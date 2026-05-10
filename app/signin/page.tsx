@@ -129,7 +129,11 @@ export default function SignInPage() {
         </section>
 
         <section className="signin-card">
-          <div className="signin-logo">F</div>
+        <img
+  src="/fromone-logo.png"
+  alt="FromOne logo"
+  className="signin-logo-img"
+/>
 
           <h2>{mode === 'signin' ? 'Welcome back' : 'Create account'}</h2>
 

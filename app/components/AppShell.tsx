@@ -55,6 +55,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     };
   };
 
+  const handleInvalidSession = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.warn('Sign out after invalid session failed:', error);
+    }
+
+    setCheckingAccess(false);
+
+    if (isProtectedRoute()) {
+      router.replace('/signin');
+    }
+  };
+
   const checkAccess = async () => {
     setCheckingAccess(true);
 
@@ -63,7 +77,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const { data: authData } = await supabase.auth.getUser();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+
+    if (authError) {
+      console.warn('Auth access check error:', authError.message);
+
+      if (
+        authError.message.includes('Invalid Refresh Token') ||
+        authError.message.includes('Refresh Token Not Found')
+      ) {
+        await handleInvalidSession();
+        return;
+      }
+
+      setCheckingAccess(false);
+      router.replace('/signin');
+      return;
+    }
+
     const user = authData.user;
 
     if (!user) {

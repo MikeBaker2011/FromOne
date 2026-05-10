@@ -111,7 +111,11 @@ export default function ResetPasswordPage() {
         </section>
 
         <section className="signin-card">
-          <div className="signin-logo">F</div>
+          <img
+            src="/fromone-logo.png"
+            alt="FromOne logo"
+            className="signin-logo-img"
+          />
 
           <h2>Reset password</h2>
 

@@ -574,7 +574,13 @@ select.input {
   font-weight: 1000;
   box-shadow: 0 18px 44px rgba(255, 212, 59, 0.22);
 }
-
+.signin-logo-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 22px;
+}
 .signin-card h2 {
   margin: 0;
   font-size: 34px;
@@ -3993,8 +3999,8 @@ select.input {
 .fromone-brand-logo,
 .mobile-topbar-logo-img,
 .sidebar-logo-img {
-  width: 42px;
-  height: 42px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
   display: block;
   flex-shrink: 0;
