@@ -1,77 +1,67 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import PublicNav from '../components/PublicNav';
+
+export const metadata: Metadata = {
+  title: 'How FromOne Works | Create Weekly Social Media Content',
+  description:
+    'See how FromOne helps small businesses create a full week of social media content from a website scan or simple business profile.',
+  alternates: {
+    canonical: '/tutorial',
+  },
+  openGraph: {
+    title: 'How FromOne Works | Create Weekly Social Media Content',
+    description:
+      'Add a business, generate a seven-day social media campaign, review each post, and publish manually with FromOne.',
+    url: '/tutorial',
+    type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'How FromOne creates weekly social media content',
+      },
+    ],
+  },
+};
 
 export default function TutorialPage() {
   const steps = [
     {
       number: '01',
-      title: 'Start on Dashboard',
+      title: 'Add the business',
       description:
-        'Use the Dashboard to create a campaign. Add a website URL, or open the no-website manual profile form.',
+        'Paste a website URL for FromOne to scan, or use the manual profile if the business does not have a website.',
     },
     {
       number: '02',
-      title: 'Scan a website',
+      title: 'Generate the week',
       description:
-        'If the business has a website, paste the URL and FromOne scans it for services, tone, audience, offers, and brand style.',
+        'FromOne creates a seven-day social media campaign with captions, CTAs, hashtags, image ideas, and platform recommendations.',
     },
     {
       number: '03',
-      title: 'No website? Use manual profile',
+      title: 'Review and publish',
       description:
-        'If the business does not have a website, enter the business name, industry, services, audience, tone, goals, and offer manually.',
+        'Edit the post if needed, upload an image, copy the content, open the platform, and publish it manually.',
     },
     {
       number: '04',
-      title: 'Generate seven posts',
+      title: 'Track what is done',
       description:
-        'FromOne creates a 7-day campaign across Facebook, Instagram, Google Business, LinkedIn, TikTok, and more.',
-    },
-    {
-      number: '05',
-      title: 'Review in Posts',
-      description:
-        'Open the Posts page to choose a campaign week, review each day, and check the generated captions, CTAs, hashtags, and image ideas.',
-    },
-    {
-      number: '06',
-      title: 'Tailor the audience',
-      description:
-        'Use the audience dropdown to rewrite a post for a specific customer type. The options change based on the business industry.',
-    },
-    {
-      number: '07',
-      title: 'Edit before publishing',
-      description:
-        'Fine-tune the caption, CTA, hashtags, and image prompt so the post sounds right before it is copied or published manually.',
-    },
-    {
-      number: '08',
-      title: 'Upload an image',
-      description:
-        'Attach the image you want to use for the post. You can replace or delete images any time before publishing.',
-    },
-    {
-      number: '09',
-      title: 'Publish manually',
-      description:
-        'Copy the post, open the platform, publish it yourself, then return to FromOne and mark it as posted.',
-    },
-    {
-      number: '10',
-      title: 'Use campaign history',
-      description:
-        'Rename, duplicate, regenerate, delete, or revisit previous campaigns from the Posts page.',
+        'Mark posts as posted and use campaign history to revisit, duplicate, rename, or regenerate previous campaigns.',
     },
   ];
 
   const workflowCards = [
     {
       title: 'Website route',
-      text: 'Best when the business already has a website. FromOne scans the site and uses that information to shape the weekly campaign.',
+      text: 'Best when the business already has a website. FromOne scans the site and uses the details to shape the weekly campaign.',
     },
     {
       title: 'Manual route',
-      text: 'Best when there is no website. Add the business details yourself and FromOne creates the campaign from that profile.',
+      text: 'Best when there is no website. Add the business details yourself and FromOne creates content from that profile.',
     },
     {
       title: 'Publishing route',
@@ -80,32 +70,34 @@ export default function TutorialPage() {
   ];
 
   return (
-    <>
-      <div className="page-header">
+    <main className="tutorial-public-page">
+      <PublicNav />
+
+      <div className="page-header tutorial-public-header">
         <div className="page-eyebrow">FromOne Tutorial</div>
-        <h1 className="page-title">Create a week of content in minutes.</h1>
+        <h1 className="page-title">Create a full week of social media content in four simple steps.</h1>
         <p className="page-description">
-          Follow this workflow to turn a website or manual business profile into a
-          complete 7-day social campaign.
+          FromOne is designed to keep social media simple: add the business, generate the
+          week, publish manually, and track what is done.
         </p>
       </div>
 
       <section className="hero-card tutorial-hero tutorial-hero-updated">
         <div>
           <div className="page-eyebrow">Quick Start</div>
-          <h2>Two ways to create a campaign.</h2>
+          <h2>Two easy ways to create a campaign.</h2>
           <p>
             Use a website scan for the richest result, or use the no-website manual
             profile when the business does not have a site yet.
           </p>
 
           <div className="tutorial-hero-actions">
-            <Link href="/dashboard" className="dashboard-profile-link">
-              Start on Dashboard
+            <Link href="/signin" className="dashboard-profile-link">
+              Start your 7-day demo
             </Link>
 
-            <Link href="/posts" className="dashboard-profile-link">
-              View Posts
+            <Link href="/" className="dashboard-profile-link">
+              Back to homepage
             </Link>
           </div>
         </div>
@@ -120,7 +112,7 @@ export default function TutorialPage() {
         ))}
       </section>
 
-      <div className="tutorial-grid tutorial-grid-updated">
+      <div className="tutorial-grid tutorial-grid-simple">
         {steps.map((step) => (
           <section key={step.number} className="tutorial-card">
             <div className="tutorial-step-number">{step.number}</div>
@@ -129,6 +121,21 @@ export default function TutorialPage() {
           </section>
         ))}
       </div>
-    </>
+
+      <section className="sales-cta-section tutorial-public-cta">
+        <div>
+          <div className="page-eyebrow">Built for busy businesses</div>
+          <h2>Simple enough to use every week.</h2>
+          <p>
+            FromOne removes the blank-page problem and gives small businesses a clear
+            social media content workflow they can actually keep using.
+          </p>
+        </div>
+
+        <Link href="/signin" className="sales-primary-button">
+          Start your 7-day demo
+        </Link>
+      </section>
+    </main>
   );
 }

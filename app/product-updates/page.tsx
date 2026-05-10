@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import PublicNav from '../components/PublicNav';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -201,7 +202,9 @@ export default function ProductUpdatesPage() {
   };
 
   return (
-    <div className="product-updates-page">
+    <main className="product-updates-public-page">
+      <PublicNav />
+
       <div className="page-header product-updates-hero">
         <div className="page-eyebrow">FromOne Updates</div>
         <h1 className="page-title">Product Updates</h1>
@@ -312,9 +315,11 @@ export default function ProductUpdatesPage() {
                       <button className="secondary-button" onClick={() => startEditing(item)}>
                         Edit
                       </button>
+
                       <button className="secondary-button" onClick={() => unpublishUpdate(item)}>
                         Unpublish
                       </button>
+
                       <button
                         className="secondary-button danger-button"
                         onClick={() => deleteUpdate(item)}
@@ -354,7 +359,9 @@ export default function ProductUpdatesPage() {
                   <button className="secondary-button" onClick={() => startEditing(item)}>
                     Edit
                   </button>
+
                   <button onClick={() => publishUpdate(item)}>Publish</button>
+
                   <button
                     className="secondary-button danger-button"
                     onClick={() => deleteUpdate(item)}
@@ -367,6 +374,6 @@ export default function ProductUpdatesPage() {
           </div>
         </section>
       )}
-    </div>
+    </main>
   );
 }

@@ -11,6 +11,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const protectedRoutes = ['/dashboard', '/posts', '/settings'];
 
+const publicMarketingRoutes = ['/', '/signin', '/tutorial', '/product-updates'];
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -20,10 +22,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     checkAccess();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   const isProtectedRoute = () => {
     return protectedRoutes.some((route) => pathname.startsWith(route));
+  };
+
+  const isPublicMarketingRoute = () => {
+    return publicMarketingRoutes.includes(pathname);
+  };
+
+  const shouldShowAppShell = () => {
+    return !isPublicMarketingRoute();
   };
 
   const createTrialDates = () => {
@@ -136,6 +147,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
     setCheckingAccess(false);
   };
+
+  if (!shouldShowAppShell()) {
+    return <>{children}</>;
+  }
 
   return (
     <>
