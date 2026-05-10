@@ -326,6 +326,7 @@ export default function PostsPage() {
   const [postsTourStep, setPostsTourStep] = useState(0);
 
   const postsHeaderRef = useRef<HTMLDivElement | null>(null);
+  const postsHeaderTextRef = useRef<HTMLDivElement | null>(null);
   const campaignHistoryControlsRef = useRef<HTMLDivElement | null>(null);
   const daySelectorRef = useRef<HTMLDivElement | null>(null);
   const audienceToolRef = useRef<HTMLDivElement | null>(null);
@@ -354,13 +355,14 @@ export default function PostsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-  useEffect(() => {
-    const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === 'true';
+useEffect(() => {
+  const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === 'true';
+  const isMobile = window.innerWidth <= 760;
 
-    if (!tourSeen) {
-      setShowPostsTour(true);
-    }
-  }, []);
+  if (!tourSeen && !isMobile) {
+    setShowPostsTour(true);
+  }
+}, []);
 
   useEffect(() => {
     if (!showPostsTour || loading) return;
@@ -419,7 +421,7 @@ export default function PostsPage() {
   const getCurrentPostsTourTarget = () => {
     const currentTarget = postsTourSteps[postsTourStep]?.target;
 
-    if (currentTarget === 'header') return postsHeaderRef.current;
+    if (currentTarget === 'header') return postsHeaderTextRef.current;
     if (currentTarget === 'campaigns') return campaignHistoryControlsRef.current;
     if (currentTarget === 'days') return daySelectorRef.current;
     if (currentTarget === 'audience') return audienceToolRef.current;
@@ -451,9 +453,18 @@ export default function PostsPage() {
   const getPostsTourTooltipStyle = () => {
     if (!postsTourRect || typeof window === 'undefined') return {};
 
-    if (window.innerWidth <= 760) {
-      return {};
-    }
+if (window.innerWidth <= 760) {
+  const mobilePadding = 12;
+  const mobileCardWidth = window.innerWidth - mobilePadding * 2;
+
+  return {
+    left: `${mobilePadding}px`,
+    right: `${mobilePadding}px`,
+    bottom: '14px',
+    width: `${mobileCardWidth}px`,
+    top: 'auto',
+  };
+}
 
     const cardWidth = 420;
     const estimatedCardHeight = 330;
@@ -1981,6 +1992,7 @@ const getCampaignOptionLabel = (item: any) => {
   return (
     <div className="campaign-brand-shell" style={brandStyle}>
       <div ref={postsHeaderRef} className="campaigns-page-header">
+        <div ref={postsHeaderTextRef}></div>
         <div>
           <div className="page-eyebrow">Campaigns</div>
           <h1 className="page-title">Your posts are ready.</h1>

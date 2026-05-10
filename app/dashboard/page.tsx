@@ -123,15 +123,16 @@ export default function DashboardPage() {
   const [manualGoals, setManualGoals] = useState('');
   const [manualContentPillars, setManualContentPillars] = useState('');
 
-  useEffect(() => {
-    fetchClient();
+useEffect(() => {
+  fetchClient();
 
-    const tourSeen = localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY) === 'true';
+  const tourSeen = localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY) === 'true';
+  const isMobile = window.innerWidth <= 760;
 
-    if (!tourSeen) {
-      setShowDashboardTour(true);
-    }
-  }, []);
+  if (!tourSeen && !isMobile) {
+    setShowDashboardTour(true);
+  }
+}, []);
 
   useEffect(() => {
     if (!showDashboardTour || loading) return;
