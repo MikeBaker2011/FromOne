@@ -760,16 +760,6 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
         }
       }
 
-      const { error: postsDeleteError } = await supabase
-        .from('campaign_posts')
-        .delete()
-        .eq('campaign_id', campaignIdToDelete);
-
-      if (postsDeleteError) {
-        alert(postsDeleteError.message);
-        return;
-      }
-
       const { error: campaignDeleteError } = await supabase
         .from('campaigns')
         .delete()
