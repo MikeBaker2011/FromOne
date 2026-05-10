@@ -276,7 +276,7 @@ export default function SubscriptionPage() {
             </div>
           )}
 
-          <div className="grid grid-two" style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <section className="hero-card">
               <div className="page-eyebrow">Current Access</div>
 
@@ -300,19 +300,6 @@ export default function SubscriptionPage() {
 
               <p>
                 Trial ends: <strong>{formatDate(trialEndsAt)}</strong>
-              </p>
-            </section>
-
-            <section className="premium-card">
-              <div className="page-eyebrow">Simple Monthly Plan</div>
-              <h2 style={{ marginTop: 0 }}>£29.99/month</h2>
-              <p>
-                FromOne gives small businesses a simple way to create tailored social media
-                post suggestions every week.
-              </p>
-              <p>
-                PayPal checkout will be connected once PayPal access is ready. For now,
-                selecting the monthly plan saves the subscription preference.
               </p>
             </section>
           </div>
