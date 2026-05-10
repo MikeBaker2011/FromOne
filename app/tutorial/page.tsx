@@ -154,12 +154,16 @@ export default function TutorialPage() {
           </p>
 
           <div className="tutorial-hero-actions">
-            <Link href="/signin" className="dashboard-profile-link">
-              Start your 7-day demo
+            <Link href="/dashboard" className="dashboard-profile-link">
+              Back to Dashboard
+            </Link>
+
+            <Link href="/posts" className="dashboard-profile-link">
+              View Posts
             </Link>
 
             <Link href="/" className="dashboard-profile-link">
-              Back to homepage
+              Back to Homepage
             </Link>
           </div>
         </div>
@@ -228,15 +232,15 @@ export default function TutorialPage() {
       <section className="sales-cta-section tutorial-public-cta">
         <div>
           <div className="page-eyebrow">Built for busy businesses</div>
-          <h2>Simple enough to use every week.</h2>
+          <h2>Ready to create your next week of content?</h2>
           <p>
-            FromOne removes the blank-page problem and gives small businesses a clear
-            social media content workflow they can actually keep using.
+            Go back to your Dashboard to generate a fresh campaign, or open Posts to
+            review content you have already created.
           </p>
         </div>
 
-        <Link href="/signin" className="sales-primary-button">
-          Start your 7-day demo
+        <Link href="/dashboard" className="sales-primary-button">
+          Back to Dashboard
         </Link>
       </section>
     </main>
