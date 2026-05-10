@@ -5434,3 +5434,46 @@ body {
     text-align: center;
   }
 }
+/* TUTORIAL DETAIL SECTIONS */
+
+.tutorial-detail-card,
+.tutorial-tips-card {
+  margin-top: 28px;
+}
+
+.tutorial-detail-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.tutorial-detail-item {
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.tutorial-detail-item h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.tutorial-detail-item p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.tutorial-tips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+@media (max-width: 760px) {
+  .tutorial-tips-grid {
+    grid-template-columns: 1fr;
+  }
+}

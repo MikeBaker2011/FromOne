@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'How FromOne Works | Create Weekly Social Media Content',
     description:
-      'Add a business, generate a seven-day social media campaign, review each post, and publish manually with FromOne.',
+      'Set up your business once, generate a seven-day social media campaign, review each post, and publish manually with FromOne.',
     url: '/tutorial',
     type: 'website',
     images: [
@@ -27,46 +27,106 @@ export const metadata: Metadata = {
 };
 
 export default function TutorialPage() {
-  const steps = [
+  const quickSteps = [
     {
       number: '01',
-      title: 'Add the business',
+      title: 'Set up once',
       description:
-        'Paste a website URL for FromOne to scan, or use the manual profile if the business does not have a website.',
+        'Add your website or create a simple business profile. FromOne remembers this, so you do not need to start from scratch every week.',
     },
     {
       number: '02',
-      title: 'Generate the week',
+      title: 'Generate your weekly content',
       description:
-        'FromOne creates a seven-day social media campaign with captions, CTAs, hashtags, image ideas, and platform recommendations.',
+        'Create a fresh seven-day campaign whenever you need one. FromOne gives you captions, CTAs, hashtags, image ideas, and platform suggestions.',
     },
     {
       number: '03',
-      title: 'Review and publish',
+      title: 'Review, copy, and publish',
       description:
-        'Edit the post if needed, upload an image, copy the content, open the platform, and publish it manually.',
+        'Check each post, edit anything you want, upload an image, copy the content, open the platform, and publish it yourself.',
     },
     {
       number: '04',
       title: 'Track what is done',
       description:
-        'Mark posts as posted and use campaign history to revisit, duplicate, rename, or regenerate previous campaigns.',
+        'Mark posts as posted so you can clearly see what has been published and what still needs doing.',
     },
   ];
 
-  const workflowCards = [
+  const setupOptions = [
     {
-      title: 'Website route',
-      text: 'Best when the business already has a website. FromOne scans the site and uses the details to shape the weekly campaign.',
+      title: 'Use a website scan',
+      text:
+        'Best if the business already has a website. Paste the website URL and FromOne will use it to understand the business, services, audience, tone, and content direction.',
     },
     {
-      title: 'Manual route',
-      text: 'Best when there is no website. Add the business details yourself and FromOne creates content from that profile.',
+      title: 'Use a manual profile',
+      text:
+        'Best if there is no website. Add the business name, industry, location, services, audience, tone, offers, and goals yourself.',
     },
     {
-      title: 'Publishing route',
-      text: 'FromOne prepares the content. You stay in control by copying, uploading images, opening platforms, and marking posts as published.',
+      title: 'Use the saved profile again',
+      text:
+        'Once the profile is saved, you can keep creating new weekly campaigns without re-entering the same details each time.',
     },
+  ];
+
+  const detailedSteps = [
+    {
+      title: '1. Open the Dashboard',
+      text:
+        'The Dashboard is where you start. You can paste a website, use a saved profile, or open the manual profile section.',
+    },
+    {
+      title: '2. Add or check the business details',
+      text:
+        'If this is the first time using FromOne, add the website or fill in the manual business profile. If it is already saved, you can move straight to generating content.',
+    },
+    {
+      title: '3. Generate the campaign',
+      text:
+        'Click the generate button. FromOne will create seven posts for the week, shaped around the business type, audience, location, tone, and offer.',
+    },
+    {
+      title: '4. Go to Posts',
+      text:
+        'The Posts page shows the full campaign. You can move through each day, check the platform, read the caption, review the CTA, and see the suggested image idea.',
+    },
+    {
+      title: '5. Tailor posts for an audience',
+      text:
+        'Use the audience tool if you want a post to speak to a specific customer group, such as homeowners, new customers, local shoppers, landlords, or busy professionals.',
+    },
+    {
+      title: '6. Edit anything you want',
+      text:
+        'You stay in control. You can change the caption, CTA, hashtags, or image idea before publishing.',
+    },
+    {
+      title: '7. Upload an image',
+      text:
+        'Add your own image to each post. This keeps your content more personal and relevant to your business.',
+    },
+    {
+      title: '8. Copy, paste, and publish',
+      text:
+        'Copy the finished post, open the platform, paste the content, add the image, and publish manually.',
+    },
+    {
+      title: '9. Mark the post as done',
+      text:
+        'After publishing, mark the post as posted inside FromOne. This helps you keep track of the week.',
+    },
+  ];
+
+  const tips = [
+    'You only need to set up the business once.',
+    'You can generate a new weekly campaign whenever you need fresh posts.',
+    'You can edit every post before publishing.',
+    'FromOne does not post automatically — you stay in control.',
+    'Use audience targeting when you want posts to speak to a specific type of customer.',
+    'If something does not work as expected, use Feedback to let us know.',
   ];
 
   return (
@@ -75,20 +135,22 @@ export default function TutorialPage() {
 
       <div className="page-header tutorial-public-header">
         <div className="page-eyebrow">FromOne Tutorial</div>
-        <h1 className="page-title">Create a full week of social media content in four simple steps.</h1>
+        <h1 className="page-title">Set up once. Create content every week.</h1>
         <p className="page-description">
-          FromOne is designed to keep social media simple: add the business, generate the
-          week, publish manually, and track what is done.
+          FromOne is designed for busy small businesses. Add your business details once,
+          generate a fresh weekly campaign when you need it, then copy, paste, publish,
+          and track what is done.
         </p>
       </div>
 
       <section className="hero-card tutorial-hero tutorial-hero-updated">
         <div>
           <div className="page-eyebrow">Quick Start</div>
-          <h2>Two easy ways to create a campaign.</h2>
+          <h2>Two easy ways to get started.</h2>
           <p>
-            Use a website scan for the richest result, or use the no-website manual
-            profile when the business does not have a site yet.
+            Use a website scan if you already have a website, or use the manual profile if
+            you do not. Once your business profile is saved, FromOne can use it again for
+            future weekly campaigns.
           </p>
 
           <div className="tutorial-hero-actions">
@@ -104,7 +166,7 @@ export default function TutorialPage() {
       </section>
 
       <section className="tutorial-workflow-grid">
-        {workflowCards.map((card) => (
+        {setupOptions.map((card) => (
           <div key={card.title}>
             <strong>{card.title}</strong>
             <p>{card.text}</p>
@@ -112,15 +174,56 @@ export default function TutorialPage() {
         ))}
       </section>
 
-      <div className="tutorial-grid tutorial-grid-simple">
-        {steps.map((step) => (
-          <section key={step.number} className="tutorial-card">
-            <div className="tutorial-step-number">{step.number}</div>
-            <h2>{step.title}</h2>
-            <p>{step.description}</p>
-          </section>
-        ))}
-      </div>
+      <section className="sales-section sales-steps-section">
+        <div className="sales-section-heading">
+          <div className="page-eyebrow">Simple Workflow</div>
+          <h2>The weekly process in plain English</h2>
+          <p>
+            FromOne keeps things simple: set up the business once, generate a fresh weekly
+            plan, review the posts, and publish them yourself.
+          </p>
+        </div>
+
+        <div className="sales-steps-grid">
+          {quickSteps.map((step) => (
+            <article key={step.number} className="sales-step-card">
+              <span>{step.number}</span>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="premium-card tutorial-detail-card">
+        <div className="page-eyebrow">Step-by-step guide</div>
+        <h2 style={{ marginTop: 0 }}>What to click and what happens next</h2>
+        <p>
+          This guide explains the full FromOne workflow from setup through to publishing.
+        </p>
+
+        <div className="tutorial-detail-list">
+          {detailedSteps.map((step) => (
+            <article key={step.title} className="tutorial-detail-item">
+              <h3>{step.title}</h3>
+              <p>{step.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="premium-card tutorial-tips-card">
+        <div className="page-eyebrow">Useful Tips</div>
+        <h2 style={{ marginTop: 0 }}>Things to remember</h2>
+
+        <div className="tutorial-tips-grid">
+          {tips.map((tip) => (
+            <div key={tip} className="card">
+              ✓ {tip}
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="sales-cta-section tutorial-public-cta">
         <div>
