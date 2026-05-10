@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -48,29 +48,34 @@ const DASHBOARD_TOUR_SEEN_KEY = 'fromone_dashboard_tour_seen';
 
 const dashboardTourSteps = [
   {
-    title: 'Welcome to FromOne',
+    title: 'Welcome to your dashboard',
     text:
-      'This dashboard is where you create your weekly content. Set up your business once, then generate fresh posts whenever you need them.',
+      'This is where you create your weekly content. Set up the business once, then generate fresh posts whenever you need them.',
+    target: 'header',
   },
   {
-    title: 'Add your website',
+    title: 'Add the website',
     text:
-      'If the business has a website, paste it here. FromOne will use it to understand the business, services, audience, tone, and offer.',
+      'If the business has a website, paste it here. FromOne uses it to understand the services, audience, tone, and offer.',
+    target: 'website',
   },
   {
-    title: 'No website? Use a manual profile',
+    title: 'Generate the campaign',
     text:
-      'If there is no website, create a manual business profile instead. Once saved, FromOne can use it again for future campaigns.',
+      'When the website or profile is ready, click here to create seven ready-to-use posts for the week.',
+    target: 'generate',
   },
   {
-    title: 'Generate your weekly campaign',
+    title: 'No website? Use a profile',
     text:
-      'When you are ready, click the generate button. FromOne will create seven ready-to-use posts for the week.',
+      'If there is no website, use this button to create or edit a manual business profile instead.',
+    target: 'manual',
   },
   {
     title: 'Review your posts',
     text:
-      'After generating, go to Posts to review, edit, copy, publish manually, and mark posts as done.',
+      'After generating, open Posts to review, edit, copy, publish manually, and mark posts as done.',
+    target: 'posts',
   },
 ];
 
@@ -89,6 +94,19 @@ export default function DashboardPage() {
 
   const [showDashboardTour, setShowDashboardTour] = useState(false);
   const [dashboardTourStep, setDashboardTourStep] = useState(0);
+
+  const dashboardHeaderRef = useRef<HTMLDivElement | null>(null);
+  const websiteInputRef = useRef<HTMLDivElement | null>(null);
+  const generateButtonRef = useRef<HTMLButtonElement | null>(null);
+  const manualButtonRef = useRef<HTMLButtonElement | null>(null);
+  const postsLinkRef = useRef<HTMLSpanElement | null>(null);
+
+  const [tourRect, setTourRect] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   const [accessInfo, setAccessInfo] = useState<AccessInfo | null>(null);
   const [accessLocked, setAccessLocked] = useState(false);
@@ -114,10 +132,39 @@ export default function DashboardPage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!showDashboardTour || loading) return;
+
+    const target = getCurrentTourTarget();
+
+    if (target) {
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center',
+      });
+    }
+
+    const timer = window.setTimeout(() => {
+      updateTourRect();
+    }, 420);
+
+    window.addEventListener('resize', updateTourRect);
+    window.addEventListener('scroll', updateTourRect, true);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('resize', updateTourRect);
+      window.removeEventListener('scroll', updateTourRect, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showDashboardTour, dashboardTourStep, loading, showManualProfile]);
+
   const closeDashboardTour = () => {
     localStorage.setItem(DASHBOARD_TOUR_SEEN_KEY, 'true');
     setShowDashboardTour(false);
     setDashboardTourStep(0);
+    setTourRect(null);
   };
 
   const restartDashboardTour = () => {
@@ -136,6 +183,71 @@ export default function DashboardPage() {
 
   const goToPreviousTourStep = () => {
     setDashboardTourStep((currentStep) => Math.max(0, currentStep - 1));
+  };
+
+  const getCurrentTourTarget = () => {
+    const currentTarget = dashboardTourSteps[dashboardTourStep]?.target;
+
+    if (currentTarget === 'header') return dashboardHeaderRef.current;
+    if (currentTarget === 'website') return websiteInputRef.current;
+    if (currentTarget === 'generate') return generateButtonRef.current;
+    if (currentTarget === 'manual') return manualButtonRef.current;
+    if (currentTarget === 'posts') return postsLinkRef.current;
+
+    return null;
+  };
+
+  const updateTourRect = () => {
+    const target = getCurrentTourTarget();
+
+    if (!target) {
+      setTourRect(null);
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const padding = 10;
+
+    setTourRect({
+      top: Math.max(rect.top - padding, 12),
+      left: Math.max(rect.left - padding, 12),
+      width: rect.width + padding * 2,
+      height: rect.height + padding * 2,
+    });
+  };
+
+  const getTourTooltipStyle = () => {
+    if (!tourRect || typeof window === 'undefined') return {};
+
+    if (window.innerWidth <= 760) {
+      return {};
+    }
+
+    const cardWidth = 370;
+    const gap = 24;
+    const safePadding = 22;
+
+    let left = tourRect.left + tourRect.width + gap;
+
+    if (left + cardWidth > window.innerWidth - safePadding) {
+      left = tourRect.left - cardWidth - gap;
+    }
+
+    left = Math.max(safePadding, Math.min(left, window.innerWidth - cardWidth - safePadding));
+
+    let top = tourRect.top;
+
+    if (top + 300 > window.innerHeight - safePadding) {
+      top = window.innerHeight - 300 - safePadding;
+    }
+
+    top = Math.max(safePadding, top);
+
+    return {
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${cardWidth}px`,
+    };
   };
 
   const getErrorMessage = (error: any) => {
@@ -1009,7 +1121,7 @@ Also detect or infer:
 
   return (
     <>
-      <div className="page-header dashboard-simple-header">
+      <div ref={dashboardHeaderRef} className="page-header dashboard-simple-header">
         <div className="page-eyebrow">FromOne Dashboard</div>
         <h1 className="page-title">Start a weekly campaign.</h1>
         <p className="page-description">
@@ -1071,26 +1183,29 @@ Also detect or infer:
                 context, while a strong manual profile still creates useful, targeted posts.
               </p>
 
-              <label>
-                <strong>Client Website URL</strong>
-                <span>
-                  Paste the website URL. Website scans are limited to {WEEKLY_SCAN_LIMIT} every 7
-                  days. You can save up to {MAX_SAVED_CAMPAIGNS} campaigns.
-                </span>
-              </label>
+              <div ref={websiteInputRef} className="dashboard-tour-target-wrap">
+                <label>
+                  <strong>Client Website URL</strong>
+                  <span>
+                    Paste the website URL. Website scans are limited to {WEEKLY_SCAN_LIMIT} every 7
+                    days. You can save up to {MAX_SAVED_CAMPAIGNS} campaigns.
+                  </span>
+                </label>
 
-              <input
-                className="input"
-                value={websiteUrl}
-                onChange={(event) => setWebsiteUrl(event.target.value)}
-                placeholder="https://example.com"
-              />
+                <input
+                  className="input"
+                  value={websiteUrl}
+                  onChange={(event) => setWebsiteUrl(event.target.value)}
+                  placeholder="https://example.com"
+                />
+              </div>
 
               <div className="dashboard-scan-usage-pill">
                 {weeklyScansRemaining} of {WEEKLY_SCAN_LIMIT} website scans remaining this week
               </div>
 
               <button
+                ref={generateButtonRef}
                 className="dashboard-primary-scan-button"
                 onClick={handleGeneratePosts}
                 disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
@@ -1108,6 +1223,7 @@ Also detect or infer:
 
               <div className="dashboard-simple-actions">
                 <button
+                  ref={manualButtonRef}
                   type="button"
                   className="secondary-button dashboard-manual-toggle-button"
                   onClick={() => setShowManualProfile(!showManualProfile)}
@@ -1120,9 +1236,11 @@ Also detect or infer:
                       : 'No website? Create manual profile'}
                 </button>
 
-                <Link href="/posts" className="dashboard-profile-link">
-                  View posts
-                </Link>
+                <span ref={postsLinkRef} className="dashboard-tour-link-target">
+                  <Link href="/posts" className="dashboard-profile-link">
+                    View posts
+                  </Link>
+                </span>
               </div>
             </div>
 
@@ -1338,25 +1456,71 @@ Also detect or infer:
         </>
       )}
 
-      {showDashboardTour && (
-        <div className="dashboard-tour-overlay">
-          <div className="dashboard-tour-backdrop" onClick={closeDashboardTour} />
+      {showDashboardTour && !loading && (
+        <div className="dashboard-spotlight-tour">
+          {tourRect && (
+            <>
+              <div
+                className="dashboard-tour-shade"
+                style={{
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: tourRect.top,
+                }}
+              />
 
-          <section className="dashboard-tour-card">
+              <div
+                className="dashboard-tour-shade"
+                style={{
+                  top: tourRect.top,
+                  left: 0,
+                  width: tourRect.left,
+                  height: tourRect.height,
+                }}
+              />
+
+              <div
+                className="dashboard-tour-shade"
+                style={{
+                  top: tourRect.top,
+                  left: tourRect.left + tourRect.width,
+                  right: 0,
+                  height: tourRect.height,
+                }}
+              />
+
+              <div
+                className="dashboard-tour-shade"
+                style={{
+                  top: tourRect.top + tourRect.height,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                }}
+              />
+
+              <div
+                className="dashboard-tour-highlight"
+                style={{
+                  top: tourRect.top,
+                  left: tourRect.left,
+                  width: tourRect.width,
+                  height: tourRect.height,
+                }}
+              />
+            </>
+          )}
+
+          {!tourRect && <div className="dashboard-tour-full-shade" />}
+
+          <section className="dashboard-tour-tooltip" style={getTourTooltipStyle()}>
             <div className="dashboard-tour-progress">
               Step {dashboardTourStep + 1} of {dashboardTourSteps.length}
             </div>
 
             <h2>{dashboardTourSteps[dashboardTourStep].title}</h2>
             <p>{dashboardTourSteps[dashboardTourStep].text}</p>
-
-            <div className="dashboard-tour-pointer">
-              {dashboardTourStep === 0 && 'Start here — this is your campaign dashboard.'}
-              {dashboardTourStep === 1 && 'Look for the website input box on the campaign card.'}
-              {dashboardTourStep === 2 && 'Use the manual profile button if there is no website.'}
-              {dashboardTourStep === 3 && 'Use the main generate button to create the week.'}
-              {dashboardTourStep === 4 && 'After generating, open Posts to review everything.'}
-            </div>
 
             <div className="dashboard-tour-actions">
               <button
