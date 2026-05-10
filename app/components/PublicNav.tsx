@@ -1,10 +1,49 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function PublicNav() {
   const [open, setOpen] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    checkUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsSignedIn(Boolean(session?.user));
+      setCheckingAuth(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const checkUser = async () => {
+    try {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error) {
+        setIsSignedIn(false);
+        return;
+      }
+
+      setIsSignedIn(Boolean(data.user));
+    } catch {
+      setIsSignedIn(false);
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
 
   const closeMenu = () => setOpen(false);
 
@@ -47,8 +86,12 @@ export default function PublicNav() {
           Updates
         </Link>
 
-        <Link href="/signin" className="sales-nav-button" onClick={closeMenu}>
-          Sign in
+        <Link
+          href={isSignedIn ? '/dashboard' : '/signin'}
+          className="sales-nav-button"
+          onClick={closeMenu}
+        >
+          {checkingAuth ? 'Checking...' : isSignedIn ? 'Dashboard' : 'Sign in'}
         </Link>
       </div>
     </nav>
