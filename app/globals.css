@@ -5198,3 +5198,38 @@ body {
     text-align: center;
   }
 }
+/* SIGN IN PASSWORD RESET */
+
+.signin-forgot-button {
+  align-self: flex-end;
+  width: auto;
+  min-height: auto;
+  margin: -4px 0 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--gold);
+  font-size: 0.92rem;
+  font-weight: 800;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.signin-forgot-button:hover {
+  text-decoration: underline;
+}
+
+.signin-forgot-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.signin-reset-wrap {
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .signin-forgot-button {
+    align-self: center;
+  }
+}
