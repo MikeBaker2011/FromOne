@@ -68,7 +68,7 @@ const dashboardTourSteps = [
   {
     title: 'No website? Use a profile',
     text:
-      'If there is no website, use this button to create or edit a manual business profile instead.',
+      'If there is no website, use this section to create or edit a manual business profile instead.',
     target: 'manual',
   },
   {
@@ -99,6 +99,7 @@ export default function DashboardPage() {
   const websiteInputRef = useRef<HTMLDivElement | null>(null);
   const generateButtonRef = useRef<HTMLButtonElement | null>(null);
   const manualButtonRef = useRef<HTMLButtonElement | null>(null);
+  const manualProfileSectionRef = useRef<HTMLDivElement | null>(null);
   const postsLinkRef = useRef<HTMLSpanElement | null>(null);
 
   const [tourRect, setTourRect] = useState<{
@@ -169,6 +170,7 @@ export default function DashboardPage() {
 
   const restartDashboardTour = () => {
     setDashboardTourStep(0);
+    setTourRect(null);
     setShowDashboardTour(true);
   };
 
@@ -178,11 +180,19 @@ export default function DashboardPage() {
       return;
     }
 
-    setDashboardTourStep((currentStep) => currentStep + 1);
+    const nextStep = dashboardTourStep + 1;
+    const nextTarget = dashboardTourSteps[nextStep]?.target;
+
+    if (nextTarget === 'manual') {
+      setShowManualProfile(true);
+    }
+
+    setDashboardTourStep(nextStep);
   };
 
   const goToPreviousTourStep = () => {
-    setDashboardTourStep((currentStep) => Math.max(0, currentStep - 1));
+    const previousStep = Math.max(0, dashboardTourStep - 1);
+    setDashboardTourStep(previousStep);
   };
 
   const getCurrentTourTarget = () => {
@@ -191,7 +201,11 @@ export default function DashboardPage() {
     if (currentTarget === 'header') return dashboardHeaderRef.current;
     if (currentTarget === 'website') return websiteInputRef.current;
     if (currentTarget === 'generate') return generateButtonRef.current;
-    if (currentTarget === 'manual') return manualButtonRef.current;
+
+    if (currentTarget === 'manual') {
+      return manualProfileSectionRef.current || manualButtonRef.current;
+    }
+
     if (currentTarget === 'posts') return postsLinkRef.current;
 
     return null;
@@ -223,25 +237,38 @@ export default function DashboardPage() {
       return {};
     }
 
-    const cardWidth = 370;
-    const gap = 24;
-    const safePadding = 22;
+    const cardWidth = 420;
+    const estimatedCardHeight = 330;
+    const gap = 42;
+    const safePadding = 26;
 
-    let left = tourRect.left + tourRect.width + gap;
+    const spaceBelow = window.innerHeight - (tourRect.top + tourRect.height);
+    const spaceAbove = tourRect.top;
+    const spaceRight = window.innerWidth - (tourRect.left + tourRect.width);
+    const spaceLeft = tourRect.left;
 
-    if (left + cardWidth > window.innerWidth - safePadding) {
+    let top = tourRect.top + tourRect.height + gap;
+    let left = tourRect.left + tourRect.width / 2 - cardWidth / 2;
+
+    if (spaceBelow >= estimatedCardHeight + gap) {
+      top = tourRect.top + tourRect.height + gap;
+      left = tourRect.left + tourRect.width / 2 - cardWidth / 2;
+    } else if (spaceAbove >= estimatedCardHeight + gap) {
+      top = tourRect.top - estimatedCardHeight - gap;
+      left = tourRect.left + tourRect.width / 2 - cardWidth / 2;
+    } else if (spaceRight >= cardWidth + gap) {
+      top = tourRect.top;
+      left = tourRect.left + tourRect.width + gap;
+    } else if (spaceLeft >= cardWidth + gap) {
+      top = tourRect.top;
       left = tourRect.left - cardWidth - gap;
     }
 
     left = Math.max(safePadding, Math.min(left, window.innerWidth - cardWidth - safePadding));
-
-    let top = tourRect.top;
-
-    if (top + 300 > window.innerHeight - safePadding) {
-      top = window.innerHeight - 300 - safePadding;
-    }
-
-    top = Math.max(safePadding, top);
+    top = Math.max(
+      safePadding,
+      Math.min(top, window.innerHeight - estimatedCardHeight - safePadding)
+    );
 
     return {
       top: `${top}px`,
@@ -1297,7 +1324,7 @@ Also detect or infer:
           </section>
 
           {showManualProfile && (
-            <section className="dashboard-manual-profile-card">
+            <section ref={manualProfileSectionRef} className="dashboard-manual-profile-card">
               <div className="dashboard-manual-profile-header">
                 <div>
                   <div className="page-eyebrow">No Website Route</div>
