@@ -41,6 +41,7 @@ const platformFallback = [
 ];
 
 const WEEKLY_SCAN_LIMIT = 2;
+const MAX_SAVED_CAMPAIGNS = 4;
 const WEBSITE_SCAN_EVENT_TYPES = ['website_scan', 'campaign_regenerate'];
 
 export default function DashboardPage() {
@@ -54,6 +55,7 @@ export default function DashboardPage() {
   const [showManualProfile, setShowManualProfile] = useState(false);
   const [savingManualProfile, setSavingManualProfile] = useState(false);
   const [weeklyScansUsed, setWeeklyScansUsed] = useState(0);
+  const [savedCampaignsCount, setSavedCampaignsCount] = useState(0);
 
   const [accessInfo, setAccessInfo] = useState<AccessInfo | null>(null);
   const [accessLocked, setAccessLocked] = useState(false);
@@ -292,6 +294,36 @@ export default function DashboardPage() {
     await loadWeeklyScanUsage(userId);
   };
 
+  const loadSavedCampaignCount = async (userId: string) => {
+    const { count, error } = await supabase
+      .from('campaigns')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error loading campaign count:', error.message);
+      setSavedCampaignsCount(0);
+      return 0;
+    }
+
+    const total = count || 0;
+    setSavedCampaignsCount(total);
+    return total;
+  };
+
+  const checkSavedCampaignLimit = async (userId: string) => {
+    const total = await loadSavedCampaignCount(userId);
+
+    if (total >= MAX_SAVED_CAMPAIGNS) {
+      alert(
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved campaigns. Delete an old campaign from Posts before creating a new one.`
+      );
+      return false;
+    }
+
+    return true;
+  };
+
   const fetchClient = async () => {
     setLoading(true);
 
@@ -299,7 +331,11 @@ export default function DashboardPage() {
     const userId = authData.user?.id;
 
     if (userId) {
-      await Promise.all([loadWeeklyScanUsage(userId), loadOrCreateAccess(userId)]);
+      await Promise.all([
+        loadWeeklyScanUsage(userId),
+        loadSavedCampaignCount(userId),
+        loadOrCreateAccess(userId),
+      ]);
     }
 
     const { data, error } = await supabase
@@ -664,6 +700,10 @@ Also detect or infer:
       return;
     }
 
+    const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
+
+    if (!campaignLimitAllowed) return;
+
     if (source === 'website_scan') {
       const allowed = await checkWeeklyScanLimit(userId);
 
@@ -811,6 +851,8 @@ Also detect or infer:
       });
     }
 
+    await loadSavedCampaignCount(userId);
+
     alert('Your weekly campaign has been generated and saved.');
     router.push('/posts');
   };
@@ -919,10 +961,18 @@ Also detect or infer:
         </div>
       ) : (
         <>
-          <section className={accessLocked ? 'access-status-card access-status-locked' : 'access-status-card'}>
+          <section
+            className={
+              accessLocked ? 'access-status-card access-status-locked' : 'access-status-card'
+            }
+          >
             <div>
               <div className="page-eyebrow">{accessLocked ? 'Demo Ended' : 'Access Active'}</div>
-              <h2>{accessLocked ? 'Campaign creation is currently locked.' : 'Your demo access is active.'}</h2>
+              <h2>
+                {accessLocked
+                  ? 'Campaign creation is currently locked.'
+                  : 'Your demo access is active.'}
+              </h2>
               <p>{accessMessage}</p>
             </div>
 
@@ -953,7 +1003,8 @@ Also detect or infer:
               <label>
                 <strong>Client Website URL</strong>
                 <span>
-                  Paste the website URL. Website scans are limited to {WEEKLY_SCAN_LIMIT} every 7 days.
+                  Paste the website URL. Website scans are limited to {WEEKLY_SCAN_LIMIT} every 7
+                  days. You can save up to {MAX_SAVED_CAMPAIGNS} campaigns.
                 </span>
               </label>
 
@@ -1032,6 +1083,13 @@ Also detect or infer:
                   <strong>Website scans</strong>
                   <span>
                     {weeklyScansUsed}/{WEEKLY_SCAN_LIMIT} used in the last 7 days
+                  </span>
+                </p>
+
+                <p>
+                  <strong>Saved campaigns</strong>
+                  <span>
+                    {savedCampaignsCount}/{MAX_SAVED_CAMPAIGNS} monthly campaign slots used
                   </span>
                 </p>
 

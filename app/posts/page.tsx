@@ -33,6 +33,7 @@ type AccessInfo = {
 const IMAGE_BUCKET = 'campaign-assets';
 
 const WEEKLY_SCAN_LIMIT = 2;
+const MAX_SAVED_CAMPAIGNS = 4;
 const WEBSITE_SCAN_EVENT_TYPES = ['website_scan', 'campaign_regenerate'];
 
 const platformFallback = [
@@ -458,6 +459,32 @@ export default function PostsPage() {
       console.error('Error recording usage event:', error.message);
     }
   };
+  const loadSavedCampaignCount = async (userId: string) => {
+  const { count, error } = await supabase
+    .from('campaigns')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error loading campaign count:', error.message);
+    return 0;
+  }
+
+  return count || 0;
+};
+
+const checkSavedCampaignLimit = async (userId: string) => {
+  const total = await loadSavedCampaignCount(userId);
+
+  if (total >= MAX_SAVED_CAMPAIGNS) {
+    alert(
+      `You already have ${MAX_SAVED_CAMPAIGNS} saved campaigns. Delete an old campaign before duplicating this one.`
+    );
+    return false;
+  }
+
+  return true;
+};
 
   const safeArray = (value: any) => {
     if (Array.isArray(value)) return value;
@@ -811,12 +838,17 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id;
 
-      if (!userId) {
-        alert('You need to sign in before duplicating a campaign.');
-        return;
-      }
+if (!userId) {
+  alert('You need to sign in before duplicating a campaign.');
+  return;
+}
 
-      const { data: sourcePosts, error: sourcePostsError } = await supabase
+const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
+
+if (!campaignLimitAllowed) return;
+
+const { data: sourcePosts, error: sourcePostsError } = await supabase
+
         .from('campaign_posts')
         .select('*')
         .eq('campaign_id', campaign.id)
@@ -1958,7 +1990,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
 
               <div className="campaign-history-actions">
                 <span className="campaign-history-count">
-                  {campaigns.length} {campaigns.length === 1 ? 'campaign' : 'campaigns'} saved
+                  {campaigns.length}/{MAX_SAVED_CAMPAIGNS} campaigns saved
                 </span>
 
                 <button
