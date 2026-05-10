@@ -199,9 +199,14 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             Subscription
           </Link>
 
+          <Link className="sidebar-link" href="/reviews" onClick={onClose}>
+            <span className="sidebar-link-icon">★</span>
+            Reviews
+          </Link>
+
           <Link className="sidebar-link" href="/bugreport" onClick={onClose}>
             <span className="sidebar-link-icon">!</span>
-            Bug Report
+            Feedback
           </Link>
 
           {checkingAuth ? (
