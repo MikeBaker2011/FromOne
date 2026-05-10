@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -8,17 +8,39 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+const REMEMBER_EMAIL_KEY = 'fromone_remember_email';
+
 export default function SignInPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [loading, setLoading] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
 
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
+  const saveRememberedEmail = (cleanEmail: string) => {
+    if (rememberMe) {
+      localStorage.setItem(REMEMBER_EMAIL_KEY, cleanEmail);
+    } else {
+      localStorage.removeItem(REMEMBER_EMAIL_KEY);
+    }
+  };
+
   const handleAuth = async () => {
-    if (!email.trim()) {
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail) {
       alert('Please enter your email.');
       return;
     }
@@ -33,7 +55,7 @@ export default function SignInPage() {
     try {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: cleanEmail,
           password,
         });
 
@@ -41,10 +63,11 @@ export default function SignInPage() {
           throw error;
         }
 
+        saveRememberedEmail(cleanEmail);
         router.push('/dashboard');
       } else {
         const { error } = await supabase.auth.signUp({
-          email: email.trim(),
+          email: cleanEmail,
           password,
         });
 
@@ -52,6 +75,7 @@ export default function SignInPage() {
           throw error;
         }
 
+        saveRememberedEmail(cleanEmail);
         alert('Account created. Check your email if confirmation is enabled, then sign in.');
         setMode('signin');
       }
@@ -63,7 +87,9 @@ export default function SignInPage() {
   };
 
   const handleForgotPassword = async () => {
-    if (!email.trim()) {
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail) {
       alert('Enter your email address first, then click forgot password.');
       return;
     }
@@ -71,7 +97,7 @@ export default function SignInPage() {
     setResettingPassword(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
         redirectTo: 'https://fromone.co.uk/reset-password',
       });
 
@@ -79,6 +105,7 @@ export default function SignInPage() {
         throw error;
       }
 
+      saveRememberedEmail(cleanEmail);
       alert('Password reset email sent. Please check your inbox.');
     } catch (error: any) {
       alert(error?.message || 'Could not send password reset email.');
@@ -129,11 +156,11 @@ export default function SignInPage() {
         </section>
 
         <section className="signin-card">
-        <img
-  src="/fromone-logo.png"
-  alt="FromOne logo"
-  className="signin-logo-img"
-/>
+          <img
+            src="/fromone-logo.png"
+            alt="FromOne logo"
+            className="signin-logo-img"
+          />
 
           <h2>{mode === 'signin' ? 'Welcome back' : 'Create account'}</h2>
 
@@ -166,14 +193,25 @@ export default function SignInPage() {
           />
 
           {mode === 'signin' && (
-            <button
-              type="button"
-              className="signin-forgot-button"
-              onClick={handleForgotPassword}
-              disabled={resettingPassword || loading}
-            >
-              {resettingPassword ? 'Sending reset email...' : 'Forgot password?'}
-            </button>
+            <div className="signin-options-row">
+              <label className="signin-remember-label">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(event) => setRememberMe(event.target.checked)}
+                />
+                <span>Remember me</span>
+              </label>
+
+              <button
+                type="button"
+                className="signin-forgot-button"
+                onClick={handleForgotPassword}
+                disabled={resettingPassword || loading}
+              >
+                {resettingPassword ? 'Sending reset email...' : 'Forgot password?'}
+              </button>
+            </div>
           )}
 
           <button className="signin-primary-button" onClick={handleAuth} disabled={loading}>
