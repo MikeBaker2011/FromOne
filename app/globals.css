@@ -4996,3 +4996,205 @@ body {
   object-position: top center;
   display: block;
 }
+/* BUG REPORT ADMIN INBOX */
+
+.bug-admin-card {
+  margin-top: 28px;
+}
+
+.bug-admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 22px;
+}
+
+.bug-admin-header h2 {
+  margin: 4px 0 8px;
+}
+
+.bug-admin-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.bug-admin-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bug-admin-stats span {
+  min-width: 86px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.bug-admin-stats strong {
+  display: block;
+  color: var(--text);
+  font-size: 1.3rem;
+  margin-bottom: 2px;
+}
+
+.bug-admin-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.bug-admin-controls .input {
+  max-width: 240px;
+}
+
+.bug-admin-empty {
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: 22px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.bug-report-list {
+  display: grid;
+  gap: 16px;
+}
+
+.bug-report-item {
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.bug-report-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.bug-report-top > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bug-report-top small,
+.bug-report-user {
+  color: var(--muted);
+}
+
+.bug-report-item h3 {
+  margin: 0 0 10px;
+}
+
+.bug-report-item p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.bug-report-url {
+  margin-bottom: 10px;
+}
+
+.bug-report-steps {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.bug-report-steps strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.bug-report-steps p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.bug-severity,
+.bug-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.bug-status {
+  color: var(--gold);
+  background: rgba(255, 212, 59, 0.12);
+  border: 1px solid rgba(255, 212, 59, 0.2);
+}
+
+.bug-severity-low {
+  color: #9be7c1;
+  background: rgba(61, 220, 151, 0.12);
+  border: 1px solid rgba(61, 220, 151, 0.2);
+}
+
+.bug-severity-medium {
+  color: #ffd43b;
+  background: rgba(255, 212, 59, 0.12);
+  border: 1px solid rgba(255, 212, 59, 0.22);
+}
+
+.bug-severity-high {
+  color: #ffb86b;
+  background: rgba(255, 184, 107, 0.12);
+  border: 1px solid rgba(255, 184, 107, 0.22);
+}
+
+.bug-severity-critical {
+  color: #ff7b7b;
+  background: rgba(255, 123, 123, 0.12);
+  border: 1px solid rgba(255, 123, 123, 0.25);
+}
+
+.bug-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (max-width: 760px) {
+  .bug-admin-header {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+
+  .bug-admin-stats,
+  .bug-admin-controls,
+  .bug-report-top,
+  .bug-report-actions {
+    justify-content: center;
+  }
+
+  .bug-admin-controls {
+    flex-direction: column;
+  }
+
+  .bug-admin-controls .input {
+    max-width: none;
+  }
+
+  .bug-report-item {
+    text-align: center;
+  }
+}
