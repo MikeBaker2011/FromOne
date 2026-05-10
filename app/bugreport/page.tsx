@@ -74,7 +74,7 @@ export default function BugReportPage() {
     }
 
     if (!description.trim()) {
-      alert('Please describe the issue.');
+      alert('Please describe what happened.');
       return;
     }
 
@@ -85,7 +85,7 @@ export default function BugReportPage() {
       const userId = authData.user?.id || null;
 
       if (!userId) {
-        alert('You need to sign in before submitting a bug report.');
+        alert('You need to sign in before submitting feedback.');
         return;
       }
 
@@ -104,7 +104,7 @@ export default function BugReportPage() {
         throw error;
       }
 
-      alert('Bug report submitted. Thank you — the FromOne team will review it.');
+      alert('Thank you. Your feedback has been sent to the FromOne team.');
 
       setTitle('');
       setSeverity('Medium');
@@ -116,7 +116,7 @@ export default function BugReportPage() {
         await loadBugReports();
       }
     } catch (error: any) {
-      alert(error?.message || 'Error submitting bug report.');
+      alert(error?.message || 'Error submitting feedback.');
     } finally {
       setSaving(false);
     }
@@ -147,7 +147,7 @@ export default function BugReportPage() {
   const deleteBugReport = async (report: BugReport) => {
     if (!isAdmin) return;
 
-    const confirmed = confirm(`Delete this bug report?\n\n${report.title}`);
+    const confirmed = confirm(`Delete this feedback report?\n\n${report.title}`);
 
     if (!confirmed) return;
 
@@ -178,30 +178,30 @@ export default function BugReportPage() {
   return (
     <>
       <div className="page-header">
-        <div className="page-eyebrow">FromOne Bug Report</div>
-        <h1 className="page-title">Report something that needs fixing.</h1>
+        <div className="page-eyebrow">FromOne Feedback</div>
+        <h1 className="page-title">Tell us if something does not work as expected.</h1>
         <p className="page-description">
-          Use this page to send feedback during testing. Reports are saved securely and
-          reviewed by the FromOne team.
+          Use this page to let us know if something looks wrong, does not work, or feels
+          confusing. Your feedback helps us improve FromOne.
         </p>
       </div>
 
       <div className="grid grid-two">
         <section className="premium-card">
-          <div className="page-eyebrow">Issue Details</div>
+          <div className="page-eyebrow">Feedback Details</div>
 
           <label>
-            <strong>Issue title</strong>
+            <strong>Short title</strong>
           </label>
           <input
             className="input"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Example: Generate button does nothing"
+            placeholder="Example: Generate button did not work"
           />
 
           <label>
-            <strong>Severity</strong>
+            <strong>How serious is it?</strong>
           </label>
           <select
             className="input"
@@ -215,13 +215,13 @@ export default function BugReportPage() {
           </select>
 
           <label>
-            <strong>Page or URL</strong>
+            <strong>Which page were you on?</strong>
           </label>
           <input
             className="input"
             value={pageUrl}
             onChange={(event) => setPageUrl(event.target.value)}
-            placeholder="Example: /dashboard"
+            placeholder="Example: Dashboard, Posts, Settings"
           />
 
           <label>
@@ -231,50 +231,49 @@ export default function BugReportPage() {
             className="input"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="Describe the issue clearly."
+            placeholder="Tell us what went wrong or what did not make sense."
             rows={6}
           />
 
           <label>
-            <strong>Steps to reproduce</strong>
+            <strong>What were you trying to do?</strong>
           </label>
           <textarea
             className="input"
             value={steps}
             onChange={(event) => setSteps(event.target.value)}
-            placeholder="Example: 1. Go to Dashboard 2. Click Generate 3. Error appears"
+            placeholder="Example: I clicked Generate Campaign, waited a few seconds, then saw an error message."
             rows={6}
           />
 
           <button onClick={submitBug} disabled={saving}>
-            {saving ? 'Sending...' : 'Submit Bug Report'}
+            {saving ? 'Sending...' : 'Send Feedback'}
           </button>
         </section>
 
         <section className="hero-card">
-          <div className="page-eyebrow">Testing Notes</div>
+          <div className="page-eyebrow">Help Us Improve</div>
           <h2 style={{ marginTop: 0, fontSize: '34px' }}>
-            Useful bug reports make the MVP faster to finish.
+            Spotted something that does not look right?
           </h2>
           <p>
-            Try to include the page, what you clicked, what you expected, and what
-            actually happened.
+            Tell us what you were trying to do and what happened. Your feedback helps us
+            improve FromOne and make it easier to use.
           </p>
 
           <div className="grid" style={{ marginTop: '22px' }}>
             <div className="card">
-              <strong>Good report</strong>
+              <strong>What to include</strong>
               <p>
-                “On Dashboard, I clicked Generate Week of Posts. It loaded for 10 seconds,
-                then showed an error.”
+                Tell us which page you were on, what you clicked, and what happened next.
               </p>
             </div>
 
             <div className="card">
-              <strong>Better report</strong>
+              <strong>Helpful example</strong>
               <p>
-                “I was signed in, had a business profile saved, selected OpenAI, and the
-                error appeared after clicking Generate.”
+                “I clicked Generate Campaign, waited a few seconds, then saw an error
+                message.”
               </p>
             </div>
           </div>
@@ -286,9 +285,9 @@ export default function BugReportPage() {
           <div className="bug-admin-header">
             <div>
               <div className="page-eyebrow">Admin Only</div>
-              <h2>Bug report inbox</h2>
+              <h2>Feedback inbox</h2>
               <p>
-                Review submitted issues, update their status, and remove reports when they
+                Review submitted feedback, update its status, and remove reports when they
                 are no longer needed.
               </p>
             </div>
@@ -329,11 +328,11 @@ export default function BugReportPage() {
           </div>
 
           {loadingReports ? (
-            <p>Loading bug reports...</p>
+            <p>Loading feedback...</p>
           ) : filteredBugReports.length === 0 ? (
             <div className="bug-admin-empty">
-              <strong>No bug reports found.</strong>
-              <p>Reports submitted by testers will appear here.</p>
+              <strong>No feedback found.</strong>
+              <p>Feedback submitted by users will appear here.</p>
             </div>
           ) : (
             <div className="bug-report-list">
@@ -372,7 +371,7 @@ export default function BugReportPage() {
 
                   {report.steps_to_reproduce && (
                     <div className="bug-report-steps">
-                      <strong>Steps to reproduce</strong>
+                      <strong>User was trying to do</strong>
                       <p>{report.steps_to_reproduce}</p>
                     </div>
                   )}
