@@ -5513,3 +5513,109 @@ body {
     align-items: center;
   }
 }
+/* DASHBOARD TOUR */
+
+.dashboard-tour-restart-button {
+  margin-top: 14px;
+  width: auto;
+}
+
+.dashboard-tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+}
+
+.dashboard-tour-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 70% 20%, rgba(255, 212, 59, 0.16), transparent 32%),
+    rgba(2, 4, 10, 0.78);
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-tour-card {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100%);
+  padding: 28px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 212, 59, 0.28);
+  background:
+    linear-gradient(145deg, rgba(16, 20, 32, 0.96), rgba(5, 9, 20, 0.98));
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42);
+}
+
+.dashboard-tour-progress {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  color: var(--gold);
+  background: rgba(255, 212, 59, 0.11);
+  border: 1px solid rgba(255, 212, 59, 0.2);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.dashboard-tour-card h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  letter-spacing: -0.05em;
+}
+
+.dashboard-tour-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.dashboard-tour-pointer {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 212, 59, 0.08);
+  border: 1px dashed rgba(255, 212, 59, 0.26);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.dashboard-tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.dashboard-tour-actions > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-tour-actions button {
+  width: auto;
+}
+
+@media (max-width: 560px) {
+  .dashboard-tour-card {
+    padding: 22px;
+    text-align: center;
+  }
+
+  .dashboard-tour-actions,
+  .dashboard-tour-actions > div {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .dashboard-tour-actions button {
+    width: 100%;
+  }
+}

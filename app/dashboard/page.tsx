@@ -44,6 +44,36 @@ const WEEKLY_SCAN_LIMIT = 2;
 const MAX_SAVED_CAMPAIGNS = 4;
 const WEBSITE_SCAN_EVENT_TYPES = ['website_scan', 'campaign_regenerate'];
 
+const DASHBOARD_TOUR_SEEN_KEY = 'fromone_dashboard_tour_seen';
+
+const dashboardTourSteps = [
+  {
+    title: 'Welcome to FromOne',
+    text:
+      'This dashboard is where you create your weekly content. Set up your business once, then generate fresh posts whenever you need them.',
+  },
+  {
+    title: 'Add your website',
+    text:
+      'If the business has a website, paste it here. FromOne will use it to understand the business, services, audience, tone, and offer.',
+  },
+  {
+    title: 'No website? Use a manual profile',
+    text:
+      'If there is no website, create a manual business profile instead. Once saved, FromOne can use it again for future campaigns.',
+  },
+  {
+    title: 'Generate your weekly campaign',
+    text:
+      'When you are ready, click the generate button. FromOne will create seven ready-to-use posts for the week.',
+  },
+  {
+    title: 'Review your posts',
+    text:
+      'After generating, go to Posts to review, edit, copy, publish manually, and mark posts as done.',
+  },
+];
+
 export default function DashboardPage() {
   const router = useRouter();
 
@@ -56,6 +86,9 @@ export default function DashboardPage() {
   const [savingManualProfile, setSavingManualProfile] = useState(false);
   const [weeklyScansUsed, setWeeklyScansUsed] = useState(0);
   const [savedCampaignsCount, setSavedCampaignsCount] = useState(0);
+
+  const [showDashboardTour, setShowDashboardTour] = useState(false);
+  const [dashboardTourStep, setDashboardTourStep] = useState(0);
 
   const [accessInfo, setAccessInfo] = useState<AccessInfo | null>(null);
   const [accessLocked, setAccessLocked] = useState(false);
@@ -73,7 +106,37 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchClient();
+
+    const tourSeen = localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY) === 'true';
+
+    if (!tourSeen) {
+      setShowDashboardTour(true);
+    }
   }, []);
+
+  const closeDashboardTour = () => {
+    localStorage.setItem(DASHBOARD_TOUR_SEEN_KEY, 'true');
+    setShowDashboardTour(false);
+    setDashboardTourStep(0);
+  };
+
+  const restartDashboardTour = () => {
+    setDashboardTourStep(0);
+    setShowDashboardTour(true);
+  };
+
+  const goToNextTourStep = () => {
+    if (dashboardTourStep >= dashboardTourSteps.length - 1) {
+      closeDashboardTour();
+      return;
+    }
+
+    setDashboardTourStep((currentStep) => currentStep + 1);
+  };
+
+  const goToPreviousTourStep = () => {
+    setDashboardTourStep((currentStep) => Math.max(0, currentStep - 1));
+  };
 
   const getErrorMessage = (error: any) => {
     if (!error) return 'Unknown error.';
@@ -953,6 +1016,14 @@ Also detect or infer:
           Add the client website to scan it, or create a manual profile if they do not
           have a website. FromOne will create seven ready-to-use posts.
         </p>
+
+        <button
+          type="button"
+          className="secondary-button dashboard-tour-restart-button"
+          onClick={restartDashboardTour}
+        >
+          Show me around
+        </button>
       </div>
 
       {loading ? (
@@ -1265,6 +1336,54 @@ Also detect or infer:
             </div>
           </section>
         </>
+      )}
+
+      {showDashboardTour && (
+        <div className="dashboard-tour-overlay">
+          <div className="dashboard-tour-backdrop" onClick={closeDashboardTour} />
+
+          <section className="dashboard-tour-card">
+            <div className="dashboard-tour-progress">
+              Step {dashboardTourStep + 1} of {dashboardTourSteps.length}
+            </div>
+
+            <h2>{dashboardTourSteps[dashboardTourStep].title}</h2>
+            <p>{dashboardTourSteps[dashboardTourStep].text}</p>
+
+            <div className="dashboard-tour-pointer">
+              {dashboardTourStep === 0 && 'Start here — this is your campaign dashboard.'}
+              {dashboardTourStep === 1 && 'Look for the website input box on the campaign card.'}
+              {dashboardTourStep === 2 && 'Use the manual profile button if there is no website.'}
+              {dashboardTourStep === 3 && 'Use the main generate button to create the week.'}
+              {dashboardTourStep === 4 && 'After generating, open Posts to review everything.'}
+            </div>
+
+            <div className="dashboard-tour-actions">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={closeDashboardTour}
+              >
+                Skip
+              </button>
+
+              <div>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={goToPreviousTourStep}
+                  disabled={dashboardTourStep === 0}
+                >
+                  Back
+                </button>
+
+                <button type="button" onClick={goToNextTourStep}>
+                  {dashboardTourStep === dashboardTourSteps.length - 1 ? 'Finish' : 'Next'}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
       )}
     </>
   );
