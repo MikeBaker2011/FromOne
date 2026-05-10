@@ -1,6 +1,13 @@
 'use client';
 
-import { ChangeEvent, CSSProperties, useEffect, useMemo, useState } from 'react';
+import {
+  ChangeEvent,
+  CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 
@@ -31,6 +38,47 @@ type AccessInfo = {
 };
 
 const IMAGE_BUCKET = 'campaign-assets';
+
+const POSTS_TOUR_SEEN_KEY = 'fromone_posts_tour_seen';
+
+const postsTourSteps = [
+  {
+    title: 'Welcome to your posts',
+    text:
+      'This is where you review the weekly campaign FromOne created for you. Choose each post, check the wording, add an image, copy it, publish it manually, then mark it as done.',
+    target: 'header',
+  },
+  {
+    title: 'Choose a campaign week',
+    text:
+      'Use this section to switch between saved campaigns, rename a campaign, duplicate it, regenerate it, or delete old campaigns.',
+    target: 'campaigns',
+  },
+  {
+    title: 'Choose a post',
+    text:
+      'Each card is one post from your weekly campaign. Select a day to review the full post below.',
+    target: 'days',
+  },
+  {
+    title: 'Tailor the post',
+    text:
+      'Use the audience tool to rewrite the post for a specific customer type, such as homeowners, new customers, landlords, or local shoppers.',
+    target: 'audience',
+  },
+  {
+    title: 'Edit the post',
+    text:
+      'You can edit the caption, CTA, hashtags, and image idea before you publish.',
+    target: 'edit',
+  },
+  {
+    title: 'Upload and publish',
+    text:
+      'Upload your image, copy the post, open the platform, publish manually, then mark it as posted.',
+    target: 'publish',
+  },
+];
 
 const WEEKLY_SCAN_LIMIT = 2;
 const MAX_SAVED_CAMPAIGNS = 4;
@@ -274,6 +322,23 @@ export default function PostsPage() {
   const [customAudienceTarget, setCustomAudienceTarget] = useState('');
   const [rewritingPost, setRewritingPost] = useState(false);
 
+  const [showPostsTour, setShowPostsTour] = useState(false);
+  const [postsTourStep, setPostsTourStep] = useState(0);
+
+  const postsHeaderRef = useRef<HTMLDivElement | null>(null);
+  const campaignHistoryControlsRef = useRef<HTMLDivElement | null>(null);
+  const daySelectorRef = useRef<HTMLDivElement | null>(null);
+  const audienceToolRef = useRef<HTMLDivElement | null>(null);
+  const editPostRef = useRef<HTMLButtonElement | null>(null);
+  const publishingPanelRef = useRef<HTMLElement | null>(null);
+
+  const [postsTourRect, setPostsTourRect] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editCaption, setEditCaption] = useState('');
   const [editCta, setEditCta] = useState('');
@@ -289,7 +354,147 @@ export default function PostsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-  const getReadableError = (error: any, fallback = 'Something went wrong.') => {
+  useEffect(() => {
+    const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === 'true';
+
+    if (!tourSeen) {
+      setShowPostsTour(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!showPostsTour || loading) return;
+
+    const target = getCurrentPostsTourTarget();
+
+    if (target) {
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center',
+      });
+    }
+
+    const timer = window.setTimeout(() => {
+      updatePostsTourRect();
+    }, 420);
+
+    window.addEventListener('resize', updatePostsTourRect);
+    window.addEventListener('scroll', updatePostsTourRect, true);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('resize', updatePostsTourRect);
+      window.removeEventListener('scroll', updatePostsTourRect, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPostsTour, postsTourStep, loading, selectedPostId, posts.length]);
+
+  const closePostsTour = () => {
+    localStorage.setItem(POSTS_TOUR_SEEN_KEY, 'true');
+    setShowPostsTour(false);
+    setPostsTourStep(0);
+    setPostsTourRect(null);
+  };
+
+  const restartPostsTour = () => {
+    setPostsTourStep(0);
+    setPostsTourRect(null);
+    setShowPostsTour(true);
+  };
+
+  const goToNextPostsTourStep = () => {
+    if (postsTourStep >= postsTourSteps.length - 1) {
+      closePostsTour();
+      return;
+    }
+
+    setPostsTourStep((currentStep) => currentStep + 1);
+  };
+
+  const goToPreviousPostsTourStep = () => {
+    setPostsTourStep((currentStep) => Math.max(0, currentStep - 1));
+  };
+
+  const getCurrentPostsTourTarget = () => {
+    const currentTarget = postsTourSteps[postsTourStep]?.target;
+
+    if (currentTarget === 'header') return postsHeaderRef.current;
+    if (currentTarget === 'campaigns') return campaignHistoryControlsRef.current;
+    if (currentTarget === 'days') return daySelectorRef.current;
+    if (currentTarget === 'audience') return audienceToolRef.current;
+    if (currentTarget === 'edit') return editPostRef.current;
+    if (currentTarget === 'publish') return publishingPanelRef.current;
+
+    return null;
+  };
+
+  const updatePostsTourRect = () => {
+    const target = getCurrentPostsTourTarget();
+
+    if (!target) {
+      setPostsTourRect(null);
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const padding = 10;
+
+    setPostsTourRect({
+      top: Math.max(rect.top - padding, 12),
+      left: Math.max(rect.left - padding, 12),
+      width: rect.width + padding * 2,
+      height: rect.height + padding * 2,
+    });
+  };
+
+  const getPostsTourTooltipStyle = () => {
+    if (!postsTourRect || typeof window === 'undefined') return {};
+
+    if (window.innerWidth <= 760) {
+      return {};
+    }
+
+    const cardWidth = 420;
+    const estimatedCardHeight = 330;
+    const gap = 42;
+    const safePadding = 26;
+
+    const spaceBelow = window.innerHeight - (postsTourRect.top + postsTourRect.height);
+    const spaceAbove = postsTourRect.top;
+    const spaceRight = window.innerWidth - (postsTourRect.left + postsTourRect.width);
+    const spaceLeft = postsTourRect.left;
+
+    let top = postsTourRect.top + postsTourRect.height + gap;
+    let left = postsTourRect.left + postsTourRect.width / 2 - cardWidth / 2;
+
+    if (spaceBelow >= estimatedCardHeight + gap) {
+      top = postsTourRect.top + postsTourRect.height + gap;
+      left = postsTourRect.left + postsTourRect.width / 2 - cardWidth / 2;
+    } else if (spaceAbove >= estimatedCardHeight + gap) {
+      top = postsTourRect.top - estimatedCardHeight - gap;
+      left = postsTourRect.left + postsTourRect.width / 2 - cardWidth / 2;
+    } else if (spaceRight >= cardWidth + gap) {
+      top = postsTourRect.top;
+      left = postsTourRect.left + postsTourRect.width + gap;
+    } else if (spaceLeft >= cardWidth + gap) {
+      top = postsTourRect.top;
+      left = postsTourRect.left - cardWidth - gap;
+    }
+
+    left = Math.max(safePadding, Math.min(left, window.innerWidth - cardWidth - safePadding));
+    top = Math.max(
+      safePadding,
+      Math.min(top, window.innerHeight - estimatedCardHeight - safePadding)
+    );
+
+    return {
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${cardWidth}px`,
+    };
+  };
+    const getReadableError = (error: any, fallback = 'Something went wrong.') => {
     if (!error) return fallback;
     if (typeof error === 'string') return error;
 
@@ -459,32 +664,33 @@ export default function PostsPage() {
       console.error('Error recording usage event:', error.message);
     }
   };
+
   const loadSavedCampaignCount = async (userId: string) => {
-  const { count, error } = await supabase
-    .from('campaigns')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId);
+    const { count, error } = await supabase
+      .from('campaigns')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
 
-  if (error) {
-    console.error('Error loading campaign count:', error.message);
-    return 0;
-  }
+    if (error) {
+      console.error('Error loading campaign count:', error.message);
+      return 0;
+    }
 
-  return count || 0;
-};
+    return count || 0;
+  };
 
-const checkSavedCampaignLimit = async (userId: string) => {
-  const total = await loadSavedCampaignCount(userId);
+  const checkSavedCampaignLimit = async (userId: string) => {
+    const total = await loadSavedCampaignCount(userId);
 
-  if (total >= MAX_SAVED_CAMPAIGNS) {
-    alert(
-      `You already have ${MAX_SAVED_CAMPAIGNS} saved campaigns. Delete an old campaign before duplicating this one.`
-    );
-    return false;
-  }
+    if (total >= MAX_SAVED_CAMPAIGNS) {
+      alert(
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved campaigns. Delete an old campaign before duplicating this one.`
+      );
+      return false;
+    }
 
-  return true;
-};
+    return true;
+  };
 
   const safeArray = (value: any) => {
     if (Array.isArray(value)) return value;
@@ -540,37 +746,25 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
     return [`#${industry}`, `#${location}`, '#SmallBusiness', '#Marketing', '#FromOne'];
   };
 
-  const getCampaignOptionLabel = (item: any) => {
-    const rawName = item.name || item.campaign_idea || 'Untitled campaign';
-    const createdDate = item.created_at ? new Date(item.created_at) : null;
+const getCampaignOptionLabel = (item: any) => {
+  const business =
+    item.business_name ||
+    item.business_type ||
+    item.campaign_area ||
+    item.name ||
+    'Campaign';
 
-    const date = createdDate
-      ? createdDate.toLocaleDateString(undefined, {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })
-      : 'No date';
+  const createdDate = item.created_at ? new Date(item.created_at) : null;
 
-    const time = createdDate
-      ? createdDate.toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-      : '';
+  const date = createdDate
+    ? createdDate.toLocaleDateString(undefined, {
+        day: '2-digit',
+        month: 'short',
+      })
+    : '';
 
-    const business =
-      item.business_name ||
-      item.business_type ||
-      item.campaign_area ||
-      'Campaign';
-
-    if (rawName.toLowerCase().startsWith('week of')) {
-      return `${business} — ${date}${time ? ` at ${time}` : ''}`;
-    }
-
-    return `${rawName} — ${date}${time ? ` at ${time}` : ''}`;
-  };
+  return date ? `${business} — ${date}` : business;
+};
 
   const buildCampaignCopyName = (item: any) => {
     const business =
@@ -838,17 +1032,16 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id;
 
-if (!userId) {
-  alert('You need to sign in before duplicating a campaign.');
-  return;
-}
+      if (!userId) {
+        alert('You need to sign in before duplicating a campaign.');
+        return;
+      }
 
-const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
+      const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
 
-if (!campaignLimitAllowed) return;
+      if (!campaignLimitAllowed) return;
 
-const { data: sourcePosts, error: sourcePostsError } = await supabase
-
+      const { data: sourcePosts, error: sourcePostsError } = await supabase
         .from('campaign_posts')
         .select('*')
         .eq('campaign_id', campaign.id)
@@ -1787,7 +1980,7 @@ const { data: sourcePosts, error: sourcePostsError } = await supabase
 
   return (
     <div className="campaign-brand-shell" style={brandStyle}>
-      <div className="campaigns-page-header">
+      <div ref={postsHeaderRef} className="campaigns-page-header">
         <div>
           <div className="page-eyebrow">Campaigns</div>
           <h1 className="page-title">Your posts are ready.</h1>
@@ -1797,9 +1990,19 @@ const { data: sourcePosts, error: sourcePostsError } = await supabase
           </p>
         </div>
 
-        <button className="secondary-button refresh-button" onClick={loadPageData}>
-          ↻ Refresh
-        </button>
+        <div className="posts-header-actions">
+          <button
+            type="button"
+            className="secondary-button posts-tour-restart-button"
+            onClick={restartPostsTour}
+          >
+            Show me around
+          </button>
+
+          <button className="secondary-button refresh-button" onClick={loadPageData}>
+            ↻ Refresh
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -1969,7 +2172,7 @@ const { data: sourcePosts, error: sourcePostsError } = await supabase
               </p>
             </div>
 
-            <div className="campaign-history-controls">
+            <div ref={campaignHistoryControlsRef} className="campaign-history-controls">
               <select
                 className="input"
                 value={selectedCampaignId || ''}
@@ -2101,7 +2304,7 @@ const { data: sourcePosts, error: sourcePostsError } = await supabase
                   </div>
                 </div>
 
-                <div className="day-carousel-wrap no-more-days">
+                <div ref={daySelectorRef} className="day-carousel-wrap no-more-days">
                   <div className="day-carousel-track no-scroll-carousel">
                     {posts.map((post, index) => (
                       <button
@@ -2145,7 +2348,7 @@ const { data: sourcePosts, error: sourcePostsError } = await supabase
 
                       <h2>{selectedPost.title || 'Social Media Post'}</h2>
 
-                      <div className="audience-rewrite-panel">
+                      <div ref={audienceToolRef} className="audience-rewrite-panel">
                         <div>
                           <div className="page-eyebrow">Audience Target</div>
                           <h3>Tailor this post to a specific customer.</h3>
@@ -2259,6 +2462,7 @@ const { data: sourcePosts, error: sourcePostsError } = await supabase
                         </div>
                       ) : (
                         <button
+                          ref={editPostRef}
                           className="edit-post-button"
                           onClick={() => startEditingPost(selectedPost)}
                         >
@@ -2291,7 +2495,7 @@ const { data: sourcePosts, error: sourcePostsError } = await supabase
                       </div>
                     </div>
 
-                    <aside className="manual-publishing-panel">
+                    <aside ref={publishingPanelRef} className="manual-publishing-panel">
                       <div className="page-eyebrow">Manual Publishing</div>
 
                       <div className="manual-image-placeholder uploaded-image-box">
@@ -2357,6 +2561,100 @@ const { data: sourcePosts, error: sourcePostsError } = await supabase
             )}
           </section>
         </>
+      )}
+
+      {showPostsTour && !loading && campaigns.length > 0 && (
+        <div className="dashboard-spotlight-tour">
+          {postsTourRect && (
+            <>
+              <div
+                className="dashboard-tour-shade"
+                style={{
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: postsTourRect.top,
+                }}
+              />
+
+              <div
+                className="dashboard-tour-shade"
+                style={{
+                  top: postsTourRect.top,
+                  left: 0,
+                  width: postsTourRect.left,
+                  height: postsTourRect.height,
+                }}
+              />
+
+              <div
+                className="dashboard-tour-shade"
+                style={{
+                  top: postsTourRect.top,
+                  left: postsTourRect.left + postsTourRect.width,
+                  right: 0,
+                  height: postsTourRect.height,
+                }}
+              />
+
+              <div
+                className="dashboard-tour-shade"
+                style={{
+                  top: postsTourRect.top + postsTourRect.height,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                }}
+              />
+
+              <div
+                className="dashboard-tour-highlight"
+                style={{
+                  top: postsTourRect.top,
+                  left: postsTourRect.left,
+                  width: postsTourRect.width,
+                  height: postsTourRect.height,
+                }}
+              />
+            </>
+          )}
+
+          {!postsTourRect && <div className="dashboard-tour-full-shade" />}
+
+          <section className="dashboard-tour-tooltip" style={getPostsTourTooltipStyle()}>
+            <div className="dashboard-tour-progress">
+              Step {postsTourStep + 1} of {postsTourSteps.length}
+            </div>
+
+            <h2>{postsTourSteps[postsTourStep].title}</h2>
+            <p>{postsTourSteps[postsTourStep].text}</p>
+
+            <div className="dashboard-tour-actions">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={closePostsTour}
+              >
+                Skip
+              </button>
+
+              <div>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={goToPreviousPostsTourStep}
+                  disabled={postsTourStep === 0}
+                >
+                  Back
+                </button>
+
+                <button type="button" onClick={goToNextPostsTourStep}>
+                  {postsTourStep === postsTourSteps.length - 1 ? 'Finish' : 'Next'}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
       )}
     </div>
   );
