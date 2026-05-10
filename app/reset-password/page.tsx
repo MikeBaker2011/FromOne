@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +14,46 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
+  const [checkingLink, setCheckingLink] = useState(true);
+  const [linkReady, setLinkReady] = useState(false);
+
+  useEffect(() => {
+    prepareRecoverySession();
+  }, []);
+
+  const prepareRecoverySession = async () => {
+    try {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (error) {
+          alert(error.message);
+          setLinkReady(false);
+          return;
+        }
+
+        setLinkReady(true);
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
+
+      if (data.session) {
+        setLinkReady(true);
+        return;
+      }
+
+      setLinkReady(false);
+    } catch (error: any) {
+      alert(error?.message || 'Could not verify password reset link.');
+      setLinkReady(false);
+    } finally {
+      setCheckingLink(false);
+    }
+  };
 
   const updatePassword = async () => {
     if (!password.trim()) {
@@ -75,35 +115,58 @@ export default function ResetPasswordPage() {
 
           <h2>Reset password</h2>
 
-          <p className="signin-card-text">
-            Choose a secure new password for your account.
-          </p>
+          {checkingLink ? (
+            <p className="signin-card-text">Checking your password reset link...</p>
+          ) : !linkReady ? (
+            <>
+              <p className="signin-card-text">
+                This password reset link is missing, expired, or has already been used.
+              </p>
 
-          <label>
-            <strong>New password</strong>
-          </label>
-          <input
-            className="input"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Enter new password"
-          />
+              <button
+                className="signin-primary-button"
+                onClick={() => router.push('/signin')}
+              >
+                Back to sign in
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="signin-card-text">
+                Choose a secure new password for your account.
+              </p>
 
-          <label>
-            <strong>Confirm password</strong>
-          </label>
-          <input
-            className="input"
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            placeholder="Confirm new password"
-          />
+              <label>
+                <strong>New password</strong>
+              </label>
+              <input
+                className="input"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter new password"
+              />
 
-          <button className="signin-primary-button" onClick={updatePassword} disabled={saving}>
-            {saving ? 'Saving...' : 'Update password'}
-          </button>
+              <label>
+                <strong>Confirm password</strong>
+              </label>
+              <input
+                className="input"
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                placeholder="Confirm new password"
+              />
+
+              <button
+                className="signin-primary-button"
+                onClick={updatePassword}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Update password'}
+              </button>
+            </>
+          )}
         </section>
       </div>
     </div>

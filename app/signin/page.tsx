@@ -8,14 +8,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const getSiteUrl = () => {
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-
-  return 'https://www.fromone.co.uk';
-};
-
 export default function SignInPage() {
   const router = useRouter();
 
@@ -80,7 +72,7 @@ export default function SignInPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${getSiteUrl()}/reset-password`,
+        redirectTo: 'https://fromone.co.uk/reset-password',
       });
 
       if (error) {

@@ -11,7 +11,13 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const protectedRoutes = ['/dashboard', '/posts', '/settings'];
 
-const publicMarketingRoutes = ['/', '/signin', '/tutorial', '/product-updates'];
+const publicMarketingRoutes = [
+  '/',
+  '/signin',
+  '/reset-password',
+  '/tutorial',
+  '/product-updates',
+];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
