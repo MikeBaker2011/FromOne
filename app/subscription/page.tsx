@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-type Plan = 'demo' | 'starter' | 'pro';
+type Plan = 'demo' | 'starter';
 
 export default function SubscriptionPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan>('demo');
@@ -104,7 +104,8 @@ export default function SubscriptionPage() {
       return;
     }
 
-    const plan = (data.plan || 'demo') as Plan;
+    const rawPlan = data.plan || 'demo';
+    const plan: Plan = rawPlan === 'starter' || rawPlan === 'pro' ? 'starter' : 'demo';
     const billingStatus = data.status || 'trialing';
     const remaining = calculateDaysRemaining(data.trial_ends_at || null);
 
@@ -151,7 +152,7 @@ export default function SubscriptionPage() {
       }
 
       if (selectedPlan === 'demo' && status === 'expired') {
-        alert('Your demo has ended. Please choose Starter or Pro to continue.');
+        alert('Your demo has ended. Please choose the monthly plan to continue.');
         setSaving(false);
         return;
       }
@@ -172,12 +173,12 @@ export default function SubscriptionPage() {
       setCurrentPlan(selectedPlan);
       setStatus(nextStatus);
 
-      if (selectedPlan === 'starter' || selectedPlan === 'pro') {
+      if (selectedPlan === 'starter') {
         alert(
-          'Plan saved for now. PayPal checkout will be connected when your PayPal access is ready.'
+          'Monthly plan selected. PayPal checkout will be connected when your PayPal access is ready.'
         );
       } else {
-        alert('Subscription preference saved.');
+        alert('Demo access saved.');
       }
 
       await loadSubscription();
@@ -201,47 +202,40 @@ export default function SubscriptionPage() {
 
   const isDemoExpired = currentPlan === 'demo' && status === 'expired';
   const isDemoActive = currentPlan === 'demo' && status === 'trialing' && daysRemaining > 0;
-  const hasPaidAccess =
-    (currentPlan === 'starter' || currentPlan === 'pro') && status === 'active';
+  const hasPaidAccess = currentPlan === 'starter' && status === 'active';
 
   const plans = [
     {
       id: 'demo' as Plan,
-      name: 'Demo',
-      price: '7 days',
-      description: 'Try FromOne before PayPal billing is connected.',
+      name: '7-Day Demo',
+      price: 'Free',
+      priceNote: 'for 7 days',
+      description: 'Try FromOne free before choosing the monthly plan.',
+      buttonText: 'Start free demo',
       disabled: isDemoExpired,
       features: [
-        '7-day trial access',
-        'Business profile setup',
-        'Website scan testing',
-        'Manual details workflow',
+        'Create your first weekly campaign',
+        'Website scan or manual business profile',
+        'Ready-to-use social post suggestions',
+        'Copy, paste, and publish workflow',
       ],
     },
     {
       id: 'starter' as Plan,
-      name: 'Starter',
-      price: '£19',
-      description: 'For small businesses and solo users.',
+      name: 'FromOne Monthly',
+      price: '£29.99',
+      priceNote: '/ month',
+      description:
+        'Your own simple social media assistant for small business content every week.',
+      buttonText: 'Start monthly plan',
       disabled: false,
       features: [
-        'Weekly content generation',
-        'Website scan workflow',
-        'Saved campaigns',
-        'Posts due today alerts',
-      ],
-    },
-    {
-      id: 'pro' as Plan,
-      name: 'Pro',
-      price: '£49',
-      description: 'For agencies and power users.',
-      disabled: false,
-      features: [
-        'Multiple client campaigns',
-        'Priority AI workflow',
-        'Advanced campaign history',
-        'PayPal billing ready',
+        'A full week of tailored social posts',
+        'Posts based on your website or business profile',
+        'Audience targeting options',
+        'Campaign history',
+        'Copy, paste, and publish workflow',
+        'No big agency fees',
       ],
     },
   ];
@@ -251,14 +245,11 @@ export default function SubscriptionPage() {
       <div className="page-header">
         <div className="page-eyebrow">FromOne Subscription</div>
         <h1 className="page-title">
-          {isDemoExpired
-            ? 'Your demo has ended.'
-            : 'Demo trial and PayPal-ready plans.'}
+          {isDemoExpired ? 'Your demo has ended.' : 'Simple pricing for small businesses.'}
         </h1>
         <p className="page-description">
-          {isDemoExpired
-            ? 'Choose Starter or Pro to continue using your dashboard, settings, and saved posts.'
-            : 'New users get a 7-day demo. PayPal checkout will be connected once your PayPal account access is ready.'}
+          Start with a 7-day free demo, then continue with FromOne Monthly for £29.99 per
+          month. No Pro plan, no complicated tiers, and no big agency fees.
         </p>
       </div>
 
@@ -279,9 +270,8 @@ export default function SubscriptionPage() {
               <div className="page-eyebrow">Demo Ended</div>
               <h2 style={{ marginTop: 0 }}>Your 7-day demo has expired.</h2>
               <p>
-                Dashboard, Posts, and Settings are now locked. Select Starter or Pro to
-                continue. PayPal checkout is coming soon, so this currently saves the plan
-                preference in Supabase.
+                Dashboard, Posts, and Settings are now locked. Choose the monthly plan to
+                continue using FromOne.
               </p>
             </div>
           )}
@@ -296,8 +286,8 @@ export default function SubscriptionPage() {
                   : isDemoExpired
                     ? 'Demo expired'
                     : hasPaidAccess
-                      ? `${currentPlan} active`
-                      : `${currentPlan} plan`}
+                      ? 'Monthly plan active'
+                      : 'Demo access'}
               </h2>
 
               <p>
@@ -314,20 +304,20 @@ export default function SubscriptionPage() {
             </section>
 
             <section className="premium-card">
-              <div className="page-eyebrow">PayPal Coming Soon</div>
-              <h2 style={{ marginTop: 0 }}>No payment is taken yet.</h2>
+              <div className="page-eyebrow">Simple Monthly Plan</div>
+              <h2 style={{ marginTop: 0 }}>£29.99/month</h2>
               <p>
-                This page is ready for PayPal billing, but checkout is not connected
-                while account access is pending.
+                FromOne gives small businesses a simple way to create tailored social media
+                post suggestions every week.
               </p>
               <p>
-                Starter and Pro will connect to PayPal monthly subscriptions when access
-                is ready.
+                PayPal checkout will be connected once PayPal access is ready. For now,
+                selecting the monthly plan saves the subscription preference.
               </p>
             </section>
           </div>
 
-          <div className="grid grid-three">
+          <div className="grid grid-two">
             {plans.map((plan) => (
               <section
                 key={plan.id}
@@ -343,14 +333,12 @@ export default function SubscriptionPage() {
               >
                 <div className="page-eyebrow">{plan.name}</div>
 
-                <h2 style={{ marginTop: 0, fontSize: '40px' }}>
+                <h2 style={{ marginTop: 0, fontSize: '44px' }}>
                   {plan.price}
-                  {plan.id === 'starter' || plan.id === 'pro' ? (
-                    <span style={{ color: 'var(--muted)', fontSize: '16px' }}>
-                      {' '}
-                      / month
-                    </span>
-                  ) : null}
+                  <span style={{ color: 'var(--muted)', fontSize: '16px' }}>
+                    {' '}
+                    {plan.priceNote}
+                  </span>
                 </h2>
 
                 <p>{plan.description}</p>
@@ -376,7 +364,7 @@ export default function SubscriptionPage() {
                     ? 'Demo Ended'
                     : selectedPlan === plan.id
                       ? 'Selected'
-                      : 'Choose Plan'}
+                      : plan.buttonText}
                 </button>
               </section>
             ))}
