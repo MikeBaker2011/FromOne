@@ -51,10 +51,21 @@ const benefits = [
 ];
 
 const steps = [
-  'Add a website or manual business profile',
-  'Generate a seven-day content campaign',
-  'Review, edit, and tailor each post',
-  'Copy, publish manually, and track what is done',
+  {
+    title: 'Set up once',
+    description:
+      'Add your website or business profile once. FromOne remembers it for future campaigns.',
+  },
+  {
+    title: 'Generate your weekly content',
+    description:
+      'Create a fresh, tailored seven-day campaign whenever you need one.',
+  },
+  {
+    title: 'Review, publish, and track',
+    description:
+      'Edit if needed, then copy, paste, publish, and mark each post as done.',
+  },
 ];
 
 const productScreenshots = [
@@ -223,14 +234,15 @@ export default function Home() {
       <section className="sales-section sales-steps-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Workflow</div>
-          <h2>One simple weekly rhythm</h2>
+          <h2>Set up once. Create content every week.</h2>
         </div>
 
         <div className="sales-steps-grid">
           {steps.map((step, index) => (
-            <article key={step} className="sales-step-card">
+            <article key={step.title} className="sales-step-card">
               <span>{String(index + 1).padStart(2, '0')}</span>
-              <h3>{step}</h3>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
             </article>
           ))}
         </div>
