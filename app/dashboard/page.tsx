@@ -123,16 +123,16 @@ export default function DashboardPage() {
   const [manualGoals, setManualGoals] = useState('');
   const [manualContentPillars, setManualContentPillars] = useState('');
 
-useEffect(() => {
-  fetchClient();
+  useEffect(() => {
+    fetchClient();
 
-  const tourSeen = localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY) === 'true';
-  const isMobile = window.innerWidth <= 760;
+    const tourSeen = localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY) === 'true';
+    const isMobile = window.innerWidth <= 760;
 
-  if (!tourSeen && !isMobile) {
-    setShowDashboardTour(true);
-  }
-}, []);
+    if (!tourSeen && !isMobile) {
+      setShowDashboardTour(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!showDashboardTour || loading) return;
@@ -167,11 +167,13 @@ useEffect(() => {
     setShowDashboardTour(false);
     setDashboardTourStep(0);
     setTourRect(null);
+    setShowManualProfile(false);
   };
 
   const restartDashboardTour = () => {
     setDashboardTourStep(0);
     setTourRect(null);
+    setShowManualProfile(false);
     setShowDashboardTour(true);
   };
 
@@ -183,9 +185,14 @@ useEffect(() => {
 
     const nextStep = dashboardTourStep + 1;
     const nextTarget = dashboardTourSteps[nextStep]?.target;
+    const currentTarget = dashboardTourSteps[dashboardTourStep]?.target;
 
     if (nextTarget === 'manual') {
       setShowManualProfile(true);
+    }
+
+    if (currentTarget === 'manual' && nextTarget !== 'manual') {
+      setShowManualProfile(false);
     }
 
     setDashboardTourStep(nextStep);
@@ -193,6 +200,17 @@ useEffect(() => {
 
   const goToPreviousTourStep = () => {
     const previousStep = Math.max(0, dashboardTourStep - 1);
+    const previousTarget = dashboardTourSteps[previousStep]?.target;
+    const currentTarget = dashboardTourSteps[dashboardTourStep]?.target;
+
+    if (previousTarget === 'manual') {
+      setShowManualProfile(true);
+    }
+
+    if (currentTarget === 'manual' && previousTarget !== 'manual') {
+      setShowManualProfile(false);
+    }
+
     setDashboardTourStep(previousStep);
   };
 
