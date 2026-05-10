@@ -11,7 +11,11 @@ export default function PublicNav() {
   return (
     <nav className="sales-nav public-nav">
       <Link href="/" className="sales-brand" onClick={closeMenu}>
-        <span>F</span>
+        <img
+          src="/fromone-logo.png"
+          alt="FromOne logo"
+          className="fromone-brand-logo"
+        />
         <strong>FromOne</strong>
       </Link>
 
@@ -24,7 +28,13 @@ export default function PublicNav() {
         {open ? '×' : '☰'}
       </button>
 
-      <div className={open ? 'sales-nav-links public-nav-links open' : 'sales-nav-links public-nav-links'}>
+      <div
+        className={
+          open
+            ? 'sales-nav-links public-nav-links open'
+            : 'sales-nav-links public-nav-links'
+        }
+      >
         <Link href="/" onClick={closeMenu}>
           Home
         </Link>

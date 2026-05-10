@@ -3990,16 +3990,25 @@ select.input {
   text-decoration: none;
 }
 
-.sales-brand span {
+.fromone-brand-logo,
+.mobile-topbar-logo-img,
+.sidebar-logo-img {
   width: 42px;
   height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background: var(--gold);
-  color: #101420;
-  font-weight: 950;
-  box-shadow: 0 14px 38px rgba(255, 212, 59, 0.24);
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
+.mobile-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-logo-img {
+  width: 38px;
+  height: 38px;
 }
 
 .sales-brand strong {

@@ -120,7 +120,12 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     <aside className={isOpen ? 'sidebar sidebar-open' : 'sidebar'}>
       <div className="sidebar-mobile-top">
         <div className="sidebar-brand">
-          <div className="sidebar-logo">F</div>
+          <img
+            src="/fromone-logo.png"
+            alt="FromOne logo"
+            className="sidebar-logo-img"
+          />
+
           <div>
             <h1 className="sidebar-title">FromOne</h1>
             <p className="sidebar-subtitle">Step-by-step content workflow</p>

@@ -162,7 +162,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <>
       <div className="mobile-topbar">
         <div className="mobile-topbar-brand">
-          <div className="mobile-topbar-logo">F</div>
+          <img
+            src="/fromone-logo.png"
+            alt="FromOne logo"
+            className="mobile-topbar-logo-img"
+          />
           <span>FromOne</span>
         </div>
 
