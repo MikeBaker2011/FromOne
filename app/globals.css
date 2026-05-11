@@ -6141,445 +6141,7 @@ body {
   opacity: 0.55;
   cursor: not-allowed;
 }
-/* PRODUCT UPDATES CARD LAYOUT FIX */
-
-.product-updates-page .premium-card,
-.product-updates-page .product-update-card,
-.product-updates-page .draft-update-card {
-  padding: 34px !important;
-  border-radius: 28px;
-}
-
-.product-updates-page .draft-update-card,
-.product-updates-page .product-update-card {
-  display: block !important;
-}
-
-.product-updates-page .draft-update-card > *,
-.product-updates-page .product-update-card > * {
-  max-width: none;
-}
-
-.product-updates-page .draft-update-card p,
-.product-updates-page .product-update-card p {
-  max-width: 850px;
-  line-height: 1.75;
-}
-
-.product-updates-page .draft-update-actions,
-.product-updates-page .product-update-actions,
-.product-updates-page .update-actions {
-  margin-top: 24px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
-.product-updates-page .draft-update-card button,
-.product-updates-page .product-update-card button {
-  min-width: 92px;
-}
-
-@media (min-width: 900px) {
-  .product-updates-page .draft-update-card,
-  .product-updates-page .product-update-card {
-    position: relative;
-  }
-
-  .product-updates-page .draft-update-actions,
-  .product-updates-page .product-update-actions,
-  .product-updates-page .update-actions {
-    justify-content: flex-end;
-  }
-}
-
-@media (max-width: 700px) {
-  .product-updates-page .premium-card,
-  .product-updates-page .product-update-card,
-  .product-updates-page .draft-update-card {
-    padding: 22px !important;
-    border-radius: 22px;
-  }
-
-  .product-updates-page .draft-update-actions,
-  .product-updates-page .product-update-actions,
-  .product-updates-page .update-actions {
-    justify-content: stretch;
-  }
-
-  .product-updates-page .draft-update-card button,
-  .product-updates-page .product-update-card button {
-    width: 100%;
-  }
-}
-/* PRODUCT UPDATES ROOMIER LAYOUT */
-
-.product-updates-page {
-  display: grid;
-  gap: 34px;
-  padding-bottom: 80px;
-}
-
-.product-updates-page > section,
-.product-updates-page .premium-card {
-  margin-bottom: 34px;
-  padding: 38px !important;
-  border-radius: 34px;
-}
-
-.product-updates-page .premium-card + .premium-card,
-.product-updates-page section + section {
-  margin-top: 34px;
-}
-
-.product-updates-page h1,
-.product-updates-page h2 {
-  margin-bottom: 22px;
-}
-
-.product-updates-page .draft-update-card,
-.product-updates-page .product-update-card,
-.product-updates-page .update-card {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  gap: 24px !important;
-  padding: 32px !important;
-  border-radius: 26px;
-}
-
-.product-updates-page .draft-update-card p,
-.product-updates-page .product-update-card p,
-.product-updates-page .update-card p {
-  max-width: 980px;
-  line-height: 1.8;
-  font-size: 16px;
-}
-
-.product-updates-page .draft-update-actions,
-.product-updates-page .product-update-actions,
-.product-updates-page .update-actions {
-  width: 100%;
-  margin-top: 8px;
-  padding-top: 22px;
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
-  display: flex;
-  justify-content: flex-start !important;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.product-updates-page .draft-update-actions button,
-.product-updates-page .product-update-actions button,
-.product-updates-page .update-actions button {
-  min-width: 110px;
-}
-
-@media (min-width: 900px) {
-  .product-updates-page .draft-update-card,
-  .product-updates-page .product-update-card,
-  .product-updates-page .update-card {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-  }
-}
-
-@media (max-width: 700px) {
-  .product-updates-page {
-    gap: 22px;
-  }
-
-  .product-updates-page > section,
-  .product-updates-page .premium-card {
-    margin-bottom: 22px;
-    padding: 24px !important;
-    border-radius: 24px;
-  }
-
-  .product-updates-page .draft-update-card,
-  .product-updates-page .product-update-card,
-  .product-updates-page .update-card {
-    padding: 22px !important;
-  }
-
-  .product-updates-page .draft-update-actions button,
-  .product-updates-page .product-update-actions button,
-  .product-updates-page .update-actions button {
-    width: 100%;
-  }
-}/* PRODUCT UPDATES SECTION GAP OVERRIDE */
-
-.product-updates-page > * + * {
-  margin-top: 44px !important;
-}
-
-.product-updates-page section + section,
-.product-updates-page .premium-card + .premium-card,
-.product-updates-page .updates-card + .updates-card,
-.product-updates-page .product-updates-card + .product-updates-card {
-  margin-top: 44px !important;
-}
-
-.product-updates-page section,
-.product-updates-page .premium-card,
-.product-updates-page .updates-card,
-.product-updates-page .product-updates-card {
-  margin-bottom: 0 !important;
-}
-
-.product-updates-page {
-  padding-bottom: 90px !important;
-}
-/* PRODUCT UPDATES FINAL SPACING FIX */
-
-.product-updates-public-page.product-updates-page {
-  width: min(1180px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 28px 0 90px;
-}
-
-.product-updates-page .product-updates-hero {
-  margin-bottom: 42px !important;
-}
-
-.product-updates-page .product-updates-section {
-  margin-top: 42px !important;
-  margin-bottom: 0 !important;
-  padding: 38px !important;
-  border-radius: 34px;
-}
-
-.product-updates-page .product-updates-section + .product-updates-section {
-  margin-top: 42px !important;
-}
-
-.product-updates-page .product-updates-section-header {
-  margin-bottom: 28px;
-}
-
-.product-updates-page .product-updates-empty {
-  padding: 28px;
-  border-radius: 22px;
-}
-
-.product-updates-page .product-updates-draft-list {
-  display: grid;
-  gap: 28px;
-}
-
-.product-updates-page .product-update-draft-item,
-.product-updates-page .product-update-item {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  gap: 26px !important;
-  padding: 34px !important;
-  border-radius: 26px;
-}
-
-.product-updates-page .product-update-content,
-.product-updates-page .product-update-draft-content {
-  max-width: 980px;
-}
-
-.product-updates-page .product-update-content p,
-.product-updates-page .product-update-draft-content p {
-  max-width: 980px;
-  line-height: 1.85;
-  font-size: 16px;
-}
-
-.product-updates-page .product-update-draft-actions,
-.product-updates-page .product-update-published-actions {
-  width: 100%;
-  padding-top: 22px;
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
-  display: flex !important;
-  justify-content: flex-start !important;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.product-updates-page .product-update-admin-row button {
-  min-width: 110px;
-}
-
-@media (max-width: 700px) {
-  .product-updates-public-page.product-updates-page {
-    width: min(100% - 22px, 1180px);
-    padding-bottom: 70px;
-  }
-
-  .product-updates-page .product-updates-hero {
-    margin-bottom: 28px !important;
-  }
-
-  .product-updates-page .product-updates-section {
-    margin-top: 28px !important;
-    padding: 24px !important;
-    border-radius: 24px;
-  }
-
-  .product-updates-page .product-update-draft-item,
-  .product-updates-page .product-update-item {
-    padding: 22px !important;
-  }
-
-  .product-updates-page .product-update-admin-row button {
-    width: 100%;
-  }
-}
-/* PRODUCT UPDATES TEXT CLIPPING FIX */
-
-.product-updates-page .product-update-draft-item,
-.product-updates-page .product-update-item {
-  overflow: visible !important;
-  min-width: 0 !important;
-}
-
-.product-updates-page .product-update-draft-content,
-.product-updates-page .product-update-content {
-  width: 100% !important;
-  max-width: none !important;
-  overflow: visible !important;
-}
-
-.product-updates-page .product-update-draft-content p,
-.product-updates-page .product-update-content p {
-  width: 100% !important;
-  max-width: none !important;
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: unset !important;
-  display: block !important;
-  line-height: 1.8;
-}
-
-.product-updates-page .product-update-draft-content h3,
-.product-updates-page .product-update-content h3 {
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: unset !important;
-}
-/* PRODUCT UPDATES HARD LAYOUT FIX */
-
-.product-updates-public-page.product-updates-page {
-  width: min(1180px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 28px 0 90px;
-}
-
-.product-updates-page .product-updates-hero {
-  margin-bottom: 44px !important;
-}
-
-.product-updates-page .product-updates-section {
-  margin-top: 44px !important;
-  margin-bottom: 0 !important;
-  padding: 38px !important;
-  border-radius: 34px;
-}
-
-.product-updates-page .product-updates-section + .product-updates-section {
-  margin-top: 44px !important;
-}
-
-.product-updates-page .product-updates-section-header {
-  margin-bottom: 30px;
-}
-
-.product-updates-page .product-updates-empty {
-  padding: 30px;
-  border-radius: 22px;
-}
-
-.product-updates-page .product-updates-timeline,
-.product-updates-page .product-updates-draft-list {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  gap: 30px !important;
-  width: 100% !important;
-}
-
-.product-updates-page .product-update-draft-item,
-.product-updates-page .product-update-item {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  box-sizing: border-box !important;
-  padding: 34px !important;
-  border-radius: 26px;
-  overflow: visible !important;
-}
-
-.product-updates-page .product-update-content,
-.product-updates-page .product-update-draft-content {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  overflow: visible !important;
-}
-
-.product-updates-page .product-update-content h3,
-.product-updates-page .product-update-draft-content h3,
-.product-updates-page .product-update-content p,
-.product-updates-page .product-update-draft-content p {
-  width: 100% !important;
-  max-width: 100% !important;
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: unset !important;
-  display: block !important;
-}
-
-.product-updates-page .product-update-content p,
-.product-updates-page .product-update-draft-content p {
-  line-height: 1.85 !important;
-  font-size: 16px;
-  overflow-wrap: break-word !important;
-  word-break: normal !important;
-}
-
-.product-updates-page .product-update-draft-actions,
-.product-updates-page .product-update-published-actions,
-.product-updates-page .product-update-admin-row {
-  width: 100% !important;
-  display: flex !important;
-  justify-content: flex-start !important;
-  align-items: center !important;
-  gap: 14px !important;
-  flex-wrap: wrap !important;
-}
-
-.product-updates-page .product-update-admin-row button {
-  min-width: 110px;
-}
-
-@media (max-width: 700px) {
-  .product-updates-public-page.product-updates-page {
-    width: min(100% - 22px, 1180px);
-    padding-bottom: 70px;
-  }
-
-  .product-updates-page .product-updates-hero {
-    margin-bottom: 30px !important;
-  }
-
-  .product-updates-page .product-updates-section {
-    margin-top: 30px !important;
-    padding: 24px !important;
-    border-radius: 24px;
-  }
-
-  .product-updates-page .product-update-draft-item,
-  .product-updates-page .product-update-item {
-    padding: 22px !important;
-  }
-
-  .product-updates-page .product-update-admin-row button {
-    width: 100%;
-  }
-}
+border-left
 /* TODAY TASK CARD */
 
 .today-task-card {
@@ -9090,5 +8652,441 @@ line-clamp: 2;
   .fromone-flow-image-grid .uploaded-image-box,
   .fromone-flow-image-idea {
     min-height: 170px;
+  }
+}
+.dashboard-personal-task-card {
+  min-height: 392px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  overflow: hidden;
+}
+
+.dashboard-personal-task-main {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  min-width: 0;
+}
+
+.dashboard-business-logo-frame {
+  width: clamp(82px, 8vw, 118px);
+  height: clamp(82px, 8vw, 118px);
+  flex: 0 0 auto;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 212, 59, 0.28), transparent 42%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 212, 59, 0.34);
+  box-shadow:
+    0 22px 60px rgba(255, 212, 59, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}/* Dashboard personalised task card fix */
+.dashboard-personal-task-card {
+  min-height: 392px;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  overflow: hidden;
+}
+
+.dashboard-personal-task-main {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  min-width: 0;
+}
+
+.dashboard-business-logo-frame {
+  width: 104px;
+  height: 104px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 212, 59, 0.28), transparent 42%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 212, 59, 0.34);
+  box-shadow:
+    0 22px 60px rgba(255, 212, 59, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.dashboard-business-logo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.75rem;
+}
+
+.dashboard-business-logo-frame span {
+  font-size: 3rem;
+  font-weight: 950;
+  color: #ffd43b;
+  line-height: 1;
+}
+
+.dashboard-personal-task-copy {
+  min-width: 0;
+  max-width: 620px;
+}
+
+.dashboard-personal-task-copy h2 {
+  margin: 0.75rem 0 0;
+  color: #fff;
+  font-size: clamp(2.4rem, 3.4vw, 4rem);
+  line-height: 0.98;
+  letter-spacing: -0.07em;
+  max-width: 620px;
+}
+
+.dashboard-personal-task-copy h3 {
+  margin: 0.65rem 0 0;
+  color: #fff;
+  font-size: clamp(1.45rem, 2vw, 2.35rem);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+  max-width: 560px;
+}
+
+.dashboard-personal-task-copy p {
+  max-width: 560px;
+  margin: 1rem 0 0;
+  line-height: 1.5;
+}
+
+.dashboard-personal-task-card .today-task-button {
+  position: static !important;
+  align-self: center;
+  justify-self: end;
+  width: auto;
+  min-width: 260px;
+  max-width: 320px;
+  white-space: nowrap;
+}
+
+.dashboard-personal-task-card .today-task-meta {
+  max-width: 560px;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-personal-task-card {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .dashboard-personal-task-card .today-task-button {
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-personal-task-card {
+    min-height: auto;
+  }
+
+  .dashboard-personal-task-main {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-business-logo-frame {
+    width: 86px;
+    height: 86px;
+    border-radius: 24px;
+  }
+
+  .dashboard-personal-task-copy h2 {
+    font-size: 2.35rem;
+  }
+
+  .dashboard-personal-task-copy h3 {
+    font-size: 1.65rem;
+  }
+}
+/* Dashboard personalised task card - fixed premium layout */
+.dashboard-personal-task-card {
+  min-height: 392px;
+  display: grid !important;
+  grid-template-columns: 1fr;
+  align-content: space-between;
+  gap: 1.5rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-personal-task-main {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: start;
+  gap: 1.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.dashboard-business-logo-frame {
+  width: 96px;
+  height: 96px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 212, 59, 0.32), transparent 44%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.035));
+  border: 1px solid rgba(255, 212, 59, 0.34);
+  box-shadow:
+    0 24px 70px rgba(255, 212, 59, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.dashboard-business-logo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.75rem;
+}
+
+.dashboard-business-logo-frame span {
+  font-size: 3rem;
+  font-weight: 950;
+  color: #ffd43b;
+  line-height: 1;
+}
+
+.dashboard-personal-task-copy {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dashboard-personal-task-copy .page-eyebrow {
+  margin-bottom: 1.2rem;
+}
+
+.dashboard-personal-task-copy h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2.6rem, 3.2vw, 4.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.075em;
+  max-width: 100%;
+}
+
+.dashboard-personal-task-copy h3 {
+  margin: 0.9rem 0 0;
+  color: #fff;
+  font-size: clamp(1.45rem, 1.7vw, 2.15rem);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  max-width: 560px;
+}
+
+.dashboard-personal-task-copy p {
+  max-width: 560px;
+  margin: 1rem 0 0;
+  line-height: 1.5;
+}
+
+.dashboard-personal-task-card .today-task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.4rem;
+  max-width: 100%;
+}
+
+.dashboard-personal-task-card .today-task-meta span {
+  max-width: 100%;
+}
+
+.dashboard-personal-task-card .today-task-button {
+  position: static !important;
+  justify-self: end;
+  align-self: end;
+  width: min(100%, 280px);
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* Make sure old today-card styles don't crush the new layout */
+.today-task-card.dashboard-personal-task-card > div {
+  min-width: 0;
+}
+
+.today-task-card.dashboard-personal-task-card h2,
+.today-task-card.dashboard-personal-task-card h3,
+.today-task-card.dashboard-personal-task-card p {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-personal-task-card {
+    min-height: 360px;
+  }
+
+  .dashboard-personal-task-main {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  .dashboard-business-logo-frame {
+    width: 84px;
+    height: 84px;
+    border-radius: 24px;
+  }
+
+  .dashboard-personal-task-card .today-task-button {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-personal-task-card {
+    min-height: auto;
+  }
+
+  .dashboard-personal-task-main {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-business-logo-frame {
+    width: 86px;
+    height: 86px;
+  }
+
+  .dashboard-personal-task-copy h2 {
+    font-size: 2.5rem;
+  }
+
+  .dashboard-personal-task-copy h3 {
+    font-size: 1.5rem;
+  }
+}
+/* Refine dashboard personal task card button */
+.dashboard-personal-task-card .today-task-button {
+  width: min(100%, 280px) !important;
+  justify-self: end !important;
+  margin-top: 20px;
+  margin-right: 0;
+  margin-bottom: 0;
+}
+
+.dashboard-personal-task-card {
+  padding-bottom: 34px !important;
+}
+
+@media (max-width: 760px) {
+  .dashboard-personal-task-card .today-task-button {
+    width: 100% !important;
+    justify-self: stretch !important;
+  }
+}
+/* Compact dashboard welcome task card */
+.dashboard-personal-task-card {
+  min-height: 320px !important;
+  padding: 32px !important;
+  display: grid !important;
+  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: start;
+  column-gap: 26px;
+  row-gap: 22px;
+}
+
+.dashboard-personal-task-main {
+  display: contents !important;
+}
+
+.dashboard-business-logo-frame {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: 112px !important;
+  height: 112px !important;
+  border-radius: 30px !important;
+}
+
+.dashboard-personal-task-copy {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.dashboard-personal-task-copy .page-eyebrow {
+  margin: 0 0 16px;
+}
+
+.dashboard-personal-task-copy h2 {
+  margin: 0;
+  font-size: clamp(2.8rem, 4.4vw, 4.9rem) !important;
+  line-height: 0.92 !important;
+  letter-spacing: -0.08em;
+}
+
+.dashboard-personal-task-copy h3 {
+  margin: 14px 0 0;
+  font-size: clamp(1.45rem, 2.1vw, 2.2rem) !important;
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+}
+
+.dashboard-personal-task-copy p {
+  max-width: 660px;
+  margin-top: 18px;
+  font-size: 1.08rem;
+  line-height: 1.55;
+}
+
+.dashboard-personal-task-card .today-task-meta {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 0;
+  align-self: end;
+}
+
+.dashboard-personal-task-card .today-task-button {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start !important;
+  align-self: end !important;
+  width: auto !important;
+  min-width: 230px;
+  margin: 0 !important;
+  padding: 16px 28px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-personal-task-card {
+    grid-template-columns: 1fr;
+    min-height: auto !important;
+  }
+
+  .dashboard-business-logo-frame,
+  .dashboard-personal-task-copy,
+  .dashboard-personal-task-card .today-task-meta,
+  .dashboard-personal-task-card .today-task-button {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .dashboard-business-logo-frame {
+    width: 88px !important;
+    height: 88px !important;
+  }
+
+  .dashboard-personal-task-card .today-task-button {
+    width: 100% !important;
+    justify-self: stretch !important;
   }
 }

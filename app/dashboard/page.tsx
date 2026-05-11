@@ -1296,6 +1296,10 @@ Also detect or infer:
       ? Math.min(100, Math.round((weeklyProgress.posted / weeklyProgress.total) * 100))
       : 0;
 
+  const businessName = client?.business_name || 'your business';
+  const businessInitial = String(businessName).trim().charAt(0).toUpperCase() || 'F';
+  const businessLogoUrl = client?.brand_logo_url || '';
+
   return (
     <>
       <div ref={dashboardHeaderRef} className="page-header dashboard-simple-header">
@@ -1350,31 +1354,43 @@ Also detect or infer:
       ) : (
         <>
           <section className="dashboard-top-grid">
-            <section className="today-task-card">
-              <div>
-                <div className="page-eyebrow">Today’s Task</div>
+            <section className="today-task-card dashboard-personal-task-card">
+              <div className="dashboard-personal-task-main">
+                <div className="dashboard-business-logo-frame" aria-hidden="true">
+                  {businessLogoUrl ? (
+                    <img src={businessLogoUrl} alt="" />
+                  ) : (
+                    <span>{businessInitial}</span>
+                  )}
+                </div>
 
-                {todayPost ? (
-                  <>
-                    <h2>You have a post to make today.</h2>
-                    <p>
-                      Review it, add an image, copy it, publish it, then mark it as posted.
-                    </p>
+                <div className="dashboard-personal-task-copy">
+                  <div className="page-eyebrow">Today’s Task</div>
 
-                    <div className="today-task-meta">
-                      <span>{todayPost.platform || 'Social post'}</span>
-                      <span>{todayPost.title || todayPost.scheduled_day || 'Today’s post'}</span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <h2>No post due today.</h2>
-                    <p>
-                      You are clear for today. You can still view this week’s posts whenever
-                      you need.
-                    </p>
-                  </>
-                )}
+                  {todayPost ? (
+                    <>
+                      <h2>Welcome back.</h2>
+                      <h3>{businessName}, you have a post to make today.</h3>
+                      <p>
+                        Review it, add an image, copy it, publish it, then mark it as posted.
+                      </p>
+
+                      <div className="today-task-meta">
+                        <span>{todayPost.platform || 'Social post'}</span>
+                        <span>{todayPost.title || todayPost.scheduled_day || 'Today’s post'}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h2>Welcome back.</h2>
+                      <h3>{businessName}, you’re all clear today.</h3>
+                      <p>
+                        No post is due right now. You can still view this week’s posts whenever
+                        you need.
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
 
               <button
