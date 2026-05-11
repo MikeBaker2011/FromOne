@@ -7254,3 +7254,140 @@ body {
     width: 100%;
   }
 }
+/* Simple tutorial page */
+.tutorial-simple-page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.tutorial-simple-header {
+  max-width: 760px;
+  margin-bottom: 2rem;
+}
+
+.tutorial-simple-header .page-title {
+  max-width: 720px;
+}
+
+.tutorial-simple-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.tutorial-simple-card {
+  margin-top: 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-radius: 28px;
+}
+
+.tutorial-simple-card h2,
+.tutorial-simple-note h2 {
+  margin: 0.35rem 0 1.25rem;
+  color: #ffffff;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+}
+
+.tutorial-simple-step-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.tutorial-simple-step {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.tutorial-simple-step span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #ffd43b;
+  color: #090d16;
+  font-weight: 900;
+}
+
+.tutorial-simple-step h3 {
+  margin: 0 0 0.25rem;
+  color: #ffffff;
+  font-size: 1.05rem;
+}
+
+.tutorial-simple-step p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.55;
+}
+
+.tutorial-simple-note {
+  margin-top: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.tutorial-simple-note p {
+  max-width: 620px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .tutorial-simple-page {
+    padding: 1rem;
+  }
+
+  .tutorial-simple-actions,
+  .tutorial-simple-note {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tutorial-simple-step {
+    grid-template-columns: 1fr;
+  }
+}
+/* Keep dashboard top cards equal height */
+.dashboard-top-grid {
+  align-items: stretch;
+}
+
+.dashboard-top-grid .today-task-card,
+.dashboard-top-grid .dashboard-weekly-progress-card {
+  height: 100%;
+  min-height: 430px;
+}
+
+.dashboard-top-grid .today-task-card {
+  display: flex;
+  justify-content: space-between;
+}
+
+.dashboard-top-grid .dashboard-weekly-progress-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-top-grid .today-task-card,
+  .dashboard-top-grid .dashboard-weekly-progress-card {
+    min-height: auto;
+  }
+}
