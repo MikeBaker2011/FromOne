@@ -1858,6 +1858,9 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
   }, [posts, selectedPostId]);
 
   const postedCount = posts.filter((post) => post.is_posted).length;
+  const postsLeftThisWeek = Math.max((posts.length || 0) - postedCount, 0);
+  const weeklyProgressPercent =
+    posts.length > 0 ? Math.round((postedCount / posts.length) * 100) : 0;
 
   const businessName =
     profile?.business_name ||
@@ -1970,6 +1973,24 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
               </a>
             </section>
           )}
+
+          <section className="weekly-progress-card">
+            <div>
+              <div className="page-eyebrow">This week</div>
+              <h3>
+                {postedCount} of {posts.length || 0} posts done
+              </h3>
+              <p>
+                {posts.length > 0 && postedCount === posts.length
+                  ? 'Great work — this week is complete.'
+                  : `${postsLeftThisWeek} posts left this week.`}
+              </p>
+            </div>
+
+            <div className="weekly-progress-bar" aria-label="Weekly post progress">
+              <span style={{ width: `${weeklyProgressPercent}%` }} />
+            </div>
+          </section>
 
           <section className="simplified-control-card">
             <div ref={campaignHistoryControlsRef} className="simplified-campaign-controls">
