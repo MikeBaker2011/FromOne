@@ -49,9 +49,9 @@ const postsTourSteps = [
     target: 'header',
   },
   {
-    title: 'Choose a campaign week',
+    title: 'Choose a campaign',
     text:
-      'Use this section to switch between saved campaigns, rename a campaign, duplicate it, regenerate it, or delete old campaigns.',
+      'Use the campaign dropdown to switch between saved weeks. The manage button keeps extra campaign actions out of the way.',
     target: 'campaigns',
   },
   {
@@ -63,17 +63,17 @@ const postsTourSteps = [
   {
     title: 'Tailor the post',
     text:
-      'Use the audience tool to rewrite the post for a specific customer type, such as homeowners, new customers, landlords, or local shoppers.',
+      'Use the audience tool if you want this post rewritten for a specific customer type.',
     target: 'audience',
   },
   {
     title: 'Edit the post',
     text:
-      'You can edit the caption, CTA, hashtags, and image idea before you publish.',
+      'You can edit the caption, CTA, hashtags, and image idea before publishing.',
     target: 'edit',
   },
   {
-    title: 'Upload and publish',
+    title: 'Publish manually',
     text:
       'Upload your image, copy the post, open the platform, publish manually, then mark it as posted.',
     target: 'publish',
@@ -270,39 +270,6 @@ const industryAudienceTargets: Record<string, string[]> = {
   ],
 };
 
-const publishingChannels = [
-  {
-    name: 'Facebook',
-    colourClass: 'channel-facebook',
-    description: 'Copy the post and publish manually',
-  },
-  {
-    name: 'Instagram',
-    colourClass: 'channel-instagram',
-    description: 'Use an image, copy caption, publish manually',
-  },
-  {
-    name: 'Google Business',
-    colourClass: 'channel-google',
-    description: 'Copy the update and publish manually',
-  },
-  {
-    name: 'Pinterest',
-    colourClass: 'channel-pinterest',
-    description: 'Create the pin and publish manually',
-  },
-  {
-    name: 'LinkedIn',
-    colourClass: 'channel-linkedin',
-    description: 'Copy the post and publish manually',
-  },
-  {
-    name: 'TikTok',
-    colourClass: 'channel-tiktok',
-    description: 'Use the script idea and publish manually',
-  },
-];
-
 export default function PostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -312,7 +279,6 @@ export default function PostsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<PostFilter>('all');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [showBriefDetails, setShowBriefDetails] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [deletingCampaign, setDeletingCampaign] = useState(false);
   const [regeneratingCampaign, setRegeneratingCampaign] = useState(false);
@@ -355,14 +321,14 @@ export default function PostsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-useEffect(() => {
-  const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === 'true';
-  const isMobile = window.innerWidth <= 760;
+  useEffect(() => {
+    const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === 'true';
+    const isMobile = window.innerWidth <= 760;
 
-  if (!tourSeen && !isMobile) {
-    setShowPostsTour(true);
-  }
-}, []);
+    if (!tourSeen && !isMobile) {
+      setShowPostsTour(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!showPostsTour || loading) return;
@@ -453,18 +419,18 @@ useEffect(() => {
   const getPostsTourTooltipStyle = () => {
     if (!postsTourRect || typeof window === 'undefined') return {};
 
-if (window.innerWidth <= 760) {
-  const mobilePadding = 12;
-  const mobileCardWidth = window.innerWidth - mobilePadding * 2;
+    if (window.innerWidth <= 760) {
+      const mobilePadding = 12;
+      const mobileCardWidth = window.innerWidth - mobilePadding * 2;
 
-  return {
-    left: `${mobilePadding}px`,
-    right: `${mobilePadding}px`,
-    bottom: '14px',
-    width: `${mobileCardWidth}px`,
-    top: 'auto',
-  };
-}
+      return {
+        left: `${mobilePadding}px`,
+        right: `${mobilePadding}px`,
+        bottom: '14px',
+        width: `${mobileCardWidth}px`,
+        top: 'auto',
+      };
+    }
 
     const cardWidth = 420;
     const estimatedCardHeight = 330;
@@ -505,7 +471,8 @@ if (window.innerWidth <= 760) {
       width: `${cardWidth}px`,
     };
   };
-    const getReadableError = (error: any, fallback = 'Something went wrong.') => {
+
+  const getReadableError = (error: any, fallback = 'Something went wrong.') => {
     if (!error) return fallback;
     if (typeof error === 'string') return error;
 
@@ -757,25 +724,25 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
     return [`#${industry}`, `#${location}`, '#SmallBusiness', '#Marketing', '#FromOne'];
   };
 
-const getCampaignOptionLabel = (item: any) => {
-  const business =
-    item.business_name ||
-    item.business_type ||
-    item.campaign_area ||
-    item.name ||
-    'Campaign';
+  const getCampaignOptionLabel = (item: any) => {
+    const business =
+      item.business_name ||
+      item.business_type ||
+      item.campaign_area ||
+      item.name ||
+      'Campaign';
 
-  const createdDate = item.created_at ? new Date(item.created_at) : null;
+    const createdDate = item.created_at ? new Date(item.created_at) : null;
 
-  const date = createdDate
-    ? createdDate.toLocaleDateString(undefined, {
-        day: '2-digit',
-        month: 'short',
-      })
-    : '';
+    const date = createdDate
+      ? createdDate.toLocaleDateString(undefined, {
+          day: '2-digit',
+          month: 'short',
+        })
+      : '';
 
-  return date ? `${business} — ${date}` : business;
-};
+    return date ? `${business} — ${date}` : business;
+  };
 
   const buildCampaignCopyName = (item: any) => {
     const business =
@@ -936,8 +903,7 @@ const getCampaignOptionLabel = (item: any) => {
       setSelectedPostId(null);
     }
   };
-
-  const switchCampaign = async (campaignId: string) => {
+    const switchCampaign = async (campaignId: string) => {
     const nextCampaign = campaigns.find((item) => item.id === campaignId) || null;
 
     setSelectedCampaignId(campaignId);
@@ -977,10 +943,7 @@ const getCampaignOptionLabel = (item: any) => {
         return;
       }
 
-      const imagePaths =
-        campaignPosts
-          ?.map((post) => post.image_path)
-          .filter(Boolean) || [];
+      const imagePaths = campaignPosts?.map((post) => post.image_path).filter(Boolean) || [];
 
       if (imagePaths.length > 0) {
         const { error: storageError } = await supabase.storage
@@ -1025,9 +988,7 @@ const getCampaignOptionLabel = (item: any) => {
       return;
     }
 
-    if (!ensureAccessAllowed()) {
-      return;
-    }
+    if (!ensureAccessAllowed()) return;
 
     const confirmed = confirm(
       `Duplicate this campaign?\n\n${
@@ -1049,7 +1010,6 @@ const getCampaignOptionLabel = (item: any) => {
       }
 
       const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
-
       if (!campaignLimitAllowed) return;
 
       const { data: sourcePosts, error: sourcePostsError } = await supabase
@@ -1187,9 +1147,7 @@ const getCampaignOptionLabel = (item: any) => {
     try {
       const { error } = await supabase
         .from('campaigns')
-        .update({
-          name: cleanName,
-        })
+        .update({ name: cleanName })
         .eq('id', campaign.id);
 
       if (error) {
@@ -1197,10 +1155,7 @@ const getCampaignOptionLabel = (item: any) => {
         return;
       }
 
-      setCampaign({
-        ...campaign,
-        name: cleanName,
-      });
+      setCampaign({ ...campaign, name: cleanName });
 
       setCampaigns((currentCampaigns) =>
         currentCampaigns.map((item) =>
@@ -1229,9 +1184,7 @@ const getCampaignOptionLabel = (item: any) => {
       return;
     }
 
-    if (!ensureAccessAllowed()) {
-      return;
-    }
+    if (!ensureAccessAllowed()) return;
 
     const campaignName = campaign.name || campaign.campaign_idea || 'Selected campaign';
 
@@ -1257,10 +1210,7 @@ const getCampaignOptionLabel = (item: any) => {
 
       if (regenerateUsesWebsiteScan) {
         const allowed = await checkWeeklyScanLimit(userId);
-
-        if (!allowed) {
-          return;
-        }
+        if (!allowed) return;
       }
 
       const { data: oldPosts, error: oldPostsError } = await supabase
@@ -1273,10 +1223,7 @@ const getCampaignOptionLabel = (item: any) => {
         return;
       }
 
-      const imagePaths =
-        oldPosts
-          ?.map((post) => post.image_path)
-          .filter(Boolean) || [];
+      const imagePaths = oldPosts?.map((post) => post.image_path).filter(Boolean) || [];
 
       if (imagePaths.length > 0) {
         const { error: storageError } = await supabase.storage
@@ -1392,56 +1339,6 @@ const getCampaignOptionLabel = (item: any) => {
       if (campaignUpdateError) {
         alert(campaignUpdateError.message);
         return;
-      }
-
-      if (activeProfile?.id && scanData) {
-        const businessProfileUpdates: any = {
-          updated_at: new Date().toISOString(),
-        };
-
-        if (scanData.business_name) businessProfileUpdates.business_name = scanData.business_name;
-        if (scanData.industry) businessProfileUpdates.industry = scanData.industry;
-        if (scanData.location) businessProfileUpdates.location = scanData.location;
-        if (scanData.main_offer) businessProfileUpdates.main_offer = scanData.main_offer;
-        if (scanData.tone_of_voice) businessProfileUpdates.tone_of_voice = scanData.tone_of_voice;
-        if (scanData.services) businessProfileUpdates.services = safeArray(scanData.services);
-        if (scanData.target_audience) {
-          businessProfileUpdates.target_audience = safeArray(scanData.target_audience);
-        }
-        if (scanData.content_pillars) {
-          businessProfileUpdates.content_pillars = safeArray(scanData.content_pillars);
-        }
-        if (scanData.business_goals) {
-          businessProfileUpdates.business_goals = safeArray(scanData.business_goals);
-        }
-        if (scanData.brand_primary_color) {
-          businessProfileUpdates.brand_primary_color = scanData.brand_primary_color;
-        }
-        if (scanData.brand_secondary_color) {
-          businessProfileUpdates.brand_secondary_color = scanData.brand_secondary_color;
-        }
-        if (scanData.brand_accent_color) {
-          businessProfileUpdates.brand_accent_color = scanData.brand_accent_color;
-        }
-        if (scanData.brand_logo_url) {
-          businessProfileUpdates.brand_logo_url = scanData.brand_logo_url;
-        }
-        if (scanData.brand_summary) {
-          businessProfileUpdates.brand_summary = scanData.brand_summary;
-        }
-
-        if (Object.keys(businessProfileUpdates).length > 1) {
-          const { data: updatedProfile, error: profileUpdateError } = await supabase
-            .from('business_profiles')
-            .update(businessProfileUpdates)
-            .eq('id', activeProfile.id)
-            .select()
-            .single();
-
-          if (!profileUpdateError) {
-            setProfile(updatedProfile);
-          }
-        }
       }
 
       const today = new Date();
@@ -1669,9 +1566,7 @@ const getCampaignOptionLabel = (item: any) => {
   const handleRewriteForAudience = async (post: any) => {
     if (!post?.id) return;
 
-    if (!ensureAccessAllowed()) {
-      return;
-    }
+    if (!ensureAccessAllowed()) return;
 
     const finalAudience =
       audienceTarget === 'Custom audience'
@@ -1751,10 +1646,7 @@ const getCampaignOptionLabel = (item: any) => {
     }
   };
 
-  const handleImageUpload = async (
-    event: ChangeEvent<HTMLInputElement>,
-    post: any
-  ) => {
+  const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>, post: any) => {
     const file = event.target.files?.[0];
 
     event.target.value = '';
@@ -1902,48 +1794,11 @@ const getCampaignOptionLabel = (item: any) => {
 
   const postedCount = posts.filter((post) => post.is_posted).length;
 
-  const weekStartLabel = useMemo(() => {
-    const firstPost = posts[0];
-
-    if (!firstPost?.scheduled_at) {
-      return 'Week starting soon';
-    }
-
-    return `Week starting ${new Date(firstPost.scheduled_at).toLocaleDateString(undefined, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })}`;
-  }, [posts]);
-
-  const campaignTitle =
-    campaign?.campaign_idea ||
-    campaign?.name ||
-    selectedPost?.title ||
-    'Your weekly campaign';
-
-  const campaignTheme =
-    campaign?.business_type ||
-    campaign?.industry ||
-    profile?.industry ||
-    'Professional business content';
-
   const businessName =
     profile?.business_name ||
     campaign?.business_name ||
     selectedPost?.business_name ||
-    'Website Brief';
-
-  const businessCategory =
-    campaign?.business_type ||
-    profile?.industry ||
-    'Business content campaign';
-
-  const businessSummary =
-    profile?.brand_summary ||
-    campaign?.campaign_idea ||
-    profile?.main_offer ||
-    'FromOne has created a campaign brief from the available business details. Review the generated posts, copy each one, publish manually, then mark it as posted.';
+    'Your business';
 
   const services = Array.isArray(profile?.services) ? profile.services : [];
   const contentPillars = Array.isArray(profile?.content_pillars) ? profile.content_pillars : [];
@@ -1964,7 +1819,6 @@ const getCampaignOptionLabel = (item: any) => {
     profile?.industry ||
       campaign?.business_type ||
       campaign?.industry ||
-      businessCategory ||
       ''
   ).toLowerCase();
 
@@ -1984,22 +1838,28 @@ const getCampaignOptionLabel = (item: any) => {
 
   const filterButtons: { label: string; value: PostFilter }[] = [
     { label: 'All', value: 'all' },
-    { label: 'Due Today', value: 'today' },
+    { label: 'Today', value: 'today' },
     { label: 'Ready', value: 'scheduled' },
     { label: 'Posted', value: 'posted' },
   ];
 
   return (
-    <div className="campaign-brand-shell" style={brandStyle}>
-      <div ref={postsHeaderRef} className="campaigns-page-header">
-        <div ref={postsHeaderTextRef}></div>
-        <div>
-          <div className="page-eyebrow">Campaigns</div>
+    <div className="campaign-brand-shell simplified-posts-page" style={brandStyle}>
+      <div ref={postsHeaderRef} className="campaigns-page-header simplified-posts-header">
+        <div ref={postsHeaderTextRef}>
+          <div className="page-eyebrow">Posts</div>
           <h1 className="page-title">Your posts are ready.</h1>
           <p className="page-description">
-            Review each post, choose an audience, edit the copy, upload an image, open the
-            platform, publish manually, then mark it as posted.
+            Choose a day, review the post, copy it, publish it, then mark it as done.
           </p>
+
+          <div className="simplified-posts-meta">
+            <span>{businessName}</span>
+            <span>
+              {postedCount}/{posts.length || 0} posted
+            </span>
+            {!accessLocked && accessMessage && <span>{accessMessage}</span>}
+          </div>
         </div>
 
         <div className="posts-header-actions">
@@ -2032,85 +1892,150 @@ const getCampaignOptionLabel = (item: any) => {
         </div>
       ) : (
         <>
-          <section className={accessLocked ? 'access-status-card access-status-locked' : 'access-status-card'}>
-            <div>
-              <div className="page-eyebrow">{accessLocked ? 'Demo Ended' : 'Access Active'}</div>
-              <h2>
-                {accessLocked
-                  ? 'Some campaign actions are currently locked.'
-                  : 'Your demo access is active.'}
-              </h2>
-              <p>{accessMessage}</p>
-            </div>
+          {accessLocked && (
+            <section className="access-status-card access-status-locked">
+              <div>
+                <div className="page-eyebrow">Demo Ended</div>
+                <h2>Some campaign actions are currently locked.</h2>
+                <p>{accessMessage}</p>
+              </div>
 
-            {accessLocked && (
               <a href="/subscription" className="dashboard-profile-link">
                 View subscription options
               </a>
-            )}
-          </section>
+            </section>
+          )}
 
-          <section className="website-brief-card">
-            <div className="website-brief-top">
-              <div className="website-brief-identity">
-                {profile?.brand_logo_url && (
-                  <div className="client-brand-logo-wrap">
-                    <img src={profile.brand_logo_url} alt={`${businessName} logo`} />
-                  </div>
-                )}
-
-                <div>
-                  <div className="page-eyebrow">Website Brief Ready</div>
-                  <h2>{businessName}</h2>
-                  <h3>{businessCategory}</h3>
-                </div>
-              </div>
-
-              <div className="website-brief-actions">
-                <button
-                  className="secondary-button"
-                  onClick={() => setShowBriefDetails(!showBriefDetails)}
+          <section className="simplified-control-card">
+            <div ref={campaignHistoryControlsRef} className="simplified-campaign-controls">
+              <label>
+                <strong>Campaign week</strong>
+                <select
+                  className="input"
+                  value={selectedCampaignId || ''}
+                  onChange={(event) => switchCampaign(event.target.value)}
+                  disabled={
+                    deletingCampaign ||
+                    regeneratingCampaign ||
+                    duplicatingCampaign ||
+                    renamingCampaign
+                  }
                 >
-                  {showBriefDetails ? 'Hide details' : 'Show details'}
-                </button>
+                  {campaigns.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {getCampaignOptionLabel(item)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="manage-campaign-wrap">
+                <strong className="campaign-control-label">&nbsp;</strong>
+
+                <details className="manage-campaign-details">
+                  <summary>Manage campaign</summary>
+
+                  <div className="manage-campaign-actions">
+                    <span>
+                      {campaigns.length}/{MAX_SAVED_CAMPAIGNS} campaigns saved
+                    </span>
+
+                    <button
+                      className="secondary-button rename-campaign-button"
+                      onClick={renameSelectedCampaign}
+                      disabled={
+                        !campaign?.id ||
+                        renamingCampaign ||
+                        duplicatingCampaign ||
+                        regeneratingCampaign ||
+                        deletingCampaign
+                      }
+                    >
+                      {renamingCampaign ? 'Renaming...' : 'Rename'}
+                    </button>
+
+                    <button
+                      className="secondary-button duplicate-campaign-button"
+                      onClick={duplicateSelectedCampaign}
+                      disabled={
+                        accessLocked ||
+                        !campaign?.id ||
+                        duplicatingCampaign ||
+                        renamingCampaign ||
+                        regeneratingCampaign ||
+                        deletingCampaign
+                      }
+                    >
+                      {duplicatingCampaign ? 'Duplicating...' : 'Duplicate'}
+                    </button>
+
+                    <button
+                      className="secondary-button regenerate-campaign-button"
+                      onClick={regenerateSelectedCampaign}
+                      disabled={
+                        accessLocked ||
+                        !campaign?.id ||
+                        regeneratingCampaign ||
+                        duplicatingCampaign ||
+                        renamingCampaign ||
+                        deletingCampaign
+                      }
+                    >
+                      {regeneratingCampaign ? 'Regenerating...' : 'Regenerate'}
+                    </button>
+
+                    <button
+                      className="secondary-button danger-button delete-campaign-button"
+                      onClick={deleteSelectedCampaign}
+                      disabled={
+                        !campaign?.id ||
+                        deletingCampaign ||
+                        duplicatingCampaign ||
+                        renamingCampaign ||
+                        regeneratingCampaign
+                      }
+                    >
+                      {deletingCampaign ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
+                </details>
               </div>
             </div>
 
-            <p>{businessSummary}</p>
+            <details className="business-details-collapsed branded-business-details">
+              <summary>
+                <span className="branded-business-summary-left">
+                  {profile?.brand_logo_url ? (
+                    <img src={profile.brand_logo_url} alt={`${businessName} logo`} />
+                  ) : (
+                    <b>{businessName.charAt(0).toUpperCase()}</b>
+                  )}
 
-            <div className="client-brand-strip">
-              <span>
-                <strong>Primary</strong>
-                <b style={{ background: brandPrimary }} />
-                {brandPrimary}
-              </span>
+                  <span>
+                    <strong>{businessName}</strong>
+                    <small>Business details</small>
+                  </span>
+                </span>
 
-              <span>
-                <strong>Secondary</strong>
-                <b style={{ background: brandSecondary }} />
-                {brandSecondary}
-              </span>
+                <span className="branded-business-summary-colours">
+                  <i style={{ background: brandPrimary }} />
+                  <i style={{ background: brandSecondary }} />
+                  <i style={{ background: brandAccent }} />
+                </span>
+              </summary>
 
-              <span>
-                <strong>Accent</strong>
-                <b style={{ background: brandAccent }} />
-                {brandAccent}
-              </span>
-            </div>
-
-            {showBriefDetails && (
-              <div className="website-brief-grid">
+              <div className="business-details-simple-grid">
                 <div>
                   <strong>Services</strong>
                   {services.length > 0 ? (
                     services.map((item: string) => <span key={item}>• {item}</span>)
                   ) : (
-                    <span>• Based on website scan</span>
+                    <span>• Based on saved profile</span>
                   )}
                 </div>
 
                 <div>
-                  <strong>Content Pillars</strong>
+                  <strong>Content ideas</strong>
                   {contentPillars.length > 0 ? (
                     contentPillars.map((item: string) => <span key={item}>• {item}</span>)
                   ) : (
@@ -2128,174 +2053,35 @@ const getCampaignOptionLabel = (item: any) => {
                 </div>
 
                 <div>
-                  <strong>CTAs</strong>
+                  <strong>Goals</strong>
                   {goals.length > 0 ? (
                     goals.map((item: string) => <span key={item}>• {item}</span>)
                   ) : (
-                    <>
-                      <span>• Learn more</span>
-                      <span>• Get started</span>
-                      <span>• Contact us</span>
-                    </>
+                    <span>• Contact, bookings, enquiries</span>
                   )}
                 </div>
               </div>
-            )}
+            </details>
           </section>
 
-          <section className="publishing-channels-section">
-            <div className="publishing-channels-header">
+          <section className="simplified-week-section">
+            <div className="simplified-section-heading">
               <div>
-                <div className="page-eyebrow">Publishing Channels</div>
-                <h2>Your posts are published manually.</h2>
-                <p>
-                  FromOne creates the content. You copy the post, open the platform,
-                  publish it yourself, then mark it as posted.
-                </p>
+                <div className="page-eyebrow">Weekly posts</div>
+                <h2>Choose a day to review.</h2>
               </div>
-            </div>
 
-            <div className="publishing-channel-grid">
-              {publishingChannels.map((channel) => (
-                <button
-                  key={channel.name}
-                  type="button"
-                  className={`publishing-channel-card ${channel.colourClass}`}
-                  onClick={() => openPlatform(channel.name)}
-                >
-                  <div>
-                    <strong>{channel.name}</strong>
-                    <span>{channel.description}</span>
-                  </div>
-
-                  <b>Manual</b>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="campaign-history-card">
-            <div>
-              <div className="page-eyebrow">Campaign History</div>
-              <h2>Choose a campaign week.</h2>
-              <p>
-                Review the current campaign, rename it, duplicate it, regenerate it, or
-                open a previous week.
-              </p>
-            </div>
-
-            <div ref={campaignHistoryControlsRef} className="campaign-history-controls">
-              <select
-                className="input"
-                value={selectedCampaignId || ''}
-                onChange={(event) => switchCampaign(event.target.value)}
-                disabled={
-                  deletingCampaign ||
-                  regeneratingCampaign ||
-                  duplicatingCampaign ||
-                  renamingCampaign
-                }
-              >
-                {campaigns.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {getCampaignOptionLabel(item)}
-                  </option>
+              <div className="posts-filter-row campaign-filter-row">
+                {filterButtons.map((item) => (
+                  <button
+                    key={item.value}
+                    className={filter === item.value ? 'posts-filter-active' : 'secondary-button'}
+                    onClick={() => setFilter(item.value)}
+                  >
+                    {item.label}
+                  </button>
                 ))}
-              </select>
-
-              <div className="campaign-history-actions">
-                <span className="campaign-history-count">
-                  {campaigns.length}/{MAX_SAVED_CAMPAIGNS} campaigns saved
-                </span>
-
-                <button
-                  className="secondary-button rename-campaign-button"
-                  onClick={renameSelectedCampaign}
-                  disabled={
-                    !campaign?.id ||
-                    renamingCampaign ||
-                    duplicatingCampaign ||
-                    regeneratingCampaign ||
-                    deletingCampaign
-                  }
-                >
-                  {renamingCampaign ? 'Renaming...' : 'Rename campaign'}
-                </button>
-
-                <button
-                  className="secondary-button duplicate-campaign-button"
-                  onClick={duplicateSelectedCampaign}
-                  disabled={
-                    accessLocked ||
-                    !campaign?.id ||
-                    duplicatingCampaign ||
-                    renamingCampaign ||
-                    regeneratingCampaign ||
-                    deletingCampaign
-                  }
-                >
-                  {duplicatingCampaign ? 'Duplicating...' : 'Duplicate campaign'}
-                </button>
-
-                <button
-                  className="secondary-button regenerate-campaign-button"
-                  onClick={regenerateSelectedCampaign}
-                  disabled={
-                    accessLocked ||
-                    !campaign?.id ||
-                    regeneratingCampaign ||
-                    duplicatingCampaign ||
-                    renamingCampaign ||
-                    deletingCampaign
-                  }
-                >
-                  {regeneratingCampaign ? 'Regenerating...' : 'Regenerate campaign'}
-                </button>
-
-                <button
-                  className="secondary-button danger-button delete-campaign-button"
-                  onClick={deleteSelectedCampaign}
-                  disabled={
-                    !campaign?.id ||
-                    deletingCampaign ||
-                    duplicatingCampaign ||
-                    renamingCampaign ||
-                    regeneratingCampaign
-                  }
-                >
-                  {deletingCampaign ? 'Deleting...' : 'Delete campaign'}
-                </button>
               </div>
-            </div>
-          </section>
-
-          <section className="campaign-shell">
-            <div className="campaign-summary-card compact-campaign-summary">
-              <div>
-                <span className="campaign-pill">7-day plan</span>
-                <span className="campaign-pill muted">
-                  {postedCount}/{posts.length} posted
-                </span>
-              </div>
-
-              <h2>{campaignTitle}</h2>
-
-              <div className="campaign-week-theme">
-                <span>{weekStartLabel}</span>
-                <strong>{campaignTheme}</strong>
-              </div>
-            </div>
-
-            <div className="posts-filter-row campaign-filter-row">
-              {filterButtons.map((item) => (
-                <button
-                  key={item.value}
-                  className={filter === item.value ? 'posts-filter-active' : 'secondary-button'}
-                  onClick={() => setFilter(item.value)}
-                >
-                  {item.label}
-                </button>
-              ))}
             </div>
 
             {posts.length === 0 ? (
@@ -2306,17 +2092,10 @@ const getCampaignOptionLabel = (item: any) => {
               </div>
             ) : (
               <>
-                <div className="clean-day-selector">
-                  <div>
-                    <div className="page-eyebrow">Your Weekly Posts</div>
-                    <p>
-                      Choose a post to review, tailor it for an audience, edit the copy,
-                      upload an image, copy, publish manually, or mark as posted.
-                    </p>
-                  </div>
-                </div>
-
-                <div ref={daySelectorRef} className="day-carousel-wrap no-more-days">
+                <div
+                  ref={daySelectorRef}
+                  className="day-carousel-wrap no-more-days simplified-day-wrap"
+                >
                   <div className="day-carousel-track no-scroll-carousel">
                     {posts.map((post, index) => (
                       <button
@@ -2347,7 +2126,7 @@ const getCampaignOptionLabel = (item: any) => {
                 </div>
 
                 {selectedPost && (
-                  <article className="selected-post-panel clean-selected-post">
+                  <article className="selected-post-panel clean-selected-post simplified-selected-post">
                     <div className="selected-post-main">
                       <div className="selected-post-tags">
                         <span>{selectedPost.scheduled_day || 'Day 1'}</span>
@@ -2360,13 +2139,15 @@ const getCampaignOptionLabel = (item: any) => {
 
                       <h2>{selectedPost.title || 'Social Media Post'}</h2>
 
-                      <div ref={audienceToolRef} className="audience-rewrite-panel">
+                      <div
+                        ref={audienceToolRef}
+                        className="audience-rewrite-panel simplified-audience-panel"
+                      >
                         <div>
-                          <div className="page-eyebrow">Audience Target</div>
-                          <h3>Tailor this post to a specific customer.</h3>
+                          <div className="page-eyebrow">Optional</div>
+                          <h3>Rewrite for a customer type</h3>
                           <p>
-                            Choose who this post should speak to. FromOne will rewrite the
-                            caption, CTA, hashtags, and image idea for that audience.
+                            Use this only if you want the post to speak to a specific audience.
                           </p>
                         </div>
 
@@ -2396,7 +2177,7 @@ const getCampaignOptionLabel = (item: any) => {
                             onClick={() => handleRewriteForAudience(selectedPost)}
                             disabled={accessLocked || rewritingPost}
                           >
-                            {rewritingPost ? 'Rewriting...' : 'Rewrite for audience'}
+                            {rewritingPost ? 'Rewriting...' : 'Rewrite'}
                           </button>
                         </div>
                       </div>
@@ -2497,18 +2278,20 @@ const getCampaignOptionLabel = (item: any) => {
                           )}
                       </div>
 
-                      <div className="suggested-image-box">
-                        <strong>Suggested image</strong>
+                      <details className="suggested-image-details">
+                        <summary>Suggested image</summary>
                         <p>
                           {selectedPost.image_prompt ||
                             'Use a clean, professional image that supports the message of this post.'}
                         </p>
-                        <small>This is a guide for choosing or creating the image.</small>
-                      </div>
+                      </details>
                     </div>
 
-                    <aside ref={publishingPanelRef} className="manual-publishing-panel">
-                      <div className="page-eyebrow">Manual Publishing</div>
+                    <aside
+                      ref={publishingPanelRef}
+                      className="manual-publishing-panel simplified-publishing-panel"
+                    >
+                      <div className="page-eyebrow">Publish this post</div>
 
                       <div className="manual-image-placeholder uploaded-image-box">
                         {selectedPost.image_url ? (
@@ -2556,7 +2339,7 @@ const getCampaignOptionLabel = (item: any) => {
                           className="secondary-button"
                           onClick={() => markAsScheduled(selectedPost.id)}
                         >
-                          Mark as scheduled
+                          Mark as not posted
                         </button>
                       ) : (
                         <button
