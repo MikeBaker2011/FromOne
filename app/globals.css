@@ -7623,3 +7623,17 @@ body {
     padding: 1.15rem;
   }
 }
+/* Posts page: align publishing panel with checklist card */
+.simplified-selected-post {
+  align-items: flex-start;
+}
+
+.simplified-publishing-panel {
+  margin-top: 4.35rem;
+}
+
+@media (max-width: 980px) {
+  .simplified-publishing-panel {
+    margin-top: 0;
+  }
+}
