@@ -7983,3 +7983,1112 @@ body {
     line-height: 1.2;
   }
 }
+/* Posts page: premium 3-day calendar carousel */
+.premium-week-calendar-section .simplified-section-heading {
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.premium-week-calendar-section .simplified-section-heading p {
+  max-width: 620px;
+  margin: 0.45rem 0 0;
+  color: rgba(218, 226, 245, 0.72);
+  font-weight: 750;
+}
+
+.premium-next-day-button {
+  min-width: 168px;
+  min-height: 54px;
+  padding: 0.9rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 212, 59, 0.5);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.22), transparent 28%),
+    linear-gradient(135deg, #ffd43b, #ffb82e);
+  color: #05070d;
+  font-weight: 950;
+  box-shadow: 0 18px 38px rgba(255, 212, 59, 0.2);
+}
+
+.premium-next-day-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 46px rgba(255, 212, 59, 0.28);
+}
+
+.premium-calendar-carousel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.premium-calendar-day-card {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  display: grid;
+  gap: 1.1rem;
+  min-height: 245px;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    rgba(7, 11, 22, 0.84);
+  color: #fff;
+  text-align: left;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.premium-calendar-day-card::after {
+  content: '';
+  position: absolute;
+  right: -42px;
+  top: -42px;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.07);
+  pointer-events: none;
+}
+
+.premium-calendar-day-card:hover,
+.premium-calendar-day-card.is-selected {
+  border-color: rgba(255, 212, 59, 0.82);
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.16), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(10, 15, 27, 0.96);
+  transform: translateY(-2px);
+  box-shadow:
+    0 24px 55px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.premium-calendar-day-card.is-today {
+  border-color: rgba(61, 220, 151, 0.72);
+}
+
+.premium-calendar-day-card.is-posted {
+  border-color: rgba(61, 220, 151, 0.36);
+}
+
+.premium-calendar-day-label {
+  width: fit-content;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.1);
+  color: var(--client-primary, #ffd43b);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.premium-calendar-date-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'weekday day'
+    'month day';
+  align-items: center;
+  gap: 0.2rem 1rem;
+}
+
+.premium-calendar-date-row span {
+  grid-area: weekday;
+  color: rgba(218, 226, 245, 0.72);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
+.premium-calendar-date-row strong {
+  grid-area: day;
+  color: #fff;
+  font-size: clamp(3rem, 5vw, 4.8rem);
+  line-height: 0.85;
+  letter-spacing: -0.08em;
+}
+
+.premium-calendar-date-row small {
+  grid-area: month;
+  color: var(--client-primary, #ffd43b);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.premium-calendar-post-info {
+  display: grid;
+  gap: 0.45rem;
+  align-self: end;
+}
+
+.premium-calendar-post-info strong {
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 950;
+}
+
+.premium-calendar-post-info p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: rgba(218, 226, 245, 0.72);
+  font-size: 0.95rem;
+  font-weight: 750;
+font-weight: 750;
+line-height: 1.4;
+-webkit-line-clamp: 2;
+line-clamp: 2;
+-webkit-box-orient: vertical;
+}
+
+.premium-calendar-status {
+  width: fit-content;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.premium-calendar-day-card.is-today .premium-calendar-status {
+  background: rgba(61, 220, 151, 0.15);
+  color: #71f3bf;
+}
+
+.premium-calendar-day-card.is-posted .premium-calendar-status {
+  background: rgba(61, 220, 151, 0.12);
+  color: #71f3bf;
+}
+
+/* Posts page: side-by-side progress and plan selector */
+.simplified-posts-page .posts-progress-plan-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(560px, 1.18fr);
+  gap: 1.25rem;
+  align-items: stretch;
+  margin: 1.25rem 0;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-card,
+.simplified-posts-page .posts-progress-plan-grid .simplified-control-card {
+  width: 100%;
+  min-height: 150px;
+  height: 100%;
+  margin: 0;
+  padding: 1.5rem 1.75rem;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-card h3,
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-card p {
+  margin: 0;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-bar {
+  margin-top: 0.9rem;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .simplified-control-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .simplified-campaign-controls {
+  width: 100%;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(230px, 0.85fr);
+  column-gap: 1.25rem;
+  row-gap: 0.75rem;
+  align-items: start;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .simplified-campaign-controls label {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: 100%;
+}
+
+.posts-plan-usage {
+  grid-column: 2;
+  grid-row: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  white-space: nowrap;
+  margin-top: 0;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(255, 212, 59, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.08);
+  color: var(--client-primary, #ffd43b);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.posts-plan-actions {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0;
+}
+
+.posts-plan-actions button,
+.posts-plan-actions .secondary-button {
+  width: 100%;
+  min-height: 48px;
+  height: auto;
+  padding: 0.8rem 1rem;
+  border-radius: 16px;
+}
+
+/* Posts page: make simple steps full width above content/publish area */
+.posts-selected-card {
+  display: block;
+}
+
+.posts-full-width-checklist {
+  width: 100%;
+  margin: 1.25rem 0;
+}
+
+.posts-publish-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.42fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.posts-publish-layout .simplified-publishing-panel {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 1100px) {
+  .simplified-posts-page .posts-progress-plan-grid,
+  .posts-publish-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .simplified-posts-page .posts-progress-plan-grid .simplified-campaign-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(230px, 0.85fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .premium-calendar-carousel {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-calendar-day-card {
+    min-height: 190px;
+  }
+
+  .premium-week-calendar-section .simplified-section-heading {
+    align-items: stretch;
+  }
+
+  .premium-next-day-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .simplified-posts-page .posts-progress-plan-grid .weekly-progress-card,
+  .simplified-posts-page .posts-progress-plan-grid .simplified-control-card {
+    min-height: auto;
+    padding: 1.15rem;
+  }
+
+  .simplified-posts-page .posts-progress-plan-grid .simplified-campaign-controls {
+    display: block;
+  }
+
+  .posts-plan-usage {
+    margin-top: 0.75rem;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .posts-plan-actions {
+    margin-top: 0.9rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .posts-plan-actions button,
+  .posts-plan-actions .secondary-button {
+    min-height: 44px;
+    padding: 0.72rem 0.8rem;
+    font-size: 0.92rem;
+  }
+}
+/* Posts page: audience and edit tools */
+.post-tools-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.46fr);
+  gap: 1rem;
+  margin: 1.25rem 0;
+  align-items: stretch;
+}
+
+.post-edit-shortcut-card,
+.post-tools-row .simplified-audience-panel {
+  margin: 0;
+  min-height: 100%;
+  border-radius: 24px;
+}
+
+.post-edit-shortcut-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.08), transparent 38%),
+    rgba(11, 16, 29, 0.84);
+}
+
+.post-edit-shortcut-card h3,
+.post-edit-shortcut-card p {
+  margin: 0;
+}
+
+.post-edit-shortcut-card p {
+  margin-top: 0.45rem;
+  color: rgba(218, 226, 245, 0.72);
+  font-weight: 750;
+}
+
+.post-edit-shortcut-card button {
+  width: 100%;
+}
+
+@media (max-width: 950px) {
+  .post-tools-row {
+    grid-template-columns: 1fr;
+  }
+}
+/* Premium post workspace */
+.premium-post-workspace .posts-full-width-checklist {
+  margin-bottom: 1.4rem;
+}
+
+.premium-post-workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 430px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.premium-post-preview-column {
+  min-width: 0;
+}
+
+.premium-post-copy-card {
+  border-radius: 28px;
+  padding: 1.7rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(20, 29, 52, 0.98), rgba(11, 16, 29, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+}
+
+.premium-post-copy-card p {
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.premium-post-tools-panel {
+  position: sticky;
+  top: 1rem;
+  border-radius: 30px;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(14, 20, 36, 0.98), rgba(7, 11, 20, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.premium-post-tools-header {
+  padding: 0.25rem 0.25rem 1rem;
+}
+
+.premium-post-tools-header h3,
+.premium-post-tools-header p {
+  margin: 0;
+}
+
+.premium-post-tools-header h3 {
+  margin-top: 0.35rem;
+  font-size: 1.25rem;
+}
+
+.premium-post-tools-header p {
+  margin-top: 0.35rem;
+  color: rgba(218, 226, 245, 0.72);
+  font-weight: 750;
+}
+
+.premium-tool-block {
+  padding: 1rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.premium-tool-block + .premium-tool-block {
+  margin-top: 0.8rem;
+}
+
+.premium-tool-block-header {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  margin-bottom: 0.9rem;
+}
+
+.premium-tool-block-header > span {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.14);
+  border: 1px solid rgba(255, 212, 59, 0.38);
+  color: var(--client-primary, #ffd43b);
+  font-weight: 950;
+}
+
+.premium-tool-block-header strong {
+  display: block;
+  color: #fff;
+  font-size: 0.98rem;
+}
+
+.premium-tool-block-header small {
+  display: block;
+  margin-top: 0.2rem;
+  color: rgba(218, 226, 245, 0.68);
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.premium-tool-controls,
+.premium-final-actions,
+.premium-image-actions,
+.premium-edit-actions {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.premium-tool-controls button,
+.premium-final-actions button,
+.premium-image-actions button,
+.premium-image-actions .upload-image-button,
+.premium-edit-actions button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.premium-inline-edit-panel {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.premium-inline-edit-panel label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.premium-inline-edit-panel textarea {
+  min-height: 105px;
+  resize: vertical;
+}
+
+.premium-inline-edit-panel label strong {
+  color: #fff;
+}
+
+.premium-image-workbench {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.premium-image-workbench .uploaded-image-box {
+  min-height: 210px;
+}
+
+.premium-image-idea-card {
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 212, 59, 0.06);
+  border: 1px solid rgba(255, 212, 59, 0.16);
+}
+
+.premium-image-idea-card strong {
+  display: block;
+  color: var(--client-primary, #ffd43b);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+
+.premium-image-idea-card p {
+  margin: 0;
+  color: rgba(230, 236, 248, 0.82);
+  line-height: 1.55;
+  font-weight: 750;
+}
+
+.premium-publish-actions-block {
+  border-color: rgba(61, 220, 151, 0.18);
+  background:
+    radial-gradient(circle at bottom right, rgba(61, 220, 151, 0.09), transparent 40%),
+    rgba(255, 255, 255, 0.035);
+}
+
+@media (max-width: 1120px) {
+  .premium-post-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-post-tools-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .premium-post-copy-card,
+  .premium-post-tools-panel {
+    border-radius: 24px;
+    padding: 1rem;
+  }
+
+  .premium-tool-block {
+    padding: 0.9rem;
+  }
+
+  .premium-image-workbench .uploaded-image-box {
+    min-height: 170px;
+  }
+}
+/* Full-width premium post preview and tools workflow */
+.premium-post-workspace-stacked {
+  display: block;
+}
+
+.premium-post-workspace-stacked .posts-full-width-checklist {
+  margin-bottom: 1.4rem;
+}
+
+.premium-post-copy-card-full {
+  width: 100%;
+  margin-bottom: 1.35rem;
+  border-radius: 30px;
+  padding: 1.8rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(20, 29, 52, 0.98), rgba(11, 16, 29, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+}
+
+.premium-post-copy-card-full p {
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.premium-post-tools-panel-full {
+  width: 100%;
+  position: static;
+  border-radius: 30px;
+  padding: 1.35rem;
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(14, 20, 36, 0.98), rgba(7, 11, 20, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.premium-post-tools-header-wide {
+  padding: 0.25rem 0.25rem 1.1rem;
+}
+
+.premium-post-tools-header-wide h3,
+.premium-post-tools-header-wide p {
+  margin: 0;
+}
+
+.premium-post-tools-header-wide h3 {
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+}
+
+.premium-post-tools-header-wide p {
+  margin-top: 0.35rem;
+  color: rgba(218, 226, 245, 0.72);
+  font-weight: 750;
+}
+
+.premium-tools-step-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.premium-tool-block {
+  padding: 1rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.premium-tool-block-header {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  margin-bottom: 0.9rem;
+}
+
+.premium-tool-block-header > span {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.14);
+  border: 1px solid rgba(255, 212, 59, 0.38);
+  color: var(--client-primary, #ffd43b);
+  font-weight: 950;
+}
+
+.premium-tool-block-header strong {
+  display: block;
+  color: #fff;
+  font-size: 0.98rem;
+}
+
+.premium-tool-block-header small {
+  display: block;
+  margin-top: 0.2rem;
+  color: rgba(218, 226, 245, 0.68);
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.premium-tool-controls,
+.premium-final-actions,
+.premium-image-actions,
+.premium-edit-actions {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.premium-tool-controls button,
+.premium-final-actions button,
+.premium-image-actions button,
+.premium-image-actions .upload-image-button,
+.premium-edit-actions button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.premium-inline-edit-panel {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.premium-inline-edit-panel label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.premium-inline-edit-panel textarea {
+  min-height: 105px;
+  resize: vertical;
+}
+
+.premium-inline-edit-panel label strong {
+  color: #fff;
+}
+
+.premium-image-workbench-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.8rem;
+}
+
+.premium-image-workbench-wide .uploaded-image-box {
+  min-height: 210px;
+}
+
+.premium-image-idea-card {
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 212, 59, 0.06);
+  border: 1px solid rgba(255, 212, 59, 0.16);
+}
+
+.premium-image-idea-card strong {
+  display: block;
+  color: var(--client-primary, #ffd43b);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+
+.premium-image-idea-card p {
+  margin: 0;
+  color: rgba(230, 236, 248, 0.82);
+  line-height: 1.55;
+  font-weight: 750;
+}
+
+.premium-publish-actions-block {
+  border-color: rgba(61, 220, 151, 0.18);
+  background:
+    radial-gradient(circle at bottom right, rgba(61, 220, 151, 0.09), transparent 40%),
+    rgba(255, 255, 255, 0.035);
+}
+
+@media (max-width: 980px) {
+  .premium-tools-step-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .premium-post-copy-card-full,
+  .premium-post-tools-panel-full {
+    border-radius: 24px;
+    padding: 1rem;
+  }
+
+  .premium-tool-block {
+    padding: 0.9rem;
+  }
+
+  .premium-image-workbench-wide .uploaded-image-box {
+    min-height: 170px;
+  }
+}
+/* FromOne posts page smoother selected-post flow */
+.fromone-post-flow {
+  margin-top: 1.2rem;
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(10, 15, 27, 0.98), rgba(6, 10, 18, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fromone-flow-preview-card,
+.fromone-flow-tools-card {
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+}
+
+.fromone-flow-preview-card {
+  padding: 1.65rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.1), transparent 32%),
+    linear-gradient(145deg, rgba(20, 29, 52, 0.98), rgba(11, 16, 29, 0.98));
+}
+
+.fromone-flow-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.fromone-flow-card-top h2 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.45rem, 2vw, 2rem);
+}
+
+.fromone-flow-card-top p {
+  margin: 0.4rem 0 0;
+  color: rgba(218, 226, 245, 0.74);
+  font-weight: 750;
+}
+
+.fromone-flow-card-top > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  background: rgba(255, 212, 59, 0.12);
+  color: var(--client-primary, #ffd43b);
+  border: 1px solid rgba(255, 212, 59, 0.28);
+  font-weight: 950;
+}
+
+.fromone-post-preview-body {
+  padding: 1.2rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fromone-post-preview-body p {
+  font-size: 1.04rem;
+  line-height: 1.72;
+}
+
+.fromone-flow-tools-card {
+  padding: 1.45rem;
+  background:
+    radial-gradient(circle at bottom right, rgba(61, 220, 151, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(13, 19, 34, 0.98), rgba(7, 11, 20, 0.98));
+}
+
+.fromone-flow-tools-header {
+  margin-bottom: 1rem;
+}
+
+.fromone-flow-tools-header h3 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.3rem, 1.8vw, 1.7rem);
+}
+
+.fromone-flow-tools-header p {
+  margin: 0.35rem 0 0;
+  color: rgba(218, 226, 245, 0.72);
+  font-weight: 750;
+}
+
+.fromone-flow-tools-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.fromone-flow-tool-row {
+  display: grid;
+  grid-template-columns: 54px minmax(190px, 0.65fr) minmax(260px, 1fr);
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fromone-flow-step-marker {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.13);
+  color: var(--client-primary, #ffd43b);
+  border: 1px solid rgba(255, 212, 59, 0.35);
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+
+.fromone-flow-tool-copy strong {
+  display: block;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.fromone-flow-tool-copy p {
+  margin: 0.25rem 0 0;
+  color: rgba(218, 226, 245, 0.68);
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.fromone-flow-tool-action {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.fromone-flow-tool-action button,
+.fromone-flow-inline-actions button,
+.fromone-flow-inline-actions .upload-image-button,
+.fromone-flow-publish-buttons button {
+  min-height: 48px;
+  width: 100%;
+}
+
+.fromone-flow-edit-box {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.fromone-flow-edit-box label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.fromone-flow-edit-box label strong {
+  color: #fff;
+}
+
+.fromone-flow-edit-box textarea {
+  min-height: 105px;
+  resize: vertical;
+}
+
+.fromone-flow-inline-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.fromone-flow-image-row {
+  align-items: start;
+}
+
+.fromone-flow-image-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.8fr);
+  gap: 0.8rem;
+}
+
+.fromone-flow-image-grid .uploaded-image-box {
+  min-height: 220px;
+}
+
+.fromone-flow-image-idea {
+  min-height: 220px;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 212, 59, 0.06);
+  border: 1px solid rgba(255, 212, 59, 0.18);
+}
+
+.fromone-flow-image-idea strong {
+  display: block;
+  color: var(--client-primary, #ffd43b);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.fromone-flow-image-idea p {
+  margin: 0;
+  color: rgba(230, 236, 248, 0.84);
+  line-height: 1.55;
+  font-weight: 750;
+}
+
+.fromone-flow-publish-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.fromone-flow-final-row {
+  border-color: rgba(61, 220, 151, 0.18);
+  background:
+    radial-gradient(circle at bottom right, rgba(61, 220, 151, 0.09), transparent 42%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.fromone-flow-page .publish-checklist-card,
+.fromone-flow-page .posts-full-width-checklist {
+  display: none !important;
+}
+
+@media (max-width: 1100px) {
+  .fromone-flow-tool-row {
+    grid-template-columns: 46px 1fr;
+  }
+
+  .fromone-flow-tool-action {
+    grid-column: 1 / -1;
+  }
+
+  .fromone-flow-image-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fromone-flow-publish-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .fromone-post-flow {
+    padding: 0.85rem;
+    border-radius: 24px;
+  }
+
+  .fromone-flow-preview-card,
+  .fromone-flow-tools-card {
+    padding: 1rem;
+    border-radius: 22px;
+  }
+
+  .fromone-flow-card-top {
+    display: grid;
+  }
+
+  .fromone-flow-tool-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .fromone-flow-step-marker {
+    width: fit-content;
+    min-width: 44px;
+    padding: 0 0.75rem;
+  }
+
+  .fromone-flow-inline-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .fromone-flow-image-grid .uploaded-image-box,
+  .fromone-flow-image-idea {
+    min-height: 170px;
+  }
+}

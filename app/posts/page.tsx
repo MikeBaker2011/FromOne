@@ -15,18 +15,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-type PostFilter = 'all' | 'today' | 'scheduled' | 'posted';
-
-type GeneratedPost = {
-  day?: string;
-  platform?: string;
-  title?: string;
-  caption?: string;
-  cta?: string;
-  hashtags?: string[];
-  image_prompt?: string;
-};
-
 type AccessInfo = {
   id: string;
   user_id: string;
@@ -43,8 +31,8 @@ type SuccessMoment = {
 };
 
 const IMAGE_BUCKET = 'campaign-assets';
-
 const POSTS_TOUR_SEEN_KEY = 'fromone_posts_tour_seen';
+const MAX_SAVED_CAMPAIGNS = 4;
 
 const postsTourSteps = [
   {
@@ -59,31 +47,17 @@ const postsTourSteps = [
     target: 'campaigns',
   },
   {
-    title: 'Choose a post',
+    title: 'Use the weekly calendar',
     text:
-      'Each card is one post from this week’s plan. Select a day to review the full post below.',
+      'The calendar shows three days at a time. Click a day to review the post, or use Next day to move through the week.',
     target: 'days',
   },
   {
-    title: 'Publish this post',
+    title: 'Prepare and publish',
     text:
-      'Upload your image, copy the post, open the platform, publish it, then mark it as posted.',
+      'Read the post first, then use the preparation steps to make it more specific, edit it, add an image, and publish.',
     target: 'publish',
   },
-];
-
-const WEEKLY_SCAN_LIMIT = 2;
-const MAX_SAVED_CAMPAIGNS = 4;
-const WEBSITE_SCAN_EVENT_TYPES = ['website_scan', 'campaign_regenerate'];
-
-const platformFallback = [
-  'Facebook',
-  'Instagram',
-  'Google Business',
-  'LinkedIn',
-  'Instagram',
-  'TikTok',
-  'Facebook',
 ];
 
 const defaultAudienceTargets = [
@@ -265,22 +239,31 @@ const industryAudienceTargets: Record<string, string[]> = {
 export default function PostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [monthlyCampaignCount, setMonthlyCampaignCount] = useState(0);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [pendingCampaignId, setPendingCampaignId] = useState('');
   const [campaign, setCampaign] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<PostFilter>('all');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [calendarStartIndex, setCalendarStartIndex] = useState(0);
+
   const [uploadingImage, setUploadingImage] = useState(false);
   const [deletingCampaign, setDeletingCampaign] = useState(false);
-  const [regeneratingCampaign, setRegeneratingCampaign] = useState(false);
   const [duplicatingCampaign, setDuplicatingCampaign] = useState(false);
   const [renamingCampaign, setRenamingCampaign] = useState(false);
   const [loadingSelectedPlan, setLoadingSelectedPlan] = useState(false);
+
   const [audienceTarget, setAudienceTarget] = useState('Local customers');
   const [customAudienceTarget, setCustomAudienceTarget] = useState('');
   const [rewritingPost, setRewritingPost] = useState(false);
+
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState('');
+  const [editCta, setEditCta] = useState('');
+  const [editHashtags, setEditHashtags] = useState('');
+  const [editImagePrompt, setEditImagePrompt] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const [showTodayReminder, setShowTodayReminder] = useState(false);
   const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(null);
@@ -293,8 +276,6 @@ export default function PostsPage() {
   const postsHeaderTextRef = useRef<HTMLDivElement | null>(null);
   const campaignHistoryControlsRef = useRef<HTMLDivElement | null>(null);
   const daySelectorRef = useRef<HTMLDivElement | null>(null);
-  const audienceToolRef = useRef<HTMLDivElement | null>(null);
-  const editPostRef = useRef<HTMLButtonElement | null>(null);
   const publishingPanelRef = useRef<HTMLElement | null>(null);
 
   const [postsTourRect, setPostsTourRect] = useState<{
@@ -304,20 +285,13 @@ export default function PostsPage() {
     height: number;
   } | null>(null);
 
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const [editCaption, setEditCaption] = useState('');
-  const [editCta, setEditCta] = useState('');
-  const [editHashtags, setEditHashtags] = useState('');
-  const [editImagePrompt, setEditImagePrompt] = useState('');
-  const [savingEdit, setSavingEdit] = useState(false);
-
   const [accessLocked, setAccessLocked] = useState(false);
   const [accessMessage, setAccessMessage] = useState('');
 
   useEffect(() => {
     loadPageData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, []);
 
   useEffect(() => {
     const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === 'true';
@@ -394,135 +368,17 @@ export default function PostsPage() {
     return params.get('today') === 'true';
   };
 
+  const isSameDate = (firstDate: Date, secondDate: Date) => {
+    return (
+      firstDate.getFullYear() === secondDate.getFullYear() &&
+      firstDate.getMonth() === secondDate.getMonth() &&
+      firstDate.getDate() === secondDate.getDate()
+    );
+  };
+
   const isPostScheduledToday = (post: any) => {
     if (!post?.scheduled_at) return false;
-
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999);
-
-    const scheduledTime = new Date(post.scheduled_at).getTime();
-
-    return (
-      scheduledTime >= startOfToday.getTime() &&
-      scheduledTime <= endOfToday.getTime()
-    );
-  };
-
-  const closePostsTour = () => {
-    localStorage.setItem(POSTS_TOUR_SEEN_KEY, 'true');
-    setShowPostsTour(false);
-    setPostsTourStep(0);
-    setPostsTourRect(null);
-  };
-
-  const restartPostsTour = () => {
-    setPostsTourStep(0);
-    setPostsTourRect(null);
-    setShowPostsTour(true);
-  };
-
-  const goToNextPostsTourStep = () => {
-    if (postsTourStep >= postsTourSteps.length - 1) {
-      closePostsTour();
-      return;
-    }
-
-    setPostsTourStep((currentStep) => currentStep + 1);
-  };
-
-  const goToPreviousPostsTourStep = () => {
-    setPostsTourStep((currentStep) => Math.max(0, currentStep - 1));
-  };
-
-  const getCurrentPostsTourTarget = () => {
-    const currentTarget = postsTourSteps[postsTourStep]?.target;
-
-    if (currentTarget === 'header') return postsHeaderTextRef.current;
-    if (currentTarget === 'campaigns') return campaignHistoryControlsRef.current;
-    if (currentTarget === 'days') return daySelectorRef.current;
-    if (currentTarget === 'audience') return audienceToolRef.current;
-    if (currentTarget === 'edit') return editPostRef.current;
-    if (currentTarget === 'publish') return publishingPanelRef.current;
-
-    return null;
-  };
-
-  const updatePostsTourRect = () => {
-    const target = getCurrentPostsTourTarget();
-
-    if (!target) {
-      setPostsTourRect(null);
-      return;
-    }
-
-    const rect = target.getBoundingClientRect();
-    const padding = 10;
-
-    setPostsTourRect({
-      top: Math.max(rect.top - padding, 12),
-      left: Math.max(rect.left - padding, 12),
-      width: rect.width + padding * 2,
-      height: rect.height + padding * 2,
-    });
-  };
-
-  const getPostsTourTooltipStyle = () => {
-    if (!postsTourRect || typeof window === 'undefined') return {};
-
-    if (window.innerWidth <= 760) {
-      const mobilePadding = 12;
-      const mobileCardWidth = window.innerWidth - mobilePadding * 2;
-
-      return {
-        left: `${mobilePadding}px`,
-        right: `${mobilePadding}px`,
-        bottom: '14px',
-        width: `${mobileCardWidth}px`,
-        top: 'auto',
-      };
-    }
-
-    const cardWidth = 420;
-    const estimatedCardHeight = 330;
-    const gap = 42;
-    const safePadding = 26;
-
-    const spaceBelow = window.innerHeight - (postsTourRect.top + postsTourRect.height);
-    const spaceAbove = postsTourRect.top;
-    const spaceRight = window.innerWidth - (postsTourRect.left + postsTourRect.width);
-    const spaceLeft = postsTourRect.left;
-
-    let top = postsTourRect.top + postsTourRect.height + gap;
-    let left = postsTourRect.left + postsTourRect.width / 2 - cardWidth / 2;
-
-    if (spaceBelow >= estimatedCardHeight + gap) {
-      top = postsTourRect.top + postsTourRect.height + gap;
-      left = postsTourRect.left + postsTourRect.width / 2 - cardWidth / 2;
-    } else if (spaceAbove >= estimatedCardHeight + gap) {
-      top = postsTourRect.top - estimatedCardHeight - gap;
-      left = postsTourRect.left + postsTourRect.width / 2 - cardWidth / 2;
-    } else if (spaceRight >= cardWidth + gap) {
-      top = postsTourRect.top;
-      left = postsTourRect.left + postsTourRect.width + gap;
-    } else if (spaceLeft >= cardWidth + gap) {
-      top = postsTourRect.top;
-      left = postsTourRect.left - cardWidth - gap;
-    }
-
-    left = Math.max(safePadding, Math.min(left, window.innerWidth - cardWidth - safePadding));
-    top = Math.max(
-      safePadding,
-      Math.min(top, window.innerHeight - estimatedCardHeight - safePadding)
-    );
-
-    return {
-      top: `${top}px`,
-      left: `${left}px`,
-      width: `${cardWidth}px`,
-    };
+    return isSameDate(new Date(post.scheduled_at), new Date());
   };
 
   const getReadableError = (error: any, fallback = 'Something went wrong.') => {
@@ -547,6 +403,21 @@ export default function PostsPage() {
       error?.details ||
       fallback
     );
+  };
+
+  const getMonthStartIso = () => {
+    const date = new Date();
+    date.setDate(1);
+    date.setHours(0, 0, 0, 0);
+    return date.toISOString();
+  };
+
+  const getMonthEndIso = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+    date.setDate(1);
+    date.setHours(0, 0, 0, 0);
+    return date.toISOString();
   };
 
   const isFutureDate = (value?: string | null) => {
@@ -602,7 +473,7 @@ export default function PostsPage() {
     return {
       locked: true,
       message:
-        'Your 7-day demo has ended. You can still view and publish existing posts, but creating fresh versions and making posts more specific are locked until access is extended or a subscription is active.',
+        'Your 7-day demo has ended. You can still view and publish existing posts, but saving copies and making posts more specific are locked until access is extended or a subscription is active.',
     };
   };
 
@@ -633,14 +504,7 @@ export default function PostsPage() {
       return;
     }
 
-    if (!data) {
-      setAccessLocked(false);
-      setAccessMessage('Demo access is being prepared.');
-      return;
-    }
-
-    const access = data as AccessInfo;
-    const calculated = calculateAccess(access);
+    const calculated = calculateAccess((data || null) as AccessInfo | null);
 
     setAccessLocked(calculated.locked);
     setAccessMessage(calculated.message);
@@ -651,230 +515,6 @@ export default function PostsPage() {
 
     alert(accessMessage);
     return false;
-  };
-
-  const getSevenDaysAgoIso = () => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return sevenDaysAgo.toISOString();
-  };
-
-  const loadWeeklyScanUsage = async (userId: string) => {
-    const { count, error } = await supabase
-      .from('usage_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .in('event_type', WEBSITE_SCAN_EVENT_TYPES)
-      .gte('created_at', getSevenDaysAgoIso());
-
-    if (error) {
-      console.error('Error loading scan usage:', error.message);
-      return 0;
-    }
-
-    return count || 0;
-  };
-
-  const isAdminUser = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('admin_users')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Admin check error:', error.message);
-      return false;
-    }
-
-    return Boolean(data);
-  };
-
-  const checkWeeklyScanLimit = async (userId: string) => {
-    const admin = await isAdminUser(userId);
-
-    if (admin) {
-      return true;
-    }
-
-    const used = await loadWeeklyScanUsage(userId);
-
-    if (used >= WEEKLY_SCAN_LIMIT) {
-      alert(
-        `You have used your ${WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create a fresh version from business details.`
-      );
-      return false;
-    }
-
-    return true;
-  };
-
-  const recordUsageEvent = async (
-    userId: string,
-    eventType: 'website_scan' | 'campaign_regenerate',
-    metadata: Record<string, any> = {}
-  ) => {
-    const { error } = await supabase.from('usage_events').insert({
-      user_id: userId,
-      event_type: eventType,
-      metadata,
-    });
-
-    if (error) {
-      console.error('Error recording usage event:', error.message);
-    }
-  };
-
-  const loadSavedCampaignCount = async (userId: string) => {
-    const { count, error } = await supabase
-      .from('campaigns')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error('Error loading weekly plan count:', error.message);
-      return 0;
-    }
-
-    return count || 0;
-  };
-
-  const checkSavedCampaignLimit = async (userId: string) => {
-    const total = await loadSavedCampaignCount(userId);
-
-    if (total >= MAX_SAVED_CAMPAIGNS) {
-      alert(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans this month. Delete an old weekly plan before copying this one.`
-      );
-      return false;
-    }
-
-    return true;
-  };
-
-  const buildBusinessDescription = (businessProfile: any) => {
-    return `
-Website URL: ${businessProfile?.website_url || ''}
-Business name: ${businessProfile?.business_name || ''}
-Industry: ${businessProfile?.industry || ''}
-Location: ${businessProfile?.location || ''}
-Services: ${Array.isArray(businessProfile?.services) ? businessProfile.services.join(', ') : ''}
-Target audience: ${
-      Array.isArray(businessProfile?.target_audience)
-        ? businessProfile.target_audience.join(', ')
-        : ''
-    }
-Tone of voice: ${businessProfile?.tone_of_voice || ''}
-Content pillars: ${
-      Array.isArray(businessProfile?.content_pillars)
-        ? businessProfile.content_pillars.join(', ')
-        : ''
-    }
-Main offer: ${businessProfile?.main_offer || ''}
-Business goals: ${
-      Array.isArray(businessProfile?.business_goals)
-        ? businessProfile.business_goals.join(', ')
-        : ''
-    }
-
-Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, and specific to the business.
-`;
-  };
-
-  const buildHashtags = (businessProfile: any) => {
-    const industry = String(businessProfile?.industry || 'business')
-      .replace(/\s+/g, '')
-      .replace(/[^a-zA-Z0-9]/g, '');
-
-    const location = String(businessProfile?.location || 'local')
-      .replace(/\s+/g, '')
-      .replace(/[^a-zA-Z0-9]/g, '');
-
-    return [`#${industry}`, `#${location}`, '#SmallBusiness', '#Marketing', '#FromOne'];
-  };
-
-  const getCampaignOptionLabel = (item: any) => {
-    const business =
-      item.business_name ||
-      item.business_type ||
-      item.campaign_area ||
-      item.name ||
-      'Weekly plan';
-
-    const createdDate = item.created_at ? new Date(item.created_at) : null;
-
-    const date = createdDate
-      ? createdDate.toLocaleDateString(undefined, {
-          day: '2-digit',
-          month: 'short',
-        })
-      : '';
-
-    return date ? `${business} — ${date}` : business;
-  };
-
-  const buildCampaignCopyName = (item: any) => {
-    const business =
-      item.business_name ||
-      profile?.business_name ||
-      item.business_type ||
-      'Weekly plan';
-
-    const date = new Date().toLocaleDateString(undefined, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-
-    const time = new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    return `${business} — Copy ${date} ${time}`;
-  };
-
-  const normaliseGeneratedPost = (
-    post: GeneratedPost | string,
-    index: number,
-    businessProfile: any,
-    detectedIndustry: string,
-    detectedLocation: string
-  ) => {
-    const fallbackPlatform = platformFallback[index] || 'Facebook';
-    const fallbackHashtags = buildHashtags({
-      ...businessProfile,
-      industry: detectedIndustry,
-      location: detectedLocation,
-    });
-
-    if (typeof post === 'string') {
-      return {
-        day: `Day ${index + 1}`,
-        platform: fallbackPlatform,
-        title: `${fallbackPlatform} Post`,
-        caption: post,
-        cta: businessProfile?.main_offer || 'Contact us today to find out more.',
-        hashtags: fallbackHashtags,
-        image_prompt:
-          'Use a clean, professional image that supports the message of this post.',
-      };
-    }
-
-    return {
-      day: post.day || `Day ${index + 1}`,
-      platform: post.platform || fallbackPlatform,
-      title: post.title || `${post.platform || fallbackPlatform} Post`,
-      caption: post.caption || '',
-      cta: post.cta || businessProfile?.main_offer || 'Contact us today to find out more.',
-      hashtags:
-        Array.isArray(post.hashtags) && post.hashtags.length > 0
-          ? post.hashtags
-          : fallbackHashtags,
-      image_prompt:
-        post.image_prompt ||
-        'Use a clean, professional image that supports the message of this post.',
-    };
   };
 
   const loadPageData = async () => {
@@ -891,7 +531,12 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
     setSelectedCampaignId(activeCampaign?.id || null);
     setPendingCampaignId(activeCampaign?.id || '');
 
-    await Promise.all([loadPosts(activeCampaign?.id || null), loadProfile(), loadAccess()]);
+    await Promise.all([
+      loadPosts(activeCampaign?.id || null),
+      loadProfile(),
+      loadAccess(),
+      loadMonthlyCampaignCount(),
+    ]);
 
     setLoading(false);
   };
@@ -915,71 +560,115 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
     return loadedCampaigns;
   };
 
+  const loadMonthlyCampaignCount = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+
+    if (!userId) {
+      setMonthlyCampaignCount(0);
+      return 0;
+    }
+
+    const { count, error } = await supabase
+      .from('campaigns')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', getMonthStartIso())
+      .lt('created_at', getMonthEndIso());
+
+    if (error) {
+      console.error('Error loading monthly weekly plan count:', error.message);
+      setMonthlyCampaignCount(0);
+      return 0;
+    }
+
+    const total = count || 0;
+    setMonthlyCampaignCount(total);
+
+    return total;
+  };
+
+  const loadProfile = async () => {
+    const { data, error } = await supabase
+      .from('business_profiles')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading business details:', error.message);
+      setProfile(null);
+      return;
+    }
+
+    setProfile(data);
+  };
+
   const loadPosts = async (campaignId?: string | null) => {
     if (!campaignId) {
       setPosts([]);
       setSelectedPostId(null);
+      setCalendarStartIndex(0);
       return;
     }
 
-    let query = supabase
+    const { data, error } = await supabase
       .from('campaign_posts')
       .select('*')
       .eq('campaign_id', campaignId)
       .order('scheduled_at', { ascending: true });
 
-    if (filter === 'scheduled') {
-      query = query.eq('is_posted', false);
-    }
-
-    if (filter === 'posted') {
-      query = query.eq('is_posted', true);
-    }
-
-    if (filter === 'today') {
-      const startOfToday = new Date();
-      startOfToday.setHours(0, 0, 0, 0);
-
-      const endOfToday = new Date();
-      endOfToday.setHours(23, 59, 59, 999);
-
-      query = query
-        .gte('scheduled_at', startOfToday.toISOString())
-        .lte('scheduled_at', endOfToday.toISOString())
-        .eq('is_posted', false);
-    }
-
-    const { data, error } = await query;
-
     if (error) {
       console.error('Error loading posts:', error.message);
       setPosts([]);
       setSelectedPostId(null);
+      setCalendarStartIndex(0);
       return;
     }
 
     const loadedPosts = data || [];
-    setPosts(loadedPosts);
+    const sortedLoadedPosts = sortPostsByDate(loadedPosts);
 
-    if (loadedPosts.length > 0) {
-      const todayUnpostedPost = loadedPosts.find(
+    setPosts(sortedLoadedPosts);
+
+    if (sortedLoadedPosts.length > 0) {
+      const todayUnpostedPost = sortedLoadedPosts.find(
         (post) => isPostScheduledToday(post) && !post.is_posted
       );
 
-      const firstUnpostedPost = loadedPosts.find((post) => !post.is_posted);
+      const firstUnpostedPost = sortedLoadedPosts.find((post) => !post.is_posted);
 
       const stillExists = selectedPostId
-        ? loadedPosts.some((post) => post.id === selectedPostId)
+        ? sortedLoadedPosts.some((post) => post.id === selectedPostId)
         : false;
 
-      if (shouldOpenTodayPost() && todayUnpostedPost) {
-        setSelectedPostId(todayUnpostedPost.id);
-      } else if (!stillExists) {
-        setSelectedPostId(todayUnpostedPost?.id || firstUnpostedPost?.id || loadedPosts[0].id);
-      }
+      const nextSelectedPost =
+        shouldOpenTodayPost() && todayUnpostedPost
+          ? todayUnpostedPost
+          : stillExists
+            ? sortedLoadedPosts.find((post) => post.id === selectedPostId) || sortedLoadedPosts[0]
+            : todayUnpostedPost || firstUnpostedPost || sortedLoadedPosts[0];
+
+      const nextSelectedIndex = sortedLoadedPosts.findIndex(
+        (post) => post.id === nextSelectedPost.id
+      );
+
+      setSelectedPostId(nextSelectedPost.id);
+      setCalendarStartIndex(nextSelectedIndex >= 0 ? nextSelectedIndex : 0);
     } else {
       setSelectedPostId(null);
+      setCalendarStartIndex(0);
     }
+  };
+
+  const sortPostsByDate = (items: any[]) => {
+    return [...items].sort((firstPost, secondPost) => {
+      const firstTime = firstPost.scheduled_at ? new Date(firstPost.scheduled_at).getTime() : 0;
+      const secondTime = secondPost.scheduled_at ? new Date(secondPost.scheduled_at).getTime() : 0;
+
+      return firstTime - secondTime;
+    });
   };
 
   const switchCampaign = async (campaignId: string) => {
@@ -989,6 +678,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
     setPendingCampaignId(campaignId);
     setCampaign(nextCampaign);
     setSelectedPostId(null);
+    setCalendarStartIndex(0);
     cancelEditingPost();
 
     await loadPosts(campaignId);
@@ -1006,6 +696,234 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
       await switchCampaign(pendingCampaignId);
     } finally {
       setLoadingSelectedPlan(false);
+    }
+  };
+
+  const checkSavedCampaignLimit = async () => {
+    const total = await loadMonthlyCampaignCount();
+
+    if (total >= MAX_SAVED_CAMPAIGNS) {
+      alert(
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans this month. Delete an old weekly plan before saving a copy.`
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const buildCampaignCopyName = (item: any) => {
+    const business =
+      item.business_name ||
+      profile?.business_name ||
+      item.business_type ||
+      'Weekly plan';
+
+    const date = new Date().toLocaleDateString(undefined, {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+
+    const time = new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    return `${business} — Copy ${date} ${time}`;
+  };
+
+  const duplicateSelectedCampaign = async () => {
+    if (!campaign?.id) {
+      alert('No weekly plan selected.');
+      return;
+    }
+
+    if (!ensureAccessAllowed()) return;
+
+    const confirmed = confirm(
+      `Save a copy of this weekly plan?\n\n${
+        campaign.name || campaign.campaign_idea || 'Selected weekly plan'
+      }\n\nThis will create a new weekly plan with copied posts. Uploaded images will not be copied.`
+    );
+
+    if (!confirmed) return;
+
+    setDuplicatingCampaign(true);
+
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id;
+
+      if (!userId) {
+        alert('You need to sign in before copying a weekly plan.');
+        return;
+      }
+
+      const campaignLimitAllowed = await checkSavedCampaignLimit();
+      if (!campaignLimitAllowed) return;
+
+      const { data: sourcePosts, error: sourcePostsError } = await supabase
+        .from('campaign_posts')
+        .select('*')
+        .eq('campaign_id', campaign.id)
+        .order('scheduled_at', { ascending: true });
+
+      if (sourcePostsError) {
+        alert(sourcePostsError.message);
+        return;
+      }
+
+      if (!sourcePosts?.length) {
+        alert('This weekly plan has no posts to copy.');
+        return;
+      }
+
+      const { data: newCampaign, error: campaignCopyError } = await supabase
+        .from('campaigns')
+        .insert({
+          user_id: userId,
+          name: buildCampaignCopyName(campaign),
+          business_type: campaign.business_type,
+          location: campaign.location,
+          is_active: true,
+          keywords: campaign.keywords || [],
+          selected_keywords: campaign.selected_keywords || [],
+          client_id: campaign.client_id,
+          business_name: campaign.business_name,
+          target_audience: campaign.target_audience,
+          campaign_idea: campaign.campaign_idea,
+          audience: campaign.audience,
+          drafts: sourcePosts.length,
+          scheduled: sourcePosts.length,
+          assets: 0,
+          posted: 0,
+          launch_date: new Date().toISOString().split('T')[0],
+          campaign_area: campaign.campaign_area,
+          tone: campaign.tone,
+          posting_frequency: campaign.posting_frequency || 'Daily',
+          platform_plan: campaign.platform_plan,
+        })
+        .select()
+        .single();
+
+      if (campaignCopyError) {
+        alert(campaignCopyError.message);
+        return;
+      }
+
+      const today = new Date();
+
+      const copiedPosts = sourcePosts.map((post: any, index: number) => {
+        const postDate = new Date(today);
+        postDate.setDate(today.getDate() + index);
+        postDate.setHours(9, 0, 0, 0);
+
+        return {
+          user_id: userId,
+          campaign_id: newCampaign.id,
+          keyword: post.keyword,
+          title: post.title,
+          caption: post.caption,
+          cta: post.cta,
+          hashtags: post.hashtags,
+          platform: post.platform,
+          type: post.type,
+          scheduled_day: post.scheduled_day || `Day ${index + 1}`,
+          scheduled_at: postDate.toISOString(),
+          status: 'scheduled',
+          is_posted: false,
+          client_id: post.client_id,
+          image_prompt: post.image_prompt,
+          audience_target: post.audience_target || null,
+          image_url: null,
+          image_path: null,
+          reach: 0,
+          clicks: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          saves: 0,
+        };
+      });
+
+      const { error: postsCopyError } = await supabase
+        .from('campaign_posts')
+        .insert(copiedPosts);
+
+      if (postsCopyError) {
+        alert(postsCopyError.message);
+        return;
+      }
+
+      const refreshedCampaigns = await loadCampaigns();
+      await loadMonthlyCampaignCount();
+
+      setCampaign(newCampaign);
+      setSelectedCampaignId(newCampaign.id);
+      setPendingCampaignId(newCampaign.id);
+      setSelectedPostId(null);
+      setCalendarStartIndex(0);
+      setCampaigns(refreshedCampaigns);
+      cancelEditingPost();
+
+      await loadPosts(newCampaign.id);
+
+      alert('Weekly plan copy saved.');
+    } catch (error: any) {
+      const message = getReadableError(error, 'Error copying weekly plan.');
+      console.error('Copy weekly plan error:', error);
+      alert(message);
+    } finally {
+      setDuplicatingCampaign(false);
+    }
+  };
+    const renameSelectedCampaign = async () => {
+    if (!campaign?.id) {
+      alert('No weekly plan selected.');
+      return;
+    }
+
+    const currentName = campaign.name || campaign.campaign_idea || 'Untitled weekly plan';
+    const newName = prompt('Rename weekly plan:', currentName);
+
+    if (newName === null) return;
+
+    const cleanName = newName.trim();
+
+    if (!cleanName) {
+      alert('Weekly plan name cannot be empty.');
+      return;
+    }
+
+    setRenamingCampaign(true);
+
+    try {
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ name: cleanName })
+        .eq('id', campaign.id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      setCampaign({ ...campaign, name: cleanName });
+
+      setCampaigns((currentCampaigns) =>
+        currentCampaigns.map((item) =>
+          item.id === campaign.id ? { ...item, name: cleanName } : item
+        )
+      );
+
+      alert('Weekly plan renamed.');
+    } catch (error: any) {
+      const message = getReadableError(error, 'Error renaming weekly plan.');
+      console.error('Rename weekly plan error:', error);
+      alert(message);
+    } finally {
+      setRenamingCampaign(false);
     }
   };
 
@@ -1065,6 +983,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
       setCampaign(null);
       setPosts([]);
       setSelectedPostId(null);
+      setCalendarStartIndex(0);
       cancelEditingPost();
 
       alert('Weekly plan deleted.');
@@ -1078,468 +997,24 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
     }
   };
 
-  const duplicateSelectedCampaign = async () => {
-    if (!campaign?.id) {
-      alert('No weekly plan selected.');
-      return;
-    }
+  const getCampaignOptionLabel = (item: any) => {
+    const business =
+      item.business_name ||
+      item.business_type ||
+      item.campaign_area ||
+      item.name ||
+      'Weekly plan';
 
-    if (!ensureAccessAllowed()) return;
+    const createdDate = item.created_at ? new Date(item.created_at) : null;
 
-    const confirmed = confirm(
-      `Save a copy of this weekly plan?\n\n${
-        campaign.name || campaign.campaign_idea || 'Selected weekly plan'
-      }\n\nThis will create a new weekly plan with copied posts. Uploaded images will not be copied.`
-    );
-
-    if (!confirmed) return;
-
-    setDuplicatingCampaign(true);
-
-    try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData.user?.id;
-
-      if (!userId) {
-        alert('You need to sign in before copying a weekly plan.');
-        return;
-      }
-
-      const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
-      if (!campaignLimitAllowed) return;
-
-      const { data: sourcePosts, error: sourcePostsError } = await supabase
-        .from('campaign_posts')
-        .select('*')
-        .eq('campaign_id', campaign.id)
-        .order('scheduled_at', { ascending: true });
-
-      if (sourcePostsError) {
-        alert(sourcePostsError.message);
-        return;
-      }
-
-      if (!sourcePosts?.length) {
-        alert('This weekly plan has no posts to copy.');
-        return;
-      }
-
-      const { data: newCampaign, error: campaignCopyError } = await supabase
-        .from('campaigns')
-        .insert({
-          user_id: userId,
-          name: buildCampaignCopyName(campaign),
-          business_type: campaign.business_type,
-          location: campaign.location,
-          is_active: true,
-          keywords: campaign.keywords || [],
-          selected_keywords: campaign.selected_keywords || [],
-          client_id: campaign.client_id,
-          business_name: campaign.business_name,
-          target_audience: campaign.target_audience,
-          campaign_idea: campaign.campaign_idea,
-          audience: campaign.audience,
-          drafts: sourcePosts.length,
-          scheduled: sourcePosts.length,
-          assets: 0,
-          posted: 0,
-          launch_date: new Date().toISOString().split('T')[0],
-          campaign_area: campaign.campaign_area,
-          tone: campaign.tone,
-          posting_frequency: campaign.posting_frequency || 'Daily',
-          platform_plan: campaign.platform_plan,
+    const date = createdDate
+      ? createdDate.toLocaleDateString(undefined, {
+          day: '2-digit',
+          month: 'short',
         })
-        .select()
-        .single();
+      : '';
 
-      if (campaignCopyError) {
-        alert(campaignCopyError.message);
-        return;
-      }
-            const today = new Date();
-
-      const copiedPosts = sourcePosts.map((post: any, index: number) => {
-        const postDate = new Date(today);
-        postDate.setDate(today.getDate() + index);
-        postDate.setHours(9, 0, 0, 0);
-
-        return {
-          user_id: userId,
-          campaign_id: newCampaign.id,
-          keyword: post.keyword,
-          title: post.title,
-          caption: post.caption,
-          cta: post.cta,
-          hashtags: post.hashtags,
-          platform: post.platform,
-          type: post.type,
-          scheduled_day: post.scheduled_day || `Day ${index + 1}`,
-          scheduled_at: postDate.toISOString(),
-          status: 'scheduled',
-          is_posted: false,
-          client_id: post.client_id,
-          image_prompt: post.image_prompt,
-          audience_target: post.audience_target || null,
-          image_url: null,
-          image_path: null,
-          reach: 0,
-          clicks: 0,
-          likes: 0,
-          comments: 0,
-          shares: 0,
-          saves: 0,
-        };
-      });
-
-      const { error: postsCopyError } = await supabase
-        .from('campaign_posts')
-        .insert(copiedPosts);
-
-      if (postsCopyError) {
-        alert(postsCopyError.message);
-        return;
-      }
-
-      const refreshedCampaigns = await loadCampaigns();
-
-      setCampaign(newCampaign);
-      setSelectedCampaignId(newCampaign.id);
-      setPendingCampaignId(newCampaign.id);
-      setSelectedPostId(null);
-      cancelEditingPost();
-
-      setCampaigns(refreshedCampaigns);
-      await loadPosts(newCampaign.id);
-
-      alert('Weekly plan copy saved.');
-    } catch (error: any) {
-      const message = getReadableError(error, 'Error copying weekly plan.');
-      console.error('Copy weekly plan error:', error);
-      alert(message);
-    } finally {
-      setDuplicatingCampaign(false);
-    }
-  };
-
-  const renameSelectedCampaign = async () => {
-    if (!campaign?.id) {
-      alert('No weekly plan selected.');
-      return;
-    }
-
-    const currentName = campaign.name || campaign.campaign_idea || 'Untitled weekly plan';
-    const newName = prompt('Rename weekly plan:', currentName);
-
-    if (newName === null) return;
-
-    const cleanName = newName.trim();
-
-    if (!cleanName) {
-      alert('Weekly plan name cannot be empty.');
-      return;
-    }
-
-    setRenamingCampaign(true);
-
-    try {
-      const { error } = await supabase
-        .from('campaigns')
-        .update({ name: cleanName })
-        .eq('id', campaign.id);
-
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      setCampaign({ ...campaign, name: cleanName });
-
-      setCampaigns((currentCampaigns) =>
-        currentCampaigns.map((item) =>
-          item.id === campaign.id ? { ...item, name: cleanName } : item
-        )
-      );
-
-      alert('Weekly plan renamed.');
-    } catch (error: any) {
-      const message = getReadableError(error, 'Error renaming weekly plan.');
-      console.error('Rename weekly plan error:', error);
-      alert(message);
-    } finally {
-      setRenamingCampaign(false);
-    }
-  };
-
-  const regenerateSelectedCampaign = async () => {
-    if (!campaign?.id) {
-      alert('No weekly plan selected.');
-      return;
-    }
-
-    if (!profile?.id && !campaign?.business_name) {
-      alert('No business details found. Go to Dashboard or Settings first.');
-      return;
-    }
-
-    if (!ensureAccessAllowed()) return;
-
-    const campaignName = campaign.name || campaign.campaign_idea || 'Selected weekly plan';
-
-    const confirmed = confirm(
-      `Create a fresh version of this weekly plan?\n\n${campaignName}\n\nThis will delete this weekly plan’s current posts and saved images, then create a fresh 7-day plan.`
-    );
-
-    if (!confirmed) return;
-
-    setRegeneratingCampaign(true);
-
-    try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData.user?.id;
-
-      if (!userId) {
-        alert('You need to sign in before creating a fresh version.');
-        return;
-      }
-
-      const activeProfile = profile || {};
-      const regenerateUsesWebsiteScan = Boolean(activeProfile.website_url);
-
-      if (regenerateUsesWebsiteScan) {
-        const allowed = await checkWeeklyScanLimit(userId);
-        if (!allowed) return;
-      }
-
-      const { data: oldPosts, error: oldPostsError } = await supabase
-        .from('campaign_posts')
-        .select('id, image_path')
-        .eq('campaign_id', campaign.id);
-
-      if (oldPostsError) {
-        alert(oldPostsError.message);
-        return;
-      }
-
-      const imagePaths = oldPosts?.map((post) => post.image_path).filter(Boolean) || [];
-
-      if (imagePaths.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from(IMAGE_BUCKET)
-          .remove(imagePaths);
-
-        if (storageError) {
-          console.error('Create fresh version image delete error:', storageError.message);
-        }
-      }
-
-      const { error: deletePostsError } = await supabase
-        .from('campaign_posts')
-        .delete()
-        .eq('campaign_id', campaign.id);
-
-      if (deletePostsError) {
-        alert(deletePostsError.message);
-        return;
-      }
-
-      const response = await axios.post('/api/generatePosts', {
-        website: activeProfile.website_url || '',
-        clientName: activeProfile.business_name || campaign.business_name || '',
-        industry: activeProfile.industry || campaign.business_type || '',
-        description: buildBusinessDescription(activeProfile),
-        provider: 'gemini',
-        requestedOutput: {
-          posts:
-            'array of 7 post objects with day, platform, title, caption, cta, hashtags, image_prompt',
-          business_name: 'detected business name',
-          industry: 'detected industry',
-          location: 'detected location',
-          services: 'array',
-          target_audience: 'array',
-          tone_of_voice: 'detected tone',
-          content_pillars: 'array',
-          main_offer: 'main offer or CTA',
-          business_goals: 'array',
-          brand_primary_color: 'hex code',
-          brand_secondary_color: 'hex code',
-          brand_accent_color: 'hex code',
-          brand_logo_url: 'logo URL or null',
-          brand_summary: 'short brand style summary',
-        },
-      });
-
-      const generatedPosts: GeneratedPost[] = response.data.posts || [];
-
-      if (!generatedPosts.length) {
-        alert(response.data.error || 'No posts were created.');
-        return;
-      }
-
-      const scanData =
-        response.data.businessProfile ||
-        response.data.scan ||
-        response.data.brief ||
-        response.data ||
-        {};
-
-      const detectedIndustry =
-        scanData?.industry || activeProfile.industry || campaign.business_type || 'General';
-
-      const detectedLocation =
-        scanData?.location || activeProfile.location || campaign.location || 'Online';
-
-      const detectedAudience = Array.isArray(scanData?.target_audience)
-        ? scanData.target_audience.join(', ')
-        : Array.isArray(activeProfile.target_audience)
-          ? activeProfile.target_audience.join(', ')
-          : campaign.target_audience || '';
-
-      const detectedTone =
-        scanData?.tone_of_voice ||
-        activeProfile.tone_of_voice ||
-        campaign.tone ||
-        'Professional';
-
-      const campaignIdea =
-        scanData?.campaign_idea ||
-        scanData?.brand_summary ||
-        campaign.campaign_idea ||
-        'Seven-day mixed-platform weekly plan';
-
-      const regeneratedName = `${
-        activeProfile.business_name || campaign.business_name || 'Weekly plan'
-      } — Fresh version ${new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      })}`;
-
-      const { error: campaignUpdateError } = await supabase
-        .from('campaigns')
-        .update({
-          name: regeneratedName,
-          business_type: detectedIndustry,
-          location: detectedLocation,
-          target_audience: detectedAudience,
-          campaign_idea: campaignIdea,
-          audience: detectedAudience,
-          drafts: generatedPosts.length,
-          scheduled: generatedPosts.length,
-          posted: 0,
-          campaign_area: detectedLocation,
-          tone: detectedTone,
-          posting_frequency: 'Daily',
-          platform_plan:
-            'Day 1 Facebook, Day 2 Instagram, Day 3 Google Business, Day 4 LinkedIn, Day 5 Instagram, Day 6 TikTok, Day 7 Facebook',
-        })
-        .eq('id', campaign.id);
-
-      if (campaignUpdateError) {
-        alert(campaignUpdateError.message);
-        return;
-      }
-
-      const today = new Date();
-
-      for (let i = 0; i < generatedPosts.length; i++) {
-        const postDate = new Date(today);
-        postDate.setDate(today.getDate() + i);
-        postDate.setHours(9, 0, 0, 0);
-
-        const post = normaliseGeneratedPost(
-          generatedPosts[i],
-          i,
-          activeProfile,
-          detectedIndustry,
-          detectedLocation
-        );
-
-        const { error: insertPostError } = await supabase.from('campaign_posts').insert({
-          user_id: userId,
-          campaign_id: campaign.id,
-          keyword: detectedIndustry || 'business',
-          title: post.title,
-          caption: post.caption,
-          cta: post.cta,
-          hashtags: post.hashtags,
-          platform: post.platform,
-          type: activeProfile.website_url ? 'website_scan' : 'manual_profile',
-          scheduled_day: post.day,
-          scheduled_at: postDate.toISOString(),
-          status: 'scheduled',
-          is_posted: false,
-          client_id: campaign.client_id || activeProfile.id || null,
-          image_prompt: post.image_prompt,
-          reach: 0,
-          clicks: 0,
-          likes: 0,
-          comments: 0,
-          shares: 0,
-          saves: 0,
-        });
-
-        if (insertPostError) {
-          alert(insertPostError.message);
-          return;
-        }
-      }
-
-      cancelEditingPost();
-      setSelectedPostId(null);
-
-      const refreshedCampaigns = await loadCampaigns();
-      const refreshedCampaign = refreshedCampaigns.find((item) => item.id === campaign.id) || null;
-
-      setCampaign(refreshedCampaign);
-      setSelectedCampaignId(campaign.id);
-      setPendingCampaignId(campaign.id);
-
-      await loadPosts(campaign.id);
-
-      if (regenerateUsesWebsiteScan) {
-        const admin = await isAdminUser(userId);
-
-        if (!admin) {
-          await recordUsageEvent(userId, 'campaign_regenerate', {
-            website: activeProfile.website_url,
-            client_id: campaign.client_id || activeProfile.id || null,
-            campaign_id: campaign.id,
-          });
-        }
-      }
-
-      alert('Fresh version created.');
-    } catch (error: any) {
-      const message = getReadableError(error, 'Error creating fresh version.');
-
-      if (axios.isAxiosError(error)) {
-        console.error('Fresh version readable error:', message);
-        console.error('Fresh version status:', error.response?.status);
-        console.error('Fresh version response data:', error.response?.data);
-      } else {
-        console.error('Fresh version error:', error);
-      }
-
-      alert(message);
-    } finally {
-      setRegeneratingCampaign(false);
-    }
-  };
-
-  const loadProfile = async () => {
-    const { data, error } = await supabase
-      .from('business_profiles')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error loading business details:', error.message);
-      setProfile(null);
-      return;
-    }
-
-    setProfile(data);
+    return date ? `${business} — ${date}` : business;
   };
 
   const copyPost = async (post: any) => {
@@ -1751,15 +1226,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
       alert(`Post made more specific for ${finalAudience}.`);
     } catch (error: any) {
       const message = getReadableError(error, 'Error making post more specific.');
-
-      if (axios.isAxiosError(error)) {
-        console.error('Make more specific readable error:', message);
-        console.error('Make more specific status:', error.response?.status);
-        console.error('Make more specific response data:', error.response?.data);
-      } else {
-        console.error('Make more specific non-Axios error:', error);
-      }
-
+      console.error('Make more specific error:', error);
       alert(message);
     } finally {
       setRewritingPost(false);
@@ -1910,7 +1377,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
 
   const openTodayReminderPost = () => {
     if (todayReminderPostId) {
-      setSelectedPostId(todayReminderPostId);
+      choosePost(todayReminderPostId);
     }
 
     setShowTodayReminder(false);
@@ -1929,8 +1396,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
       return;
     }
 
-    setFilter('all');
-    setSelectedPostId(successMoment.nextPostId);
+    choosePost(successMoment.nextPostId);
     setSuccessMoment(null);
 
     window.setTimeout(() => {
@@ -1941,9 +1407,202 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
     }, 120);
   };
 
+  const choosePost = (postId: string) => {
+    const nextIndex = sortedPosts.findIndex((post) => post.id === postId);
+
+    setSelectedPostId(postId);
+    cancelEditingPost();
+
+    if (nextIndex >= 0) {
+      setCalendarStartIndex(nextIndex);
+    }
+  };
+
+  const goToNextCalendarDay = () => {
+    if (sortedPosts.length === 0) return;
+
+    const selectedIndex = selectedPost
+      ? sortedPosts.findIndex((post) => post.id === selectedPost.id)
+      : calendarStartIndex;
+
+    const safeSelectedIndex = selectedIndex >= 0 ? selectedIndex : calendarStartIndex;
+    const nextIndex = (safeSelectedIndex + 1) % sortedPosts.length;
+    const nextPost = sortedPosts[nextIndex];
+
+    if (!nextPost) return;
+
+    setCalendarStartIndex(nextIndex);
+    setSelectedPostId(nextPost.id);
+    cancelEditingPost();
+  };
+
+  const closePostsTour = () => {
+    localStorage.setItem(POSTS_TOUR_SEEN_KEY, 'true');
+    setShowPostsTour(false);
+    setPostsTourStep(0);
+    setPostsTourRect(null);
+  };
+
+  const restartPostsTour = () => {
+    setPostsTourStep(0);
+    setPostsTourRect(null);
+    setShowPostsTour(true);
+  };
+
+  const goToNextPostsTourStep = () => {
+    if (postsTourStep >= postsTourSteps.length - 1) {
+      closePostsTour();
+      return;
+    }
+
+    setPostsTourStep((currentStep) => currentStep + 1);
+  };
+
+  const goToPreviousPostsTourStep = () => {
+    setPostsTourStep((currentStep) => Math.max(0, currentStep - 1));
+  };
+
+  const getCurrentPostsTourTarget = () => {
+    const currentTarget = postsTourSteps[postsTourStep]?.target;
+
+    if (currentTarget === 'header') return postsHeaderTextRef.current;
+    if (currentTarget === 'campaigns') return campaignHistoryControlsRef.current;
+    if (currentTarget === 'days') return daySelectorRef.current;
+    if (currentTarget === 'publish') return publishingPanelRef.current;
+
+    return null;
+  };
+
+  const updatePostsTourRect = () => {
+    const target = getCurrentPostsTourTarget();
+
+    if (!target) {
+      setPostsTourRect(null);
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const padding = 10;
+
+    setPostsTourRect({
+      top: Math.max(rect.top - padding, 12),
+      left: Math.max(rect.left - padding, 12),
+      width: rect.width + padding * 2,
+      height: rect.height + padding * 2,
+    });
+  };
+
+  const getPostsTourTooltipStyle = () => {
+    if (!postsTourRect || typeof window === 'undefined') return {};
+
+    if (window.innerWidth <= 760) {
+      const mobilePadding = 12;
+      const mobileCardWidth = window.innerWidth - mobilePadding * 2;
+
+      return {
+        left: `${mobilePadding}px`,
+        right: `${mobilePadding}px`,
+        bottom: '14px',
+        width: `${mobileCardWidth}px`,
+        top: 'auto',
+      };
+    }
+
+    const cardWidth = 420;
+    const estimatedCardHeight = 330;
+    const gap = 42;
+    const safePadding = 26;
+
+    const spaceBelow = window.innerHeight - (postsTourRect.top + postsTourRect.height);
+    const spaceAbove = postsTourRect.top;
+    const spaceRight = window.innerWidth - (postsTourRect.left + postsTourRect.width);
+    const spaceLeft = postsTourRect.left;
+
+    let top = postsTourRect.top + postsTourRect.height + gap;
+    let left = postsTourRect.left + postsTourRect.width / 2 - cardWidth / 2;
+
+    if (spaceBelow >= estimatedCardHeight + gap) {
+      top = postsTourRect.top + postsTourRect.height + gap;
+      left = postsTourRect.left + postsTourRect.width / 2 - cardWidth / 2;
+    } else if (spaceAbove >= estimatedCardHeight + gap) {
+      top = postsTourRect.top - estimatedCardHeight - gap;
+      left = postsTourRect.left + postsTourRect.width / 2 - cardWidth / 2;
+    } else if (spaceRight >= cardWidth + gap) {
+      top = postsTourRect.top;
+      left = postsTourRect.left + postsTourRect.width + gap;
+    } else if (spaceLeft >= cardWidth + gap) {
+      top = postsTourRect.top;
+      left = postsTourRect.left - cardWidth - gap;
+    }
+
+    left = Math.max(safePadding, Math.min(left, window.innerWidth - cardWidth - safePadding));
+    top = Math.max(
+      safePadding,
+      Math.min(top, window.innerHeight - estimatedCardHeight - safePadding)
+    );
+
+    return {
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${cardWidth}px`,
+    };
+  };
+
+  const sortedPosts = useMemo(() => {
+    return sortPostsByDate(posts);
+  }, [posts]);
+
   const selectedPost = useMemo(() => {
-    return posts.find((post) => post.id === selectedPostId) || posts[0] || null;
-  }, [posts, selectedPostId]);
+    return sortedPosts.find((post) => post.id === selectedPostId) || sortedPosts[0] || null;
+  }, [sortedPosts, selectedPostId]);
+
+  const visibleCalendarPosts = useMemo(() => {
+    if (sortedPosts.length === 0) return [];
+
+    const visibleCount = Math.min(3, sortedPosts.length);
+
+    return Array.from({ length: visibleCount }).map((_, index) => {
+      const postIndex = (calendarStartIndex + index) % sortedPosts.length;
+      return sortedPosts[postIndex];
+    });
+  }, [sortedPosts, calendarStartIndex]);
+
+  const getPostDateParts = (post: any) => {
+    const date = post?.scheduled_at ? new Date(post.scheduled_at) : new Date();
+
+    return {
+      weekday: date.toLocaleDateString(undefined, { weekday: 'short' }),
+      day: date.toLocaleDateString(undefined, { day: '2-digit' }),
+      month: date.toLocaleDateString(undefined, { month: 'short' }),
+    };
+  };
+
+  const getPostPositionLabel = (post: any) => {
+    const index = sortedPosts.findIndex((item) => item.id === post?.id);
+
+    return index >= 0 ? `Day ${index + 1}` : post?.scheduled_day || 'Day';
+  };
+
+  const activeIndustry = String(
+    profile?.industry ||
+      campaign?.business_type ||
+      campaign?.industry ||
+      ''
+  ).toLowerCase();
+
+  const dynamicAudienceTargets = useMemo(() => {
+    const matchedKey = Object.keys(industryAudienceTargets).find((key) =>
+      activeIndustry.includes(key)
+    );
+
+    return matchedKey ? industryAudienceTargets[matchedKey] : defaultAudienceTargets;
+  }, [activeIndustry]);
+
+  useEffect(() => {
+    if (!dynamicAudienceTargets.includes(audienceTarget)) {
+      setAudienceTarget(dynamicAudienceTargets[0] || 'Custom audience');
+    }
+  }, [dynamicAudienceTargets, audienceTarget]);
 
   const postedCount = posts.filter((post) => post.is_posted).length;
   const postsLeftThisWeek = Math.max((posts.length || 0) - postedCount, 0);
@@ -1967,27 +1626,6 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
     '--client-secondary': brandSecondary,
     '--client-accent': brandAccent,
   } as CSSProperties;
-
-  const activeIndustry = String(
-    profile?.industry ||
-      campaign?.business_type ||
-      campaign?.industry ||
-      ''
-  ).toLowerCase();
-
-  const dynamicAudienceTargets = useMemo(() => {
-    const matchedKey = Object.keys(industryAudienceTargets).find((key) =>
-      activeIndustry.includes(key)
-    );
-
-    return matchedKey ? industryAudienceTargets[matchedKey] : defaultAudienceTargets;
-  }, [activeIndustry]);
-
-  useEffect(() => {
-    if (!dynamicAudienceTargets.includes(audienceTarget)) {
-      setAudienceTarget(dynamicAudienceTargets[0] || 'Custom audience');
-    }
-  }, [dynamicAudienceTargets, audienceTarget]);
 
   return (
     <div className="campaign-brand-shell simplified-posts-page" style={brandStyle}>
@@ -2081,7 +1719,6 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                     onChange={(event) => setPendingCampaignId(event.target.value)}
                     disabled={
                       deletingCampaign ||
-                      regeneratingCampaign ||
                       duplicatingCampaign ||
                       renamingCampaign ||
                       loadingSelectedPlan
@@ -2096,7 +1733,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                 </label>
 
                 <div className="posts-plan-usage">
-                  {campaigns.length}/{MAX_SAVED_CAMPAIGNS} plans created this month
+                  {monthlyCampaignCount}/{MAX_SAVED_CAMPAIGNS} plans created this month
                 </div>
 
                 <div className="posts-plan-actions">
@@ -2107,7 +1744,6 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                       !pendingCampaignId ||
                       loadingSelectedPlan ||
                       deletingCampaign ||
-                      regeneratingCampaign ||
                       duplicatingCampaign ||
                       renamingCampaign
                     }
@@ -2124,7 +1760,6 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                       !campaign?.id ||
                       loadingSelectedPlan ||
                       deletingCampaign ||
-                      regeneratingCampaign ||
                       duplicatingCampaign ||
                       renamingCampaign
                     }
@@ -2140,7 +1775,6 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                       !campaign?.id ||
                       loadingSelectedPlan ||
                       deletingCampaign ||
-                      regeneratingCampaign ||
                       duplicatingCampaign ||
                       renamingCampaign
                     }
@@ -2156,7 +1790,6 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                       !campaign?.id ||
                       loadingSelectedPlan ||
                       deletingCampaign ||
-                      regeneratingCampaign ||
                       duplicatingCampaign ||
                       renamingCampaign
                     }
@@ -2168,12 +1801,21 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
             </section>
           </section>
 
-          <section className="simplified-week-section">
+          <section className="simplified-week-section premium-week-calendar-section fromone-flow-page">
             <div className="simplified-section-heading">
               <div>
-                <div className="page-eyebrow">Weekly posts</div>
+                <div className="page-eyebrow">Weekly calendar</div>
                 <h2>Choose a day to review.</h2>
+                <p>See three posts at a time and move through the week with one button.</p>
               </div>
+
+              <button
+                type="button"
+                className="premium-next-day-button"
+                onClick={goToNextCalendarDay}
+              >
+                Next day →
+              </button>
             </div>
 
             {posts.length === 0 ? (
@@ -2184,45 +1826,57 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
               </div>
             ) : (
               <>
-                <div
-                  ref={daySelectorRef}
-                  className="day-carousel-wrap no-more-days simplified-day-wrap"
-                >
-                  <div className="day-carousel-track no-scroll-carousel">
-                    {posts.map((post, index) => (
+                <div ref={daySelectorRef} className="premium-calendar-carousel">
+                  {visibleCalendarPosts.map((post) => {
+                    const dateParts = getPostDateParts(post);
+                    const isSelected = selectedPost?.id === post.id;
+                    const isToday = isPostScheduledToday(post);
+
+                    return (
                       <button
                         key={post.id}
                         type="button"
-                        className={
-                          selectedPost?.id === post.id
-                            ? 'day-select-button carousel-day-card active'
-                            : 'day-select-button carousel-day-card'
-                        }
-                        onClick={() => {
-                          setSelectedPostId(post.id);
-                          cancelEditingPost();
-                        }}
+                        className={[
+                          'premium-calendar-day-card',
+                          isSelected ? 'is-selected' : '',
+                          isToday && !post.is_posted ? 'is-today' : '',
+                          post.is_posted ? 'is-posted' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        onClick={() => choosePost(post.id)}
                       >
-                        <span>{post.scheduled_day || `Day ${index + 1}`}</span>
-                        <strong>{post.platform || 'Facebook'}</strong>
-                        <small>
-                          {isPostScheduledToday(post) && !post.is_posted
+                        <span className="premium-calendar-day-label">
+                          {getPostPositionLabel(post)}
+                        </span>
+
+                        <div className="premium-calendar-date-row">
+                          <span>{dateParts.weekday}</span>
+                          <strong>{dateParts.day}</strong>
+                          <small>{dateParts.month}</small>
+                        </div>
+
+                        <div className="premium-calendar-post-info">
+                          <strong>{post.platform || 'Social post'}</strong>
+                          <p>{post.title || post.scheduled_day || 'Post ready to review'}</p>
+                        </div>
+
+                        <span className="premium-calendar-status">
+                          {isToday && !post.is_posted
                             ? 'Start here'
-                            : post.audience_target
-                              ? `For ${post.audience_target}`
-                              : post.is_posted
-                                ? 'Posted'
-                                : 'Ready'}
-                        </small>
+                            : post.is_posted
+                              ? 'Posted'
+                              : 'Ready'}
+                        </span>
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
 
                 {selectedPost && (
-                  <article className="selected-post-panel clean-selected-post simplified-selected-post posts-selected-card">
+                  <article className="fromone-post-flow">
                     <div className="selected-post-tags">
-                      <span>{selectedPost.scheduled_day || 'Day 1'}</span>
+                      <span>{getPostPositionLabel(selectedPost)}</span>
                       <span>{selectedPost.platform || 'Facebook'}</span>
                       <span>{selectedPost.is_posted ? 'Posted' : 'Ready'}</span>
                       {isPostScheduledToday(selectedPost) && !selectedPost.is_posted && (
@@ -2233,133 +1887,264 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                       )}
                     </div>
 
-                    <h2>{selectedPost.title || 'Social Media Post'}</h2>
-
-                    <div className="publish-checklist-card posts-full-width-checklist">
-                      <div>
-                        <div className="page-eyebrow">Simple steps</div>
-                        <h3>Publish this post</h3>
-                        <p>Follow these steps in order. No guessing needed.</p>
-                      </div>
-
-                      <ol className="publish-checklist">
-                        <li className="is-complete">
-                          <span>1</span>
-                          <strong>Read the post</strong>
-                        </li>
-
-                        <li className={selectedPost.image_url ? 'is-complete' : ''}>
-                          <span>2</span>
-                          <strong>Add image</strong>
-                        </li>
-
-                        <li>
-                          <span>3</span>
-                          <strong>Copy post</strong>
-                        </li>
-
-                        <li>
-                          <span>4</span>
-                          <strong>Open {selectedPost.platform || 'platform'}</strong>
-                        </li>
-
-                        <li className={selectedPost.is_posted ? 'is-complete' : ''}>
-                          <span>5</span>
-                          <strong>Mark as posted</strong>
-                        </li>
-                      </ol>
-                    </div>
-
-                    <div className="posts-publish-layout">
-                      <div className="selected-post-main">
-                        <div className="selected-post-copy">
-                          <p>{selectedPost.caption || 'No caption saved.'}</p>
-
-                          {selectedPost.cta && (
-                            <p>
-                              <strong>CTA:</strong> {selectedPost.cta}
-                            </p>
-                          )}
-
-                          {Array.isArray(selectedPost.hashtags) &&
-                            selectedPost.hashtags.length > 0 && (
-                              <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
-                            )}
+                    <section className="fromone-flow-preview-card">
+                      <div className="fromone-flow-card-top">
+                        <div>
+                          <div className="page-eyebrow">Step 1 · Read the post</div>
+                          <h2>{selectedPost.title || 'Social Media Post'}</h2>
+                          <p>Check the post first. Then use the tools underneath only if needed.</p>
                         </div>
 
-                        <details className="suggested-image-details">
-                          <summary>Suggested image</summary>
+                        <span>{selectedPost.platform || 'Social post'}</span>
+                      </div>
+
+                      <div className="fromone-post-preview-body">
+                        <p>{selectedPost.caption || 'No caption saved.'}</p>
+
+                        {selectedPost.cta && (
                           <p>
-                            {selectedPost.image_prompt ||
-                              'Use a clean, professional image that supports the message of this post.'}
+                            <strong>CTA:</strong> {selectedPost.cta}
                           </p>
-                        </details>
+                        )}
+
+                        {Array.isArray(selectedPost.hashtags) &&
+                          selectedPost.hashtags.length > 0 && (
+                            <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
+                          )}
+                      </div>
+                    </section>
+
+                    <section
+                      ref={publishingPanelRef}
+                      className="fromone-flow-tools-card"
+                    >
+                      <div className="fromone-flow-tools-header">
+                        <div>
+                          <div className="page-eyebrow">Step 2 · Prepare and publish</div>
+                          <h3>Use these tools in order.</h3>
+                          <p>
+                            Everything is grouped together so the client can follow one clear path.
+                          </p>
+                        </div>
                       </div>
 
-                      <aside
-                        ref={publishingPanelRef}
-                        className="manual-publishing-panel simplified-publishing-panel"
-                      >
-                        <div className="page-eyebrow">Publish this post</div>
+                      <div className="fromone-flow-tools-list">
+                        <section className="fromone-flow-tool-row">
+                          <div className="fromone-flow-step-marker">2A</div>
 
-                        <div className="manual-image-placeholder uploaded-image-box">
-                          {selectedPost.image_url ? (
-                            <img src={selectedPost.image_url} alt="Uploaded post image" />
-                          ) : (
-                            <>
-                              <strong>No image uploaded</strong>
-                              <p>Upload the image you want to use for this post.</p>
-                            </>
-                          )}
-                        </div>
+                          <div className="fromone-flow-tool-copy">
+                            <strong>Make it more specific</strong>
+                            <p>Optional: rewrite the post for one type of customer.</p>
+                          </div>
 
-                        <label className="upload-image-button">
-                          ⇪ Upload image
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(event) => handleImageUpload(event, selectedPost)}
-                            disabled={uploadingImage}
-                          />
-                        </label>
+                          <div className="fromone-flow-tool-action">
+                            <select
+                              className="input"
+                              value={audienceTarget}
+                              onChange={(event) => setAudienceTarget(event.target.value)}
+                            >
+                              {dynamicAudienceTargets.map((item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ))}
+                            </select>
 
-                        <button
-                          className="secondary-button danger-button"
-                          onClick={() => deletePostImage(selectedPost)}
-                          disabled={
-                            uploadingImage ||
-                            (!selectedPost.image_url && !selectedPost.image_path)
-                          }
-                        >
-                          Delete image
-                        </button>
+                            {audienceTarget === 'Custom audience' && (
+                              <input
+                                className="input"
+                                value={customAudienceTarget}
+                                onChange={(event) => setCustomAudienceTarget(event.target.value)}
+                                placeholder="Example: first-time homeowners"
+                              />
+                            )}
 
-                        <button onClick={() => copyPost(selectedPost)}>Copy post</button>
+                            <button
+                              type="button"
+                              onClick={() => handleRewriteForAudience(selectedPost)}
+                              disabled={accessLocked || rewritingPost}
+                            >
+                              {rewritingPost ? 'Making specific...' : 'Make it more specific'}
+                            </button>
+                          </div>
+                        </section>
 
-                        <button
-                          className="secondary-button"
-                          onClick={() => openPlatform(selectedPost.platform || 'Facebook')}
-                        >
-                          Open {selectedPost.platform || 'Facebook'}
-                        </button>
+                        <section className="fromone-flow-tool-row">
+                          <div className="fromone-flow-step-marker">2B</div>
 
-                        {selectedPost.is_posted ? (
-                          <button
-                            className="secondary-button"
-                            onClick={() => markAsScheduled(selectedPost.id)}
-                          >
-                            Mark as not posted
-                          </button>
-                        ) : (
-                          <button
-                            className="posted-button"
-                            onClick={() => markAsPosted(selectedPost.id)}
-                          >
-                            Mark as posted
-                          </button>
-                        )}
-                      </aside>
-                    </div>
+                          <div className="fromone-flow-tool-copy">
+                            <strong>Edit wording</strong>
+                            <p>Change the caption, CTA, hashtags, or image idea.</p>
+                          </div>
+
+                          <div className="fromone-flow-tool-action">
+                            {editingPostId === selectedPost.id ? (
+                              <div className="fromone-flow-edit-box">
+                                <label>
+                                  <strong>Caption</strong>
+                                  <textarea
+                                    className="input"
+                                    value={editCaption}
+                                    onChange={(event) => setEditCaption(event.target.value)}
+                                  />
+                                </label>
+
+                                <label>
+                                  <strong>CTA</strong>
+                                  <input
+                                    className="input"
+                                    value={editCta}
+                                    onChange={(event) => setEditCta(event.target.value)}
+                                  />
+                                </label>
+
+                                <label>
+                                  <strong>Hashtags</strong>
+                                  <input
+                                    className="input"
+                                    value={editHashtags}
+                                    onChange={(event) => setEditHashtags(event.target.value)}
+                                    placeholder="#LocalBusiness #Marketing"
+                                  />
+                                </label>
+
+                                <label>
+                                  <strong>Image idea</strong>
+                                  <textarea
+                                    className="input"
+                                    value={editImagePrompt}
+                                    onChange={(event) => setEditImagePrompt(event.target.value)}
+                                  />
+                                </label>
+
+                                <div className="fromone-flow-inline-actions">
+                                  <button
+                                    type="button"
+                                    onClick={() => saveEditedPost(selectedPost)}
+                                    disabled={savingEdit}
+                                  >
+                                    {savingEdit ? 'Saving...' : 'Save changes'}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={cancelEditingPost}
+                                    disabled={savingEdit}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="secondary-button"
+                                onClick={() => startEditingPost(selectedPost)}
+                              >
+                                Edit post
+                              </button>
+                            )}
+                          </div>
+                        </section>
+
+                        <section className="fromone-flow-tool-row fromone-flow-image-row">
+                          <div className="fromone-flow-step-marker">2C</div>
+
+                          <div className="fromone-flow-tool-copy">
+                            <strong>Add image</strong>
+                            <p>Upload the image and keep the suggested image idea beside it.</p>
+                          </div>
+
+                          <div className="fromone-flow-tool-action">
+                            <div className="fromone-flow-image-grid">
+                              <div className="manual-image-placeholder uploaded-image-box">
+                                {selectedPost.image_url ? (
+                                  <img src={selectedPost.image_url} alt="Uploaded post image" />
+                                ) : (
+                                  <>
+                                    <strong>No image uploaded</strong>
+                                    <p>Upload the image you want to use for this post.</p>
+                                  </>
+                                )}
+                              </div>
+
+                              <div className="fromone-flow-image-idea">
+                                <strong>Suggested image</strong>
+                                <p>
+                                  {editingPostId === selectedPost.id
+                                    ? editImagePrompt ||
+                                      'Use a clean, professional image that supports the message of this post.'
+                                    : selectedPost.image_prompt ||
+                                      'Use a clean, professional image that supports the message of this post.'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="fromone-flow-inline-actions">
+                              <label className="upload-image-button">
+                                ⇪ Upload image
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(event) => handleImageUpload(event, selectedPost)}
+                                  disabled={uploadingImage}
+                                />
+                              </label>
+
+                              <button
+                                className="secondary-button danger-button"
+                                onClick={() => deletePostImage(selectedPost)}
+                                disabled={
+                                  uploadingImage ||
+                                  (!selectedPost.image_url && !selectedPost.image_path)
+                                }
+                              >
+                                Delete image
+                              </button>
+                            </div>
+                          </div>
+                        </section>
+
+                        <section className="fromone-flow-tool-row fromone-flow-final-row">
+                          <div className="fromone-flow-step-marker">2D</div>
+
+                          <div className="fromone-flow-tool-copy">
+                            <strong>Copy and publish</strong>
+                            <p>Copy the post, open the platform, publish it, then mark it done.</p>
+                          </div>
+
+                          <div className="fromone-flow-tool-action">
+                            <div className="fromone-flow-publish-buttons">
+                              <button onClick={() => copyPost(selectedPost)}>Copy post</button>
+
+                              <button
+                                className="secondary-button"
+                                onClick={() => openPlatform(selectedPost.platform || 'Facebook')}
+                              >
+                                Open {selectedPost.platform || 'Facebook'}
+                              </button>
+
+                              {selectedPost.is_posted ? (
+                                <button
+                                  className="secondary-button"
+                                  onClick={() => markAsScheduled(selectedPost.id)}
+                                >
+                                  Mark as not posted
+                                </button>
+                              ) : (
+                                <button
+                                  className="posted-button"
+                                  onClick={() => markAsPosted(selectedPost.id)}
+                                >
+                                  Mark as posted
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </section>
+                      </div>
+                    </section>
                   </article>
                 )}
               </>
