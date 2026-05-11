@@ -2203,6 +2203,41 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
 
                       <h2>{selectedPost.title || 'Social Media Post'}</h2>
 
+                      <div className="publish-checklist-card">
+                        <div>
+                          <div className="page-eyebrow">Simple steps</div>
+                          <h3>Publish this post</h3>
+                          <p>Follow these steps in order. No guessing needed.</p>
+                        </div>
+
+                        <ol className="publish-checklist">
+                          <li className="is-complete">
+                            <span>1</span>
+                            <strong>Read the post</strong>
+                          </li>
+
+                          <li className={selectedPost.image_url ? 'is-complete' : ''}>
+                            <span>2</span>
+                            <strong>Add image</strong>
+                          </li>
+
+                          <li>
+                            <span>3</span>
+                            <strong>Copy post</strong>
+                          </li>
+
+                          <li>
+                            <span>4</span>
+                            <strong>Open {selectedPost.platform || 'platform'}</strong>
+                          </li>
+
+                          <li className={selectedPost.is_posted ? 'is-complete' : ''}>
+                            <span>5</span>
+                            <strong>Mark as posted</strong>
+                          </li>
+                        </ol>
+                      </div>
+
                       <div
                         ref={audienceToolRef}
                         className="audience-rewrite-panel simplified-audience-panel"
