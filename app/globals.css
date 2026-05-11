@@ -7087,3 +7087,170 @@ body {
     width: 100%;
   }
 }
+/* Dashboard Phase 6 visual polish */
+.dashboard-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+  gap: 1.25rem;
+  align-items: stretch;
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-top-grid .today-task-card,
+.dashboard-weekly-progress-card {
+  min-height: 300px;
+  border-radius: 28px;
+}
+
+.dashboard-top-grid .today-task-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 212, 59, 0.35);
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 34%),
+    linear-gradient(135deg, #101420 0%, #070b14 100%);
+  color: #ffffff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+.dashboard-top-grid .today-task-card h2 {
+  color: #ffffff;
+  max-width: 640px;
+}
+
+.dashboard-top-grid .today-task-card p {
+  color: rgba(255, 255, 255, 0.74);
+  max-width: 620px;
+}
+
+.dashboard-top-grid .today-task-meta span {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-top-grid .today-task-button {
+  background: #ffd43b;
+  color: #080b12;
+  border: 0;
+  box-shadow: 0 18px 42px rgba(255, 212, 59, 0.22);
+}
+
+.dashboard-top-grid .today-task-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 52px rgba(255, 212, 59, 0.28);
+}
+
+.dashboard-weekly-progress-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 212, 59, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 36%),
+    linear-gradient(135deg, #111827 0%, #090d16 100%);
+  color: #ffffff;
+  padding: 1.5rem;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.15rem;
+}
+
+.dashboard-weekly-progress-card .page-eyebrow {
+  color: #ffd43b;
+}
+
+.dashboard-weekly-progress-card h2 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.45rem, 2.5vw, 2.2rem);
+  line-height: 1.1;
+  color: #ffffff;
+  letter-spacing: -0.04em;
+}
+
+.dashboard-weekly-progress-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+  font-size: 0.98rem;
+}
+
+.dashboard-weekly-progress-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dashboard-weekly-progress-count {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  background: rgba(18, 183, 106, 0.16);
+  color: #75e0a7;
+  border: 1px solid rgba(117, 224, 167, 0.18);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.dashboard-weekly-progress-track {
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.dashboard-weekly-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd43b, #12b76a);
+  transition: width 220ms ease;
+}
+
+.dashboard-weekly-progress-button {
+  width: fit-content;
+  min-width: 150px;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.dashboard-weekly-progress-button:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1100px) {
+  .dashboard-top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-top-grid .today-task-card,
+  .dashboard-weekly-progress-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-top-grid {
+    gap: 1rem;
+  }
+
+  .dashboard-weekly-progress-card,
+  .dashboard-top-grid .today-task-card {
+    border-radius: 22px;
+    padding: 1rem;
+  }
+
+  .dashboard-weekly-progress-header {
+    flex-direction: column;
+  }
+
+  .dashboard-weekly-progress-button {
+    width: 100%;
+  }
+}
