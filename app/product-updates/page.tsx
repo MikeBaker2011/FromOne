@@ -90,6 +90,11 @@ export default function ProductUpdatesPage() {
     setTitle(item.title);
     setBody(item.body);
     setCategory(item.category || 'Product Update');
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
   };
 
   const saveDraft = async () => {
@@ -202,7 +207,7 @@ export default function ProductUpdatesPage() {
   };
 
   return (
-    <main className="product-updates-public-page">
+    <main className="product-updates-public-page product-updates-page">
       <PublicNav />
 
       <div className="page-header product-updates-hero">
@@ -214,7 +219,7 @@ export default function ProductUpdatesPage() {
       </div>
 
       {isAdmin && (
-        <section className="premium-card product-updates-admin-card">
+        <section className="premium-card product-updates-section product-updates-admin-card">
           <div>
             <div className="page-eyebrow">Admin Only</div>
             <h2>{editingId ? 'Edit product update' : 'Create product update'}</h2>
@@ -270,7 +275,7 @@ export default function ProductUpdatesPage() {
         </section>
       )}
 
-      <section className="premium-card product-updates-timeline-card">
+      <section className="premium-card product-updates-section product-updates-timeline-card">
         <div className="product-updates-section-header">
           <div>
             <div className="page-eyebrow">Latest Improvements</div>
@@ -293,7 +298,7 @@ export default function ProductUpdatesPage() {
               <article key={item.id} className="product-update-item">
                 <div className="product-update-marker">✓</div>
 
-                <div>
+                <div className="product-update-content">
                   <div className="product-update-meta">
                     <span>{item.category || 'Product Update'}</span>
                     {item.published_at && (
@@ -311,7 +316,7 @@ export default function ProductUpdatesPage() {
                   <p>{item.body}</p>
 
                   {isAdmin && (
-                    <div className="product-update-admin-row">
+                    <div className="product-update-admin-row product-update-published-actions">
                       <button className="secondary-button" onClick={() => startEditing(item)}>
                         Edit
                       </button>
@@ -336,7 +341,7 @@ export default function ProductUpdatesPage() {
       </section>
 
       {isAdmin && draftUpdates.length > 0 && (
-        <section className="premium-card product-updates-drafts-card">
+        <section className="premium-card product-updates-section product-updates-drafts-card">
           <div className="product-updates-section-header">
             <div>
               <div className="page-eyebrow">Admin Drafts</div>
@@ -349,13 +354,13 @@ export default function ProductUpdatesPage() {
           <div className="product-updates-draft-list">
             {draftUpdates.map((item) => (
               <article key={item.id} className="product-update-draft-item">
-                <div>
+                <div className="product-update-draft-content">
                   <span>{item.category || 'Product Update'}</span>
                   <h3>{item.title}</h3>
                   <p>{item.body}</p>
                 </div>
 
-                <div className="product-update-admin-row">
+                <div className="product-update-admin-row product-update-draft-actions">
                   <button className="secondary-button" onClick={() => startEditing(item)}>
                     Edit
                   </button>
