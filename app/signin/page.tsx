@@ -19,6 +19,8 @@ export default function SignInPage() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [loading, setLoading] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
+  const [authMessage, setAuthMessage] = useState('');
 
   useEffect(() => {
     const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
@@ -28,6 +30,14 @@ export default function SignInPage() {
       setRememberMe(true);
     }
   }, []);
+
+  const getEmailRedirectUrl = () => {
+    if (typeof window === 'undefined') {
+      return 'https://fromone.co.uk/dashboard';
+    }
+
+    return `${window.location.origin}/dashboard`;
+  };
 
   const saveRememberedEmail = (cleanEmail: string) => {
     if (rememberMe) {
@@ -39,6 +49,8 @@ export default function SignInPage() {
 
   const handleAuth = async () => {
     const cleanEmail = email.trim();
+
+    setAuthMessage('');
 
     if (!cleanEmail) {
       alert('Please enter your email.');
@@ -69,6 +81,9 @@ export default function SignInPage() {
         const { error } = await supabase.auth.signUp({
           email: cleanEmail,
           password,
+          options: {
+            emailRedirectTo: getEmailRedirectUrl(),
+          },
         });
 
         if (error) {
@@ -76,7 +91,9 @@ export default function SignInPage() {
         }
 
         saveRememberedEmail(cleanEmail);
-        alert('Account created. Check your email if confirmation is enabled, then sign in.');
+        setAuthMessage(
+          'Account created. Please check your email to verify your account before signing in.'
+        );
         setMode('signin');
       }
     } catch (error: any) {
@@ -86,8 +103,44 @@ export default function SignInPage() {
     }
   };
 
+  const handleResendConfirmation = async () => {
+    const cleanEmail = email.trim();
+
+    setAuthMessage('');
+
+    if (!cleanEmail) {
+      alert('Enter your email address first, then click resend verification email.');
+      return;
+    }
+
+    setResendingConfirmation(true);
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: cleanEmail,
+        options: {
+          emailRedirectTo: getEmailRedirectUrl(),
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      saveRememberedEmail(cleanEmail);
+      setAuthMessage('Verification email sent. Please check your inbox and spam folder.');
+    } catch (error: any) {
+      alert(error?.message || 'Could not resend verification email.');
+    } finally {
+      setResendingConfirmation(false);
+    }
+  };
+
   const handleForgotPassword = async () => {
     const cleanEmail = email.trim();
+
+    setAuthMessage('');
 
     if (!cleanEmail) {
       alert('Enter your email address first, then click forgot password.');
@@ -106,7 +159,7 @@ export default function SignInPage() {
       }
 
       saveRememberedEmail(cleanEmail);
-      alert('Password reset email sent. Please check your inbox.');
+      setAuthMessage('Password reset email sent. Please check your inbox.');
     } catch (error: any) {
       alert(error?.message || 'Could not send password reset email.');
     } finally {
@@ -170,6 +223,12 @@ export default function SignInPage() {
               : 'Create your account to start your FromOne demo.'}
           </p>
 
+          {authMessage && (
+            <div className="signin-auth-message">
+              {authMessage}
+            </div>
+          )}
+
           <label>
             <strong>Email address</strong>
           </label>
@@ -207,20 +266,39 @@ export default function SignInPage() {
                 type="button"
                 className="signin-forgot-button"
                 onClick={handleForgotPassword}
-                disabled={resettingPassword || loading}
+                disabled={resettingPassword || loading || resendingConfirmation}
               >
                 {resettingPassword ? 'Sending reset email...' : 'Forgot password?'}
               </button>
             </div>
           )}
 
-          <button className="signin-primary-button" onClick={handleAuth} disabled={loading}>
+          <button
+            className="signin-primary-button"
+            onClick={handleAuth}
+            disabled={loading || resettingPassword || resendingConfirmation}
+          >
             {loading
               ? 'Please wait...'
               : mode === 'signin'
                 ? 'Sign In'
                 : 'Create Account'}
           </button>
+
+          {mode === 'signin' && (
+            <div className="signin-verification-help">
+              <span>Waiting for your verification email?</span>
+
+              <button
+                type="button"
+                className="signin-resend-button"
+                onClick={handleResendConfirmation}
+                disabled={loading || resettingPassword || resendingConfirmation}
+              >
+                {resendingConfirmation ? 'Sending...' : 'Resend verification email'}
+              </button>
+            </div>
+          )}
 
           <div className="signin-switch">
             <span>
@@ -230,7 +308,10 @@ export default function SignInPage() {
             <button
               type="button"
               className="secondary-button"
-              onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
+              onClick={() => {
+                setAuthMessage('');
+                setMode(mode === 'signin' ? 'signup' : 'signin');
+              }}
             >
               {mode === 'signin' ? 'Create one' : 'Sign in'}
             </button>

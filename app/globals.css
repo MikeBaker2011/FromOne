@@ -6080,3 +6080,53 @@ body {
     flex-direction: column;
   }
 }
+.signin-auth-message {
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 212, 59, 0.28);
+  background: rgba(255, 212, 59, 0.08);
+  color: var(--text);
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.signin-verification-help {
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.035);
+  display: grid;
+  gap: 10px;
+  text-align: center;
+}
+
+.signin-verification-help span {
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.signin-resend-button {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 212, 59, 0.14);
+  color: var(--brand);
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.signin-resend-button:hover {
+  background: rgba(255, 212, 59, 0.22);
+}
+
+.signin-resend-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
