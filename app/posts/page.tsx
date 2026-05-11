@@ -55,8 +55,7 @@ const postsTourSteps = [
   },
   {
     title: 'Choose this week’s plan',
-    text:
-      'Use this dropdown to switch between saved weekly plans.',
+    text: 'Use this dropdown to switch between saved weekly plans.',
     target: 'campaigns',
   },
   {
@@ -749,19 +748,6 @@ export default function PostsPage() {
     }
 
     return true;
-  };
-
-  const safeArray = (value: any) => {
-    if (Array.isArray(value)) return value;
-
-    if (typeof value === 'string' && value.trim()) {
-      return value
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean);
-    }
-
-    return [];
   };
 
   const buildBusinessDescription = (businessProfile: any) => {
@@ -1950,11 +1936,6 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
     selectedPost?.business_name ||
     'Your business';
 
-  const services = Array.isArray(profile?.services) ? profile.services : [];
-  const contentPillars = Array.isArray(profile?.content_pillars) ? profile.content_pillars : [];
-  const audience = Array.isArray(profile?.target_audience) ? profile.target_audience : [];
-  const goals = Array.isArray(profile?.business_goals) ? profile.business_goals : [];
-
   const brandPrimary = profile?.brand_primary_color || '#ffd43b';
   const brandSecondary = profile?.brand_secondary_color || '#101420';
   const brandAccent = profile?.brand_accent_color || '#3ddc97';
@@ -2049,47 +2030,49 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
             </section>
           )}
 
-          <section className="weekly-progress-card">
-            <div>
-              <div className="page-eyebrow">This week</div>
-              <h3>
-                {postedCount} of {posts.length || 0} posts done
-              </h3>
-              <p>
-                {posts.length > 0 && postedCount === posts.length
-                  ? 'Nice work — this week is complete 🎉'
-                  : `${postsLeftThisWeek} posts left this week.`}
-              </p>
-            </div>
+          <section className="posts-progress-plan-grid">
+            <section className="weekly-progress-card">
+              <div>
+                <div className="page-eyebrow">This week</div>
+                <h3>
+                  {postedCount} of {posts.length || 0} posts done
+                </h3>
+                <p>
+                  {posts.length > 0 && postedCount === posts.length
+                    ? 'Nice work — this week is complete 🎉'
+                    : `${postsLeftThisWeek} posts left this week.`}
+                </p>
+              </div>
 
-            <div className="weekly-progress-bar" aria-label="Weekly post progress">
-              <span style={{ width: `${weeklyProgressPercent}%` }} />
-            </div>
-          </section>
+              <div className="weekly-progress-bar" aria-label="Weekly post progress">
+                <span style={{ width: `${weeklyProgressPercent}%` }} />
+              </div>
+            </section>
 
-          <section className="simplified-control-card">
-            <div ref={campaignHistoryControlsRef} className="simplified-campaign-controls">
-              <label>
-                <strong>This week’s plan</strong>
-                <select
-                  className="input"
-                  value={selectedCampaignId || ''}
-                  onChange={(event) => switchCampaign(event.target.value)}
-                  disabled={
-                    deletingCampaign ||
-                    regeneratingCampaign ||
-                    duplicatingCampaign ||
-                    renamingCampaign
-                  }
-                >
-                  {campaigns.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {getCampaignOptionLabel(item)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+            <section className="simplified-control-card">
+              <div ref={campaignHistoryControlsRef} className="simplified-campaign-controls">
+                <label>
+                  <strong>This week’s plan</strong>
+                  <select
+                    className="input"
+                    value={selectedCampaignId || ''}
+                    onChange={(event) => switchCampaign(event.target.value)}
+                    disabled={
+                      deletingCampaign ||
+                      regeneratingCampaign ||
+                      duplicatingCampaign ||
+                      renamingCampaign
+                    }
+                  >
+                    {campaigns.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {getCampaignOptionLabel(item)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </section>
           </section>
 
           <section className="simplified-week-section">

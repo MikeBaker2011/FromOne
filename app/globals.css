@@ -7512,3 +7512,80 @@ body {
     width: 100%;
   }
 }
+/* Posts page: put progress and plan selector on the same row */
+.simplified-posts-page .weekly-progress-card,
+.simplified-posts-page .simplified-control-card {
+  min-height: 210px;
+}
+
+.simplified-posts-page .weekly-progress-card {
+  margin: 0;
+}
+
+.simplified-posts-page .simplified-control-card {
+  margin: 0;
+}
+
+.simplified-posts-page .weekly-progress-card + .simplified-control-card {
+  margin-top: 0;
+}
+
+.simplified-posts-page .access-status-card + .weekly-progress-card,
+.simplified-posts-page .campaigns-page-header + .weekly-progress-card {
+  margin-top: 1.25rem;
+}
+
+.simplified-posts-page .weekly-progress-card,
+.simplified-posts-page .simplified-control-card {
+  width: 100%;
+}
+
+.simplified-posts-page .weekly-progress-card {
+  grid-area: progress;
+}
+
+.simplified-posts-page .simplified-control-card {
+  grid-area: controls;
+}
+
+.simplified-posts-page > .weekly-progress-card,
+.simplified-posts-page > .simplified-control-card {
+  display: none;
+}
+
+.simplified-posts-page .posts-progress-plan-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+  grid-template-areas: "progress controls";
+  gap: 1.25rem;
+  align-items: stretch;
+  margin: 1.25rem 0;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-card,
+.simplified-posts-page .posts-progress-plan-grid .simplified-control-card {
+  display: flex;
+  height: 100%;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .simplified-control-card {
+  flex-direction: column;
+  justify-content: center;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .simplified-campaign-controls {
+  width: 100%;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .simplified-campaign-controls label {
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .simplified-posts-page .posts-progress-plan-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "progress"
+      "controls";
+  }
+}
