@@ -7968,3 +7968,18 @@ body {
     margin-top: 0.75rem;
   }
 }
+/* Posts page: make saved plans pill match action row width */
+.posts-plan-usage {
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 430px) {
+  .posts-plan-usage {
+    white-space: normal;
+    line-height: 1.2;
+  }
+}

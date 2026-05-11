@@ -2096,7 +2096,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                 </label>
 
                 <div className="posts-plan-usage">
-                  {campaigns.length}/{MAX_SAVED_CAMPAIGNS} plans
+                  {campaigns.length}/{MAX_SAVED_CAMPAIGNS} plans created this month
                 </div>
 
                 <div className="posts-plan-actions">
