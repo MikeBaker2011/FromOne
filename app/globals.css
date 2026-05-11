@@ -7637,3 +7637,13 @@ body {
     margin-top: 0;
   }
 }
+/* Posts page: lower publishing panel to align with checklist card */
+.simplified-publishing-panel {
+  margin-top: 7rem !important;
+}
+
+@media (max-width: 980px) {
+  .simplified-publishing-panel {
+    margin-top: 0 !important;
+  }
+}
