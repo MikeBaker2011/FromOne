@@ -358,6 +358,30 @@ export default function PostsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPostsTour, postsTourStep, loading, selectedPostId, posts.length]);
 
+  const shouldOpenTodayPost = () => {
+    if (typeof window === 'undefined') return false;
+
+    const params = new URLSearchParams(window.location.search);
+    return params.get('today') === 'true';
+  };
+
+  const isPostScheduledToday = (post: any) => {
+    if (!post?.scheduled_at) return false;
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const scheduledTime = new Date(post.scheduled_at).getTime();
+
+    return (
+      scheduledTime >= startOfToday.getTime() &&
+      scheduledTime <= endOfToday.getTime()
+    );
+  };
+
   const closePostsTour = () => {
     localStorage.setItem(POSTS_TOUR_SEEN_KEY, 'true');
     setShowPostsTour(false);
@@ -554,7 +578,15 @@ export default function PostsPage() {
   };
 
   const loadAccess = async () => {
-    const { data: authData } = await supabase.auth.getUser();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+
+    if (authError) {
+      console.error('Auth session error:', authError.message);
+      setAccessLocked(false);
+      setAccessMessage('Please sign in again.');
+      return;
+    }
+
     const userId = authData.user?.id;
 
     if (!userId) return;
@@ -628,7 +660,8 @@ export default function PostsPage() {
 
     return Boolean(data);
   };
-    const checkWeeklyScanLimit = async (userId: string) => {
+
+  const checkWeeklyScanLimit = async (userId: string) => {
     const admin = await isAdminUser(userId);
 
     if (admin) {
@@ -912,19 +945,26 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
     setPosts(loadedPosts);
 
     if (loadedPosts.length > 0) {
+      const todayUnpostedPost = loadedPosts.find(
+        (post) => isPostScheduledToday(post) && !post.is_posted
+      );
+
+      const firstUnpostedPost = loadedPosts.find((post) => !post.is_posted);
+
       const stillExists = selectedPostId
         ? loadedPosts.some((post) => post.id === selectedPostId)
         : false;
 
-      if (!stillExists) {
-        setSelectedPostId(loadedPosts[0].id);
+      if (shouldOpenTodayPost() && todayUnpostedPost) {
+        setSelectedPostId(todayUnpostedPost.id);
+      } else if (!stillExists) {
+        setSelectedPostId(todayUnpostedPost?.id || firstUnpostedPost?.id || loadedPosts[0].id);
       }
     } else {
       setSelectedPostId(null);
     }
   };
-
-  const switchCampaign = async (campaignId: string) => {
+    const switchCampaign = async (campaignId: string) => {
     const nextCampaign = campaigns.find((item) => item.id === campaignId) || null;
 
     setSelectedCampaignId(campaignId);
@@ -2133,11 +2173,13 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
                         <span>{post.scheduled_day || `Day ${index + 1}`}</span>
                         <strong>{post.platform || 'Facebook'}</strong>
                         <small>
-                          {post.audience_target
-                            ? `For ${post.audience_target}`
-                            : post.is_posted
-                              ? 'Posted'
-                              : 'Ready'}
+                          {isPostScheduledToday(post) && !post.is_posted
+                            ? 'Start here'
+                            : post.audience_target
+                              ? `For ${post.audience_target}`
+                              : post.is_posted
+                                ? 'Posted'
+                                : 'Ready'}
                         </small>
                       </button>
                     ))}
@@ -2151,6 +2193,9 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
                         <span>{selectedPost.scheduled_day || 'Day 1'}</span>
                         <span>{selectedPost.platform || 'Facebook'}</span>
                         <span>{selectedPost.is_posted ? 'Posted' : 'Ready'}</span>
+                        {isPostScheduledToday(selectedPost) && !selectedPost.is_posted && (
+                          <span>Start here</span>
+                        )}
                         {selectedPost.audience_target && (
                           <span>For {selectedPost.audience_target}</span>
                         )}
