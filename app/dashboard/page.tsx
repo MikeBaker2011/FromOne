@@ -30,6 +30,13 @@ type AccessInfo = {
   subscription_status: string | null;
 };
 
+type WeeklyProgress = {
+  total: number;
+  posted: number;
+  remaining: number;
+  nextPost: any | null;
+};
+
 const platformFallback = [
   'Facebook',
   'Instagram',
@@ -50,7 +57,7 @@ const dashboardTourSteps = [
   {
     title: 'Welcome to your dashboard',
     text:
-      'This is where you create your weekly content. Set up the business once, then generate fresh posts whenever you need them.',
+      'This is where you create your weekly posts. Set up the business once, then create a fresh weekly plan whenever you need it.',
     target: 'header',
   },
   {
@@ -60,21 +67,21 @@ const dashboardTourSteps = [
     target: 'website',
   },
   {
-    title: 'Generate the campaign',
+    title: 'Create weekly posts',
     text:
-      'When the website or profile is ready, click here to create seven ready-to-use posts for the week.',
+      'When the website or business details are ready, click here to create seven ready-to-use posts for the week.',
     target: 'generate',
   },
   {
-    title: 'No website? Use a profile',
+    title: 'No website? Add business details',
     text:
-      'If there is no website, use this section to create or edit a manual business profile instead.',
+      'If there is no website, use this section to add the business details instead.',
     target: 'manual',
   },
   {
     title: 'Review your posts',
     text:
-      'After generating, open Posts to review, edit, copy, publish manually, and mark posts as done.',
+      'After creating the weekly posts, open Posts to review, copy, publish manually, and mark posts as done.',
     target: 'posts',
   },
 ];
@@ -92,6 +99,13 @@ export default function DashboardPage() {
   const [weeklyScansUsed, setWeeklyScansUsed] = useState(0);
   const [savedCampaignsCount, setSavedCampaignsCount] = useState(0);
   const [todayPost, setTodayPost] = useState<any>(null);
+
+  const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({
+    total: 0,
+    posted: 0,
+    remaining: 0,
+    nextPost: null,
+  });
 
   const [showDashboardTour, setShowDashboardTour] = useState(false);
   const [dashboardTourStep, setDashboardTourStep] = useState(0);
@@ -324,7 +338,7 @@ export default function DashboardPage() {
     try {
       return JSON.stringify(error, null, 2);
     } catch {
-      return 'Unknown error generating or saving posts.';
+      return 'Unknown error creating or saving posts.';
     }
   };
 
@@ -348,11 +362,69 @@ export default function DashboardPage() {
     return ['active', 'paid', 'trialing'].includes(String(status || '').toLowerCase());
   };
 
+  const getStartOfWeek = () => {
+    const date = new Date();
+    const day = date.getDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+
+    date.setDate(date.getDate() + mondayOffset);
+    date.setHours(0, 0, 0, 0);
+
+    return date;
+  };
+
+  const getEndOfWeek = () => {
+    const date = getStartOfWeek();
+    date.setDate(date.getDate() + 6);
+    date.setHours(23, 59, 59, 999);
+
+    return date;
+  };
+
+  const loadWeeklyProgress = async (userId: string) => {
+    const startOfWeek = getStartOfWeek();
+    const endOfWeek = getEndOfWeek();
+
+    const { data, error } = await supabase
+      .from('campaign_posts')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('scheduled_at', startOfWeek.toISOString())
+      .lte('scheduled_at', endOfWeek.toISOString())
+      .order('scheduled_at', { ascending: true });
+
+    if (error) {
+      console.error('Error loading weekly progress:', error.message);
+      setWeeklyProgress({
+        total: 0,
+        posted: 0,
+        remaining: 0,
+        nextPost: null,
+      });
+      return;
+    }
+
+    const posts = data || [];
+    const posted = posts.filter((post) => post.is_posted).length;
+    const remaining = Math.max(posts.length - posted, 0);
+    const nextPost =
+      posts.find((post) => !post.is_posted && new Date(post.scheduled_at).getTime() >= Date.now()) ||
+      posts.find((post) => !post.is_posted) ||
+      null;
+
+    setWeeklyProgress({
+      total: posts.length,
+      posted,
+      remaining,
+      nextPost,
+    });
+  };
+
   const calculateAccess = (access: AccessInfo | null) => {
     if (!access) {
       return {
         locked: false,
-        message: 'Trial access is being prepared.',
+        message: 'Demo access is being prepared.',
       };
     }
 
@@ -392,7 +464,7 @@ export default function DashboardPage() {
     return {
       locked: true,
       message:
-        'Your 7-day demo has ended. You can still view existing posts, but creating new campaigns is locked until access is extended or a subscription is active.',
+        'Your 7-day demo has ended. You can still view existing posts, but creating new weekly posts is locked until access is extended or a subscription is active.',
     };
   };
 
@@ -510,7 +582,7 @@ export default function DashboardPage() {
 
     if (used >= WEEKLY_SCAN_LIMIT) {
       alert(
-        `You have used your ${WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still generate campaigns using the manual profile route.`
+        `You have used your ${WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create weekly posts using the business details route.`
       );
       return false;
     }
@@ -544,7 +616,7 @@ export default function DashboardPage() {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error loading campaign count:', error.message);
+      console.error('Error loading weekly plan count:', error.message);
       setSavedCampaignsCount(0);
       return 0;
     }
@@ -559,7 +631,7 @@ export default function DashboardPage() {
 
     if (total >= MAX_SAVED_CAMPAIGNS) {
       alert(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved campaigns. Delete an old campaign from Posts before creating a new one.`
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans. Delete an old weekly plan from Posts before creating a new one.`
       );
       return false;
     }
@@ -606,6 +678,7 @@ export default function DashboardPage() {
         loadSavedCampaignCount(userId),
         loadOrCreateAccess(userId),
         loadTodayPost(userId),
+        loadWeeklyProgress(userId),
       ]);
     }
 
@@ -717,7 +790,7 @@ Also detect or infer:
     const cleanWebsiteUrl = normaliseWebsiteUrl(websiteUrl);
 
     if (!cleanWebsiteUrl) {
-      alert('Please enter a website URL, or use the manual profile option.');
+      alert('Please enter a website URL, or use the business details option.');
       return null;
     }
 
@@ -837,7 +910,7 @@ Also detect or infer:
     } catch (error: any) {
       const message = getErrorMessage(error);
 
-      console.error('Error saving manual profile:', error);
+      console.error('Error saving business details:', error);
       alert(message);
       return null;
     } finally {
@@ -956,7 +1029,7 @@ Also detect or infer:
       minute: '2-digit',
     });
 
-    return `${businessName || 'Campaign'} — ${date} ${time}`;
+    return `${businessName || 'Weekly plan'} — ${date} ${time}`;
   };
 
   const createCampaignFromProfile = async (
@@ -1010,7 +1083,7 @@ Also detect or infer:
     const posts: GeneratedPost[] = response.data.posts || [];
 
     if (!posts.length) {
-      alert(response.data.error || 'No posts were generated.');
+      alert(response.data.error || 'No posts were created.');
       return;
     }
 
@@ -1025,10 +1098,10 @@ Also detect or infer:
     const campaignIdea =
       scanData?.campaign_idea ||
       scanData?.brand_summary ||
-      'Seven-day mixed-platform content campaign';
+      'Seven-day mixed-platform weekly post plan';
 
     const detectedBusinessName =
-      scanData?.business_name || activeClient.business_name || 'Website Scan Campaign';
+      scanData?.business_name || activeClient.business_name || 'Website Scan Weekly Plan';
 
     const detectedIndustry = scanData?.industry || activeClient.industry || 'General';
     const detectedLocation = scanData?.location || activeClient.location || 'Online';
@@ -1126,9 +1199,9 @@ Also detect or infer:
       }
     }
 
-    await loadSavedCampaignCount(userId);
+    await Promise.all([loadSavedCampaignCount(userId), loadWeeklyProgress(userId)]);
 
-    alert('Your weekly campaign has been generated and saved.');
+    alert('Your weekly posts have been created and saved.');
     router.push('/posts');
   };
 
@@ -1155,13 +1228,13 @@ Also detect or infer:
       }
 
       if (!activeClient) {
-        alert('Please enter a website URL, or create a manual profile.');
+        alert('Please enter a website URL, or add business details.');
         setScanning(false);
         return;
       }
 
       if (!activeClient.website_url && !activeClient.business_name) {
-        alert('Please enter a website URL, or create a manual profile.');
+        alert('Please enter a website URL, or add business details.');
         setScanning(false);
         return;
       }
@@ -1173,13 +1246,13 @@ Also detect or infer:
     } catch (error: any) {
       const message = getErrorMessage(error);
 
-      console.error('Readable campaign error:', message);
+      console.error('Readable weekly posts error:', message);
 
       if (axios.isAxiosError(error)) {
         console.error('API response:', error.response?.data);
         console.error('API status:', error.response?.status);
       } else {
-        console.error('Non-Axios campaign error:', error);
+        console.error('Non-Axios weekly posts error:', error);
       }
 
       alert(message);
@@ -1208,7 +1281,7 @@ Also detect or infer:
     } catch (error: any) {
       const message = getErrorMessage(error);
 
-      console.error('Manual generate error:', error);
+      console.error('Business details create error:', error);
       alert(message);
     } finally {
       setScanning(false);
@@ -1218,15 +1291,19 @@ Also detect or infer:
   const hasManualProfile = Boolean(client?.business_name && client?.industry);
   const hasWebsite = Boolean(websiteUrl.trim());
   const weeklyScansRemaining = Math.max(WEEKLY_SCAN_LIMIT - weeklyScansUsed, 0);
+  const weeklyProgressPercent =
+    weeklyProgress.total > 0
+      ? Math.min(100, Math.round((weeklyProgress.posted / weeklyProgress.total) * 100))
+      : 0;
 
   return (
     <>
       <div ref={dashboardHeaderRef} className="page-header dashboard-simple-header">
         <div className="page-eyebrow">FromOne Dashboard</div>
-        <h1 className="page-title">Start a weekly campaign.</h1>
+        <h1 className="page-title">Create this week’s posts.</h1>
         <p className="page-description">
-          Add the client website to scan it, or create a manual profile if they do not
-          have a website. FromOne will create seven ready-to-use posts.
+          Add the business website, or use business details if there is no website.
+          FromOne will create seven ready-to-use posts for the week.
         </p>
 
         <button
@@ -1240,44 +1317,87 @@ Also detect or infer:
 
       {loading ? (
         <div className="premium-card">
-          <p>Loading client profile...</p>
+          <p>Loading business profile...</p>
         </div>
       ) : (
         <>
-          <section className="today-task-card">
-            <div>
-              <div className="page-eyebrow">Today’s Task</div>
+          <section className="dashboard-top-grid">
+            <section className="today-task-card">
+              <div>
+                <div className="page-eyebrow">Today’s Task</div>
 
-              {todayPost ? (
-                <>
-                  <h2>Your post is ready for today.</h2>
-                  <p>
-                    Review it, add an image, copy it, publish it, then mark it as posted.
-                  </p>
+                {todayPost ? (
+                  <>
+                    <h2>You have a post to make today.</h2>
+                    <p>
+                      Review it, add an image, copy it, publish it, then mark it as posted.
+                    </p>
 
-                  <div className="today-task-meta">
-                    <span>{todayPost.platform || 'Social post'}</span>
-                    <span>{todayPost.title || todayPost.scheduled_day || 'Today’s post'}</span>
-                  </div>
-                </>
+                    <div className="today-task-meta">
+                      <span>{todayPost.platform || 'Social post'}</span>
+                      <span>{todayPost.title || todayPost.scheduled_day || 'Today’s post'}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h2>No post due today.</h2>
+                    <p>
+                      You are clear for today. You can still view this week’s posts whenever
+                      you need.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="today-task-button"
+                onClick={() => router.push(todayPost ? '/posts?today=true' : '/posts')}
+              >
+                {todayPost ? 'Start today’s post' : 'View this week'}
+              </button>
+            </section>
+
+            <section className="dashboard-weekly-progress-card">
+              <div className="dashboard-weekly-progress-header">
+                <div>
+                  <div className="page-eyebrow">This week’s progress</div>
+                  <h2>
+                    {weeklyProgress.total > 0
+                      ? `${weeklyProgress.posted} of ${weeklyProgress.total} posts done`
+                      : 'No weekly posts yet'}
+                  </h2>
+                </div>
+
+                <span className="dashboard-weekly-progress-count">
+                  {weeklyProgress.remaining} left
+                </span>
+              </div>
+
+              <div className="dashboard-weekly-progress-track">
+                <span style={{ width: `${weeklyProgressPercent}%` }} />
+              </div>
+
+              {weeklyProgress.total > 0 ? (
+                <p>
+                  {weeklyProgress.remaining === 0
+                    ? 'Nice work — this week’s posts are complete 🎉'
+                    : weeklyProgress.nextPost
+                      ? `Next up: ${weeklyProgress.nextPost.title || weeklyProgress.nextPost.scheduled_day || 'your next post'}`
+                      : 'Keep going — open Posts to finish the remaining items.'}
+                </p>
               ) : (
-                <>
-                  <h2>No post due today.</h2>
-                  <p>
-                    You are clear for today. You can still view this week’s posts whenever
-                    you need.
-                  </p>
-                </>
+                <p>Create weekly posts to start tracking your progress here.</p>
               )}
-            </div>
 
-            <button
-              type="button"
-              className="today-task-button"
-              onClick={() => router.push(todayPost ? '/posts?today=true' : '/posts')}
-            >
-              {todayPost ? 'Start today’s post' : 'View this week'}
-            </button>
+              <button
+                type="button"
+                className="secondary-button dashboard-weekly-progress-button"
+                onClick={() => router.push('/posts')}
+              >
+                View posts
+              </button>
+            </section>
           </section>
 
           <section
@@ -1289,7 +1409,7 @@ Also detect or infer:
               <div className="page-eyebrow">{accessLocked ? 'Demo Ended' : 'Access Active'}</div>
               <h2>
                 {accessLocked
-                  ? 'Campaign creation is currently locked.'
+                  ? 'Creating weekly posts is currently locked.'
                   : 'Your demo access is active.'}
               </h2>
               <p>{accessMessage}</p>
@@ -1304,27 +1424,27 @@ Also detect or infer:
 
           <section className="dashboard-simple-shell">
             <div className="dashboard-create-card">
-              <div className="page-eyebrow">Create Campaign</div>
+              <div className="page-eyebrow">Create weekly posts</div>
 
               <h2>
                 {hasWebsite
-                  ? 'Scan this website and generate the week.'
+                  ? 'Scan this website and create the week.'
                   : hasManualProfile
-                    ? 'Use the saved profile or add a website.'
-                    : 'Enter a website, or create a manual profile.'}
+                    ? 'Use the saved business details or add a website.'
+                    : 'Enter a website, or add business details.'}
               </h2>
 
               <p>
                 Choose the route that fits the business. A website scan gives richer brand
-                context, while a strong manual profile still creates useful, targeted posts.
+                context, while strong business details still create useful, targeted posts.
               </p>
 
               <div ref={websiteInputRef} className="dashboard-tour-target-wrap">
                 <label>
-                  <strong>Client Website URL</strong>
+                  <strong>Business website URL</strong>
                   <span>
                     Paste the website URL. Website scans are limited to {WEEKLY_SCAN_LIMIT} every 7
-                    days. You can save up to {MAX_SAVED_CAMPAIGNS} campaigns.
+                    days. You can save up to {MAX_SAVED_CAMPAIGNS} weekly plans.
                   </span>
                 </label>
 
@@ -1349,12 +1469,12 @@ Also detect or infer:
                 {scanning || savingWebsite
                   ? hasWebsite
                     ? 'Scanning website...'
-                    : 'Generating campaign...'
+                    : 'Creating weekly posts...'
                   : hasWebsite
-                    ? 'Scan Website & Generate Campaign'
+                    ? 'Scan Website & Create Weekly Posts'
                     : hasManualProfile
-                      ? 'Generate from Saved Profile'
-                      : 'Save Website & Generate Campaign'}
+                      ? 'Create Weekly Posts'
+                      : 'Save Website & Create Weekly Posts'}
               </button>
 
               <div className="dashboard-simple-actions">
@@ -1366,10 +1486,10 @@ Also detect or infer:
                   disabled={scanning || savingWebsite || savingManualProfile}
                 >
                   {showManualProfile
-                    ? 'Hide manual profile'
+                    ? 'Hide business details'
                     : hasManualProfile
-                      ? 'Edit manual profile'
-                      : 'No website? Create manual profile'}
+                      ? 'Edit business details'
+                      : 'No website? Add business details'}
                 </button>
 
                 <span ref={postsLinkRef} className="dashboard-tour-link-target">
@@ -1381,7 +1501,7 @@ Also detect or infer:
             </div>
 
             <aside className="dashboard-status-card">
-              <div className="page-eyebrow">Current Client</div>
+              <div className="page-eyebrow">Current Business</div>
 
               <div className="dashboard-status-list">
                 <p>
@@ -1412,19 +1532,19 @@ Also detect or infer:
                 </p>
 
                 <p>
-                  <strong>Saved campaigns</strong>
+                  <strong>Saved weekly plans</strong>
                   <span>
-                    {savedCampaignsCount}/{MAX_SAVED_CAMPAIGNS} monthly campaign slots used
+                    {savedCampaignsCount}/{MAX_SAVED_CAMPAIGNS} slots used
                   </span>
                 </p>
 
                 <p>
-                  <strong>Profile source</strong>
+                  <strong>Setup source</strong>
                   <span>
                     {hasWebsite
                       ? 'Website scan'
                       : hasManualProfile
-                        ? 'Manual profile'
+                        ? 'Business details'
                         : 'Not set up'}
                   </span>
                 </p>
@@ -1436,11 +1556,11 @@ Also detect or infer:
             <section ref={manualProfileSectionRef} className="dashboard-manual-profile-card">
               <div className="dashboard-manual-profile-header">
                 <div>
-                  <div className="page-eyebrow">No Website Route</div>
-                  <h2>Create a manual business profile.</h2>
+                  <div className="page-eyebrow">Business Details</div>
+                  <h2>Add the business details.</h2>
                   <p>
-                    Add enough detail for FromOne to understand the business. This profile
-                    saves automatically and can be edited later in Settings.
+                    Add enough detail for FromOne to understand the business. This helps create
+                    more specific posts when there is no website to scan.
                   </p>
                 </div>
               </div>
@@ -1505,7 +1625,7 @@ Also detect or infer:
                 </label>
 
                 <label>
-                  <strong>Target audience</strong>
+                  <strong>Who are the customers?</strong>
                   <span>Separate with commas.</span>
                   <textarea
                     className="input"
@@ -1516,7 +1636,7 @@ Also detect or infer:
                 </label>
 
                 <label>
-                  <strong>Main offer or CTA</strong>
+                  <strong>Main offer or call to action</strong>
                   <textarea
                     className="input"
                     value={manualMainOffer}
@@ -1537,7 +1657,7 @@ Also detect or infer:
                 </label>
 
                 <label>
-                  <strong>Content pillars</strong>
+                  <strong>What should the posts focus on?</strong>
                   <span>Separate with commas.</span>
                   <textarea
                     className="input"
@@ -1554,8 +1674,8 @@ Also detect or infer:
                   disabled={accessLocked || scanning || savingManualProfile}
                 >
                   {scanning || savingManualProfile
-                    ? 'Generating from profile...'
-                    : 'Save Profile & Generate Campaign'}
+                    ? 'Creating weekly posts...'
+                    : 'Save Details & Create Weekly Posts'}
                 </button>
 
                 <button
@@ -1564,7 +1684,7 @@ Also detect or infer:
                   onClick={saveManualProfile}
                   disabled={scanning || savingManualProfile}
                 >
-                  {savingManualProfile ? 'Saving...' : 'Save profile only'}
+                  {savingManualProfile ? 'Saving...' : 'Save details only'}
                 </button>
               </div>
             </section>
@@ -1573,20 +1693,20 @@ Also detect or infer:
           <section className="dashboard-simple-steps">
             <div>
               <span>1</span>
-              <strong>Add website or profile</strong>
-              <p>Scan a client website, or create a manual profile if they do not have one.</p>
+              <strong>Add website or business details</strong>
+              <p>Scan a business website, or add business details if there is no website.</p>
             </div>
 
             <div>
               <span>2</span>
-              <strong>Generate campaign</strong>
+              <strong>Create weekly posts</strong>
               <p>FromOne creates seven clean posts with platform recommendations.</p>
             </div>
 
             <div>
               <span>3</span>
               <strong>Review in Posts</strong>
-              <p>Upload images, copy content, open platforms, and track publishing.</p>
+              <p>Copy content, open platforms, publish manually, and mark posts as done.</p>
             </div>
           </section>
         </>
