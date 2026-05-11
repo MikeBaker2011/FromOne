@@ -6580,3 +6580,79 @@ body {
     width: 100%;
   }
 }
+/* TODAY TASK CARD */
+
+.today-task-card {
+  margin: 0 0 26px;
+  padding: 30px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 212, 59, 0.24);
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.18), transparent 34%),
+    linear-gradient(145deg, rgba(17, 24, 39, 0.98), rgba(7, 10, 18, 0.98));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.today-task-card h2 {
+  margin: 6px 0 8px;
+  font-size: clamp(26px, 4vw, 42px);
+  letter-spacing: -0.04em;
+}
+
+.today-task-card p {
+  max-width: 680px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.today-task-meta {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.today-task-meta span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.today-task-button {
+  min-width: 190px;
+  border: 0;
+  border-radius: 18px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #ffd43b, #ffbf1f);
+  color: #050816;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 18px 34px rgba(255, 212, 59, 0.18);
+}
+
+.today-task-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 40px rgba(255, 212, 59, 0.25);
+}
+
+@media (max-width: 760px) {
+  .today-task-card {
+    padding: 24px;
+    border-radius: 24px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .today-task-button {
+    width: 100%;
+  }
+}

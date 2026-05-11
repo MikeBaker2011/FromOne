@@ -91,6 +91,7 @@ export default function DashboardPage() {
   const [savingManualProfile, setSavingManualProfile] = useState(false);
   const [weeklyScansUsed, setWeeklyScansUsed] = useState(0);
   const [savedCampaignsCount, setSavedCampaignsCount] = useState(0);
+  const [todayPost, setTodayPost] = useState<any>(null);
 
   const [showDashboardTour, setShowDashboardTour] = useState(false);
   const [dashboardTourStep, setDashboardTourStep] = useState(0);
@@ -497,7 +498,8 @@ export default function DashboardPage() {
 
     return Boolean(data);
   };
-    const checkWeeklyScanLimit = async (userId: string) => {
+
+  const checkWeeklyScanLimit = async (userId: string) => {
     const admin = await isAdminUser(userId);
 
     if (admin) {
@@ -565,6 +567,33 @@ export default function DashboardPage() {
     return true;
   };
 
+  const loadTodayPost = async (userId: string) => {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabase
+      .from('campaign_posts')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_posted', false)
+      .gte('scheduled_at', startOfToday.toISOString())
+      .lte('scheduled_at', endOfToday.toISOString())
+      .order('scheduled_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading today post:', error.message);
+      setTodayPost(null);
+      return;
+    }
+
+    setTodayPost(data);
+  };
+
   const fetchClient = async () => {
     setLoading(true);
 
@@ -576,6 +605,7 @@ export default function DashboardPage() {
         loadWeeklyScanUsage(userId),
         loadSavedCampaignCount(userId),
         loadOrCreateAccess(userId),
+        loadTodayPost(userId),
       ]);
     }
 
@@ -1214,6 +1244,42 @@ Also detect or infer:
         </div>
       ) : (
         <>
+          <section className="today-task-card">
+            <div>
+              <div className="page-eyebrow">Today’s Task</div>
+
+              {todayPost ? (
+                <>
+                  <h2>Your post is ready for today.</h2>
+                  <p>
+                    Review it, add an image, copy it, publish it, then mark it as posted.
+                  </p>
+
+                  <div className="today-task-meta">
+                    <span>{todayPost.platform || 'Social post'}</span>
+                    <span>{todayPost.title || todayPost.scheduled_day || 'Today’s post'}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2>No post due today.</h2>
+                  <p>
+                    You are clear for today. You can still view this week’s posts whenever
+                    you need.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="today-task-button"
+              onClick={() => router.push(todayPost ? '/posts?today=true' : '/posts')}
+            >
+              {todayPost ? 'Start today’s post' : 'View this week'}
+            </button>
+          </section>
+
           <section
             className={
               accessLocked ? 'access-status-card access-status-locked' : 'access-status-card'
