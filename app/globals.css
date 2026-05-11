@@ -6213,3 +6213,99 @@ body {
     width: 100%;
   }
 }
+/* PRODUCT UPDATES ROOMIER LAYOUT */
+
+.product-updates-page {
+  display: grid;
+  gap: 34px;
+  padding-bottom: 80px;
+}
+
+.product-updates-page > section,
+.product-updates-page .premium-card {
+  margin-bottom: 34px;
+  padding: 38px !important;
+  border-radius: 34px;
+}
+
+.product-updates-page .premium-card + .premium-card,
+.product-updates-page section + section {
+  margin-top: 34px;
+}
+
+.product-updates-page h1,
+.product-updates-page h2 {
+  margin-bottom: 22px;
+}
+
+.product-updates-page .draft-update-card,
+.product-updates-page .product-update-card,
+.product-updates-page .update-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 24px !important;
+  padding: 32px !important;
+  border-radius: 26px;
+}
+
+.product-updates-page .draft-update-card p,
+.product-updates-page .product-update-card p,
+.product-updates-page .update-card p {
+  max-width: 980px;
+  line-height: 1.8;
+  font-size: 16px;
+}
+
+.product-updates-page .draft-update-actions,
+.product-updates-page .product-update-actions,
+.product-updates-page .update-actions {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  display: flex;
+  justify-content: flex-start !important;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.product-updates-page .draft-update-actions button,
+.product-updates-page .product-update-actions button,
+.product-updates-page .update-actions button {
+  min-width: 110px;
+}
+
+@media (min-width: 900px) {
+  .product-updates-page .draft-update-card,
+  .product-updates-page .product-update-card,
+  .product-updates-page .update-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .product-updates-page {
+    gap: 22px;
+  }
+
+  .product-updates-page > section,
+  .product-updates-page .premium-card {
+    margin-bottom: 22px;
+    padding: 24px !important;
+    border-radius: 24px;
+  }
+
+  .product-updates-page .draft-update-card,
+  .product-updates-page .product-update-card,
+  .product-updates-page .update-card {
+    padding: 22px !important;
+  }
+
+  .product-updates-page .draft-update-actions button,
+  .product-updates-page .product-update-actions button,
+  .product-updates-page .update-actions button {
+    width: 100%;
+  }
+}
