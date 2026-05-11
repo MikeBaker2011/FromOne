@@ -6769,3 +6769,157 @@ body {
   border-radius: inherit;
   background: linear-gradient(135deg, #3ddc97, #ffd43b);
 }
+/* SIMPLIFIED PRODUCT UPDATES PAGE */
+
+.product-updates-simple-page {
+  padding-bottom: 100px;
+}
+
+.product-updates-simple-page .product-updates-hero {
+  margin-bottom: 36px !important;
+}
+
+.product-updates-simple-page .product-updates-clean-card {
+  margin-top: 0 !important;
+}
+
+.product-updates-clean-header h2 {
+  margin: 4px 0 0;
+}
+
+.product-updates-simple-list {
+  display: grid;
+  gap: 18px;
+}
+
+.product-update-simple-item {
+  padding: 26px;
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.product-update-simple-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.product-update-simple-topline span,
+.product-update-draft-content span {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.12);
+  border: 1px solid rgba(255, 212, 59, 0.24);
+  color: #ffd43b;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product-update-simple-topline small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.product-update-simple-item h3 {
+  margin: 0 0 10px;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.04em;
+}
+
+.product-update-simple-item p,
+.product-update-draft-content p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+  font-weight: 700;
+}
+
+.product-updates-admin-tools {
+  margin-top: 34px;
+  border-radius: 28px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.035);
+  overflow: hidden;
+}
+
+.product-updates-admin-tools > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.product-updates-admin-tools > summary::-webkit-details-marker {
+  display: none;
+}
+
+.product-updates-admin-tools > summary span {
+  display: grid;
+  gap: 4px;
+}
+
+.product-updates-admin-tools > summary strong {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.product-updates-admin-tools > summary small {
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.product-updates-admin-tools > summary b {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.12);
+  border: 1px solid rgba(255, 212, 59, 0.22);
+  color: #ffd43b;
+  font-size: 13px;
+}
+
+.product-updates-admin-tools-inner {
+  padding: 0 24px 24px;
+  display: grid;
+  gap: 24px;
+}
+
+.product-updates-simple-page .product-updates-admin-compact-card {
+  margin-top: 0 !important;
+  padding: 28px !important;
+  border-radius: 24px;
+}
+
+.product-updates-simple-page .product-updates-admin-card {
+  grid-template-columns: 0.75fr 1.25fr;
+}
+
+@media (max-width: 760px) {
+  .product-update-simple-item {
+    padding: 22px;
+  }
+
+  .product-updates-admin-tools > summary {
+    padding: 20px;
+    align-items: flex-start;
+  }
+
+  .product-updates-admin-tools-inner {
+    padding: 0 14px 14px;
+  }
+
+  .product-updates-simple-page .product-updates-admin-card {
+    grid-template-columns: 1fr;
+  }
+}

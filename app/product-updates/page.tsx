@@ -207,79 +207,23 @@ export default function ProductUpdatesPage() {
   };
 
   return (
-    <main className="product-updates-public-page product-updates-page">
+    <main className="product-updates-public-page product-updates-page product-updates-simple-page">
       <PublicNav />
 
       <div className="page-header product-updates-hero">
         <div className="page-eyebrow">FromOne Updates</div>
         <h1 className="page-title">Product Updates</h1>
         <p className="page-description">
-          Follow the latest improvements, fixes, and new features added to FromOne.
+          Simple updates on the latest improvements, fixes, and new features added to
+          FromOne.
         </p>
       </div>
 
-      {isAdmin && (
-        <section className="premium-card product-updates-section product-updates-admin-card">
+      <section className="premium-card product-updates-section product-updates-timeline-card product-updates-clean-card">
+        <div className="product-updates-section-header product-updates-clean-header">
           <div>
-            <div className="page-eyebrow">Admin Only</div>
-            <h2>{editingId ? 'Edit product update' : 'Create product update'}</h2>
-            <p>
-              Clients cannot see this editor. They only see updates after you publish
-              them.
-            </p>
-          </div>
-
-          <div className="product-updates-admin-form">
-            <label>
-              <strong>Category</strong>
-              <input
-                className="input"
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                placeholder="Product Update"
-              />
-            </label>
-
-            <label>
-              <strong>Title</strong>
-              <input
-                className="input"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Example: Campaign history is now live"
-              />
-            </label>
-
-            <label>
-              <strong>Update text</strong>
-              <textarea
-                className="input"
-                value={body}
-                onChange={(event) => setBody(event.target.value)}
-                placeholder="Write the product update here..."
-              />
-            </label>
-
-            <div className="product-updates-admin-actions">
-              <button onClick={saveDraft} disabled={saving}>
-                {saving ? 'Saving...' : editingId ? 'Save changes' : 'Save draft'}
-              </button>
-
-              {editingId && (
-                <button className="secondary-button" onClick={resetForm} disabled={saving}>
-                  Cancel edit
-                </button>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="premium-card product-updates-section product-updates-timeline-card">
-        <div className="product-updates-section-header">
-          <div>
-            <div className="page-eyebrow">Latest Improvements</div>
-            <h2>What’s new at FromOne</h2>
+            <div className="page-eyebrow">Latest updates</div>
+            <h2>What’s new</h2>
           </div>
 
           <span>{publishedUpdates.length} published</span>
@@ -289,192 +233,167 @@ export default function ProductUpdatesPage() {
           <p>Loading product updates...</p>
         ) : publishedUpdates.length === 0 ? (
           <div className="product-updates-empty">
-            <strong>No published updates yet.</strong>
-            <p>Product updates will appear here soon.</p>
+            <strong>No updates yet.</strong>
+            <p>New improvements will appear here.</p>
           </div>
         ) : (
-          <div className="product-updates-timeline">
+          <div className="product-updates-timeline product-updates-simple-list">
             {publishedUpdates.map((item) => (
-              <article
-                key={item.id}
-                className="product-update-item"
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  overflow: 'visible',
-                }}
-              >
-                <div className="product-update-marker">✓</div>
+              <article key={item.id} className="product-update-simple-item">
+                <div className="product-update-simple-topline">
+                  <span>{item.category || 'Product Update'}</span>
 
-                <div
-                  className="product-update-content"
-                  style={{
-                    width: '100%',
-                    maxWidth: '100%',
-                    overflow: 'visible',
-                  }}
-                >
-                  <div className="product-update-meta">
-                    <span>{item.category || 'Product Update'}</span>
-                    {item.published_at && (
-                      <small>
-                        {new Date(item.published_at).toLocaleDateString(undefined, {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </small>
-                    )}
-                  </div>
-
-                  <h3
-                    style={{
-                      width: '100%',
-                      maxWidth: '100%',
-                      whiteSpace: 'normal',
-                      overflow: 'visible',
-                      textOverflow: 'unset',
-                    }}
-                  >
-                    {item.title}
-                  </h3>
-
-                  <p
-                    style={{
-                      width: '100%',
-                      maxWidth: '100%',
-                      whiteSpace: 'normal',
-                      overflow: 'visible',
-                      textOverflow: 'unset',
-                      lineHeight: 1.8,
-                    }}
-                  >
-                    {item.body}
-                  </p>
-
-                  {isAdmin && (
-                    <div
-                      className="product-update-admin-row product-update-published-actions"
-                      style={{
-                        marginTop: 24,
-                        paddingTop: 22,
-                        borderTop: '1px solid rgba(148, 163, 184, 0.14)',
-                        display: 'flex',
-                        justifyContent: 'flex-start',
-                        gap: 14,
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <button className="secondary-button" onClick={() => startEditing(item)}>
-                        Edit
-                      </button>
-
-                      <button className="secondary-button" onClick={() => unpublishUpdate(item)}>
-                        Unpublish
-                      </button>
-
-                      <button
-                        className="secondary-button danger-button"
-                        onClick={() => deleteUpdate(item)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                  {item.published_at && (
+                    <small>
+                      {new Date(item.published_at).toLocaleDateString(undefined, {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </small>
                   )}
                 </div>
+
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+
+                {isAdmin && (
+                  <div className="product-update-admin-row product-update-published-actions">
+                    <button className="secondary-button" onClick={() => startEditing(item)}>
+                      Edit
+                    </button>
+
+                    <button className="secondary-button" onClick={() => unpublishUpdate(item)}>
+                      Unpublish
+                    </button>
+
+                    <button
+                      className="secondary-button danger-button"
+                      onClick={() => deleteUpdate(item)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </article>
             ))}
           </div>
         )}
       </section>
 
-      {isAdmin && draftUpdates.length > 0 && (
-        <section className="premium-card product-updates-section product-updates-drafts-card">
-          <div className="product-updates-section-header">
-            <div>
-              <div className="page-eyebrow">Admin Drafts</div>
-              <h2>Draft updates</h2>
-            </div>
+      {isAdmin && (
+        <details className="product-updates-admin-tools">
+          <summary>
+            <span>
+              <strong>Admin tools</strong>
+              <small>Create updates and manage drafts</small>
+            </span>
 
-            <span>{draftUpdates.length} draft</span>
-          </div>
+            <b>{draftUpdates.length} draft</b>
+          </summary>
 
-          <div className="product-updates-draft-list">
-            {draftUpdates.map((item) => (
-              <article
-                key={item.id}
-                className="product-update-draft-item"
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  overflow: 'visible',
-                }}
-              >
-                <div
-                  className="product-update-draft-content"
-                  style={{
-                    width: '100%',
-                    maxWidth: '100%',
-                    overflow: 'visible',
-                  }}
-                >
-                  <span>{item.category || 'Product Update'}</span>
+          <div className="product-updates-admin-tools-inner">
+            <section className="premium-card product-updates-section product-updates-admin-card product-updates-admin-compact-card">
+              <div>
+                <div className="page-eyebrow">Admin Only</div>
+                <h2>{editingId ? 'Edit update' : 'Create update'}</h2>
+                <p>
+                  Clients cannot see this editor. They only see updates after you publish
+                  them.
+                </p>
+              </div>
 
-                  <h3
-                    style={{
-                      width: '100%',
-                      maxWidth: '100%',
-                      whiteSpace: 'normal',
-                      overflow: 'visible',
-                      textOverflow: 'unset',
-                    }}
-                  >
-                    {item.title}
-                  </h3>
+              <div className="product-updates-admin-form">
+                <label>
+                  <strong>Category</strong>
+                  <input
+                    className="input"
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                    placeholder="Product Update"
+                  />
+                </label>
 
-                  <p
-                    style={{
-                      width: '100%',
-                      maxWidth: '100%',
-                      whiteSpace: 'normal',
-                      overflow: 'visible',
-                      textOverflow: 'unset',
-                      lineHeight: 1.8,
-                    }}
-                  >
-                    {item.body}
-                  </p>
-                </div>
+                <label>
+                  <strong>Title</strong>
+                  <input
+                    className="input"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    placeholder="Example: Campaign history is now live"
+                  />
+                </label>
 
-                <div
-                  className="product-update-admin-row product-update-draft-actions"
-                  style={{
-                    marginTop: 24,
-                    paddingTop: 22,
-                    borderTop: '1px solid rgba(148, 163, 184, 0.14)',
-                    display: 'flex',
-                    justifyContent: 'flex-start',
-                    gap: 14,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <button className="secondary-button" onClick={() => startEditing(item)}>
-                    Edit
+                <label>
+                  <strong>Update text</strong>
+                  <textarea
+                    className="input"
+                    value={body}
+                    onChange={(event) => setBody(event.target.value)}
+                    placeholder="Write the product update here..."
+                  />
+                </label>
+
+                <div className="product-updates-admin-actions">
+                  <button onClick={saveDraft} disabled={saving}>
+                    {saving ? 'Saving...' : editingId ? 'Save changes' : 'Save draft'}
                   </button>
 
-                  <button onClick={() => publishUpdate(item)}>Publish</button>
-
-                  <button
-                    className="secondary-button danger-button"
-                    onClick={() => deleteUpdate(item)}
-                  >
-                    Delete
-                  </button>
+                  {editingId && (
+                    <button className="secondary-button" onClick={resetForm} disabled={saving}>
+                      Cancel edit
+                    </button>
+                  )}
                 </div>
-              </article>
-            ))}
+              </div>
+            </section>
+
+            <section className="premium-card product-updates-section product-updates-drafts-card product-updates-admin-compact-card">
+              <div className="product-updates-section-header product-updates-clean-header">
+                <div>
+                  <div className="page-eyebrow">Drafts</div>
+                  <h2>Saved drafts</h2>
+                </div>
+
+                <span>{draftUpdates.length} draft</span>
+              </div>
+
+              {draftUpdates.length === 0 ? (
+                <div className="product-updates-empty">
+                  <strong>No drafts.</strong>
+                  <p>Draft updates will appear here.</p>
+                </div>
+              ) : (
+                <div className="product-updates-draft-list">
+                  {draftUpdates.map((item) => (
+                    <article key={item.id} className="product-update-draft-item">
+                      <div className="product-update-draft-content">
+                        <span>{item.category || 'Product Update'}</span>
+                        <h3>{item.title}</h3>
+                        <p>{item.body}</p>
+                      </div>
+
+                      <div className="product-update-admin-row product-update-draft-actions">
+                        <button className="secondary-button" onClick={() => startEditing(item)}>
+                          Edit
+                        </button>
+
+                        <button onClick={() => publishUpdate(item)}>Publish</button>
+
+                        <button
+                          className="secondary-button danger-button"
+                          onClick={() => deleteUpdate(item)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
-        </section>
+        </details>
       )}
     </main>
   );
