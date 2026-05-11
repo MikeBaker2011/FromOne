@@ -6923,3 +6923,167 @@ body {
     grid-template-columns: 1fr;
   }
 }
+.dashboard-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 1.25rem;
+  align-items: stretch;
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-weekly-progress-card {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 1.35rem;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dashboard-weekly-progress-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dashboard-weekly-progress-card h2 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  line-height: 1.15;
+  color: #101828;
+}
+
+.dashboard-weekly-progress-card p {
+  margin: 0;
+  color: #667085;
+  line-height: 1.6;
+}
+
+.dashboard-weekly-progress-count {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  background: #ecfdf3;
+  color: #027a48;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.dashboard-weekly-progress-track {
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f2f4f7;
+}
+
+.dashboard-weekly-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #12b76a, #84cc16);
+  transition: width 220ms ease;
+}
+
+.dashboard-weekly-progress-button {
+  width: fit-content;
+}
+
+@media (max-width: 900px) {
+  .dashboard-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-weekly-progress-card {
+    border-radius: 20px;
+    padding: 1rem;
+  }
+
+  .dashboard-weekly-progress-header {
+    flex-direction: column;
+  }
+
+  .dashboard-weekly-progress-button {
+    width: 100%;
+  }
+}
+.fromone-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(6px);
+}
+
+.fromone-modal-card {
+  width: min(100%, 480px);
+  border-radius: 28px;
+  background: #ffffff;
+  padding: 1.5rem;
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.28);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  text-align: left;
+}
+
+.fromone-modal-card h2 {
+  margin: 0.4rem 0 0.65rem;
+  color: #101828;
+  font-size: clamp(1.55rem, 4vw, 2rem);
+  line-height: 1.1;
+}
+
+.fromone-modal-card p {
+  margin: 0;
+  color: #667085;
+  line-height: 1.6;
+}
+
+.fromone-modal-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #fffaeb;
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+}
+
+.fromone-success-card .fromone-modal-icon {
+  background: #ecfdf3;
+}
+
+.fromone-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.35rem;
+}
+
+.fromone-modal-actions button {
+  flex: 1 1 170px;
+}
+
+@media (max-width: 560px) {
+  .fromone-modal-card {
+    border-radius: 22px;
+    padding: 1.15rem;
+  }
+
+  .fromone-modal-actions {
+    flex-direction: column;
+  }
+
+  .fromone-modal-actions button {
+    width: 100%;
+  }
+}

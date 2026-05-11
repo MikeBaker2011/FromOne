@@ -37,6 +37,11 @@ type AccessInfo = {
   subscription_status: string | null;
 };
 
+type SuccessMoment = {
+  postsLeft: number;
+  nextPostId: string | null;
+};
+
 const IMAGE_BUCKET = 'campaign-assets';
 
 const POSTS_TOUR_SEEN_KEY = 'fromone_posts_tour_seen';
@@ -45,37 +50,25 @@ const postsTourSteps = [
   {
     title: 'Welcome to your posts',
     text:
-      'This is where you review the weekly campaign FromOne created for you. Choose each post, check the wording, add an image, copy it, publish it manually, then mark it as done.',
+      'This is where you review this week’s plan. Choose each post, check the wording, add an image, copy it, publish it, then mark it as done.',
     target: 'header',
   },
   {
-    title: 'Choose a campaign',
+    title: 'Choose this week’s plan',
     text:
-      'Use the campaign dropdown to switch between saved weeks. The manage button keeps extra campaign actions out of the way.',
+      'Use this dropdown to switch between saved weekly plans.',
     target: 'campaigns',
   },
   {
     title: 'Choose a post',
     text:
-      'Each card is one post from your weekly campaign. Select a day to review the full post below.',
+      'Each card is one post from this week’s plan. Select a day to review the full post below.',
     target: 'days',
   },
   {
-    title: 'Tailor the post',
+    title: 'Publish this post',
     text:
-      'Use the audience tool if you want this post rewritten for a specific customer type.',
-    target: 'audience',
-  },
-  {
-    title: 'Edit the post',
-    text:
-      'You can edit the caption, CTA, hashtags, and image idea before publishing.',
-    target: 'edit',
-  },
-  {
-    title: 'Publish manually',
-    text:
-      'Upload your image, copy the post, open the platform, publish manually, then mark it as posted.',
+      'Upload your image, copy the post, open the platform, publish it, then mark it as posted.',
     target: 'publish',
   },
 ];
@@ -288,6 +281,10 @@ export default function PostsPage() {
   const [customAudienceTarget, setCustomAudienceTarget] = useState('');
   const [rewritingPost, setRewritingPost] = useState(false);
 
+  const [showTodayReminder, setShowTodayReminder] = useState(false);
+  const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(null);
+  const [successMoment, setSuccessMoment] = useState<SuccessMoment | null>(null);
+
   const [showPostsTour, setShowPostsTour] = useState(false);
   const [postsTourStep, setPostsTourStep] = useState(0);
 
@@ -357,6 +354,37 @@ export default function PostsPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPostsTour, postsTourStep, loading, selectedPostId, posts.length]);
+
+  useEffect(() => {
+    if (loading || posts.length === 0) return;
+
+    const todayUnpostedPost = posts.find(
+      (post) => isPostScheduledToday(post) && !post.is_posted
+    );
+
+    if (!todayUnpostedPost) return;
+
+    const storageKey = getTodayReminderStorageKey();
+
+    if (localStorage.getItem(storageKey) === 'true') return;
+
+    localStorage.setItem(storageKey, 'true');
+    setTodayReminderPostId(todayUnpostedPost.id);
+    setShowTodayReminder(true);
+  }, [loading, posts]);
+
+  const getTodayKey = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const getTodayReminderStorageKey = () => {
+    return `fromone_today_post_alert_${getTodayKey()}`;
+  };
 
   const shouldOpenTodayPost = () => {
     if (typeof window === 'undefined') return false;
@@ -533,7 +561,7 @@ export default function PostsPage() {
     if (!access) {
       return {
         locked: false,
-        message: 'Trial access is being prepared.',
+        message: 'Demo access is being prepared.',
       };
     }
 
@@ -573,7 +601,7 @@ export default function PostsPage() {
     return {
       locked: true,
       message:
-        'Your 7-day demo has ended. You can still view and use existing posts, but campaign regeneration, duplication, and audience rewrites are locked until access is extended or a subscription is active.',
+        'Your 7-day demo has ended. You can still view and publish existing posts, but creating fresh versions and making posts more specific are locked until access is extended or a subscription is active.',
     };
   };
 
@@ -606,7 +634,7 @@ export default function PostsPage() {
 
     if (!data) {
       setAccessLocked(false);
-      setAccessMessage('Trial access is being prepared.');
+      setAccessMessage('Demo access is being prepared.');
       return;
     }
 
@@ -672,7 +700,7 @@ export default function PostsPage() {
 
     if (used >= WEEKLY_SCAN_LIMIT) {
       alert(
-        `You have used your ${WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still regenerate campaigns from a manual profile.`
+        `You have used your ${WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create a fresh version from business details.`
       );
       return false;
     }
@@ -703,7 +731,7 @@ export default function PostsPage() {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error loading campaign count:', error.message);
+      console.error('Error loading weekly plan count:', error.message);
       return 0;
     }
 
@@ -715,7 +743,7 @@ export default function PostsPage() {
 
     if (total >= MAX_SAVED_CAMPAIGNS) {
       alert(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved campaigns. Delete an old campaign before duplicating this one.`
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans. Delete an old weekly plan before copying this one.`
       );
       return false;
     }
@@ -761,7 +789,7 @@ Business goals: ${
         : ''
     }
 
-Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and specific to the business.
+Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, and specific to the business.
 `;
   };
 
@@ -783,7 +811,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       item.business_type ||
       item.campaign_area ||
       item.name ||
-      'Campaign';
+      'Weekly plan';
 
     const createdDate = item.created_at ? new Date(item.created_at) : null;
 
@@ -802,7 +830,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       item.business_name ||
       profile?.business_name ||
       item.business_type ||
-      'Campaign';
+      'Weekly plan';
 
     const date = new Date().toLocaleDateString(undefined, {
       day: '2-digit',
@@ -886,7 +914,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error loading campaigns:', error.message);
+      console.error('Error loading weekly plans:', error.message);
       setCampaigns([]);
       setCampaign(null);
       return [];
@@ -964,7 +992,8 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       setSelectedPostId(null);
     }
   };
-    const switchCampaign = async (campaignId: string) => {
+
+  const switchCampaign = async (campaignId: string) => {
     const nextCampaign = campaigns.find((item) => item.id === campaignId) || null;
 
     setSelectedCampaignId(campaignId);
@@ -977,14 +1006,14 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
 
   const deleteSelectedCampaign = async () => {
     if (!campaign?.id) {
-      alert('No campaign selected.');
+      alert('No weekly plan selected.');
       return;
     }
 
-    const campaignName = campaign.name || campaign.campaign_idea || 'Selected campaign';
+    const campaignName = campaign.name || campaign.campaign_idea || 'Selected weekly plan';
 
     const confirmed = confirm(
-      `Delete this campaign and all its posts?\n\n${campaignName}\n\nThis cannot be undone.`
+      `Delete this weekly plan and all its posts?\n\n${campaignName}\n\nThis cannot be undone.`
     );
 
     if (!confirmed) return;
@@ -1012,7 +1041,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
           .remove(imagePaths);
 
         if (storageError) {
-          console.error('Campaign image delete error:', storageError.message);
+          console.error('Weekly plan image delete error:', storageError.message);
         }
       }
 
@@ -1032,11 +1061,11 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       setSelectedPostId(null);
       cancelEditingPost();
 
-      alert('Campaign deleted.');
+      alert('Weekly plan deleted.');
       await loadPageData();
     } catch (error: any) {
-      const message = getReadableError(error, 'Error deleting campaign.');
-      console.error('Delete campaign error:', error);
+      const message = getReadableError(error, 'Error deleting weekly plan.');
+      console.error('Delete weekly plan error:', error);
       alert(message);
     } finally {
       setDeletingCampaign(false);
@@ -1045,16 +1074,16 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
 
   const duplicateSelectedCampaign = async () => {
     if (!campaign?.id) {
-      alert('No campaign selected.');
+      alert('No weekly plan selected.');
       return;
     }
 
     if (!ensureAccessAllowed()) return;
 
     const confirmed = confirm(
-      `Duplicate this campaign?\n\n${
-        campaign.name || campaign.campaign_idea || 'Selected campaign'
-      }\n\nThis will create a new campaign with copied posts. Uploaded images will not be copied.`
+      `Copy this weekly plan?\n\n${
+        campaign.name || campaign.campaign_idea || 'Selected weekly plan'
+      }\n\nThis will create a new weekly plan with copied posts. Uploaded images will not be copied.`
     );
 
     if (!confirmed) return;
@@ -1066,7 +1095,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       const userId = authData.user?.id;
 
       if (!userId) {
-        alert('You need to sign in before duplicating a campaign.');
+        alert('You need to sign in before copying a weekly plan.');
         return;
       }
 
@@ -1085,7 +1114,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       }
 
       if (!sourcePosts?.length) {
-        alert('This campaign has no posts to duplicate.');
+        alert('This weekly plan has no posts to copy.');
         return;
       }
 
@@ -1175,10 +1204,10 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
 
       await loadPosts(newCampaign.id);
 
-      alert('Campaign duplicated.');
+      alert('Weekly plan copied.');
     } catch (error: any) {
-      const message = getReadableError(error, 'Error duplicating campaign.');
-      console.error('Duplicate campaign error:', error);
+      const message = getReadableError(error, 'Error copying weekly plan.');
+      console.error('Copy weekly plan error:', error);
       alert(message);
     } finally {
       setDuplicatingCampaign(false);
@@ -1187,19 +1216,19 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
 
   const renameSelectedCampaign = async () => {
     if (!campaign?.id) {
-      alert('No campaign selected.');
+      alert('No weekly plan selected.');
       return;
     }
 
-    const currentName = campaign.name || campaign.campaign_idea || 'Untitled campaign';
-    const newName = prompt('Rename campaign:', currentName);
+    const currentName = campaign.name || campaign.campaign_idea || 'Untitled weekly plan';
+    const newName = prompt('Rename weekly plan:', currentName);
 
     if (newName === null) return;
 
     const cleanName = newName.trim();
 
     if (!cleanName) {
-      alert('Campaign name cannot be empty.');
+      alert('Weekly plan name cannot be empty.');
       return;
     }
 
@@ -1224,10 +1253,10 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
         )
       );
 
-      alert('Campaign renamed.');
+      alert('Weekly plan renamed.');
     } catch (error: any) {
-      const message = getReadableError(error, 'Error renaming campaign.');
-      console.error('Rename campaign error:', error);
+      const message = getReadableError(error, 'Error renaming weekly plan.');
+      console.error('Rename weekly plan error:', error);
       alert(message);
     } finally {
       setRenamingCampaign(false);
@@ -1236,21 +1265,21 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
 
   const regenerateSelectedCampaign = async () => {
     if (!campaign?.id) {
-      alert('No campaign selected.');
+      alert('No weekly plan selected.');
       return;
     }
 
     if (!profile?.id && !campaign?.business_name) {
-      alert('No business profile found. Go to Dashboard or Settings first.');
+      alert('No business details found. Go to Dashboard or Settings first.');
       return;
     }
 
     if (!ensureAccessAllowed()) return;
 
-    const campaignName = campaign.name || campaign.campaign_idea || 'Selected campaign';
+    const campaignName = campaign.name || campaign.campaign_idea || 'Selected weekly plan';
 
     const confirmed = confirm(
-      `Regenerate this campaign?\n\n${campaignName}\n\nThis will delete this campaign’s current posts and saved images, then create a fresh 7-day plan.`
+      `Create a fresh version of this weekly plan?\n\n${campaignName}\n\nThis will delete this weekly plan’s current posts and saved images, then create a fresh 7-day plan.`
     );
 
     if (!confirmed) return;
@@ -1262,7 +1291,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       const userId = authData.user?.id;
 
       if (!userId) {
-        alert('You need to sign in before regenerating a campaign.');
+        alert('You need to sign in before creating a fresh version.');
         return;
       }
 
@@ -1292,7 +1321,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
           .remove(imagePaths);
 
         if (storageError) {
-          console.error('Regenerate image delete error:', storageError.message);
+          console.error('Create fresh version image delete error:', storageError.message);
         }
       }
 
@@ -1335,7 +1364,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       const generatedPosts: GeneratedPost[] = response.data.posts || [];
 
       if (!generatedPosts.length) {
-        alert(response.data.error || 'No posts were generated.');
+        alert(response.data.error || 'No posts were created.');
         return;
       }
 
@@ -1368,11 +1397,11 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
         scanData?.campaign_idea ||
         scanData?.brand_summary ||
         campaign.campaign_idea ||
-        'Seven-day mixed-platform content campaign';
+        'Seven-day mixed-platform weekly plan';
 
       const regeneratedName = `${
-        activeProfile.business_name || campaign.business_name || 'Campaign'
-      } — Regenerated ${new Date().toLocaleTimeString([], {
+        activeProfile.business_name || campaign.business_name || 'Weekly plan'
+      } — Fresh version ${new Date().toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
       })}`;
@@ -1470,16 +1499,16 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
         }
       }
 
-      alert('Campaign regenerated.');
+      alert('Fresh version created.');
     } catch (error: any) {
-      const message = getReadableError(error, 'Error regenerating campaign.');
+      const message = getReadableError(error, 'Error creating fresh version.');
 
       if (axios.isAxiosError(error)) {
-        console.error('Regenerate campaign readable error:', message);
-        console.error('Regenerate campaign status:', error.response?.status);
-        console.error('Regenerate campaign response data:', error.response?.data);
+        console.error('Fresh version readable error:', message);
+        console.error('Fresh version status:', error.response?.status);
+        console.error('Fresh version response data:', error.response?.data);
       } else {
-        console.error('Regenerate campaign error:', error);
+        console.error('Fresh version error:', error);
       }
 
       alert(message);
@@ -1497,7 +1526,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading profile:', error.message);
+      console.error('Error loading business details:', error.message);
       setProfile(null);
       return;
     }
@@ -1517,6 +1546,19 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
   };
 
   const markAsPosted = async (postId: string) => {
+    const postIndex = posts.findIndex((post) => post.id === postId);
+
+    const updatedPosts = posts.map((post) =>
+      post.id === postId ? { ...post, is_posted: true, status: 'posted' } : post
+    );
+
+    const postsLeftAfterMarking = updatedPosts.filter((post) => !post.is_posted).length;
+
+    const nextPost =
+      updatedPosts.slice(postIndex + 1).find((post) => !post.is_posted) ||
+      updatedPosts.find((post) => !post.is_posted) ||
+      null;
+
     const { error } = await supabase
       .from('campaign_posts')
       .update({
@@ -1530,6 +1572,11 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       alert(error.message);
       return;
     }
+
+    setSuccessMoment({
+      postsLeft: postsLeftAfterMarking,
+      nextPostId: nextPost?.id || null,
+    });
 
     await loadPosts(campaign?.id || null);
   };
@@ -1639,12 +1686,12 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
         : audienceTarget.trim();
 
     if (!finalAudience) {
-      alert('Please enter a custom audience.');
+      alert('Please enter who this post is for.');
       return;
     }
 
     if (!post.caption?.trim()) {
-      alert('This post needs a caption before it can be rewritten.');
+      alert('This post needs a caption before it can be made more specific.');
       return;
     }
 
@@ -1693,16 +1740,16 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
         setEditImagePrompt(updates.image_prompt || '');
       }
 
-      alert(`Post rewritten for ${finalAudience}.`);
+      alert(`Post made more specific for ${finalAudience}.`);
     } catch (error: any) {
-      const message = getReadableError(error, 'Error rewriting post.');
+      const message = getReadableError(error, 'Error making post more specific.');
 
       if (axios.isAxiosError(error)) {
-        console.error('Audience rewrite readable error:', message);
-        console.error('Audience rewrite status:', error.response?.status);
-        console.error('Audience rewrite response data:', error.response?.data);
+        console.error('Make more specific readable error:', message);
+        console.error('Make more specific status:', error.response?.status);
+        console.error('Make more specific response data:', error.response?.data);
       } else {
-        console.error('Audience rewrite non-Axios error:', error);
+        console.error('Make more specific non-Axios error:', error);
       }
 
       alert(message);
@@ -1853,6 +1900,39 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
     window.open(urls[platform] || 'https://www.google.com', '_blank');
   };
 
+  const openTodayReminderPost = () => {
+    if (todayReminderPostId) {
+      setSelectedPostId(todayReminderPostId);
+    }
+
+    setShowTodayReminder(false);
+
+    window.setTimeout(() => {
+      publishingPanelRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 80);
+  };
+
+  const viewNextPostAfterSuccess = () => {
+    if (!successMoment?.nextPostId) {
+      setSuccessMoment(null);
+      return;
+    }
+
+    setFilter('all');
+    setSelectedPostId(successMoment.nextPostId);
+    setSuccessMoment(null);
+
+    window.setTimeout(() => {
+      daySelectorRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 120);
+  };
+
   const selectedPost = useMemo(() => {
     return posts.find((post) => post.id === selectedPostId) || posts[0] || null;
   }, [posts, selectedPostId]);
@@ -1861,6 +1941,8 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
   const postsLeftThisWeek = Math.max((posts.length || 0) - postedCount, 0);
   const weeklyProgressPercent =
     posts.length > 0 ? Math.round((postedCount / posts.length) * 100) : 0;
+
+  const todayReminderPost = posts.find((post) => post.id === todayReminderPostId) || null;
 
   const businessName =
     profile?.business_name ||
@@ -1904,13 +1986,6 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
     }
   }, [dynamicAudienceTargets, audienceTarget]);
 
-  const filterButtons: { label: string; value: PostFilter }[] = [
-    { label: 'All', value: 'all' },
-    { label: 'Today', value: 'today' },
-    { label: 'Ready', value: 'scheduled' },
-    { label: 'Posted', value: 'posted' },
-  ];
-
   return (
     <div className="campaign-brand-shell simplified-posts-page" style={brandStyle}>
       <div ref={postsHeaderRef} className="campaigns-page-header simplified-posts-header">
@@ -1947,15 +2022,15 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
 
       {loading ? (
         <div className="premium-card">
-          <p>Loading campaign...</p>
+          <p>Loading weekly plan...</p>
         </div>
       ) : campaigns.length === 0 ? (
         <div className="premium-card">
-          <div className="page-eyebrow">No Campaign Yet</div>
-          <h2 style={{ marginTop: 0 }}>Generate your weekly campaign first.</h2>
+          <div className="page-eyebrow">No Weekly Plan Yet</div>
+          <h2 style={{ marginTop: 0 }}>Create your weekly posts first.</h2>
           <p>
-            Go to Dashboard, scan the website, and generate the week. Your campaign will
-            then appear here ready to publish manually.
+            Go to Dashboard, scan the website or add business details, then create weekly
+            posts. They will appear here ready to publish.
           </p>
         </div>
       ) : (
@@ -1964,7 +2039,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
             <section className="access-status-card access-status-locked">
               <div>
                 <div className="page-eyebrow">Demo Ended</div>
-                <h2>Some campaign actions are currently locked.</h2>
+                <h2>Some weekly plan actions are currently locked.</h2>
                 <p>{accessMessage}</p>
               </div>
 
@@ -1982,7 +2057,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
               </h3>
               <p>
                 {posts.length > 0 && postedCount === posts.length
-                  ? 'Great work — this week is complete.'
+                  ? 'Nice work — this week is complete 🎉'
                   : `${postsLeftThisWeek} posts left this week.`}
               </p>
             </div>
@@ -1995,7 +2070,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
           <section className="simplified-control-card">
             <div ref={campaignHistoryControlsRef} className="simplified-campaign-controls">
               <label>
-                <strong>Campaign week</strong>
+                <strong>This week’s plan</strong>
                 <select
                   className="input"
                   value={selectedCampaignId || ''}
@@ -2014,134 +2089,7 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
                   ))}
                 </select>
               </label>
-
-              <div className="manage-campaign-wrap">
-                <strong className="campaign-control-label">&nbsp;</strong>
-
-                <details className="manage-campaign-details">
-                  <summary>Manage campaign</summary>
-
-                  <div className="manage-campaign-actions">
-                    <span>
-                      {campaigns.length}/{MAX_SAVED_CAMPAIGNS} campaigns saved
-                    </span>
-
-                    <button
-                      className="secondary-button rename-campaign-button"
-                      onClick={renameSelectedCampaign}
-                      disabled={
-                        !campaign?.id ||
-                        renamingCampaign ||
-                        duplicatingCampaign ||
-                        regeneratingCampaign ||
-                        deletingCampaign
-                      }
-                    >
-                      {renamingCampaign ? 'Renaming...' : 'Rename'}
-                    </button>
-
-                    <button
-                      className="secondary-button duplicate-campaign-button"
-                      onClick={duplicateSelectedCampaign}
-                      disabled={
-                        accessLocked ||
-                        !campaign?.id ||
-                        duplicatingCampaign ||
-                        renamingCampaign ||
-                        regeneratingCampaign ||
-                        deletingCampaign
-                      }
-                    >
-                      {duplicatingCampaign ? 'Duplicating...' : 'Duplicate'}
-                    </button>
-
-                    <button
-                      className="secondary-button regenerate-campaign-button"
-                      onClick={regenerateSelectedCampaign}
-                      disabled={
-                        accessLocked ||
-                        !campaign?.id ||
-                        regeneratingCampaign ||
-                        duplicatingCampaign ||
-                        renamingCampaign ||
-                        deletingCampaign
-                      }
-                    >
-                      {regeneratingCampaign ? 'Regenerating...' : 'Regenerate'}
-                    </button>
-
-                    <button
-                      className="secondary-button danger-button delete-campaign-button"
-                      onClick={deleteSelectedCampaign}
-                      disabled={
-                        !campaign?.id ||
-                        deletingCampaign ||
-                        duplicatingCampaign ||
-                        renamingCampaign ||
-                        regeneratingCampaign
-                      }
-                    >
-                      {deletingCampaign ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                </details>
-              </div>
             </div>
-
-            <details className="business-details-collapsed branded-business-details">
-              <summary>
-                <span className="branded-business-summary-left">
-                  {profile?.brand_logo_url ? (
-                    <img src={profile.brand_logo_url} alt={`${businessName} logo`} />
-                  ) : (
-                    <b>{businessName.charAt(0).toUpperCase()}</b>
-                  )}
-
-                  <span>
-                    <strong>{businessName}</strong>
-                    <small>Business details</small>
-                  </span>
-                </span>
-              </summary>
-
-              <div className="business-details-simple-grid">
-                <div>
-                  <strong>Services</strong>
-                  {services.length > 0 ? (
-                    services.map((item: string) => <span key={item}>• {item}</span>)
-                  ) : (
-                    <span>• Based on saved profile</span>
-                  )}
-                </div>
-
-                <div>
-                  <strong>Content ideas</strong>
-                  {contentPillars.length > 0 ? (
-                    contentPillars.map((item: string) => <span key={item}>• {item}</span>)
-                  ) : (
-                    <span>• Trust, expertise, useful advice, offers</span>
-                  )}
-                </div>
-
-                <div>
-                  <strong>Audience</strong>
-                  {audience.length > 0 ? (
-                    audience.map((item: string) => <span key={item}>• {item}</span>)
-                  ) : (
-                    <span>• Website target audience</span>
-                  )}
-                </div>
-
-                <div>
-                  <strong>Goals</strong>
-                  {goals.length > 0 ? (
-                    goals.map((item: string) => <span key={item}>• {item}</span>)
-                  ) : (
-                    <span>• Contact, bookings, enquiries</span>
-                  )}
-                </div>
-              </div>
-            </details>
           </section>
 
           <section className="simplified-week-section">
@@ -2150,25 +2098,13 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
                 <div className="page-eyebrow">Weekly posts</div>
                 <h2>Choose a day to review.</h2>
               </div>
-
-              <div className="posts-filter-row campaign-filter-row">
-                {filterButtons.map((item) => (
-                  <button
-                    key={item.value}
-                    className={filter === item.value ? 'posts-filter-active' : 'secondary-button'}
-                    onClick={() => setFilter(item.value)}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {posts.length === 0 ? (
               <div className="premium-card" style={{ marginTop: 20 }}>
                 <div className="page-eyebrow">No Posts Found</div>
-                <h2 style={{ marginTop: 0 }}>This campaign has no posts for this filter.</h2>
-                <p>Try switching the filter back to All or Ready.</p>
+                <h2 style={{ marginTop: 0 }}>This weekly plan has no posts yet.</h2>
+                <p>Go back to Dashboard and create weekly posts.</p>
               </div>
             ) : (
               <>
@@ -2258,130 +2194,6 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
                           </li>
                         </ol>
                       </div>
-
-                      <div
-                        ref={audienceToolRef}
-                        className="audience-rewrite-panel simplified-audience-panel"
-                      >
-                        <div>
-                          <div className="page-eyebrow">Optional</div>
-                          <h3>Rewrite for a customer type</h3>
-                          <p>
-                            Use this only if you want the post to speak to a specific audience.
-                          </p>
-                        </div>
-
-                        <div className="audience-rewrite-controls">
-                          <select
-                            className="input"
-                            value={audienceTarget}
-                            onChange={(event) => setAudienceTarget(event.target.value)}
-                          >
-                            {dynamicAudienceTargets.map((item) => (
-                              <option key={item} value={item}>
-                                {item}
-                              </option>
-                            ))}
-                          </select>
-
-                          {audienceTarget === 'Custom audience' && (
-                            <input
-                              className="input"
-                              value={customAudienceTarget}
-                              onChange={(event) => setCustomAudienceTarget(event.target.value)}
-                              placeholder="Example: first-time homeowners"
-                            />
-                          )}
-
-                          <button
-                            onClick={() => handleRewriteForAudience(selectedPost)}
-                            disabled={accessLocked || rewritingPost}
-                          >
-                            {rewritingPost ? 'Rewriting...' : 'Rewrite'}
-                          </button>
-                        </div>
-                      </div>
-
-                      {editingPostId === selectedPost.id ? (
-                        <div className="post-edit-panel">
-                          <div className="post-edit-panel-header">
-                            <div>
-                              <div className="page-eyebrow">Edit Post</div>
-                              <h3>Fine-tune the post before publishing.</h3>
-                              <p>
-                                Adjust the wording, CTA, hashtags, and image idea. These
-                                changes save back to this post.
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="post-edit-grid">
-                            <label>
-                              <strong>Caption</strong>
-                              <textarea
-                                className="input"
-                                value={editCaption}
-                                onChange={(event) => setEditCaption(event.target.value)}
-                              />
-                            </label>
-
-                            <label>
-                              <strong>CTA</strong>
-                              <input
-                                className="input"
-                                value={editCta}
-                                onChange={(event) => setEditCta(event.target.value)}
-                              />
-                            </label>
-
-                            <label>
-                              <strong>Hashtags</strong>
-                              <span>Separate with spaces or commas.</span>
-                              <input
-                                className="input"
-                                value={editHashtags}
-                                onChange={(event) => setEditHashtags(event.target.value)}
-                                placeholder="#LocalBusiness #Marketing"
-                              />
-                            </label>
-
-                            <label>
-                              <strong>Image prompt</strong>
-                              <textarea
-                                className="input"
-                                value={editImagePrompt}
-                                onChange={(event) => setEditImagePrompt(event.target.value)}
-                              />
-                            </label>
-                          </div>
-
-                          <div className="post-edit-actions">
-                            <button
-                              className="save-edit-button"
-                              onClick={() => saveEditedPost(selectedPost)}
-                              disabled={savingEdit}
-                            >
-                              {savingEdit ? 'Saving...' : 'Save changes'}
-                            </button>
-
-                            <button
-                              className="cancel-edit-button"
-                              onClick={cancelEditingPost}
-                              disabled={savingEdit}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          ref={editPostRef}
-                          className="edit-post-button"
-                          onClick={() => startEditingPost(selectedPost)}
-                        >
-                          Edit post
-                        </button>
-                      )}
 
                       <div className="selected-post-copy">
                         <p>{selectedPost.caption || 'No caption saved.'}</p>
@@ -2476,6 +2288,67 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
             )}
           </section>
         </>
+      )}
+
+      {showTodayReminder && todayReminderPost && (
+        <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
+          <section className="fromone-modal-card">
+            <div className="fromone-modal-icon">📌</div>
+            <div className="page-eyebrow">Today’s post</div>
+            <h2>You have a post to make today</h2>
+            <p>
+              Your {todayReminderPost.platform || 'social'} post is ready. Open it, publish it,
+              then mark it as posted.
+            </p>
+
+            <div className="fromone-modal-actions">
+              <button type="button" onClick={openTodayReminderPost}>
+                Start today’s post
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setShowTodayReminder(false)}
+              >
+                Later
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {successMoment && (
+        <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
+          <section className="fromone-modal-card fromone-success-card">
+            <div className="fromone-modal-icon">🎉</div>
+            <div className="page-eyebrow">Post complete</div>
+            <h2>Nice work — today’s post is done 🎉</h2>
+            <p>
+              {successMoment.postsLeft === 0
+                ? 'That was the last post in this weekly plan.'
+                : `${successMoment.postsLeft} posts left this week.`}
+            </p>
+
+            <div className="fromone-modal-actions">
+              {successMoment.nextPostId && (
+                <button type="button" onClick={viewNextPostAfterSuccess}>
+                  View next post
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  window.location.href = '/dashboard';
+                }}
+              >
+                Back to dashboard
+              </button>
+            </div>
+          </section>
+        </div>
       )}
 
       {showPostsTour && !loading && campaigns.length > 0 && (
