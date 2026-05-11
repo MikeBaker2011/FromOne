@@ -483,7 +483,27 @@ export default function DashboardPage() {
     return used;
   };
 
-  const checkWeeklyScanLimit = async (userId: string) => {
+  const isAdminUser = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('admin_users')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Admin check error:', error.message);
+      return false;
+    }
+
+    return Boolean(data);
+  };
+    const checkWeeklyScanLimit = async (userId: string) => {
+    const admin = await isAdminUser(userId);
+
+    if (admin) {
+      return true;
+    }
+
     const used = await loadWeeklyScanUsage(userId);
 
     if (used >= WEEKLY_SCAN_LIMIT) {
@@ -1065,11 +1085,15 @@ Also detect or infer:
     }
 
     if (source === 'website_scan') {
-      await recordUsageEvent(userId, 'website_scan', {
-        website: activeClient.website_url,
-        client_id: activeClient.id,
-        campaign_id: campaign.id,
-      });
+      const admin = await isAdminUser(userId);
+
+      if (!admin) {
+        await recordUsageEvent(userId, 'website_scan', {
+          website: activeClient.website_url,
+          client_id: activeClient.id,
+          campaign_id: campaign.id,
+        });
+      }
     }
 
     await loadSavedCampaignCount(userId);

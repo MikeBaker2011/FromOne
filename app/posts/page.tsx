@@ -614,7 +614,27 @@ export default function PostsPage() {
     return count || 0;
   };
 
-  const checkWeeklyScanLimit = async (userId: string) => {
+  const isAdminUser = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('admin_users')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Admin check error:', error.message);
+      return false;
+    }
+
+    return Boolean(data);
+  };
+    const checkWeeklyScanLimit = async (userId: string) => {
+    const admin = await isAdminUser(userId);
+
+    if (admin) {
+      return true;
+    }
+
     const used = await loadWeeklyScanUsage(userId);
 
     if (used >= WEEKLY_SCAN_LIMIT) {
@@ -903,7 +923,8 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       setSelectedPostId(null);
     }
   };
-    const switchCampaign = async (campaignId: string) => {
+
+  const switchCampaign = async (campaignId: string) => {
     const nextCampaign = campaigns.find((item) => item.id === campaignId) || null;
 
     setSelectedCampaignId(campaignId);
@@ -1398,11 +1419,15 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
       await loadPosts(campaign.id);
 
       if (regenerateUsesWebsiteScan) {
-        await recordUsageEvent(userId, 'campaign_regenerate', {
-          website: activeProfile.website_url,
-          client_id: campaign.client_id || activeProfile.id || null,
-          campaign_id: campaign.id,
-        });
+        const admin = await isAdminUser(userId);
+
+        if (!admin) {
+          await recordUsageEvent(userId, 'campaign_regenerate', {
+            website: activeProfile.website_url,
+            client_id: campaign.client_id || activeProfile.id || null,
+            campaign_id: campaign.id,
+          });
+        }
       }
 
       alert('Campaign regenerated.');
@@ -2015,12 +2040,6 @@ Create a fresh 7-day mixed-platform campaign. Keep the posts clean, useful, and 
                     <strong>{businessName}</strong>
                     <small>Business details</small>
                   </span>
-                </span>
-
-                <span className="branded-business-summary-colours">
-                  <i style={{ background: brandPrimary }} />
-                  <i style={{ background: brandSecondary }} />
-                  <i style={{ background: brandAccent }} />
                 </span>
               </summary>
 
