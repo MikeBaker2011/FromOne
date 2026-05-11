@@ -1306,13 +1306,41 @@ Also detect or infer:
           FromOne will create seven ready-to-use posts for the week.
         </p>
 
-        <button
-          type="button"
-          className="secondary-button dashboard-tour-restart-button"
-          onClick={restartDashboardTour}
-        >
-          Show me around
-        </button>
+        <div className="dashboard-header-actions-row">
+          <button
+            type="button"
+            className="secondary-button dashboard-tour-restart-button"
+            onClick={restartDashboardTour}
+          >
+            Show me around
+          </button>
+
+          {!loading && (
+            <section
+              className={
+                accessLocked
+                  ? 'access-status-card access-status-locked dashboard-access-pill'
+                  : 'access-status-card dashboard-access-pill'
+              }
+            >
+              <div>
+                <div className="page-eyebrow">{accessLocked ? 'Demo Ended' : 'Access Active'}</div>
+                <h2>
+                  {accessLocked
+                    ? 'Creating weekly posts is currently locked.'
+                    : 'Your demo access is active.'}
+                </h2>
+                <p>{accessMessage}</p>
+              </div>
+
+              {accessLocked && (
+                <Link href="/subscription" className="dashboard-profile-link">
+                  View subscription options
+                </Link>
+              )}
+            </section>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -1398,28 +1426,6 @@ Also detect or infer:
                 View posts
               </button>
             </section>
-          </section>
-
-          <section
-            className={
-              accessLocked ? 'access-status-card access-status-locked' : 'access-status-card'
-            }
-          >
-            <div>
-              <div className="page-eyebrow">{accessLocked ? 'Demo Ended' : 'Access Active'}</div>
-              <h2>
-                {accessLocked
-                  ? 'Creating weekly posts is currently locked.'
-                  : 'Your demo access is active.'}
-              </h2>
-              <p>{accessMessage}</p>
-            </div>
-
-            {accessLocked && (
-              <Link href="/subscription" className="dashboard-profile-link">
-                View subscription options
-              </Link>
-            )}
           </section>
 
           <section className="dashboard-simple-shell">
