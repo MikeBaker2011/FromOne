@@ -7589,3 +7589,37 @@ body {
       "controls";
   }
 }
+/* Posts page: reduce height of progress and plan cards */
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-card,
+.simplified-posts-page .posts-progress-plan-grid .simplified-control-card {
+  min-height: 150px;
+  padding: 1.5rem 1.75rem;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-card {
+  gap: 1rem;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-card h3 {
+  margin: 0.35rem 0 0.35rem;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-card p {
+  margin: 0;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .weekly-progress-bar {
+  margin-top: 0.9rem;
+}
+
+.simplified-posts-page .posts-progress-plan-grid .simplified-campaign-controls {
+  max-width: 520px;
+}
+
+@media (max-width: 700px) {
+  .simplified-posts-page .posts-progress-plan-grid .weekly-progress-card,
+  .simplified-posts-page .posts-progress-plan-grid .simplified-control-card {
+    min-height: auto;
+    padding: 1.15rem;
+  }
+}
