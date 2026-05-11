@@ -744,7 +744,7 @@ export default function PostsPage() {
 
     if (total >= MAX_SAVED_CAMPAIGNS) {
       alert(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans. Delete an old weekly plan before copying this one.`
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans this month. Delete an old weekly plan before copying this one.`
       );
       return false;
     }
@@ -2095,6 +2095,10 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                   </select>
                 </label>
 
+                <div className="posts-plan-usage">
+                  {campaigns.length}/{MAX_SAVED_CAMPAIGNS} weekly plans saved this month
+                </div>
+
                 <div className="posts-plan-actions">
                   <button
                     type="button"
@@ -2126,6 +2130,38 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                     }
                   >
                     {duplicatingCampaign ? 'Saving...' : 'Save copy'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={renameSelectedCampaign}
+                    disabled={
+                      !campaign?.id ||
+                      loadingSelectedPlan ||
+                      deletingCampaign ||
+                      regeneratingCampaign ||
+                      duplicatingCampaign ||
+                      renamingCampaign
+                    }
+                  >
+                    {renamingCampaign ? 'Renaming...' : 'Rename'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="secondary-button danger-button"
+                    onClick={deleteSelectedCampaign}
+                    disabled={
+                      !campaign?.id ||
+                      loadingSelectedPlan ||
+                      deletingCampaign ||
+                      regeneratingCampaign ||
+                      duplicatingCampaign ||
+                      renamingCampaign
+                    }
+                  >
+                    {deletingCampaign ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
               </div>
