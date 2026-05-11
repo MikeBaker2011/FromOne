@@ -92,7 +92,7 @@ export default function ProductUpdatesPage() {
     setCategory(item.category || 'Product Update');
 
     window.scrollTo({
-      top: 0,
+      top: document.body.scrollHeight,
       behavior: 'smooth',
     });
   };
@@ -256,25 +256,6 @@ export default function ProductUpdatesPage() {
 
                 <h3>{item.title}</h3>
                 <p>{item.body}</p>
-
-                {isAdmin && (
-                  <div className="product-update-admin-row product-update-published-actions">
-                    <button className="secondary-button" onClick={() => startEditing(item)}>
-                      Edit
-                    </button>
-
-                    <button className="secondary-button" onClick={() => unpublishUpdate(item)}>
-                      Unpublish
-                    </button>
-
-                    <button
-                      className="secondary-button danger-button"
-                      onClick={() => deleteUpdate(item)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
               </article>
             ))}
           </div>
@@ -298,7 +279,7 @@ export default function ProductUpdatesPage() {
                 <div className="page-eyebrow">Admin Only</div>
                 <h2>{editingId ? 'Edit update' : 'Create update'}</h2>
                 <p>
-                  Clients cannot see this editor. They only see updates after you publish
+                  Customers cannot see this editor. They only see updates after you publish
                   them.
                 </p>
               </div>
@@ -320,7 +301,7 @@ export default function ProductUpdatesPage() {
                     className="input"
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
-                    placeholder="Example: Campaign history is now live"
+                    placeholder="Example: Weekly progress is now live"
                   />
                 </label>
 
@@ -346,6 +327,53 @@ export default function ProductUpdatesPage() {
                   )}
                 </div>
               </div>
+            </section>
+
+            <section className="premium-card product-updates-section product-updates-drafts-card product-updates-admin-compact-card">
+              <div className="product-updates-section-header product-updates-clean-header">
+                <div>
+                  <div className="page-eyebrow">Published updates</div>
+                  <h2>Manage live updates</h2>
+                </div>
+
+                <span>{publishedUpdates.length} published</span>
+              </div>
+
+              {publishedUpdates.length === 0 ? (
+                <div className="product-updates-empty">
+                  <strong>No published updates.</strong>
+                  <p>Published updates will appear here.</p>
+                </div>
+              ) : (
+                <div className="product-updates-draft-list">
+                  {publishedUpdates.map((item) => (
+                    <article key={item.id} className="product-update-draft-item">
+                      <div className="product-update-draft-content">
+                        <span>{item.category || 'Product Update'}</span>
+                        <h3>{item.title}</h3>
+                        <p>{item.body}</p>
+                      </div>
+
+                      <div className="product-update-admin-row product-update-draft-actions">
+                        <button className="secondary-button" onClick={() => startEditing(item)}>
+                          Edit
+                        </button>
+
+                        <button className="secondary-button" onClick={() => unpublishUpdate(item)}>
+                          Unpublish
+                        </button>
+
+                        <button
+                          className="secondary-button danger-button"
+                          onClick={() => deleteUpdate(item)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
             </section>
 
             <section className="premium-card product-updates-section product-updates-drafts-card product-updates-admin-compact-card">
