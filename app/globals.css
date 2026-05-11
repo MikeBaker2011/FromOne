@@ -7459,3 +7459,56 @@ body {
     gap: 0.35rem;
   }
 }
+/* Match lower dashboard cards to top two-card layout */
+.dashboard-simple-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.dashboard-simple-shell .dashboard-create-card,
+.dashboard-simple-shell .dashboard-status-card {
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-simple-shell {
+    grid-template-columns: 1fr;
+  }
+}
+/* Dashboard header action row with demo access pill */
+.dashboard-header-actions-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+}
+
+.dashboard-header-actions-row .dashboard-tour-restart-button {
+  margin: 0;
+}
+
+.dashboard-header-actions-row .dashboard-access-pill {
+  margin: 0;
+}
+
+.dashboard-header-actions-row .access-status-card {
+  width: fit-content;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .dashboard-header-actions-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-header-actions-row .dashboard-tour-restart-button,
+  .dashboard-header-actions-row .dashboard-access-pill {
+    width: 100%;
+  }
+}
