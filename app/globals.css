@@ -6461,3 +6461,122 @@ body {
   overflow: visible !important;
   text-overflow: unset !important;
 }
+/* PRODUCT UPDATES HARD LAYOUT FIX */
+
+.product-updates-public-page.product-updates-page {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 90px;
+}
+
+.product-updates-page .product-updates-hero {
+  margin-bottom: 44px !important;
+}
+
+.product-updates-page .product-updates-section {
+  margin-top: 44px !important;
+  margin-bottom: 0 !important;
+  padding: 38px !important;
+  border-radius: 34px;
+}
+
+.product-updates-page .product-updates-section + .product-updates-section {
+  margin-top: 44px !important;
+}
+
+.product-updates-page .product-updates-section-header {
+  margin-bottom: 30px;
+}
+
+.product-updates-page .product-updates-empty {
+  padding: 30px;
+  border-radius: 22px;
+}
+
+.product-updates-page .product-updates-timeline,
+.product-updates-page .product-updates-draft-list {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 30px !important;
+  width: 100% !important;
+}
+
+.product-updates-page .product-update-draft-item,
+.product-updates-page .product-update-item {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 34px !important;
+  border-radius: 26px;
+  overflow: visible !important;
+}
+
+.product-updates-page .product-update-content,
+.product-updates-page .product-update-draft-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.product-updates-page .product-update-content h3,
+.product-updates-page .product-update-draft-content h3,
+.product-updates-page .product-update-content p,
+.product-updates-page .product-update-draft-content p {
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  display: block !important;
+}
+
+.product-updates-page .product-update-content p,
+.product-updates-page .product-update-draft-content p {
+  line-height: 1.85 !important;
+  font-size: 16px;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+.product-updates-page .product-update-draft-actions,
+.product-updates-page .product-update-published-actions,
+.product-updates-page .product-update-admin-row {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-wrap: wrap !important;
+}
+
+.product-updates-page .product-update-admin-row button {
+  min-width: 110px;
+}
+
+@media (max-width: 700px) {
+  .product-updates-public-page.product-updates-page {
+    width: min(100% - 22px, 1180px);
+    padding-bottom: 70px;
+  }
+
+  .product-updates-page .product-updates-hero {
+    margin-bottom: 30px !important;
+  }
+
+  .product-updates-page .product-updates-section {
+    margin-top: 30px !important;
+    padding: 24px !important;
+    border-radius: 24px;
+  }
+
+  .product-updates-page .product-update-draft-item,
+  .product-updates-page .product-update-item {
+    padding: 22px !important;
+  }
+
+  .product-updates-page .product-update-admin-row button {
+    width: 100%;
+  }
+}

@@ -295,10 +295,25 @@ export default function ProductUpdatesPage() {
         ) : (
           <div className="product-updates-timeline">
             {publishedUpdates.map((item) => (
-              <article key={item.id} className="product-update-item">
+              <article
+                key={item.id}
+                className="product-update-item"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  overflow: 'visible',
+                }}
+              >
                 <div className="product-update-marker">✓</div>
 
-                <div className="product-update-content">
+                <div
+                  className="product-update-content"
+                  style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    overflow: 'visible',
+                  }}
+                >
                   <div className="product-update-meta">
                     <span>{item.category || 'Product Update'}</span>
                     {item.published_at && (
@@ -312,11 +327,44 @@ export default function ProductUpdatesPage() {
                     )}
                   </div>
 
-                  <h3>{item.title}</h3>
-                  <p>{item.body}</p>
+                  <h3
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      whiteSpace: 'normal',
+                      overflow: 'visible',
+                      textOverflow: 'unset',
+                    }}
+                  >
+                    {item.title}
+                  </h3>
+
+                  <p
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      whiteSpace: 'normal',
+                      overflow: 'visible',
+                      textOverflow: 'unset',
+                      lineHeight: 1.8,
+                    }}
+                  >
+                    {item.body}
+                  </p>
 
                   {isAdmin && (
-                    <div className="product-update-admin-row product-update-published-actions">
+                    <div
+                      className="product-update-admin-row product-update-published-actions"
+                      style={{
+                        marginTop: 24,
+                        paddingTop: 22,
+                        borderTop: '1px solid rgba(148, 163, 184, 0.14)',
+                        display: 'flex',
+                        justifyContent: 'flex-start',
+                        gap: 14,
+                        flexWrap: 'wrap',
+                      }}
+                    >
                       <button className="secondary-button" onClick={() => startEditing(item)}>
                         Edit
                       </button>
@@ -353,14 +401,63 @@ export default function ProductUpdatesPage() {
 
           <div className="product-updates-draft-list">
             {draftUpdates.map((item) => (
-              <article key={item.id} className="product-update-draft-item">
-                <div className="product-update-draft-content">
+              <article
+                key={item.id}
+                className="product-update-draft-item"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  overflow: 'visible',
+                }}
+              >
+                <div
+                  className="product-update-draft-content"
+                  style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    overflow: 'visible',
+                  }}
+                >
                   <span>{item.category || 'Product Update'}</span>
-                  <h3>{item.title}</h3>
-                  <p>{item.body}</p>
+
+                  <h3
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      whiteSpace: 'normal',
+                      overflow: 'visible',
+                      textOverflow: 'unset',
+                    }}
+                  >
+                    {item.title}
+                  </h3>
+
+                  <p
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      whiteSpace: 'normal',
+                      overflow: 'visible',
+                      textOverflow: 'unset',
+                      lineHeight: 1.8,
+                    }}
+                  >
+                    {item.body}
+                  </p>
                 </div>
 
-                <div className="product-update-admin-row product-update-draft-actions">
+                <div
+                  className="product-update-admin-row product-update-draft-actions"
+                  style={{
+                    marginTop: 24,
+                    paddingTop: 22,
+                    borderTop: '1px solid rgba(148, 163, 184, 0.14)',
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    gap: 14,
+                    flexWrap: 'wrap',
+                  }}
+                >
                   <button className="secondary-button" onClick={() => startEditing(item)}>
                     Edit
                   </button>
