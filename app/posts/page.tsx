@@ -55,7 +55,7 @@ const postsTourSteps = [
   },
   {
     title: 'Choose this week’s plan',
-    text: 'Use this dropdown to switch between saved weekly plans.',
+    text: 'Choose a saved weekly plan, then click Load plan.',
     target: 'campaigns',
   },
   {
@@ -266,6 +266,7 @@ export default function PostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [pendingCampaignId, setPendingCampaignId] = useState('');
   const [campaign, setCampaign] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -276,6 +277,7 @@ export default function PostsPage() {
   const [regeneratingCampaign, setRegeneratingCampaign] = useState(false);
   const [duplicatingCampaign, setDuplicatingCampaign] = useState(false);
   const [renamingCampaign, setRenamingCampaign] = useState(false);
+  const [loadingSelectedPlan, setLoadingSelectedPlan] = useState(false);
   const [audienceTarget, setAudienceTarget] = useState('Local customers');
   const [customAudienceTarget, setCustomAudienceTarget] = useState('');
   const [rewritingPost, setRewritingPost] = useState(false);
@@ -887,6 +889,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
 
     setCampaign(activeCampaign);
     setSelectedCampaignId(activeCampaign?.id || null);
+    setPendingCampaignId(activeCampaign?.id || '');
 
     await Promise.all([loadPosts(activeCampaign?.id || null), loadProfile(), loadAccess()]);
 
@@ -983,11 +986,27 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
     const nextCampaign = campaigns.find((item) => item.id === campaignId) || null;
 
     setSelectedCampaignId(campaignId);
+    setPendingCampaignId(campaignId);
     setCampaign(nextCampaign);
     setSelectedPostId(null);
     cancelEditingPost();
 
     await loadPosts(campaignId);
+  };
+
+  const loadSelectedPlan = async () => {
+    if (!pendingCampaignId) {
+      alert('Please choose a weekly plan first.');
+      return;
+    }
+
+    setLoadingSelectedPlan(true);
+
+    try {
+      await switchCampaign(pendingCampaignId);
+    } finally {
+      setLoadingSelectedPlan(false);
+    }
   };
 
   const deleteSelectedCampaign = async () => {
@@ -1042,6 +1061,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
       }
 
       setSelectedCampaignId(null);
+      setPendingCampaignId('');
       setCampaign(null);
       setPosts([]);
       setSelectedPostId(null);
@@ -1067,7 +1087,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
     if (!ensureAccessAllowed()) return;
 
     const confirmed = confirm(
-      `Copy this weekly plan?\n\n${
+      `Save a copy of this weekly plan?\n\n${
         campaign.name || campaign.campaign_idea || 'Selected weekly plan'
       }\n\nThis will create a new weekly plan with copied posts. Uploaded images will not be copied.`
     );
@@ -1136,8 +1156,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
         alert(campaignCopyError.message);
         return;
       }
-
-      const today = new Date();
+            const today = new Date();
 
       const copiedPosts = sourcePosts.map((post: any, index: number) => {
         const postDate = new Date(today);
@@ -1181,16 +1200,18 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
         return;
       }
 
-      await loadCampaigns();
+      const refreshedCampaigns = await loadCampaigns();
 
       setCampaign(newCampaign);
       setSelectedCampaignId(newCampaign.id);
+      setPendingCampaignId(newCampaign.id);
       setSelectedPostId(null);
       cancelEditingPost();
 
+      setCampaigns(refreshedCampaigns);
       await loadPosts(newCampaign.id);
 
-      alert('Weekly plan copied.');
+      alert('Weekly plan copy saved.');
     } catch (error: any) {
       const message = getReadableError(error, 'Error copying weekly plan.');
       console.error('Copy weekly plan error:', error);
@@ -1470,6 +1491,7 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
 
       setCampaign(refreshedCampaign);
       setSelectedCampaignId(campaign.id);
+      setPendingCampaignId(campaign.id);
 
       await loadPosts(campaign.id);
 
@@ -2055,13 +2077,14 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                   <strong>This week’s plan</strong>
                   <select
                     className="input"
-                    value={selectedCampaignId || ''}
-                    onChange={(event) => switchCampaign(event.target.value)}
+                    value={pendingCampaignId}
+                    onChange={(event) => setPendingCampaignId(event.target.value)}
                     disabled={
                       deletingCampaign ||
                       regeneratingCampaign ||
                       duplicatingCampaign ||
-                      renamingCampaign
+                      renamingCampaign ||
+                      loadingSelectedPlan
                     }
                   >
                     {campaigns.map((item) => (
@@ -2071,6 +2094,40 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                     ))}
                   </select>
                 </label>
+
+                <div className="posts-plan-actions">
+                  <button
+                    type="button"
+                    onClick={loadSelectedPlan}
+                    disabled={
+                      !pendingCampaignId ||
+                      loadingSelectedPlan ||
+                      deletingCampaign ||
+                      regeneratingCampaign ||
+                      duplicatingCampaign ||
+                      renamingCampaign
+                    }
+                  >
+                    {loadingSelectedPlan ? 'Loading...' : 'Load plan'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={duplicateSelectedCampaign}
+                    disabled={
+                      accessLocked ||
+                      !campaign?.id ||
+                      loadingSelectedPlan ||
+                      deletingCampaign ||
+                      regeneratingCampaign ||
+                      duplicatingCampaign ||
+                      renamingCampaign
+                    }
+                  >
+                    {duplicatingCampaign ? 'Saving...' : 'Save copy'}
+                  </button>
+                </div>
               </div>
             </section>
           </section>
@@ -2127,144 +2184,146 @@ Create a fresh 7-day mixed-platform weekly plan. Keep the posts clean, useful, a
                 </div>
 
                 {selectedPost && (
-                  <article className="selected-post-panel clean-selected-post simplified-selected-post">
-                    <div className="selected-post-main">
-                      <div className="selected-post-tags">
-                        <span>{selectedPost.scheduled_day || 'Day 1'}</span>
-                        <span>{selectedPost.platform || 'Facebook'}</span>
-                        <span>{selectedPost.is_posted ? 'Posted' : 'Ready'}</span>
-                        {isPostScheduledToday(selectedPost) && !selectedPost.is_posted && (
-                          <span>Start here</span>
-                        )}
-                        {selectedPost.audience_target && (
-                          <span>For {selectedPost.audience_target}</span>
-                        )}
-                      </div>
-
-                      <h2>{selectedPost.title || 'Social Media Post'}</h2>
-
-                      <div className="publish-checklist-card">
-                        <div>
-                          <div className="page-eyebrow">Simple steps</div>
-                          <h3>Publish this post</h3>
-                          <p>Follow these steps in order. No guessing needed.</p>
-                        </div>
-
-                        <ol className="publish-checklist">
-                          <li className="is-complete">
-                            <span>1</span>
-                            <strong>Read the post</strong>
-                          </li>
-
-                          <li className={selectedPost.image_url ? 'is-complete' : ''}>
-                            <span>2</span>
-                            <strong>Add image</strong>
-                          </li>
-
-                          <li>
-                            <span>3</span>
-                            <strong>Copy post</strong>
-                          </li>
-
-                          <li>
-                            <span>4</span>
-                            <strong>Open {selectedPost.platform || 'platform'}</strong>
-                          </li>
-
-                          <li className={selectedPost.is_posted ? 'is-complete' : ''}>
-                            <span>5</span>
-                            <strong>Mark as posted</strong>
-                          </li>
-                        </ol>
-                      </div>
-
-                      <div className="selected-post-copy">
-                        <p>{selectedPost.caption || 'No caption saved.'}</p>
-
-                        {selectedPost.cta && (
-                          <p>
-                            <strong>CTA:</strong> {selectedPost.cta}
-                          </p>
-                        )}
-
-                        {Array.isArray(selectedPost.hashtags) &&
-                          selectedPost.hashtags.length > 0 && (
-                            <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
-                          )}
-                      </div>
-
-                      <details className="suggested-image-details">
-                        <summary>Suggested image</summary>
-                        <p>
-                          {selectedPost.image_prompt ||
-                            'Use a clean, professional image that supports the message of this post.'}
-                        </p>
-                      </details>
+                  <article className="selected-post-panel clean-selected-post simplified-selected-post posts-selected-card">
+                    <div className="selected-post-tags">
+                      <span>{selectedPost.scheduled_day || 'Day 1'}</span>
+                      <span>{selectedPost.platform || 'Facebook'}</span>
+                      <span>{selectedPost.is_posted ? 'Posted' : 'Ready'}</span>
+                      {isPostScheduledToday(selectedPost) && !selectedPost.is_posted && (
+                        <span>Start here</span>
+                      )}
+                      {selectedPost.audience_target && (
+                        <span>For {selectedPost.audience_target}</span>
+                      )}
                     </div>
 
-                    <aside
-                      ref={publishingPanelRef}
-                      className="manual-publishing-panel simplified-publishing-panel"
-                    >
-                      <div className="page-eyebrow">Publish this post</div>
+                    <h2>{selectedPost.title || 'Social Media Post'}</h2>
 
-                      <div className="manual-image-placeholder uploaded-image-box">
-                        {selectedPost.image_url ? (
-                          <img src={selectedPost.image_url} alt="Uploaded post image" />
-                        ) : (
-                          <>
-                            <strong>No image uploaded</strong>
-                            <p>Upload the image you want to use for this post.</p>
-                          </>
-                        )}
+                    <div className="publish-checklist-card posts-full-width-checklist">
+                      <div>
+                        <div className="page-eyebrow">Simple steps</div>
+                        <h3>Publish this post</h3>
+                        <p>Follow these steps in order. No guessing needed.</p>
                       </div>
 
-                      <label className="upload-image-button">
-                        ⇪ Upload image
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(event) => handleImageUpload(event, selectedPost)}
-                          disabled={uploadingImage}
-                        />
-                      </label>
+                      <ol className="publish-checklist">
+                        <li className="is-complete">
+                          <span>1</span>
+                          <strong>Read the post</strong>
+                        </li>
 
-                      <button
-                        className="secondary-button danger-button"
-                        onClick={() => deletePostImage(selectedPost)}
-                        disabled={
-                          uploadingImage ||
-                          (!selectedPost.image_url && !selectedPost.image_path)
-                        }
+                        <li className={selectedPost.image_url ? 'is-complete' : ''}>
+                          <span>2</span>
+                          <strong>Add image</strong>
+                        </li>
+
+                        <li>
+                          <span>3</span>
+                          <strong>Copy post</strong>
+                        </li>
+
+                        <li>
+                          <span>4</span>
+                          <strong>Open {selectedPost.platform || 'platform'}</strong>
+                        </li>
+
+                        <li className={selectedPost.is_posted ? 'is-complete' : ''}>
+                          <span>5</span>
+                          <strong>Mark as posted</strong>
+                        </li>
+                      </ol>
+                    </div>
+
+                    <div className="posts-publish-layout">
+                      <div className="selected-post-main">
+                        <div className="selected-post-copy">
+                          <p>{selectedPost.caption || 'No caption saved.'}</p>
+
+                          {selectedPost.cta && (
+                            <p>
+                              <strong>CTA:</strong> {selectedPost.cta}
+                            </p>
+                          )}
+
+                          {Array.isArray(selectedPost.hashtags) &&
+                            selectedPost.hashtags.length > 0 && (
+                              <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
+                            )}
+                        </div>
+
+                        <details className="suggested-image-details">
+                          <summary>Suggested image</summary>
+                          <p>
+                            {selectedPost.image_prompt ||
+                              'Use a clean, professional image that supports the message of this post.'}
+                          </p>
+                        </details>
+                      </div>
+
+                      <aside
+                        ref={publishingPanelRef}
+                        className="manual-publishing-panel simplified-publishing-panel"
                       >
-                        Delete image
-                      </button>
+                        <div className="page-eyebrow">Publish this post</div>
 
-                      <button onClick={() => copyPost(selectedPost)}>Copy post</button>
+                        <div className="manual-image-placeholder uploaded-image-box">
+                          {selectedPost.image_url ? (
+                            <img src={selectedPost.image_url} alt="Uploaded post image" />
+                          ) : (
+                            <>
+                              <strong>No image uploaded</strong>
+                              <p>Upload the image you want to use for this post.</p>
+                            </>
+                          )}
+                        </div>
 
-                      <button
-                        className="secondary-button"
-                        onClick={() => openPlatform(selectedPost.platform || 'Facebook')}
-                      >
-                        Open {selectedPost.platform || 'Facebook'}
-                      </button>
+                        <label className="upload-image-button">
+                          ⇪ Upload image
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) => handleImageUpload(event, selectedPost)}
+                            disabled={uploadingImage}
+                          />
+                        </label>
 
-                      {selectedPost.is_posted ? (
+                        <button
+                          className="secondary-button danger-button"
+                          onClick={() => deletePostImage(selectedPost)}
+                          disabled={
+                            uploadingImage ||
+                            (!selectedPost.image_url && !selectedPost.image_path)
+                          }
+                        >
+                          Delete image
+                        </button>
+
+                        <button onClick={() => copyPost(selectedPost)}>Copy post</button>
+
                         <button
                           className="secondary-button"
-                          onClick={() => markAsScheduled(selectedPost.id)}
+                          onClick={() => openPlatform(selectedPost.platform || 'Facebook')}
                         >
-                          Mark as not posted
+                          Open {selectedPost.platform || 'Facebook'}
                         </button>
-                      ) : (
-                        <button
-                          className="posted-button"
-                          onClick={() => markAsPosted(selectedPost.id)}
-                        >
-                          Mark as posted
-                        </button>
-                      )}
-                    </aside>
+
+                        {selectedPost.is_posted ? (
+                          <button
+                            className="secondary-button"
+                            onClick={() => markAsScheduled(selectedPost.id)}
+                          >
+                            Mark as not posted
+                          </button>
+                        ) : (
+                          <button
+                            className="posted-button"
+                            onClick={() => markAsPosted(selectedPost.id)}
+                          >
+                            Mark as posted
+                          </button>
+                        )}
+                      </aside>
+                    </div>
                   </article>
                 )}
               </>
