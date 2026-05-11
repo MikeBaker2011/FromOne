@@ -6308,4 +6308,26 @@ body {
   .product-updates-page .update-actions button {
     width: 100%;
   }
+}/* PRODUCT UPDATES SECTION GAP OVERRIDE */
+
+.product-updates-page > * + * {
+  margin-top: 44px !important;
+}
+
+.product-updates-page section + section,
+.product-updates-page .premium-card + .premium-card,
+.product-updates-page .updates-card + .updates-card,
+.product-updates-page .product-updates-card + .product-updates-card {
+  margin-top: 44px !important;
+}
+
+.product-updates-page section,
+.product-updates-page .premium-card,
+.product-updates-page .updates-card,
+.product-updates-page .product-updates-card {
+  margin-bottom: 0 !important;
+}
+
+.product-updates-page {
+  padding-bottom: 90px !important;
 }
