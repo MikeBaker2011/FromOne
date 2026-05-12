@@ -87,6 +87,7 @@ const availablePlatforms: PlatformOption[] = [
 ];
 
 const defaultSelectedPlatforms = ['Facebook', 'Instagram', 'Google Business', 'LinkedIn'];
+const PLATFORM_CAROUSEL_VISIBLE_COUNT = 3;
 
 const recommendedPlatformsByIndustry: Record<string, string[]> = {
   plumbing: ['Facebook', 'Google Business', 'LinkedIn'],
@@ -146,7 +147,7 @@ const dashboardTourSteps = [
   {
     title: 'Welcome to your dashboard',
     text:
-      'This is where you create your weekly posts. Set up the business once, then create a fresh weekly plan whenever you need it.',
+      'This is where you create your weekly posts. Set up the business once, choose the platforms, then create a fresh weekly plan whenever you need it.',
     target: 'header',
   },
   {
@@ -156,9 +157,15 @@ const dashboardTourSteps = [
     target: 'website',
   },
   {
+    title: 'Choose social platforms',
+    text:
+      'Select where you want FromOne to create posts for this week. Use the recommended platforms or choose your own before creating the weekly plan.',
+    target: 'platforms',
+  },
+  {
     title: 'Create weekly posts',
     text:
-      'Choose the platforms you want, then create seven ready-to-use posts for the week.',
+      'Once the website or business details and platforms are ready, create seven ready-to-use posts for the week.',
     target: 'generate',
   },
   {
@@ -190,6 +197,7 @@ export default function DashboardPage() {
   const [todayPost, setTodayPost] = useState<any>(null);
 
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultSelectedPlatforms);
+  const [platformCarouselStart, setPlatformCarouselStart] = useState(0);
 
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({
     total: 0,
@@ -203,6 +211,7 @@ export default function DashboardPage() {
 
   const dashboardHeaderRef = useRef<HTMLDivElement | null>(null);
   const websiteInputRef = useRef<HTMLDivElement | null>(null);
+  const platformSelectorRef = useRef<HTMLDivElement | null>(null);
   const generateButtonRef = useRef<HTMLButtonElement | null>(null);
   const manualButtonRef = useRef<HTMLButtonElement | null>(null);
   const manualProfileSectionRef = useRef<HTMLDivElement | null>(null);
@@ -283,6 +292,20 @@ export default function DashboardPage() {
   const recommendedPlatforms = useMemo(() => {
     return getRecommendedPlatforms(client?.industry || manualIndustry);
   }, [client?.industry, manualIndustry]);
+
+  const visiblePlatformCards = useMemo(() => {
+    return availablePlatforms.slice(
+      platformCarouselStart,
+      platformCarouselStart + PLATFORM_CAROUSEL_VISIBLE_COUNT
+    );
+  }, [platformCarouselStart]);
+
+  const handleShowMorePlatforms = () => {
+    setPlatformCarouselStart((currentStart) => {
+      const nextStart = currentStart + PLATFORM_CAROUSEL_VISIBLE_COUNT;
+      return nextStart >= availablePlatforms.length ? 0 : nextStart;
+    });
+  };
 
   const togglePlatform = (platformName: string) => {
     setSelectedPlatforms((currentPlatforms) => {
@@ -371,6 +394,7 @@ export default function DashboardPage() {
 
     if (currentTarget === 'header') return dashboardHeaderRef.current;
     if (currentTarget === 'website') return websiteInputRef.current;
+    if (currentTarget === 'platforms') return platformSelectorRef.current;
     if (currentTarget === 'generate') return generateButtonRef.current;
 
     if (currentTarget === 'manual') {
@@ -803,25 +827,57 @@ export default function DashboardPage() {
     setTodayPost(data);
   };
 
+  const getSafeAuthUser = async () => {
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error) {
+      const message = error.message || '';
+
+      if (
+        message.includes('Invalid Refresh Token') ||
+        message.includes('Refresh Token Not Found') ||
+        message.includes('refresh_token_not_found')
+      ) {
+        await supabase.auth.signOut({ scope: 'local' });
+
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(DASHBOARD_TOUR_SEEN_KEY);
+        }
+
+        router.replace('/login');
+        return null;
+      }
+
+      console.error('Auth user error:', error.message);
+      return null;
+    }
+
+    return data.user || null;
+  };
+
   const fetchClient = async () => {
     setLoading(true);
 
-    const { data: authData } = await supabase.auth.getUser();
-    const userId = authData.user?.id;
+    const user = await getSafeAuthUser();
+    const userId = user?.id;
 
-    if (userId) {
-      await Promise.all([
-        loadWeeklyScanUsage(userId),
-        loadSavedCampaignCount(userId),
-        loadOrCreateAccess(userId),
-        loadTodayPost(userId),
-        loadWeeklyProgress(userId),
-      ]);
+    if (!userId) {
+      setLoading(false);
+      return;
     }
+
+    await Promise.all([
+      loadWeeklyScanUsage(userId),
+      loadSavedCampaignCount(userId),
+      loadOrCreateAccess(userId),
+      loadTodayPost(userId),
+      loadWeeklyProgress(userId),
+    ]);
 
     const { data, error } = await supabase
       .from('business_profiles')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -949,8 +1005,13 @@ Also detect or infer:
     setSavingWebsite(true);
 
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData.user?.id || null;
+      const user = await getSafeAuthUser();
+      const userId = user?.id || null;
+
+      if (!userId) {
+        alert('Please sign in again.');
+        return null;
+      }
 
       if (client?.id) {
         const { data, error } = await supabase
@@ -961,6 +1022,7 @@ Also detect or infer:
             updated_at: new Date().toISOString(),
           })
           .eq('id', client.id)
+          .eq('user_id', userId)
           .select()
           .single();
 
@@ -1015,8 +1077,13 @@ Also detect or infer:
     setSavingManualProfile(true);
 
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData.user?.id || null;
+      const user = await getSafeAuthUser();
+      const userId = user?.id || null;
+
+      if (!userId) {
+        alert('Please sign in again.');
+        return null;
+      }
 
       const profilePayload = {
         user_id: userId,
@@ -1037,6 +1104,7 @@ Also detect or infer:
           .from('business_profiles')
           .update(profilePayload)
           .eq('id', client.id)
+          .eq('user_id', userId)
           .select()
           .single();
 
@@ -1119,6 +1187,7 @@ Also detect or infer:
       .from('business_profiles')
       .update(businessProfileUpdates)
       .eq('id', activeClient.id)
+      .eq('user_id', activeClient.user_id)
       .select()
       .single();
 
@@ -1204,8 +1273,8 @@ Also detect or infer:
     activeClient: any,
     source: 'website_scan' | 'manual_profile'
   ) => {
-    const { data: authData } = await supabase.auth.getUser();
-    const userId = authData.user?.id;
+    const user = await getSafeAuthUser();
+    const userId = user?.id;
 
     if (!userId) {
       alert('You need to sign in before saving posts.');
@@ -1544,15 +1613,23 @@ Also detect or infer:
 
                   {todayPost ? (
                     <>
-                      <h2>Welcome back.</h2>
-                      <h3>{businessName}, you have a post to make today.</h3>
+                      <h2>Review your {todayPost.platform || 'social'} post</h2>
+                      <h3>{businessName} has one post ready to publish today.</h3>
                       <p>
-                        Review it, add an image, copy it, publish it, then mark it as posted.
+                        Review the post, add an image, copy it to{' '}
+                        {todayPost.platform || 'the selected platform'}, then mark it as posted.
                       </p>
 
-                      <div className="today-task-meta">
-                        <span>{todayPost.platform || 'Social post'}</span>
-                        <span>{todayPost.title || todayPost.scheduled_day || 'Today’s post'}</span>
+                      <div className="today-task-meta today-task-meta-stacked">
+                        <span>
+                          <strong>Posting to</strong>
+                          {todayPost.platform || 'Social post'}
+                        </span>
+
+                        <span>
+                          <strong>Post theme</strong>
+                          {todayPost.title || todayPost.scheduled_day || 'Today’s post'}
+                        </span>
                       </div>
                     </>
                   ) : (
@@ -1573,7 +1650,7 @@ Also detect or infer:
                 className="today-task-button"
                 onClick={() => router.push(todayPost ? '/posts?today=true' : '/posts')}
               >
-                {todayPost ? 'Start today’s post' : 'View this week'}
+                {todayPost ? `Review ${todayPost.platform || 'social'} post` : 'View this week'}
               </button>
             </section>
 
@@ -1619,7 +1696,7 @@ Also detect or infer:
             </section>
           </section>
 
-          <section className="dashboard-simple-shell">
+          <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
             <div className="dashboard-create-card">
               <div className="page-eyebrow">Create weekly posts</div>
 
@@ -1632,8 +1709,8 @@ Also detect or infer:
               </h2>
 
               <p>
-                Choose the route that fits the business. A website scan gives richer brand
-                context, while strong business details still create useful, targeted posts.
+                Add a website or use saved business details first. Then check the current business
+                details and choose the platforms for this week’s posts.
               </p>
 
               <div ref={websiteInputRef} className="dashboard-tour-target-wrap">
@@ -1651,68 +1728,6 @@ Also detect or infer:
                   onChange={(event) => setWebsiteUrl(event.target.value)}
                   placeholder="https://example.com"
                 />
-              </div>
-
-              <div className="dashboard-platform-selector">
-                <div className="dashboard-platform-selector-header">
-                  <div>
-                    <div className="page-eyebrow">Choose your platforms</div>
-                    <h3>Where should we create posts for?</h3>
-                    <p>
-                      FromOne recommends platforms based on the business type. You can change
-                      them before creating the weekly posts.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="secondary-button dashboard-platform-recommend-button"
-                    onClick={selectRecommendedPlatforms}
-                  >
-                    Use recommended
-                  </button>
-                </div>
-
-                <div className="dashboard-platform-grid">
-                  {availablePlatforms.map((platform) => {
-                    const isSelected = selectedPlatforms.includes(platform.name);
-                    const isRecommended = recommendedPlatforms.includes(platform.name);
-
-                    return (
-                      <button
-                        key={platform.name}
-                        type="button"
-                        className={
-                          isSelected
-                            ? 'dashboard-platform-card is-selected'
-                            : 'dashboard-platform-card'
-                        }
-                        onClick={() => togglePlatform(platform.name)}
-                        aria-pressed={isSelected}
-                      >
-                        <div className="dashboard-platform-card-top">
-                          <strong>{platform.name}</strong>
-                          <span>{isSelected ? '✓ Selected' : 'Add'}</span>
-                        </div>
-
-                        <p>{platform.description}</p>
-
-                        {isRecommended && (
-                          <small className="dashboard-platform-recommended-pill">
-                            Recommended
-                          </small>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="dashboard-selected-platforms-line">
-                  <strong>{selectedPlatforms.length}</strong>
-                  <span>
-                    selected: {selectedPlatforms.join(', ')}
-                  </span>
-                </div>
               </div>
 
               <div className="dashboard-scan-usage-pill">
@@ -1759,7 +1774,7 @@ Also detect or infer:
               </div>
             </div>
 
-            <aside className="dashboard-status-card">
+            <aside className="dashboard-status-card dashboard-status-card-full">
               <div className="page-eyebrow">Current Business</div>
 
               <div className="dashboard-status-list">
@@ -1814,6 +1829,84 @@ Also detect or infer:
                 </p>
               </div>
             </aside>
+
+            <div ref={platformSelectorRef} className="dashboard-platform-selector dashboard-platform-selector-full">
+              <div className="dashboard-platform-selector-header">
+                <div>
+                  <div className="page-eyebrow">Choose your platforms</div>
+                  <h3>Where should we create posts for?</h3>
+                  <p>
+                    Pick the platforms for this week’s plan. Use More to cycle through the social cards.
+                  </p>
+                </div>
+
+                <div className="dashboard-platform-carousel-actions">
+                  <button
+                    type="button"
+                    className="secondary-button dashboard-platform-recommend-button"
+                    onClick={selectRecommendedPlatforms}
+                  >
+                    Use recommended
+                  </button>
+                </div>
+              </div>
+
+              <div className="dashboard-platform-carousel-wrap">
+                <div className="dashboard-platform-carousel" aria-label="Social platform selector">
+                {visiblePlatformCards.map((platform) => {
+                  const isSelected = selectedPlatforms.includes(platform.name);
+                  const isRecommended = recommendedPlatforms.includes(platform.name);
+
+                  return (
+                    <button
+                      key={platform.name}
+                      type="button"
+                      className={
+                        isSelected
+                          ? 'dashboard-platform-carousel-card is-selected'
+                          : 'dashboard-platform-carousel-card'
+                      }
+                      onClick={() => togglePlatform(platform.name)}
+                      aria-pressed={isSelected}
+                    >
+                      <span className="dashboard-platform-check">
+                        {isSelected ? '✓' : '+'}
+                      </span>
+
+                      <strong>{platform.shortName}</strong>
+
+                      <small className={isRecommended ? 'is-visible' : 'is-hidden'}>
+                        Recommended
+                      </small>
+                    </button>
+                  );
+                })}
+                </div>
+
+                <button
+                  type="button"
+                  className="dashboard-platform-more-button"
+                  onClick={handleShowMorePlatforms}
+                  aria-label="Show more social platforms"
+                >
+                  <span>More</span>
+                  <b>›</b>
+                </button>
+              </div>
+
+              <div className="dashboard-selected-platforms-line">
+                <strong>{selectedPlatforms.length}</strong>
+                <span>selected: {selectedPlatforms.join(', ')}</span>
+                <small>
+                  Showing {platformCarouselStart + 1}–
+                  {Math.min(
+                    platformCarouselStart + PLATFORM_CAROUSEL_VISIBLE_COUNT,
+                    availablePlatforms.length
+                  )}{' '}
+                  of {availablePlatforms.length}
+                </small>
+              </div>
+            </div>
           </section>
 
           {showManualProfile && (
@@ -1953,26 +2046,6 @@ Also detect or infer:
               </div>
             </section>
           )}
-
-          <section className="dashboard-simple-steps">
-            <div>
-              <span>1</span>
-              <strong>Add website or business details</strong>
-              <p>Scan a business website, or add business details if there is no website.</p>
-            </div>
-
-            <div>
-              <span>2</span>
-              <strong>Choose platforms</strong>
-              <p>Select the social platforms you actually want posts for this week.</p>
-            </div>
-
-            <div>
-              <span>3</span>
-              <strong>Review in Posts</strong>
-              <p>Copy content, open platforms, publish manually, and mark posts as done.</p>
-            </div>
-          </section>
         </>
       )}
 

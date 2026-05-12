@@ -9261,3 +9261,601 @@ line-clamp: 2;
     align-items: flex-start;
   }
 }
+.today-task-meta-stacked {
+  display: grid;
+  gap: 10px;
+}
+
+.today-task-meta-stacked span {
+  display: grid;
+  gap: 3px;
+}
+
+.today-task-meta-stacked strong {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+.dashboard-simple-shell-stacked {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.dashboard-simple-shell-stacked .dashboard-create-card,
+.dashboard-simple-shell-stacked .dashboard-status-card,
+.dashboard-simple-shell-stacked .dashboard-platform-selector {
+  width: 100%;
+}
+
+.dashboard-status-card-full,
+.dashboard-platform-selector-full {
+  grid-column: 1 / -1;
+}
+
+.dashboard-platform-selector-full {
+  margin-top: 0;
+}
+
+.dashboard-simple-shell-stacked .dashboard-status-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dashboard-simple-shell-stacked .dashboard-status-list p {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-simple-shell-stacked .dashboard-status-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-simple-shell-stacked .dashboard-status-list {
+    grid-template-columns: 1fr;
+  }
+}
+.dashboard-platform-carousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 4px 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-platform-carousel::-webkit-scrollbar {
+  height: 8px;
+}
+
+.dashboard-platform-carousel::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.06);
+  border-radius: 999px;
+}
+
+.dashboard-platform-carousel::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.22);
+  border-radius: 999px;
+}
+
+.dashboard-platform-carousel-card {
+  position: relative;
+  flex: 0 0 172px;
+  min-height: 132px;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.78));
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  scroll-snap-align: start;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dashboard-platform-carousel-card strong {
+  display: block;
+  margin-top: 34px;
+  font-size: 1.05rem;
+}
+
+.dashboard-platform-carousel-card small {
+  display: inline-flex;
+  margin-top: 10px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.dashboard-platform-carousel-card.is-selected {
+  border-color: rgba(37, 99, 235, 0.6);
+  box-shadow:
+    0 20px 50px rgba(37, 99, 235, 0.14),
+    inset 0 0 0 1px rgba(37, 99, 235, 0.18);
+}
+
+.dashboard-platform-check {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  font-weight: 900;
+}
+
+.dashboard-platform-carousel-card.is-selected .dashboard-platform-check {
+  background: rgba(37, 99, 235, 0.12);
+}
+
+@media (max-width: 640px) {
+  .dashboard-platform-carousel-card {
+    flex-basis: 150px;
+  }
+}
+.dashboard-platform-carousel-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-platform-more-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 16px;
+  font-weight: 800;
+  cursor: pointer;
+  background: #0f172a;
+  color: #fff;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+}
+
+.dashboard-platform-more-button span {
+  font-size: 1rem;
+}
+
+.dashboard-platform-carousel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dashboard-platform-carousel-card {
+  position: relative;
+  min-height: 150px;
+  padding: 20px;
+  border-radius: 28px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,0.98), rgba(255,255,255,0.74)),
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.86));
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.dashboard-platform-carousel-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+}
+
+.dashboard-platform-carousel-card strong {
+  display: block;
+  margin-top: 42px;
+  font-size: 1.15rem;
+}
+
+.dashboard-platform-carousel-card small {
+  display: inline-flex;
+  margin-top: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.dashboard-platform-carousel-card.is-selected {
+  border-color: rgba(37, 99, 235, 0.62);
+  box-shadow:
+    0 24px 60px rgba(37, 99, 235, 0.14),
+    inset 0 0 0 1px rgba(37, 99, 235, 0.18);
+}
+
+.dashboard-platform-check {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  font-weight: 900;
+}
+
+.dashboard-platform-carousel-card.is-selected .dashboard-platform-check {
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.dashboard-selected-platforms-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dashboard-selected-platforms-line small {
+  opacity: 0.65;
+}
+
+@media (max-width: 900px) {
+  .dashboard-platform-carousel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-platform-selector-header {
+    display: grid;
+  }
+
+  .dashboard-platform-carousel-actions {
+    width: 100%;
+  }
+
+  .dashboard-platform-carousel {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-platform-more-button,
+  .dashboard-platform-recommend-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+/* FINAL OVERRIDE — Dashboard social platform carousel */
+
+.dashboard-platform-carousel-wrap {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 160px !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+}
+
+.dashboard-platform-carousel {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.dashboard-platform-carousel-card {
+  all: unset;
+  box-sizing: border-box !important;
+  position: relative !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  min-height: 176px !important;
+  padding: 20px !important;
+  border-radius: 28px !important;
+  border: 1px solid rgba(255, 212, 59, 0.18) !important;
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(108, 140, 255, 0.1), transparent 36%),
+    linear-gradient(145deg, rgba(18, 24, 40, 0.98), rgba(7, 10, 18, 0.98)) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  display: grid !important;
+  grid-template-rows: auto 1fr auto !important;
+  align-content: stretch !important;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease !important;
+}
+
+.dashboard-platform-carousel-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(255, 212, 59, 0.18), transparent 22%);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.dashboard-platform-carousel-card::after {
+  content: "";
+  position: absolute;
+  right: -36px;
+  bottom: -44px;
+  width: 130px;
+  height: 130px;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.08);
+  pointer-events: none;
+}
+
+.dashboard-platform-carousel-card:hover {
+  transform: translateY(-3px) !important;
+  border-color: rgba(255, 212, 59, 0.48) !important;
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(255, 212, 59, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.dashboard-platform-carousel-card.is-selected {
+  border-color: rgba(255, 212, 59, 0.75) !important;
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.24), transparent 36%),
+    radial-gradient(circle at bottom left, rgba(61, 220, 151, 0.12), transparent 34%),
+    linear-gradient(145deg, rgba(22, 29, 47, 1), rgba(8, 12, 22, 1)) !important;
+  box-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.36),
+    0 0 0 1px rgba(255, 212, 59, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.dashboard-platform-check {
+  position: relative !important;
+  z-index: 2 !important;
+  top: auto !important;
+  right: auto !important;
+  width: 38px !important;
+  height: 38px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 212, 59, 0.3) !important;
+  background: rgba(255, 212, 59, 0.11) !important;
+  color: #ffd43b !important;
+  font-size: 1rem !important;
+  font-weight: 1000 !important;
+}
+
+.dashboard-platform-carousel-card.is-selected .dashboard-platform-check {
+  border-color: rgba(61, 220, 151, 0.38) !important;
+  background: rgba(61, 220, 151, 0.14) !important;
+  color: #71f3bf !important;
+}
+
+.dashboard-platform-carousel-card strong {
+  position: relative !important;
+  z-index: 2 !important;
+  display: block !important;
+  align-self: end !important;
+  margin: 34px 0 0 !important;
+  color: #ffffff !important;
+  font-size: clamp(1.45rem, 2vw, 2.05rem) !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.06em !important;
+  font-weight: 1000 !important;
+}
+
+.dashboard-platform-carousel-card small {
+  position: relative !important;
+  z-index: 2 !important;
+  width: fit-content !important;
+  display: inline-flex !important;
+  margin-top: 14px !important;
+  padding: 7px 10px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 212, 59, 0.2) !important;
+  background: rgba(255, 212, 59, 0.1) !important;
+  color: #ffd43b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  font-size: 0.68rem !important;
+  font-weight: 950 !important;
+}
+
+.dashboard-platform-more-button {
+  all: unset;
+  box-sizing: border-box !important;
+  width: 160px !important;
+  min-height: 176px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 20px !important;
+  border-radius: 28px !important;
+  border: 1px solid rgba(255, 212, 59, 0.55) !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.28), transparent 28%),
+    linear-gradient(135deg, #ffd43b, #f7b733) !important;
+  color: #07090f !important;
+  font-weight: 1000 !important;
+  box-shadow: 0 22px 55px rgba(255, 212, 59, 0.2) !important;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease !important;
+}
+
+.dashboard-platform-more-button:hover {
+  transform: translateY(-3px) !important;
+  filter: brightness(1.04) !important;
+  box-shadow: 0 28px 68px rgba(255, 212, 59, 0.28) !important;
+}
+
+.dashboard-platform-more-button span {
+  font-size: 1rem !important;
+  font-weight: 1000 !important;
+}
+
+.dashboard-platform-more-button b {
+  width: 36px !important;
+  height: 36px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 999px !important;
+  background: rgba(7, 9, 15, 0.14) !important;
+  font-size: 28px !important;
+  line-height: 1 !important;
+}
+
+.dashboard-platform-selector-header {
+  align-items: flex-start !important;
+}
+
+.dashboard-platform-carousel-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+.dashboard-selected-platforms-line {
+  margin-top: 16px !important;
+}
+
+.dashboard-selected-platforms-line small {
+  color: var(--muted) !important;
+  font-weight: 800 !important;
+  opacity: 0.75 !important;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-platform-carousel {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .dashboard-platform-carousel-wrap {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-platform-more-button {
+    width: 100% !important;
+    min-height: 64px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-platform-selector-header {
+    display: grid !important;
+  }
+
+  .dashboard-platform-carousel-actions,
+  .dashboard-platform-recommend-button {
+    width: 100% !important;
+  }
+
+  .dashboard-platform-carousel {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-platform-carousel-card {
+    min-height: 160px !important;
+  }
+}
+/* Mobile header spacing override */
+
+@media (max-width: 980px) {
+  .main-content {
+    padding-top: 118px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .main-content {
+    padding-top: 110px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .main-content {
+    padding-top: 102px !important;
+  }
+}
+/* Mobile top bar compact override */
+
+@media (max-width: 980px) {
+  .mobile-topbar {
+    height: 76px !important;
+    padding: 10px 16px !important;
+  }
+
+  .mobile-topbar-logo-img {
+    width: 54px !important;
+    height: 54px !important;
+  }
+
+  .mobile-topbar-brand {
+    font-size: 20px !important;
+    gap: 12px !important;
+  }
+
+  .mobile-menu-button {
+    width: 54px !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    border-radius: 18px !important;
+  }
+
+  .main-content {
+    padding-top: 102px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .mobile-topbar {
+    height: 70px !important;
+    padding: 8px 12px !important;
+  }
+
+  .mobile-topbar-logo-img {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .mobile-menu-button {
+    width: 50px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+  }
+
+  .main-content {
+    padding-top: 94px !important;
+  }
+}
+/* Keep platform cards stable when recommended pill changes */
+
+.dashboard-platform-carousel-card small {
+  min-height: 28px !important;
+  visibility: visible !important;
+}
+
+.dashboard-platform-carousel-card small.is-hidden {
+  visibility: hidden !important;
+}
+
+.dashboard-platform-carousel-card small.is-visible {
+  visibility: visible !important;
+}
