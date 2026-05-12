@@ -654,26 +654,49 @@ export default function DashboardPage() {
       return;
     }
 
+    const trialStartedAt = new Date();
     const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+    trialEndsAt.setDate(trialStartedAt.getDate() + 7);
 
-    const { data: newAccess, error: accessInsertError } = await supabase
+    const { data: newAccess, error: accessUpsertError } = await supabase
       .from('user_access')
-      .insert({
-        user_id: userId,
-        access_status: 'trial',
-        trial_started_at: new Date().toISOString(),
-        trial_ends_at: trialEndsAt.toISOString(),
-        subscription_status: 'none',
-      })
+      .upsert(
+        {
+          user_id: userId,
+          access_status: 'trial',
+          trial_started_at: trialStartedAt.toISOString(),
+          trial_ends_at: trialEndsAt.toISOString(),
+          subscription_status: 'none',
+        },
+        {
+          onConflict: 'user_id',
+        }
+      )
       .select()
       .single();
 
-    if (accessInsertError) {
-      console.error('Error creating user access:', accessInsertError.message);
-      setAccessInfo(null);
-      setAccessLocked(false);
-      setAccessMessage('Access check unavailable.');
+    if (accessUpsertError) {
+      console.error('Error creating user access:', accessUpsertError.message);
+
+      const { data: fallbackAccess, error: fallbackError } = await supabase
+        .from('user_access')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (fallbackError || !fallbackAccess) {
+        setAccessInfo(null);
+        setAccessLocked(false);
+        setAccessMessage('Access check unavailable.');
+        return;
+      }
+
+      const access = fallbackAccess as AccessInfo;
+      const calculated = calculateAccess(access);
+
+      setAccessInfo(access);
+      setAccessLocked(calculated.locked);
+      setAccessMessage(calculated.message);
       return;
     }
 
@@ -1530,33 +1553,6 @@ Also detect or infer:
     }
   };
 
-  const handleSaveManualAndGenerate = async () => {
-    setScanning(true);
-
-    if (!ensureAccessAllowed()) {
-      setScanning(false);
-      return;
-    }
-
-    try {
-      const savedProfile = await saveManualProfile();
-
-      if (!savedProfile) {
-        setScanning(false);
-        return;
-      }
-
-      await createCampaignFromProfile(savedProfile, 'manual_profile');
-    } catch (error: any) {
-      const message = getErrorMessage(error);
-
-      console.error('Business details create error:', error);
-      alert(message);
-    } finally {
-      setScanning(false);
-    }
-  };
-
   const hasManualProfile = Boolean(client?.business_name && client?.industry);
   const hasWebsite = Boolean(websiteUrl.trim());
   const weeklyScansRemaining = Math.max(WEEKLY_SCAN_LIMIT - weeklyScansUsed, 0);
@@ -1568,15 +1564,14 @@ Also detect or infer:
   const businessName = client?.business_name || 'your business';
   const businessInitial = String(businessName).trim().charAt(0).toUpperCase() || 'F';
   const businessLogoUrl = client?.brand_logo_url || '';
-
-  return (
+    return (
     <>
       <div ref={dashboardHeaderRef} className="page-header dashboard-simple-header">
         <div className="page-eyebrow">FromOne Dashboard</div>
         <h1 className="page-title">Create this week’s posts.</h1>
         <p className="page-description">
-          Add the business website, or use business details if there is no website.
-          FromOne will create seven ready-to-use posts for the week.
+          Add the business website, or use business details if there is no website. FromOne will
+          create seven ready-to-use posts for the week.
         </p>
 
         <div className="dashboard-header-actions-row">
@@ -1597,7 +1592,9 @@ Also detect or infer:
               }
             >
               <div>
-                <div className="page-eyebrow">{accessLocked ? 'Demo Ended' : 'Access Active'}</div>
+                <div className="page-eyebrow">
+                  {accessLocked ? 'Demo Ended' : 'Access Active'}
+                </div>
                 <h2>
                   {accessLocked
                     ? 'Creating weekly posts is currently locked.'
@@ -1655,7 +1652,9 @@ Also detect or infer:
 
                         <div>
                           <span>Post theme</span>
-                          <strong>{todayPost.title || todayPost.scheduled_day || 'Today’s post'}</strong>
+                          <strong>
+                            {todayPost.title || todayPost.scheduled_day || 'Today’s post'}
+                          </strong>
                         </div>
                       </div>
                     </>
@@ -1664,8 +1663,8 @@ Also detect or infer:
                       <h2>Welcome back.</h2>
                       <h3>{businessName}, you’re all clear today.</h3>
                       <p>
-                        No post is due right now. You can still view this week’s posts whenever
-                        you need.
+                        No post is due right now. You can still view this week’s posts whenever you
+                        need.
                       </p>
                     </>
                   )}
@@ -1706,7 +1705,11 @@ Also detect or infer:
                   {weeklyProgress.remaining === 0
                     ? 'Nice work — this week’s posts are complete 🎉'
                     : weeklyProgress.nextPost
-                      ? `Next up: ${weeklyProgress.nextPost.title || weeklyProgress.nextPost.scheduled_day || 'your next post'}`
+                      ? `Next up: ${
+                          weeklyProgress.nextPost.title ||
+                          weeklyProgress.nextPost.scheduled_day ||
+                          'your next post'
+                        }`
                       : 'Keep going — open Posts to finish the remaining items.'}
                 </p>
               ) : (
@@ -1785,7 +1788,10 @@ Also detect or infer:
                       : 'No website? Add business details'}
                 </button>
 
-                <span ref={postsLinkRef} className="dashboard-tour-link-target dashboard-view-posts-action">
+                <span
+                  ref={postsLinkRef}
+                  className="dashboard-tour-link-target dashboard-view-posts-action"
+                >
                   <Link href="/posts" className="dashboard-profile-link">
                     View posts
                   </Link>
@@ -1916,7 +1922,8 @@ Also detect or infer:
                   <div>
                     <strong>Save these business details first.</strong>
                     <span>
-                      Then choose the platforms below and use the create button in the platform section.
+                      Then choose the platforms below and use the create button in the platform
+                      section.
                     </span>
                   </div>
 
@@ -1996,7 +2003,8 @@ Also detect or infer:
                   <div className="page-eyebrow">Choose your platforms</div>
                   <h3>Where should we create posts for?</h3>
                   <p>
-                    Click a card to add or remove that platform. Use More to cycle through the social cards.
+                    Click a card to add or remove that platform. Use More to cycle through the
+                    social cards.
                   </p>
                 </div>
 
@@ -2094,6 +2102,11 @@ Also detect or infer:
                 </button>
               </div>
             </div>
+
+            <Link href="/product-updates" className="dashboard-update-pill">
+              <span>What’s new</span>
+              <strong>View latest updates</strong>
+            </Link>
           </section>
         </>
       )}
@@ -2165,11 +2178,7 @@ Also detect or infer:
             <p>{dashboardTourSteps[dashboardTourStep].text}</p>
 
             <div className="dashboard-tour-actions">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={closeDashboardTour}
-              >
+              <button type="button" className="secondary-button" onClick={closeDashboardTour}>
                 Skip
               </button>
 

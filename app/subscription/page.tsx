@@ -63,7 +63,7 @@ export default function SubscriptionPage() {
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading subscription:', error.message);
+      console.error('Error loading plan and billing:', error.message);
       setLoading(false);
       return;
     }
@@ -175,7 +175,7 @@ export default function SubscriptionPage() {
 
       if (selectedPlan === 'starter') {
         alert(
-          'Monthly plan selected. PayPal checkout will be connected when your PayPal access is ready.'
+          'Monthly plan selected. PayPal checkout will be connected when your PayPal subscription link is ready.'
         );
       } else {
         alert('Demo access saved.');
@@ -183,7 +183,7 @@ export default function SubscriptionPage() {
 
       await loadSubscription();
     } catch (error: any) {
-      alert(error?.message || 'Error saving subscription.');
+      alert(error?.message || 'Error saving plan and billing preference.');
     } finally {
       setSaving(false);
     }
@@ -204,58 +204,57 @@ export default function SubscriptionPage() {
   const isDemoActive = currentPlan === 'demo' && status === 'trialing' && daysRemaining > 0;
   const hasPaidAccess = currentPlan === 'starter' && status === 'active';
 
+  const sharedFeatures = [
+    'Create weekly social media posts',
+    'Website scan or manual business profile',
+    'Choose your social platforms',
+    'Copy, paste, and publish workflow',
+    '2 website scans per week',
+  ];
+
   const plans = [
     {
       id: 'demo' as Plan,
       name: '7-Day Demo',
       price: 'Free',
       priceNote: 'for 7 days',
-      description: 'Try FromOne free before choosing the monthly plan.',
+      valueNote: 'Demo access locks after 7 days unless you move to the monthly plan.',
+      description: 'Try the full FromOne workflow free for 7 days.',
       buttonText: 'Start free demo',
       disabled: isDemoExpired,
-      features: [
-        'Create your first weekly campaign',
-        'Website scan or manual business profile',
-        'Ready-to-use social post suggestions',
-        'Copy, paste, and publish workflow',
-      ],
+      features: sharedFeatures,
     },
     {
       id: 'starter' as Plan,
       name: 'FromOne Monthly',
-      price: '£29.99',
+      price: '£31.99',
       priceNote: '/ month',
+      valueNote: 'Equivalent to around £1.07 a day for high-quality social media content.',
       description:
-        'Your own simple social media assistant for small business content every week.',
+        'Continue using the full FromOne workflow every week for your business.',
       buttonText: 'Start monthly plan',
       disabled: false,
-      features: [
-        'A full week of tailored social posts',
-        'Posts based on your website or business profile',
-        'Audience targeting options',
-        'Campaign history',
-        'Copy, paste, and publish workflow',
-        'No big agency fees',
-      ],
+      features: sharedFeatures,
     },
   ];
 
   return (
     <>
       <div className="page-header">
-        <div className="page-eyebrow">FromOne Subscription</div>
+        <div className="page-eyebrow">FromOne Plan & Billing</div>
         <h1 className="page-title">
           {isDemoExpired ? 'Your demo has ended.' : 'Simple pricing for small businesses.'}
         </h1>
         <p className="page-description">
-          Start with a 7-day free demo, then continue with FromOne Monthly for £29.99 per
-          month. No Pro plan, no complicated tiers, and no big agency fees.
+          Start with a 7-day free demo, then continue with FromOne Monthly for £31.99 per
+          month. That is around £1.07 a day for high-quality social media content, with no
+          complicated tiers.
         </p>
       </div>
 
       {loading ? (
         <div className="premium-card">
-          <p>Loading subscription...</p>
+          <p>Loading plan and billing...</p>
         </div>
       ) : (
         <>
@@ -320,13 +319,26 @@ export default function SubscriptionPage() {
               >
                 <div className="page-eyebrow">{plan.name}</div>
 
-                <h2 style={{ marginTop: 0, fontSize: '44px' }}>
+                <h2 style={{ marginTop: 0, marginBottom: '8px', fontSize: '44px' }}>
                   {plan.price}
                   <span style={{ color: 'var(--muted)', fontSize: '16px' }}>
                     {' '}
                     {plan.priceNote}
                   </span>
                 </h2>
+
+                {plan.valueNote && (
+                  <p
+                    style={{
+                      margin: '0 0 18px',
+                      color: plan.id === 'starter' ? 'var(--gold)' : 'var(--muted)',
+                      fontWeight: 900,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {plan.valueNote}
+                  </p>
+                )}
 
                 <p>{plan.description}</p>
 
@@ -358,9 +370,16 @@ export default function SubscriptionPage() {
           </div>
 
           <div className="premium-card" style={{ marginTop: '24px' }}>
-            <div className="button-row">
+            <div className="page-eyebrow">Billing note</div>
+            <h2 style={{ marginTop: 0 }}>PayPal will manage recurring payments.</h2>
+            <p>
+              Once connected, PayPal will handle monthly billing, renewals, and cancellations.
+              You can cancel anytime before your next billing date to stop future renewal.
+            </p>
+
+            <div className="button-row" style={{ marginTop: '20px' }}>
               <button onClick={savePlan} disabled={saving}>
-                {saving ? 'Saving...' : 'Save Subscription Preference'}
+                {saving ? 'Saving...' : 'Save Plan Preference'}
               </button>
 
               <button

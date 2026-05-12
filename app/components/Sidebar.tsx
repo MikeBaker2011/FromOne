@@ -9,7 +9,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const PRODUCT_UPDATES_SEEN_KEY = 'fromone_product_updates_seen';
 const NEW_POSTS_KEY = 'fromone_has_new_posts';
 
 type SidebarProps = {
@@ -21,12 +20,10 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const router = useRouter();
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [showProductUpdatesDot, setShowProductUpdatesDot] = useState(false);
   const [showPostsDot, setShowPostsDot] = useState(false);
 
   useEffect(() => {
     checkUser();
-    checkProductUpdatesSeen();
     checkNewPosts();
 
     const {
@@ -37,27 +34,19 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     });
 
     const handleStorageChange = () => {
-      checkProductUpdatesSeen();
       checkNewPosts();
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('fromone-product-updates-seen', handleStorageChange);
     window.addEventListener('fromone-new-posts-updated', handleStorageChange);
 
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('fromone-product-updates-seen', handleStorageChange);
       window.removeEventListener('fromone-new-posts-updated', handleStorageChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const checkProductUpdatesSeen = () => {
-    const hasSeenUpdates = localStorage.getItem(PRODUCT_UPDATES_SEEN_KEY) === 'true';
-    setShowProductUpdatesDot(!hasSeenUpdates);
-  };
 
   const checkNewPosts = () => {
     const hasNewPosts = localStorage.getItem(NEW_POSTS_KEY) === 'true';
@@ -68,12 +57,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     localStorage.removeItem(NEW_POSTS_KEY);
     window.dispatchEvent(new Event('fromone-new-posts-updated'));
 
-    if (onClose) {
-      onClose();
-    }
-  };
-
-  const handleProductUpdatesClick = () => {
     if (onClose) {
       onClose();
     }
@@ -155,37 +138,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               {showPostsDot && <b className="product-updates-live-dot" aria-label="New posts" />}
             </span>
           </Link>
-
-          <Link className="sidebar-link" href="/tutorial" onClick={onClose}>
-            <span className="sidebar-link-icon">?</span>
-            Tutorial
-          </Link>
-
-          <Link
-            className="sidebar-link sidebar-link-coming-soon"
-            href="/social-hub"
-            onClick={onClose}
-          >
-            <span className="sidebar-link-icon">H</span>
-            <span className="sidebar-link-text">
-              Social Hub
-              <small>Coming soon</small>
-            </span>
-          </Link>
-
-          <Link
-            className="sidebar-link sidebar-product-updates-link"
-            href="/product-updates"
-            onClick={handleProductUpdatesClick}
-          >
-            <span className="sidebar-link-icon">N</span>
-            <span className="sidebar-product-updates-text">
-              Product Updates
-              {showProductUpdatesDot && (
-                <b className="product-updates-live-dot" aria-label="New updates" />
-              )}
-            </span>
-          </Link>
         </div>
 
         <div className="sidebar-nav-bottom">
@@ -196,7 +148,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
           <Link className="sidebar-link" href="/subscription" onClick={onClose}>
             <span className="sidebar-link-icon">£</span>
-            Subscription
+            Plan & Billing
           </Link>
 
           <Link className="sidebar-link" href="/reviews" onClick={onClose}>
@@ -204,9 +156,14 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             Reviews
           </Link>
 
+          <Link className="sidebar-link" href="/tutorial" onClick={onClose}>
+            <span className="sidebar-link-icon">?</span>
+            Tutorial
+          </Link>
+
           <Link className="sidebar-link" href="/bugreport" onClick={onClose}>
-            <span className="sidebar-link-icon">!</span>
-            Feedback
+            <span className="sidebar-link-icon">?</span>
+            Support
           </Link>
 
           {checkingAuth ? (
