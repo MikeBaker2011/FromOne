@@ -1505,6 +1505,21 @@ Also detect or infer:
     }
   };
 
+  const handleSaveWebsiteOnly = async () => {
+    if (!ensureAccessAllowed()) return;
+
+    if (!websiteUrl.trim()) {
+      alert('Please enter a website URL first.');
+      return;
+    }
+
+    const savedClient = await saveWebsiteToProfile();
+
+    if (savedClient) {
+      alert('Website saved. Now choose your platforms and create weekly posts below.');
+    }
+  };
+
   const handleSaveManualAndGenerate = async () => {
     setScanning(true);
 
@@ -1734,24 +1749,16 @@ Also detect or infer:
                 {weeklyScansRemaining} of {WEEKLY_SCAN_LIMIT} website scans remaining this week
               </div>
 
-              <button
-                ref={generateButtonRef}
-                className="dashboard-primary-scan-button"
-                onClick={handleGeneratePosts}
-                disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
-              >
-                {scanning || savingWebsite
-                  ? hasWebsite
-                    ? 'Scanning website...'
-                    : 'Creating weekly posts...'
-                  : hasWebsite
-                    ? 'Scan Website & Create Weekly Posts'
-                    : hasManualProfile
-                      ? 'Create Weekly Posts'
-                      : 'Save Website & Create Weekly Posts'}
-              </button>
+              <div className="dashboard-create-action-row">
+                <button
+                  type="button"
+                  className="dashboard-primary-scan-button"
+                  onClick={handleSaveWebsiteOnly}
+                  disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
+                >
+                  {savingWebsite ? 'Saving website...' : 'Save Website'}
+                </button>
 
-              <div className="dashboard-simple-actions">
                 <button
                   ref={manualButtonRef}
                   type="button"
@@ -1766,7 +1773,7 @@ Also detect or infer:
                       : 'No website? Add business details'}
                 </button>
 
-                <span ref={postsLinkRef} className="dashboard-tour-link-target">
+                <span ref={postsLinkRef} className="dashboard-tour-link-target dashboard-view-posts-action">
                   <Link href="/posts" className="dashboard-profile-link">
                     View posts
                   </Link>
@@ -1905,6 +1912,31 @@ Also detect or infer:
                   )}{' '}
                   of {availablePlatforms.length}
                 </small>
+              </div>
+
+              <div className="dashboard-platform-create-row">
+                <div>
+                  <strong>Ready to create?</strong>
+                  <span>
+                    FromOne will create seven posts using the selected platforms above.
+                  </span>
+                </div>
+
+                <button
+                  ref={generateButtonRef}
+                  type="button"
+                  className="dashboard-platform-create-button"
+                  onClick={handleGeneratePosts}
+                  disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
+                >
+                  {scanning || savingWebsite
+                    ? hasWebsite
+                      ? 'Scanning website...'
+                      : 'Creating weekly posts...'
+                    : hasWebsite
+                      ? 'Scan Website & Create Weekly Posts'
+                      : 'Create Weekly Posts'}
+                </button>
               </div>
             </div>
           </section>

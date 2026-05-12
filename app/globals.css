@@ -9859,3 +9859,81 @@ line-clamp: 2;
 .dashboard-platform-carousel-card small.is-visible {
   visibility: visible !important;
 }
+/* Dashboard create card action row */
+
+.dashboard-create-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.8fr) minmax(140px, 0.45fr);
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 14px;
+}
+
+.dashboard-create-action-row .dashboard-primary-scan-button,
+.dashboard-create-action-row .dashboard-manual-toggle-button,
+.dashboard-create-action-row .dashboard-profile-link {
+  width: 100%;
+  height: 100%;
+  min-height: 54px;
+  margin: 0;
+}
+
+.dashboard-create-action-row .dashboard-tour-link-target {
+  display: block;
+}
+
+.dashboard-create-action-row .dashboard-profile-link {
+  display: inline-flex;
+}
+
+@media (max-width: 900px) {
+  .dashboard-create-action-row {
+    grid-template-columns: 1fr;
+  }
+}
+/* Dashboard platform final create button */
+
+.dashboard-platform-create-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.1), transparent 34%),
+    rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 212, 59, 0.18);
+}
+
+.dashboard-platform-create-row strong {
+  display: block;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.dashboard-platform-create-row span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.dashboard-platform-create-button {
+  width: auto;
+  min-width: 280px;
+}
+
+@media (max-width: 760px) {
+  .dashboard-platform-create-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-platform-create-button {
+    width: 100%;
+    min-width: 0;
+  }
+}
