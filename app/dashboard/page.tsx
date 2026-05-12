@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -37,6 +37,95 @@ type WeeklyProgress = {
   nextPost: any | null;
 };
 
+type PlatformOption = {
+  name: string;
+  shortName: string;
+  description: string;
+};
+
+const availablePlatforms: PlatformOption[] = [
+  {
+    name: 'Facebook',
+    shortName: 'Facebook',
+    description: 'Local updates, trust posts, offers, and community content.',
+  },
+  {
+    name: 'Instagram',
+    shortName: 'Instagram',
+    description: 'Visual captions, reels ideas, stories, and brand-led posts.',
+  },
+  {
+    name: 'Google Business',
+    shortName: 'Google',
+    description: 'Search-friendly updates for local visibility and enquiries.',
+  },
+  {
+    name: 'LinkedIn',
+    shortName: 'LinkedIn',
+    description: 'Professional posts that build credibility and authority.',
+  },
+  {
+    name: 'TikTok',
+    shortName: 'TikTok',
+    description: 'Short-form video ideas, hooks, and simple talking points.',
+  },
+  {
+    name: 'YouTube Shorts',
+    shortName: 'Shorts',
+    description: 'Short video scripts and quick educational post ideas.',
+  },
+  {
+    name: 'X / Twitter',
+    shortName: 'X',
+    description: 'Short tips, updates, opinions, and quick announcements.',
+  },
+  {
+    name: 'Pinterest',
+    shortName: 'Pinterest',
+    description: 'Visual discovery posts for inspiration-led businesses.',
+  },
+];
+
+const defaultSelectedPlatforms = ['Facebook', 'Instagram', 'Google Business', 'LinkedIn'];
+
+const recommendedPlatformsByIndustry: Record<string, string[]> = {
+  plumbing: ['Facebook', 'Google Business', 'LinkedIn'],
+  plumber: ['Facebook', 'Google Business', 'LinkedIn'],
+  electrician: ['Facebook', 'Google Business', 'LinkedIn'],
+  electrical: ['Facebook', 'Google Business', 'LinkedIn'],
+  roofing: ['Facebook', 'Google Business', 'LinkedIn'],
+  roofer: ['Facebook', 'Google Business', 'LinkedIn'],
+  building: ['Facebook', 'Google Business', 'LinkedIn'],
+  construction: ['Facebook', 'Google Business', 'LinkedIn'],
+  landscaping: ['Facebook', 'Instagram', 'Google Business'],
+  gardener: ['Facebook', 'Instagram', 'Google Business'],
+  signage: ['Instagram', 'Facebook', 'LinkedIn', 'Google Business'],
+  print: ['Instagram', 'Facebook', 'LinkedIn', 'Google Business'],
+  beauty: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
+  hair: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
+  salon: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
+  aesthetics: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
+  fitness: ['Instagram', 'TikTok', 'YouTube Shorts', 'Facebook'],
+  gym: ['Instagram', 'TikTok', 'YouTube Shorts', 'Facebook'],
+  restaurant: ['Instagram', 'TikTok', 'Facebook', 'Google Business'],
+  cafe: ['Instagram', 'TikTok', 'Facebook', 'Google Business'],
+  food: ['Instagram', 'TikTok', 'Facebook', 'Google Business'],
+  bakery: ['Instagram', 'TikTok', 'Facebook', 'Google Business'],
+  estate: ['Facebook', 'LinkedIn', 'Google Business', 'Instagram'],
+  property: ['Facebook', 'LinkedIn', 'Google Business', 'Instagram'],
+  accounting: ['LinkedIn', 'Google Business', 'Facebook'],
+  accountant: ['LinkedIn', 'Google Business', 'Facebook'],
+  legal: ['LinkedIn', 'Google Business', 'Facebook'],
+  solicitor: ['LinkedIn', 'Google Business', 'Facebook'],
+  dental: ['Instagram', 'Facebook', 'Google Business'],
+  dentist: ['Instagram', 'Facebook', 'Google Business'],
+  mechanic: ['Facebook', 'Google Business', 'Instagram'],
+  garage: ['Facebook', 'Google Business', 'Instagram'],
+  ecommerce: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
+  shop: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
+  retail: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
+};
+
 const platformFallback = [
   'Facebook',
   'Instagram',
@@ -69,7 +158,7 @@ const dashboardTourSteps = [
   {
     title: 'Create weekly posts',
     text:
-      'When the website or business details are ready, click here to create seven ready-to-use posts for the week.',
+      'Choose the platforms you want, then create seven ready-to-use posts for the week.',
     target: 'generate',
   },
   {
@@ -99,6 +188,8 @@ export default function DashboardPage() {
   const [weeklyScansUsed, setWeeklyScansUsed] = useState(0);
   const [savedCampaignsCount, setSavedCampaignsCount] = useState(0);
   const [todayPost, setTodayPost] = useState<any>(null);
+
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultSelectedPlatforms);
 
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({
     total: 0,
@@ -176,6 +267,52 @@ export default function DashboardPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showDashboardTour, dashboardTourStep, loading, showManualProfile]);
+
+  const getRecommendedPlatforms = (industryValue?: string | null) => {
+    const industry = String(industryValue || '').toLowerCase();
+
+    const matchedKey = Object.keys(recommendedPlatformsByIndustry).find((key) =>
+      industry.includes(key)
+    );
+
+    return matchedKey
+      ? recommendedPlatformsByIndustry[matchedKey]
+      : defaultSelectedPlatforms;
+  };
+
+  const recommendedPlatforms = useMemo(() => {
+    return getRecommendedPlatforms(client?.industry || manualIndustry);
+  }, [client?.industry, manualIndustry]);
+
+  const togglePlatform = (platformName: string) => {
+    setSelectedPlatforms((currentPlatforms) => {
+      if (currentPlatforms.includes(platformName)) {
+        if (currentPlatforms.length === 1) {
+          alert('Please choose at least one platform.');
+          return currentPlatforms;
+        }
+
+        return currentPlatforms.filter((item) => item !== platformName);
+      }
+
+      return [...currentPlatforms, platformName];
+    });
+  };
+
+  const selectRecommendedPlatforms = () => {
+    setSelectedPlatforms(recommendedPlatforms);
+  };
+
+  const buildPlatformPlanText = (platforms: string[]) => {
+    const safePlatforms = platforms.length > 0 ? platforms : defaultSelectedPlatforms;
+
+    return Array.from({ length: 7 })
+      .map((_, index) => {
+        const platform = safePlatforms[index % safePlatforms.length];
+        return `Day ${index + 1} ${platform}`;
+      })
+      .join(', ');
+  };
 
   const closeDashboardTour = () => {
     localStorage.setItem(DASHBOARD_TOUR_SEEN_KEY, 'true');
@@ -711,6 +848,16 @@ export default function DashboardPage() {
         setManualContentPillars(
           Array.isArray(data.content_pillars) ? data.content_pillars.join(', ') : ''
         );
+
+        const recommendedForLoadedProfile = getRecommendedPlatforms(data.industry);
+
+        setSelectedPlatforms((currentPlatforms) => {
+          const isDefaultSelection =
+            currentPlatforms.length === defaultSelectedPlatforms.length &&
+            defaultSelectedPlatforms.every((platform) => currentPlatforms.includes(platform));
+
+          return isDefaultSelection ? recommendedForLoadedProfile : currentPlatforms;
+        });
       }
     }
 
@@ -760,6 +907,11 @@ Main offer: ${profile.main_offer || ''}
 Business goals: ${
       Array.isArray(profile.business_goals) ? profile.business_goals.join(', ') : ''
     }
+
+Selected social media platforms for this weekly plan:
+${selectedPlatforms.join(', ')}
+
+Only create posts for the selected social media platforms above. Do not use platforms that are not selected.
 
 When a website URL is available, scan the website and infer the business details, tone, audience, services, content pillars, CTAs, and branding from the website.
 
@@ -891,6 +1043,8 @@ Also detect or infer:
         if (error) throwSupabaseError(error);
 
         setClient(data);
+        setSelectedPlatforms(getRecommendedPlatforms(data.industry));
+
         return data;
       }
 
@@ -906,6 +1060,8 @@ Also detect or infer:
       if (error) throwSupabaseError(error);
 
       setClient(data);
+      setSelectedPlatforms(getRecommendedPlatforms(data.industry));
+
       return data;
     } catch (error: any) {
       const message = getErrorMessage(error);
@@ -972,6 +1128,10 @@ Also detect or infer:
     }
 
     setClient(data);
+
+    if (data?.industry) {
+      setSelectedPlatforms(getRecommendedPlatforms(data.industry));
+    }
   };
 
   const normaliseGeneratedPost = (
@@ -981,7 +1141,11 @@ Also detect or infer:
     detectedIndustry: string,
     detectedLocation: string
   ) => {
-    const fallbackPlatform = platformFallback[index] || 'Facebook';
+    const selectedPlatformFallback =
+      selectedPlatforms[index % selectedPlatforms.length] ||
+      platformFallback[index] ||
+      'Facebook';
+
     const fallbackHashtags = buildHashtags({
       ...activeClient,
       industry: detectedIndustry,
@@ -991,8 +1155,8 @@ Also detect or infer:
     if (typeof post === 'string') {
       return {
         day: `Day ${index + 1}`,
-        platform: fallbackPlatform,
-        title: `${fallbackPlatform} Post`,
+        platform: selectedPlatformFallback,
+        title: `${selectedPlatformFallback} Post`,
         caption: post,
         cta: activeClient.main_offer || 'Contact us today to find out more.',
         hashtags: fallbackHashtags,
@@ -1001,10 +1165,14 @@ Also detect or infer:
       };
     }
 
+    const allowedPlatform = selectedPlatforms.includes(post.platform || '')
+      ? post.platform
+      : selectedPlatformFallback;
+
     return {
       day: post.day || `Day ${index + 1}`,
-      platform: post.platform || fallbackPlatform,
-      title: post.title || `${post.platform || fallbackPlatform} Post`,
+      platform: allowedPlatform || selectedPlatformFallback,
+      title: post.title || `${allowedPlatform || selectedPlatformFallback} Post`,
       caption: post.caption || '',
       cta: post.cta || activeClient.main_offer || 'Contact us today to find out more.',
       hashtags:
@@ -1044,6 +1212,11 @@ Also detect or infer:
       return;
     }
 
+    if (selectedPlatforms.length === 0) {
+      alert('Please choose at least one platform.');
+      return;
+    }
+
     const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
 
     if (!campaignLimitAllowed) return;
@@ -1060,9 +1233,11 @@ Also detect or infer:
       industry: activeClient.industry,
       description: buildBusinessDescription(activeClient),
       provider: 'gemini',
+      platforms: selectedPlatforms,
       requestedOutput: {
         posts:
-          'array of 7 post objects with day, platform, title, caption, cta, hashtags, image_prompt',
+          'array of 7 post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only the selected platforms supplied in the request.',
+        selected_platforms: selectedPlatforms,
         business_name: 'detected business name',
         industry: 'detected industry',
         location: 'detected location',
@@ -1137,8 +1312,7 @@ Also detect or infer:
         campaign_area: detectedLocation,
         tone: detectedTone,
         posting_frequency: 'Daily',
-        platform_plan:
-          'Day 1 Facebook, Day 2 Instagram, Day 3 Google Business, Day 4 LinkedIn, Day 5 Instagram, Day 6 TikTok, Day 7 Facebook',
+        platform_plan: buildPlatformPlanText(selectedPlatforms),
       })
       .select()
       .single();
@@ -1195,6 +1369,7 @@ Also detect or infer:
           website: activeClient.website_url,
           client_id: activeClient.id,
           campaign_id: campaign.id,
+          platforms: selectedPlatforms,
         });
       }
     }
@@ -1478,6 +1653,68 @@ Also detect or infer:
                 />
               </div>
 
+              <div className="dashboard-platform-selector">
+                <div className="dashboard-platform-selector-header">
+                  <div>
+                    <div className="page-eyebrow">Choose your platforms</div>
+                    <h3>Where should we create posts for?</h3>
+                    <p>
+                      FromOne recommends platforms based on the business type. You can change
+                      them before creating the weekly posts.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="secondary-button dashboard-platform-recommend-button"
+                    onClick={selectRecommendedPlatforms}
+                  >
+                    Use recommended
+                  </button>
+                </div>
+
+                <div className="dashboard-platform-grid">
+                  {availablePlatforms.map((platform) => {
+                    const isSelected = selectedPlatforms.includes(platform.name);
+                    const isRecommended = recommendedPlatforms.includes(platform.name);
+
+                    return (
+                      <button
+                        key={platform.name}
+                        type="button"
+                        className={
+                          isSelected
+                            ? 'dashboard-platform-card is-selected'
+                            : 'dashboard-platform-card'
+                        }
+                        onClick={() => togglePlatform(platform.name)}
+                        aria-pressed={isSelected}
+                      >
+                        <div className="dashboard-platform-card-top">
+                          <strong>{platform.name}</strong>
+                          <span>{isSelected ? '✓ Selected' : 'Add'}</span>
+                        </div>
+
+                        <p>{platform.description}</p>
+
+                        {isRecommended && (
+                          <small className="dashboard-platform-recommended-pill">
+                            Recommended
+                          </small>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="dashboard-selected-platforms-line">
+                  <strong>{selectedPlatforms.length}</strong>
+                  <span>
+                    selected: {selectedPlatforms.join(', ')}
+                  </span>
+                </div>
+              </div>
+
               <div className="dashboard-scan-usage-pill">
                 {weeklyScansRemaining} of {WEEKLY_SCAN_LIMIT} website scans remaining this week
               </div>
@@ -1544,6 +1781,11 @@ Also detect or infer:
                 <p>
                   <strong>Website</strong>
                   <span>{websiteUrl || 'Not added yet'}</span>
+                </p>
+
+                <p>
+                  <strong>Platforms</strong>
+                  <span>{selectedPlatforms.join(', ')}</span>
                 </p>
 
                 <p>
@@ -1721,8 +1963,8 @@ Also detect or infer:
 
             <div>
               <span>2</span>
-              <strong>Create weekly posts</strong>
-              <p>FromOne creates seven clean posts with platform recommendations.</p>
+              <strong>Choose platforms</strong>
+              <p>Select the social platforms you actually want posts for this week.</p>
             </div>
 
             <div>

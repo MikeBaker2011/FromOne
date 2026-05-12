@@ -42,7 +42,7 @@ type GenerateResult = {
   businessProfile: BusinessProfileResult;
 };
 
-const platformPlan = [
+const defaultPlatformPlan = [
   'Facebook',
   'Instagram',
   'Google Business',
@@ -50,6 +50,17 @@ const platformPlan = [
   'Instagram',
   'TikTok',
   'Facebook',
+];
+
+const allowedPlatformOptions = [
+  'Facebook',
+  'Instagram',
+  'Google Business',
+  'LinkedIn',
+  'TikTok',
+  'YouTube Shorts',
+  'X / Twitter',
+  'Pinterest',
 ];
 
 const weeklyAngles = [
@@ -67,6 +78,35 @@ const fallbackColours: BrandColours = {
   secondary: '#101420',
   accent: '#27ae60',
 };
+
+function normaliseSelectedPlatforms(value: any) {
+  const rawPlatforms = Array.isArray(value)
+    ? value
+    : typeof value === 'string'
+      ? value.split(',')
+      : [];
+
+  const cleanedPlatforms = rawPlatforms
+    .map((item: any) => String(item || '').trim())
+    .filter(Boolean)
+    .filter((platform: string) => allowedPlatformOptions.includes(platform));
+
+  const uniquePlatforms = Array.from(new Set(cleanedPlatforms));
+
+  return uniquePlatforms.length > 0 ? uniquePlatforms : defaultPlatformPlan;
+}
+
+function getPlatformForDay(platforms: string[], index: number) {
+  return platforms[index % platforms.length] || defaultPlatformPlan[index] || 'Facebook';
+}
+
+function buildSelectedPlatformPlan(platforms: string[]) {
+  return Array.from({ length: 7 }).map((_, index) => ({
+    day: `Day ${index + 1}`,
+    platform: getPlatformForDay(platforms, index),
+    angle: weeklyAngles[index] || 'Helpful business post',
+  }));
+}
 
 function cleanWebsiteText(html: string) {
   return html
@@ -415,24 +455,38 @@ function fallbackBusinessProfile({
   };
 }
 
-function buildFallbackPosts(profile: BusinessProfileResult): GeneratedPost[] {
-  return platformPlan.map((platform, index) => ({
-    day: `Day ${index + 1}`,
-    platform,
-    title: weeklyAngles[index] || `${platform} Post`,
-    caption: `A useful ${platform} post for ${profile.business_name}, focused on ${profile.industry} and designed to build trust with local customers.`,
-    cta: profile.main_offer || 'Contact us today to find out more.',
-    hashtags: ['#LocalBusiness', '#SmallBusiness', '#SupportLocal', '#Marketing'],
-    image_prompt: `Create a professional image for ${profile.business_name} showing ${profile.industry} in a realistic, trustworthy way. Match the brand style.`,
-  }));
+function buildFallbackPosts(
+  profile: BusinessProfileResult,
+  selectedPlatforms = defaultPlatformPlan
+): GeneratedPost[] {
+  return Array.from({ length: 7 }).map((_, index) => {
+    const platform = getPlatformForDay(selectedPlatforms, index);
+
+    return {
+      day: `Day ${index + 1}`,
+      platform,
+      title: weeklyAngles[index] || `${platform} Post`,
+      caption: `A useful ${platform} post for ${profile.business_name}, focused on ${profile.industry} and designed to build trust with local customers.`,
+      cta: profile.main_offer || 'Contact us today to find out more.',
+      hashtags: ['#LocalBusiness', '#SmallBusiness', '#SupportLocal', '#Marketing'],
+      image_prompt: `Create a professional image for ${profile.business_name} showing ${profile.industry} in a realistic, trustworthy way. Match the brand style.`,
+    };
+  });
 }
 
-function normalisePost(value: any, index: number, fallbackProfile: BusinessProfileResult): GeneratedPost {
+function normalisePost(
+  value: any,
+  index: number,
+  fallbackProfile: BusinessProfileResult,
+  selectedPlatforms = defaultPlatformPlan
+): GeneratedPost {
+  const fallbackPlatform = getPlatformForDay(selectedPlatforms, index);
+
   if (typeof value === 'string') {
     return {
       day: `Day ${index + 1}`,
-      platform: platformPlan[index] || 'Facebook',
-      title: weeklyAngles[index] || `${platformPlan[index] || 'Social'} Post`,
+      platform: fallbackPlatform,
+      title: weeklyAngles[index] || `${fallbackPlatform} Post`,
       caption: value,
       cta: fallbackProfile.main_offer || 'Contact us today to find out more.',
       hashtags: ['#LocalBusiness', '#SmallBusiness', '#SupportLocal', '#Marketing'],
@@ -445,10 +499,13 @@ function normalisePost(value: any, index: number, fallbackProfile: BusinessProfi
     .filter(Boolean)
     .slice(0, 8);
 
+  const aiPlatform = cleanText(value?.platform);
+  const safePlatform = selectedPlatforms.includes(aiPlatform) ? aiPlatform : fallbackPlatform;
+
   return {
     day: value?.day || `Day ${index + 1}`,
-    platform: value?.platform || platformPlan[index] || 'Facebook',
-    title: cleanText(value?.title, weeklyAngles[index] || `${value?.platform || platformPlan[index] || 'Social'} Post`),
+    platform: safePlatform,
+    title: cleanText(value?.title, weeklyAngles[index] || `${safePlatform} Post`),
     caption: cleanText(value?.caption),
     cta: cleanText(value?.cta, fallbackProfile.main_offer || 'Contact us today to find out more.'),
     hashtags: rawHashtags.length
@@ -460,7 +517,11 @@ function normalisePost(value: any, index: number, fallbackProfile: BusinessProfi
   };
 }
 
-function normaliseResult(raw: any, fallback: BusinessProfileResult): GenerateResult {
+function normaliseResult(
+  raw: any,
+  fallback: BusinessProfileResult,
+  selectedPlatforms = defaultPlatformPlan
+): GenerateResult {
   const rawProfile = raw.businessProfile || raw.business_profile || raw.profile || raw.brief || raw;
 
   const businessProfile: BusinessProfileResult = {
@@ -503,13 +564,15 @@ function normaliseResult(raw: any, fallback: BusinessProfileResult): GenerateRes
 
   const posts = rawPosts
     .slice(0, 7)
-    .map((post: any, index: number) => normalisePost(post, index, businessProfile))
+    .map((post: any, index: number) =>
+      normalisePost(post, index, businessProfile, selectedPlatforms)
+    )
     .filter((post: GeneratedPost) => post.caption.trim());
 
   const completePosts = [...posts];
 
   while (completePosts.length < 7) {
-    const fallbackPosts = buildFallbackPosts(businessProfile);
+    const fallbackPosts = buildFallbackPosts(businessProfile, selectedPlatforms);
     completePosts.push(fallbackPosts[completePosts.length]);
   }
 
@@ -543,6 +606,7 @@ function buildPrompt({
   websiteContent,
   logoUrl,
   colours,
+  selectedPlatforms,
 }: {
   clientName: string;
   industry: string;
@@ -551,7 +615,12 @@ function buildPrompt({
   websiteContent: string;
   logoUrl: string | null;
   colours: BrandColours;
+  selectedPlatforms: string[];
 }) {
+  const selectedPlatformPlan = buildSelectedPlatformPlan(selectedPlatforms)
+    .map((item) => `- ${item.day}: ${item.platform} — ${item.angle}`)
+    .join('\n');
+
   return `
 You are FromOne's premium social media strategist, website analyst, brand interpreter, and local business copywriter.
 
@@ -594,14 +663,20 @@ Required JSON shape:
   ]
 }
 
+Selected social media platforms:
+${selectedPlatforms.join(', ')}
+
 Seven-day platform and content strategy:
-- Day 1: Facebook — Trust and credibility post
-- Day 2: Instagram — Visual service spotlight
-- Day 3: Google Business — Local helpful update
-- Day 4: LinkedIn — Authority or expertise post
-- Day 5: Instagram — Customer pain point or transformation post
-- Day 6: TikTok — Short video idea or script caption
-- Day 7: Facebook — Reminder, social proof, or enquiry driver
+${selectedPlatformPlan}
+
+Strict platform rule:
+- You must only use these selected platforms: ${selectedPlatforms.join(', ')}.
+- Do not create posts for platforms that are not selected.
+- Spread the 7 posts naturally across the selected platforms.
+- If only one platform is selected, all 7 posts should use that platform.
+- If YouTube Shorts is selected, create short video script style content.
+- If X / Twitter is selected, create short, punchy update-style content.
+- If Pinterest is selected, create visual discovery style content.
 
 Industry quality rules:
 - Write with industry knowledge, not generic marketing fluff.
@@ -619,7 +694,10 @@ Platform rules:
 - Google Business: direct, local, search-friendly, clear service/update language.
 - LinkedIn: credible, professional, expertise-building.
 - TikTok: short hook plus simple video/script idea that a business owner could realistically film.
-- Do not make TikTok sound like a long corporate advert.
+- YouTube Shorts: short video script, strong first line, clear scene idea, simple spoken wording.
+- X / Twitter: short, punchy, clear, useful, and easy to post as a quick update.
+- Pinterest: visual, searchable, inspiration-led, and image-friendly.
+- Do not make short-form video content sound like a long corporate advert.
 
 Caption style:
 - Do not include "Day 1", "Day 2", platform names, or big headings inside captions.
@@ -629,7 +707,7 @@ Caption style:
 - Emojis are allowed only if the business tone suits them. Use none by default.
 - Captions should usually be 45 to 120 words.
 - Google Business may be shorter and more direct.
-- TikTok may be formatted as a simple hook/script idea.
+- TikTok, YouTube Shorts, and X / Twitter may be shorter where appropriate.
 - Every caption must be ready to copy and paste.
 
 CTA rules:
@@ -677,7 +755,7 @@ Accent: ${colours.accent}
 Website scan content:
 ${websiteContent || 'No website content was available. Use the supplied business profile instead.'}
 
-Return exactly 7 posts. Use the platform and day plan exactly.
+Return exactly 7 posts. Use only the selected platforms and follow the seven-day platform plan exactly.
 `;
 }
 
@@ -862,6 +940,7 @@ export async function POST(req: NextRequest) {
     const clientName = String(body.clientName || 'the business').trim();
     const industry = String(body.industry || 'general business').trim();
     const description = String(body.description || '').trim();
+    const selectedPlatforms = normaliseSelectedPlatforms(body.platforms || body.selectedPlatforms);
 
     const provider: Provider = body.provider === 'openai' ? 'openai' : 'gemini';
 
@@ -898,6 +977,7 @@ export async function POST(req: NextRequest) {
       websiteContent,
       logoUrl,
       colours,
+      selectedPlatforms,
     });
 
     const rawResult =
@@ -905,13 +985,14 @@ export async function POST(req: NextRequest) {
         ? await generateWithOpenAI(prompt)
         : await generateWithGemini(prompt);
 
-    const result = normaliseResult(rawResult, fallback);
+    const result = normaliseResult(rawResult, fallback, selectedPlatforms);
 
     if (!result.posts.length) {
       return NextResponse.json(
         {
           posts: [],
           businessProfile: result.businessProfile,
+          selectedPlatforms,
           error: 'No posts were generated.',
         },
         { status: 500 }
@@ -922,6 +1003,7 @@ export async function POST(req: NextRequest) {
       posts: result.posts,
       businessProfile: result.businessProfile,
       provider,
+      selectedPlatforms,
       usedWebsiteScan: Boolean(website && websiteContent),
       detectedBrandColours: colours,
     });
