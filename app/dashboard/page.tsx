@@ -725,7 +725,17 @@ export default function DashboardPage() {
       .maybeSingle();
 
     if (error) {
-      console.error('Admin check error:', error.message);
+      const message = error.message || '';
+
+      if (
+        message.includes("Could not find the table 'public.admin_users'") ||
+        message.includes('admin_users') ||
+        error.code === 'PGRST205'
+      ) {
+        return false;
+      }
+
+      console.warn('Admin check unavailable:', message);
       return false;
     }
 
@@ -1635,16 +1645,18 @@ Also detect or infer:
                         {todayPost.platform || 'the selected platform'}, then mark it as posted.
                       </p>
 
-                      <div className="today-task-meta today-task-meta-stacked">
-                        <span>
-                          <strong>Posting to</strong>
-                          {todayPost.platform || 'Social post'}
-                        </span>
+                      <div className="today-task-premium-meta">
+                        <div>
+                          <span>Posting to</span>
+                          <strong>{todayPost.platform || 'Social post'}</strong>
+                        </div>
 
-                        <span>
-                          <strong>Post theme</strong>
-                          {todayPost.title || todayPost.scheduled_day || 'Today’s post'}
-                        </span>
+                        <i />
+
+                        <div>
+                          <span>Post theme</span>
+                          <strong>{todayPost.title || todayPost.scheduled_day || 'Today’s post'}</strong>
+                        </div>
                       </div>
                     </>
                   ) : (
@@ -1781,6 +1793,144 @@ Also detect or infer:
               </div>
             </div>
 
+            {showManualProfile && (
+              <section
+                ref={manualProfileSectionRef}
+                className="dashboard-manual-profile-card dashboard-manual-profile-card-inline"
+              >
+                <div className="dashboard-manual-profile-header">
+                  <div>
+                    <div className="page-eyebrow">Business Details</div>
+                    <h2>Add the business details.</h2>
+                    <p>
+                      Add enough detail for FromOne to understand the business. This helps create
+                      more specific posts when there is no website to scan.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="dashboard-manual-profile-grid">
+                  <label>
+                    <strong>Business name</strong>
+                    <input
+                      className="input"
+                      value={manualBusinessName}
+                      onChange={(event) => setManualBusinessName(event.target.value)}
+                      placeholder="Example: Baker & Co Plumbing"
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Industry</strong>
+                    <input
+                      className="input"
+                      value={manualIndustry}
+                      onChange={(event) => setManualIndustry(event.target.value)}
+                      placeholder="Example: Plumbing, beauty, signage"
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Location</strong>
+                    <input
+                      className="input"
+                      value={manualLocation}
+                      onChange={(event) => setManualLocation(event.target.value)}
+                      placeholder="Example: Manchester"
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Tone of voice</strong>
+                    <select
+                      className="input"
+                      value={manualTone}
+                      onChange={(event) => setManualTone(event.target.value)}
+                    >
+                      <option>Professional</option>
+                      <option>Friendly</option>
+                      <option>Premium</option>
+                      <option>Fun</option>
+                      <option>Direct</option>
+                      <option>Luxury</option>
+                      <option>Trustworthy</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <strong>Services</strong>
+                    <span>Separate with commas.</span>
+                    <textarea
+                      className="input"
+                      value={manualServices}
+                      onChange={(event) => setManualServices(event.target.value)}
+                      placeholder="Emergency callouts, installations, repairs"
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Who are the customers?</strong>
+                    <span>Separate with commas.</span>
+                    <textarea
+                      className="input"
+                      value={manualAudience}
+                      onChange={(event) => setManualAudience(event.target.value)}
+                      placeholder="Homeowners, landlords, small business owners"
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Main offer or call to action</strong>
+                    <textarea
+                      className="input"
+                      value={manualMainOffer}
+                      onChange={(event) => setManualMainOffer(event.target.value)}
+                      placeholder="Book a free quote today"
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Business goals</strong>
+                    <span>Separate with commas.</span>
+                    <textarea
+                      className="input"
+                      value={manualGoals}
+                      onChange={(event) => setManualGoals(event.target.value)}
+                      placeholder="More enquiries, build trust, promote services"
+                    />
+                  </label>
+
+                  <label>
+                    <strong>What should the posts focus on?</strong>
+                    <span>Separate with commas.</span>
+                    <textarea
+                      className="input"
+                      value={manualContentPillars}
+                      onChange={(event) => setManualContentPillars(event.target.value)}
+                      placeholder="Helpful advice, customer trust, services, offers"
+                    />
+                  </label>
+                </div>
+
+                <div className="dashboard-manual-profile-actions dashboard-manual-profile-actions-clean">
+                  <div>
+                    <strong>Save these business details first.</strong>
+                    <span>
+                      Then choose the platforms below and use the create button in the platform section.
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={saveManualProfile}
+                    disabled={scanning || savingManualProfile}
+                  >
+                    {savingManualProfile ? 'Saving details...' : 'Save business details'}
+                  </button>
+                </div>
+              </section>
+            )}
+
             <aside className="dashboard-status-card dashboard-status-card-full">
               <div className="page-eyebrow">Current Business</div>
 
@@ -1805,7 +1955,7 @@ Also detect or infer:
                   <span>{websiteUrl || 'Not added yet'}</span>
                 </p>
 
-                <p>
+                <p className="dashboard-platform-status-pulse">
                   <strong>Platforms</strong>
                   <span>{selectedPlatforms.join(', ')}</span>
                 </p>
@@ -1837,13 +1987,16 @@ Also detect or infer:
               </div>
             </aside>
 
-            <div ref={platformSelectorRef} className="dashboard-platform-selector dashboard-platform-selector-full">
+            <div
+              ref={platformSelectorRef}
+              className="dashboard-platform-selector dashboard-platform-selector-full"
+            >
               <div className="dashboard-platform-selector-header">
                 <div>
                   <div className="page-eyebrow">Choose your platforms</div>
                   <h3>Where should we create posts for?</h3>
                   <p>
-                    Pick the platforms for this week’s plan. Use More to cycle through the social cards.
+                    Click a card to add or remove that platform. Use More to cycle through the social cards.
                   </p>
                 </div>
 
@@ -1860,34 +2013,34 @@ Also detect or infer:
 
               <div className="dashboard-platform-carousel-wrap">
                 <div className="dashboard-platform-carousel" aria-label="Social platform selector">
-                {visiblePlatformCards.map((platform) => {
-                  const isSelected = selectedPlatforms.includes(platform.name);
-                  const isRecommended = recommendedPlatforms.includes(platform.name);
+                  {visiblePlatformCards.map((platform) => {
+                    const isSelected = selectedPlatforms.includes(platform.name);
+                    const isRecommended = recommendedPlatforms.includes(platform.name);
 
-                  return (
-                    <button
-                      key={platform.name}
-                      type="button"
-                      className={
-                        isSelected
-                          ? 'dashboard-platform-carousel-card is-selected'
-                          : 'dashboard-platform-carousel-card'
-                      }
-                      onClick={() => togglePlatform(platform.name)}
-                      aria-pressed={isSelected}
-                    >
-                      <span className="dashboard-platform-check">
-                        {isSelected ? '✓' : '+'}
-                      </span>
+                    return (
+                      <button
+                        key={platform.name}
+                        type="button"
+                        className={
+                          isSelected
+                            ? 'dashboard-platform-carousel-card is-selected'
+                            : 'dashboard-platform-carousel-card'
+                        }
+                        onClick={() => togglePlatform(platform.name)}
+                        aria-pressed={isSelected}
+                      >
+                        <span className="dashboard-platform-check">
+                          {isSelected ? '✓' : '+'}
+                        </span>
 
-                      <strong>{platform.shortName}</strong>
+                        <strong>{platform.shortName}</strong>
 
-                      <small className={isRecommended ? 'is-visible' : 'is-hidden'}>
-                        Recommended
-                      </small>
-                    </button>
-                  );
-                })}
+                        <small className={isRecommended ? 'is-visible' : 'is-hidden'}>
+                          Recommended
+                        </small>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <button
@@ -1932,152 +2085,16 @@ Also detect or infer:
                   {scanning || savingWebsite
                     ? hasWebsite
                       ? 'Scanning website...'
-                      : 'Creating weekly posts...'
+                      : 'Creating posts from business details...'
                     : hasWebsite
                       ? 'Scan Website & Create Weekly Posts'
-                      : 'Create Weekly Posts'}
+                      : hasManualProfile
+                        ? 'Create Posts From Business Details'
+                        : 'Create Weekly Posts'}
                 </button>
               </div>
             </div>
           </section>
-
-          {showManualProfile && (
-            <section ref={manualProfileSectionRef} className="dashboard-manual-profile-card">
-              <div className="dashboard-manual-profile-header">
-                <div>
-                  <div className="page-eyebrow">Business Details</div>
-                  <h2>Add the business details.</h2>
-                  <p>
-                    Add enough detail for FromOne to understand the business. This helps create
-                    more specific posts when there is no website to scan.
-                  </p>
-                </div>
-              </div>
-
-              <div className="dashboard-manual-profile-grid">
-                <label>
-                  <strong>Business name</strong>
-                  <input
-                    className="input"
-                    value={manualBusinessName}
-                    onChange={(event) => setManualBusinessName(event.target.value)}
-                    placeholder="Example: Baker & Co Plumbing"
-                  />
-                </label>
-
-                <label>
-                  <strong>Industry</strong>
-                  <input
-                    className="input"
-                    value={manualIndustry}
-                    onChange={(event) => setManualIndustry(event.target.value)}
-                    placeholder="Example: Plumbing, beauty, signage"
-                  />
-                </label>
-
-                <label>
-                  <strong>Location</strong>
-                  <input
-                    className="input"
-                    value={manualLocation}
-                    onChange={(event) => setManualLocation(event.target.value)}
-                    placeholder="Example: Manchester"
-                  />
-                </label>
-
-                <label>
-                  <strong>Tone of voice</strong>
-                  <select
-                    className="input"
-                    value={manualTone}
-                    onChange={(event) => setManualTone(event.target.value)}
-                  >
-                    <option>Professional</option>
-                    <option>Friendly</option>
-                    <option>Premium</option>
-                    <option>Fun</option>
-                    <option>Direct</option>
-                    <option>Luxury</option>
-                    <option>Trustworthy</option>
-                  </select>
-                </label>
-
-                <label>
-                  <strong>Services</strong>
-                  <span>Separate with commas.</span>
-                  <textarea
-                    className="input"
-                    value={manualServices}
-                    onChange={(event) => setManualServices(event.target.value)}
-                    placeholder="Emergency callouts, installations, repairs"
-                  />
-                </label>
-
-                <label>
-                  <strong>Who are the customers?</strong>
-                  <span>Separate with commas.</span>
-                  <textarea
-                    className="input"
-                    value={manualAudience}
-                    onChange={(event) => setManualAudience(event.target.value)}
-                    placeholder="Homeowners, landlords, small business owners"
-                  />
-                </label>
-
-                <label>
-                  <strong>Main offer or call to action</strong>
-                  <textarea
-                    className="input"
-                    value={manualMainOffer}
-                    onChange={(event) => setManualMainOffer(event.target.value)}
-                    placeholder="Book a free quote today"
-                  />
-                </label>
-
-                <label>
-                  <strong>Business goals</strong>
-                  <span>Separate with commas.</span>
-                  <textarea
-                    className="input"
-                    value={manualGoals}
-                    onChange={(event) => setManualGoals(event.target.value)}
-                    placeholder="More enquiries, build trust, promote services"
-                  />
-                </label>
-
-                <label>
-                  <strong>What should the posts focus on?</strong>
-                  <span>Separate with commas.</span>
-                  <textarea
-                    className="input"
-                    value={manualContentPillars}
-                    onChange={(event) => setManualContentPillars(event.target.value)}
-                    placeholder="Helpful advice, customer trust, services, offers"
-                  />
-                </label>
-              </div>
-
-              <div className="dashboard-manual-profile-actions">
-                <button
-                  onClick={handleSaveManualAndGenerate}
-                  disabled={accessLocked || scanning || savingManualProfile}
-                >
-                  {scanning || savingManualProfile
-                    ? 'Creating weekly posts...'
-                    : 'Save Details & Create Weekly Posts'}
-                </button>
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={saveManualProfile}
-                  disabled={scanning || savingManualProfile}
-                >
-                  {savingManualProfile ? 'Saving...' : 'Save details only'}
-                </button>
-              </div>
-            </section>
-          )}
         </>
       )}
 

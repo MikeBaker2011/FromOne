@@ -9936,4 +9936,251 @@ line-clamp: 2;
     width: 100%;
     min-width: 0;
   }
+}/* Highlight selected platforms in Current Business */
+
+.dashboard-platform-status-pulse {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(255, 212, 59, 0.34) !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.16), transparent 38%),
+    rgba(5, 7, 12, 0.36) !important;
+  box-shadow:
+    0 0 0 0 rgba(255, 212, 59, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  animation: dashboardPlatformStatusPulse 2.4s ease-in-out infinite;
+}
+
+.dashboard-platform-status-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle, rgba(255, 212, 59, 0.18), transparent 42%);
+  opacity: 0;
+  transform: scale(0.75);
+  animation: dashboardPlatformGlowSweep 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.dashboard-platform-status-pulse strong,
+.dashboard-platform-status-pulse span {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes dashboardPlatformStatusPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(255, 212, 59, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(255, 212, 59, 0),
+      0 18px 36px rgba(255, 212, 59, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+
+@keyframes dashboardPlatformGlowSweep {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}/* Dashboard today task card sizing refinement */
+
+.dashboard-personal-task-copy h2 {
+  font-size: clamp(2.4rem, 3.4vw, 4.2rem) !important;
+  line-height: 0.94 !important;
+  max-width: 720px !important;
+}
+
+.dashboard-personal-task-copy h3 {
+  font-size: clamp(1.35rem, 1.75vw, 2rem) !important;
+  line-height: 1.08 !important;
+  max-width: 620px !important;
+}
+
+.dashboard-personal-task-copy p {
+  max-width: 620px !important;
+  font-size: 1rem !important;
+}
+
+.dashboard-personal-task-card .today-task-button {
+  margin-top: 8px !important;
+}
+
+@media (max-width: 760px) {
+  .dashboard-personal-task-copy h2 {
+    font-size: clamp(2.1rem, 10vw, 3.2rem) !important;
+  }
+
+  .dashboard-personal-task-copy h3 {
+    font-size: 1.35rem !important;
+  }
+}
+/* Premium Today Task meta row */
+
+.today-task-premium-meta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 680px;
+}
+
+.today-task-premium-meta div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.today-task-premium-meta span {
+  color: rgba(255, 212, 59, 0.92);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.today-task-premium-meta strong {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.98rem;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.today-task-premium-meta i {
+  width: 1px;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 640px) {
+  .today-task-premium-meta {
+    display: grid;
+    gap: 12px;
+  }
+
+  .today-task-premium-meta i {
+    display: none;
+  }
+}
+/* Final override — premium Today Task meta */
+
+.today-task-premium-meta {
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+  flex-wrap: wrap !important;
+  margin-top: 22px !important;
+  padding-top: 18px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  max-width: 680px !important;
+}
+
+.today-task-premium-meta div {
+  display: grid !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.today-task-premium-meta span {
+  display: block !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: rgba(255, 212, 59, 0.92) !important;
+  font-size: 0.72rem !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+}
+
+.today-task-premium-meta strong {
+  display: block !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.98rem !important;
+  font-weight: 850 !important;
+  line-height: 1.35 !important;
+}
+
+.today-task-premium-meta i {
+  display: block !important;
+  width: 1px !important;
+  height: 34px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+@media (max-width: 640px) {
+  .today-task-premium-meta {
+    display: grid !important;
+    gap: 12px !important;
+  }
+
+  .today-task-premium-meta i {
+    display: none !important;
+  }
+}
+/* Manual business details inline placement + clean save action */
+
+.dashboard-manual-profile-card-inline {
+  grid-column: 1 / -1;
+  margin-top: 0 !important;
+}
+
+.dashboard-manual-profile-actions-clean {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+}
+
+.dashboard-manual-profile-actions-clean > div {
+  display: grid;
+  gap: 4px;
+}
+
+.dashboard-manual-profile-actions-clean strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.dashboard-manual-profile-actions-clean span {
+  color: var(--muted);
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.dashboard-manual-profile-actions-clean button {
+  width: auto;
+  min-width: 240px;
+}
+
+@media (max-width: 760px) {
+  .dashboard-manual-profile-actions-clean {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .dashboard-manual-profile-actions-clean button {
+    width: 100%;
+    min-width: 0;
+  }
 }
