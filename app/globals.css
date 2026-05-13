@@ -10680,3 +10680,21 @@ select.input {
   object-position: center;
   display: block;
 }
+.dashboard-business-logo-frame {
+  background: #ffffff !important;
+  border: 1px solid rgba(255, 212, 59, 0.26) !important;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  padding: 4px !important;
+}
+
+.dashboard-business-logo-frame img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  transform: scale(1.18);
+}
