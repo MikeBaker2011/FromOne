@@ -34,6 +34,11 @@ const IMAGE_BUCKET = 'campaign-assets';
 const POSTS_TOUR_SEEN_KEY = 'fromone_posts_tour_seen';
 const MAX_SAVED_CAMPAIGNS = 4;
 
+const REVIEW_PROMPT_DISMISSED_KEY = 'fromone_review_prompt_dismissed';
+const REVIEW_PROMPT_SUBMITTED_KEY = 'fromone_review_prompt_submitted';
+const REVIEW_PROMPT_POSTED_COUNT_KEY = 'fromone_review_prompt_posted_count';
+const REVIEW_PROMPT_TRIGGER_COUNT = 3;
+
 const postsTourSteps = [
   {
     title: 'Welcome to your posts',
@@ -69,6 +74,16 @@ const defaultAudienceTargets = [
   'New customers',
   'Returning customers',
   'Custom audience',
+];
+
+const toneOptions = [
+  'Use current tone',
+  'More friendly',
+  'More professional',
+  'More premium',
+  'More direct',
+  'More fun',
+  'More trustworthy',
 ];
 
 const industryAudienceTargets: Record<string, string[]> = {
@@ -239,7 +254,6 @@ const industryAudienceTargets: Record<string, string[]> = {
 export default function PostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [monthlyCampaignCount, setMonthlyCampaignCount] = useState(0);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [pendingCampaignId, setPendingCampaignId] = useState('');
   const [campaign, setCampaign] = useState<any>(null);
@@ -250,12 +264,12 @@ export default function PostsPage() {
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [deletingCampaign, setDeletingCampaign] = useState(false);
-  const [duplicatingCampaign, setDuplicatingCampaign] = useState(false);
   const [renamingCampaign, setRenamingCampaign] = useState(false);
   const [loadingSelectedPlan, setLoadingSelectedPlan] = useState(false);
 
   const [audienceTarget, setAudienceTarget] = useState('Local customers');
   const [customAudienceTarget, setCustomAudienceTarget] = useState('');
+  const [toneTarget, setToneTarget] = useState('Use current tone');
   const [rewritingPost, setRewritingPost] = useState(false);
 
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -268,6 +282,12 @@ export default function PostsPage() {
   const [showTodayReminder, setShowTodayReminder] = useState(false);
   const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(null);
   const [successMoment, setSuccessMoment] = useState<SuccessMoment | null>(null);
+
+  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewHoverRating, setReviewHoverRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [savingReview, setSavingReview] = useState(false);
 
   const [showPostsTour, setShowPostsTour] = useState(false);
   const [postsTourStep, setPostsTourStep] = useState(0);
@@ -290,16 +310,15 @@ export default function PostsPage() {
 
   useEffect(() => {
     loadPageData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  useEffect(() => {
     const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === 'true';
     const isMobile = window.innerWidth <= 760;
 
     if (!tourSeen && !isMobile) {
       setShowPostsTour(true);
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -405,21 +424,6 @@ export default function PostsPage() {
     );
   };
 
-  const getMonthStartIso = () => {
-    const date = new Date();
-    date.setDate(1);
-    date.setHours(0, 0, 0, 0);
-    return date.toISOString();
-  };
-
-  const getMonthEndIso = () => {
-    const date = new Date();
-    date.setMonth(date.getMonth() + 1);
-    date.setDate(1);
-    date.setHours(0, 0, 0, 0);
-    return date.toISOString();
-  };
-
   const isFutureDate = (value?: string | null) => {
     if (!value) return false;
     return new Date(value).getTime() > Date.now();
@@ -473,7 +477,7 @@ export default function PostsPage() {
     return {
       locked: true,
       message:
-        'Your 7-day demo has ended. You can still view and publish existing posts, but saving copies and making posts more specific are locked until access is extended or a subscription is active.',
+        'Your 7-day demo has ended. You can still view and publish existing posts, but editing and making posts more specific are locked until access is extended or a subscription is active.',
     };
   };
 
@@ -531,12 +535,7 @@ export default function PostsPage() {
     setSelectedCampaignId(activeCampaign?.id || null);
     setPendingCampaignId(activeCampaign?.id || '');
 
-    await Promise.all([
-      loadPosts(activeCampaign?.id || null),
-      loadProfile(),
-      loadAccess(),
-      loadMonthlyCampaignCount(),
-    ]);
+    await Promise.all([loadPosts(activeCampaign?.id || null), loadProfile(), loadAccess()]);
 
     setLoading(false);
   };
@@ -558,34 +557,6 @@ export default function PostsPage() {
     setCampaigns(loadedCampaigns);
 
     return loadedCampaigns;
-  };
-
-  const loadMonthlyCampaignCount = async () => {
-    const { data: authData } = await supabase.auth.getUser();
-    const userId = authData.user?.id;
-
-    if (!userId) {
-      setMonthlyCampaignCount(0);
-      return 0;
-    }
-
-    const { count, error } = await supabase
-      .from('campaigns')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .gte('created_at', getMonthStartIso())
-      .lt('created_at', getMonthEndIso());
-
-    if (error) {
-      console.error('Error loading monthly weekly plan count:', error.message);
-      setMonthlyCampaignCount(0);
-      return 0;
-    }
-
-    const total = count || 0;
-    setMonthlyCampaignCount(total);
-
-    return total;
   };
 
   const loadProfile = async () => {
@@ -699,186 +670,7 @@ export default function PostsPage() {
     }
   };
 
-  const checkSavedCampaignLimit = async () => {
-    const total = await loadMonthlyCampaignCount();
-
-    if (total >= MAX_SAVED_CAMPAIGNS) {
-      alert(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans this month. Delete an old weekly plan before saving a copy.`
-      );
-      return false;
-    }
-
-    return true;
-  };
-
-  const buildCampaignCopyName = (item: any) => {
-    const business =
-      item.business_name ||
-      profile?.business_name ||
-      item.business_type ||
-      'Weekly plan';
-
-    const date = new Date().toLocaleDateString(undefined, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-
-    const time = new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    return `${business} — Copy ${date} ${time}`;
-  };
-
-  const duplicateSelectedCampaign = async () => {
-    if (!campaign?.id) {
-      alert('No weekly plan selected.');
-      return;
-    }
-
-    if (!ensureAccessAllowed()) return;
-
-    const confirmed = confirm(
-      `Save a copy of this weekly plan?\n\n${
-        campaign.name || campaign.campaign_idea || 'Selected weekly plan'
-      }\n\nThis will create a new weekly plan with copied posts. Uploaded images will not be copied.`
-    );
-
-    if (!confirmed) return;
-
-    setDuplicatingCampaign(true);
-
-    try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData.user?.id;
-
-      if (!userId) {
-        alert('You need to sign in before copying a weekly plan.');
-        return;
-      }
-
-      const campaignLimitAllowed = await checkSavedCampaignLimit();
-      if (!campaignLimitAllowed) return;
-
-      const { data: sourcePosts, error: sourcePostsError } = await supabase
-        .from('campaign_posts')
-        .select('*')
-        .eq('campaign_id', campaign.id)
-        .order('scheduled_at', { ascending: true });
-
-      if (sourcePostsError) {
-        alert(sourcePostsError.message);
-        return;
-      }
-
-      if (!sourcePosts?.length) {
-        alert('This weekly plan has no posts to copy.');
-        return;
-      }
-
-      const { data: newCampaign, error: campaignCopyError } = await supabase
-        .from('campaigns')
-        .insert({
-          user_id: userId,
-          name: buildCampaignCopyName(campaign),
-          business_type: campaign.business_type,
-          location: campaign.location,
-          is_active: true,
-          keywords: campaign.keywords || [],
-          selected_keywords: campaign.selected_keywords || [],
-          client_id: campaign.client_id,
-          business_name: campaign.business_name,
-          target_audience: campaign.target_audience,
-          campaign_idea: campaign.campaign_idea,
-          audience: campaign.audience,
-          drafts: sourcePosts.length,
-          scheduled: sourcePosts.length,
-          assets: 0,
-          posted: 0,
-          launch_date: new Date().toISOString().split('T')[0],
-          campaign_area: campaign.campaign_area,
-          tone: campaign.tone,
-          posting_frequency: campaign.posting_frequency || 'Daily',
-          platform_plan: campaign.platform_plan,
-        })
-        .select()
-        .single();
-
-      if (campaignCopyError) {
-        alert(campaignCopyError.message);
-        return;
-      }
-
-      const today = new Date();
-
-      const copiedPosts = sourcePosts.map((post: any, index: number) => {
-        const postDate = new Date(today);
-        postDate.setDate(today.getDate() + index);
-        postDate.setHours(9, 0, 0, 0);
-
-        return {
-          user_id: userId,
-          campaign_id: newCampaign.id,
-          keyword: post.keyword,
-          title: post.title,
-          caption: post.caption,
-          cta: post.cta,
-          hashtags: post.hashtags,
-          platform: post.platform,
-          type: post.type,
-          scheduled_day: post.scheduled_day || `Day ${index + 1}`,
-          scheduled_at: postDate.toISOString(),
-          status: 'scheduled',
-          is_posted: false,
-          client_id: post.client_id,
-          image_prompt: post.image_prompt,
-          audience_target: post.audience_target || null,
-          image_url: null,
-          image_path: null,
-          reach: 0,
-          clicks: 0,
-          likes: 0,
-          comments: 0,
-          shares: 0,
-          saves: 0,
-        };
-      });
-
-      const { error: postsCopyError } = await supabase
-        .from('campaign_posts')
-        .insert(copiedPosts);
-
-      if (postsCopyError) {
-        alert(postsCopyError.message);
-        return;
-      }
-
-      const refreshedCampaigns = await loadCampaigns();
-      await loadMonthlyCampaignCount();
-
-      setCampaign(newCampaign);
-      setSelectedCampaignId(newCampaign.id);
-      setPendingCampaignId(newCampaign.id);
-      setSelectedPostId(null);
-      setCalendarStartIndex(0);
-      setCampaigns(refreshedCampaigns);
-      cancelEditingPost();
-
-      await loadPosts(newCampaign.id);
-
-      alert('Weekly plan copy saved.');
-    } catch (error: any) {
-      const message = getReadableError(error, 'Error copying weekly plan.');
-      console.error('Copy weekly plan error:', error);
-      alert(message);
-    } finally {
-      setDuplicatingCampaign(false);
-    }
-  };
-    const renameSelectedCampaign = async () => {
+  const renameSelectedCampaign = async () => {
     if (!campaign?.id) {
       alert('No weekly plan selected.');
       return;
@@ -1028,6 +820,73 @@ export default function PostsPage() {
     alert('Post copied.');
   };
 
+  const maybeShowReviewPrompt = () => {
+    if (typeof window === 'undefined') return;
+
+    const hasSubmitted = localStorage.getItem(REVIEW_PROMPT_SUBMITTED_KEY) === 'true';
+    const hasDismissed = localStorage.getItem(REVIEW_PROMPT_DISMISSED_KEY) === 'true';
+
+    if (hasSubmitted || hasDismissed) return;
+
+    const currentCount = Number(localStorage.getItem(REVIEW_PROMPT_POSTED_COUNT_KEY) || '0');
+    const nextCount = currentCount + 1;
+
+    localStorage.setItem(REVIEW_PROMPT_POSTED_COUNT_KEY, String(nextCount));
+
+    if (nextCount >= REVIEW_PROMPT_TRIGGER_COUNT) {
+      setShowReviewPrompt(true);
+    }
+  };
+
+  const submitReviewPrompt = async () => {
+    if (!reviewText.trim()) {
+      alert('Please write a short review.');
+      return;
+    }
+
+    setSavingReview(true);
+
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id || null;
+
+      if (!userId) {
+        alert('Please sign in before leaving a review.');
+        return;
+      }
+
+      const { error } = await supabase.from('user_reviews').insert({
+        user_id: userId,
+        rating: reviewRating,
+        review_text: reviewText.trim(),
+        status: 'new',
+        created_at: new Date().toISOString(),
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      localStorage.setItem(REVIEW_PROMPT_SUBMITTED_KEY, 'true');
+
+      setShowReviewPrompt(false);
+      setReviewRating(5);
+      setReviewHoverRating(0);
+      setReviewText('');
+
+      alert('Thank you — your review has been sent.');
+    } catch (error: any) {
+      alert(error?.message || 'Error submitting review.');
+    } finally {
+      setSavingReview(false);
+    }
+  };
+
+  const dismissReviewPrompt = () => {
+    localStorage.setItem(REVIEW_PROMPT_DISMISSED_KEY, 'true');
+    setShowReviewPrompt(false);
+  };
+
   const markAsPosted = async (postId: string) => {
     const postIndex = posts.findIndex((post) => post.id === postId);
 
@@ -1060,6 +919,8 @@ export default function PostsPage() {
       postsLeft: postsLeftAfterMarking,
       nextPostId: nextPost?.id || null,
     });
+
+    maybeShowReviewPrompt();
 
     await loadPosts(campaign?.id || null);
   };
@@ -1121,6 +982,8 @@ export default function PostsPage() {
   const saveEditedPost = async (post: any) => {
     if (!post?.id) return;
 
+    if (!ensureAccessAllowed()) return;
+
     if (!editCaption.trim()) {
       alert('Caption cannot be empty.');
       return;
@@ -1158,6 +1021,16 @@ export default function PostsPage() {
     }
   };
 
+  const getToneForRewrite = () => {
+    const currentTone = profile?.tone_of_voice || campaign?.tone || 'Professional';
+
+    if (toneTarget === 'Use current tone') {
+      return currentTone;
+    }
+
+    return `${currentTone}. Adjust this rewrite to be ${toneTarget.toLowerCase()}.`;
+  };
+
   const handleRewriteForAudience = async (post: any) => {
     if (!post?.id) return;
 
@@ -1184,10 +1057,11 @@ export default function PostsPage() {
       const response = await axios.post('/api/rewritePost', {
         provider: 'gemini',
         audienceTarget: finalAudience,
+        tone: getToneForRewrite(),
+        toneAdjustment: toneTarget,
         businessName: profile?.business_name || campaign?.business_name || 'the business',
         industry: profile?.industry || campaign?.business_type || 'general business',
         platform: post.platform || 'Facebook',
-        tone: profile?.tone_of_voice || campaign?.tone || 'Professional',
         caption: post.caption || '',
         cta: post.cta || '',
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
@@ -1223,7 +1097,10 @@ export default function PostsPage() {
         setEditImagePrompt(updates.image_prompt || '');
       }
 
-      alert(`Post made more specific for ${finalAudience}.`);
+      const toneMessage =
+        toneTarget === 'Use current tone' ? '' : ` with a ${toneTarget.toLowerCase()} tone`;
+
+      alert(`Post made more specific for ${finalAudience}${toneMessage}.`);
     } catch (error: any) {
       const message = getReadableError(error, 'Error making post more specific.');
       console.error('Make more specific error:', error);
@@ -1232,8 +1109,7 @@ export default function PostsPage() {
       setRewritingPost(false);
     }
   };
-
-  const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>, post: any) => {
+    const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>, post: any) => {
     const file = event.target.files?.[0];
 
     event.target.value = '';
@@ -1370,6 +1246,8 @@ export default function PostsPage() {
       Pinterest: 'https://www.pinterest.com',
       LinkedIn: 'https://www.linkedin.com',
       TikTok: 'https://www.tiktok.com',
+      'YouTube Shorts': 'https://www.youtube.com',
+      'X / Twitter': 'https://x.com',
     };
 
     window.open(urls[platform] || 'https://www.google.com', '_blank');
@@ -1667,11 +1545,11 @@ export default function PostsPage() {
         </div>
       ) : campaigns.length === 0 ? (
         <div className="premium-card">
-          <div className="page-eyebrow">No Weekly Plan Yet</div>
+          <div className="page-eyebrow">No weekly plan yet</div>
           <h2 style={{ marginTop: 0 }}>Create your weekly posts first.</h2>
           <p>
-            Go to Dashboard, scan the website or add business details, then create weekly
-            posts. They will appear here ready to publish.
+            Go to Dashboard, scan the website or add business details, then create weekly posts.
+            They will appear here ready to publish.
           </p>
         </div>
       ) : (
@@ -1679,7 +1557,7 @@ export default function PostsPage() {
           {accessLocked && (
             <section className="access-status-card access-status-locked">
               <div>
-                <div className="page-eyebrow">Demo Ended</div>
+                <div className="page-eyebrow">Demo ended</div>
                 <h2>Some weekly plan actions are currently locked.</h2>
                 <p>{accessMessage}</p>
               </div>
@@ -1717,12 +1595,7 @@ export default function PostsPage() {
                     className="input"
                     value={pendingCampaignId}
                     onChange={(event) => setPendingCampaignId(event.target.value)}
-                    disabled={
-                      deletingCampaign ||
-                      duplicatingCampaign ||
-                      renamingCampaign ||
-                      loadingSelectedPlan
-                    }
+                    disabled={deletingCampaign || renamingCampaign || loadingSelectedPlan}
                   >
                     {campaigns.map((item) => (
                       <option key={item.id} value={item.id}>
@@ -1733,7 +1606,7 @@ export default function PostsPage() {
                 </label>
 
                 <div className="posts-plan-usage">
-                  {monthlyCampaignCount}/{MAX_SAVED_CAMPAIGNS} plans created this month
+                  {campaigns.length}/{MAX_SAVED_CAMPAIGNS} saved weekly plans
                 </div>
 
                 <div className="posts-plan-actions">
@@ -1744,27 +1617,10 @@ export default function PostsPage() {
                       !pendingCampaignId ||
                       loadingSelectedPlan ||
                       deletingCampaign ||
-                      duplicatingCampaign ||
                       renamingCampaign
                     }
                   >
                     {loadingSelectedPlan ? 'Loading...' : 'Load plan'}
-                  </button>
-
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={duplicateSelectedCampaign}
-                    disabled={
-                      accessLocked ||
-                      !campaign?.id ||
-                      loadingSelectedPlan ||
-                      deletingCampaign ||
-                      duplicatingCampaign ||
-                      renamingCampaign
-                    }
-                  >
-                    {duplicatingCampaign ? 'Saving...' : 'Save copy'}
                   </button>
 
                   <button
@@ -1775,7 +1631,6 @@ export default function PostsPage() {
                       !campaign?.id ||
                       loadingSelectedPlan ||
                       deletingCampaign ||
-                      duplicatingCampaign ||
                       renamingCampaign
                     }
                   >
@@ -1790,7 +1645,6 @@ export default function PostsPage() {
                       !campaign?.id ||
                       loadingSelectedPlan ||
                       deletingCampaign ||
-                      duplicatingCampaign ||
                       renamingCampaign
                     }
                   >
@@ -1820,7 +1674,7 @@ export default function PostsPage() {
 
             {posts.length === 0 ? (
               <div className="premium-card" style={{ marginTop: 20 }}>
-                <div className="page-eyebrow">No Posts Found</div>
+                <div className="page-eyebrow">No posts found</div>
                 <h2 style={{ marginTop: 0 }}>This weekly plan has no posts yet.</h2>
                 <p>Go back to Dashboard and create weekly posts.</p>
               </div>
@@ -1914,17 +1768,12 @@ export default function PostsPage() {
                       </div>
                     </section>
 
-                    <section
-                      ref={publishingPanelRef}
-                      className="fromone-flow-tools-card"
-                    >
+                    <section ref={publishingPanelRef} className="fromone-flow-tools-card">
                       <div className="fromone-flow-tools-header">
                         <div>
                           <div className="page-eyebrow">Step 2 · Prepare and publish</div>
                           <h3>Use these tools in order.</h3>
-                          <p>
-                            Everything is grouped together so the client can follow one clear path.
-                          </p>
+                          <p>Follow the steps below to get this post ready to publish.</p>
                         </div>
                       </div>
 
@@ -1934,7 +1783,7 @@ export default function PostsPage() {
 
                           <div className="fromone-flow-tool-copy">
                             <strong>Make it more specific</strong>
-                            <p>Optional: rewrite the post for one type of customer.</p>
+                            <p>Optional: choose who it is for and adjust the tone.</p>
                           </div>
 
                           <div className="fromone-flow-tool-action">
@@ -1958,6 +1807,18 @@ export default function PostsPage() {
                                 placeholder="Example: first-time homeowners"
                               />
                             )}
+
+                            <select
+                              className="input"
+                              value={toneTarget}
+                              onChange={(event) => setToneTarget(event.target.value)}
+                            >
+                              {toneOptions.map((item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ))}
+                            </select>
 
                             <button
                               type="button"
@@ -2041,6 +1902,7 @@ export default function PostsPage() {
                                 type="button"
                                 className="secondary-button"
                                 onClick={() => startEditingPost(selectedPost)}
+                                disabled={accessLocked}
                               >
                                 Edit post
                               </button>
@@ -2214,6 +2076,62 @@ export default function PostsPage() {
         </div>
       )}
 
+      {showReviewPrompt && (
+        <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
+          <section className="fromone-modal-card">
+            <div className="fromone-modal-icon">⭐</div>
+            <div className="page-eyebrow">Quick favour</div>
+            <h2>How are you finding FromOne?</h2>
+            <p>
+              A short review helps improve FromOne and helps other small businesses understand
+              whether it could save them time.
+            </p>
+
+            <div className="review-star-row" onMouseLeave={() => setReviewHoverRating(0)}>
+              {[1, 2, 3, 4, 5].map((star) => {
+                const active = star <= (reviewHoverRating || reviewRating);
+
+                return (
+                  <button
+                    key={star}
+                    type="button"
+                    className={active ? 'review-star active' : 'review-star'}
+                    onMouseEnter={() => setReviewHoverRating(star)}
+                    onClick={() => setReviewRating(star)}
+                    aria-label={`${star} star${star === 1 ? '' : 's'}`}
+                  >
+                    ★
+                  </button>
+                );
+              })}
+            </div>
+
+            <textarea
+              className="input"
+              value={reviewText}
+              onChange={(event) => setReviewText(event.target.value)}
+              placeholder="Example: FromOne made it much easier to plan my posts for the week."
+              rows={5}
+            />
+
+            <div className="fromone-modal-actions">
+              <button type="button" onClick={submitReviewPrompt} disabled={savingReview}>
+                {savingReview ? 'Sending...' : 'Send review'}
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={dismissReviewPrompt}
+                disabled={savingReview}
+              >
+                Maybe later
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {showPostsTour && !loading && campaigns.length > 0 && (
         <div className="dashboard-spotlight-tour">
           {postsTourRect && (
@@ -2281,11 +2199,7 @@ export default function PostsPage() {
             <p>{postsTourSteps[postsTourStep].text}</p>
 
             <div className="dashboard-tour-actions">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={closePostsTour}
-              >
+              <button type="button" className="secondary-button" onClick={closePostsTour}>
                 Skip
               </button>
 

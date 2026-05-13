@@ -21,7 +21,18 @@ type BugReport = {
   created_at: string;
 };
 
-export default function BugReportPage() {
+const supportTypes = [
+  'Question',
+  'Something not working',
+  'Improvement idea',
+  'Billing help',
+  'Other',
+];
+
+const urgencyOptions = ['Low', 'Medium', 'High', 'Critical'];
+
+export default function SupportPage() {
+  const [requestType, setRequestType] = useState('Question');
   const [title, setTitle] = useState('');
   const [severity, setSeverity] = useState('Medium');
   const [description, setDescription] = useState('');
@@ -36,6 +47,10 @@ export default function BugReportPage() {
 
   useEffect(() => {
     checkAdminAndLoadReports();
+
+    if (typeof window !== 'undefined') {
+      setPageUrl(window.location.pathname);
+    }
   }, []);
 
   const checkAdminAndLoadReports = async () => {
@@ -58,7 +73,7 @@ export default function BugReportPage() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error loading bug reports:', error.message);
+      console.error('Error loading support requests:', error.message);
       setBugReports([]);
     } else {
       setBugReports((data || []) as BugReport[]);
@@ -67,14 +82,24 @@ export default function BugReportPage() {
     setLoadingReports(false);
   };
 
-  const submitBug = async () => {
+  const buildSupportTitle = () => {
+    const cleanTitle = title.trim();
+
+    if (!cleanTitle) return '';
+
+    return `[${requestType}] ${cleanTitle}`;
+  };
+
+  const submitSupportRequest = async () => {
+    const supportTitle = buildSupportTitle();
+
     if (!title.trim()) {
       alert('Please enter a short title.');
       return;
     }
 
     if (!description.trim()) {
-      alert('Please describe what happened.');
+      alert('Please tell us what you need help with.');
       return;
     }
 
@@ -85,17 +110,17 @@ export default function BugReportPage() {
       const userId = authData.user?.id || null;
 
       if (!userId) {
-        alert('You need to sign in before submitting feedback.');
+        alert('You need to sign in before sending a support request.');
         return;
       }
 
       const { error } = await supabase.from('bug_reports').insert({
         user_id: userId,
-        title: title.trim(),
+        title: supportTitle,
         severity,
         description: description.trim(),
-        steps_to_reproduce: steps.trim(),
-        page_url: pageUrl.trim(),
+        steps_to_reproduce: steps.trim() || null,
+        page_url: pageUrl.trim() || null,
         status: 'new',
         created_at: new Date().toISOString(),
       });
@@ -104,19 +129,23 @@ export default function BugReportPage() {
         throw error;
       }
 
-      alert('Thank you. Your feedback has been sent to the FromOne team.');
+      alert('Thank you. Your support request has been sent.');
 
+      setRequestType('Question');
       setTitle('');
       setSeverity('Medium');
       setDescription('');
       setSteps('');
-      setPageUrl('');
+
+      if (typeof window !== 'undefined') {
+        setPageUrl(window.location.pathname);
+      }
 
       if (isAdmin) {
         await loadBugReports();
       }
     } catch (error: any) {
-      alert(error?.message || 'Error submitting feedback.');
+      alert(error?.message || 'Error sending support request.');
     } finally {
       setSaving(false);
     }
@@ -147,7 +176,7 @@ export default function BugReportPage() {
   const deleteBugReport = async (report: BugReport) => {
     if (!isAdmin) return;
 
-    const confirmed = confirm(`Delete this feedback report?\n\n${report.title}`);
+    const confirmed = confirm(`Delete this support request?\n\n${report.title}`);
 
     if (!confirmed) return;
 
@@ -178,17 +207,37 @@ export default function BugReportPage() {
   return (
     <>
       <div className="page-header">
-        <div className="page-eyebrow">FromOne Feedback</div>
-        <h1 className="page-title">Tell us if something does not work as expected.</h1>
+        <div className="page-eyebrow">FromOne Support</div>
+        <h1 className="page-title">How can we help?</h1>
         <p className="page-description">
-          Use this page to let us know if something looks wrong, does not work, or feels
-          confusing. Your feedback helps us improve FromOne.
+          Send a quick message if something is not working, confusing, or you need help using
+          FromOne.
         </p>
       </div>
 
       <div className="grid grid-two">
         <section className="premium-card">
-          <div className="page-eyebrow">Feedback Details</div>
+          <div className="page-eyebrow">Support Request</div>
+          <h2 style={{ marginTop: 0 }}>Tell us what you need.</h2>
+          <p>
+            Keep it simple. Tell us what you were trying to do and what happened, and we will
+            review it.
+          </p>
+
+          <label>
+            <strong>What type of help do you need?</strong>
+          </label>
+          <select
+            className="input"
+            value={requestType}
+            onChange={(event) => setRequestType(event.target.value)}
+          >
+            {supportTypes.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
 
           <label>
             <strong>Short title</strong>
@@ -197,21 +246,22 @@ export default function BugReportPage() {
             className="input"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Example: Generate button did not work"
+            placeholder="Example: I cannot create weekly posts"
           />
 
           <label>
-            <strong>How serious is it?</strong>
+            <strong>How urgent is it?</strong>
           </label>
           <select
             className="input"
             value={severity}
             onChange={(event) => setSeverity(event.target.value)}
           >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-            <option value="Critical">Critical</option>
+            {urgencyOptions.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
           </select>
 
           <label>
@@ -231,7 +281,7 @@ export default function BugReportPage() {
             className="input"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="Tell us what went wrong or what did not make sense."
+            placeholder="Tell us what went wrong, what confused you, or what you need help with."
             rows={6}
           />
 
@@ -242,37 +292,35 @@ export default function BugReportPage() {
             className="input"
             value={steps}
             onChange={(event) => setSteps(event.target.value)}
-            placeholder="Example: I clicked Generate Campaign, waited a few seconds, then saw an error message."
+            placeholder="Example: I clicked Create Weekly Posts, waited a few seconds, then saw an error message."
             rows={6}
           />
 
-          <button onClick={submitBug} disabled={saving}>
-            {saving ? 'Sending...' : 'Send Feedback'}
+          <button onClick={submitSupportRequest} disabled={saving}>
+            {saving ? 'Sending...' : 'Send Support Request'}
           </button>
         </section>
 
         <section className="hero-card">
-          <div className="page-eyebrow">Help Us Improve</div>
+          <div className="page-eyebrow">Support</div>
           <h2 style={{ marginTop: 0, fontSize: '34px' }}>
-            Spotted something that does not look right?
+            We want FromOne to feel simple.
           </h2>
           <p>
-            Tell us what you were trying to do and what happened. Your feedback helps us
-            improve FromOne and make it easier to use.
+            If something feels unclear, slow, broken, or difficult to use, send it here. This
+            helps us improve the product and support you properly.
           </p>
 
           <div className="grid" style={{ marginTop: '22px' }}>
             <div className="card">
               <strong>What to include</strong>
-              <p>
-                Tell us which page you were on, what you clicked, and what happened next.
-              </p>
+              <p>Tell us which page you were on, what you clicked, and what happened next.</p>
             </div>
 
             <div className="card">
               <strong>Helpful example</strong>
               <p>
-                “I clicked Generate Campaign, waited a few seconds, then saw an error
+                “I clicked Create Weekly Posts, waited a few seconds, then saw an error
                 message.”
               </p>
             </div>
@@ -285,10 +333,10 @@ export default function BugReportPage() {
           <div className="bug-admin-header">
             <div>
               <div className="page-eyebrow">Admin Only</div>
-              <h2>Feedback inbox</h2>
+              <h2>Support inbox</h2>
               <p>
-                Review submitted feedback, update its status, and remove reports when they
-                are no longer needed.
+                Review submitted support requests, update their status, and remove reports
+                when they are no longer needed.
               </p>
             </div>
 
@@ -314,7 +362,7 @@ export default function BugReportPage() {
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
             >
-              <option value="all">All reports</option>
+              <option value="all">All requests</option>
               <option value="new">New</option>
               <option value="reviewing">Reviewing</option>
               <option value="in_progress">In progress</option>
@@ -328,11 +376,11 @@ export default function BugReportPage() {
           </div>
 
           {loadingReports ? (
-            <p>Loading feedback...</p>
+            <p>Loading support requests...</p>
           ) : filteredBugReports.length === 0 ? (
             <div className="bug-admin-empty">
-              <strong>No feedback found.</strong>
-              <p>Feedback submitted by users will appear here.</p>
+              <strong>No support requests found.</strong>
+              <p>Support requests submitted by users will appear here.</p>
             </div>
           ) : (
             <div className="bug-report-list">

@@ -123,7 +123,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       <nav className="sidebar-nav">
         <div className="sidebar-nav-main">
           <Link className="sidebar-link" href="/dashboard" onClick={onClose}>
-            <span className="sidebar-link-icon">1</span>
+            <span className="sidebar-link-icon">⌂</span>
             Dashboard
           </Link>
 
@@ -132,15 +132,13 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             href="/posts"
             onClick={handlePostsClick}
           >
-            <span className="sidebar-link-icon">2</span>
+            <span className="sidebar-link-icon">✦</span>
             <span className="sidebar-posts-text">
               Posts
               {showPostsDot && <b className="product-updates-live-dot" aria-label="New posts" />}
             </span>
           </Link>
-        </div>
 
-        <div className="sidebar-nav-bottom">
           <Link className="sidebar-link" href="/settings" onClick={onClose}>
             <span className="sidebar-link-icon">⚙</span>
             Settings
@@ -150,19 +148,16 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             <span className="sidebar-link-icon">£</span>
             Plan & Billing
           </Link>
+        </div>
 
-          <Link className="sidebar-link" href="/reviews" onClick={onClose}>
-            <span className="sidebar-link-icon">★</span>
-            Reviews
-          </Link>
-
+        <div className="sidebar-nav-bottom">
           <Link className="sidebar-link" href="/tutorial" onClick={onClose}>
             <span className="sidebar-link-icon">?</span>
-            Tutorial
+            Help Guide
           </Link>
 
           <Link className="sidebar-link" href="/bugreport" onClick={onClose}>
-            <span className="sidebar-link-icon">?</span>
+            <span className="sidebar-link-icon">✉</span>
             Support
           </Link>
 

@@ -4,16 +4,16 @@ import type { Metadata } from 'next';
 import PublicNav from './components/PublicNav';
 
 export const metadata: Metadata = {
-  title: 'FromOne | Social Media Content for Small Businesses',
+  title: 'FromOne | Weekly Social Media Posts for Small Businesses',
   description:
-    'Create a full week of ready-to-publish social media posts for your small business from one website scan or simple business profile.',
+    'Create a full week of ready-to-publish social media posts for your small business from one website scan or simple business profile. Try FromOne free for 7 days, then continue for £29.99/month.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'FromOne | Social Media Content for Small Businesses',
+    title: 'FromOne | Weekly Social Media Posts for Small Businesses',
     description:
-      'Create a full week of ready-to-publish posts from one website scan or simple business profile.',
+      'Create seven ready-to-publish posts from one website scan or simple business profile. Built for busy small businesses.',
     url: '/',
     type: 'website',
     images: [
@@ -29,67 +29,88 @@ export const metadata: Metadata = {
 
 const benefits = [
   {
-    title: 'A full week of posts in minutes',
+    title: 'Website scan to weekly content',
     description:
-      'FromOne turns a website scan or manual business profile into seven ready-to-use posts across Facebook, Instagram, Google Business, LinkedIn, and TikTok.',
+      'FromOne scans the business website to understand services, audience, tone, location, offers, and brand details before creating posts.',
   },
   {
-    title: 'Built for busy small businesses',
+    title: 'Seven posts ready for the week',
     description:
-      'No complicated marketing dashboard. No guessing what to post. Just a clear weekly workflow that shows what to publish next.',
+      'Create a full seven-day content plan with captions, CTAs, hashtags, image ideas, and platform-specific post suggestions.',
   },
   {
-    title: 'Industry-specific content',
+    title: 'Built for small businesses',
     description:
-      'Posts are shaped around the business type, audience, services, tone, location, and offer, so the content feels relevant rather than generic.',
+      'No complicated agency process. No blank-page stress. Just a simple workflow that shows what to post next.',
   },
   {
-    title: 'Manual publishing made simple',
+    title: 'Manual publishing, full control',
     description:
-      'Copy the post, upload the image, open the platform, publish it yourself, then mark it as posted so nothing gets lost.',
+      'FromOne does not post automatically. You review each post, copy it, publish it yourself, then mark it as done.',
   },
+];
+
+const scanBenefits = [
+  'Understands what the business actually does',
+  'Finds services, tone, audience, and offers',
+  'Creates more relevant captions and CTAs',
+  'Helps keep posts specific instead of generic',
 ];
 
 const steps = [
   {
-    title: 'Set up once',
+    title: 'Add the business',
     description:
-      'Add your website or business profile once. FromOne remembers it for future campaigns.',
+      'Paste the website URL, or enter the business details manually if there is no website.',
   },
   {
-    title: 'Generate your weekly content',
+    title: 'Choose platforms',
     description:
-      'Create a fresh, tailored seven-day campaign whenever you need one.',
+      'Select where you want posts for — Facebook, Instagram, Google Business, LinkedIn, TikTok, and more.',
   },
   {
-    title: 'Review, publish, and track',
+    title: 'Create the week',
     description:
-      'Edit if needed, then copy, paste, publish, and mark each post as done.',
+      'FromOne creates seven ready-to-use posts based on the business, audience, offer, and selected platforms.',
+  },
+  {
+    title: 'Review and publish',
+    description:
+      'Open Posts, check each day, add an image, copy the post, publish manually, and mark it as done.',
   },
 ];
 
 const productScreenshots = [
   {
-    title: 'Dashboard campaign generator',
+    title: 'Simple dashboard',
     description:
-      'Start a campaign from a website scan or manual business profile.',
+      'Add a website or business profile, choose platforms, and create the weekly posts.',
     image: '/dashboard-preview.png',
-    alt: 'FromOne dashboard campaign generator',
+    alt: 'FromOne dashboard for creating weekly social media posts',
   },
   {
-    title: 'Weekly posts view',
+    title: 'Weekly post workflow',
     description:
-      'Review the full campaign, edit posts, upload images, and track publishing.',
+      'Review each post, make it more specific, edit it, upload an image, and publish manually.',
     image: '/posts-preview.png',
-    alt: 'FromOne weekly posts view',
+    alt: 'FromOne posts page showing weekly post workflow',
   },
   {
-    title: 'Audience rewrite tool',
+    title: 'Customer-specific rewrites',
     description:
-      'Tailor posts for specific customer types based on the business industry.',
+      'Adjust posts for different customer types and tones without starting again.',
     image: '/audience-preview.png',
-    alt: 'FromOne audience rewrite tool',
+    alt: 'FromOne audience rewrite tool for social media posts',
   },
+];
+
+const planFeatures = [
+  '7-day free demo',
+  '£29.99/month after demo',
+  '2 website scans per week',
+  'Seven posts per weekly plan',
+  'Manual business profile option',
+  'Copy, publish, and mark-done workflow',
 ];
 
 export default function Home() {
@@ -100,19 +121,19 @@ export default function Home() {
 
         <div className="sales-hero-grid">
           <div className="sales-hero-copy">
-            <div className="page-eyebrow">Small Business Content System</div>
+            <div className="page-eyebrow">Weekly content for small businesses</div>
 
-            <h1>Social media content without the weekly headache.</h1>
+            <h1>Social media posts for the week, created from one website scan.</h1>
 
             <p>
-              FromOne helps small businesses create a full week of clear, useful,
-              ready-to-publish social media posts from one website scan or a simple
-              business profile.
+              FromOne helps small businesses turn a website or simple business profile into
+              seven ready-to-publish social media posts, with a clear workflow for reviewing,
+              copying, publishing, and tracking what is done.
             </p>
 
             <div className="sales-hero-actions">
               <Link href="/signin" className="sales-primary-button">
-                Start your 7-day demo
+                Start 7-day demo
               </Link>
 
               <Link href="/tutorial" className="sales-secondary-button">
@@ -121,9 +142,9 @@ export default function Home() {
             </div>
 
             <div className="sales-trust-row">
-              <span>✓ Website scan</span>
-              <span>✓ Manual profile option</span>
-              <span>✓ 7-day campaign plan</span>
+              <span>✓ 7-day free demo</span>
+              <span>✓ Then £29.99/month</span>
+              <span>✓ Cancel anytime</span>
             </div>
           </div>
 
@@ -135,8 +156,8 @@ export default function Home() {
             </div>
 
             <div className="sales-preview-card">
-              <small>This week’s campaign</small>
-              <h2>7 posts ready to publish</h2>
+              <small>Website scan complete</small>
+              <h2>7 posts ready to review</h2>
 
               <div className="sales-preview-list">
                 <p>
@@ -146,7 +167,7 @@ export default function Home() {
 
                 <p>
                   <strong>Day 2</strong>
-                  <span>Instagram visual caption</span>
+                  <span>Instagram caption and image idea</span>
                 </p>
 
                 <p>
@@ -157,8 +178,8 @@ export default function Home() {
             </div>
 
             <div className="sales-preview-floating">
-              <strong>Ready</strong>
-              <span>Copy → Publish → Mark done</span>
+              <strong>Simple workflow</strong>
+              <span>Review → Copy → Publish → Done</span>
             </div>
           </div>
         </div>
@@ -166,16 +187,45 @@ export default function Home() {
 
       <section className="sales-section sales-problem-section">
         <div>
-          <div className="page-eyebrow">Why FromOne Exists</div>
-          <h2>Small businesses know they should post. They just do not have time.</h2>
+          <div className="page-eyebrow">The problem</div>
+          <h2>Most small businesses know they should post. They just do not have time.</h2>
         </div>
 
         <p>
-          Most local businesses are busy serving customers, answering calls, quoting jobs,
-          and running the day-to-day. Social media gets pushed aside because planning,
-          writing, and organising posts takes too long. FromOne gives them a simple weekly
-          content planner instead.
+          Planning social content every week takes time. You have to think of ideas, write
+          captions, choose platforms, create calls to action, and remember what has already
+          been posted. FromOne turns that into a simple weekly system.
         </p>
+      </section>
+
+      <section className="sales-section sales-scan-section">
+        <div className="sales-section-heading">
+          <div className="page-eyebrow">Website scan</div>
+          <h2>Why the website scan matters</h2>
+          <p>
+            FromOne uses the business website as the starting point, so the weekly posts can
+            be based on real services, real customers, and the actual tone of the business.
+          </p>
+        </div>
+
+        <div className="sales-scan-grid">
+          <div className="sales-scan-card">
+            <small>From one website URL</small>
+            <h3>FromOne builds the content brief for you.</h3>
+            <p>
+              Instead of asking the business owner to write a full marketing brief, FromOne
+              scans the website and uses the information to shape the weekly posts.
+            </p>
+          </div>
+
+          <div className="sales-scan-list">
+            {scanBenefits.map((benefit) => (
+              <div key={benefit} className="card">
+                ✓ {benefit}
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="sales-section">
@@ -183,8 +233,8 @@ export default function Home() {
           <div className="page-eyebrow">Benefits</div>
           <h2>What FromOne gives your business</h2>
           <p>
-            A practical social media content workflow that keeps marketing moving without
-            needing a marketing team.
+            A practical weekly content workflow for businesses that need to stay visible
+            online without spending hours planning social posts.
           </p>
         </div>
 
@@ -199,13 +249,34 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="sales-section sales-steps-section">
+        <div className="sales-section-heading">
+          <div className="page-eyebrow">Workflow</div>
+          <h2>Simple enough to use every week</h2>
+          <p>
+            FromOne is designed around one clear routine: set up the business, create the
+            week, review the posts, publish manually, and mark each post as done.
+          </p>
+        </div>
+
+        <div className="sales-steps-grid">
+          {steps.map((step, index) => (
+            <article key={step.title} className="sales-step-card">
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="sales-section sales-screenshots-section">
         <div className="sales-section-heading">
-          <div className="page-eyebrow">Product Preview</div>
-          <h2>Designed to feel simple from the first click</h2>
+          <div className="page-eyebrow">Product preview</div>
+          <h2>Designed to feel clear from the first click</h2>
           <p>
-            From campaign creation to post review, FromOne keeps the weekly content
-            workflow clear, visual, and easy to follow.
+            From dashboard setup to post review, FromOne keeps the content workflow focused
+            and easy to follow.
           </p>
         </div>
 
@@ -231,30 +302,47 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="sales-section sales-steps-section">
+      <section className="sales-section sales-pricing-section">
         <div className="sales-section-heading">
-          <div className="page-eyebrow">Workflow</div>
-          <h2>Set up once. Create content every week.</h2>
+          <div className="page-eyebrow">Simple pricing</div>
+          <h2>Try it free, then continue monthly</h2>
+          <p>
+            Start with the full workflow during the 7-day demo. If it saves you time, keep
+            using it for one simple monthly price.
+          </p>
         </div>
 
-        <div className="sales-steps-grid">
-          {steps.map((step, index) => (
-            <article key={step.title} className="sales-step-card">
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
-            </article>
-          ))}
+        <div className="sales-pricing-card">
+          <div>
+            <small>FromOne Monthly</small>
+            <h3>
+              £29.99 <span>/ month</span>
+            </h3>
+            <p>
+              A simple content assistant for small businesses that need weekly social posts
+              without the agency cost.
+            </p>
+          </div>
+
+          <div className="sales-pricing-features">
+            {planFeatures.map((feature) => (
+              <span key={feature}>✓ {feature}</span>
+            ))}
+          </div>
+
+          <Link href="/signin" className="sales-primary-button">
+            Start 7-day demo
+          </Link>
         </div>
       </section>
 
       <section className="sales-cta-section">
         <div>
           <div className="page-eyebrow">Ready for small businesses</div>
-          <h2>Give your business a week of content before the week even starts.</h2>
+          <h2>Create next week’s content before the week even starts.</h2>
           <p>
-            Start with a website scan, or use the manual profile route if there is no
-            website yet.
+            Start with a website scan, or use the manual business profile route if there is
+            no website yet.
           </p>
         </div>
 

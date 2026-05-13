@@ -224,7 +224,7 @@ export default function DashboardPage() {
     height: number;
   } | null>(null);
 
-  const [accessInfo, setAccessInfo] = useState<AccessInfo | null>(null);
+  const [, setAccessInfo] = useState<AccessInfo | null>(null);
   const [accessLocked, setAccessLocked] = useState(false);
   const [accessMessage, setAccessMessage] = useState('');
 
@@ -240,13 +240,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchClient();
-
-    const tourSeen = localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY) === 'true';
-    const isMobile = window.innerWidth <= 760;
-
-    if (!tourSeen && !isMobile) {
-      setShowDashboardTour(true);
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -739,8 +733,7 @@ export default function DashboardPage() {
     setWeeklyScansUsed(used);
     return used;
   };
-
-  const isAdminUser = async (userId: string) => {
+    const isAdminUser = async (userId: string) => {
     const { data, error } = await supabase
       .from('admin_users')
       .select('id')
@@ -1002,7 +995,9 @@ ${selectedPlatforms.join(', ')}
 
 Only create posts for the selected social media platforms above. Do not use platforms that are not selected.
 
-When a website URL is available, scan the website and infer the business details, tone, audience, services, content pillars, CTAs, and branding from the website.
+When a website URL is available, scan the website and infer the business details, audience, services, content pillars, CTAs, branding, and natural tone of voice from the website.
+
+Use the detected website tone of voice where possible. If no clear tone is found, use a professional, friendly, small-business tone.
 
 When no website URL is available, use the manual business profile above. Treat it as the main source of truth and create strong, specific content from those details.
 
@@ -1187,29 +1182,36 @@ Also detect or infer:
     if (scanData.location) businessProfileUpdates.location = scanData.location;
     if (scanData.main_offer) businessProfileUpdates.main_offer = scanData.main_offer;
     if (scanData.tone_of_voice) businessProfileUpdates.tone_of_voice = scanData.tone_of_voice;
-
     if (scanData.services) businessProfileUpdates.services = safeArray(scanData.services);
+
     if (scanData.target_audience) {
       businessProfileUpdates.target_audience = safeArray(scanData.target_audience);
     }
+
     if (scanData.content_pillars) {
       businessProfileUpdates.content_pillars = safeArray(scanData.content_pillars);
     }
+
     if (scanData.business_goals) {
       businessProfileUpdates.business_goals = safeArray(scanData.business_goals);
     }
+
     if (scanData.brand_primary_color) {
       businessProfileUpdates.brand_primary_color = scanData.brand_primary_color;
     }
+
     if (scanData.brand_secondary_color) {
       businessProfileUpdates.brand_secondary_color = scanData.brand_secondary_color;
     }
+
     if (scanData.brand_accent_color) {
       businessProfileUpdates.brand_accent_color = scanData.brand_accent_color;
     }
+
     if (scanData.brand_logo_url) {
       businessProfileUpdates.brand_logo_url = scanData.brand_logo_url;
     }
+
     if (scanData.brand_summary) {
       businessProfileUpdates.brand_summary = scanData.brand_summary;
     }
@@ -1564,14 +1566,17 @@ Also detect or infer:
   const businessName = client?.business_name || 'your business';
   const businessInitial = String(businessName).trim().charAt(0).toUpperCase() || 'F';
   const businessLogoUrl = client?.brand_logo_url || '';
-    return (
+  const businessSummaryName = client?.business_name || 'No business added yet';
+  const businessSummaryIndustry = client?.industry ? ` · ${client.industry}` : '';
+
+  return (
     <>
       <div ref={dashboardHeaderRef} className="page-header dashboard-simple-header">
         <div className="page-eyebrow">FromOne Dashboard</div>
         <h1 className="page-title">Create this week’s posts.</h1>
         <p className="page-description">
-          Add the business website, or use business details if there is no website. FromOne will
-          create seven ready-to-use posts for the week.
+          Add a website or business details, choose your platforms, then create seven ready-to-use
+          posts for the week.
         </p>
 
         <div className="dashboard-header-actions-row">
@@ -1592,12 +1597,10 @@ Also detect or infer:
               }
             >
               <div>
-                <div className="page-eyebrow">
-                  {accessLocked ? 'Demo Ended' : 'Access Active'}
-                </div>
+                <div className="page-eyebrow">{accessLocked ? 'Demo Ended' : 'Access Active'}</div>
                 <h2>
                   {accessLocked
-                    ? 'Creating weekly posts is currently locked.'
+                    ? 'Creating weekly posts is locked.'
                     : 'Your demo access is active.'}
                 </h2>
                 <p>{accessMessage}</p>
@@ -1631,41 +1634,22 @@ Also detect or infer:
                 </div>
 
                 <div className="dashboard-personal-task-copy">
-                  <div className="page-eyebrow">Today’s Task</div>
+                  <div className="page-eyebrow">Today’s task</div>
 
                   {todayPost ? (
                     <>
                       <h2>Review your {todayPost.platform || 'social'} post</h2>
-                      <h3>{businessName} has one post ready to publish today.</h3>
+                      <h3>{businessName} has one post ready today.</h3>
                       <p>
-                        Review the post, add an image, copy it to{' '}
+                        Review it, add an image, copy it to{' '}
                         {todayPost.platform || 'the selected platform'}, then mark it as posted.
                       </p>
-
-                      <div className="today-task-premium-meta">
-                        <div>
-                          <span>Posting to</span>
-                          <strong>{todayPost.platform || 'Social post'}</strong>
-                        </div>
-
-                        <i />
-
-                        <div>
-                          <span>Post theme</span>
-                          <strong>
-                            {todayPost.title || todayPost.scheduled_day || 'Today’s post'}
-                          </strong>
-                        </div>
-                      </div>
                     </>
                   ) : (
                     <>
                       <h2>Welcome back.</h2>
                       <h3>{businessName}, you’re all clear today.</h3>
-                      <p>
-                        No post is due right now. You can still view this week’s posts whenever you
-                        need.
-                      </p>
+                      <p>No post is due right now. You can still view this week’s posts.</p>
                     </>
                   )}
                 </div>
@@ -1683,7 +1667,7 @@ Also detect or infer:
             <section className="dashboard-weekly-progress-card">
               <div className="dashboard-weekly-progress-header">
                 <div>
-                  <div className="page-eyebrow">This week’s progress</div>
+                  <div className="page-eyebrow">This week</div>
                   <h2>
                     {weeklyProgress.total > 0
                       ? `${weeklyProgress.posted} of ${weeklyProgress.total} posts done`
@@ -1710,7 +1694,7 @@ Also detect or infer:
                           weeklyProgress.nextPost.scheduled_day ||
                           'your next post'
                         }`
-                      : 'Keep going — open Posts to finish the remaining items.'}
+                      : 'Open Posts to finish the remaining items.'}
                 </p>
               ) : (
                 <p>Create weekly posts to start tracking your progress here.</p>
@@ -1732,23 +1716,27 @@ Also detect or infer:
 
               <h2>
                 {hasWebsite
-                  ? 'Scan this website and create the week.'
+                  ? 'Use this website.'
                   : hasManualProfile
-                    ? 'Use the saved business details or add a website.'
-                    : 'Enter a website, or add business details.'}
+                    ? 'Use saved business details.'
+                    : 'Add a website or business details.'}
               </h2>
 
               <p>
-                Add a website or use saved business details first. Then check the current business
-                details and choose the platforms for this week’s posts.
+                Set up the business once, choose platforms below, then create this week’s posts.
+              </p>
+
+              <p className="dashboard-business-summary">
+                Using: <strong>{businessSummaryName}</strong>
+                {businessSummaryIndustry}
               </p>
 
               <div ref={websiteInputRef} className="dashboard-tour-target-wrap">
                 <label>
                   <strong>Business website URL</strong>
                   <span>
-                    Paste the website URL. Website scans are limited to {WEEKLY_SCAN_LIMIT} every 7
-                    days. You can save up to {MAX_SAVED_CAMPAIGNS} weekly plans.
+                    You have {weeklyScansRemaining} of {WEEKLY_SCAN_LIMIT} website scans remaining
+                    this week.
                   </span>
                 </label>
 
@@ -1760,10 +1748,6 @@ Also detect or infer:
                 />
               </div>
 
-              <div className="dashboard-scan-usage-pill">
-                {weeklyScansRemaining} of {WEEKLY_SCAN_LIMIT} website scans remaining this week
-              </div>
-
               <div className="dashboard-create-action-row">
                 <button
                   type="button"
@@ -1771,7 +1755,7 @@ Also detect or infer:
                   onClick={handleSaveWebsiteOnly}
                   disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
                 >
-                  {savingWebsite ? 'Saving website...' : 'Save Website'}
+                  {savingWebsite ? 'Saving website...' : 'Save website'}
                 </button>
 
                 <button
@@ -1806,11 +1790,11 @@ Also detect or infer:
               >
                 <div className="dashboard-manual-profile-header">
                   <div>
-                    <div className="page-eyebrow">Business Details</div>
+                    <div className="page-eyebrow">Business details</div>
                     <h2>Add the business details.</h2>
                     <p>
-                      Add enough detail for FromOne to understand the business. This helps create
-                      more specific posts when there is no website to scan.
+                      Use this when there is no website. Add enough detail to make the posts
+                      specific.
                     </p>
                   </div>
                 </div>
@@ -1907,7 +1891,7 @@ Also detect or infer:
                   </label>
 
                   <label>
-                    <strong>What should the posts focus on?</strong>
+                    <strong>Post focus</strong>
                     <span>Separate with commas.</span>
                     <textarea
                       className="input"
@@ -1920,11 +1904,8 @@ Also detect or infer:
 
                 <div className="dashboard-manual-profile-actions dashboard-manual-profile-actions-clean">
                   <div>
-                    <strong>Save these business details first.</strong>
-                    <span>
-                      Then choose the platforms below and use the create button in the platform
-                      section.
-                    </span>
+                    <strong>Save these details first.</strong>
+                    <span>Then choose platforms and create the weekly posts.</span>
                   </div>
 
                   <button
@@ -1938,74 +1919,15 @@ Also detect or infer:
               </section>
             )}
 
-            <aside className="dashboard-status-card dashboard-status-card-full">
-              <div className="page-eyebrow">Current Business</div>
-
-              <div className="dashboard-status-list">
-                <p>
-                  <strong>Business</strong>
-                  <span>{client?.business_name || 'Detected after scan'}</span>
-                </p>
-
-                <p>
-                  <strong>Industry</strong>
-                  <span>{client?.industry || 'Detected after scan'}</span>
-                </p>
-
-                <p>
-                  <strong>Location</strong>
-                  <span>{client?.location || 'Detected if available'}</span>
-                </p>
-
-                <p>
-                  <strong>Website</strong>
-                  <span>{websiteUrl || 'Not added yet'}</span>
-                </p>
-
-                <p className="dashboard-platform-status-pulse">
-                  <strong>Platforms</strong>
-                  <span>{selectedPlatforms.join(', ')}</span>
-                </p>
-
-                <p>
-                  <strong>Website scans</strong>
-                  <span>
-                    {weeklyScansUsed}/{WEEKLY_SCAN_LIMIT} used in the last 7 days
-                  </span>
-                </p>
-
-                <p>
-                  <strong>Saved weekly plans</strong>
-                  <span>
-                    {savedCampaignsCount}/{MAX_SAVED_CAMPAIGNS} slots used
-                  </span>
-                </p>
-
-                <p>
-                  <strong>Setup source</strong>
-                  <span>
-                    {hasWebsite
-                      ? 'Website scan'
-                      : hasManualProfile
-                        ? 'Business details'
-                        : 'Not set up'}
-                  </span>
-                </p>
-              </div>
-            </aside>
-
             <div
               ref={platformSelectorRef}
               className="dashboard-platform-selector dashboard-platform-selector-full"
             >
               <div className="dashboard-platform-selector-header">
                 <div>
-                  <div className="page-eyebrow">Choose your platforms</div>
-                  <h3>Where should we create posts for?</h3>
-                  <p>
-                    Click a card to add or remove that platform. Use More to cycle through the
-                    social cards.
-                  </p>
+                  <div className="page-eyebrow">Choose platforms</div>
+                  <h3>Where should the posts go?</h3>
+                  <p>Choose your platforms. Use More to cycle through the list.</p>
                 </div>
 
                 <div className="dashboard-platform-carousel-actions">
@@ -2065,22 +1987,12 @@ Also detect or infer:
               <div className="dashboard-selected-platforms-line">
                 <strong>{selectedPlatforms.length}</strong>
                 <span>selected: {selectedPlatforms.join(', ')}</span>
-                <small>
-                  Showing {platformCarouselStart + 1}–
-                  {Math.min(
-                    platformCarouselStart + PLATFORM_CAROUSEL_VISIBLE_COUNT,
-                    availablePlatforms.length
-                  )}{' '}
-                  of {availablePlatforms.length}
-                </small>
               </div>
 
               <div className="dashboard-platform-create-row">
                 <div>
                   <strong>Ready to create?</strong>
-                  <span>
-                    FromOne will create seven posts using the selected platforms above.
-                  </span>
+                  <span>FromOne will create seven posts for the selected platforms.</span>
                 </div>
 
                 <button
@@ -2095,18 +2007,13 @@ Also detect or infer:
                       ? 'Scanning website...'
                       : 'Creating posts from business details...'
                     : hasWebsite
-                      ? 'Scan Website & Create Weekly Posts'
+                      ? 'Scan website and create posts'
                       : hasManualProfile
-                        ? 'Create Posts From Business Details'
-                        : 'Create Weekly Posts'}
+                        ? 'Create posts from business details'
+                        : 'Create weekly posts'}
                 </button>
               </div>
             </div>
-
-            <Link href="/product-updates" className="dashboard-update-pill">
-              <span>What’s new</span>
-              <strong>View latest updates</strong>
-            </Link>
           </section>
         </>
       )}

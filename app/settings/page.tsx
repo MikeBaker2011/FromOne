@@ -9,6 +9,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function SettingsPage() {
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -27,8 +28,10 @@ export default function SettingsPage() {
   const [brandLogoUrl, setBrandLogoUrl] = useState('');
   const [brandSummary, setBrandSummary] = useState('');
 
-  const [showManualDetails, setShowManualDetails] = useState(false);
+  const [showBusinessDetails, setShowBusinessDetails] = useState(false);
   const [showBrandDetails, setShowBrandDetails] = useState(false);
+  const [showDangerZone, setShowDangerZone] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -36,18 +39,48 @@ export default function SettingsPage() {
     loadBusinessProfile();
   }, []);
 
+  const normaliseWebsiteUrl = (value: string) => {
+    const trimmed = value.trim();
+
+    if (!trimmed) return '';
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+
+    return `https://${trimmed}`;
+  };
+
   const loadBusinessProfile = async () => {
     setLoading(true);
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const authUserId = authData.user?.id || null;
+
+    if (authError) {
+      console.error('Auth error:', authError.message);
+      setLoading(false);
+      return;
+    }
+
+    if (!authUserId) {
+      setUserId(null);
+      setLoading(false);
+      return;
+    }
+
+    setUserId(authUserId);
 
     const { data, error } = await supabase
       .from('business_profiles')
       .select('*')
+      .eq('user_id', authUserId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading client profile:', error.message);
+      console.error('Error loading business profile:', error.message);
       setLoading(false);
       return;
     }
@@ -78,8 +111,8 @@ export default function SettingsPage() {
       setBrandLogoUrl(data.brand_logo_url || '');
       setBrandSummary(data.brand_summary || '');
 
-      if (!data.website_url && (data.business_name || data.industry || data.services?.length)) {
-        setShowManualDetails(true);
+      if (data.business_name || data.industry || data.location || data.services?.length) {
+        setShowBusinessDetails(true);
       }
 
       if (
@@ -105,11 +138,11 @@ export default function SettingsPage() {
 
   const buildPayload = async () => {
     const { data: authData } = await supabase.auth.getUser();
-    const userId = authData.user?.id || null;
+    const authUserId = authData.user?.id || userId || null;
 
     return {
-      user_id: userId,
-      website_url: websiteUrl.trim() || null,
+      user_id: authUserId,
+      website_url: normaliseWebsiteUrl(websiteUrl) || null,
 
       business_name: businessName.trim() || null,
       industry: industry.trim() || null,
@@ -134,11 +167,16 @@ export default function SettingsPage() {
   const saveProfile = async () => {
     const payload = await buildPayload();
 
+    if (!payload.user_id) {
+      throw new Error('Please sign in again before saving settings.');
+    }
+
     if (profileId) {
       const { error } = await supabase
         .from('business_profiles')
         .update(payload)
-        .eq('id', profileId);
+        .eq('id', profileId)
+        .eq('user_id', payload.user_id);
 
       if (error) throw error;
 
@@ -159,12 +197,10 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     const hasWebsite = Boolean(websiteUrl.trim());
-    const hasManualProfile = Boolean(businessName.trim() && industry.trim());
+    const hasBusinessDetails = Boolean(businessName.trim() && industry.trim());
 
-    if (!hasWebsite && !hasManualProfile) {
-      alert(
-        'Please add a website URL, or open manual profile details and add at least a business name and industry.'
-      );
+    if (!hasWebsite && !hasBusinessDetails) {
+      alert('Please add a website URL, or add at least a business name and industry.');
       return;
     }
 
@@ -172,11 +208,11 @@ export default function SettingsPage() {
 
     try {
       await saveProfile();
-      alert('Client profile saved.');
+      alert('Business profile saved.');
       await loadBusinessProfile();
     } catch (error: any) {
-      console.error('Error saving client profile:', error?.message || error);
-      alert(error?.message || 'Error saving client profile.');
+      console.error('Error saving business profile:', error?.message || error);
+      alert(error?.message || 'Error saving business profile.');
     } finally {
       setSaving(false);
     }
@@ -200,7 +236,7 @@ export default function SettingsPage() {
     setBrandLogoUrl('');
     setBrandSummary('');
 
-    setShowManualDetails(false);
+    setShowBusinessDetails(false);
     setShowBrandDetails(false);
   };
 
@@ -210,8 +246,13 @@ export default function SettingsPage() {
       return;
     }
 
+    if (!userId) {
+      alert('Please sign in again before deleting this profile.');
+      return;
+    }
+
     const confirmed = confirm(
-      'Delete this client profile? This removes the saved profile from Supabase.'
+      'Delete this business profile? This removes the saved profile settings. Existing weekly posts will not be deleted.'
     );
 
     if (!confirmed) return;
@@ -222,16 +263,17 @@ export default function SettingsPage() {
       const { error } = await supabase
         .from('business_profiles')
         .delete()
-        .eq('id', profileId);
+        .eq('id', profileId)
+        .eq('user_id', userId);
 
       if (error) throw error;
 
       setProfileId(null);
       handleResetForm();
-      alert('Client profile deleted.');
+      alert('Business profile deleted.');
     } catch (error: any) {
-      console.error('Error deleting client profile:', error?.message || error);
-      alert(error?.message || 'Error deleting client profile.');
+      console.error('Error deleting business profile:', error?.message || error);
+      alert(error?.message || 'Error deleting business profile.');
     } finally {
       setSaving(false);
     }
@@ -240,53 +282,35 @@ export default function SettingsPage() {
   return (
     <>
       <div className="page-header">
-        <div className="page-eyebrow">Settings · Client Profile</div>
-        <h1 className="page-title">Client profile settings.</h1>
+        <div className="page-eyebrow">Settings · Business Profile</div>
+        <h1 className="page-title">Business profile settings.</h1>
         <p className="page-description">
-          Edit the saved client profile here. The Dashboard handles scanning the website,
-          building the brief, and generating the campaign.
+          Edit the saved business details FromOne uses to create weekly posts.
         </p>
       </div>
 
       {loading ? (
         <div className="premium-card">
-          <p>Loading client profile...</p>
+          <p>Loading business profile...</p>
         </div>
       ) : (
         <>
           <section className="scan-feature-card settings-simple-scan">
             <div className="scan-feature-content">
               <div>
-                <div className="page-eyebrow">Website Profile</div>
+                <div className="page-eyebrow">Business Website</div>
                 <h2>Website details.</h2>
                 <p>
-                  Add or edit the client website. This only stores the profile. The actual
-                  website scan happens from the Dashboard.
+                  Add or update the website FromOne uses when creating weekly posts. The
+                  Dashboard still controls when a website scan happens.
                 </p>
-              </div>
-
-              <div className="scan-feature-steps">
-                <div>
-                  <span>1</span>
-                  <strong>Edit profile</strong>
-                </div>
-
-                <div>
-                  <span>2</span>
-                  <strong>Save settings</strong>
-                </div>
-
-                <div>
-                  <span>3</span>
-                  <strong>Generate from Dashboard</strong>
-                </div>
               </div>
             </div>
 
             <div className="scan-feature-form">
               <label>
                 <strong>Website URL</strong>
-                <span>Used by the Dashboard when generating the campaign.</span>
+                <span>Used when generating new weekly posts from Dashboard.</span>
               </label>
 
               <input
@@ -303,11 +327,9 @@ export default function SettingsPage() {
               <button
                 type="button"
                 className="manual-open-button"
-                onClick={() => setShowManualDetails(!showManualDetails)}
+                onClick={() => setShowBusinessDetails(!showBusinessDetails)}
               >
-                {showManualDetails
-                  ? 'Hide manual profile details'
-                  : 'No website? Add manual profile details'}
+                {showBusinessDetails ? 'Hide business details' : 'Edit business details'}
               </button>
 
               <button
@@ -315,39 +337,19 @@ export default function SettingsPage() {
                 className="manual-open-button"
                 onClick={() => setShowBrandDetails(!showBrandDetails)}
               >
-                {showBrandDetails ? 'Hide brand details' : 'Edit detected brand details'}
+                {showBrandDetails ? 'Hide brand details' : 'Edit brand details'}
               </button>
-
-              <div className="settings-small-actions">
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={handleResetForm}
-                  disabled={saving}
-                >
-                  Reset Form
-                </button>
-
-                <button
-                  type="button"
-                  className="secondary-button danger-button"
-                  onClick={handleDeleteProfile}
-                  disabled={saving}
-                >
-                  Delete Profile
-                </button>
-              </div>
             </div>
           </section>
 
-          {showManualDetails && (
+          {showBusinessDetails && (
             <section className="manual-collapse-card manual-open-card">
               <div className="manual-collapse-content manual-visible-content">
-                <div className="page-eyebrow">Manual Profile</div>
-                <h2>No website? Add the client details here.</h2>
+                <div className="page-eyebrow">Business Details</div>
+                <h2>Tell FromOne about the business.</h2>
                 <p>
-                  Use this only when the client does not have a website. The Dashboard
-                  will use these details instead of a website scan.
+                  These details help FromOne create better posts, especially when there is no
+                  website or the website does not explain everything clearly.
                 </p>
 
                 <div className="manual-backup-grid">
@@ -413,7 +415,7 @@ export default function SettingsPage() {
 
                     <label>
                       <strong>Tone of Voice</strong>
-                      <span>How should the content sound?</span>
+                      <span>How should the content sound by default?</span>
                     </label>
                     <select
                       className="input"
@@ -422,21 +424,22 @@ export default function SettingsPage() {
                     >
                       <option value="Professional">Professional</option>
                       <option value="Friendly">Friendly</option>
-                      <option value="Luxury">Luxury</option>
-                      <option value="Bold">Bold</option>
+                      <option value="Premium">Premium</option>
+                      <option value="Direct">Direct</option>
                       <option value="Helpful">Helpful</option>
+                      <option value="Fun">Fun</option>
                       <option value="Local and trustworthy">Local and trustworthy</option>
                     </select>
 
                     <label>
-                      <strong>Anything specific to promote?</strong>
-                      <span>Optional offer, service, or announcement.</span>
+                      <strong>Main Offer or CTA</strong>
+                      <span>Optional offer, service, or action to promote.</span>
                     </label>
                     <textarea
                       className="input"
                       value={mainOffer}
                       onChange={(event) => setMainOffer(event.target.value)}
-                      placeholder="Example: Free quote this month, new service, seasonal offer"
+                      placeholder="Example: Book a free quote this month"
                       rows={4}
                     />
 
@@ -467,7 +470,7 @@ export default function SettingsPage() {
                 </div>
 
                 <button onClick={handleSaveProfile} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Manual Profile'}
+                  {saving ? 'Saving...' : 'Save Business Details'}
                 </button>
               </div>
             </section>
@@ -477,10 +480,10 @@ export default function SettingsPage() {
             <section className="manual-collapse-card manual-open-card">
               <div className="manual-collapse-content manual-visible-content">
                 <div className="page-eyebrow">Brand Details</div>
-                <h2>Edit detected brand details.</h2>
+                <h2>Adjust the brand details.</h2>
                 <p>
-                  These are normally detected during the website scan. You can adjust them
-                  here if the scan needs correcting.
+                  These are usually detected during the website scan. You can correct them here
+                  if needed.
                 </p>
 
                 <div className="manual-backup-grid">
@@ -498,7 +501,7 @@ export default function SettingsPage() {
 
                     <label>
                       <strong>Secondary Brand Colour</strong>
-                      <span>Usually dark, light, or supporting brand colour.</span>
+                      <span>Usually a dark, light, or supporting colour.</span>
                     </label>
                     <input
                       className="input"
@@ -555,11 +558,58 @@ export default function SettingsPage() {
           <section className="settings-save-bar">
             <div>
               <div className="page-eyebrow">Next Step</div>
-              <h2>Go to Dashboard to generate the campaign.</h2>
+              <h2>Create weekly posts from Dashboard.</h2>
               <p>
-                Settings stores profile data only. Dashboard performs the scan and creates
-                the weekly posts.
+                Settings stores the business profile. Dashboard uses this profile to scan,
+                generate, and save weekly posts.
               </p>
+            </div>
+
+            <button onClick={handleSaveProfile} disabled={saving}>
+              {saving ? 'Saving...' : 'Save All Settings'}
+            </button>
+          </section>
+
+          <section className="manual-collapse-card manual-open-card" style={{ marginTop: '24px' }}>
+            <div className="manual-collapse-content manual-visible-content">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setShowDangerZone(!showDangerZone)}
+              >
+                {showDangerZone ? 'Hide danger zone' : 'Show danger zone'}
+              </button>
+
+              {showDangerZone && (
+                <div style={{ marginTop: '18px' }}>
+                  <div className="page-eyebrow">Danger Zone</div>
+                  <h2>Reset or delete profile data.</h2>
+                  <p>
+                    Reset clears the form on this page. Delete removes the saved business
+                    profile from Supabase.
+                  </p>
+
+                  <div className="button-row">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={handleResetForm}
+                      disabled={saving}
+                    >
+                      Reset Form
+                    </button>
+
+                    <button
+                      type="button"
+                      className="secondary-button danger-button"
+                      onClick={handleDeleteProfile}
+                      disabled={saving}
+                    >
+                      Delete Business Profile
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         </>

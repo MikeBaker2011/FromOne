@@ -3,14 +3,14 @@ import type { Metadata } from 'next';
 import PublicNav from '../components/PublicNav';
 
 export const metadata: Metadata = {
-  title: 'How FromOne Works | Create Weekly Social Media Content',
+  title: 'Help Guide | How FromOne Works',
   description:
-    'A simple guide to using FromOne to set up a business, choose platforms, create weekly social media posts, and publish them manually.',
+    'A simple guide to using FromOne to set up a business, create weekly social media posts, review posts, and publish them manually.',
   alternates: {
     canonical: '/tutorial',
   },
   openGraph: {
-    title: 'How FromOne Works | Create Weekly Social Media Content',
+    title: 'Help Guide | How FromOne Works',
     description:
       'Set up your business, choose your platforms, create weekly posts, review them, publish manually, and track what is done.',
     url: '/tutorial',
@@ -29,39 +29,57 @@ export const metadata: Metadata = {
 const steps = [
   {
     number: '1',
-    title: 'Add website or business details',
+    title: 'Set up the business',
     text:
-      'Paste the business website, or use the business details form if there is no website.',
+      'Add the business website, or enter the business details manually if there is no website.',
   },
   {
     number: '2',
-    title: 'Save the business setup',
+    title: 'Choose your platforms',
     text:
-      'Save the website or business details first so FromOne knows what business it is creating content for.',
+      'Select the social platforms you want content for. FromOne will only create posts for the platforms you choose.',
   },
   {
     number: '3',
-    title: 'Check Current Business',
+    title: 'Create weekly posts',
     text:
-      'Review the detected or saved business details, including the business name, industry, location, website, and selected platforms.',
+      'Click the create button on the Dashboard. FromOne creates seven ready-to-use posts for the week.',
   },
   {
     number: '4',
-    title: 'Choose social platforms',
+    title: 'Open Posts',
     text:
-      'Select the social media platforms you want posts for. Click a platform card to add or remove it, and use More to see the next options.',
+      'Go to Posts to see the weekly calendar. Choose a day to review the post for that day.',
   },
   {
     number: '5',
-    title: 'Create weekly posts',
+    title: 'Prepare the post',
     text:
-      'Once the setup and platforms are ready, click Create Weekly Posts under the platform selector. FromOne creates seven posts using the selected platforms.',
+      'Read the post, make it more specific if needed, edit the wording, and add an image.',
   },
   {
     number: '6',
-    title: 'Review and publish in Posts',
+    title: 'Publish and mark as done',
     text:
-      'Open Posts, choose a day, review the content, add an image if needed, copy it to the platform, publish it manually, then mark it as posted.',
+      'Copy the post, open the platform, publish it manually, then mark it as posted in FromOne.',
+  },
+];
+
+const tips = [
+  {
+    title: 'FromOne does not auto-post',
+    text:
+      'You stay in control. FromOne creates the content, then you copy and publish it manually.',
+  },
+  {
+    title: 'Use Settings for business details',
+    text:
+      'Settings is where you can update the website, business profile, tone, offers, and brand details.',
+  },
+  {
+    title: 'Use Support if something feels unclear',
+    text:
+      'Send a support request if something does not work, looks wrong, or you need help.',
   },
 ];
 
@@ -71,11 +89,11 @@ export default function TutorialPage() {
       <PublicNav />
 
       <section className="page-header tutorial-public-header tutorial-simple-header">
-        <div className="page-eyebrow">FromOne Tutorial</div>
+        <div className="page-eyebrow">FromOne Help Guide</div>
         <h1 className="page-title">How FromOne works</h1>
         <p className="page-description">
-          FromOne helps you set up a business, choose the right platforms, create a week
-          of social media posts, then publish them manually.
+          A simple guide to setting up a business, creating weekly posts, reviewing them,
+          and publishing manually.
         </p>
 
         <div className="tutorial-simple-actions">
@@ -110,16 +128,30 @@ export default function TutorialPage() {
       <section className="premium-card tutorial-simple-note">
         <div>
           <div className="page-eyebrow">Good to know</div>
-          <h2>You choose the platforms first</h2>
+          <h2>You stay in control</h2>
           <p>
-            FromOne does not post automatically. You choose the platforms, create the weekly
-            posts, copy each post, publish it yourself, then mark it as done.
+            FromOne does not post automatically. It creates the weekly content, then you
+            review, copy, publish, and mark each post as done.
           </p>
         </div>
 
         <Link href="/dashboard" className="sales-primary-button">
-          Set up weekly posts
+          Create weekly posts
         </Link>
+      </section>
+
+      <section className="premium-card tutorial-simple-card">
+        <div className="page-eyebrow">Helpful notes</div>
+        <h2>Before you start</h2>
+
+        <div className="grid grid-three">
+          {tips.map((tip) => (
+            <article key={tip.title} className="card">
+              <strong>{tip.title}</strong>
+              <p>{tip.text}</p>
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   );
