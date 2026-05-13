@@ -32,10 +32,10 @@ const outcomes = [
   {
     title: 'No more blank-page posting',
     description:
-      'FromOne gives you clear post ideas, captions, CTAs, hashtags, and image prompts, so you are not starting from scratch every week.',
+      'FromOne gives you post ideas, captions, CTAs, hashtags, and image prompts, so you are not starting from scratch every week.',
   },
   {
-    title: 'Content based on the real business',
+    title: 'Based on the real business',
     description:
       'The website scan helps FromOne understand services, location, audience, offers, and tone before creating the plan.',
   },
@@ -121,7 +121,7 @@ export default function Home() {
           <div className="sales-hero-copy">
             <div className="page-eyebrow">Content planning for small businesses</div>
 
-            <h1>Turn one website into a week of social media content.</h1>
+            <h1>Turn one website into a week of content.</h1>
 
             <p>
               FromOne helps busy small businesses create, review, and publish a full week of
@@ -185,7 +185,7 @@ export default function Home() {
       <section className="sales-section sales-problem-section">
         <div>
           <div className="page-eyebrow">The gap</div>
-          <h2>Most businesses do not need more marketing complexity. They need a weekly rhythm.</h2>
+          <h2>Small businesses need a simple weekly rhythm.</h2>
         </div>
 
         <p>
@@ -229,7 +229,7 @@ export default function Home() {
       <section className="sales-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Why it helps</div>
-          <h2>Built around the way small businesses actually work</h2>
+          <h2>Built for busy small businesses.</h2>
           <p>
             FromOne is not trying to replace the business owner. It gives them a faster,
             clearer way to stay visible online.
@@ -250,7 +250,7 @@ export default function Home() {
       <section className="sales-section sales-steps-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Workflow</div>
-          <h2>One clear path from setup to published post</h2>
+          <h2>From setup to published post.</h2>
           <p>
             Every part of FromOne is designed to guide the user through the same simple flow:
             set up, create, review, publish, and track.
@@ -271,7 +271,7 @@ export default function Home() {
       <section className="sales-section sales-screenshots-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Product preview</div>
-          <h2>Simple enough for clients. Useful enough to keep using.</h2>
+          <h2>Simple to use. Useful every week.</h2>
           <p>
             The product keeps the weekly content process focused, visual, and easy to follow.
           </p>
@@ -336,7 +336,7 @@ export default function Home() {
       <section className="sales-cta-section">
         <div>
           <div className="page-eyebrow">Ready when you are</div>
-          <h2>Create the content before the week gets busy.</h2>
+          <h2>Get next week’s content ready today.</h2>
           <p>
             Start with a website scan, or use the manual profile if there is no website yet.
           </p>

@@ -10918,3 +10918,12 @@ select.input {
     width: 100%;
   }
 }
+.sales-page h1,
+.sales-page h2 {
+  max-width: 780px;
+  text-wrap: balance;
+}
+
+.sales-hero-copy h1 {
+  max-width: 760px;
+}
