@@ -10677,3 +10677,17 @@ select.input {
   max-height: 78%;
   object-fit: contain;
 }
+.dashboard-business-logo-frame {
+  overflow: hidden;
+  padding: 10px;
+}
+
+.dashboard-business-logo-frame img {
+  width: 100%;
+  height: 100%;
+  max-width: 88%;
+  max-height: 88%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
