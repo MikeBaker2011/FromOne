@@ -66,24 +66,6 @@ const steps = [
   },
 ];
 
-const tips = [
-  {
-    title: 'FromOne does not auto-post',
-    text:
-      'You stay in control. FromOne creates the content, then you copy and publish it manually.',
-  },
-  {
-    title: 'Use Settings for business details',
-    text:
-      'Settings is where you can update the website, business profile, tone, offers, and brand details.',
-  },
-  {
-    title: 'Use Support if something feels unclear',
-    text:
-      'Send a support request if something does not work, looks wrong, or you need help.',
-  },
-];
-
 export default function TutorialPage() {
   return (
     <main className="tutorial-public-page tutorial-simple-page">
@@ -93,8 +75,8 @@ export default function TutorialPage() {
         <div className="page-eyebrow">FromOne Help Guide</div>
         <h1 className="page-title">How FromOne works</h1>
         <p className="page-description">
-          A simple guide to setting up a business, creating weekly posts, reviewing them,
-          and publishing manually.
+          Set up the business, create the weekly posts, review each day, publish manually,
+          and keep track of what is done.
         </p>
 
         <div className="tutorial-simple-actions">
@@ -110,7 +92,7 @@ export default function TutorialPage() {
 
       <section className="premium-card tutorial-simple-card">
         <div className="page-eyebrow">Simple workflow</div>
-        <h2>Six steps</h2>
+        <h2>Six clear steps</h2>
 
         <div className="tutorial-simple-step-list">
           {steps.map((step) => (
@@ -128,31 +110,17 @@ export default function TutorialPage() {
 
       <section className="premium-card tutorial-simple-note">
         <div>
-          <div className="page-eyebrow">Good to know</div>
-          <h2>You stay in control</h2>
+          <div className="page-eyebrow">Ready to start?</div>
+          <h2>Create your first weekly plan.</h2>
           <p>
-            FromOne does not post automatically. It creates the weekly content, then you
-            review, copy, publish, and mark each post as done.
+            Start from the Dashboard. Add the website or business details, choose the
+            platforms, then create the week of posts.
           </p>
         </div>
 
         <Link href="/dashboard" className="sales-primary-button">
           Create weekly posts
         </Link>
-      </section>
-
-      <section className="premium-card tutorial-simple-card">
-        <div className="page-eyebrow">Helpful notes</div>
-        <h2>Before you start</h2>
-
-        <div className="grid grid-three">
-          {tips.map((tip) => (
-            <article key={tip.title} className="card">
-              <strong>{tip.title}</strong>
-              <p>{tip.text}</p>
-            </article>
-          ))}
-        </div>
       </section>
 
       <PublicFooter />
