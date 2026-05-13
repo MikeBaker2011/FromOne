@@ -103,7 +103,7 @@ export default function Home() {
           <div className="sales-hero-copy">
             <div className="page-eyebrow">Content planning for small businesses</div>
 
-            <h1>Turn one website into a week of content.</h1>
+            <h1>One website. One week of content.</h1>
 
             <p>
               FromOne helps busy small businesses create, review, and publish a full week of
