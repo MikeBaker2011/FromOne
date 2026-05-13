@@ -10927,3 +10927,19 @@ select.input {
 .sales-hero-copy h1 {
   max-width: 760px;
 }
+.sales-page h1,
+.sales-page h2 {
+  max-width: 780px;
+  text-wrap: balance;
+}
+
+.sales-hero-copy h1 {
+  max-width: 680px;
+}
+
+@media (max-width: 760px) {
+  .sales-hero-copy h1 {
+    max-width: 100%;
+    font-size: clamp(44px, 13vw, 64px);
+  }
+}

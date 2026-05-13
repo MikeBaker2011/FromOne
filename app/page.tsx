@@ -182,19 +182,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="sales-section sales-problem-section">
-        <div>
-          <div className="page-eyebrow">The gap</div>
-          <h2>Small businesses need a simple weekly rhythm.</h2>
-        </div>
-
-        <p>
-          Social media gets missed because the process feels bigger than it should: thinking
-          of ideas, writing captions, choosing platforms, and keeping track of what has been
-          published. FromOne turns that into a simple repeatable routine.
-        </p>
-      </section>
-
       <section className="sales-section sales-scan-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Website intelligence</div>
