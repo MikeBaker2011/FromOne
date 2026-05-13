@@ -320,20 +320,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="sales-cta-section">
-        <div>
-          <div className="page-eyebrow">Ready when you are</div>
-          <h2>Get next week’s content ready today.</h2>
-          <p>
-            Start with a website scan, or use the manual profile if there is no website yet.
-          </p>
-        </div>
-
-        <Link href="/signin" className="sales-primary-button">
-          Start your 7-day demo
-        </Link>
-      </section>
-
       <PublicFooter />
     </main>
   );
