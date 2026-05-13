@@ -1590,8 +1590,7 @@ Also detect or infer:
 
     await Promise.all([loadSavedCampaignCount(userId), loadWeeklyProgress(userId)]);
 
-    alert('Your weekly posts have been created and saved.');
-    router.push('/posts');
+    router.push('/posts?created=true');
   };
 
   const handleGeneratePosts = async () => {
@@ -2211,6 +2210,36 @@ Also detect or infer:
             </div>
           </section>
         </>
+      )}
+
+      {scanning && (
+        <div className="fromone-loading-overlay" role="status" aria-live="polite">
+          <section className="fromone-loading-card">
+            <div className="fromone-loading-orb">
+              <span />
+              <span />
+              <span />
+            </div>
+
+            <div className="page-eyebrow">
+              {hasWebsite ? 'Website scan in progress' : 'Creating weekly posts'}
+            </div>
+
+            <h2>{hasWebsite ? 'Scanning your website.' : 'Creating your weekly plan.'}</h2>
+
+            <p>
+              FromOne is reading the business details, understanding the audience, and creating
+              seven ready-to-use posts for the week.
+            </p>
+
+            <div className="fromone-loading-steps">
+              <span>Scanning business details</span>
+              <span>Finding services and audience</span>
+              <span>Planning platform content</span>
+              <span>Writing seven posts</span>
+            </div>
+          </section>
+        </div>
       )}
 
       {showDashboardTour && !loading && (
