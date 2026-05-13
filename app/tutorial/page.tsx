@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 export const metadata: Metadata = {
   title: 'Help Guide | How FromOne Works',
@@ -153,6 +154,8 @@ export default function TutorialPage() {
           ))}
         </div>
       </section>
+
+      <PublicFooter />
     </main>
   );
 }

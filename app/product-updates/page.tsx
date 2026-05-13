@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -423,6 +424,8 @@ export default function ProductUpdatesPage() {
           </div>
         </details>
       )}
+
+      <PublicFooter />
     </main>
   );
 }

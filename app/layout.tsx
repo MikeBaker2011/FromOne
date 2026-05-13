@@ -1,5 +1,6 @@
 import './globals.css';
 import AppShell from './components/AppShell';
+import CookieBanner from './components/CookieBanner';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
@@ -79,6 +80,7 @@ export default function RootLayout({
     <html lang="en-GB">
       <body>
         <AppShell>{children}</AppShell>
+        <CookieBanner />
       </body>
     </html>
   );

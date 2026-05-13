@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import PublicNav from './components/PublicNav';
+import PublicFooter from './components/PublicFooter';
 
 export const metadata: Metadata = {
   title: 'FromOne | Weekly Social Media Posts for Small Businesses',
@@ -350,6 +351,8 @@ export default function Home() {
           Start your 7-day demo
         </Link>
       </section>
+
+      <PublicFooter />
     </main>
   );
 }
