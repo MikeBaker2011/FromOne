@@ -10943,3 +10943,26 @@ select.input {
     font-size: clamp(44px, 13vw, 64px);
   }
 }
+/* Homepage hero headline refinement */
+
+.sales-hero-copy h1 {
+  max-width: 820px !important;
+  font-size: clamp(58px, 7vw, 96px) !important;
+  line-height: 0.92 !important;
+  letter-spacing: -0.075em;
+  text-wrap: balance;
+}
+
+@media (max-width: 900px) {
+  .sales-hero-copy h1 {
+    max-width: 100% !important;
+    font-size: clamp(48px, 12vw, 72px) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .sales-hero-copy h1 {
+    font-size: clamp(42px, 13vw, 58px) !important;
+    line-height: 0.95 !important;
+  }
+}
