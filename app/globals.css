@@ -10666,3 +10666,14 @@ select.input {
     font-size: 16px;
   }
 }
+.dashboard-business-logo-frame {
+  background: #ffffff;
+  border: 1px solid rgba(255, 212, 59, 0.22);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+}
+
+.dashboard-business-logo-frame img {
+  max-width: 78%;
+  max-height: 78%;
+  object-fit: contain;
+}
