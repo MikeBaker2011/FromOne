@@ -28,24 +28,6 @@ export const metadata: Metadata = {
   },
 };
 
-const outcomes = [
-  {
-    title: 'No more blank-page posting',
-    description:
-      'FromOne gives you post ideas, captions, CTAs, hashtags, and image prompts, so you are not starting from scratch every week.',
-  },
-  {
-    title: 'Based on the real business',
-    description:
-      'The website scan helps FromOne understand services, location, audience, offers, and tone before creating the plan.',
-  },
-  {
-    title: 'A simple publish routine',
-    description:
-      'Review the post, make small edits if needed, copy it, publish it manually, then mark it as done.',
-  },
-];
-
 const scanHighlights = [
   'Services and offers',
   'Target audience',
@@ -210,27 +192,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="sales-section">
-        <div className="sales-section-heading">
-          <div className="page-eyebrow">Why it helps</div>
-          <h2>Built for busy small businesses.</h2>
-          <p>
-            FromOne is not trying to replace the business owner. It gives them a faster,
-            clearer way to stay visible online.
-          </p>
-        </div>
-
-        <div className="sales-benefit-grid">
-          {outcomes.map((benefit) => (
-            <article key={benefit.title} className="sales-benefit-card">
-              <div className="sales-card-icon">✓</div>
-              <h3>{benefit.title}</h3>
-              <p>{benefit.description}</p>
-            </article>
-          ))}
         </div>
       </section>
 
