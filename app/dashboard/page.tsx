@@ -90,7 +90,8 @@ const marketReachOptions = [
   {
     value: 'Local customers',
     title: 'Local',
-    description: 'Best for trades, local services, venues, clinics, and businesses serving one area.',
+    description:
+      'Best for trades, local services, venues, clinics, and businesses serving one area.',
   },
   {
     value: 'Nationwide customers',
@@ -1012,12 +1013,55 @@ export default function DashboardPage() {
     return [];
   };
 
+  const getBusinessLocation = (profile?: any) => {
+    return String(profile?.location || manualLocation || '').trim();
+  };
+
+  const getMarketReachContext = (profile?: any) => {
+    const location = getBusinessLocation(profile);
+
+    if (selectedMarketReach === 'Local customers' && location) {
+      return `Local customers in and around ${location}`;
+    }
+
+    if (selectedMarketReach === 'Nationwide customers') {
+      return 'Nationwide customers across the UK';
+    }
+
+    if (selectedMarketReach === 'Online customers') {
+      return 'Online customers';
+    }
+
+    return selectedMarketReach;
+  };
+
+  const getMarketReachDisplayLabel = (profile?: any) => {
+    const location = getBusinessLocation(profile);
+
+    if (selectedMarketReach === 'Local customers' && location) {
+      return `Local · ${location}`;
+    }
+
+    if (selectedMarketReach === 'Nationwide customers') {
+      return 'Nationwide · UK';
+    }
+
+    if (selectedMarketReach === 'Online customers') {
+      return 'Online';
+    }
+
+    return selectedMarketReach;
+  };
+
   const buildBusinessDescription = (profile: any) => {
+    const marketReachContext = getMarketReachContext(profile);
+    const businessLocation = getBusinessLocation(profile);
+
     return `
 Website URL: ${profile.website_url || ''}
 Business name: ${profile.business_name || ''}
 Industry: ${profile.industry || ''}
-Location: ${profile.location || ''}
+Location: ${businessLocation}
 Services: ${Array.isArray(profile.services) ? profile.services.join(', ') : ''}
 Target audience: ${
       Array.isArray(profile.target_audience) ? profile.target_audience.join(', ') : ''
@@ -1032,10 +1076,10 @@ Business goals: ${
     }
 
 Market reach for this weekly plan:
-${selectedMarketReach}
+${marketReachContext}
 
 Use the market reach to shape the posts:
-- Local customers: include local trust, service area, nearby customer needs, and location-led wording where useful.
+- Local customers: write for customers in and around the business location. Use local trust, service area wording, nearby customer needs, and location-led phrasing where useful.
 - Nationwide customers: avoid over-local wording unless it is directly relevant. Make the posts suitable for a wider UK audience.
 - Online customers: focus on digital buying intent, online enquiries, delivery, remote service, ecommerce, or online conversion where relevant.
 
@@ -1062,7 +1106,14 @@ Also detect or infer:
       .replace(/\s+/g, '')
       .replace(/[^a-zA-Z0-9]/g, '');
 
-    const location = String(profile.location || selectedMarketReach || 'local')
+    const locationSource =
+      selectedMarketReach === 'Nationwide customers'
+        ? 'UK'
+        : selectedMarketReach === 'Online customers'
+          ? 'Online'
+          : getBusinessLocation(profile) || 'Local';
+
+    const location = String(locationSource)
       .replace(/\s+/g, '')
       .replace(/[^a-zA-Z0-9]/g, '');
 
@@ -1366,6 +1417,9 @@ Also detect or infer:
       return;
     }
 
+    const marketReachContext = getMarketReachContext(activeClient);
+    const marketReachDisplayLabel = getMarketReachDisplayLabel(activeClient);
+
     const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
 
     if (!campaignLimitAllowed) return;
@@ -1383,12 +1437,12 @@ Also detect or infer:
       description: buildBusinessDescription(activeClient),
       provider: 'gemini',
       platforms: selectedPlatforms,
-      marketReach: selectedMarketReach,
+      marketReach: marketReachContext,
       requestedOutput: {
         posts:
-          'array of 7 post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only the selected platforms supplied in the request. Shape posts around the supplied marketReach.',
+          'array of 7 post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only the selected platforms supplied in the request. Shape posts around the supplied marketReach, including the business location when local reach is selected.',
         selected_platforms: selectedPlatforms,
-        market_reach: selectedMarketReach,
+        market_reach: marketReachContext,
         business_name: 'detected business name',
         industry: 'detected industry',
         location: 'detected location',
@@ -1424,19 +1478,23 @@ Also detect or infer:
     const campaignIdea =
       scanData?.campaign_idea ||
       scanData?.brand_summary ||
-      `Seven-day ${selectedMarketReach.toLowerCase()} weekly post plan`;
+      `Seven-day ${marketReachContext.toLowerCase()} weekly post plan`;
 
     const detectedBusinessName =
       scanData?.business_name || activeClient.business_name || 'Website Scan Weekly Plan';
 
     const detectedIndustry = scanData?.industry || activeClient.industry || 'General';
-    const detectedLocation = scanData?.location || activeClient.location || selectedMarketReach;
+    const detectedLocation =
+      scanData?.location ||
+      activeClient.location ||
+      getBusinessLocation(activeClient) ||
+      marketReachContext;
 
     const detectedAudience = Array.isArray(scanData?.target_audience)
       ? scanData.target_audience.join(', ')
       : Array.isArray(activeClient.target_audience)
         ? activeClient.target_audience.join(', ')
-        : selectedMarketReach;
+        : marketReachContext;
 
     const detectedTone = scanData?.tone_of_voice || activeClient.tone_of_voice || 'Professional';
 
@@ -1463,7 +1521,7 @@ Also detect or infer:
         campaign_area: detectedLocation,
         tone: detectedTone,
         posting_frequency: 'Daily',
-        platform_plan: `${buildPlatformPlanText(selectedPlatforms)}. Market reach: ${selectedMarketReach}`,
+        platform_plan: `${buildPlatformPlanText(selectedPlatforms)}. Market reach: ${marketReachContext}`,
       })
       .select()
       .single();
@@ -1521,7 +1579,8 @@ Also detect or infer:
           client_id: activeClient.id,
           campaign_id: campaign.id,
           platforms: selectedPlatforms,
-          marketReach: selectedMarketReach,
+          marketReach: marketReachContext,
+          marketReachDisplayLabel,
         });
       }
     }
@@ -1617,6 +1676,8 @@ Also detect or infer:
   const businessName = client?.business_name || 'your business';
   const businessInitial = String(businessName).trim().charAt(0).toUpperCase() || 'F';
   const businessLogoUrl = client?.brand_logo_url || '';
+  const marketReachDisplayLabel = getMarketReachDisplayLabel(client);
+  const marketReachContext = getMarketReachContext(client);
 
   return (
     <>
@@ -1991,7 +2052,10 @@ Also detect or infer:
               </section>
             )}
 
-            <section ref={marketReachRef} className="dashboard-platform-selector dashboard-platform-selector-full">
+            <section
+              ref={marketReachRef}
+              className="dashboard-platform-selector dashboard-platform-selector-full"
+            >
               <div className="dashboard-platform-selector-header">
                 <div>
                   <div className="page-eyebrow">Choose your reach</div>
@@ -2032,7 +2096,7 @@ Also detect or infer:
 
               <div className="dashboard-selected-platforms-line">
                 <strong>Reach</strong>
-                <span>{selectedMarketReach}</span>
+                <span>{marketReachDisplayLabel}</span>
               </div>
             </section>
 
@@ -2121,7 +2185,7 @@ Also detect or infer:
                 <div>
                   <strong>Ready to create?</strong>
                   <span>
-                    FromOne will create seven posts for {selectedMarketReach.toLowerCase()} using
+                    FromOne will create seven posts for {marketReachContext.toLowerCase()} using
                     the selected platforms above.
                   </span>
                 </div>

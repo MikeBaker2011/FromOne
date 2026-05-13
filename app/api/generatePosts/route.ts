@@ -108,6 +108,20 @@ function buildSelectedPlatformPlan(platforms: string[]) {
   }));
 }
 
+function getFallbackHashtags(marketReach = 'Local customers') {
+  const reach = marketReach.toLowerCase();
+
+  if (reach.includes('nationwide')) {
+    return ['#UKBusiness', '#SmallBusiness', '#BusinessGrowth', '#Marketing'];
+  }
+
+  if (reach.includes('online')) {
+    return ['#OnlineBusiness', '#SmallBusiness', '#DigitalMarketing', '#Marketing'];
+  }
+
+  return ['#LocalBusiness', '#SmallBusiness', '#SupportLocal', '#Marketing'];
+}
+
 function cleanWebsiteText(html: string) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
@@ -319,7 +333,8 @@ function extractBrandColours(source: string): BrandColours {
     }
   }
 
-  const rgbPattern = /rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[\d.]+)?\s*\)/gi;
+  const rgbPattern =
+    /rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[\d.]+)?\s*\)/gi;
   let rgbMatch;
 
   while ((rgbMatch = rgbPattern.exec(source)) !== null) {
@@ -330,7 +345,8 @@ function extractBrandColours(source: string): BrandColours {
     }
   }
 
-  const hslPattern = /hsla?\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%(?:\s*,\s*[\d.]+)?\s*\)/gi;
+  const hslPattern =
+    /hsla?\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%(?:\s*,\s*[\d.]+)?\s*\)/gi;
   let hslMatch;
 
   while ((hslMatch = hslPattern.exec(source)) !== null) {
@@ -348,7 +364,6 @@ function extractBrandColours(source: string): BrandColours {
 
   while ((variableMatch = brandVariablePattern.exec(source)) !== null) {
     const value = variableMatch[1];
-
     const variableHexMatches = value.match(/#[0-9a-fA-F]{3,6}\b/g) || [];
 
     for (const match of variableHexMatches) {
@@ -427,19 +442,23 @@ function fallbackBusinessProfile({
   website,
   logoUrl,
   colours,
+  marketReach,
 }: {
   clientName: string;
   industry: string;
   website: string;
   logoUrl: string | null;
   colours: BrandColours;
+  marketReach: string;
 }): BusinessProfileResult {
+  const reach = marketReach.toLowerCase();
+
   return {
     business_name: clientName || 'Website Scan Business',
     industry: industry || 'General business',
-    location: 'Online',
+    location: reach.includes('nationwide') ? 'UK' : reach.includes('online') ? 'Online' : 'Local',
     services: [],
-    target_audience: [],
+    target_audience: [marketReach],
     tone_of_voice: 'Professional',
     content_pillars: ['Helpful advice', 'Trust building', 'Services', 'Customer action'],
     main_offer: 'Contact us today to find out more.',
@@ -451,13 +470,14 @@ function fallbackBusinessProfile({
     brand_summary: website
       ? 'Brand style detected from website HTML and stylesheet scan where possible.'
       : 'Brand style based on the saved business profile.',
-    campaign_idea: 'Seven-day mixed-platform content campaign',
+    campaign_idea: `Seven-day content campaign for ${marketReach.toLowerCase()}`,
   };
 }
 
 function buildFallbackPosts(
   profile: BusinessProfileResult,
-  selectedPlatforms = defaultPlatformPlan
+  selectedPlatforms = defaultPlatformPlan,
+  marketReach = 'Local customers'
 ): GeneratedPost[] {
   return Array.from({ length: 7 }).map((_, index) => {
     const platform = getPlatformForDay(selectedPlatforms, index);
@@ -466,9 +486,9 @@ function buildFallbackPosts(
       day: `Day ${index + 1}`,
       platform,
       title: weeklyAngles[index] || `${platform} Post`,
-      caption: `A useful ${platform} post for ${profile.business_name}, focused on ${profile.industry} and designed to build trust with local customers.`,
+      caption: `A useful ${platform} post for ${profile.business_name}, focused on ${profile.industry} and designed to build trust with ${marketReach.toLowerCase()}.`,
       cta: profile.main_offer || 'Contact us today to find out more.',
-      hashtags: ['#LocalBusiness', '#SmallBusiness', '#SupportLocal', '#Marketing'],
+      hashtags: getFallbackHashtags(marketReach),
       image_prompt: `Create a professional image for ${profile.business_name} showing ${profile.industry} in a realistic, trustworthy way. Match the brand style.`,
     };
   });
@@ -478,7 +498,8 @@ function normalisePost(
   value: any,
   index: number,
   fallbackProfile: BusinessProfileResult,
-  selectedPlatforms = defaultPlatformPlan
+  selectedPlatforms = defaultPlatformPlan,
+  marketReach = 'Local customers'
 ): GeneratedPost {
   const fallbackPlatform = getPlatformForDay(selectedPlatforms, index);
 
@@ -489,7 +510,7 @@ function normalisePost(
       title: weeklyAngles[index] || `${fallbackPlatform} Post`,
       caption: value,
       cta: fallbackProfile.main_offer || 'Contact us today to find out more.',
-      hashtags: ['#LocalBusiness', '#SmallBusiness', '#SupportLocal', '#Marketing'],
+      hashtags: getFallbackHashtags(marketReach),
       image_prompt: 'Use a clean, professional image that matches the business and post message.',
     };
   }
@@ -508,9 +529,7 @@ function normalisePost(
     title: cleanText(value?.title, weeklyAngles[index] || `${safePlatform} Post`),
     caption: cleanText(value?.caption),
     cta: cleanText(value?.cta, fallbackProfile.main_offer || 'Contact us today to find out more.'),
-    hashtags: rawHashtags.length
-      ? rawHashtags
-      : ['#LocalBusiness', '#SmallBusiness', '#SupportLocal', '#Marketing'],
+    hashtags: rawHashtags.length ? rawHashtags : getFallbackHashtags(marketReach),
     image_prompt:
       cleanText(value?.image_prompt || value?.imagePrompt) ||
       'Use a clean, professional image that matches the business and post message.',
@@ -520,7 +539,8 @@ function normalisePost(
 function normaliseResult(
   raw: any,
   fallback: BusinessProfileResult,
-  selectedPlatforms = defaultPlatformPlan
+  selectedPlatforms = defaultPlatformPlan,
+  marketReach = 'Local customers'
 ): GenerateResult {
   const rawProfile = raw.businessProfile || raw.business_profile || raw.profile || raw.brief || raw;
 
@@ -551,11 +571,7 @@ function normaliseResult(
     brand_accent_color:
       normaliseHex(rawProfile.brand_accent_color || rawProfile.accent_brand_color || '') ||
       fallback.brand_accent_color,
-    brand_logo_url:
-      rawProfile.brand_logo_url ||
-      rawProfile.logo_url ||
-      fallback.brand_logo_url ||
-      null,
+    brand_logo_url: rawProfile.brand_logo_url || rawProfile.logo_url || fallback.brand_logo_url || null,
     brand_summary: cleanText(rawProfile.brand_summary, fallback.brand_summary),
     campaign_idea: cleanText(rawProfile.campaign_idea, fallback.campaign_idea),
   };
@@ -565,14 +581,14 @@ function normaliseResult(
   const posts = rawPosts
     .slice(0, 7)
     .map((post: any, index: number) =>
-      normalisePost(post, index, businessProfile, selectedPlatforms)
+      normalisePost(post, index, businessProfile, selectedPlatforms, marketReach)
     )
     .filter((post: GeneratedPost) => post.caption.trim());
 
   const completePosts = [...posts];
 
   while (completePosts.length < 7) {
-    const fallbackPosts = buildFallbackPosts(businessProfile, selectedPlatforms);
+    const fallbackPosts = buildFallbackPosts(businessProfile, selectedPlatforms, marketReach);
     completePosts.push(fallbackPosts[completePosts.length]);
   }
 
@@ -607,6 +623,7 @@ function buildPrompt({
   logoUrl,
   colours,
   selectedPlatforms,
+  marketReach,
 }: {
   clientName: string;
   industry: string;
@@ -616,6 +633,7 @@ function buildPrompt({
   logoUrl: string | null;
   colours: BrandColours;
   selectedPlatforms: string[];
+  marketReach: string;
 }) {
   const selectedPlatformPlan = buildSelectedPlatformPlan(selectedPlatforms)
     .map((item) => `- ${item.day}: ${item.platform} — ${item.angle}`)
@@ -665,6 +683,14 @@ Required JSON shape:
 
 Selected social media platforms:
 ${selectedPlatforms.join(', ')}
+
+Market reach:
+${marketReach}
+
+Market reach rules:
+- If market reach is local, make the posts feel relevant to that area and nearby customers.
+- If market reach is nationwide, avoid overly local wording and write for a wider UK audience.
+- If market reach is online, focus on online enquiries, digital buying intent, ecommerce, remote services, delivery, or online conversion where relevant.
 
 Seven-day platform and content strategy:
 ${selectedPlatformPlan}
@@ -941,6 +967,7 @@ export async function POST(req: NextRequest) {
     const industry = String(body.industry || 'general business').trim();
     const description = String(body.description || '').trim();
     const selectedPlatforms = normaliseSelectedPlatforms(body.platforms || body.selectedPlatforms);
+    const marketReach = String(body.marketReach || 'Local customers').trim();
 
     const provider: Provider = body.provider === 'openai' ? 'openai' : 'gemini';
 
@@ -967,6 +994,7 @@ export async function POST(req: NextRequest) {
       website,
       logoUrl,
       colours,
+      marketReach,
     });
 
     const prompt = buildPrompt({
@@ -978,6 +1006,7 @@ export async function POST(req: NextRequest) {
       logoUrl,
       colours,
       selectedPlatforms,
+      marketReach,
     });
 
     const rawResult =
@@ -985,7 +1014,7 @@ export async function POST(req: NextRequest) {
         ? await generateWithOpenAI(prompt)
         : await generateWithGemini(prompt);
 
-    const result = normaliseResult(rawResult, fallback, selectedPlatforms);
+    const result = normaliseResult(rawResult, fallback, selectedPlatforms, marketReach);
 
     if (!result.posts.length) {
       return NextResponse.json(
@@ -993,6 +1022,7 @@ export async function POST(req: NextRequest) {
           posts: [],
           businessProfile: result.businessProfile,
           selectedPlatforms,
+          marketReach,
           error: 'No posts were generated.',
         },
         { status: 500 }
@@ -1004,6 +1034,7 @@ export async function POST(req: NextRequest) {
       businessProfile: result.businessProfile,
       provider,
       selectedPlatforms,
+      marketReach,
       usedWebsiteScan: Boolean(website && websiteContent),
       detectedBrandColours: colours,
     });
