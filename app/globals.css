@@ -10966,3 +10966,97 @@ select.input {
     line-height: 0.95 !important;
   }
 }
+/* Single page scroll fix */
+
+html,
+body {
+  min-height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-y: auto;
+}
+
+main {
+  max-width: 100%;
+}
+
+/* Prevent the app content from creating a second scrollbar */
+
+.app-shell,
+.app-layout,
+.dashboard-layout,
+.main-content,
+.content-area,
+.page-content,
+.app-main,
+.dashboard-main {
+  min-height: 100vh;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+/* Keep fixed sidebars from forcing page overflow */
+
+.sidebar {
+  max-height: 100vh;
+}
+
+/* Mobile menu can still scroll internally if needed */
+
+.sidebar.sidebar-open {
+  overflow-y: auto;
+}
+/* Market reach card text spacing */
+
+.dashboard-market-reach-card small,
+.dashboard-platform-carousel-card small.is-visible {
+  display: block;
+  max-width: 100%;
+  margin-top: 10px;
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.dashboard-market-reach-card {
+  align-items: flex-start;
+  text-align: left;
+  padding: 20px 20px 18px;
+  min-height: 150px;
+}
+
+.dashboard-market-reach-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.dashboard-market-reach-card .dashboard-platform-check {
+  margin-bottom: 6px;
+}
+
+.dashboard-market-reach-grid {
+  align-items: stretch;
+}
+
+@media (max-width: 760px) {
+  .dashboard-market-reach-card {
+    min-height: auto;
+    padding: 18px;
+  }
+
+  .dashboard-market-reach-card small,
+  .dashboard-platform-carousel-card small.is-visible {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
