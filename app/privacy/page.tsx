@@ -35,7 +35,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           For privacy questions, contact us at{' '}
-          <a href="mailto:mikeb33@hotmail.co.uk">mikeb33@hotmail.co.uk</a>.
+          <a href="mailto:info@fromone.co.uk">info@fromone.co.uk</a>.
         </p>
 
         <h2>2. What information we collect</h2>

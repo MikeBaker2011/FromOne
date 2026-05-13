@@ -114,7 +114,7 @@ export default function TermsPage() {
         <h2>14. Contact</h2>
         <p>
           For questions about these terms, contact{' '}
-          <a href="mailto:mikeb33@hotmail.co.uk">mikeb33@hotmail.co.uk</a>.
+          <a href="mailto:info@fromone.co.uk">info@fromone.co.uk</a>.
         </p>
 
         <div className="legal-link-row">
