@@ -11826,3 +11826,24 @@ main {
 .fromone-flow-page .fromone-improvement-note p {
   color: #d7deec !important;
 }
+/* Cleaner collapsible post improvement tools */
+
+.fromone-flow-tools-list > .fromone-flow-tool-row {
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.fromone-improve-options-row {
+  animation: fromoneImproveReveal 180ms ease-out;
+}
+
+@keyframes fromoneImproveReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

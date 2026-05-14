@@ -47,7 +47,8 @@ const postsTourSteps = [
   },
   {
     title: 'Choose this week’s plan',
-    text: 'Choose a saved plan slot, then click Load plan. Delete old plans when you need to free up space.',
+    text:
+      'Choose a saved plan slot, then click Load plan. Delete old plans when you need to free up space.',
     target: 'campaigns',
   },
   {
@@ -294,6 +295,7 @@ export default function PostsPage() {
   const [rewritingPost, setRewritingPost] = useState(false);
   const [rewritingAction, setRewritingAction] = useState('');
   const [improvementNote, setImprovementNote] = useState<ImprovementNote | null>(null);
+  const [showImproveTools, setShowImproveTools] = useState(false);
 
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editCaption, setEditCaption] = useState('');
@@ -674,6 +676,7 @@ export default function PostsPage() {
     setCalendarStartIndex(0);
     cancelEditingPost();
     setImprovementNote(null);
+    setShowImproveTools(false);
 
     await loadPosts(campaignId);
   };
@@ -800,6 +803,7 @@ export default function PostsPage() {
       setSelectedPostId(null);
       setCalendarStartIndex(0);
       setImprovementNote(null);
+      setShowImproveTools(false);
       cancelEditingPost();
 
       alert('Weekly plan deleted.');
@@ -943,8 +947,7 @@ export default function PostsPage() {
     localStorage.setItem(REVIEW_PROMPT_DISMISSED_KEY, 'true');
     setShowReviewPrompt(false);
   };
-
-  const markAsPosted = async (postId: string) => {
+    const markAsPosted = async (postId: string) => {
     const postIndex = posts.findIndex((post) => post.id === postId);
 
     const updatedPosts = posts.map((post) =>
@@ -1063,11 +1066,13 @@ export default function PostsPage() {
 
       updatePostLocally(post.id, updates);
       cancelEditingPost();
+
       setImprovementNote({
         postId: post.id,
         label: 'Manual edit saved',
         detail: 'Review the updated post above, then copy and publish when ready.',
       });
+
       alert('Post updated.');
     } catch (error: any) {
       const message = getReadableError(error, 'Error saving post changes.');
@@ -1235,7 +1240,8 @@ export default function PostsPage() {
       setRewritingPost(false);
     }
   };
-    const openPlatform = (platform: string) => {
+
+  const openPlatform = (platform: string) => {
     const urls: Record<string, string> = {
       Facebook: 'https://www.facebook.com',
       Instagram: 'https://www.instagram.com',
@@ -1287,6 +1293,7 @@ export default function PostsPage() {
 
     setSelectedPostId(postId);
     setImprovementNote(null);
+    setShowImproveTools(false);
     cancelEditingPost();
 
     if (nextIndex >= 0) {
@@ -1310,6 +1317,7 @@ export default function PostsPage() {
     setCalendarStartIndex(nextIndex);
     setSelectedPostId(nextPost.id);
     setImprovementNote(null);
+    setShowImproveTools(false);
     cancelEditingPost();
   };
 
@@ -1608,10 +1616,13 @@ export default function PostsPage() {
                   </select>
                 </label>
 
-<div className="posts-plan-usage">
-  <strong>{campaigns.length}/{MAX_SAVED_CAMPAIGNS}</strong>
-  <span>saved plans</span>
-</div>
+                <div className="posts-plan-usage">
+                  <strong>
+                    {campaigns.length}/{MAX_SAVED_CAMPAIGNS}
+                  </strong>
+                  <span>saved plans</span>
+                </div>
+
                 <div className="posts-plan-actions">
                   <button
                     type="button"
@@ -1781,9 +1792,9 @@ export default function PostsPage() {
                     <section ref={publishingPanelRef} className="fromone-flow-tools-card">
                       <div className="fromone-flow-tools-header">
                         <div>
-                          <div className="page-eyebrow">Step 2 · Improve and publish</div>
-                          <h3>Use these tools in order.</h3>
-                          <p>Improve the post if needed, use the image idea, then publish.</p>
+                          <div className="page-eyebrow">Step 2 · Prepare and publish</div>
+                          <h3>Only use the tools you need.</h3>
+                          <p>Most users can simply copy the post and publish it.</p>
                         </div>
                       </div>
 
@@ -1792,89 +1803,119 @@ export default function PostsPage() {
                           <div className="fromone-flow-step-marker">2A</div>
 
                           <div className="fromone-flow-tool-copy">
-                            <strong>Quick improve</strong>
-                            <p>Use one click to make the post sharper before publishing.</p>
+                            <strong>Improve post</strong>
+                            <p>Optional. Use this only if the post needs changing.</p>
                           </div>
 
                           <div className="fromone-flow-tool-action">
-                            <div className="fromone-quick-improve-grid">
-                              {quickImproveActions.map((action) => (
-                                <button
-                                  key={action.value}
-                                  type="button"
-                                  className="secondary-button fromone-quick-improve-button"
-                                  onClick={() => handleQuickImprovePost(selectedPost, action.value)}
-                                  disabled={accessLocked || rewritingPost}
-                                >
-                                  {rewritingPost && rewritingAction === action.value
-                                    ? 'Improving...'
-                                    : action.label}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </section>
-
-                        <section className="fromone-flow-tool-row">
-                          <div className="fromone-flow-step-marker">2B</div>
-
-                          <div className="fromone-flow-tool-copy">
-                            <strong>Make it more specific</strong>
-                            <p>Optional: choose who it is for and adjust the tone.</p>
-                          </div>
-
-                          <div className="fromone-flow-tool-action">
-                            <select
-                              className="input"
-                              value={audienceTarget}
-                              onChange={(event) => setAudienceTarget(event.target.value)}
-                            >
-                              {dynamicAudienceTargets.map((item) => (
-                                <option key={item} value={item}>
-                                  {item}
-                                </option>
-                              ))}
-                            </select>
-
-                            {audienceTarget === 'Custom audience' && (
-                              <input
-                                className="input"
-                                value={customAudienceTarget}
-                                onChange={(event) => setCustomAudienceTarget(event.target.value)}
-                                placeholder="Example: first-time homeowners"
-                              />
-                            )}
-
-                            <select
-                              className="input"
-                              value={toneTarget}
-                              onChange={(event) => setToneTarget(event.target.value)}
-                            >
-                              {toneOptions.map((item) => (
-                                <option key={item} value={item}>
-                                  {item}
-                                </option>
-                              ))}
-                            </select>
-
                             <button
                               type="button"
-                              onClick={() => handleRewriteForAudience(selectedPost)}
+                              className="secondary-button"
+                              onClick={() => setShowImproveTools(!showImproveTools)}
                               disabled={accessLocked || rewritingPost}
                             >
-                              {rewritingPost && rewritingAction === 'audience'
-                                ? 'Making specific...'
-                                : 'Make it more specific'}
+                              {showImproveTools ? 'Hide improve tools' : 'Improve post'}
                             </button>
                           </div>
                         </section>
 
+                        {showImproveTools && (
+                          <>
+                            <section className="fromone-flow-tool-row fromone-improve-options-row">
+                              <div className="fromone-flow-step-marker">2B</div>
+
+                              <div className="fromone-flow-tool-copy">
+                                <strong>Quick improve</strong>
+                                <p>Choose a simple improvement.</p>
+                              </div>
+
+                              <div className="fromone-flow-tool-action">
+                                <div className="fromone-quick-improve-grid">
+                                  {quickImproveActions.map((action) => (
+                                    <button
+                                      key={action.value}
+                                      type="button"
+                                      className="secondary-button fromone-quick-improve-button"
+                                      onClick={() =>
+                                        handleQuickImprovePost(selectedPost, action.value)
+                                      }
+                                      disabled={accessLocked || rewritingPost}
+                                    >
+                                      {rewritingPost && rewritingAction === action.value
+                                        ? 'Improving...'
+                                        : action.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </section>
+
+                            <section className="fromone-flow-tool-row fromone-improve-options-row">
+                              <div className="fromone-flow-step-marker">2C</div>
+
+                              <div className="fromone-flow-tool-copy">
+                                <strong>Make it specific</strong>
+                                <p>Choose who the post should speak to.</p>
+                              </div>
+
+                              <div className="fromone-flow-tool-action">
+                                <select
+                                  className="input"
+                                  value={audienceTarget}
+                                  onChange={(event) => setAudienceTarget(event.target.value)}
+                                >
+                                  {dynamicAudienceTargets.map((item) => (
+                                    <option key={item} value={item}>
+                                      {item}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                {audienceTarget === 'Custom audience' && (
+                                  <input
+                                    className="input"
+                                    value={customAudienceTarget}
+                                    onChange={(event) =>
+                                      setCustomAudienceTarget(event.target.value)
+                                    }
+                                    placeholder="Example: first-time homeowners"
+                                  />
+                                )}
+
+                                <select
+                                  className="input"
+                                  value={toneTarget}
+                                  onChange={(event) => setToneTarget(event.target.value)}
+                                >
+                                  {toneOptions.map((item) => (
+                                    <option key={item} value={item}>
+                                      {item}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleRewriteForAudience(selectedPost)}
+                                  disabled={accessLocked || rewritingPost}
+                                >
+                                  {rewritingPost && rewritingAction === 'audience'
+                                    ? 'Making specific...'
+                                    : 'Make it specific'}
+                                </button>
+                              </div>
+                            </section>
+                          </>
+                        )}
+
                         <section className="fromone-flow-tool-row">
-                          <div className="fromone-flow-step-marker">2C</div>
+                          <div className="fromone-flow-step-marker">
+                            {showImproveTools ? '2D' : '2B'}
+                          </div>
 
                           <div className="fromone-flow-tool-copy">
                             <strong>Edit wording</strong>
-                            <p>Change the caption, CTA, or hashtags.</p>
+                            <p>Optional. Change the caption, CTA, or hashtags.</p>
                           </div>
 
                           <div className="fromone-flow-tool-action">
@@ -1934,21 +1975,20 @@ export default function PostsPage() {
                                 onClick={() => startEditingPost(selectedPost)}
                                 disabled={accessLocked}
                               >
-                                Edit post
+                                Edit wording
                               </button>
                             )}
                           </div>
                         </section>
 
                         <section className="fromone-flow-tool-row fromone-flow-final-row">
-                          <div className="fromone-flow-step-marker">2D</div>
+                          <div className="fromone-flow-step-marker">
+                            {showImproveTools ? '2E' : '2C'}
+                          </div>
 
                           <div className="fromone-flow-tool-copy">
                             <strong>Copy and publish</strong>
-                            <p>
-                              Use the image idea if helpful, copy the post, publish it, then mark it
-                              done.
-                            </p>
+                            <p>Copy the post, open the platform, then mark it as posted.</p>
                           </div>
 
                           <div className="fromone-flow-tool-action">
