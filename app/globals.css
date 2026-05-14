@@ -11720,3 +11720,28 @@ main {
 .fromone-image-guidance-note p {
   color: #d7deec !important;
 }
+/* Force dark style for Posts image idea card */
+
+.campaign-brand-shell .fromone-flow-final-row .fromone-image-guidance-note,
+.simplified-posts-page .fromone-flow-final-row .fromone-image-guidance-note,
+.fromone-flow-page .fromone-flow-final-row .fromone-image-guidance-note {
+  background: linear-gradient(145deg, #111827, #070b16) !important;
+  border: 1px solid rgba(255, 212, 59, 0.42) !important;
+  border-radius: 24px !important;
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+}
+
+.campaign-brand-shell .fromone-flow-final-row .fromone-image-guidance-note strong,
+.simplified-posts-page .fromone-flow-final-row .fromone-image-guidance-note strong,
+.fromone-flow-page .fromone-flow-final-row .fromone-image-guidance-note strong {
+  color: #ffd43b !important;
+}
+
+.campaign-brand-shell .fromone-flow-final-row .fromone-image-guidance-note p,
+.simplified-posts-page .fromone-flow-final-row .fromone-image-guidance-note p,
+.fromone-flow-page .fromone-flow-final-row .fromone-image-guidance-note p {
+  color: #d7deec !important;
+}
