@@ -53,7 +53,7 @@ const postsTourSteps = [
   {
     title: 'Prepare and publish',
     text:
-      'Read the post first, make it more specific if needed, edit the wording, then copy, publish, and mark it as done.',
+      'Read the post first, make it more specific if needed, edit the wording, use the image idea if helpful, then copy, publish, and mark it as done.',
     target: 'publish',
   },
 ];
@@ -808,6 +808,39 @@ export default function PostsPage() {
 
     await navigator.clipboard.writeText(textToCopy);
     alert('Post copied.');
+  };
+
+  const getImageGuidance = (post: any) => {
+    if (post?.image_prompt?.trim()) {
+      return post.image_prompt.trim();
+    }
+
+    const platform = String(post?.platform || '').toLowerCase();
+
+    if (
+      platform.includes('instagram') ||
+      platform.includes('tiktok') ||
+      platform.includes('pinterest') ||
+      platform.includes('shorts')
+    ) {
+      return 'Use a clear visual that matches the post: finished work, product detail, team moment, venue, customer result, or a simple behind-the-scenes photo.';
+    }
+
+    return 'Choose a clear photo that supports the post, such as your work, product, team, premises, or a customer result.';
+  };
+
+  const shouldShowImageGuidance = (post: any) => {
+    if (!post) return false;
+
+    const platform = String(post.platform || '').toLowerCase();
+
+    return Boolean(
+      post.image_prompt ||
+        platform.includes('instagram') ||
+        platform.includes('tiktok') ||
+        platform.includes('pinterest') ||
+        platform.includes('shorts')
+    );
   };
 
   const maybeShowReviewPrompt = () => {
@@ -1761,12 +1794,19 @@ export default function PostsPage() {
                           <div className="fromone-flow-tool-copy">
                             <strong>Copy and publish</strong>
                             <p>
-                              Choose your own photo on the platform if needed, copy the post,
-                              publish it, then mark it done.
+                              Use the image idea if helpful, copy the post, publish it, then mark it
+                              done.
                             </p>
                           </div>
 
                           <div className="fromone-flow-tool-action">
+                            {shouldShowImageGuidance(selectedPost) && (
+                              <div className="fromone-image-guidance-note">
+                                <strong>Image idea</strong>
+                                <p>{getImageGuidance(selectedPost)}</p>
+                              </div>
+                            )}
+
                             <div className="fromone-flow-publish-buttons">
                               <button onClick={() => copyPost(selectedPost)}>Copy post</button>
 
