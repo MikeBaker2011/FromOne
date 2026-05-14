@@ -11571,3 +11571,29 @@ main {
     border-radius: 14px;
   }
 }
+/* Clearer image idea card text */
+
+.fromone-image-guidance-note {
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 212, 59, 0.5);
+  background: linear-gradient(135deg, rgba(255, 212, 59, 0.14), rgba(255, 255, 255, 0.96));
+  box-shadow: 0 12px 28px rgba(16, 20, 32, 0.08);
+  color: #101420;
+}
+
+.fromone-image-guidance-note strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #101420;
+  font-size: 1rem;
+}
+
+.fromone-image-guidance-note p {
+  margin: 0;
+  color: #2f3747;
+  opacity: 1;
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
