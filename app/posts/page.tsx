@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  ChangeEvent,
-  CSSProperties,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 
@@ -43,7 +36,7 @@ const postsTourSteps = [
   {
     title: 'Welcome to your posts',
     text:
-      'This is where you review this week’s plan. Choose each post, check the wording, add an image, copy it, publish it, then mark it as done.',
+      'This is where you review this week’s plan. Choose each post, check the wording, copy it, publish it, then mark it as done.',
     target: 'header',
   },
   {
@@ -60,7 +53,7 @@ const postsTourSteps = [
   {
     title: 'Prepare and publish',
     text:
-      'Read the post first, then use the preparation steps to make it more specific, edit it, add an image, and publish.',
+      'Read the post first, make it more specific if needed, edit the wording, then copy, publish, and mark it as done.',
     target: 'publish',
   },
 ];
@@ -262,7 +255,6 @@ export default function PostsPage() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [calendarStartIndex, setCalendarStartIndex] = useState(0);
 
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [deletingCampaign, setDeletingCampaign] = useState(false);
   const [renamingCampaign, setRenamingCampaign] = useState(false);
   const [loadingSelectedPlan, setLoadingSelectedPlan] = useState(false);
@@ -276,7 +268,6 @@ export default function PostsPage() {
   const [editCaption, setEditCaption] = useState('');
   const [editCta, setEditCta] = useState('');
   const [editHashtags, setEditHashtags] = useState('');
-  const [editImagePrompt, setEditImagePrompt] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [showTodayReminder, setShowTodayReminder] = useState(false);
@@ -788,8 +779,7 @@ export default function PostsPage() {
       setDeletingCampaign(false);
     }
   };
-
-  const getCampaignOptionLabel = (item: any) => {
+    const getCampaignOptionLabel = (item: any) => {
     const business =
       item.business_name ||
       item.business_type ||
@@ -906,7 +896,6 @@ export default function PostsPage() {
       .update({
         is_posted: true,
         status: 'posted',
-        posted_at: new Date().toISOString(),
       })
       .eq('id', postId);
 
@@ -931,7 +920,6 @@ export default function PostsPage() {
       .update({
         is_posted: false,
         status: 'scheduled',
-        posted_at: null,
       })
       .eq('id', postId);
 
@@ -968,7 +956,6 @@ export default function PostsPage() {
     setEditCaption(post.caption || '');
     setEditCta(post.cta || '');
     setEditHashtags(hashtagsToString(post.hashtags));
-    setEditImagePrompt(post.image_prompt || '');
   };
 
   const cancelEditingPost = () => {
@@ -976,7 +963,6 @@ export default function PostsPage() {
     setEditCaption('');
     setEditCta('');
     setEditHashtags('');
-    setEditImagePrompt('');
   };
 
   const saveEditedPost = async (post: any) => {
@@ -996,7 +982,6 @@ export default function PostsPage() {
         caption: editCaption.trim(),
         cta: editCta.trim(),
         hashtags: stringToHashtags(editHashtags),
-        image_prompt: editImagePrompt.trim(),
       };
 
       const { error } = await supabase
@@ -1065,7 +1050,6 @@ export default function PostsPage() {
         caption: post.caption || '',
         cta: post.cta || '',
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
-        image_prompt: post.image_prompt || '',
       });
 
       const rewritten = response.data;
@@ -1074,7 +1058,6 @@ export default function PostsPage() {
         caption: rewritten.caption,
         cta: rewritten.cta,
         hashtags: Array.isArray(rewritten.hashtags) ? rewritten.hashtags : [],
-        image_prompt: rewritten.image_prompt,
         audience_target: finalAudience,
       };
 
@@ -1094,7 +1077,6 @@ export default function PostsPage() {
         setEditCaption(updates.caption || '');
         setEditCta(updates.cta || '');
         setEditHashtags(hashtagsToString(updates.hashtags));
-        setEditImagePrompt(updates.image_prompt || '');
       }
 
       const toneMessage =
@@ -1107,134 +1089,6 @@ export default function PostsPage() {
       alert(message);
     } finally {
       setRewritingPost(false);
-    }
-  };
-    const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>, post: any) => {
-    const file = event.target.files?.[0];
-
-    event.target.value = '';
-
-    if (!file || !post?.id) return;
-
-    if (!file.type.startsWith('image/')) {
-      alert('Please choose an image file.');
-      return;
-    }
-
-    setUploadingImage(true);
-
-    try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData.user?.id;
-
-      if (!userId) {
-        alert('You need to sign in before uploading images.');
-        return;
-      }
-
-      if (post.image_path) {
-        await supabase.storage.from(IMAGE_BUCKET).remove([post.image_path]);
-      }
-
-      const extension = file.name.split('.').pop() || 'jpg';
-      const safePlatform = String(post.platform || 'post')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-');
-
-      const imagePath = `${userId}/${post.id}/${safePlatform}-${Date.now()}.${extension}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(IMAGE_BUCKET)
-        .upload(imagePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
-
-      if (uploadError) {
-        alert(uploadError.message);
-        return;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from(IMAGE_BUCKET)
-        .getPublicUrl(imagePath);
-
-      const imageUrl = publicUrlData.publicUrl;
-
-      const updates = {
-        image_url: imageUrl,
-        image_path: imagePath,
-      };
-
-      const { error: updateError } = await supabase
-        .from('campaign_posts')
-        .update(updates)
-        .eq('id', post.id);
-
-      if (updateError) {
-        alert(updateError.message);
-        return;
-      }
-
-      updatePostLocally(post.id, updates);
-      alert('Image uploaded.');
-    } catch (error: any) {
-      const message = getReadableError(error, 'Error uploading image.');
-      console.error('Image upload error:', error);
-      alert(message);
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const deletePostImage = async (post: any) => {
-    if (!post?.id) return;
-
-    if (!post.image_path && !post.image_url) {
-      alert('No image saved for this post.');
-      return;
-    }
-
-    const confirmed = confirm('Delete the saved image for this post?');
-
-    if (!confirmed) return;
-
-    setUploadingImage(true);
-
-    try {
-      if (post.image_path) {
-        const { error: storageError } = await supabase.storage
-          .from(IMAGE_BUCKET)
-          .remove([post.image_path]);
-
-        if (storageError) {
-          console.error('Storage delete error:', storageError.message);
-        }
-      }
-
-      const updates = {
-        image_url: null,
-        image_path: null,
-      };
-
-      const { error: updateError } = await supabase
-        .from('campaign_posts')
-        .update(updates)
-        .eq('id', post.id);
-
-      if (updateError) {
-        alert(updateError.message);
-        return;
-      }
-
-      updatePostLocally(post.id, updates);
-      alert('Image deleted.');
-    } catch (error: any) {
-      const message = getReadableError(error, 'Error deleting image.');
-      console.error('Delete image error:', error);
-      alert(message);
-    } finally {
-      setUploadingImage(false);
     }
   };
 
@@ -1773,7 +1627,7 @@ export default function PostsPage() {
                         <div>
                           <div className="page-eyebrow">Step 2 · Prepare and publish</div>
                           <h3>Use these tools in order.</h3>
-                          <p>Follow the steps below to get this post ready to publish.</p>
+                          <p>Make it more specific if needed, edit the wording, then publish.</p>
                         </div>
                       </div>
 
@@ -1835,7 +1689,7 @@ export default function PostsPage() {
 
                           <div className="fromone-flow-tool-copy">
                             <strong>Edit wording</strong>
-                            <p>Change the caption, CTA, hashtags, or image idea.</p>
+                            <p>Change the caption, CTA, or hashtags.</p>
                           </div>
 
                           <div className="fromone-flow-tool-action">
@@ -1866,15 +1720,6 @@ export default function PostsPage() {
                                     value={editHashtags}
                                     onChange={(event) => setEditHashtags(event.target.value)}
                                     placeholder="#LocalBusiness #Marketing"
-                                  />
-                                </label>
-
-                                <label>
-                                  <strong>Image idea</strong>
-                                  <textarea
-                                    className="input"
-                                    value={editImagePrompt}
-                                    onChange={(event) => setEditImagePrompt(event.target.value)}
                                   />
                                 </label>
 
@@ -1910,70 +1755,15 @@ export default function PostsPage() {
                           </div>
                         </section>
 
-                        <section className="fromone-flow-tool-row fromone-flow-image-row">
+                        <section className="fromone-flow-tool-row fromone-flow-final-row">
                           <div className="fromone-flow-step-marker">2C</div>
 
                           <div className="fromone-flow-tool-copy">
-                            <strong>Add image</strong>
-                            <p>Upload the image and keep the suggested image idea beside it.</p>
-                          </div>
-
-                          <div className="fromone-flow-tool-action">
-                            <div className="fromone-flow-image-grid">
-                              <div className="manual-image-placeholder uploaded-image-box">
-                                {selectedPost.image_url ? (
-                                  <img src={selectedPost.image_url} alt="Uploaded post image" />
-                                ) : (
-                                  <>
-                                    <strong>No image uploaded</strong>
-                                    <p>Upload the image you want to use for this post.</p>
-                                  </>
-                                )}
-                              </div>
-
-                              <div className="fromone-flow-image-idea">
-                                <strong>Suggested image</strong>
-                                <p>
-                                  {editingPostId === selectedPost.id
-                                    ? editImagePrompt ||
-                                      'Use a clean, professional image that supports the message of this post.'
-                                    : selectedPost.image_prompt ||
-                                      'Use a clean, professional image that supports the message of this post.'}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="fromone-flow-inline-actions">
-                              <label className="upload-image-button">
-                                ⇪ Upload image
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(event) => handleImageUpload(event, selectedPost)}
-                                  disabled={uploadingImage}
-                                />
-                              </label>
-
-                              <button
-                                className="secondary-button danger-button"
-                                onClick={() => deletePostImage(selectedPost)}
-                                disabled={
-                                  uploadingImage ||
-                                  (!selectedPost.image_url && !selectedPost.image_path)
-                                }
-                              >
-                                Delete image
-                              </button>
-                            </div>
-                          </div>
-                        </section>
-
-                        <section className="fromone-flow-tool-row fromone-flow-final-row">
-                          <div className="fromone-flow-step-marker">2D</div>
-
-                          <div className="fromone-flow-tool-copy">
                             <strong>Copy and publish</strong>
-                            <p>Copy the post, open the platform, publish it, then mark it done.</p>
+                            <p>
+                              Choose your own photo on the platform if needed, copy the post,
+                              publish it, then mark it done.
+                            </p>
                           </div>
 
                           <div className="fromone-flow-tool-action">
