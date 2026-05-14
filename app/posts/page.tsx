@@ -1609,8 +1609,8 @@ export default function PostsPage() {
                 </label>
 
 <div className="posts-plan-usage">
-  {campaigns.length} of {MAX_SAVED_CAMPAIGNS} plan slots used
-  <small>Delete an old plan to free up a slot.</small>
+  <strong>{campaigns.length}/{MAX_SAVED_CAMPAIGNS}</strong>
+  <span>saved plans</span>
 </div>
                 <div className="posts-plan-actions">
                   <button

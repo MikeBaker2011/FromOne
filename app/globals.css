@@ -11774,3 +11774,30 @@ main {
     width: 100%;
   }
 }
+/* Saved plans compact pill */
+
+.posts-plan-usage {
+  width: fit-content !important;
+  max-width: none !important;
+  min-width: 170px;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap !important;
+  text-align: center;
+  line-height: 1;
+  padding: 12px 18px !important;
+  border-radius: 999px;
+}
+
+.posts-plan-usage strong {
+  color: #0099ff;
+  font-weight: 950;
+}
+
+.posts-plan-usage span {
+  color: #c8d2e4;
+  font-weight: 850;
+}
