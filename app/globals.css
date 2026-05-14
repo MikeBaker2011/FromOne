@@ -11745,3 +11745,32 @@ main {
 .fromone-flow-page .fromone-flow-final-row .fromone-image-guidance-note p {
   color: #d7deec !important;
 }
+/* Fix saved plan usage pill overlap */
+
+.simplified-campaign-controls {
+  align-items: start;
+}
+
+.posts-plan-usage {
+  width: 100%;
+  max-width: 340px;
+  justify-self: stretch;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.35;
+  padding: 12px 18px;
+}
+
+@media (max-width: 900px) {
+  .simplified-campaign-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .posts-plan-usage {
+    max-width: none;
+  }
+
+  .posts-plan-actions {
+    width: 100%;
+  }
+}
