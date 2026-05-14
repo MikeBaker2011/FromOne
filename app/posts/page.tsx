@@ -23,6 +23,12 @@ type SuccessMoment = {
   nextPostId: string | null;
 };
 
+type ImprovementNote = {
+  postId: string;
+  label: string;
+  detail: string;
+};
+
 const IMAGE_BUCKET = 'campaign-assets';
 const POSTS_TOUR_SEEN_KEY = 'fromone_posts_tour_seen';
 const MAX_SAVED_CAMPAIGNS = 4;
@@ -53,8 +59,31 @@ const postsTourSteps = [
   {
     title: 'Prepare and publish',
     text:
-      'Read the post first, make it more specific if needed, edit the wording, use the image idea if helpful, then copy, publish, and mark it as done.',
+      'Read the post first, improve it if needed, use the image idea if helpful, then copy, publish, and mark it as done.',
     target: 'publish',
+  },
+];
+
+const quickImproveActions = [
+  {
+    value: 'make_shorter',
+    label: 'Make shorter',
+  },
+  {
+    value: 'make_more_local',
+    label: 'More local',
+  },
+  {
+    value: 'make_sales_focused',
+    label: 'More sales-focused',
+  },
+  {
+    value: 'make_less_generic',
+    label: 'Less generic',
+  },
+  {
+    value: 'different_version',
+    label: 'Different version',
   },
 ];
 
@@ -263,6 +292,8 @@ export default function PostsPage() {
   const [customAudienceTarget, setCustomAudienceTarget] = useState('');
   const [toneTarget, setToneTarget] = useState('Use current tone');
   const [rewritingPost, setRewritingPost] = useState(false);
+  const [rewritingAction, setRewritingAction] = useState('');
+  const [improvementNote, setImprovementNote] = useState<ImprovementNote | null>(null);
 
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editCaption, setEditCaption] = useState('');
@@ -642,6 +673,7 @@ export default function PostsPage() {
     setSelectedPostId(null);
     setCalendarStartIndex(0);
     cancelEditingPost();
+    setImprovementNote(null);
 
     await loadPosts(campaignId);
   };
@@ -767,6 +799,7 @@ export default function PostsPage() {
       setPosts([]);
       setSelectedPostId(null);
       setCalendarStartIndex(0);
+      setImprovementNote(null);
       cancelEditingPost();
 
       alert('Weekly plan deleted.');
@@ -779,7 +812,8 @@ export default function PostsPage() {
       setDeletingCampaign(false);
     }
   };
-    const getCampaignOptionLabel = (item: any) => {
+
+  const getCampaignOptionLabel = (item: any) => {
     const business =
       item.business_name ||
       item.business_type ||
@@ -1029,6 +1063,11 @@ export default function PostsPage() {
 
       updatePostLocally(post.id, updates);
       cancelEditingPost();
+      setImprovementNote({
+        postId: post.id,
+        label: 'Manual edit saved',
+        detail: 'Review the updated post above, then copy and publish when ready.',
+      });
       alert('Post updated.');
     } catch (error: any) {
       const message = getReadableError(error, 'Error saving post changes.');
@@ -1047,6 +1086,40 @@ export default function PostsPage() {
     }
 
     return `${currentTone}. Adjust this rewrite to be ${toneTarget.toLowerCase()}.`;
+  };
+
+  const applyRewrittenPost = async (
+    post: any,
+    rewritten: any,
+    extraUpdates: Record<string, any> = {}
+  ) => {
+    const updates = {
+      caption: rewritten.caption,
+      cta: rewritten.cta,
+      hashtags: Array.isArray(rewritten.hashtags) ? rewritten.hashtags : [],
+      image_prompt: rewritten.image_prompt || post.image_prompt || '',
+      ...extraUpdates,
+    };
+
+    const { error } = await supabase
+      .from('campaign_posts')
+      .update(updates)
+      .eq('id', post.id);
+
+    if (error) {
+      alert(error.message);
+      return false;
+    }
+
+    updatePostLocally(post.id, updates);
+
+    if (editingPostId === post.id) {
+      setEditCaption(updates.caption || '');
+      setEditCta(updates.cta || '');
+      setEditHashtags(hashtagsToString(updates.hashtags));
+    }
+
+    return true;
   };
 
   const handleRewriteForAudience = async (post: any) => {
@@ -1069,6 +1142,7 @@ export default function PostsPage() {
       return;
     }
 
+    setRewritingAction('audience');
     setRewritingPost(true);
 
     try {
@@ -1083,49 +1157,85 @@ export default function PostsPage() {
         caption: post.caption || '',
         cta: post.cta || '',
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
+        image_prompt: post.image_prompt || '',
       });
 
-      const rewritten = response.data;
-
-      const updates = {
-        caption: rewritten.caption,
-        cta: rewritten.cta,
-        hashtags: Array.isArray(rewritten.hashtags) ? rewritten.hashtags : [],
+      const saved = await applyRewrittenPost(post, response.data, {
         audience_target: finalAudience,
-      };
+      });
 
-      const { error } = await supabase
-        .from('campaign_posts')
-        .update(updates)
-        .eq('id', post.id);
+      if (!saved) return;
 
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      updatePostLocally(post.id, updates);
-
-      if (editingPostId === post.id) {
-        setEditCaption(updates.caption || '');
-        setEditCta(updates.cta || '');
-        setEditHashtags(hashtagsToString(updates.hashtags));
-      }
-
-      const toneMessage =
-        toneTarget === 'Use current tone' ? '' : ` with a ${toneTarget.toLowerCase()} tone`;
-
-      alert(`Post made more specific for ${finalAudience}${toneMessage}.`);
+      setImprovementNote({
+        postId: post.id,
+        label: `Improved for ${finalAudience}`,
+        detail:
+          response.data.improvement_summary ||
+          'Made the post more specific for the selected audience.',
+      });
     } catch (error: any) {
       const message = getReadableError(error, 'Error making post more specific.');
       console.error('Make more specific error:', error);
       alert(message);
     } finally {
+      setRewritingAction('');
       setRewritingPost(false);
     }
   };
 
-  const openPlatform = (platform: string) => {
+  const handleQuickImprovePost = async (post: any, improvementAction: string) => {
+    if (!post?.id) return;
+
+    if (!ensureAccessAllowed()) return;
+
+    if (!post.caption?.trim()) {
+      alert('This post needs a caption before it can be improved.');
+      return;
+    }
+
+    const selectedAction = quickImproveActions.find((item) => item.value === improvementAction);
+    const actionLabel = selectedAction?.label || 'Improve post';
+
+    setRewritingAction(improvementAction);
+    setRewritingPost(true);
+
+    try {
+      const response = await axios.post('/api/rewritePost', {
+        provider: 'gemini',
+        improvementAction,
+        tone: getToneForRewrite(),
+        businessName: profile?.business_name || campaign?.business_name || 'the business',
+        industry: profile?.industry || campaign?.business_type || 'general business',
+        platform: post.platform || 'Facebook',
+        caption: post.caption || '',
+        cta: post.cta || '',
+        hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
+        image_prompt: post.image_prompt || '',
+      });
+
+      const saved = await applyRewrittenPost(post, response.data, {
+        audience_target: post.audience_target || null,
+      });
+
+      if (!saved) return;
+
+      setImprovementNote({
+        postId: post.id,
+        label: `Improved: ${actionLabel}`,
+        detail:
+          response.data.improvement_summary ||
+          'Review the updated post above, then copy and publish when ready.',
+      });
+    } catch (error: any) {
+      const message = getReadableError(error, 'Error improving post.');
+      console.error('Improve post error:', error);
+      alert(message);
+    } finally {
+      setRewritingAction('');
+      setRewritingPost(false);
+    }
+  };
+    const openPlatform = (platform: string) => {
     const urls: Record<string, string> = {
       Facebook: 'https://www.facebook.com',
       Instagram: 'https://www.instagram.com',
@@ -1176,6 +1286,7 @@ export default function PostsPage() {
     const nextIndex = sortedPosts.findIndex((post) => post.id === postId);
 
     setSelectedPostId(postId);
+    setImprovementNote(null);
     cancelEditingPost();
 
     if (nextIndex >= 0) {
@@ -1198,6 +1309,7 @@ export default function PostsPage() {
 
     setCalendarStartIndex(nextIndex);
     setSelectedPostId(nextPost.id);
+    setImprovementNote(null);
     cancelEditingPost();
   };
 
@@ -1382,6 +1494,9 @@ export default function PostsPage() {
     selectedPost?.business_name ||
     'Your business';
 
+  const activeImprovementNote =
+    selectedPost && improvementNote?.postId === selectedPost.id ? improvementNote : null;
+
   const brandPrimary = profile?.brand_primary_color || '#ffd43b';
   const brandSecondary = profile?.brand_secondary_color || '#101420';
   const brandAccent = profile?.brand_accent_color || '#3ddc97';
@@ -1399,7 +1514,8 @@ export default function PostsPage() {
           <div className="page-eyebrow">Posts</div>
           <h1 className="page-title">Your posts are ready.</h1>
           <p className="page-description">
-            Choose a day, review the post, copy it, publish it, then mark it as done.
+            Choose a day, review the post, improve it if needed, copy it, publish it, then mark it
+            as done.
           </p>
 
           <div className="simplified-posts-meta">
@@ -1653,20 +1769,54 @@ export default function PostsPage() {
                             <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
                           )}
                       </div>
+
+                      {activeImprovementNote && (
+                        <div className="fromone-improvement-note">
+                          <strong>{activeImprovementNote.label}</strong>
+                          <p>{activeImprovementNote.detail}</p>
+                        </div>
+                      )}
                     </section>
 
                     <section ref={publishingPanelRef} className="fromone-flow-tools-card">
                       <div className="fromone-flow-tools-header">
                         <div>
-                          <div className="page-eyebrow">Step 2 · Prepare and publish</div>
+                          <div className="page-eyebrow">Step 2 · Improve and publish</div>
                           <h3>Use these tools in order.</h3>
-                          <p>Make it more specific if needed, edit the wording, then publish.</p>
+                          <p>Improve the post if needed, use the image idea, then publish.</p>
                         </div>
                       </div>
 
                       <div className="fromone-flow-tools-list">
                         <section className="fromone-flow-tool-row">
                           <div className="fromone-flow-step-marker">2A</div>
+
+                          <div className="fromone-flow-tool-copy">
+                            <strong>Quick improve</strong>
+                            <p>Use one click to make the post sharper before publishing.</p>
+                          </div>
+
+                          <div className="fromone-flow-tool-action">
+                            <div className="fromone-quick-improve-grid">
+                              {quickImproveActions.map((action) => (
+                                <button
+                                  key={action.value}
+                                  type="button"
+                                  className="secondary-button fromone-quick-improve-button"
+                                  onClick={() => handleQuickImprovePost(selectedPost, action.value)}
+                                  disabled={accessLocked || rewritingPost}
+                                >
+                                  {rewritingPost && rewritingAction === action.value
+                                    ? 'Improving...'
+                                    : action.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </section>
+
+                        <section className="fromone-flow-tool-row">
+                          <div className="fromone-flow-step-marker">2B</div>
 
                           <div className="fromone-flow-tool-copy">
                             <strong>Make it more specific</strong>
@@ -1712,13 +1862,15 @@ export default function PostsPage() {
                               onClick={() => handleRewriteForAudience(selectedPost)}
                               disabled={accessLocked || rewritingPost}
                             >
-                              {rewritingPost ? 'Making specific...' : 'Make it more specific'}
+                              {rewritingPost && rewritingAction === 'audience'
+                                ? 'Making specific...'
+                                : 'Make it more specific'}
                             </button>
                           </div>
                         </section>
 
                         <section className="fromone-flow-tool-row">
-                          <div className="fromone-flow-step-marker">2B</div>
+                          <div className="fromone-flow-step-marker">2C</div>
 
                           <div className="fromone-flow-tool-copy">
                             <strong>Edit wording</strong>
@@ -1789,7 +1941,7 @@ export default function PostsPage() {
                         </section>
 
                         <section className="fromone-flow-tool-row fromone-flow-final-row">
-                          <div className="fromone-flow-step-marker">2C</div>
+                          <div className="fromone-flow-step-marker">2D</div>
 
                           <div className="fromone-flow-tool-copy">
                             <strong>Copy and publish</strong>

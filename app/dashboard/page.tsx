@@ -207,6 +207,25 @@ const dashboardTourSteps = [
   },
 ];
 
+const firstRunChecklist = [
+  {
+    title: 'Add the business',
+    description: 'Use a website scan or enter the business details manually.',
+  },
+  {
+    title: 'Choose the reach',
+    description: 'Tell FromOne whether the posts are local, nationwide, or online.',
+  },
+  {
+    title: 'Pick platforms',
+    description: 'Choose where you want posts for this week.',
+  },
+  {
+    title: 'Create weekly posts',
+    description: 'Generate the seven-day plan and review it in Posts.',
+  },
+];
+
 export default function DashboardPage() {
   const router = useRouter();
 
@@ -748,7 +767,8 @@ export default function DashboardPage() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     return sevenDaysAgo.toISOString();
   };
-    const loadWeeklyScanUsage = async (userId: string) => {
+
+  const loadWeeklyScanUsage = async (userId: string) => {
     const { count, error } = await supabase
       .from('usage_events')
       .select('*', { count: 'exact', head: true })
@@ -1034,8 +1054,7 @@ export default function DashboardPage() {
 
     return selectedMarketReach;
   };
-
-  const getMarketReachDisplayLabel = (profile?: any) => {
+    const getMarketReachDisplayLabel = (profile?: any) => {
     const location = getBusinessLocation(profile);
 
     if (selectedMarketReach === 'Local customers' && location) {
@@ -1678,6 +1697,28 @@ Also detect or infer:
   const marketReachDisplayLabel = getMarketReachDisplayLabel(client);
   const marketReachContext = getMarketReachContext(client);
 
+  const hasBusinessSetup = Boolean(hasWebsite || hasManualProfile);
+  const hasChosenReach = Boolean(selectedMarketReach);
+  const hasChosenPlatforms = selectedPlatforms.length > 0;
+  const hasCreatedPosts = weeklyProgress.total > 0 || savedCampaignsCount > 0;
+  const showFirstRunChecklist = !hasCreatedPosts;
+
+  const firstRunChecklistState = firstRunChecklist.map((item, index) => {
+    const complete =
+      index === 0
+        ? hasBusinessSetup
+        : index === 1
+          ? hasChosenReach
+          : index === 2
+            ? hasChosenPlatforms
+            : hasCreatedPosts;
+
+    return {
+      ...item,
+      complete,
+    };
+  });
+
   return (
     <>
       <div ref={dashboardHeaderRef} className="page-header dashboard-simple-header">
@@ -1733,6 +1774,48 @@ Also detect or infer:
         </div>
       ) : (
         <>
+          {showFirstRunChecklist && (
+            <section className="dashboard-first-run-card">
+              <div className="dashboard-first-run-heading">
+                <div>
+                  <div className="page-eyebrow">Quick setup</div>
+                  <h2>Set up your first weekly plan.</h2>
+                  <p>
+                    Complete these steps once. After your first weekly plan is created, this
+                    checklist will disappear.
+                  </p>
+                </div>
+
+                <span>
+                  {firstRunChecklistState.filter((item) => item.complete).length}/
+                  {firstRunChecklistState.length} done
+                </span>
+              </div>
+
+              <div className="dashboard-first-run-grid">
+                {firstRunChecklistState.map((item, index) => (
+                  <article
+                    key={item.title}
+                    className={
+                      item.complete
+                        ? 'dashboard-first-run-step is-complete'
+                        : 'dashboard-first-run-step'
+                    }
+                  >
+                    <div className="dashboard-first-run-step-number">
+                      {item.complete ? '✓' : String(index + 1)}
+                    </div>
+
+                    <div>
+                      <strong>{item.title}</strong>
+                      <p>{item.description}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="dashboard-top-grid">
             <section className="today-task-card dashboard-personal-task-card">
               <div className="dashboard-personal-task-main">
@@ -1752,7 +1835,7 @@ Also detect or infer:
                       <h2>Review your {todayPost.platform || 'social'} post</h2>
                       <h3>{businessName} has one post ready to publish today.</h3>
                       <p>
-                        Review the post, add an image, copy it to{' '}
+                        Review the post, use the image idea if helpful, copy it to{' '}
                         {todayPost.platform || 'the selected platform'}, then mark it as posted.
                       </p>
 

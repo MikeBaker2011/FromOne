@@ -73,11 +73,63 @@ const weeklyAngles = [
   'Reminder, social proof, or local CTA',
 ];
 
+const platformCaptionLimits: Record<string, number> = {
+  Facebook: 700,
+  Instagram: 1200,
+  'Google Business': 600,
+  LinkedIn: 900,
+  TikTok: 300,
+  'YouTube Shorts': 350,
+  'X / Twitter': 260,
+  Pinterest: 500,
+};
+
 const fallbackColours: BrandColours = {
   primary: '#2f80ed',
   secondary: '#101420',
   accent: '#27ae60',
 };
+
+function getPlatformCaptionLimit(platform: string) {
+  return platformCaptionLimits[platform] || 700;
+}
+
+function truncateTextToLimit(value: string, limit: number) {
+  const clean = cleanText(value);
+
+  if (clean.length <= limit) return clean;
+
+  const trimmed = clean.slice(0, Math.max(limit - 1, 0)).trim();
+  const lastSentenceEnd = Math.max(
+    trimmed.lastIndexOf('.'),
+    trimmed.lastIndexOf('!'),
+    trimmed.lastIndexOf('?')
+  );
+
+  if (lastSentenceEnd > limit * 0.55) {
+    return trimmed.slice(0, lastSentenceEnd + 1).trim();
+  }
+
+  const lastSpace = trimmed.lastIndexOf(' ');
+
+  if (lastSpace > limit * 0.55) {
+    return `${trimmed.slice(0, lastSpace).trim()}…`;
+  }
+
+  return `${trimmed}…`;
+}
+
+function enforcePlatformCaptionLimit(caption: string, platform: string) {
+  return truncateTextToLimit(caption, getPlatformCaptionLimit(platform));
+}
+
+function buildPlatformLimitGuide(platforms: string[]) {
+  const uniquePlatforms = Array.from(new Set(platforms));
+
+  return uniquePlatforms
+    .map((platform) => `- ${platform}: maximum ${getPlatformCaptionLimit(platform)} characters`)
+    .join('\n');
+}
 
 function normaliseSelectedPlatforms(value: any) {
   const rawPlatforms = Array.isArray(value)
@@ -486,7 +538,10 @@ function buildFallbackPosts(
       day: `Day ${index + 1}`,
       platform,
       title: weeklyAngles[index] || `${platform} Post`,
-      caption: `A useful ${platform} post for ${profile.business_name}, focused on ${profile.industry} and designed to build trust with ${marketReach.toLowerCase()}.`,
+      caption: enforcePlatformCaptionLimit(
+        `A useful ${platform} post for ${profile.business_name}, focused on ${profile.industry} and designed to build trust with ${marketReach.toLowerCase()}.`,
+        platform
+      ),
       cta: profile.main_offer || 'Contact us today to find out more.',
       hashtags: getFallbackHashtags(marketReach),
       image_prompt: `Create a professional image for ${profile.business_name} showing ${profile.industry} in a realistic, trustworthy way. Match the brand style.`,
@@ -508,7 +563,7 @@ function normalisePost(
       day: `Day ${index + 1}`,
       platform: fallbackPlatform,
       title: weeklyAngles[index] || `${fallbackPlatform} Post`,
-      caption: value,
+      caption: enforcePlatformCaptionLimit(value, fallbackPlatform),
       cta: fallbackProfile.main_offer || 'Contact us today to find out more.',
       hashtags: getFallbackHashtags(marketReach),
       image_prompt: 'Use a clean, professional image that matches the business and post message.',
@@ -527,7 +582,7 @@ function normalisePost(
     day: value?.day || `Day ${index + 1}`,
     platform: safePlatform,
     title: cleanText(value?.title, weeklyAngles[index] || `${safePlatform} Post`),
-    caption: cleanText(value?.caption),
+    caption: enforcePlatformCaptionLimit(cleanText(value?.caption), safePlatform),
     cta: cleanText(value?.cta, fallbackProfile.main_offer || 'Contact us today to find out more.'),
     hashtags: rawHashtags.length ? rawHashtags : getFallbackHashtags(marketReach),
     image_prompt:
@@ -571,7 +626,8 @@ function normaliseResult(
     brand_accent_color:
       normaliseHex(rawProfile.brand_accent_color || rawProfile.accent_brand_color || '') ||
       fallback.brand_accent_color,
-    brand_logo_url: rawProfile.brand_logo_url || rawProfile.logo_url || fallback.brand_logo_url || null,
+    brand_logo_url:
+      rawProfile.brand_logo_url || rawProfile.logo_url || fallback.brand_logo_url || null,
     brand_summary: cleanText(rawProfile.brand_summary, fallback.brand_summary),
     campaign_idea: cleanText(rawProfile.campaign_idea, fallback.campaign_idea),
   };
@@ -639,6 +695,8 @@ function buildPrompt({
     .map((item) => `- ${item.day}: ${item.platform} — ${item.angle}`)
     .join('\n');
 
+  const platformLimitGuide = buildPlatformLimitGuide(selectedPlatforms);
+
   return `
 You are FromOne's premium social media strategist, website analyst, brand interpreter, and local business copywriter.
 
@@ -683,6 +741,16 @@ Required JSON shape:
 
 Selected social media platforms:
 ${selectedPlatforms.join(', ')}
+
+Platform-safe caption limits:
+${platformLimitGuide}
+
+Important caption length rule:
+- Every caption must stay under the platform-safe character limit for its platform.
+- Do not use the absolute maximum allowed by social platforms.
+- Keep captions practical, readable, and easy for a small business owner to post.
+- X / Twitter must be especially short.
+- TikTok and YouTube Shorts should read like short video ideas/scripts, not long captions.
 
 Market reach:
 ${marketReach}
@@ -731,9 +799,9 @@ Caption style:
 - Do not use bullet-heavy formatting.
 - Do not use exaggerated hype.
 - Emojis are allowed only if the business tone suits them. Use none by default.
-- Captions should usually be 45 to 120 words.
+- Captions should usually be 45 to 120 words only when the platform limit allows it.
 - Google Business may be shorter and more direct.
-- TikTok, YouTube Shorts, and X / Twitter may be shorter where appropriate.
+- TikTok, YouTube Shorts, and X / Twitter must be shorter where appropriate.
 - Every caption must be ready to copy and paste.
 
 CTA rules:
@@ -1037,6 +1105,7 @@ export async function POST(req: NextRequest) {
       marketReach,
       usedWebsiteScan: Boolean(website && websiteContent),
       detectedBrandColours: colours,
+      platformCaptionLimits,
     });
   } catch (error: any) {
     console.error('Generate posts API error:', error?.response?.data || error?.message || error);

@@ -60,6 +60,36 @@ const workflow = [
   },
 ];
 
+const examplePosts = [
+  {
+    platform: 'Facebook',
+    goal: 'Build trust',
+    caption:
+      'Not every plumbing problem starts with a big leak. Sometimes it is a slow drip, a strange noise, or a small patch of damp that gets worse over time. If something does not look or sound right, it is always better to get it checked early before it turns into a bigger repair.',
+    cta: 'Message us today to arrange a quote.',
+    hashtags: '#Plumbing #LocalPlumber #HomeMaintenance #SmallBusiness',
+    imageIdea: 'A clear photo of a finished repair, van, tools, or team member on-site.',
+  },
+  {
+    platform: 'Instagram',
+    goal: 'Show the work',
+    caption:
+      'A clean finish matters. Whether it is a small repair or a full installation, customers want someone who turns up, explains the job clearly, and leaves things tidy afterwards. That is the kind of service people remember.',
+    cta: 'Save this post for when you need a reliable local service.',
+    hashtags: '#LocalBusiness #TradeBusiness #CustomerTrust #BeforeAndAfter',
+    imageIdea: 'A before-and-after photo, finished job detail, or behind-the-scenes work shot.',
+  },
+  {
+    platform: 'Google Business',
+    goal: 'Drive enquiries',
+    caption:
+      'Need help with a repair, installation, or maintenance job? We help local customers with reliable service, clear communication, and practical advice before any work begins.',
+    cta: 'Call or message us to book your next job.',
+    hashtags: '#LocalService #GoogleBusiness #CustomerEnquiries',
+    imageIdea: 'A simple service photo, shopfront, team photo, or completed customer job.',
+  },
+];
+
 const productScreenshots = [
   {
     title: 'Dashboard setup',
@@ -71,7 +101,7 @@ const productScreenshots = [
   {
     title: 'Post-by-post workflow',
     description:
-      'Move through the week, review each post, upload an image, copy the content, and track progress.',
+      'Move through the week, review each post, copy the content, publish manually, and track progress.',
     image: '/posts-preview.png',
     alt: 'FromOne posts page showing weekly post workflow',
   },
@@ -192,6 +222,45 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="sales-section sales-example-section">
+        <div className="sales-section-heading">
+          <div className="page-eyebrow">Example output</div>
+          <h2>See what a weekly post can look like.</h2>
+          <p>
+            FromOne creates practical, ready-to-use posts with a caption, call to action,
+            hashtags, and image guidance for the platform.
+          </p>
+        </div>
+
+        <div className="sales-example-grid">
+          {examplePosts.map((post) => (
+            <article key={post.platform} className="sales-example-card">
+              <div className="sales-example-card-top">
+                <span>{post.platform}</span>
+                <small>{post.goal}</small>
+              </div>
+
+              <p className="sales-example-caption">{post.caption}</p>
+
+              <div className="sales-example-detail">
+                <strong>CTA</strong>
+                <p>{post.cta}</p>
+              </div>
+
+              <div className="sales-example-detail">
+                <strong>Hashtags</strong>
+                <p>{post.hashtags}</p>
+              </div>
+
+              <div className="sales-example-detail sales-example-image-idea">
+                <strong>Image idea</strong>
+                <p>{post.imageIdea}</p>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 

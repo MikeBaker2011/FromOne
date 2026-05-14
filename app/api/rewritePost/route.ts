@@ -6,7 +6,87 @@ type RewriteResult = {
   cta: string;
   hashtags: string[];
   image_prompt: string;
+  improvement_summary: string;
 };
+
+const improvementActionLabels: Record<string, string> = {
+  make_shorter: 'Make shorter',
+  make_more_local: 'Make more local',
+  make_sales_focused: 'Make more sales-focused',
+  make_less_generic: 'Make less generic',
+  different_version: 'Try a different version',
+};
+
+const improvementSummaries: Record<string, string> = {
+  make_shorter: 'Shortened the post and removed extra wording.',
+  make_more_local: 'Added more local relevance and customer context.',
+  make_sales_focused: 'Made the benefit and call to action stronger.',
+  make_less_generic: 'Made the wording more specific to the business and industry.',
+  different_version: 'Created a fresh alternative version of the post.',
+};
+
+const platformCaptionLimits: Record<string, number> = {
+  Facebook: 700,
+  Instagram: 1200,
+  'Google Business': 600,
+  LinkedIn: 900,
+  TikTok: 300,
+  'YouTube Shorts': 350,
+  'X / Twitter': 260,
+  Pinterest: 500,
+};
+
+function getPlatformCaptionLimit(platform: string) {
+  const cleanPlatform = String(platform || '').trim();
+
+  if (platformCaptionLimits[cleanPlatform]) {
+    return platformCaptionLimits[cleanPlatform];
+  }
+
+  const lower = cleanPlatform.toLowerCase();
+
+  if (lower.includes('instagram')) return platformCaptionLimits.Instagram;
+  if (lower.includes('google')) return platformCaptionLimits['Google Business'];
+  if (lower.includes('linkedin')) return platformCaptionLimits.LinkedIn;
+  if (lower.includes('tiktok')) return platformCaptionLimits.TikTok;
+  if (lower.includes('youtube') || lower.includes('shorts')) {
+    return platformCaptionLimits['YouTube Shorts'];
+  }
+  if (lower.includes('twitter') || lower === 'x') return platformCaptionLimits['X / Twitter'];
+  if (lower.includes('pinterest')) return platformCaptionLimits.Pinterest;
+
+  return platformCaptionLimits.Facebook;
+}
+
+function truncateTextToLimit(value: string, limit: number) {
+  const clean = cleanText(value);
+
+  if (clean.length <= limit) return clean;
+
+  const trimmed = clean.slice(0, Math.max(limit - 1, 0)).trim();
+
+  const lastSentenceEnd = Math.max(
+    trimmed.lastIndexOf('.'),
+    trimmed.lastIndexOf('!'),
+    trimmed.lastIndexOf('?')
+  );
+
+  if (lastSentenceEnd > limit * 0.55) {
+    return trimmed.slice(0, lastSentenceEnd + 1).trim();
+  }
+
+  const lastSpace = trimmed.lastIndexOf(' ');
+
+  if (lastSpace > limit * 0.55) {
+    return `${trimmed.slice(0, lastSpace).trim()}…`;
+  }
+
+  return `${trimmed}…`;
+}
+
+function enforcePlatformCaptionLimit(caption: string, platform: string) {
+  return truncateTextToLimit(caption, getPlatformCaptionLimit(platform));
+}
 
 function extractJsonFromText(text: string) {
   const cleaned = text
@@ -33,7 +113,7 @@ function ensureArray(value: any) {
 
   if (typeof value === 'string' && value.trim()) {
     return value
-      .split(',')
+      .split(/[\s,]+/)
       .map((item) => item.trim())
       .filter(Boolean);
   }
@@ -59,17 +139,21 @@ function cleanText(value: any, fallback = '') {
     .trim();
 }
 
-function normaliseRewrite(raw: any): RewriteResult {
+function normaliseRewrite(raw: any, fallbackSummary: string, platform: string): RewriteResult {
   const hashtags = ensureArray(raw.hashtags)
     .map(ensureHashtag)
     .filter(Boolean)
     .slice(0, 8);
 
   return {
-    caption: cleanText(raw.caption),
+    caption: enforcePlatformCaptionLimit(cleanText(raw.caption), platform),
     cta: cleanText(raw.cta),
     hashtags: hashtags.length ? hashtags : ['#LocalBusiness', '#SmallBusiness', '#SupportLocal'],
     image_prompt: cleanText(raw.image_prompt || raw.imagePrompt),
+    improvement_summary: truncateTextToLimit(
+      cleanText(raw.improvement_summary, fallbackSummary),
+      120
+    ),
   };
 }
 
@@ -121,28 +205,128 @@ function getIndustryGuidance(industry: string) {
 
 function getPlatformGuidance(platform: string) {
   const lower = platform.toLowerCase();
+  const limit = getPlatformCaptionLimit(platform);
 
   if (lower.includes('instagram')) {
-    return 'Make it visual, benefit-led, caption-friendly, and suited to an image or carousel.';
+    return `Make it visual, benefit-led, caption-friendly, and suited to an image or carousel. Keep the caption under ${limit} characters.`;
   }
 
   if (lower.includes('google')) {
-    return 'Make it direct, local, service-focused, search-friendly, and easy for a customer to act on.';
+    return `Make it direct, local, service-focused, search-friendly, and easy for a customer to act on. Keep the caption under ${limit} characters.`;
   }
 
   if (lower.includes('linkedin')) {
-    return 'Make it professional, credibility-led, useful, and authority-building without sounding stiff.';
+    return `Make it professional, credibility-led, useful, and authority-building without sounding stiff. Keep the caption under ${limit} characters.`;
   }
 
   if (lower.includes('tiktok')) {
-    return 'Make it a short hook plus simple video/script idea that the business owner could realistically film.';
+    return `Make it a short hook plus simple video/script idea that the business owner could realistically film. Keep the caption under ${limit} characters.`;
+  }
+
+  if (lower.includes('youtube')) {
+    return `Make it suitable for a short video script, with a strong first line and a simple idea the business can film. Keep the caption under ${limit} characters.`;
   }
 
   if (lower.includes('pinterest')) {
-    return 'Make it visual, inspiration-led, and suited to an image, guide, idea, or transformation.';
+    return `Make it visual, inspiration-led, and suited to an image, guide, idea, or transformation. Keep the caption under ${limit} characters.`;
   }
 
-  return 'Make it community-friendly, trustworthy, clear, and local.';
+  if (lower.includes('twitter') || lower === 'x') {
+    return `Make it short, punchy, clear, and easy to post as a quick update. Keep the caption under ${limit} characters.`;
+  }
+
+  return `Make it community-friendly, trustworthy, clear, and local. Keep the caption under ${limit} characters.`;
+}
+
+function getImprovementGuidance(action: string, audienceTarget: string) {
+  if (action === 'make_shorter') {
+    return `
+Improvement action:
+Make the post shorter.
+
+Specific instructions:
+- Keep the main meaning.
+- Remove filler and repetition.
+- Make it quick to read.
+- Keep the CTA clear.
+- Caption should usually be 25 to 70 words.
+`;
+  }
+
+  if (action === 'make_more_local') {
+    return `
+Improvement action:
+Make the post more local.
+
+Specific instructions:
+- Add local trust, local customer needs, local service wording, or nearby-area relevance.
+- Do not invent a town unless one is clearly supplied.
+- If no exact location is supplied, use wording like "local customers", "nearby homes", "in your area", or "the local community".
+- Keep it natural, not forced.
+`;
+  }
+
+  if (action === 'make_sales_focused') {
+    return `
+Improvement action:
+Make the post more sales-focused.
+
+Specific instructions:
+- Make the customer benefit clearer.
+- Strengthen the reason to enquire, book, call, message, visit, or buy.
+- Keep it helpful rather than pushy.
+- Use a stronger CTA.
+- Avoid hype and overpromising.
+`;
+  }
+
+  if (action === 'make_less_generic') {
+    return `
+Improvement action:
+Make the post less generic.
+
+Specific instructions:
+- Remove vague marketing wording.
+- Add realistic customer problems, moments, concerns, or service details.
+- Make it sound like it belongs to this specific type of business.
+- Avoid phrases like "look no further", "elevate your", "unlock", "passionate about", and "quality service".
+`;
+  }
+
+  if (action === 'different_version') {
+    return `
+Improvement action:
+Try a different version.
+
+Specific instructions:
+- Keep the same business, platform, and general goal.
+- Use a fresh angle and different wording.
+- Do not repeat the original structure.
+- Make it feel like a useful alternative the user could choose instead.
+`;
+  }
+
+  if (audienceTarget) {
+    return `
+Improvement action:
+Make the post more specific for this audience: ${audienceTarget}.
+
+Specific instructions:
+- Speak directly to that audience.
+- Keep the original post idea, but sharpen the angle for this group.
+- Use realistic needs, objections, desires, or pain points for this audience.
+`;
+  }
+
+  return `
+Improvement action:
+Improve the post.
+
+Specific instructions:
+- Make it more useful, specific, natural, and ready to publish.
+- Keep the same overall idea.
+- Remove generic wording.
+`;
 }
 
 async function rewriteWithGemini(prompt: string) {
@@ -178,8 +362,9 @@ async function rewriteWithGemini(prompt: string) {
               items: { type: 'STRING' },
             },
             image_prompt: { type: 'STRING' },
+            improvement_summary: { type: 'STRING' },
           },
-          required: ['caption', 'cta', 'hashtags', 'image_prompt'],
+          required: ['caption', 'cta', 'hashtags', 'image_prompt', 'improvement_summary'],
         },
       },
     },
@@ -219,7 +404,7 @@ async function rewriteWithOpenAI(prompt: string) {
         {
           role: 'system',
           content:
-            'You are a premium small-business social media strategist. Rewrite posts for specific audiences. Return only valid JSON.',
+            'You are a premium small-business social media strategist. Improve posts so they feel specific, useful, and ready to publish. Return only valid JSON.',
         },
         {
           role: 'user',
@@ -253,21 +438,33 @@ export async function POST(req: NextRequest) {
 
     const provider = body.provider === 'openai' ? 'openai' : 'gemini';
 
+    const improvementAction = String(body.improvementAction || '').trim();
+    const improvementLabel =
+      improvementActionLabels[improvementAction] || improvementAction || 'Improve post';
+
     const audienceTarget = String(body.audienceTarget || '').trim();
+
+    const fallbackSummary =
+      improvementSummaries[improvementAction] ||
+      (audienceTarget
+        ? 'Made the post more specific for the selected audience.'
+        : 'Improved the post so it is clearer and more specific.');
+
     const businessName = String(body.businessName || 'the business').trim();
     const industry = String(body.industry || 'general business').trim();
     const platform = String(body.platform || 'Facebook').trim();
     const tone = String(body.tone || 'Professional').trim();
+    const platformLimit = getPlatformCaptionLimit(platform);
 
     const caption = String(body.caption || '').trim();
     const cta = String(body.cta || '').trim();
     const hashtags = ensureArray(body.hashtags);
     const imagePrompt = String(body.image_prompt || body.imagePrompt || '').trim();
 
-    if (!audienceTarget) {
+    if (!improvementAction && !audienceTarget) {
       return NextResponse.json(
         {
-          error: 'Audience target is required.',
+          error: 'Audience target or improvement action is required.',
         },
         { status: 400 }
       );
@@ -284,24 +481,31 @@ export async function POST(req: NextRequest) {
 
     const industryGuidance = getIndustryGuidance(industry);
     const platformGuidance = getPlatformGuidance(platform);
+    const improvementGuidance = getImprovementGuidance(improvementAction, audienceTarget);
 
     const prompt = `
-You are rewriting a social media post for a specific customer audience.
+You are improving a social media post for a small business.
 
-The rewritten post should feel like it was written by a skilled social media manager who understands the business, the industry, the platform, and the audience.
+The improved post should feel like it was written by a skilled social media manager who understands the business, the industry, the platform, and the customer.
 
 Return ONLY valid JSON. Do not use markdown. Do not explain anything.
 
 Return this exact JSON shape:
 {
-  "caption": "rewritten post caption",
+  "caption": "improved post caption",
   "cta": "short CTA",
   "hashtags": ["#Example"],
-  "image_prompt": "specific image idea"
+  "image_prompt": "specific image idea",
+  "improvement_summary": "one short sentence explaining what changed"
 }
 
+Improvement selected:
+${improvementLabel}
+
+${improvementGuidance}
+
 Audience target:
-${audienceTarget}
+${audienceTarget || 'No specific audience supplied'}
 
 Business:
 ${businessName}
@@ -318,8 +522,8 @@ ${platform}
 Platform guidance:
 ${platformGuidance}
 
-Tone:
-${tone}
+Platform-safe caption limit:
+${platformLimit} characters maximum.
 
 Original caption:
 ${caption}
@@ -334,12 +538,14 @@ Original image idea:
 ${imagePrompt || 'No image idea provided'}
 
 Rewrite rules:
-- Make it speak directly to ${audienceTarget}.
-- Keep the original post idea, but sharpen the angle for this audience.
-- Make the caption more specific, useful, and client-ready.
-- Use realistic customer needs, objections, desires, or pain points for this industry.
+- Keep the post ready to copy and paste.
+- Keep the original business context.
+- Make the caption specific, useful, and client-ready.
+- The caption must stay under ${platformLimit} characters.
+- Do not aim for the absolute maximum; make it readable and practical.
+- Use realistic customer needs, objections, desires, service moments, buying triggers, or pain points for this industry.
 - Keep it suitable for ${platform}.
-- Avoid generic AI wording such as "look no further", "elevate your", "unlock your potential", or "we are passionate".
+- Avoid generic AI wording such as "look no further", "elevate your", "unlock your potential", "transform your", or "we are passionate".
 - Do not add big headings.
 - Do not include markdown.
 - Do not use bullet-heavy formatting.
@@ -347,11 +553,14 @@ Rewrite rules:
 - Do not repeat the exact original caption.
 - Use natural, human wording.
 - Use no emojis unless the brand clearly suits them.
-- Caption should usually be 45 to 120 words unless ${platform} needs shorter copy.
+- Caption should usually be 45 to 120 words only if the platform limit allows it.
+- If the selected improvement action asks for shorter copy, make it shorter.
+- TikTok, YouTube Shorts, and X / Twitter should be especially short.
 - CTA should be specific and natural.
 - Hashtags must be 4 to 8 items, relevant to the industry, audience, and local/small business context.
 - Hashtags must start with # and have no spaces.
-- Image prompt must be practical for a small business to create, choose, or upload.
+- Image prompt must be practical for a small business to create, choose, or use when posting manually.
+- improvement_summary must be short, clear, and no more than 14 words.
 `;
 
     const rawResult =
@@ -359,7 +568,7 @@ Rewrite rules:
         ? await rewriteWithOpenAI(prompt)
         : await rewriteWithGemini(prompt);
 
-    const result = normaliseRewrite(rawResult);
+    const result = normaliseRewrite(rawResult, fallbackSummary, platform);
 
     if (!result.caption) {
       return NextResponse.json(
@@ -375,8 +584,11 @@ Rewrite rules:
       cta: result.cta,
       hashtags: result.hashtags,
       image_prompt: result.image_prompt,
+      improvement_summary: result.improvement_summary,
       audience_target: audienceTarget,
+      improvement_action: improvementAction,
       provider,
+      platform_caption_limit: platformLimit,
     });
   } catch (error: any) {
     console.error('Rewrite post API error:', error?.response?.data || error?.message || error);
