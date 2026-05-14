@@ -56,7 +56,7 @@ const workflow = [
   {
     title: 'Publish with control',
     description:
-      'You stay in control. FromOne helps you prepare the content, but you publish manually.',
+      'FromOne gives you ready-to-copy posts and image ideas. You choose what to publish, where to publish it, and when.',
   },
 ];
 
@@ -153,7 +153,7 @@ export default function Home() {
             <div className="sales-trust-row">
               <span>✓ Free 7-day demo</span>
               <span>✓ £29.99/month</span>
-              <span>✓ Manual publishing</span>
+              <span>✓ You stay in control</span>
             </div>
           </div>
 
@@ -188,7 +188,7 @@ export default function Home() {
 
             <div className="sales-preview-floating">
               <strong>Ready to publish</strong>
-              <span>Review → Copy → Post → Done</span>
+              <span>Review → Copy → Publish → Done</span>
             </div>
           </div>
         </div>
@@ -349,7 +349,50 @@ export default function Home() {
           </Link>
         </div>
       </section>
+<section className="sales-section sales-faq-section">
+  <div className="sales-section-heading">
+    <div className="page-eyebrow">Questions</div>
+    <h2>Common questions before starting.</h2>
+    <p>
+      FromOne is built to keep weekly social media simple, controlled, and practical for small
+      businesses.
+    </p>
+  </div>
 
+  <div className="sales-faq-grid">
+    <article className="sales-faq-card">
+      <h3>Does FromOne post automatically?</h3>
+      <p>
+        Not at the moment. FromOne creates the posts, captions, hashtags, calls to action, and
+        image ideas. You review and publish them yourself so you stay in control of what goes live.
+      </p>
+    </article>
+
+    <article className="sales-faq-card">
+      <h3>Can I use it without a website?</h3>
+      <p>
+        Yes. You can add business details manually if the business does not have a website, then
+        FromOne can create a weekly plan from that profile.
+      </p>
+    </article>
+
+    <article className="sales-faq-card">
+      <h3>Which platforms does it support?</h3>
+      <p>
+        FromOne can create content for Facebook, Instagram, Google Business, LinkedIn, TikTok,
+        YouTube Shorts, X / Twitter, and Pinterest.
+      </p>
+    </article>
+
+    <article className="sales-faq-card">
+      <h3>Can I edit the posts?</h3>
+      <p>
+        Yes. You can improve a post, make it more specific for an audience, adjust the tone, or
+        edit the wording before publishing.
+      </p>
+    </article>
+  </div>
+</section>
       <PublicFooter />
     </main>
   );

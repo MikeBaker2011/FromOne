@@ -47,7 +47,7 @@ const postsTourSteps = [
   },
   {
     title: 'Choose this week’s plan',
-    text: 'Choose a saved weekly plan, then click Load plan.',
+    text: 'Choose a saved plan slot, then click Load plan. Delete old plans when you need to free up space.',
     target: 'campaigns',
   },
   {
@@ -1593,7 +1593,7 @@ export default function PostsPage() {
             <section className="simplified-control-card">
               <div ref={campaignHistoryControlsRef} className="simplified-campaign-controls">
                 <label>
-                  <strong>This week’s plan</strong>
+                  <strong>Current saved plan</strong>
                   <select
                     className="input"
                     value={pendingCampaignId}
@@ -1608,10 +1608,10 @@ export default function PostsPage() {
                   </select>
                 </label>
 
-                <div className="posts-plan-usage">
-                  {campaigns.length}/{MAX_SAVED_CAMPAIGNS} saved weekly plans
-                </div>
-
+<div className="posts-plan-usage">
+  {campaigns.length} of {MAX_SAVED_CAMPAIGNS} plan slots used
+  <small>Delete an old plan to free up a slot.</small>
+</div>
                 <div className="posts-plan-actions">
                   <button
                     type="button"

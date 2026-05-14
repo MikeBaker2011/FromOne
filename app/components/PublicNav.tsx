@@ -91,7 +91,7 @@ export default function PublicNav() {
           className="sales-nav-button"
           onClick={closeMenu}
         >
-          {checkingAuth ? 'Checking...' : isSignedIn ? 'Dashboard' : 'Sign in'}
+          {checkingAuth ? 'Checking...' : isSignedIn ? 'Dashboard' : 'Start free demo'}
         </Link>
       </div>
     </nav>

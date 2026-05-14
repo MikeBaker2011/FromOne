@@ -185,7 +185,7 @@ export default function SubscriptionPage() {
 
       if (selectedPlan === 'starter') {
         alert(
-          'Monthly plan selected. PayPal checkout is being connected, so you will not be charged yet.'
+          'Monthly plan selected. PayPal subscriptions are being activated, so you will not be charged yet.'
         );
       } else {
         alert('Demo access saved.');
@@ -354,8 +354,8 @@ export default function SubscriptionPage() {
         </h1>
         <p className="page-description">
           Start with a 7-day free demo, then continue with FromOne Monthly for £29.99 per
-          month. That is less than £1 a day for weekly social media content, with no
-          complicated tiers.
+          month. PayPal subscriptions are currently being activated, so launch users may
+          receive manual access while billing is being connected.
         </p>
       </div>
 
@@ -410,7 +410,8 @@ export default function SubscriptionPage() {
               <h2 style={{ marginTop: 0 }}>PayPal checkout is being connected.</h2>
               <p>
                 Your monthly plan preference has been saved, but you have not been charged yet.
-                PayPal payment will be connected before live billing starts.
+                PayPal subscriptions are being activated. During this launch period, access may
+                be extended manually before live billing starts.
               </p>
             </div>
           )}
@@ -560,14 +561,15 @@ export default function SubscriptionPage() {
             <div className="page-eyebrow">Billing Management</div>
             <h2 style={{ marginTop: 0 }}>Manage your plan.</h2>
             <p>
-              PayPal will manage monthly payments and renewals once connected. You will be
-              able to cancel anytime from this page before your next billing date.
+              PayPal will manage monthly payments and renewals once connected. Until then,
+              selecting the monthly plan saves your preference only and does not take payment.
+              You will be able to cancel anytime once live subscriptions are active.
             </p>
 
             {!paypalSubscriptionId && currentPlan === 'starter' && (
               <p style={{ color: 'var(--muted)', fontWeight: 800 }}>
-                PayPal is not connected yet, so no payment has been taken and cancellation is
-                not required.
+                PayPal subscriptions are not live yet, so no payment has been taken and
+                cancellation is not required.
               </p>
             )}
 

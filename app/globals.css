@@ -11615,3 +11615,52 @@ main {
   opacity: 1 !important;
   font-weight: 500;
 }
+.posts-plan-usage small {
+  display: block;
+  margin-top: 4px;
+  color: #9ba6bd;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+.sales-faq-section {
+  padding-top: 36px;
+}
+
+.sales-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.sales-faq-card {
+  padding: 24px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(16, 20, 32, 0.08);
+  box-shadow: 0 18px 42px rgba(16, 20, 32, 0.08);
+}
+
+.sales-faq-card h3 {
+  margin: 0 0 10px;
+  color: #101420;
+  font-size: 1.05rem;
+}
+
+.sales-faq-card p {
+  margin: 0;
+  color: #5d6575;
+  line-height: 1.65;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 760px) {
+  .sales-faq-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sales-faq-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+}
