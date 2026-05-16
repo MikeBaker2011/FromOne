@@ -5,7 +5,6 @@ export const dynamic = 'force-dynamic';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const cronSecret = process.env.CRON_SECRET;
 
 const MAX_POSTS_PER_RUN = 10;
 
@@ -22,17 +21,39 @@ function getSupabaseAdmin() {
   });
 }
 
+function cleanSecret(value: unknown) {
+  return String(value || '').trim();
+}
+
+function getCronSecret() {
+  return cleanSecret(process.env.CRON_SECRET);
+}
+
 function isAuthorized(request: NextRequest) {
+  const cronSecret = getCronSecret();
+
   if (!cronSecret) {
-    return false;
+    return {
+      authorized: false,
+      reason: 'CRON_SECRET is not set on the deployed web service.',
+    };
   }
 
-  const authHeader = request.headers.get('authorization') || '';
-  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  const headerSecret = request.headers.get('x-cron-secret') || '';
-  const querySecret = request.nextUrl.searchParams.get('secret') || '';
+  const authHeader = cleanSecret(request.headers.get('authorization'));
+  const bearerToken = authHeader.toLowerCase().startsWith('bearer ')
+    ? authHeader.slice(7).trim()
+    : '';
 
-  return bearerToken === cronSecret || headerSecret === cronSecret || querySecret === cronSecret;
+  const headerSecret = cleanSecret(request.headers.get('x-cron-secret'));
+  const querySecret = cleanSecret(request.nextUrl.searchParams.get('secret'));
+
+  const authorized =
+    bearerToken === cronSecret || headerSecret === cronSecret || querySecret === cronSecret;
+
+  return {
+    authorized,
+    reason: authorized ? null : 'Secret was provided but did not match CRON_SECRET.',
+  };
 }
 
 function isFacebookPost(post: any) {
@@ -43,7 +64,8 @@ function isAlreadyPosted(post: any) {
   return (
     post?.is_posted === true ||
     String(post?.status || '').toLowerCase() === 'posted' ||
-    String(post?.publish_status || '').toLowerCase() === 'posted'
+    String(post?.publish_status || '').toLowerCase() === 'posted' ||
+    String(post?.publish_status || '').toLowerCase() === 'published'
   );
 }
 
@@ -59,12 +81,43 @@ function buildPostText(post: any) {
   return [caption, cta, hashtags].filter(Boolean).join('\n\n').trim();
 }
 
+function getFacebookPostId(responseBody: any) {
+  return (
+    responseBody?.facebookPostId ||
+    responseBody?.facebook_post_id ||
+    responseBody?.postId ||
+    responseBody?.post_id ||
+    responseBody?.id ||
+    responseBody?.result?.id ||
+    responseBody?.facebookResult?.id ||
+    responseBody?.facebookResult?.post_id ||
+    responseBody?.facebookResult?.photo_id ||
+    null
+  );
+}
+
+function buildPublishedToValue(currentValue: any) {
+  if (Array.isArray(currentValue)) {
+    return Array.from(new Set([...currentValue, 'facebook']));
+  }
+
+  if (typeof currentValue === 'string' && currentValue.trim()) {
+    return Array.from(new Set([currentValue.toLowerCase(), 'facebook']));
+  }
+
+  return ['facebook'];
+}
+
 async function runFacebookScheduledPublish(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  const auth = isAuthorized(request);
+
+  if (!auth.authorized) {
     return NextResponse.json(
       {
         ok: false,
         error: 'Unauthorized.',
+        reason: auth.reason,
+        hasCronSecret: Boolean(getCronSecret()),
       },
       { status: 401 }
     );
@@ -200,12 +253,8 @@ async function runFacebookScheduledPublish(request: NextRequest) {
         continue;
       }
 
-      const facebookPostId =
-        responseBody?.facebook_post_id ||
-        responseBody?.post_id ||
-        responseBody?.id ||
-        responseBody?.result?.id ||
-        null;
+      const facebookPostId = getFacebookPostId(responseBody);
+      const publishedTo = buildPublishedToValue(post.published_to);
 
       await supabase
         .from('campaign_posts')
@@ -214,7 +263,7 @@ async function runFacebookScheduledPublish(request: NextRequest) {
           status: 'posted',
           publish_status: 'posted',
           publish_error: null,
-          published_to: 'Facebook',
+          published_to: publishedTo,
           published_at: new Date().toISOString(),
           facebook_post_id: facebookPostId,
         })
