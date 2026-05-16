@@ -1,12 +1,30 @@
 'use client';
 
-import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import './posts.css';
+
+import { CSSProperties, ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
+
+import WeeklyPlanControls from '@/components/posts/WeeklyPlanControls';
+import WeeklyQueue from '@/components/posts/WeeklyQueue';
+import PostActionModal from '@/components/posts/PostActionModal';
+import TodayReminderModal from '@/components/posts/TodayReminderModal';
+import PostSuccessModal from '@/components/posts/PostSuccessModal';
+import ReviewPromptModal from '@/components/posts/ReviewPromptModal';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+const MEDIA_BUCKET = 'campaign-assets';
+const MAX_SAVED_CAMPAIGNS = 4;
+
+const POSTS_TOUR_SEEN_KEY = 'fromone_posts_tour_seen';
+const REVIEW_PROMPT_DISMISSED_KEY = 'fromone_review_prompt_dismissed';
+const REVIEW_PROMPT_SUBMITTED_KEY = 'fromone_review_prompt_submitted';
+const REVIEW_PROMPT_POSTED_COUNT_KEY = 'fromone_review_prompt_posted_count';
+const REVIEW_PROMPT_TRIGGER_COUNT = 3;
 
 type AccessInfo = {
   id: string;
@@ -29,63 +47,37 @@ type ImprovementNote = {
   detail: string;
 };
 
-const IMAGE_BUCKET = 'campaign-assets';
-const POSTS_TOUR_SEEN_KEY = 'fromone_posts_tour_seen';
-const MAX_SAVED_CAMPAIGNS = 4;
-
-const REVIEW_PROMPT_DISMISSED_KEY = 'fromone_review_prompt_dismissed';
-const REVIEW_PROMPT_SUBMITTED_KEY = 'fromone_review_prompt_submitted';
-const REVIEW_PROMPT_POSTED_COUNT_KEY = 'fromone_review_prompt_posted_count';
-const REVIEW_PROMPT_TRIGGER_COUNT = 3;
+type PostStatus = 'Ready' | 'Reminder set' | 'Posted' | 'Failed';
 
 const postsTourSteps = [
   {
-    title: 'Welcome to your posts',
-    text:
-      'This is where you review this week’s plan. Choose each post, check the wording, copy it, publish it, then mark it as done.',
-    target: 'header',
+    title: 'Choose today’s post',
+    text: 'Start with the weekly queue. Pick the post you want to work on.',
+    target: 'queue',
   },
   {
-    title: 'Choose this week’s plan',
-    text:
-      'Choose a saved plan slot, then click Load plan. Delete old plans when you need to free up space.',
-    target: 'campaigns',
+    title: 'Check the wording',
+    text: 'Click a card to open the post window. Review the wording first.',
+    target: 'post',
   },
   {
-    title: 'Use the weekly calendar',
-    text:
-      'The calendar shows three days at a time. Click a day to review the post, or use Next day to move through the week.',
-    target: 'days',
+    title: 'Add media',
+    text: 'Add an image or video when the post needs one.',
+    target: 'media',
   },
   {
-    title: 'Prepare and publish',
-    text:
-      'Read the post first, improve it if needed, use the image idea if helpful, then copy, publish, and mark it as done.',
+    title: 'Publish',
+    text: 'Publish to Facebook directly, or copy and open the platform when direct publishing is not ready yet.',
     target: 'publish',
   },
 ];
 
 const quickImproveActions = [
-  {
-    value: 'make_shorter',
-    label: 'Make shorter',
-  },
-  {
-    value: 'make_more_local',
-    label: 'More local',
-  },
-  {
-    value: 'make_sales_focused',
-    label: 'More sales-focused',
-  },
-  {
-    value: 'make_less_generic',
-    label: 'Less generic',
-  },
-  {
-    value: 'different_version',
-    label: 'Different version',
-  },
+  { value: 'make_shorter', label: 'Make shorter' },
+  { value: 'make_more_local', label: 'More local' },
+  { value: 'make_sales_focused', label: 'More sales-focused' },
+  { value: 'make_less_generic', label: 'Less generic' },
+  { value: 'different_version', label: 'Different version' },
 ];
 
 const defaultAudienceTargets = [
@@ -277,17 +269,20 @@ const industryAudienceTargets: Record<string, string[]> = {
 export default function PostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
-  const [pendingCampaignId, setPendingCampaignId] = useState('');
   const [campaign, setCampaign] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [calendarStartIndex, setCalendarStartIndex] = useState(0);
 
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [pendingCampaignId, setPendingCampaignId] = useState('');
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [loadingSelectedPlan, setLoadingSelectedPlan] = useState(false);
   const [deletingCampaign, setDeletingCampaign] = useState(false);
   const [renamingCampaign, setRenamingCampaign] = useState(false);
-  const [loadingSelectedPlan, setLoadingSelectedPlan] = useState(false);
+
+  const [accessLocked, setAccessLocked] = useState(false);
+  const [accessMessage, setAccessMessage] = useState('');
 
   const [audienceTarget, setAudienceTarget] = useState('Local customers');
   const [customAudienceTarget, setCustomAudienceTarget] = useState('');
@@ -303,6 +298,12 @@ export default function PostsPage() {
   const [editHashtags, setEditHashtags] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
+  const [uploadingMediaPostId, setUploadingMediaPostId] = useState<string | null>(null);
+  const [removingMediaPostId, setRemovingMediaPostId] = useState<string | null>(null);
+  const [publishingPostId, setPublishingPostId] = useState<string | null>(null);
+  const [savingReminderPostId, setSavingReminderPostId] = useState<string | null>(null);
+  const [reminderValue, setReminderValue] = useState('');
+
   const [showTodayReminder, setShowTodayReminder] = useState(false);
   const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(null);
   const [successMoment, setSuccessMoment] = useState<SuccessMoment | null>(null);
@@ -315,13 +316,6 @@ export default function PostsPage() {
 
   const [showPostsTour, setShowPostsTour] = useState(false);
   const [postsTourStep, setPostsTourStep] = useState(0);
-
-  const postsHeaderRef = useRef<HTMLDivElement | null>(null);
-  const postsHeaderTextRef = useRef<HTMLDivElement | null>(null);
-  const campaignHistoryControlsRef = useRef<HTMLDivElement | null>(null);
-  const daySelectorRef = useRef<HTMLDivElement | null>(null);
-  const publishingPanelRef = useRef<HTMLElement | null>(null);
-
   const [postsTourRect, setPostsTourRect] = useState<{
     top: number;
     left: number;
@@ -329,8 +323,67 @@ export default function PostsPage() {
     height: number;
   } | null>(null);
 
-  const [accessLocked, setAccessLocked] = useState(false);
-  const [accessMessage, setAccessMessage] = useState('');
+  const queueRef = useRef<HTMLDivElement | null>(null);
+  const postRef = useRef<HTMLElement | null>(null);
+  const mediaRef = useRef<HTMLElement | null>(null);
+  const publishRef = useRef<HTMLElement | null>(null);
+
+  function sortPostsByDate(items: any[]) {
+    return [...items].sort((firstPost, secondPost) => {
+      const firstTime = firstPost.scheduled_at ? new Date(firstPost.scheduled_at).getTime() : 0;
+      const secondTime = secondPost.scheduled_at ? new Date(secondPost.scheduled_at).getTime() : 0;
+      return firstTime - secondTime;
+    });
+  }
+
+  function isPostPosted(post: any) {
+    return (
+      post?.is_posted === true ||
+      String(post?.status || '').toLowerCase() === 'posted' ||
+      String(post?.publish_status || '').toLowerCase() === 'posted'
+    );
+  }
+
+  function isPostFailed(post: any) {
+    return String(post?.publish_status || '').toLowerCase() === 'failed';
+  }
+
+  function isPostReminderSet(post: any) {
+    if (isPostPosted(post)) return false;
+    if (isPostFailed(post)) return false;
+
+    return (
+      Boolean(post?.scheduled_publish_at) ||
+      String(post?.status || '').toLowerCase() === 'scheduled' ||
+      String(post?.publish_status || '').toLowerCase() === 'scheduled'
+    );
+  }
+
+  function getPostStatus(post: any): PostStatus {
+    if (isPostFailed(post)) return 'Failed';
+    if (isPostPosted(post)) return 'Posted';
+    if (isPostReminderSet(post)) return 'Reminder set';
+    return 'Ready';
+  }
+
+  function getStatusClass(status: PostStatus) {
+    if (status === 'Posted') return 'is-posted';
+    if (status === 'Reminder set') return 'is-scheduled';
+    if (status === 'Failed') return 'is-failed';
+    return 'is-ready';
+  }
+
+  const sortedPosts = useMemo(() => sortPostsByDate(posts), [posts]);
+
+  const selectedPost = useMemo(() => {
+    if (!selectedPostId) return null;
+    return sortedPosts.find((post) => post.id === selectedPostId) || null;
+  }, [selectedPostId, sortedPosts]);
+
+  const activePostForEditing = useMemo(() => {
+    if (!editingPostId) return null;
+    return sortedPosts.find((post) => post.id === editingPostId) || null;
+  }, [editingPostId, sortedPosts]);
 
   useEffect(() => {
     loadPageData();
@@ -344,6 +397,33 @@ export default function PostsPage() {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (loading || posts.length === 0) return;
+
+    const todayUnpostedPost = posts.find(
+      (post) => isPostScheduledToday(post) && !isPostPosted(post)
+    );
+
+    if (!todayUnpostedPost) return;
+
+    const storageKey = getTodayReminderStorageKey();
+
+    if (localStorage.getItem(storageKey) === 'true') return;
+
+    localStorage.setItem(storageKey, 'true');
+    setTodayReminderPostId(todayUnpostedPost.id);
+    setShowTodayReminder(true);
+  }, [loading, posts]);
+
+  useEffect(() => {
+    if (!selectedPost) {
+      setReminderValue('');
+      return;
+    }
+
+    setReminderValue(toDateTimeInputValue(selectedPost.scheduled_publish_at || ''));
+  }, [selectedPost]);
 
   useEffect(() => {
     if (!showPostsTour || loading) return;
@@ -370,33 +450,15 @@ export default function PostsPage() {
       window.removeEventListener('resize', updatePostsTourRect);
       window.removeEventListener('scroll', updatePostsTourRect, true);
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPostsTour, postsTourStep, loading, selectedPostId, posts.length]);
-
-  useEffect(() => {
-    if (loading || posts.length === 0) return;
-
-    const todayUnpostedPost = posts.find(
-      (post) => isPostScheduledToday(post) && !post.is_posted
-    );
-
-    if (!todayUnpostedPost) return;
-
-    const storageKey = getTodayReminderStorageKey();
-
-    if (localStorage.getItem(storageKey) === 'true') return;
-
-    localStorage.setItem(storageKey, 'true');
-    setTodayReminderPostId(todayUnpostedPost.id);
-    setShowTodayReminder(true);
-  }, [loading, posts]);
 
   const getTodayKey = () => {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-
     return `${year}-${month}-${day}`;
   };
 
@@ -406,7 +468,6 @@ export default function PostsPage() {
 
   const shouldOpenTodayPost = () => {
     if (typeof window === 'undefined') return false;
-
     const params = new URLSearchParams(window.location.search);
     return params.get('today') === 'true';
   };
@@ -422,30 +483,6 @@ export default function PostsPage() {
   const isPostScheduledToday = (post: any) => {
     if (!post?.scheduled_at) return false;
     return isSameDate(new Date(post.scheduled_at), new Date());
-  };
-
-  const getReadableError = (error: any, fallback = 'Something went wrong.') => {
-    if (!error) return fallback;
-    if (typeof error === 'string') return error;
-
-    if (axios.isAxiosError(error)) {
-      return (
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        error.response?.data?.details ||
-        error.message ||
-        fallback
-      );
-    }
-
-    return (
-      error?.response?.data?.error ||
-      error?.response?.data?.message ||
-      error?.message ||
-      error?.error_description ||
-      error?.details ||
-      fallback
-    );
   };
 
   const isFutureDate = (value?: string | null) => {
@@ -501,8 +538,38 @@ export default function PostsPage() {
     return {
       locked: true,
       message:
-        'Your 7-day demo has ended. You can still view and publish existing posts, but editing and making posts more specific are locked until access is extended or a subscription is active.',
+        'Your 7-day demo has ended. You can still view and publish existing posts, but editing, media upload, and improving posts are locked until access is extended or a subscription is active.',
     };
+  };
+
+  const getReadableError = (error: any, fallback = 'Something went wrong.') => {
+    if (!error) return fallback;
+    if (typeof error === 'string') return error;
+
+    if (axios.isAxiosError(error)) {
+      return (
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.response?.data?.details ||
+        error.message ||
+        fallback
+      );
+    }
+
+    return (
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      error?.error_description ||
+      error?.details ||
+      fallback
+    );
+  };
+
+  const ensureAccessAllowed = () => {
+    if (!accessLocked) return true;
+    alert(accessMessage);
+    return false;
   };
 
   const loadAccess = async () => {
@@ -516,7 +583,6 @@ export default function PostsPage() {
     }
 
     const userId = authData.user?.id;
-
     if (!userId) return;
 
     const { data, error } = await supabase
@@ -533,16 +599,8 @@ export default function PostsPage() {
     }
 
     const calculated = calculateAccess((data || null) as AccessInfo | null);
-
     setAccessLocked(calculated.locked);
     setAccessMessage(calculated.message);
-  };
-
-  const ensureAccessAllowed = () => {
-    if (!accessLocked) return true;
-
-    alert(accessMessage);
-    return false;
   };
 
   const loadPageData = async () => {
@@ -579,7 +637,6 @@ export default function PostsPage() {
 
     const loadedCampaigns = data || [];
     setCampaigns(loadedCampaigns);
-
     return loadedCampaigns;
   };
 
@@ -604,7 +661,6 @@ export default function PostsPage() {
     if (!campaignId) {
       setPosts([]);
       setSelectedPostId(null);
-      setCalendarStartIndex(0);
       return;
     }
 
@@ -618,53 +674,72 @@ export default function PostsPage() {
       console.error('Error loading posts:', error.message);
       setPosts([]);
       setSelectedPostId(null);
-      setCalendarStartIndex(0);
       return;
     }
 
-    const loadedPosts = data || [];
-    const sortedLoadedPosts = sortPostsByDate(loadedPosts);
+    const loadedPosts = sortPostsByDate(data || []);
+    setPosts(loadedPosts);
 
-    setPosts(sortedLoadedPosts);
-
-    if (sortedLoadedPosts.length > 0) {
-      const todayUnpostedPost = sortedLoadedPosts.find(
-        (post) => isPostScheduledToday(post) && !post.is_posted
-      );
-
-      const firstUnpostedPost = sortedLoadedPosts.find((post) => !post.is_posted);
-
-      const stillExists = selectedPostId
-        ? sortedLoadedPosts.some((post) => post.id === selectedPostId)
-        : false;
-
-      const nextSelectedPost =
-        shouldOpenTodayPost() && todayUnpostedPost
-          ? todayUnpostedPost
-          : stillExists
-            ? sortedLoadedPosts.find((post) => post.id === selectedPostId) || sortedLoadedPosts[0]
-            : todayUnpostedPost || firstUnpostedPost || sortedLoadedPosts[0];
-
-      const nextSelectedIndex = sortedLoadedPosts.findIndex(
-        (post) => post.id === nextSelectedPost.id
-      );
-
-      setSelectedPostId(nextSelectedPost.id);
-      setCalendarStartIndex(nextSelectedIndex >= 0 ? nextSelectedIndex : 0);
-    } else {
+    if (loadedPosts.length === 0) {
       setSelectedPostId(null);
-      setCalendarStartIndex(0);
+      return;
     }
+
+    const todayUnpostedPost = loadedPosts.find(
+      (post) => isPostScheduledToday(post) && !isPostPosted(post)
+    );
+
+    if (shouldOpenTodayPost() && todayUnpostedPost) {
+      setSelectedPostId(todayUnpostedPost.id);
+      return;
+    }
+
+    setSelectedPostId(null);
   };
 
-  const sortPostsByDate = (items: any[]) => {
-    return [...items].sort((firstPost, secondPost) => {
-      const firstTime = firstPost.scheduled_at ? new Date(firstPost.scheduled_at).getTime() : 0;
-      const secondTime = secondPost.scheduled_at ? new Date(secondPost.scheduled_at).getTime() : 0;
+  const businessName =
+    profile?.business_name ||
+    campaign?.business_name ||
+    selectedPost?.business_name ||
+    'Your business';
 
-      return firstTime - secondTime;
-    });
-  };
+  const activeIndustry = String(
+    profile?.industry || campaign?.business_type || campaign?.industry || ''
+  ).toLowerCase();
+
+  const dynamicAudienceTargets = useMemo(() => {
+    const matchedKey = Object.keys(industryAudienceTargets).find((key) =>
+      activeIndustry.includes(key)
+    );
+
+    return matchedKey ? industryAudienceTargets[matchedKey] : defaultAudienceTargets;
+  }, [activeIndustry]);
+
+  useEffect(() => {
+    if (!dynamicAudienceTargets.includes(audienceTarget)) {
+      setAudienceTarget(dynamicAudienceTargets[0] || 'Custom audience');
+    }
+  }, [dynamicAudienceTargets, audienceTarget]);
+
+  const postedCount = posts.filter((post) => isPostPosted(post)).length;
+  const postsLeftThisWeek = Math.max((posts.length || 0) - postedCount, 0);
+  const weeklyProgressPercent =
+    posts.length > 0 ? Math.round((postedCount / posts.length) * 100) : 0;
+
+  const todayReminderPost = posts.find((post) => post.id === todayReminderPostId) || null;
+
+  const activeImprovementNote =
+    selectedPost && improvementNote?.postId === selectedPost.id ? improvementNote : null;
+
+  const brandPrimary = profile?.brand_primary_color || '#ffd43b';
+  const brandSecondary = profile?.brand_secondary_color || '#101420';
+  const brandAccent = profile?.brand_accent_color || '#3ddc97';
+
+  const brandStyle = {
+    '--client-primary': brandPrimary,
+    '--client-secondary': brandSecondary,
+    '--client-accent': brandAccent,
+  } as CSSProperties;
 
   const switchCampaign = async (campaignId: string) => {
     const nextCampaign = campaigns.find((item) => item.id === campaignId) || null;
@@ -673,7 +748,6 @@ export default function PostsPage() {
     setPendingCampaignId(campaignId);
     setCampaign(nextCampaign);
     setSelectedPostId(null);
-    setCalendarStartIndex(0);
     cancelEditingPost();
     setImprovementNote(null);
     setShowImproveTools(false);
@@ -766,7 +840,7 @@ export default function PostsPage() {
 
       const { data: campaignPosts, error: postsLoadError } = await supabase
         .from('campaign_posts')
-        .select('id, image_path')
+        .select('id, image_path, media_path')
         .eq('campaign_id', campaignIdToDelete);
 
       if (postsLoadError) {
@@ -774,15 +848,19 @@ export default function PostsPage() {
         return;
       }
 
-      const imagePaths = campaignPosts?.map((post) => post.image_path).filter(Boolean) || [];
+      const storagePaths =
+        campaignPosts
+          ?.flatMap((post) => [post.image_path, post.media_path])
+          .filter(Boolean)
+          .filter((value, index, array) => array.indexOf(value) === index) || [];
 
-      if (imagePaths.length > 0) {
+      if (storagePaths.length > 0) {
         const { error: storageError } = await supabase.storage
-          .from(IMAGE_BUCKET)
-          .remove(imagePaths);
+          .from(MEDIA_BUCKET)
+          .remove(storagePaths);
 
         if (storageError) {
-          console.error('Weekly plan image delete error:', storageError.message);
+          console.error('Weekly plan media delete error:', storageError.message);
         }
       }
 
@@ -801,7 +879,6 @@ export default function PostsPage() {
       setCampaign(null);
       setPosts([]);
       setSelectedPostId(null);
-      setCalendarStartIndex(0);
       setImprovementNote(null);
       setShowImproveTools(false);
       cancelEditingPost();
@@ -817,32 +894,106 @@ export default function PostsPage() {
     }
   };
 
+  const cleanCampaignLabel = (value: any) => {
+    const raw = String(value || '').trim();
+
+    return (
+      raw
+        .replace(/\s+—\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}(?:\s+\d{1,2}:\d{2})?(?:\s+—.*)?$/g, '')
+        .replace(/\s+-\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}.*$/g, '')
+        .replace(/\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}(?:\s+\d{1,2}:\d{2})?$/g, '')
+        .trim() || 'Weekly plan'
+    );
+  };
+
   const getCampaignOptionLabel = (item: any) => {
-    const business =
+    const label =
+      item.name ||
       item.business_name ||
       item.business_type ||
       item.campaign_area ||
-      item.name ||
+      item.campaign_idea ||
       'Weekly plan';
 
-    const createdDate = item.created_at ? new Date(item.created_at) : null;
+    return cleanCampaignLabel(label);
+  };
 
-    const date = createdDate
-      ? createdDate.toLocaleDateString(undefined, {
-          day: '2-digit',
-          month: 'short',
-        })
-      : '';
+  const choosePost = (postId: string) => {
+    setSelectedPostId(postId);
+    setImprovementNote(null);
+    setShowImproveTools(false);
+    cancelEditingPost();
+  };
 
-    return date ? `${business} — ${date}` : business;
+  const closePostModal = () => {
+    setSelectedPostId(null);
+    setImprovementNote(null);
+    setShowImproveTools(false);
+    cancelEditingPost();
+  };
+
+  const selectNextPost = () => {
+    if (sortedPosts.length === 0) return;
+
+    if (!selectedPost) {
+      choosePost(sortedPosts[0].id);
+      return;
+    }
+
+    const selectedIndex = sortedPosts.findIndex((post) => post.id === selectedPost.id);
+    const safeIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    const nextIndex = (safeIndex + 1) % sortedPosts.length;
+    const nextPost = sortedPosts[nextIndex];
+
+    if (!nextPost) return;
+
+    choosePost(nextPost.id);
+  };
+
+  const getPostDateParts = (post: any) => {
+    const date = post?.scheduled_at ? new Date(post.scheduled_at) : new Date();
+
+    return {
+      weekday: date.toLocaleDateString(undefined, { weekday: 'short' }),
+      day: date.toLocaleDateString(undefined, { day: '2-digit' }),
+      month: date.toLocaleDateString(undefined, { month: 'short' }),
+    };
+  };
+
+  const getPostPositionLabel = (post: any) => {
+    const index = sortedPosts.findIndex((item) => item.id === post?.id);
+    return index >= 0 ? `Day ${index + 1}` : post?.scheduled_day || 'Day';
+  };
+
+  const hashtagsToString = (hashtags: any) => {
+    if (Array.isArray(hashtags)) return hashtags.join(' ');
+    if (typeof hashtags === 'string') return hashtags;
+    return '';
+  };
+
+  const stringToHashtags = (value: string) => {
+    return value
+      .split(/[\s,]+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((item) => (item.startsWith('#') ? item : `#${item}`));
+  };
+
+  const buildPostText = (post: any) => {
+    const caption = post?.caption || '';
+    const cta = post?.cta ? `CTA: ${post.cta}` : '';
+    const hashtags = Array.isArray(post?.hashtags) ? post.hashtags.join(' ') : '';
+
+    return [caption, cta, hashtags].filter(Boolean).join('\n\n').trim();
   };
 
   const copyPost = async (post: any) => {
-    const caption = post.caption || '';
-    const cta = post.cta ? `CTA: ${post.cta}` : '';
-    const hashtags = Array.isArray(post.hashtags) ? post.hashtags.join(' ') : '';
+    const textToCopy = buildPostText(post);
 
-    const textToCopy = [caption, cta, hashtags].filter(Boolean).join('\n\n').trim();
+    if (!textToCopy) {
+      alert('There is no post text to copy yet.');
+      return;
+    }
 
     await navigator.clipboard.writeText(textToCopy);
     alert('Post copied.');
@@ -861,164 +1012,177 @@ export default function PostsPage() {
       platform.includes('pinterest') ||
       platform.includes('shorts')
     ) {
-      return 'Use a clear visual that matches the post: finished work, product detail, team moment, venue, customer result, or a simple behind-the-scenes photo.';
+      return 'Use a clear image or video that matches the post: finished work, product detail, team moment, venue, customer result, or behind-the-scenes clip.';
     }
 
-    return 'Choose a clear photo that supports the post, such as your work, product, team, premises, or a customer result.';
+    return 'Choose a clear photo or short video that supports the post, such as your work, product, team, premises, or a customer result.';
   };
 
-  const shouldShowImageGuidance = (post: any) => {
-    if (!post) return false;
+  const mediaRequiredForPlatform = (platform?: string) => {
+    const cleanPlatform = String(platform || '').toLowerCase();
 
-    const platform = String(post.platform || '').toLowerCase();
-
-    return Boolean(
-      post.image_prompt ||
-        platform.includes('instagram') ||
-        platform.includes('tiktok') ||
-        platform.includes('pinterest') ||
-        platform.includes('shorts')
+    return (
+      cleanPlatform.includes('instagram') ||
+      cleanPlatform.includes('tiktok') ||
+      cleanPlatform.includes('pinterest') ||
+      cleanPlatform.includes('shorts')
     );
   };
 
-  const maybeShowReviewPrompt = () => {
-    if (typeof window === 'undefined') return;
+  const getPlatformUrl = (platform: string) => {
+    const cleanPlatform = String(platform || '').toLowerCase();
 
-    const hasSubmitted = localStorage.getItem(REVIEW_PROMPT_SUBMITTED_KEY) === 'true';
-    const hasDismissed = localStorage.getItem(REVIEW_PROMPT_DISMISSED_KEY) === 'true';
+    if (cleanPlatform.includes('facebook')) return 'https://www.facebook.com';
+    if (cleanPlatform.includes('instagram')) return 'https://www.instagram.com';
+    if (cleanPlatform.includes('google')) return 'https://business.google.com';
+    if (cleanPlatform.includes('pinterest')) return 'https://www.pinterest.com';
+    if (cleanPlatform.includes('linkedin')) return 'https://www.linkedin.com';
+    if (cleanPlatform.includes('tiktok')) return 'https://www.tiktok.com';
+    if (cleanPlatform.includes('youtube')) return 'https://www.youtube.com';
+    if (cleanPlatform.includes('twitter') || cleanPlatform.includes('x')) return 'https://x.com';
 
-    if (hasSubmitted || hasDismissed) return;
-
-    const currentCount = Number(localStorage.getItem(REVIEW_PROMPT_POSTED_COUNT_KEY) || '0');
-    const nextCount = currentCount + 1;
-
-    localStorage.setItem(REVIEW_PROMPT_POSTED_COUNT_KEY, String(nextCount));
-
-    if (nextCount >= REVIEW_PROMPT_TRIGGER_COUNT) {
-      setShowReviewPrompt(true);
-    }
+    return 'https://www.google.com';
   };
 
-  const submitReviewPrompt = async () => {
-    if (!reviewText.trim()) {
-      alert('Please write a short review.');
+  const openPlatform = (platform: string) => {
+    window.open(getPlatformUrl(platform), '_blank');
+  };
+
+  const getPlatformDisplayName = (post: any) => {
+    return post?.platform || 'Facebook';
+  };
+
+  const canDirectPublishToFacebook = (post: any) => {
+    return String(post?.platform || '').toLowerCase().includes('facebook');
+  };
+
+  const getMediaKind = (file: File) => {
+    if (file.type.startsWith('video/')) return 'video';
+    return 'image';
+  };
+
+  const getSafeFileName = (fileName: string) => {
+    const cleanName = fileName
+      .toLowerCase()
+      .replace(/[^a-z0-9.\-_]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    return cleanName || 'media';
+  };
+
+  const uploadMedia = async (post: any, event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    event.target.value = '';
+
+    if (!file || !post?.id) return;
+
+    if (!ensureAccessAllowed()) return;
+
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      alert('Please upload an image or video file.');
       return;
     }
 
-    setSavingReview(true);
+    setUploadingMediaPostId(post.id);
 
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData.user?.id || null;
+      const { data: authData, error: authError } = await supabase.auth.getUser();
 
-      if (!userId) {
-        alert('Please sign in before leaving a review.');
-        return;
-      }
+      if (authError) throw authError;
 
-      const { error } = await supabase.from('user_reviews').insert({
-        user_id: userId,
-        rating: reviewRating,
-        review_text: reviewText.trim(),
-        status: 'new',
-        created_at: new Date().toISOString(),
-      });
+      const userId = authData.user?.id || 'anonymous';
+      const mediaType = getMediaKind(file);
+      const safeFileName = getSafeFileName(file.name);
+      const path = `${userId}/posts/${post.id}/${Date.now()}-${safeFileName}`;
 
-      if (error) {
-        throw error;
-      }
+      const { error: uploadError } = await supabase.storage
+        .from(MEDIA_BUCKET)
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type,
+        });
 
-      localStorage.setItem(REVIEW_PROMPT_SUBMITTED_KEY, 'true');
+      if (uploadError) throw uploadError;
 
-      setShowReviewPrompt(false);
-      setReviewRating(5);
-      setReviewHoverRating(0);
-      setReviewText('');
+      const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
 
-      alert('Thank you — your review has been sent.');
+      const updates = {
+        media_url: publicUrlData.publicUrl,
+        media_path: path,
+        media_type: mediaType,
+      };
+
+      const { error: updateError } = await supabase
+        .from('campaign_posts')
+        .update(updates)
+        .eq('id', post.id);
+
+      if (updateError) throw updateError;
+
+      updatePostLocally(post.id, updates);
+      alert(`${mediaType === 'video' ? 'Video' : 'Image'} added.`);
     } catch (error: any) {
-      alert(error?.message || 'Error submitting review.');
+      const message = getReadableError(error, 'Error uploading media.');
+      console.error('Upload media error:', error);
+      alert(message);
     } finally {
-      setSavingReview(false);
+      setUploadingMediaPostId(null);
     }
   };
 
-  const dismissReviewPrompt = () => {
-    localStorage.setItem(REVIEW_PROMPT_DISMISSED_KEY, 'true');
-    setShowReviewPrompt(false);
-  };
-    const markAsPosted = async (postId: string) => {
-    const postIndex = posts.findIndex((post) => post.id === postId);
+  const removeMedia = async (post: any) => {
+    if (!post?.id) return;
 
-    const updatedPosts = posts.map((post) =>
-      post.id === postId ? { ...post, is_posted: true, status: 'posted' } : post
-    );
+    if (!ensureAccessAllowed()) return;
 
-    const postsLeftAfterMarking = updatedPosts.filter((post) => !post.is_posted).length;
+    const confirmed = confirm('Remove this media from the post?');
 
-    const nextPost =
-      updatedPosts.slice(postIndex + 1).find((post) => !post.is_posted) ||
-      updatedPosts.find((post) => !post.is_posted) ||
-      null;
+    if (!confirmed) return;
 
-    const { error } = await supabase
-      .from('campaign_posts')
-      .update({
-        is_posted: true,
-        status: 'posted',
-      })
-      .eq('id', postId);
+    setRemovingMediaPostId(post.id);
 
-    if (error) {
-      alert(error.message);
-      return;
+    try {
+      if (post.media_path) {
+        const { error: storageError } = await supabase.storage
+          .from(MEDIA_BUCKET)
+          .remove([post.media_path]);
+
+        if (storageError) {
+          console.error('Remove media storage error:', storageError.message);
+        }
+      }
+
+      const updates = {
+        media_url: null,
+        media_path: null,
+        media_type: null,
+      };
+
+      const { error } = await supabase
+        .from('campaign_posts')
+        .update(updates)
+        .eq('id', post.id);
+
+      if (error) throw error;
+
+      updatePostLocally(post.id, updates);
+      alert('Media removed.');
+    } catch (error: any) {
+      const message = getReadableError(error, 'Error removing media.');
+      console.error('Remove media error:', error);
+      alert(message);
+    } finally {
+      setRemovingMediaPostId(null);
     }
-
-    setSuccessMoment({
-      postsLeft: postsLeftAfterMarking,
-      nextPostId: nextPost?.id || null,
-    });
-
-    maybeShowReviewPrompt();
-
-    await loadPosts(campaign?.id || null);
-  };
-
-  const markAsScheduled = async (postId: string) => {
-    const { error } = await supabase
-      .from('campaign_posts')
-      .update({
-        is_posted: false,
-        status: 'scheduled',
-      })
-      .eq('id', postId);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    await loadPosts(campaign?.id || null);
   };
 
   const updatePostLocally = (postId: string, updates: any) => {
     setPosts((currentPosts) =>
       currentPosts.map((post) => (post.id === postId ? { ...post, ...updates } : post))
     );
-  };
-
-  const hashtagsToString = (hashtags: any) => {
-    if (Array.isArray(hashtags)) return hashtags.join(' ');
-    if (typeof hashtags === 'string') return hashtags;
-    return '';
-  };
-
-  const stringToHashtags = (value: string) => {
-    return value
-      .split(/[\s,]+/)
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .map((item) => (item.startsWith('#') ? item : `#${item}`));
   };
 
   const startEditingPost = (post: any) => {
@@ -1035,8 +1199,8 @@ export default function PostsPage() {
     setEditHashtags('');
   };
 
-  const saveEditedPost = async (post: any) => {
-    if (!post?.id) return;
+  const saveEditedPost = async () => {
+    if (!activePostForEditing?.id) return;
 
     if (!ensureAccessAllowed()) return;
 
@@ -1057,22 +1221,22 @@ export default function PostsPage() {
       const { error } = await supabase
         .from('campaign_posts')
         .update(updates)
-        .eq('id', post.id);
+        .eq('id', activePostForEditing.id);
 
       if (error) {
         alert(error.message);
         return;
       }
 
-      updatePostLocally(post.id, updates);
-      cancelEditingPost();
+      updatePostLocally(activePostForEditing.id, updates);
 
       setImprovementNote({
-        postId: post.id,
-        label: 'Manual edit saved',
-        detail: 'Review the updated post above, then copy and publish when ready.',
+        postId: activePostForEditing.id,
+        label: 'Wording saved',
+        detail: 'Review the updated post, then add media or publish when ready.',
       });
 
+      cancelEditingPost();
       alert('Post updated.');
     } catch (error: any) {
       const message = getReadableError(error, 'Error saving post changes.');
@@ -1143,7 +1307,7 @@ export default function PostsPage() {
     }
 
     if (!post.caption?.trim()) {
-      alert('This post needs a caption before it can be made more specific.');
+      alert('This post needs a caption before it can be improved.');
       return;
     }
 
@@ -1179,7 +1343,7 @@ export default function PostsPage() {
           'Made the post more specific for the selected audience.',
       });
     } catch (error: any) {
-      const message = getReadableError(error, 'Error making post more specific.');
+      const message = getReadableError(error, 'Error improving post.');
       console.error('Make more specific error:', error);
       alert(message);
     } finally {
@@ -1229,7 +1393,7 @@ export default function PostsPage() {
         label: `Improved: ${actionLabel}`,
         detail:
           response.data.improvement_summary ||
-          'Review the updated post above, then copy and publish when ready.',
+          'Review the updated post, then add media or publish when ready.',
       });
     } catch (error: any) {
       const message = getReadableError(error, 'Error improving post.');
@@ -1241,19 +1405,317 @@ export default function PostsPage() {
     }
   };
 
-  const openPlatform = (platform: string) => {
-    const urls: Record<string, string> = {
-      Facebook: 'https://www.facebook.com',
-      Instagram: 'https://www.instagram.com',
-      'Google Business': 'https://business.google.com',
-      Pinterest: 'https://www.pinterest.com',
-      LinkedIn: 'https://www.linkedin.com',
-      TikTok: 'https://www.tiktok.com',
-      'YouTube Shorts': 'https://www.youtube.com',
-      'X / Twitter': 'https://x.com',
+  const publishToFacebook = async (post: any) => {
+    if (!post?.id) return;
+
+    if (!canDirectPublishToFacebook(post)) {
+      alert('Direct publishing is currently only available for Facebook.');
+      return;
+    }
+
+    const text = buildPostText(post);
+
+    if (!text) {
+      alert('This post needs wording before it can be published.');
+      return;
+    }
+
+    setPublishingPostId(post.id);
+
+    try {
+      const response = await axios.post('/api/facebook/publish', {
+        postId: post.id,
+        campaignPostId: post.id,
+        campaign_id: post.campaign_id,
+        platform: post.platform || 'Facebook',
+        message: text,
+        text,
+        caption: post.caption || '',
+        cta: post.cta || '',
+        hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
+        media_url: post.media_url || null,
+        mediaUrl: post.media_url || null,
+        media_type: post.media_type || null,
+        mediaType: post.media_type || null,
+      });
+
+      const facebookPostId =
+        response.data?.facebook_post_id ||
+        response.data?.post_id ||
+        response.data?.id ||
+        response.data?.result?.id ||
+        null;
+
+      const updates = {
+        is_posted: true,
+        status: 'posted',
+        publish_status: 'posted',
+        publish_error: null,
+        published_to: 'Facebook',
+        published_at: new Date().toISOString(),
+        facebook_post_id: facebookPostId,
+      };
+
+      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+
+      updatePostLocally(post.id, updates);
+      maybeShowReviewPrompt();
+
+      const postIndex = sortedPosts.findIndex((item) => item.id === post.id);
+      const updatedPosts = sortedPosts.map((item) =>
+        item.id === post.id ? { ...item, ...updates } : item
+      );
+      const postsLeftAfterPublishing = updatedPosts.filter((item) => !isPostPosted(item)).length;
+      const nextPost =
+        updatedPosts.slice(postIndex + 1).find((item) => !isPostPosted(item)) ||
+        updatedPosts.find((item) => !isPostPosted(item)) ||
+        null;
+
+      setSuccessMoment({
+        postsLeft: postsLeftAfterPublishing,
+        nextPostId: nextPost?.id || null,
+      });
+    } catch (error: any) {
+      const message = getReadableError(error, 'Facebook publishing failed.');
+
+      const updates = {
+        publish_status: 'failed',
+        publish_error: message,
+        status: 'failed',
+      };
+
+      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+      updatePostLocally(post.id, updates);
+
+      console.error('Facebook publish error:', error);
+      alert(message);
+    } finally {
+      setPublishingPostId(null);
+    }
+  };
+
+  const markAsPosted = async (postId: string) => {
+    const postIndex = sortedPosts.findIndex((post) => post.id === postId);
+
+    const updates = {
+      is_posted: true,
+      status: 'posted',
+      publish_status: 'posted',
+      publish_error: null,
+      published_at: new Date().toISOString(),
     };
 
-    window.open(urls[platform] || 'https://www.google.com', '_blank');
+    const updatedPosts = sortedPosts.map((post) =>
+      post.id === postId ? { ...post, ...updates } : post
+    );
+
+    const postsLeftAfterMarking = updatedPosts.filter((post) => !isPostPosted(post)).length;
+
+    const nextPost =
+      updatedPosts.slice(postIndex + 1).find((post) => !isPostPosted(post)) ||
+      updatedPosts.find((post) => !isPostPosted(post)) ||
+      null;
+
+    const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    updatePostLocally(postId, updates);
+
+    setSuccessMoment({
+      postsLeft: postsLeftAfterMarking,
+      nextPostId: nextPost?.id || null,
+    });
+
+    maybeShowReviewPrompt();
+  };
+
+  const markAsNotPosted = async (postId: string) => {
+    const updates = {
+      is_posted: false,
+      status: 'ready',
+      publish_status: null,
+      publish_error: null,
+      published_at: null,
+      published_to: null,
+      facebook_post_id: null,
+    };
+
+    const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    updatePostLocally(postId, updates);
+  };
+
+  const saveReminder = async (post: any) => {
+    if (!post?.id) return;
+
+    if (!reminderValue) {
+      alert('Choose a date and time first.');
+      return;
+    }
+
+    setSavingReminderPostId(post.id);
+
+    try {
+      const scheduledIso = new Date(reminderValue).toISOString();
+
+      const updates = {
+        scheduled_publish_at: scheduledIso,
+        status: 'scheduled',
+        publish_status: 'scheduled',
+        publish_error: null,
+        is_posted: false,
+      };
+
+      const { error } = await supabase
+        .from('campaign_posts')
+        .update(updates)
+        .eq('id', post.id);
+
+      if (error) throw error;
+
+      updatePostLocally(post.id, updates);
+      alert('Reminder time saved.');
+    } catch (error: any) {
+      const message = getReadableError(error, 'Error saving reminder time.');
+      console.error('Save reminder error:', error);
+      alert(message);
+    } finally {
+      setSavingReminderPostId(null);
+    }
+  };
+
+  const clearReminder = async (post: any) => {
+    if (!post?.id) return;
+
+    setSavingReminderPostId(post.id);
+
+    try {
+      const updates = {
+        scheduled_publish_at: null,
+        status: 'ready',
+        publish_status: null,
+        publish_error: null,
+      };
+
+      const { error } = await supabase
+        .from('campaign_posts')
+        .update(updates)
+        .eq('id', post.id);
+
+      if (error) throw error;
+
+      updatePostLocally(post.id, updates);
+      setReminderValue('');
+      alert('Reminder removed.');
+    } catch (error: any) {
+      const message = getReadableError(error, 'Error clearing reminder.');
+      console.error('Clear reminder error:', error);
+      alert(message);
+    } finally {
+      setSavingReminderPostId(null);
+    }
+  };
+
+  const toDateTimeInputValue = (value?: string | null) => {
+    if (!value) return '';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return '';
+
+    const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+    const localDate = new Date(date.getTime() - offsetMs);
+
+    return localDate.toISOString().slice(0, 16);
+  };
+
+  const getReadableDateTime = (value?: string | null) => {
+    if (!value) return '';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return '';
+
+    return date.toLocaleString(undefined, {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const maybeShowReviewPrompt = () => {
+    if (typeof window === 'undefined') return;
+
+    const hasSubmitted = localStorage.getItem(REVIEW_PROMPT_SUBMITTED_KEY) === 'true';
+    const hasDismissed = localStorage.getItem(REVIEW_PROMPT_DISMISSED_KEY) === 'true';
+
+    if (hasSubmitted || hasDismissed) return;
+
+    const currentCount = Number(localStorage.getItem(REVIEW_PROMPT_POSTED_COUNT_KEY) || '0');
+    const nextCount = currentCount + 1;
+
+    localStorage.setItem(REVIEW_PROMPT_POSTED_COUNT_KEY, String(nextCount));
+
+    if (nextCount >= REVIEW_PROMPT_TRIGGER_COUNT) {
+      setShowReviewPrompt(true);
+    }
+  };
+
+  const submitReviewPrompt = async () => {
+    if (!reviewText.trim()) {
+      alert('Please write a short review.');
+      return;
+    }
+
+    setSavingReview(true);
+
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id || null;
+
+      if (!userId) {
+        alert('Please sign in before leaving a review.');
+        return;
+      }
+
+      const { error } = await supabase.from('user_reviews').insert({
+        user_id: userId,
+        rating: reviewRating,
+        review_text: reviewText.trim(),
+        status: 'new',
+        created_at: new Date().toISOString(),
+      });
+
+      if (error) throw error;
+
+      localStorage.setItem(REVIEW_PROMPT_SUBMITTED_KEY, 'true');
+
+      setShowReviewPrompt(false);
+      setReviewRating(5);
+      setReviewHoverRating(0);
+      setReviewText('');
+
+      alert('Thank you — your review has been sent.');
+    } catch (error: any) {
+      alert(error?.message || 'Error submitting review.');
+    } finally {
+      setSavingReview(false);
+    }
+  };
+
+  const dismissReviewPrompt = () => {
+    localStorage.setItem(REVIEW_PROMPT_DISMISSED_KEY, 'true');
+    setShowReviewPrompt(false);
   };
 
   const openTodayReminderPost = () => {
@@ -1262,13 +1724,6 @@ export default function PostsPage() {
     }
 
     setShowTodayReminder(false);
-
-    window.setTimeout(() => {
-      publishingPanelRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }, 80);
   };
 
   const viewNextPostAfterSuccess = () => {
@@ -1279,46 +1734,6 @@ export default function PostsPage() {
 
     choosePost(successMoment.nextPostId);
     setSuccessMoment(null);
-
-    window.setTimeout(() => {
-      daySelectorRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }, 120);
-  };
-
-  const choosePost = (postId: string) => {
-    const nextIndex = sortedPosts.findIndex((post) => post.id === postId);
-
-    setSelectedPostId(postId);
-    setImprovementNote(null);
-    setShowImproveTools(false);
-    cancelEditingPost();
-
-    if (nextIndex >= 0) {
-      setCalendarStartIndex(nextIndex);
-    }
-  };
-
-  const goToNextCalendarDay = () => {
-    if (sortedPosts.length === 0) return;
-
-    const selectedIndex = selectedPost
-      ? sortedPosts.findIndex((post) => post.id === selectedPost.id)
-      : calendarStartIndex;
-
-    const safeSelectedIndex = selectedIndex >= 0 ? selectedIndex : calendarStartIndex;
-    const nextIndex = (safeSelectedIndex + 1) % sortedPosts.length;
-    const nextPost = sortedPosts[nextIndex];
-
-    if (!nextPost) return;
-
-    setCalendarStartIndex(nextIndex);
-    setSelectedPostId(nextPost.id);
-    setImprovementNote(null);
-    setShowImproveTools(false);
-    cancelEditingPost();
   };
 
   const closePostsTour = () => {
@@ -1335,12 +1750,18 @@ export default function PostsPage() {
   };
 
   const goToNextPostsTourStep = () => {
+    const nextStep = postsTourStep + 1;
+
     if (postsTourStep >= postsTourSteps.length - 1) {
       closePostsTour();
       return;
     }
 
-    setPostsTourStep((currentStep) => currentStep + 1);
+    if (nextStep > 0 && !selectedPost && sortedPosts[0]) {
+      setSelectedPostId(sortedPosts[0].id);
+    }
+
+    setPostsTourStep(nextStep);
   };
 
   const goToPreviousPostsTourStep = () => {
@@ -1350,10 +1771,10 @@ export default function PostsPage() {
   const getCurrentPostsTourTarget = () => {
     const currentTarget = postsTourSteps[postsTourStep]?.target;
 
-    if (currentTarget === 'header') return postsHeaderTextRef.current;
-    if (currentTarget === 'campaigns') return campaignHistoryControlsRef.current;
-    if (currentTarget === 'days') return daySelectorRef.current;
-    if (currentTarget === 'publish') return publishingPanelRef.current;
+    if (currentTarget === 'queue') return queueRef.current;
+    if (currentTarget === 'post') return postRef.current || queueRef.current;
+    if (currentTarget === 'media') return mediaRef.current || postRef.current || queueRef.current;
+    if (currentTarget === 'publish') return publishRef.current || postRef.current || queueRef.current;
 
     return null;
   };
@@ -1394,7 +1815,7 @@ export default function PostsPage() {
     }
 
     const cardWidth = 420;
-    const estimatedCardHeight = 330;
+    const estimatedCardHeight = 300;
     const gap = 42;
     const safePadding = 26;
 
@@ -1433,97 +1854,14 @@ export default function PostsPage() {
     };
   };
 
-  const sortedPosts = useMemo(() => {
-    return sortPostsByDate(posts);
-  }, [posts]);
-
-  const selectedPost = useMemo(() => {
-    return sortedPosts.find((post) => post.id === selectedPostId) || sortedPosts[0] || null;
-  }, [sortedPosts, selectedPostId]);
-
-  const visibleCalendarPosts = useMemo(() => {
-    if (sortedPosts.length === 0) return [];
-
-    const visibleCount = Math.min(3, sortedPosts.length);
-
-    return Array.from({ length: visibleCount }).map((_, index) => {
-      const postIndex = (calendarStartIndex + index) % sortedPosts.length;
-      return sortedPosts[postIndex];
-    });
-  }, [sortedPosts, calendarStartIndex]);
-
-  const getPostDateParts = (post: any) => {
-    const date = post?.scheduled_at ? new Date(post.scheduled_at) : new Date();
-
-    return {
-      weekday: date.toLocaleDateString(undefined, { weekday: 'short' }),
-      day: date.toLocaleDateString(undefined, { day: '2-digit' }),
-      month: date.toLocaleDateString(undefined, { month: 'short' }),
-    };
-  };
-
-  const getPostPositionLabel = (post: any) => {
-    const index = sortedPosts.findIndex((item) => item.id === post?.id);
-
-    return index >= 0 ? `Day ${index + 1}` : post?.scheduled_day || 'Day';
-  };
-
-  const activeIndustry = String(
-    profile?.industry ||
-      campaign?.business_type ||
-      campaign?.industry ||
-      ''
-  ).toLowerCase();
-
-  const dynamicAudienceTargets = useMemo(() => {
-    const matchedKey = Object.keys(industryAudienceTargets).find((key) =>
-      activeIndustry.includes(key)
-    );
-
-    return matchedKey ? industryAudienceTargets[matchedKey] : defaultAudienceTargets;
-  }, [activeIndustry]);
-
-  useEffect(() => {
-    if (!dynamicAudienceTargets.includes(audienceTarget)) {
-      setAudienceTarget(dynamicAudienceTargets[0] || 'Custom audience');
-    }
-  }, [dynamicAudienceTargets, audienceTarget]);
-
-  const postedCount = posts.filter((post) => post.is_posted).length;
-  const postsLeftThisWeek = Math.max((posts.length || 0) - postedCount, 0);
-  const weeklyProgressPercent =
-    posts.length > 0 ? Math.round((postedCount / posts.length) * 100) : 0;
-
-  const todayReminderPost = posts.find((post) => post.id === todayReminderPostId) || null;
-
-  const businessName =
-    profile?.business_name ||
-    campaign?.business_name ||
-    selectedPost?.business_name ||
-    'Your business';
-
-  const activeImprovementNote =
-    selectedPost && improvementNote?.postId === selectedPost.id ? improvementNote : null;
-
-  const brandPrimary = profile?.brand_primary_color || '#ffd43b';
-  const brandSecondary = profile?.brand_secondary_color || '#101420';
-  const brandAccent = profile?.brand_accent_color || '#3ddc97';
-
-  const brandStyle = {
-    '--client-primary': brandPrimary,
-    '--client-secondary': brandSecondary,
-    '--client-accent': brandAccent,
-  } as CSSProperties;
-
   return (
     <div className="campaign-brand-shell simplified-posts-page" style={brandStyle}>
-      <div ref={postsHeaderRef} className="campaigns-page-header simplified-posts-header">
-        <div ref={postsHeaderTextRef}>
+      <div className="campaigns-page-header simplified-posts-header">
+        <div>
           <div className="page-eyebrow">Posts</div>
-          <h1 className="page-title">Your posts are ready.</h1>
+          <h1 className="page-title">Choose today’s post.</h1>
           <p className="page-description">
-            Choose a day, review the post, improve it if needed, copy it, publish it, then mark it
-            as done.
+            Pick a card from the weekly queue. The post opens in a simple window.
           </p>
 
           <div className="simplified-posts-meta">
@@ -1598,560 +1936,143 @@ export default function PostsPage() {
               </div>
             </section>
 
-            <section className="simplified-control-card">
-              <div ref={campaignHistoryControlsRef} className="simplified-campaign-controls">
-                <label>
-                  <strong>Current saved plan</strong>
-                  <select
-                    className="input"
-                    value={pendingCampaignId}
-                    onChange={(event) => setPendingCampaignId(event.target.value)}
-                    disabled={deletingCampaign || renamingCampaign || loadingSelectedPlan}
-                  >
-                    {campaigns.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {getCampaignOptionLabel(item)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+            <WeeklyPlanControls
+              campaigns={campaigns}
+              pendingCampaignId={pendingCampaignId}
+              campaignId={campaign?.id || null}
+              maxSavedCampaigns={MAX_SAVED_CAMPAIGNS}
+              loadingSelectedPlan={loadingSelectedPlan}
+              deletingCampaign={deletingCampaign}
+              renamingCampaign={renamingCampaign}
+              onPendingCampaignChange={setPendingCampaignId}
+              onLoadSelectedPlan={loadSelectedPlan}
+              onRenameSelectedCampaign={renameSelectedCampaign}
+              onDeleteSelectedCampaign={deleteSelectedCampaign}
+              getCampaignOptionLabel={getCampaignOptionLabel}
+            />
+          </section>
 
-                <div className="posts-plan-usage">
-                  <strong>
-                    {campaigns.length}/{MAX_SAVED_CAMPAIGNS}
-                  </strong>
-                  <span>saved plans</span>
-                </div>
+          <WeeklyQueue
+            posts={sortedPosts}
+            selectedPostId={selectedPost?.id || null}
+            onChoosePost={choosePost}
+            onSelectNextPost={selectNextPost}
+            getPostDateParts={getPostDateParts}
+            getPostPositionLabel={getPostPositionLabel}
+            getPlatformDisplayName={getPlatformDisplayName}
+            getPostStatus={getPostStatus}
+            getStatusClass={getStatusClass}
+            isPostScheduledToday={isPostScheduledToday}
+            isPostPosted={isPostPosted}
+            queueRef={queueRef}
+          />
 
-                <div className="posts-plan-actions">
-                  <button
-                    type="button"
-                    onClick={loadSelectedPlan}
-                    disabled={
-                      !pendingCampaignId ||
-                      loadingSelectedPlan ||
-                      deletingCampaign ||
-                      renamingCampaign
-                    }
-                  >
-                    {loadingSelectedPlan ? 'Loading...' : 'Load plan'}
-                  </button>
-
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={renameSelectedCampaign}
-                    disabled={
-                      !campaign?.id ||
-                      loadingSelectedPlan ||
-                      deletingCampaign ||
-                      renamingCampaign
-                    }
-                  >
-                    {renamingCampaign ? 'Renaming...' : 'Rename'}
-                  </button>
-
-                  <button
-                    type="button"
-                    className="secondary-button danger-button"
-                    onClick={deleteSelectedCampaign}
-                    disabled={
-                      !campaign?.id ||
-                      loadingSelectedPlan ||
-                      deletingCampaign ||
-                      renamingCampaign
-                    }
-                  >
-                    {deletingCampaign ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
+          {posts.length > 0 && (
+            <section className="premium-card" style={{ marginTop: 22 }}>
+              <div className="page-eyebrow">Simple workflow</div>
+              <h2 style={{ marginTop: 0 }}>Choose a card to start.</h2>
+              <p>
+                The post, media, and publishing tools stay inside the post window so this page stays
+                clean.
+              </p>
             </section>
-          </section>
-
-          <section className="simplified-week-section premium-week-calendar-section fromone-flow-page">
-            <div className="simplified-section-heading">
-              <div>
-                <div className="page-eyebrow">Weekly calendar</div>
-                <h2>Choose a day to review.</h2>
-                <p>See three posts at a time and move through the week with one button.</p>
-              </div>
-
-              <button
-                type="button"
-                className="premium-next-day-button"
-                onClick={goToNextCalendarDay}
-              >
-                Next day →
-              </button>
-            </div>
-
-            {posts.length === 0 ? (
-              <div className="premium-card" style={{ marginTop: 20 }}>
-                <div className="page-eyebrow">No posts found</div>
-                <h2 style={{ marginTop: 0 }}>This weekly plan has no posts yet.</h2>
-                <p>Go back to Dashboard and create weekly posts.</p>
-              </div>
-            ) : (
-              <>
-                <div ref={daySelectorRef} className="premium-calendar-carousel">
-                  {visibleCalendarPosts.map((post) => {
-                    const dateParts = getPostDateParts(post);
-                    const isSelected = selectedPost?.id === post.id;
-                    const isToday = isPostScheduledToday(post);
-
-                    return (
-                      <button
-                        key={post.id}
-                        type="button"
-                        className={[
-                          'premium-calendar-day-card',
-                          isSelected ? 'is-selected' : '',
-                          isToday && !post.is_posted ? 'is-today' : '',
-                          post.is_posted ? 'is-posted' : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' ')}
-                        onClick={() => choosePost(post.id)}
-                      >
-                        <span className="premium-calendar-day-label">
-                          {getPostPositionLabel(post)}
-                        </span>
-
-                        <div className="premium-calendar-date-row">
-                          <span>{dateParts.weekday}</span>
-                          <strong>{dateParts.day}</strong>
-                          <small>{dateParts.month}</small>
-                        </div>
-
-                        <div className="premium-calendar-post-info">
-                          <strong>{post.platform || 'Social post'}</strong>
-                          <p>{post.title || post.scheduled_day || 'Post ready to review'}</p>
-                        </div>
-
-                        <span className="premium-calendar-status">
-                          {isToday && !post.is_posted
-                            ? 'Start here'
-                            : post.is_posted
-                              ? 'Posted'
-                              : 'Ready'}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {selectedPost && (
-                  <article className="fromone-post-flow">
-                    <div className="selected-post-tags">
-                      <span>{getPostPositionLabel(selectedPost)}</span>
-                      <span>{selectedPost.platform || 'Facebook'}</span>
-                      <span>{selectedPost.is_posted ? 'Posted' : 'Ready'}</span>
-                      {isPostScheduledToday(selectedPost) && !selectedPost.is_posted && (
-                        <span>Start here</span>
-                      )}
-                      {selectedPost.audience_target && (
-                        <span>For {selectedPost.audience_target}</span>
-                      )}
-                    </div>
-
-                    <section className="fromone-flow-preview-card">
-                      <div className="fromone-flow-card-top">
-                        <div>
-                          <div className="page-eyebrow">Step 1 · Read the post</div>
-                          <h2>{selectedPost.title || 'Social Media Post'}</h2>
-                          <p>Check the post first. Then use the tools underneath only if needed.</p>
-                        </div>
-
-                        <span>{selectedPost.platform || 'Social post'}</span>
-                      </div>
-
-                      <div className="fromone-post-preview-body">
-                        <p>{selectedPost.caption || 'No caption saved.'}</p>
-
-                        {selectedPost.cta && (
-                          <p>
-                            <strong>CTA:</strong> {selectedPost.cta}
-                          </p>
-                        )}
-
-                        {Array.isArray(selectedPost.hashtags) &&
-                          selectedPost.hashtags.length > 0 && (
-                            <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
-                          )}
-                      </div>
-
-                      {activeImprovementNote && (
-                        <div className="fromone-improvement-note">
-                          <strong>{activeImprovementNote.label}</strong>
-                          <p>{activeImprovementNote.detail}</p>
-                        </div>
-                      )}
-                    </section>
-
-                    <section ref={publishingPanelRef} className="fromone-flow-tools-card">
-                      <div className="fromone-flow-tools-header">
-                        <div>
-                          <div className="page-eyebrow">Step 2 · Prepare and publish</div>
-                          <h3>Only use the tools you need.</h3>
-                          <p>Most users can simply copy the post and publish it.</p>
-                        </div>
-                      </div>
-
-                      <div className="fromone-flow-tools-list">
-                        <section className="fromone-flow-tool-row">
-                          <div className="fromone-flow-step-marker">2A</div>
-
-                          <div className="fromone-flow-tool-copy">
-                            <strong>Improve post</strong>
-                            <p>Optional. Use this only if the post needs changing.</p>
-                          </div>
-
-                          <div className="fromone-flow-tool-action">
-                            <button
-                              type="button"
-                              className="secondary-button"
-                              onClick={() => setShowImproveTools(!showImproveTools)}
-                              disabled={accessLocked || rewritingPost}
-                            >
-                              {showImproveTools ? 'Hide improve tools' : 'Improve post'}
-                            </button>
-                          </div>
-                        </section>
-
-                        {showImproveTools && (
-                          <>
-                            <section className="fromone-flow-tool-row fromone-improve-options-row">
-                              <div className="fromone-flow-step-marker">2B</div>
-
-                              <div className="fromone-flow-tool-copy">
-                                <strong>Quick improve</strong>
-                                <p>Choose a simple improvement.</p>
-                              </div>
-
-                              <div className="fromone-flow-tool-action">
-                                <div className="fromone-quick-improve-grid">
-                                  {quickImproveActions.map((action) => (
-                                    <button
-                                      key={action.value}
-                                      type="button"
-                                      className="secondary-button fromone-quick-improve-button"
-                                      onClick={() =>
-                                        handleQuickImprovePost(selectedPost, action.value)
-                                      }
-                                      disabled={accessLocked || rewritingPost}
-                                    >
-                                      {rewritingPost && rewritingAction === action.value
-                                        ? 'Improving...'
-                                        : action.label}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            </section>
-
-                            <section className="fromone-flow-tool-row fromone-improve-options-row">
-                              <div className="fromone-flow-step-marker">2C</div>
-
-                              <div className="fromone-flow-tool-copy">
-                                <strong>Make it specific</strong>
-                                <p>Choose who the post should speak to.</p>
-                              </div>
-
-                              <div className="fromone-flow-tool-action">
-                                <select
-                                  className="input"
-                                  value={audienceTarget}
-                                  onChange={(event) => setAudienceTarget(event.target.value)}
-                                >
-                                  {dynamicAudienceTargets.map((item) => (
-                                    <option key={item} value={item}>
-                                      {item}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                {audienceTarget === 'Custom audience' && (
-                                  <input
-                                    className="input"
-                                    value={customAudienceTarget}
-                                    onChange={(event) =>
-                                      setCustomAudienceTarget(event.target.value)
-                                    }
-                                    placeholder="Example: first-time homeowners"
-                                  />
-                                )}
-
-                                <select
-                                  className="input"
-                                  value={toneTarget}
-                                  onChange={(event) => setToneTarget(event.target.value)}
-                                >
-                                  {toneOptions.map((item) => (
-                                    <option key={item} value={item}>
-                                      {item}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleRewriteForAudience(selectedPost)}
-                                  disabled={accessLocked || rewritingPost}
-                                >
-                                  {rewritingPost && rewritingAction === 'audience'
-                                    ? 'Making specific...'
-                                    : 'Make it specific'}
-                                </button>
-                              </div>
-                            </section>
-                          </>
-                        )}
-
-                        <section className="fromone-flow-tool-row">
-                          <div className="fromone-flow-step-marker">
-                            {showImproveTools ? '2D' : '2B'}
-                          </div>
-
-                          <div className="fromone-flow-tool-copy">
-                            <strong>Edit wording</strong>
-                            <p>Optional. Change the caption, CTA, or hashtags.</p>
-                          </div>
-
-                          <div className="fromone-flow-tool-action">
-                            {editingPostId === selectedPost.id ? (
-                              <div className="fromone-flow-edit-box">
-                                <label>
-                                  <strong>Caption</strong>
-                                  <textarea
-                                    className="input"
-                                    value={editCaption}
-                                    onChange={(event) => setEditCaption(event.target.value)}
-                                  />
-                                </label>
-
-                                <label>
-                                  <strong>CTA</strong>
-                                  <input
-                                    className="input"
-                                    value={editCta}
-                                    onChange={(event) => setEditCta(event.target.value)}
-                                  />
-                                </label>
-
-                                <label>
-                                  <strong>Hashtags</strong>
-                                  <input
-                                    className="input"
-                                    value={editHashtags}
-                                    onChange={(event) => setEditHashtags(event.target.value)}
-                                    placeholder="#LocalBusiness #Marketing"
-                                  />
-                                </label>
-
-                                <div className="fromone-flow-inline-actions">
-                                  <button
-                                    type="button"
-                                    onClick={() => saveEditedPost(selectedPost)}
-                                    disabled={savingEdit}
-                                  >
-                                    {savingEdit ? 'Saving...' : 'Save changes'}
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    className="secondary-button"
-                                    onClick={cancelEditingPost}
-                                    disabled={savingEdit}
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                className="secondary-button"
-                                onClick={() => startEditingPost(selectedPost)}
-                                disabled={accessLocked}
-                              >
-                                Edit wording
-                              </button>
-                            )}
-                          </div>
-                        </section>
-
-                        <section className="fromone-flow-tool-row fromone-flow-final-row">
-                          <div className="fromone-flow-step-marker">
-                            {showImproveTools ? '2E' : '2C'}
-                          </div>
-
-                          <div className="fromone-flow-tool-copy">
-                            <strong>Copy and publish</strong>
-                            <p>Copy the post, open the platform, then mark it as posted.</p>
-                          </div>
-
-                          <div className="fromone-flow-tool-action">
-                            {shouldShowImageGuidance(selectedPost) && (
-                              <div className="fromone-image-guidance-note">
-                                <strong>Image idea</strong>
-                                <p>{getImageGuidance(selectedPost)}</p>
-                              </div>
-                            )}
-
-                            <div className="fromone-flow-publish-buttons">
-                              <button onClick={() => copyPost(selectedPost)}>Copy post</button>
-
-                              <button
-                                className="secondary-button"
-                                onClick={() => openPlatform(selectedPost.platform || 'Facebook')}
-                              >
-                                Open {selectedPost.platform || 'Facebook'}
-                              </button>
-
-                              {selectedPost.is_posted ? (
-                                <button
-                                  className="secondary-button"
-                                  onClick={() => markAsScheduled(selectedPost.id)}
-                                >
-                                  Mark as not posted
-                                </button>
-                              ) : (
-                                <button
-                                  className="posted-button"
-                                  onClick={() => markAsPosted(selectedPost.id)}
-                                >
-                                  Mark as posted
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </section>
-                      </div>
-                    </section>
-                  </article>
-                )}
-              </>
-            )}
-          </section>
+          )}
         </>
       )}
 
+      {selectedPost && (
+        <PostActionModal
+          selectedPost={selectedPost}
+          editingPostId={editingPostId}
+          editCaption={editCaption}
+          editCta={editCta}
+          editHashtags={editHashtags}
+          savingEdit={savingEdit}
+          accessLocked={accessLocked}
+          rewritingPost={rewritingPost}
+          rewritingAction={rewritingAction}
+          showImproveTools={showImproveTools}
+          quickImproveActions={quickImproveActions}
+          dynamicAudienceTargets={dynamicAudienceTargets}
+          audienceTarget={audienceTarget}
+          customAudienceTarget={customAudienceTarget}
+          toneTarget={toneTarget}
+          toneOptions={toneOptions}
+          activeImprovementNote={activeImprovementNote}
+          uploadingMediaPostId={uploadingMediaPostId}
+          removingMediaPostId={removingMediaPostId}
+          publishingPostId={publishingPostId}
+          savingReminderPostId={savingReminderPostId}
+          reminderValue={reminderValue}
+          postRef={postRef}
+          mediaRef={mediaRef}
+          publishRef={publishRef}
+          getPostPositionLabel={getPostPositionLabel}
+          getPlatformDisplayName={getPlatformDisplayName}
+          getPostStatus={getPostStatus}
+          getImageGuidance={getImageGuidance}
+          getReadableDateTime={getReadableDateTime}
+          mediaRequiredForPlatform={mediaRequiredForPlatform}
+          canDirectPublishToFacebook={canDirectPublishToFacebook}
+          isPostPosted={isPostPosted}
+          isPostScheduledToday={isPostScheduledToday}
+          onClose={closePostModal}
+          onStartEditingPost={startEditingPost}
+          onCancelEditingPost={cancelEditingPost}
+          onSaveEditedPost={saveEditedPost}
+          onSetEditCaption={setEditCaption}
+          onSetEditCta={setEditCta}
+          onSetEditHashtags={setEditHashtags}
+          onToggleImproveTools={() => setShowImproveTools(!showImproveTools)}
+          onQuickImprovePost={handleQuickImprovePost}
+          onRewriteForAudience={handleRewriteForAudience}
+          onSetAudienceTarget={setAudienceTarget}
+          onSetCustomAudienceTarget={setCustomAudienceTarget}
+          onSetToneTarget={setToneTarget}
+          onUploadMedia={uploadMedia}
+          onRemoveMedia={removeMedia}
+          onPublishToFacebook={publishToFacebook}
+          onCopyPost={copyPost}
+          onOpenPlatform={openPlatform}
+          onMarkAsPosted={markAsPosted}
+          onMarkAsNotPosted={markAsNotPosted}
+          onSetReminderValue={setReminderValue}
+          onSaveReminder={saveReminder}
+          onClearReminder={clearReminder}
+        />
+      )}
+
       {showTodayReminder && todayReminderPost && (
-        <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
-          <section className="fromone-modal-card">
-            <div className="fromone-modal-icon">📌</div>
-            <div className="page-eyebrow">Today’s post</div>
-            <h2>You have a post to make today</h2>
-            <p>
-              Your {todayReminderPost.platform || 'social'} post is ready. Open it, publish it,
-              then mark it as posted.
-            </p>
-
-            <div className="fromone-modal-actions">
-              <button type="button" onClick={openTodayReminderPost}>
-                Start today’s post
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setShowTodayReminder(false)}
-              >
-                Later
-              </button>
-            </div>
-          </section>
-        </div>
+        <TodayReminderModal
+          post={todayReminderPost}
+          onStartTodayPost={openTodayReminderPost}
+          onClose={() => setShowTodayReminder(false)}
+        />
       )}
 
       {successMoment && (
-        <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
-          <section className="fromone-modal-card fromone-success-card">
-            <div className="fromone-modal-icon">🎉</div>
-            <div className="page-eyebrow">Post complete</div>
-            <h2>Nice work — today’s post is done 🎉</h2>
-            <p>
-              {successMoment.postsLeft === 0
-                ? 'That was the last post in this weekly plan.'
-                : `${successMoment.postsLeft} posts left this week.`}
-            </p>
-
-            <div className="fromone-modal-actions">
-              {successMoment.nextPostId && (
-                <button type="button" onClick={viewNextPostAfterSuccess}>
-                  View next post
-                </button>
-              )}
-
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  window.location.href = '/dashboard';
-                }}
-              >
-                Back to dashboard
-              </button>
-            </div>
-          </section>
-        </div>
+        <PostSuccessModal
+          postsLeft={successMoment.postsLeft}
+          nextPostId={successMoment.nextPostId}
+          onViewNextPost={viewNextPostAfterSuccess}
+          onBackToDashboard={() => {
+            window.location.href = '/dashboard';
+          }}
+        />
       )}
 
       {showReviewPrompt && (
-        <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
-          <section className="fromone-modal-card">
-            <div className="fromone-modal-icon">⭐</div>
-            <div className="page-eyebrow">Quick favour</div>
-            <h2>How are you finding FromOne?</h2>
-            <p>
-              A short review helps improve FromOne and helps other small businesses understand
-              whether it could save them time.
-            </p>
-
-            <div className="review-star-row" onMouseLeave={() => setReviewHoverRating(0)}>
-              {[1, 2, 3, 4, 5].map((star) => {
-                const active = star <= (reviewHoverRating || reviewRating);
-
-                return (
-                  <button
-                    key={star}
-                    type="button"
-                    className={active ? 'review-star active' : 'review-star'}
-                    onMouseEnter={() => setReviewHoverRating(star)}
-                    onClick={() => setReviewRating(star)}
-                    aria-label={`${star} star${star === 1 ? '' : 's'}`}
-                  >
-                    ★
-                  </button>
-                );
-              })}
-            </div>
-
-            <textarea
-              className="input"
-              value={reviewText}
-              onChange={(event) => setReviewText(event.target.value)}
-              placeholder="Example: FromOne made it much easier to plan my posts for the week."
-              rows={5}
-            />
-
-            <div className="fromone-modal-actions">
-              <button type="button" onClick={submitReviewPrompt} disabled={savingReview}>
-                {savingReview ? 'Sending...' : 'Send review'}
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={dismissReviewPrompt}
-                disabled={savingReview}
-              >
-                Maybe later
-              </button>
-            </div>
-          </section>
-        </div>
+        <ReviewPromptModal
+          reviewRating={reviewRating}
+          reviewHoverRating={reviewHoverRating}
+          reviewText={reviewText}
+          savingReview={savingReview}
+          onSetReviewRating={setReviewRating}
+          onSetReviewHoverRating={setReviewHoverRating}
+          onSetReviewText={setReviewText}
+          onSubmitReview={submitReviewPrompt}
+          onDismissReview={dismissReviewPrompt}
+        />
       )}
 
       {showPostsTour && !loading && campaigns.length > 0 && (

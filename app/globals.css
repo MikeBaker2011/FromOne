@@ -11847,3 +11847,288 @@ main {
     transform: translateY(0);
   }
 }
+/* FromOne Posts page modal fix */
+.fromone-modal-overlay {
+  overflow-y: auto !important;
+  align-items: flex-start !important;
+  padding: 32px 16px !important;
+}
+
+.fromone-post-action-modal {
+  width: min(1040px, calc(100vw - 32px)) !important;
+  max-width: 1040px !important;
+  max-height: calc(100vh - 64px) !important;
+  overflow-y: auto !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 28px !important;
+  padding: 28px !important;
+}
+
+.fromone-post-action-modal .fromone-flow-preview-card,
+.fromone-post-action-modal .fromone-flow-tools-card {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 24px !important;
+  padding: 24px !important;
+  margin-top: 18px !important;
+}
+
+.fromone-post-action-modal .fromone-post-preview-body,
+.fromone-post-action-modal .fromone-flow-edit-box,
+.fromone-post-action-modal .fromone-media-preview-card,
+.fromone-post-action-modal .fromone-schedule-box {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 20px !important;
+  padding: 20px !important;
+}
+
+.fromone-post-action-modal h2,
+.fromone-post-action-modal h3,
+.fromone-post-action-modal strong {
+  color: #ffffff !important;
+}
+
+.fromone-post-action-modal p,
+.fromone-post-action-modal span,
+.fromone-post-action-modal label {
+  color: rgba(248, 250, 252, 0.82) !important;
+}
+
+.fromone-post-action-modal .page-eyebrow {
+  color: #ffd43b !important;
+}
+
+.fromone-post-action-modal .secondary-button {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.09) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.fromone-post-action-modal .fromone-flow-card-top {
+  gap: 18px !important;
+  align-items: flex-start !important;
+}
+
+.fromone-post-action-modal .fromone-flow-publish-buttons,
+.fromone-post-action-modal .fromone-flow-inline-actions {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.fromone-post-action-modal .input {
+  background: rgba(2, 6, 23, 0.85) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+.fromone-post-action-modal textarea.input {
+  min-height: 180px !important;
+}
+
+.fromone-post-action-modal .fromone-media-preview {
+  max-width: 100% !important;
+  max-height: 420px !important;
+  border-radius: 18px !important;
+  display: block !important;
+}
+
+@media (max-width: 760px) {
+  .fromone-modal-overlay {
+    padding: 14px 10px !important;
+  }
+
+  .fromone-post-action-modal {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 28px) !important;
+    padding: 18px !important;
+    border-radius: 22px !important;
+  }
+}
+/* Make media upload clearly look clickable */
+.fromone-post-action-modal .fromone-upload-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 54px !important;
+  margin-top: 18px !important;
+  padding: 16px 20px !important;
+  border-radius: 16px !important;
+  background: #ffd43b !important;
+  color: #101420 !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  border: 0 !important;
+  box-shadow: 0 14px 30px rgba(255, 212, 59, 0.18) !important;
+  text-align: center !important;
+}
+
+.fromone-post-action-modal .fromone-upload-button span {
+  color: #101420 !important;
+  font-weight: 900 !important;
+}
+
+.fromone-post-action-modal .fromone-upload-button:hover {
+  transform: translateY(-1px) !important;
+  filter: brightness(1.03) !important;
+}
+
+.fromone-post-action-modal .fromone-upload-button:has(input:disabled) {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+/* Add breathing room between post text card and actions */
+.fromone-post-action-modal .fromone-post-preview-body {
+  margin-bottom: 22px !important;
+}
+
+.fromone-post-action-modal .fromone-post-preview-body + .fromone-flow-publish-buttons,
+.fromone-post-action-modal .fromone-improvement-note + .fromone-flow-publish-buttons {
+  margin-top: 24px !important;
+}
+
+.fromone-post-action-modal .fromone-flow-preview-card .fromone-flow-publish-buttons {
+  padding-top: 6px !important;
+}
+
+/* Slightly reduce cramped button feel */
+.fromone-post-action-modal .fromone-flow-publish-buttons button {
+  min-height: 42px !important;
+}
+/* Mobile spacing and queue card readability fixes */
+@media (max-width: 760px) {
+  .fromone-post-action-modal .fromone-flow-publish-buttons {
+    gap: 10px !important;
+    margin-top: 14px !important;
+  }
+
+  .fromone-post-action-modal .fromone-schedule-box {
+    margin-top: 14px !important;
+    padding: 16px !important;
+  }
+
+  .fromone-post-action-modal .fromone-flow-tools-card,
+  .fromone-post-action-modal .fromone-flow-preview-card {
+    margin-top: 14px !important;
+    padding: 18px !important;
+  }
+
+  .fromone-post-action-modal .fromone-flow-publish-buttons button {
+    min-height: 44px !important;
+  }
+
+  .premium-calendar-day-card,
+  .fromone-queue-card {
+    background: linear-gradient(145deg, #111827 0%, #182235 100%) !important;
+  }
+
+  .premium-calendar-date-row span,
+  .premium-calendar-date-row small,
+  .premium-calendar-day-label {
+    color: rgba(255, 255, 255, 0.84) !important;
+    opacity: 1 !important;
+  }
+
+  .premium-calendar-date-row strong {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.38) !important;
+  }
+
+  .premium-calendar-post-info strong {
+    color: #ffffff !important;
+  }
+
+  .premium-calendar-post-info p {
+    color: rgba(255, 255, 255, 0.76) !important;
+  }
+
+  .premium-calendar-status {
+    color: #101420 !important;
+    background: #ffd43b !important;
+    border: 0 !important;
+  }
+}
+
+/* Make queue card date/day readable on all screen sizes */
+.premium-calendar-date-row span,
+.premium-calendar-date-row small,
+.premium-calendar-day-label {
+  color: rgba(255, 255, 255, 0.82) !important;
+  opacity: 1 !important;
+}
+
+.premium-calendar-date-row strong {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.fromone-queue-card::before,
+.premium-calendar-day-card::before {
+  opacity: 0.18 !important;
+}
+/* Saved plan selector cleanup */
+.simplified-control-card {
+  padding: 22px !important;
+}
+
+.simplified-campaign-controls {
+  display: grid !important;
+  grid-template-columns: minmax(220px, 1fr) auto !important;
+  gap: 14px !important;
+  align-items: end !important;
+}
+
+.simplified-campaign-controls label {
+  min-width: 0 !important;
+}
+
+.simplified-campaign-controls .input {
+  height: 46px !important;
+  font-size: 0.9rem !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.posts-plan-usage {
+  height: 46px !important;
+  padding: 0 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+
+.posts-plan-actions {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.posts-plan-actions button {
+  min-height: 44px !important;
+  border-radius: 14px !important;
+}
+
+@media (max-width: 760px) {
+  .simplified-campaign-controls {
+    grid-template-columns: 1fr !important;
+  }
+
+  .posts-plan-actions {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .posts-plan-actions button {
+    min-width: 0 !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    font-size: 0.82rem !important;
+  }
+}
