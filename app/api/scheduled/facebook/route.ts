@@ -25,6 +25,10 @@ function cleanSecret(value: unknown) {
   return String(value || '').trim();
 }
 
+function cleanText(value: unknown) {
+  return String(value || '').trim();
+}
+
 function getCronSecret() {
   return cleanSecret(process.env.CRON_SECRET);
 }
@@ -73,25 +77,25 @@ function isCurrentlyPublishing(post: any) {
   return String(post?.publish_status || '').toLowerCase() === 'publishing';
 }
 
+function isImageMedia(mediaType: string) {
+  return mediaType.toLowerCase().startsWith('image');
+}
+
 function buildPostText(post: any) {
-  const caption = post?.caption || '';
-  const cta = post?.cta ? `CTA: ${post.cta}` : '';
+  const caption = cleanText(post?.caption);
+  const cta = post?.cta ? `CTA: ${cleanText(post.cta)}` : '';
   const hashtags = Array.isArray(post?.hashtags) ? post.hashtags.join(' ') : '';
 
   return [caption, cta, hashtags].filter(Boolean).join('\n\n').trim();
 }
 
-function getFacebookPostId(responseBody: any) {
+function getFacebookPostId(result: any) {
   return (
-    responseBody?.facebookPostId ||
-    responseBody?.facebook_post_id ||
-    responseBody?.postId ||
-    responseBody?.post_id ||
-    responseBody?.id ||
-    responseBody?.result?.id ||
-    responseBody?.facebookResult?.id ||
-    responseBody?.facebookResult?.post_id ||
-    responseBody?.facebookResult?.photo_id ||
+    result?.id ||
+    result?.post_id ||
+    result?.photo_id ||
+    result?.data?.id ||
+    result?.post?.id ||
     null
   );
 }
@@ -106,6 +110,99 @@ function buildPublishedToValue(currentValue: any) {
   }
 
   return ['facebook'];
+}
+
+async function publishTextPost({
+  pageId,
+  pageAccessToken,
+  message,
+}: {
+  pageId: string;
+  pageAccessToken: string;
+  message: string;
+}) {
+  const response = await fetch(`https://graph.facebook.com/v20.0/${pageId}/feed`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message,
+      access_token: pageAccessToken,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result?.error?.message || 'Facebook text post failed.');
+  }
+
+  return result;
+}
+
+async function publishImagePost({
+  pageId,
+  pageAccessToken,
+  message,
+  mediaUrl,
+}: {
+  pageId: string;
+  pageAccessToken: string;
+  message: string;
+  mediaUrl: string;
+}) {
+  const response = await fetch(`https://graph.facebook.com/v20.0/${pageId}/photos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url: mediaUrl,
+      caption: message,
+      access_token: pageAccessToken,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result?.error?.message || 'Facebook image post failed.');
+  }
+
+  return result;
+}
+
+async function publishScheduledPostToFacebook(post: any) {
+  const pageId = process.env.FACEBOOK_PAGE_ID;
+  const pageAccessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
+
+  if (!pageId || !pageAccessToken) {
+    throw new Error('Facebook page ID or access token is missing.');
+  }
+
+  const message = buildPostText(post);
+  const mediaUrl = cleanText(post?.media_url);
+  const mediaType = cleanText(post?.media_type);
+
+  if (!message) {
+    throw new Error('This scheduled post has no wording to publish.');
+  }
+
+  if (mediaUrl && isImageMedia(mediaType)) {
+    return publishImagePost({
+      pageId,
+      pageAccessToken,
+      message,
+      mediaUrl,
+    });
+  }
+
+  return publishTextPost({
+    pageId,
+    pageAccessToken,
+    message,
+  });
 }
 
 async function runFacebookScheduledPublish(request: NextRequest) {
@@ -158,8 +255,6 @@ async function runFacebookScheduledPublish(request: NextRequest) {
     facebookPostId?: string | null;
   }> = [];
 
-  const publishUrl = new URL('/api/facebook/publish', request.nextUrl.origin).toString();
-
   for (const post of candidates) {
     const postText = buildPostText(post);
 
@@ -203,58 +298,13 @@ async function runFacebookScheduledPublish(request: NextRequest) {
     }
 
     try {
-      const publishResponse = await fetch(publishUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-scheduled-publish': 'true',
-        },
-        body: JSON.stringify({
-          postId: post.id,
-          campaignPostId: post.id,
-          campaign_id: post.campaign_id,
-          platform: post.platform || 'Facebook',
-          message: postText,
-          text: postText,
-          caption: post.caption || '',
-          cta: post.cta || '',
-          hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
-          media_url: post.media_url || null,
-          mediaUrl: post.media_url || null,
-          media_type: post.media_type || null,
-          mediaType: post.media_type || null,
-        }),
-      });
-
-      const responseBody = await publishResponse.json().catch(() => null);
-
-      if (!publishResponse.ok) {
-        const message =
-          responseBody?.error ||
-          responseBody?.message ||
-          responseBody?.details ||
-          `Facebook publish failed with status ${publishResponse.status}.`;
-
-        await supabase
-          .from('campaign_posts')
-          .update({
-            publish_status: 'failed',
-            status: 'failed',
-            publish_error: message,
-          })
-          .eq('id', post.id);
-
-        results.push({
-          postId: post.id,
-          status: 'failed',
-          message,
-        });
-
-        continue;
-      }
-
-      const facebookPostId = getFacebookPostId(responseBody);
+      const facebookResult = await publishScheduledPostToFacebook(post);
+      const facebookPostId = getFacebookPostId(facebookResult);
       const publishedTo = buildPublishedToValue(post.published_to);
+
+      if (!facebookPostId) {
+        throw new Error('Facebook published the post but did not return a post ID.');
+      }
 
       await supabase
         .from('campaign_posts')
