@@ -399,12 +399,15 @@
     border: 0 !important;
   }
 }
+
+/* Premium publish control card */
 .fromone-publish-control-section {
   position: relative !important;
 }
 
 .fromone-publish-control-card {
-  margin-top: 20px !important;
+  margin-top: 22px !important;
+  margin-bottom: 4px !important;
   padding: 24px !important;
   border-radius: 24px !important;
   background:
@@ -542,7 +545,7 @@
 }
 
 .fromone-schedule-control-card {
-  margin-top: 18px !important;
+  margin-top: 28px !important;
   padding: 22px !important;
   border-radius: 22px !important;
   background: rgba(255, 255, 255, 0.055) !important;
