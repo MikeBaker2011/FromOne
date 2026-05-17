@@ -3,9 +3,26 @@ import { createClient } from '@supabase/supabase-js';
 
 type FacebookPublishBody = {
   postId?: string;
+  campaignPostId?: string;
+  campaign_id?: string;
+  userId?: string;
+  user_id?: string;
   message?: string;
+  text?: string;
+  caption?: string;
+  cta?: string;
+  hashtags?: string[];
   mediaUrl?: string;
+  media_url?: string;
   mediaType?: string;
+  media_type?: string;
+};
+
+type FacebookCredentials = {
+  pageId: string;
+  pageAccessToken: string;
+  source: 'social_connections' | 'env';
+  connectionId?: string | null;
 };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -19,6 +36,7 @@ function getSupabaseAdmin() {
   return createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: {
       persistSession: false,
+      autoRefreshToken: false,
     },
   });
 }
@@ -29,6 +47,18 @@ function cleanText(value: unknown) {
 
 function isImageMedia(mediaType: string) {
   return mediaType.toLowerCase().startsWith('image');
+}
+
+function buildMessage(body: FacebookPublishBody) {
+  const message = cleanText(body.message || body.text);
+
+  if (message) return message;
+
+  const caption = cleanText(body.caption);
+  const cta = cleanText(body.cta);
+  const hashtags = Array.isArray(body.hashtags) ? body.hashtags.join(' ') : '';
+
+  return [caption, cta ? `CTA: ${cta}` : '', hashtags].filter(Boolean).join('\n\n').trim();
 }
 
 function getFacebookPostId(result: any) {
@@ -42,12 +72,130 @@ function getFacebookPostId(result: any) {
   );
 }
 
+function buildPublishedToValue(currentValue: any) {
+  if (Array.isArray(currentValue)) {
+    return Array.from(new Set([...currentValue, 'facebook']));
+  }
+
+  if (typeof currentValue === 'string' && currentValue.trim()) {
+    return Array.from(new Set([currentValue.toLowerCase(), 'facebook']));
+  }
+
+  return ['facebook'];
+}
+
+async function findUserIdForPost({
+  supabase,
+  body,
+}: {
+  supabase: any;
+  body: FacebookPublishBody;
+}) {
+  const explicitUserId = cleanText(body.userId || body.user_id);
+
+  if (explicitUserId) return explicitUserId;
+
+  const postId = cleanText(body.postId || body.campaignPostId);
+
+  if (!postId) return '';
+
+  const { data: post } = await supabase
+    .from('campaign_posts')
+    .select('*')
+    .eq('id', postId)
+    .maybeSingle();
+
+  const postUserId = cleanText((post as any)?.user_id || (post as any)?.created_by);
+
+  if (postUserId) return postUserId;
+
+  const campaignId = cleanText((post as any)?.campaign_id || body.campaign_id);
+
+  if (!campaignId) return '';
+
+  const { data: campaign } = await supabase
+    .from('campaigns')
+    .select('*')
+    .eq('id', campaignId)
+    .maybeSingle();
+
+  return cleanText(
+    (campaign as any)?.user_id ||
+      (campaign as any)?.created_by ||
+      (campaign as any)?.owner_id ||
+      ''
+  );
+}
+
+async function getFacebookCredentials(body: FacebookPublishBody): Promise<FacebookCredentials> {
+  const supabase = getSupabaseAdmin();
+
+  const userId = await findUserIdForPost({
+    supabase,
+    body,
+  });
+
+  if (userId) {
+    const { data: connection, error } = await supabase
+      .from('social_connections')
+      .select('id, page_id, page_access_token, access_token, status, updated_at')
+      .eq('user_id', userId)
+      .eq('provider', 'meta')
+      .eq('status', 'connected')
+      .not('page_id', 'is', null)
+      .not('page_access_token', 'is', null)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Could not load Facebook social connection:', error.message);
+    }
+
+    const connectedPageId = cleanText((connection as any)?.page_id);
+    const connectedAccessToken = cleanText(
+      (connection as any)?.page_access_token || (connection as any)?.access_token
+    );
+
+    if (connectedPageId && connectedAccessToken) {
+      return {
+        pageId: connectedPageId,
+        pageAccessToken: connectedAccessToken,
+        source: 'social_connections',
+        connectionId: cleanText((connection as any)?.id) || null,
+      };
+    }
+  }
+
+  const envPageId = cleanText(process.env.FACEBOOK_PAGE_ID);
+  const envPageAccessToken = cleanText(process.env.FACEBOOK_PAGE_ACCESS_TOKEN);
+
+  if (envPageId && envPageAccessToken) {
+    return {
+      pageId: envPageId,
+      pageAccessToken: envPageAccessToken,
+      source: 'env',
+      connectionId: null,
+    };
+  }
+
+  throw new Error(
+    userId
+      ? 'No connected Facebook Page was found, and fallback Facebook env vars are missing.'
+      : 'Facebook page ID or access token is missing.'
+  );
+}
+
 async function updatePostAfterPublish({
   postId,
   facebookPostId,
+  credentialSource,
+  connectionId,
 }: {
   postId?: string;
   facebookPostId: string;
+  credentialSource: string;
+  connectionId?: string | null;
 }) {
   if (!postId) return;
 
@@ -59,15 +207,32 @@ async function updatePostAfterPublish({
     .eq('id', postId)
     .maybeSingle();
 
-  const currentPublishedTo = Array.isArray(currentPost?.published_to)
-    ? currentPost.published_to
-    : [];
+  const publishedTo = buildPublishedToValue(currentPost?.published_to);
 
-  const publishedTo = Array.from(new Set([...currentPublishedTo, 'facebook']));
+  const updates: Record<string, any> = {
+    facebook_post_id: facebookPostId,
+    published_to: publishedTo,
+    published_at: new Date().toISOString(),
+    publish_status: 'published',
+    publish_error: null,
+    is_posted: true,
+    status: 'posted',
+  };
 
-  const { error } = await supabase
-    .from('campaign_posts')
-    .update({
+  if (credentialSource) {
+    updates.publish_source = credentialSource;
+  }
+
+  if (connectionId) {
+    updates.social_connection_id = connectionId;
+  }
+
+  const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
+
+  if (error) {
+    console.error('Facebook publish saved but database update failed:', error.message);
+
+    const fallbackUpdates = {
       facebook_post_id: facebookPostId,
       published_to: publishedTo,
       published_at: new Date().toISOString(),
@@ -75,11 +240,16 @@ async function updatePostAfterPublish({
       publish_error: null,
       is_posted: true,
       status: 'posted',
-    })
-    .eq('id', postId);
+    };
 
-  if (error) {
-    console.error('Facebook publish saved but database update failed:', error.message);
+    const { error: fallbackError } = await supabase
+      .from('campaign_posts')
+      .update(fallbackUpdates)
+      .eq('id', postId);
+
+    if (fallbackError) {
+      console.error('Facebook publish fallback database update failed:', fallbackError.message);
+    }
   }
 }
 
@@ -150,22 +320,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
 
-    const pageId = process.env.FACEBOOK_PAGE_ID;
-    const pageAccessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
+    const credentials = await getFacebookCredentials(body);
 
-    if (!pageId || !pageAccessToken) {
-      return NextResponse.json(
-        {
-          error: 'Facebook page ID or access token is missing.',
-        },
-        { status: 500 }
-      );
-    }
-
-    const message = cleanText(body.message);
-    const postId = cleanText(body.postId);
-    const mediaUrl = cleanText(body.mediaUrl);
-    const mediaType = cleanText(body.mediaType);
+    const message = buildMessage(body);
+    const postId = cleanText(body.postId || body.campaignPostId);
+    const mediaUrl = cleanText(body.mediaUrl || body.media_url);
+    const mediaType = cleanText(body.mediaType || body.media_type);
 
     if (!message) {
       return NextResponse.json(
@@ -180,15 +340,15 @@ export async function POST(req: NextRequest) {
 
     if (mediaUrl && isImageMedia(mediaType)) {
       result = await publishImagePost({
-        pageId,
-        pageAccessToken,
+        pageId: credentials.pageId,
+        pageAccessToken: credentials.pageAccessToken,
         message,
         mediaUrl,
       });
     } else {
       result = await publishTextPost({
-        pageId,
-        pageAccessToken,
+        pageId: credentials.pageId,
+        pageAccessToken: credentials.pageAccessToken,
         message,
       });
     }
@@ -208,26 +368,26 @@ export async function POST(req: NextRequest) {
     await updatePostAfterPublish({
       postId,
       facebookPostId,
+      credentialSource: credentials.source,
+      connectionId: credentials.connectionId,
     });
 
     return NextResponse.json({
       success: true,
       provider: 'facebook',
-
-      // Keep the old response key so existing manual publishing keeps working.
       postId: facebookPostId,
-
-      // Add explicit Facebook keys so scheduled publishing can map this reliably.
       facebookPostId,
       facebook_post_id: facebookPostId,
-
-      // Helpful while testing scheduled publishing.
+      credentialSource: credentials.source,
+      connectionId: credentials.connectionId || null,
       facebookResult: result,
     });
   } catch (error: any) {
     console.error('Facebook publish API error:', error?.message || error);
 
-    if (body?.postId) {
+    const postId = cleanText(body?.postId || body?.campaignPostId);
+
+    if (postId) {
       try {
         const supabase = getSupabaseAdmin();
 
@@ -237,7 +397,7 @@ export async function POST(req: NextRequest) {
             publish_status: 'failed',
             publish_error: error?.message || 'Facebook publish failed.',
           })
-          .eq('id', body.postId);
+          .eq('id', postId);
       } catch (databaseError: any) {
         console.error('Failed to save Facebook publish error:', databaseError?.message);
       }
