@@ -2098,37 +2098,53 @@ export default function PostsPage() {
             </section>
           )}
 
-          <section className="premium-card" style={{ marginBottom: 22 }}>
-            <div className="page-eyebrow">Connected accounts</div>
-            <h2 style={{ marginTop: 0 }}>Facebook & Instagram</h2>
+          <section
+            className="premium-card"
+            style={{
+              marginBottom: 22,
+              padding: 18,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 18,
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ minWidth: 260, flex: '1 1 420px' }}>
+              <div className="page-eyebrow">Connected accounts</div>
+              <h3 style={{ marginTop: 0, marginBottom: 8 }}>Facebook & Instagram</h3>
 
-            {loadingMetaConnections ? (
-              <p>Checking connected accounts...</p>
-            ) : metaConnections.length > 0 ? (
-              <>
-                <p>
+              {loadingMetaConnections ? (
+                <p style={{ marginBottom: 0 }}>Checking connected accounts...</p>
+              ) : metaConnections.length > 0 ? (
+                <p style={{ marginBottom: 0 }}>
                   Connected to{' '}
                   <strong>{metaConnections[0].page_name || 'Facebook Page'}</strong>
                   {metaConnections[0].instagram_username
                     ? ` and Instagram @${metaConnections[0].instagram_username}`
                     : '.'}
                 </p>
-
-                <button type="button" className="secondary-button" onClick={connectMetaAccount}>
-                  Reconnect Facebook & Instagram
-                </button>
-              </>
-            ) : (
-              <>
-                <p>
-                  Connect your Facebook Page and Instagram account so FromOne can publish using your
-                  own accounts.
+              ) : (
+                <p style={{ marginBottom: 0 }}>
+                  Connect your accounts so FromOne can publish using your own Facebook Page and
+                  Instagram.
                 </p>
+              )}
+            </div>
 
-                <button type="button" onClick={connectMetaAccount}>
-                  Connect Facebook & Instagram
-                </button>
-              </>
+            {metaConnections.length > 0 ? (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={connectMetaAccount}
+                style={{ flex: '0 0 auto' }}
+              >
+                Reconnect Facebook & Instagram
+              </button>
+            ) : (
+              <button type="button" onClick={connectMetaAccount} style={{ flex: '0 0 auto' }}>
+                Connect Facebook & Instagram
+              </button>
             )}
           </section>
 
