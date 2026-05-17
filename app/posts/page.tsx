@@ -288,6 +288,7 @@ export default function PostsPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [metaConnections, setMetaConnections] = useState<MetaConnection[]>([]);
   const [loadingMetaConnections, setLoadingMetaConnections] = useState(false);
+  const [disconnectingMetaConnection, setDisconnectingMetaConnection] = useState(false);
 
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [pendingCampaignId, setPendingCampaignId] = useState('');
@@ -622,13 +623,15 @@ export default function PostsPage() {
     }
   };
 
-  const connectMetaAccount = async () => {
-    let userId = currentUserId;
+  const getSignedInUserId = async () => {
+    if (currentUserId) return currentUserId;
 
-    if (!userId) {
-      const { data } = await supabase.auth.getUser();
-      userId = data.user?.id || null;
-    }
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id || null;
+  };
+
+  const connectMetaAccount = async () => {
+    const userId = await getSignedInUserId();
 
     if (!userId) {
       alert('Please sign in before connecting Facebook and Instagram.');
@@ -641,6 +644,40 @@ export default function PostsPage() {
     params.set('return_to', '/posts');
 
     window.location.href = `/api/auth/meta/start?${params.toString()}`;
+  };
+
+  const disconnectMetaAccount = async () => {
+    const userId = await getSignedInUserId();
+
+    if (!userId) {
+      alert('Please sign in before disconnecting Facebook and Instagram.');
+      return;
+    }
+
+    const confirmed = confirm(
+      'Disconnect Facebook and Instagram?\n\nFromOne will stop using this connected account for future publishing until you connect it again.'
+    );
+
+    if (!confirmed) return;
+
+    setDisconnectingMetaConnection(true);
+
+    try {
+      await axios.post('/api/social-connections/disconnect', {
+        user_id: userId,
+        provider: 'meta',
+      });
+
+      setMetaConnections([]);
+      alert('Facebook and Instagram disconnected.');
+      await loadMetaConnections(userId);
+    } catch (error: any) {
+      const message = getReadableError(error, 'Could not disconnect Facebook and Instagram.');
+      console.error('Disconnect Meta connection error:', error);
+      alert(message);
+    } finally {
+      setDisconnectingMetaConnection(false);
+    }
   };
 
   const loadAccess = async () => {
@@ -2133,14 +2170,34 @@ export default function PostsPage() {
             </div>
 
             {metaConnections.length > 0 ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={connectMetaAccount}
-                style={{ flex: '0 0 auto' }}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  gap: 10,
+                  flexWrap: 'wrap',
+                }}
               >
-                Reconnect Facebook & Instagram
-              </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={connectMetaAccount}
+                  style={{ flex: '0 0 auto' }}
+                >
+                  Manage connection
+                </button>
+
+                <button
+                  type="button"
+                  className="secondary-button danger-button"
+                  onClick={disconnectMetaAccount}
+                  disabled={disconnectingMetaConnection}
+                  style={{ flex: '0 0 auto' }}
+                >
+                  {disconnectingMetaConnection ? 'Disconnecting...' : 'Disconnect'}
+                </button>
+              </div>
             ) : (
               <button type="button" onClick={connectMetaAccount} style={{ flex: '0 0 auto' }}>
                 Connect Facebook & Instagram
