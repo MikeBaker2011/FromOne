@@ -1896,47 +1896,172 @@ Also detect or infer:
             >
               <div className="dashboard-first-run-heading">
                 <div>
-                  <div className="page-eyebrow">Customer-ready setup</div>
-                  <h2>Your FromOne setup.</h2>
+                  <div className="page-eyebrow">Command centre</div>
+                  <h2>
+                    {hasBusinessSetup
+                      ? hasCreatedPosts
+                        ? 'You are set up and ready.'
+                        : 'Create your first weekly plan.'
+                      : 'Start here: add your business.'}
+                  </h2>
                   <p>
-                    Complete these steps to make the account ready for reliable weekly publishing.
+                    {hasBusinessSetup
+                      ? hasCreatedPosts
+                        ? 'FromOne is ready to help you review, schedule, and publish this week.'
+                        : 'Your account is nearly ready. Create a weekly plan to start publishing.'
+                      : 'Add a website or business details, then FromOne can create your first week of posts.'}
                   </p>
                 </div>
 
                 <span>
-                  {completedCustomerReadySteps}/{customerReadyChecklistState.length} done
+                  {completedCustomerReadySteps}/{customerReadyChecklistState.length} ready
                 </span>
               </div>
 
-              <div className="dashboard-first-run-grid">
-                {customerReadyChecklistState.map((item, index) => (
-                  <article
-                    key={item.title}
-                    className={
-                      item.complete
-                        ? 'dashboard-first-run-step is-complete'
-                        : 'dashboard-first-run-step'
-                    }
-                  >
-                    <div className="dashboard-first-run-step-number">
-                      {item.complete ? '✓' : String(index + 1)}
-                    </div>
+              <div
+                className="dashboard-first-run-grid"
+                style={{
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                }}
+              >
+                <article
+                  className={
+                    hasBusinessSetup
+                      ? 'dashboard-first-run-step is-complete'
+                      : 'dashboard-first-run-step'
+                  }
+                >
+                  <div className="dashboard-first-run-step-number">
+                    {hasBusinessSetup ? '✓' : '1'}
+                  </div>
 
-                    <div>
-                      <strong>{item.title}</strong>
-                      <p>{item.pending ? `${item.description} · ${item.pending}` : item.description}</p>
-                    </div>
-                  </article>
-                ))}
+                  <div>
+                    <strong>Business</strong>
+                    <p>{hasBusinessSetup ? 'Business profile started.' : 'Add a website or business details.'}</p>
+                  </div>
+                </article>
+
+                <article
+                  className={
+                    hasFacebookConnection
+                      ? 'dashboard-first-run-step is-complete'
+                      : 'dashboard-first-run-step'
+                  }
+                >
+                  <div className="dashboard-first-run-step-number">
+                    {hasFacebookConnection ? '✓' : '2'}
+                  </div>
+
+                  <div>
+                    <strong>Facebook</strong>
+                    <p>{hasFacebookConnection ? 'Connected and ready.' : 'Connect Meta in Settings.'}</p>
+                  </div>
+                </article>
+
+                <article
+                  className={
+                    hasInstagramConnection
+                      ? 'dashboard-first-run-step is-complete'
+                      : 'dashboard-first-run-step'
+                  }
+                >
+                  <div className="dashboard-first-run-step-number">
+                    {hasInstagramConnection ? '✓' : '3'}
+                  </div>
+
+                  <div>
+                    <strong>Instagram</strong>
+                    <p>
+                      {hasInstagramConnection
+                        ? 'Connected and ready.'
+                        : hasFacebookConnection
+                          ? 'No linked Instagram account found.'
+                          : 'Connect Meta in Settings.'}
+                    </p>
+                  </div>
+                </article>
+
+                <article
+                  className={
+                    hasGoogleConnection
+                      ? 'dashboard-first-run-step is-complete'
+                      : 'dashboard-first-run-step'
+                  }
+                >
+                  <div className="dashboard-first-run-step-number">
+                    {hasGoogleConnection ? '✓' : '4'}
+                  </div>
+
+                  <div>
+                    <strong>Google</strong>
+                    <p>
+                      {hasGoogleConnection
+                        ? googleLocationReady
+                          ? 'Location selected.'
+                          : 'Connected · approval pending.'
+                        : 'Optional next platform.'}
+                    </p>
+                  </div>
+                </article>
+
+                <article
+                  className={
+                    hasPaidPlan
+                      ? 'dashboard-first-run-step is-complete'
+                      : 'dashboard-first-run-step'
+                  }
+                >
+                  <div className="dashboard-first-run-step-number">
+                    {hasPaidPlan ? '✓' : '5'}
+                  </div>
+
+                  <div>
+                    <strong>Access</strong>
+                    <p>{hasPaidPlan ? 'Paid plan active.' : accessMessage || 'Demo access active.'}</p>
+                  </div>
+                </article>
               </div>
 
-              <div className="button-row" style={{ marginTop: 18, gap: 12, flexWrap: 'wrap' }}>
+              <div
+                className="button-row"
+                style={{
+                  marginTop: 18,
+                  gap: 12,
+                  flexWrap: 'wrap',
+                }}
+              >
+                {!hasBusinessSetup && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = websiteInputRef.current;
+                      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }}
+                  >
+                    Add business
+                  </button>
+                )}
+
+                {hasBusinessSetup && !hasCreatedPosts && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = generateButtonRef.current;
+                      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }}
+                  >
+                    Create my first weekly plan
+                  </button>
+                )}
+
+                {hasCreatedPosts && (
+                  <Link href="/posts" className="dashboard-profile-link">
+                    Review this week
+                  </Link>
+                )}
+
                 <Link href="/settings" className="dashboard-profile-link">
                   Manage connected accounts
-                </Link>
-
-                <Link href="/posts" className="dashboard-profile-link">
-                  View posts
                 </Link>
 
                 {!hasPaidPlan && (
