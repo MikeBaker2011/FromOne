@@ -1937,7 +1937,11 @@ Also detect or infer:
 
                   <div>
                     <strong>Business</strong>
-                    <p>{hasBusinessSetup ? 'Business profile started.' : 'Add a website or business details.'}</p>
+                    <p>
+                      {hasBusinessSetup
+                        ? 'Business profile started.'
+                        : 'Add a website or business details.'}
+                    </p>
                   </div>
                 </article>
 
@@ -1954,7 +1958,11 @@ Also detect or infer:
 
                   <div>
                     <strong>Facebook</strong>
-                    <p>{hasFacebookConnection ? 'Connected and ready.' : 'Connect Meta in Settings.'}</p>
+                    <p>
+                      {hasFacebookConnection
+                        ? 'Connected and ready.'
+                        : 'Connect Meta in Settings.'}
+                    </p>
                   </div>
                 </article>
 
