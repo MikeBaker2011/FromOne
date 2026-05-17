@@ -29,9 +29,18 @@ export async function POST(request: NextRequest) {
 
     const userId = cleanText(body.user_id || body.userId);
     const connectionId = cleanText(body.connection_id || body.connectionId);
+    const provider = cleanText(body.provider || 'meta');
 
     if (!userId) {
       return NextResponse.json({ error: 'Missing user_id.' }, { status: 400 });
+    }
+
+    if (!provider) {
+      return NextResponse.json({ error: 'Missing provider.' }, { status: 400 });
+    }
+
+    if (!['meta', 'google'].includes(provider)) {
+      return NextResponse.json({ error: 'Unsupported provider.' }, { status: 400 });
     }
 
     const supabase = getSupabaseAdmin();
@@ -40,7 +49,7 @@ export async function POST(request: NextRequest) {
       .from('social_connections')
       .delete()
       .eq('user_id', userId)
-      .eq('provider', 'meta');
+      .eq('provider', provider);
 
     if (connectionId) {
       query = query.eq('id', connectionId);
@@ -55,10 +64,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       disconnected: true,
+      provider,
     });
   } catch (error: any) {
     return NextResponse.json(
-      { error: error?.message || 'Could not disconnect Meta account.' },
+      { error: error?.message || 'Could not disconnect account.' },
       { status: 500 }
     );
   }

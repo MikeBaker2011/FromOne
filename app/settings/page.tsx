@@ -416,6 +416,53 @@ export default function SettingsPage() {
     }
   };
 
+  const disconnectGoogleAccount = async (connectionId?: string | null) => {
+    if (!userId) {
+      alert('Please sign in again before disconnecting.');
+      return;
+    }
+
+    const confirmed = confirm(
+      'Disconnect Google from FromOne? Existing posts will stay saved, but FromOne will not be able to publish through this Google connection until you reconnect.'
+    );
+
+    if (!confirmed) return;
+
+    setDisconnectingConnectionId(connectionId || 'google');
+
+    try {
+      const response = await fetch('/api/social-connections/disconnect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          connection_id: connectionId || undefined,
+          provider: 'google',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Could not disconnect Google.');
+      }
+
+      await loadSocialConnections(userId);
+      setGoogleLocations([]);
+      setSelectedGoogleLocationId('');
+      setShowGoogleLocationPicker(false);
+
+      alert('Google disconnected.');
+    } catch (error: any) {
+      console.error('Disconnect Google account error:', error?.message || error);
+      alert(error?.message || 'Could not disconnect Google.');
+    } finally {
+      setDisconnectingConnectionId(null);
+    }
+  };
+
   const handleManageMetaConnection = () => {
     connectMetaAccount();
   };
@@ -730,10 +777,12 @@ export default function SettingsPage() {
                   }
                   onConnect={connectGoogleAccount}
                   onManage={handleManageGoogleConnection}
-                  onDisconnect={() =>
-                    alert('Google disconnect will be added after Google location publishing is connected.')
+                  onDisconnect={() => disconnectGoogleAccount(primaryGoogleConnection?.id)}
+                  busy={
+                    disconnectingConnectionId === primaryGoogleConnection?.id ||
+                    loadingGoogleLocations ||
+                    savingGoogleLocation
                   }
-                  busy={loadingGoogleLocations || savingGoogleLocation}
                 />
 
                 <AccountPill
