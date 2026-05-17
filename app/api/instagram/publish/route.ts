@@ -113,18 +113,12 @@ async function createInstagramMediaContainer({
 async function waitForInstagramContainer({
   containerId,
   instagramAccessToken,
-  mediaType,
 }: {
   containerId: string;
   instagramAccessToken: string;
-  mediaType: string;
 }) {
-  if (!isVideoMedia(mediaType)) {
-    return;
-  }
-
-  const maxAttempts = 12;
-  const delayMs = 5000;
+  const maxAttempts = 18;
+  const delayMs = 4000;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const params = new URLSearchParams();
@@ -140,7 +134,7 @@ async function waitForInstagramContainer({
 
     if (!response.ok) {
       throw new Error(
-        result?.error?.message || result?.message || 'Could not check Instagram video status.'
+        result?.error?.message || result?.message || 'Could not check Instagram media status.'
       );
     }
 
@@ -151,13 +145,13 @@ async function waitForInstagramContainer({
     }
 
     if (statusCode === 'ERROR' || statusCode === 'EXPIRED') {
-      throw new Error(result?.status || 'Instagram could not process this video.');
+      throw new Error(result?.status || 'Instagram could not process this media.');
     }
 
     await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 
-  throw new Error('Instagram is still processing the video. Please try publishing again shortly.');
+  throw new Error('Instagram is still preparing the media. Please try publishing again shortly.');
 }
 
 async function publishInstagramMediaContainer({
@@ -301,7 +295,6 @@ export async function POST(req: NextRequest) {
     await waitForInstagramContainer({
       containerId: creationId,
       instagramAccessToken,
-      mediaType,
     });
 
     const publishResult = await publishInstagramMediaContainer({
