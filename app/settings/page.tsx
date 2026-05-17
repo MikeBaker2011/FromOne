@@ -7,6 +7,109 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+type MetaConnection = {
+  id: string;
+  provider: string;
+  provider_user_name: string | null;
+  page_id: string | null;
+  page_name: string | null;
+  instagram_business_account_id: string | null;
+  instagram_username: string | null;
+  expires_at: string | null;
+  status: string | null;
+  updated_at: string | null;
+};
+
+type AccountPillProps = {
+  platform: string;
+  status: 'connected' | 'not_connected' | 'coming_soon';
+  detail: string;
+  onConnect?: () => void;
+  onManage?: () => void;
+  onDisconnect?: () => void;
+  busy?: boolean;
+};
+
+function AccountPill({
+  platform,
+  status,
+  detail,
+  onConnect,
+  onManage,
+  onDisconnect,
+  busy = false,
+}: AccountPillProps) {
+  const statusLabel =
+    status === 'connected' ? 'Connected' : status === 'coming_soon' ? 'Coming soon' : 'Not connected';
+
+  return (
+    <div
+      className="premium-card"
+      style={{
+        padding: 16,
+        display: 'grid',
+        gap: 12,
+        alignContent: 'space-between',
+        minHeight: 154,
+      }}
+    >
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+          <strong>{platform}</strong>
+          <span
+            style={{
+              borderRadius: 999,
+              padding: '5px 10px',
+              fontSize: 12,
+              fontWeight: 800,
+              background:
+                status === 'connected'
+                  ? 'rgba(61, 220, 151, 0.14)'
+                  : status === 'coming_soon'
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(255, 212, 59, 0.16)',
+              color:
+                status === 'connected'
+                  ? '#3ddc97'
+                  : status === 'coming_soon'
+                    ? 'rgba(255,255,255,0.72)'
+                    : '#ffd43b',
+            }}
+          >
+            {statusLabel}
+          </span>
+        </div>
+
+        <p style={{ marginBottom: 0 }}>{detail}</p>
+      </div>
+
+      {status === 'connected' ? (
+        <div className="button-row" style={{ gap: 10, flexWrap: 'wrap' }}>
+          <button type="button" className="secondary-button" onClick={onManage} disabled={busy}>
+            Manage
+          </button>
+          <button
+            type="button"
+            className="secondary-button danger-button"
+            onClick={onDisconnect}
+            disabled={busy}
+          >
+            {busy ? 'Disconnecting...' : 'Disconnect'}
+          </button>
+        </div>
+      ) : status === 'not_connected' ? (
+        <button type="button" onClick={onConnect} disabled={busy}>
+          Connect
+        </button>
+      ) : (
+        <button type="button" className="secondary-button" disabled>
+          Coming soon
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -28,6 +131,10 @@ export default function SettingsPage() {
   const [brandLogoUrl, setBrandLogoUrl] = useState('');
   const [brandSummary, setBrandSummary] = useState('');
 
+  const [metaConnections, setMetaConnections] = useState<MetaConnection[]>([]);
+  const [loadingConnections, setLoadingConnections] = useState(false);
+  const [disconnectingConnectionId, setDisconnectingConnectionId] = useState<string | null>(null);
+
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
   const [showBrandDetails, setShowBrandDetails] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
@@ -35,8 +142,26 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const primaryMetaConnection = metaConnections[0] || null;
+  const hasMetaConnection = Boolean(primaryMetaConnection);
+  const hasInstagramConnection = Boolean(primaryMetaConnection?.instagram_business_account_id);
+
   useEffect(() => {
     loadBusinessProfile();
+
+    const params = new URLSearchParams(window.location.search);
+    const metaConnected = params.get('meta_connected');
+    const metaError = params.get('meta_error');
+
+    if (metaConnected === 'true') {
+      alert('Facebook and Instagram connected.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (metaConnected === 'false') {
+      alert(metaError || 'Meta connection failed.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
 
   const normaliseWebsiteUrl = (value: string) => {
@@ -49,6 +174,95 @@ export default function SettingsPage() {
     }
 
     return `https://${trimmed}`;
+  };
+
+  const loadSocialConnections = async (authUserId: string) => {
+    setLoadingConnections(true);
+
+    try {
+      const params = new URLSearchParams();
+      params.set('user_id', authUserId);
+
+      const response = await fetch(`/api/social-connections?${params.toString()}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Could not load connected accounts.');
+      }
+
+      setMetaConnections(result?.connections || []);
+    } catch (error: any) {
+      console.error('Load connected accounts error:', error?.message || error);
+      setMetaConnections([]);
+    } finally {
+      setLoadingConnections(false);
+    }
+  };
+
+  const connectMetaAccount = async () => {
+    let authUserId = userId;
+
+    if (!authUserId) {
+      const { data } = await supabase.auth.getUser();
+      authUserId = data.user?.id || null;
+    }
+
+    if (!authUserId) {
+      alert('Please sign in before connecting Facebook and Instagram.');
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set('user_id', authUserId);
+    params.set('return_to', '/settings');
+
+    window.location.href = `/api/auth/meta/start?${params.toString()}`;
+  };
+
+  const disconnectMetaAccount = async (connectionId?: string | null) => {
+    if (!userId) {
+      alert('Please sign in again before disconnecting.');
+      return;
+    }
+
+    const confirmed = confirm(
+      'Disconnect Facebook and Instagram from FromOne? Existing posts will stay saved, but FromOne will not be able to publish through this connection until you reconnect.'
+    );
+
+    if (!confirmed) return;
+
+    setDisconnectingConnectionId(connectionId || 'all');
+
+    try {
+      const response = await fetch('/api/social-connections/disconnect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          connection_id: connectionId || undefined,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Could not disconnect account.');
+      }
+
+      await loadSocialConnections(userId);
+      alert('Facebook and Instagram disconnected.');
+    } catch (error: any) {
+      console.error('Disconnect Meta account error:', error?.message || error);
+      alert(error?.message || 'Could not disconnect account.');
+    } finally {
+      setDisconnectingConnectionId(null);
+    }
+  };
+
+  const handleManageMetaConnection = () => {
+    connectMetaAccount();
   };
 
   const loadBusinessProfile = async () => {
@@ -70,6 +284,7 @@ export default function SettingsPage() {
     }
 
     setUserId(authUserId);
+    await loadSocialConnections(authUserId);
 
     const { data, error } = await supabase
       .from('business_profiles')
@@ -282,27 +497,98 @@ export default function SettingsPage() {
   return (
     <>
       <div className="page-header">
-        <div className="page-eyebrow">Settings · Business Profile</div>
-        <h1 className="page-title">Business profile settings.</h1>
+        <div className="page-eyebrow">Settings</div>
+        <h1 className="page-title">Settings.</h1>
         <p className="page-description">
-          Edit the saved business details FromOne uses to create weekly posts.
+          Manage business details, brand details, and the accounts FromOne can publish to.
         </p>
       </div>
 
       {loading ? (
         <div className="premium-card">
-          <p>Loading business profile...</p>
+          <p>Loading settings...</p>
         </div>
       ) : (
         <>
+          <section className="premium-card" style={{ marginBottom: 24 }}>
+            <div className="page-eyebrow">Connected accounts</div>
+            <h2 style={{ marginTop: 0 }}>Where FromOne can publish.</h2>
+            <p>
+              Connect the accounts you want FromOne to publish to. Facebook and Instagram are ready
+              now. More platforms can be added later.
+            </p>
+
+            {loadingConnections ? (
+              <p>Checking connected accounts...</p>
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+                  gap: 14,
+                  marginTop: 18,
+                }}
+              >
+                <AccountPill
+                  platform="Facebook"
+                  status={hasMetaConnection ? 'connected' : 'not_connected'}
+                  detail={
+                    hasMetaConnection
+                      ? `Connected to ${primaryMetaConnection?.page_name || 'Facebook Page'}.`
+                      : 'Connect your Facebook Page for direct publishing and scheduling.'
+                  }
+                  onConnect={connectMetaAccount}
+                  onManage={handleManageMetaConnection}
+                  onDisconnect={() => disconnectMetaAccount(primaryMetaConnection?.id)}
+                  busy={disconnectingConnectionId === primaryMetaConnection?.id}
+                />
+
+                <AccountPill
+                  platform="Instagram"
+                  status={hasInstagramConnection ? 'connected' : hasMetaConnection ? 'not_connected' : 'not_connected'}
+                  detail={
+                    hasInstagramConnection
+                      ? `Connected @${primaryMetaConnection?.instagram_username || 'Instagram'}.`
+                      : hasMetaConnection
+                        ? 'No linked Instagram professional account was found for this Page.'
+                        : 'Connect Meta to publish Instagram posts with image or video.'
+                  }
+                  onConnect={connectMetaAccount}
+                  onManage={handleManageMetaConnection}
+                  onDisconnect={() => disconnectMetaAccount(primaryMetaConnection?.id)}
+                  busy={disconnectingConnectionId === primaryMetaConnection?.id}
+                />
+
+                <AccountPill
+                  platform="Google Business"
+                  status="not_connected"
+                  detail="Worth adding next for local businesses and Google visibility."
+                  onConnect={() => alert('Google Business Profile connection is coming next.')}
+                />
+
+                <AccountPill
+                  platform="LinkedIn"
+                  status="coming_soon"
+                  detail="Keep using copy/open until LinkedIn posting permissions are ready."
+                />
+
+                <AccountPill
+                  platform="TikTok"
+                  status="coming_soon"
+                  detail="Video publishing can be added once the app approval is usable."
+                />
+              </div>
+            )}
+          </section>
+
           <section className="scan-feature-card settings-simple-scan">
             <div className="scan-feature-content">
               <div>
                 <div className="page-eyebrow">Business Website</div>
                 <h2>Website details.</h2>
                 <p>
-                  Add or update the website FromOne uses when creating weekly posts. The
-                  Dashboard still controls when a website scan happens.
+                  Add or update the website FromOne uses when creating weekly posts. The Dashboard
+                  still controls when a website scan happens.
                 </p>
               </div>
             </div>
@@ -482,8 +768,8 @@ export default function SettingsPage() {
                 <div className="page-eyebrow">Brand Details</div>
                 <h2>Adjust the brand details.</h2>
                 <p>
-                  These are usually detected during the website scan. You can correct them here
-                  if needed.
+                  These are usually detected during the website scan. You can correct them here if
+                  needed.
                 </p>
 
                 <div className="manual-backup-grid">
@@ -560,8 +846,8 @@ export default function SettingsPage() {
               <div className="page-eyebrow">Next Step</div>
               <h2>Create weekly posts from Dashboard.</h2>
               <p>
-                Settings stores the business profile. Dashboard uses this profile to scan,
-                generate, and save weekly posts.
+                Settings stores the business profile and connected accounts. Dashboard uses the
+                profile to scan, generate, and save weekly posts.
               </p>
             </div>
 
@@ -585,8 +871,8 @@ export default function SettingsPage() {
                   <div className="page-eyebrow">Danger Zone</div>
                   <h2>Reset or delete profile data.</h2>
                   <p>
-                    Reset clears the form on this page. Delete removes the saved business
-                    profile from Supabase.
+                    Reset clears the form on this page. Delete removes the saved business profile
+                    from Supabase.
                   </p>
 
                   <div className="button-row">
