@@ -36,10 +36,26 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from('social_connections')
       .select(
-        'id, provider, provider_user_name, page_id, page_name, instagram_business_account_id, instagram_username, expires_at, status, updated_at'
+        `
+        id,
+        provider,
+        provider_user_id,
+        provider_user_name,
+        page_id,
+        page_name,
+        instagram_business_account_id,
+        instagram_username,
+        google_account_id,
+        google_account_name,
+        google_location_id,
+        google_location_name,
+        expires_at,
+        status,
+        updated_at
+        `
       )
       .eq('user_id', userId)
-      .eq('provider', 'meta')
+      .in('provider', ['meta', 'google'])
       .order('updated_at', { ascending: false });
 
     if (error) {
