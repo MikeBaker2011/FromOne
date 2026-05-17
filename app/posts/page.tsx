@@ -288,7 +288,6 @@ export default function PostsPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [metaConnections, setMetaConnections] = useState<MetaConnection[]>([]);
   const [loadingMetaConnections, setLoadingMetaConnections] = useState(false);
-  const [disconnectingMetaConnection, setDisconnectingMetaConnection] = useState(false);
 
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [pendingCampaignId, setPendingCampaignId] = useState('');
@@ -644,40 +643,6 @@ export default function PostsPage() {
     params.set('return_to', '/posts');
 
     window.location.href = `/api/auth/meta/start?${params.toString()}`;
-  };
-
-  const disconnectMetaAccount = async () => {
-    const userId = await getSignedInUserId();
-
-    if (!userId) {
-      alert('Please sign in before disconnecting Facebook and Instagram.');
-      return;
-    }
-
-    const confirmed = confirm(
-      'Disconnect Facebook and Instagram?\n\nFromOne will stop using this connected account for future publishing until you connect it again.'
-    );
-
-    if (!confirmed) return;
-
-    setDisconnectingMetaConnection(true);
-
-    try {
-      await axios.post('/api/social-connections/disconnect', {
-        user_id: userId,
-        provider: 'meta',
-      });
-
-      setMetaConnections([]);
-      alert('Facebook and Instagram disconnected.');
-      await loadMetaConnections(userId);
-    } catch (error: any) {
-      const message = getReadableError(error, 'Could not disconnect Facebook and Instagram.');
-      console.error('Disconnect Meta connection error:', error);
-      alert(message);
-    } finally {
-      setDisconnectingMetaConnection(false);
-    }
   };
 
   const loadAccess = async () => {
@@ -2072,6 +2037,10 @@ export default function PostsPage() {
     };
   };
 
+  const primaryMetaConnection = metaConnections[0] || null;
+  const facebookConnected = Boolean(primaryMetaConnection?.page_id);
+  const instagramConnected = Boolean(primaryMetaConnection?.instagram_business_account_id);
+
   return (
     <div className="campaign-brand-shell simplified-posts-page" style={brandStyle}>
       <div className="campaigns-page-header simplified-posts-header">
@@ -2139,70 +2108,131 @@ export default function PostsPage() {
             className="premium-card"
             style={{
               marginBottom: 22,
-              padding: 18,
+              padding: '14px 16px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: 18,
+              gap: 14,
               flexWrap: 'wrap',
             }}
           >
-            <div style={{ minWidth: 260, flex: '1 1 420px' }}>
-              <div className="page-eyebrow">Connected accounts</div>
-              <h3 style={{ marginTop: 0, marginBottom: 8 }}>Facebook & Instagram</h3>
+            <div style={{ minWidth: 260, flex: '1 1 520px' }}>
+              <div className="page-eyebrow">Publishing status</div>
 
-              {loadingMetaConnections ? (
-                <p style={{ marginBottom: 0 }}>Checking connected accounts...</p>
-              ) : metaConnections.length > 0 ? (
-                <p style={{ marginBottom: 0 }}>
-                  Connected to{' '}
-                  <strong>{metaConnections[0].page_name || 'Facebook Page'}</strong>
-                  {metaConnections[0].instagram_username
-                    ? ` and Instagram @${metaConnections[0].instagram_username}`
-                    : '.'}
-                </p>
-              ) : (
-                <p style={{ marginBottom: 0 }}>
-                  Connect your accounts so FromOne can publish using your own Facebook Page and
-                  Instagram.
-                </p>
-              )}
-            </div>
-
-            {metaConnections.length > 0 ? (
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'flex-end',
                   gap: 10,
                   flexWrap: 'wrap',
+                  marginTop: 8,
                 }}
               >
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={connectMetaAccount}
-                  style={{ flex: '0 0 auto' }}
-                >
-                  Manage connection
-                </button>
+                {loadingMetaConnections ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      minHeight: 34,
+                      padding: '8px 12px',
+                      borderRadius: 999,
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      fontWeight: 800,
+                    }}
+                  >
+                    Checking connected accounts...
+                  </span>
+                ) : (
+                  <>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 7,
+                        minHeight: 34,
+                        padding: '8px 12px',
+                        borderRadius: 999,
+                        background: facebookConnected
+                          ? 'rgba(61, 220, 151, 0.14)'
+                          : 'rgba(255, 255, 255, 0.08)',
+                        border: facebookConnected
+                          ? '1px solid rgba(61, 220, 151, 0.28)'
+                          : '1px solid rgba(255, 255, 255, 0.12)',
+                        fontWeight: 900,
+                      }}
+                    >
+                      <span>{facebookConnected ? '✓' : '•'}</span>
+                      Facebook {facebookConnected ? 'connected' : 'not connected'}
+                    </span>
 
-                <button
-                  type="button"
-                  className="secondary-button danger-button"
-                  onClick={disconnectMetaAccount}
-                  disabled={disconnectingMetaConnection}
-                  style={{ flex: '0 0 auto' }}
-                >
-                  {disconnectingMetaConnection ? 'Disconnecting...' : 'Disconnect'}
-                </button>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 7,
+                        minHeight: 34,
+                        padding: '8px 12px',
+                        borderRadius: 999,
+                        background: instagramConnected
+                          ? 'rgba(61, 220, 151, 0.14)'
+                          : 'rgba(255, 255, 255, 0.08)',
+                        border: instagramConnected
+                          ? '1px solid rgba(61, 220, 151, 0.28)'
+                          : '1px solid rgba(255, 255, 255, 0.12)',
+                        fontWeight: 900,
+                      }}
+                    >
+                      <span>{instagramConnected ? '✓' : '•'}</span>
+                      Instagram {instagramConnected ? 'connected' : 'not connected'}
+                    </span>
+
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 7,
+                        minHeight: 34,
+                        padding: '8px 12px',
+                        borderRadius: 999,
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        fontWeight: 900,
+                      }}
+                    >
+                      <span>•</span>
+                      Google soon
+                    </span>
+                  </>
+                )}
               </div>
-            ) : (
-              <button type="button" onClick={connectMetaAccount} style={{ flex: '0 0 auto' }}>
-                Connect Facebook & Instagram
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: 10,
+                flexWrap: 'wrap',
+              }}
+            >
+              {!loadingMetaConnections && !facebookConnected && !instagramConnected && (
+                <button type="button" onClick={connectMetaAccount} style={{ flex: '0 0 auto' }}>
+                  Connect
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  window.location.href = '/settings';
+                }}
+                style={{ flex: '0 0 auto' }}
+              >
+                Manage accounts
               </button>
-            )}
+            </div>
           </section>
 
           <section className="posts-progress-plan-grid">
