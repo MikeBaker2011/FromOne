@@ -39,6 +39,9 @@ type AccountPillProps = {
   onConnect?: () => void;
   onManage?: () => void;
   onDisconnect?: () => void;
+  manageLabel?: string;
+  disconnectLabel?: string;
+  showDisconnect?: boolean;
   busy?: boolean;
 };
 
@@ -49,6 +52,9 @@ function AccountPill({
   onConnect,
   onManage,
   onDisconnect,
+  manageLabel = 'Manage',
+  disconnectLabel = 'Disconnect',
+  showDisconnect = true,
   busy = false,
 }: AccountPillProps) {
   const statusLabel =
@@ -98,16 +104,19 @@ function AccountPill({
       {status === 'connected' ? (
         <div className="button-row" style={{ gap: 10, flexWrap: 'wrap' }}>
           <button type="button" className="secondary-button" onClick={onManage} disabled={busy}>
-            Manage
+            {manageLabel}
           </button>
-          <button
-            type="button"
-            className="secondary-button danger-button"
-            onClick={onDisconnect}
-            disabled={busy}
-          >
-            {busy ? 'Disconnecting...' : 'Disconnect'}
-          </button>
+
+          {showDisconnect && (
+            <button
+              type="button"
+              className="secondary-button danger-button"
+              onClick={onDisconnect}
+              disabled={busy}
+            >
+              {busy ? 'Disconnecting...' : disconnectLabel}
+            </button>
+          )}
         </div>
       ) : status === 'not_connected' ? (
         <button type="button" onClick={onConnect} disabled={busy}>
@@ -162,6 +171,9 @@ export default function SettingsPage() {
   const hasMetaConnection = Boolean(primaryMetaConnection);
   const hasInstagramConnection = Boolean(primaryMetaConnection?.instagram_business_account_id);
   const hasGoogleConnection = Boolean(primaryGoogleConnection);
+  const metaConnectionBusy =
+    disconnectingConnectionId === primaryMetaConnection?.id ||
+    disconnectingConnectionId === 'all';
 
   useEffect(() => {
     loadBusinessProfile();
@@ -374,7 +386,7 @@ export default function SettingsPage() {
     }
 
     const confirmed = confirm(
-      'Disconnect Facebook and Instagram from FromOne? Existing posts will stay saved, but FromOne will not be able to publish through this connection until you reconnect.'
+      'Disconnect the Meta connection from FromOne? This removes Facebook and Instagram publishing access. Existing posts will stay saved, but FromOne will not be able to publish through this connection until you reconnect.'
     );
 
     if (!confirmed) return;
@@ -685,6 +697,11 @@ export default function SettingsPage() {
               now. More platforms can be added later.
             </p>
 
+            <p style={{ marginTop: 10, opacity: 0.82 }}>
+              Facebook and Instagram are managed through one Meta connection, so disconnecting Meta
+              removes both Facebook and Instagram publishing access.
+            </p>
+
             {loadingConnections ? (
               <p>Checking connected accounts...</p>
             ) : (
@@ -701,29 +718,32 @@ export default function SettingsPage() {
                   status={hasMetaConnection ? 'connected' : 'not_connected'}
                   detail={
                     hasMetaConnection
-                      ? `Connected to ${primaryMetaConnection?.page_name || 'Facebook Page'}.`
-                      : 'Connect your Facebook Page for direct publishing and scheduling.'
+                      ? `Connected to ${primaryMetaConnection?.page_name || 'Facebook Page'}. This is part of your Meta connection.`
+                      : 'Connect your Meta account to enable Facebook Page publishing.'
                   }
                   onConnect={connectMetaAccount}
                   onManage={handleManageMetaConnection}
                   onDisconnect={() => disconnectMetaAccount(primaryMetaConnection?.id)}
-                  busy={disconnectingConnectionId === primaryMetaConnection?.id}
+                  manageLabel="Manage Meta"
+                  disconnectLabel="Disconnect Meta"
+                  busy={metaConnectionBusy}
                 />
 
                 <AccountPill
                   platform="Instagram"
-                  status={hasInstagramConnection ? 'connected' : hasMetaConnection ? 'not_connected' : 'not_connected'}
+                  status={hasInstagramConnection ? 'connected' : 'not_connected'}
                   detail={
                     hasInstagramConnection
-                      ? `Connected @${primaryMetaConnection?.instagram_username || 'Instagram'}.`
+                      ? `Connected @${primaryMetaConnection?.instagram_username || 'Instagram'} via the Facebook Page.`
                       : hasMetaConnection
-                        ? 'No linked Instagram professional account was found for this Page.'
-                        : 'Connect Meta to publish Instagram posts with image or video.'
+                        ? 'No linked Instagram professional account was found for this Facebook Page.'
+                        : 'Connect Meta to enable Instagram publishing with image or video.'
                   }
                   onConnect={connectMetaAccount}
                   onManage={handleManageMetaConnection}
-                  onDisconnect={() => disconnectMetaAccount(primaryMetaConnection?.id)}
-                  busy={disconnectingConnectionId === primaryMetaConnection?.id}
+                  manageLabel="Manage Meta"
+                  showDisconnect={false}
+                  busy={metaConnectionBusy}
                 />
 
                 <AccountPill
