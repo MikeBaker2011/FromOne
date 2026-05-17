@@ -35,6 +35,14 @@ function cleanText(value: unknown) {
   return String(value || '').trim();
 }
 
+function getAppUrl() {
+  return (
+    cleanText(process.env.NEXT_PUBLIC_APP_URL) ||
+    cleanText(process.env.META_SITE_URL) ||
+    'https://fromone.co.uk'
+  );
+}
+
 function signState(payload: string) {
   const secret = cleanText(process.env.META_APP_SECRET);
 
@@ -243,12 +251,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const redirectUrl = new URL(verifiedState.returnTo, request.nextUrl.origin);
+    const redirectUrl = new URL(verifiedState.returnTo, getAppUrl());
     redirectUrl.searchParams.set('meta_connected', 'true');
 
     return NextResponse.redirect(redirectUrl);
   } catch (error: any) {
-    const redirectUrl = new URL('/posts', request.nextUrl.origin);
+    const redirectUrl = new URL('/posts', getAppUrl());
 
     redirectUrl.searchParams.set('meta_connected', 'false');
     redirectUrl.searchParams.set('meta_error', error?.message || 'Meta connection failed.');
