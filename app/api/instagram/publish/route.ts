@@ -3,6 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 
 type InstagramPublishBody = {
   postId?: string;
+  campaignPostId?: string;
+  campaign_id?: string;
+  userId?: string;
+  user_id?: string;
   message?: string;
   text?: string;
   caption?: string;
@@ -12,6 +16,13 @@ type InstagramPublishBody = {
   media_url?: string;
   mediaType?: string;
   media_type?: string;
+};
+
+type InstagramCredentials = {
+  instagramBusinessAccountId: string;
+  instagramAccessToken: string;
+  source: 'social_connections' | 'env';
+  connectionId?: string | null;
 };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -56,6 +67,111 @@ function buildCaption(body: InstagramPublishBody) {
 
 function getInstagramMediaId(result: any) {
   return result?.id || result?.media_id || result?.data?.id || null;
+}
+
+async function findUserIdForPost({
+  supabase,
+  body,
+}: {
+  supabase: any;
+  body: InstagramPublishBody;
+}) {
+  const explicitUserId = cleanText(body.userId || body.user_id);
+
+  if (explicitUserId) return explicitUserId;
+
+  const postId = cleanText(body.postId || body.campaignPostId);
+
+  if (!postId) return '';
+
+  const { data: post } = await supabase
+    .from('campaign_posts')
+    .select('*')
+    .eq('id', postId)
+    .maybeSingle();
+
+  const postUserId = cleanText((post as any)?.user_id || (post as any)?.created_by);
+
+  if (postUserId) return postUserId;
+
+  const campaignId = cleanText((post as any)?.campaign_id || body.campaign_id);
+
+  if (!campaignId) return '';
+
+  const { data: campaign } = await supabase
+    .from('campaigns')
+    .select('*')
+    .eq('id', campaignId)
+    .maybeSingle();
+
+  return cleanText(
+    (campaign as any)?.user_id ||
+      (campaign as any)?.created_by ||
+      (campaign as any)?.owner_id ||
+      ''
+  );
+}
+
+async function getInstagramCredentials(body: InstagramPublishBody): Promise<InstagramCredentials> {
+  const supabase = getSupabaseAdmin();
+
+  const userId = await findUserIdForPost({
+    supabase,
+    body,
+  });
+
+  if (userId) {
+    const { data: connection, error } = await supabase
+      .from('social_connections')
+      .select(
+        'id, instagram_business_account_id, page_access_token, access_token, status, updated_at'
+      )
+      .eq('user_id', userId)
+      .eq('provider', 'meta')
+      .eq('status', 'connected')
+      .not('instagram_business_account_id', 'is', null)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Could not load Instagram social connection:', error.message);
+    }
+
+    const connectedInstagramBusinessAccountId = cleanText(
+      (connection as any)?.instagram_business_account_id
+    );
+    const connectedAccessToken = cleanText(
+      (connection as any)?.page_access_token || (connection as any)?.access_token
+    );
+
+    if (connectedInstagramBusinessAccountId && connectedAccessToken) {
+      return {
+        instagramBusinessAccountId: connectedInstagramBusinessAccountId,
+        instagramAccessToken: connectedAccessToken,
+        source: 'social_connections',
+        connectionId: cleanText((connection as any)?.id) || null,
+      };
+    }
+  }
+
+  const envInstagramBusinessAccountId = cleanText(process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID);
+  const envInstagramAccessToken = cleanText(process.env.INSTAGRAM_ACCESS_TOKEN);
+
+  if (envInstagramBusinessAccountId && envInstagramAccessToken) {
+    return {
+      instagramBusinessAccountId: envInstagramBusinessAccountId,
+      instagramAccessToken: envInstagramAccessToken,
+      source: 'env',
+      connectionId: null,
+    };
+  }
+
+  throw new Error(
+    userId
+      ? 'No connected Instagram account was found, and fallback Instagram env vars are missing.'
+      : 'Instagram account ID or access token is missing.'
+  );
 }
 
 async function createInstagramMediaContainer({
@@ -200,9 +316,13 @@ function buildPublishedToValue(currentValue: any) {
 async function updatePostAfterPublish({
   postId,
   instagramPostId,
+  credentialSource,
+  connectionId,
 }: {
   postId?: string;
   instagramPostId: string;
+  credentialSource: string;
+  connectionId?: string | null;
 }) {
   if (!postId) return;
 
@@ -216,9 +336,30 @@ async function updatePostAfterPublish({
 
   const publishedTo = buildPublishedToValue(currentPost?.published_to);
 
-  const { error } = await supabase
-    .from('campaign_posts')
-    .update({
+  const updates: Record<string, any> = {
+    instagram_post_id: instagramPostId,
+    published_to: publishedTo,
+    published_at: new Date().toISOString(),
+    publish_status: 'posted',
+    publish_error: null,
+    is_posted: true,
+    status: 'posted',
+  };
+
+  if (credentialSource) {
+    updates.publish_source = credentialSource;
+  }
+
+  if (connectionId) {
+    updates.social_connection_id = connectionId;
+  }
+
+  const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
+
+  if (error) {
+    console.error('Instagram publish saved but database update failed:', error.message);
+
+    const fallbackUpdates = {
       instagram_post_id: instagramPostId,
       published_to: publishedTo,
       published_at: new Date().toISOString(),
@@ -226,11 +367,16 @@ async function updatePostAfterPublish({
       publish_error: null,
       is_posted: true,
       status: 'posted',
-    })
-    .eq('id', postId);
+    };
 
-  if (error) {
-    console.error('Instagram publish saved but database update failed:', error.message);
+    const { error: fallbackError } = await supabase
+      .from('campaign_posts')
+      .update(fallbackUpdates)
+      .eq('id', postId);
+
+    if (fallbackError) {
+      console.error('Instagram publish fallback database update failed:', fallbackError.message);
+    }
   }
 }
 
@@ -240,19 +386,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
 
-    const instagramBusinessAccountId = cleanText(process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID);
-    const instagramAccessToken = cleanText(process.env.INSTAGRAM_ACCESS_TOKEN);
-
-    if (!instagramBusinessAccountId || !instagramAccessToken) {
-      return NextResponse.json(
-        {
-          error: 'Instagram account ID or access token is missing.',
-        },
-        { status: 500 }
-      );
-    }
-
-    const postId = cleanText(body.postId);
+    const postId = cleanText(body.postId || body.campaignPostId);
     const caption = buildCaption(body);
     const mediaUrl = cleanText(body.mediaUrl || body.media_url);
     const mediaType = cleanText(body.mediaType || body.media_type);
@@ -284,9 +418,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const credentials = await getInstagramCredentials(body);
+
     const creationId = await createInstagramMediaContainer({
-      instagramBusinessAccountId,
-      instagramAccessToken,
+      instagramBusinessAccountId: credentials.instagramBusinessAccountId,
+      instagramAccessToken: credentials.instagramAccessToken,
       caption,
       mediaUrl,
       mediaType,
@@ -294,12 +430,12 @@ export async function POST(req: NextRequest) {
 
     await waitForInstagramContainer({
       containerId: creationId,
-      instagramAccessToken,
+      instagramAccessToken: credentials.instagramAccessToken,
     });
 
     const publishResult = await publishInstagramMediaContainer({
-      instagramBusinessAccountId,
-      instagramAccessToken,
+      instagramBusinessAccountId: credentials.instagramBusinessAccountId,
+      instagramAccessToken: credentials.instagramAccessToken,
       creationId,
     });
 
@@ -318,6 +454,8 @@ export async function POST(req: NextRequest) {
     await updatePostAfterPublish({
       postId,
       instagramPostId,
+      credentialSource: credentials.source,
+      connectionId: credentials.connectionId,
     });
 
     return NextResponse.json({
@@ -327,12 +465,16 @@ export async function POST(req: NextRequest) {
       instagramPostId,
       instagram_post_id: instagramPostId,
       creationId,
+      credentialSource: credentials.source,
+      connectionId: credentials.connectionId || null,
       instagramResult: publishResult,
     });
   } catch (error: any) {
     console.error('Instagram publish API error:', error?.message || error);
 
-    if (body?.postId) {
+    const postId = cleanText(body?.postId || body?.campaignPostId);
+
+    if (postId) {
       try {
         const supabase = getSupabaseAdmin();
 
@@ -343,7 +485,7 @@ export async function POST(req: NextRequest) {
             publish_error: error?.message || 'Instagram publish failed.',
             status: 'failed',
           })
-          .eq('id', body.postId);
+          .eq('id', postId);
       } catch (databaseError: any) {
         console.error('Failed to save Instagram publish error:', databaseError?.message);
       }
