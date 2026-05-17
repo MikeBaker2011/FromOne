@@ -1827,6 +1827,17 @@ Also detect or infer:
   const completedCustomerReadySteps = customerReadyChecklistState.filter(
     (item) => item.complete
   ).length;
+
+  const commandCentreReadySteps = [
+    hasBusinessSetup,
+    hasFacebookConnection,
+    hasInstagramConnection,
+    hasGoogleConnection,
+    !accessLocked,
+  ].filter(Boolean).length;
+
+  const commandCentreTotalSteps = 5;
+
   const showCustomerReadyChecklist =
     completedCustomerReadySteps < customerReadyChecklistState.length;
 
@@ -1914,7 +1925,7 @@ Also detect or infer:
                 </div>
 
                 <span>
-                  {completedCustomerReadySteps}/{customerReadyChecklistState.length} ready
+                  {commandCentreReadySteps}/{commandCentreTotalSteps} ready
                 </span>
               </div>
 
@@ -2025,7 +2036,7 @@ Also detect or infer:
 
                   <div>
                     <strong>Access</strong>
-                    <p>{hasPaidPlan ? 'Paid plan active.' : accessMessage || 'Demo access active.'}</p>
+                    <p>{hasPaidPlan ? 'Paid plan active.' : accessLocked ? accessMessage : accessMessage || 'Demo access active.'}</p>
                   </div>
                 </article>
               </div>
