@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-type MetaConnection = {
+type SocialConnection = {
   id: string;
   provider: string;
   provider_user_name: string | null;
@@ -15,6 +15,10 @@ type MetaConnection = {
   page_name: string | null;
   instagram_business_account_id: string | null;
   instagram_username: string | null;
+  google_account_id?: string | null;
+  google_account_name?: string | null;
+  google_location_id?: string | null;
+  google_location_name?: string | null;
   expires_at: string | null;
   status: string | null;
   updated_at: string | null;
@@ -131,7 +135,7 @@ export default function SettingsPage() {
   const [brandLogoUrl, setBrandLogoUrl] = useState('');
   const [brandSummary, setBrandSummary] = useState('');
 
-  const [metaConnections, setMetaConnections] = useState<MetaConnection[]>([]);
+  const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
   const [disconnectingConnectionId, setDisconnectingConnectionId] = useState<string | null>(null);
 
@@ -142,9 +146,15 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const metaConnections = socialConnections.filter((connection) => connection.provider === 'meta');
+  const googleConnections = socialConnections.filter((connection) => connection.provider === 'google');
+
   const primaryMetaConnection = metaConnections[0] || null;
+  const primaryGoogleConnection = googleConnections[0] || null;
+
   const hasMetaConnection = Boolean(primaryMetaConnection);
   const hasInstagramConnection = Boolean(primaryMetaConnection?.instagram_business_account_id);
+  const hasGoogleConnection = Boolean(primaryGoogleConnection);
 
   useEffect(() => {
     loadBusinessProfile();
@@ -152,6 +162,8 @@ export default function SettingsPage() {
     const params = new URLSearchParams(window.location.search);
     const metaConnected = params.get('meta_connected');
     const metaError = params.get('meta_error');
+    const googleConnected = params.get('google_connected');
+    const googleError = params.get('google_error');
 
     if (metaConnected === 'true') {
       alert('Facebook and Instagram connected.');
@@ -160,6 +172,16 @@ export default function SettingsPage() {
 
     if (metaConnected === 'false') {
       alert(metaError || 'Meta connection failed.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (googleConnected === 'true') {
+      alert('Google connected.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (googleConnected === 'false') {
+      alert(googleError || 'Google connection failed.');
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -190,10 +212,10 @@ export default function SettingsPage() {
         throw new Error(result?.error || 'Could not load connected accounts.');
       }
 
-      setMetaConnections(result?.connections || []);
+      setSocialConnections(result?.connections || []);
     } catch (error: any) {
       console.error('Load connected accounts error:', error?.message || error);
-      setMetaConnections([]);
+      setSocialConnections([]);
     } finally {
       setLoadingConnections(false);
     }
@@ -217,6 +239,26 @@ export default function SettingsPage() {
     params.set('return_to', '/settings');
 
     window.location.href = `/api/auth/meta/start?${params.toString()}`;
+  };
+
+  const connectGoogleAccount = async () => {
+    let authUserId = userId;
+
+    if (!authUserId) {
+      const { data } = await supabase.auth.getUser();
+      authUserId = data.user?.id || null;
+    }
+
+    if (!authUserId) {
+      alert('Please sign in before connecting Google.');
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set('user_id', authUserId);
+    params.set('return_to', '/settings');
+
+    window.location.href = `/api/auth/google/start?${params.toString()}`;
   };
 
   const disconnectMetaAccount = async (connectionId?: string | null) => {
@@ -561,9 +603,21 @@ export default function SettingsPage() {
 
                 <AccountPill
                   platform="Google"
-                  status="not_connected"
-                  detail="Worth adding next for local businesses and Google visibility."
-                  onConnect={() => alert('Google Business Profile connection is coming next.')}
+                  status={hasGoogleConnection ? 'connected' : 'not_connected'}
+                  detail={
+                    hasGoogleConnection
+                      ? `Connected to ${
+                          primaryGoogleConnection?.google_account_name ||
+                          primaryGoogleConnection?.provider_user_name ||
+                          'Google'
+                        }.`
+                      : 'Connect Google so FromOne can prepare Google publishing next.'
+                  }
+                  onConnect={connectGoogleAccount}
+                  onManage={connectGoogleAccount}
+                  onDisconnect={() =>
+                    alert('Google disconnect will be added after Google location publishing is connected.')
+                  }
                 />
 
                 <AccountPill
