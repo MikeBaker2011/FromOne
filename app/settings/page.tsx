@@ -24,6 +24,14 @@ type SocialConnection = {
   updated_at: string | null;
 };
 
+type GoogleLocationOption = {
+  accountId: string;
+  accountName: string;
+  locationId: string;
+  locationName: string;
+  address?: string;
+};
+
 type AccountPillProps = {
   platform: string;
   status: 'connected' | 'not_connected' | 'coming_soon';
@@ -138,6 +146,12 @@ export default function SettingsPage() {
   const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
   const [disconnectingConnectionId, setDisconnectingConnectionId] = useState<string | null>(null);
+
+  const [googleLocations, setGoogleLocations] = useState<GoogleLocationOption[]>([]);
+  const [selectedGoogleLocationId, setSelectedGoogleLocationId] = useState('');
+  const [loadingGoogleLocations, setLoadingGoogleLocations] = useState(false);
+  const [savingGoogleLocation, setSavingGoogleLocation] = useState(false);
+  const [showGoogleLocationPicker, setShowGoogleLocationPicker] = useState(false);
 
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
   const [showBrandDetails, setShowBrandDetails] = useState(false);
@@ -259,6 +273,105 @@ export default function SettingsPage() {
     params.set('return_to', '/settings');
 
     window.location.href = `/api/auth/google/start?${params.toString()}`;
+  };
+
+  const loadGoogleLocations = async () => {
+    if (!userId) {
+      alert('Please sign in again before loading Google locations.');
+      return;
+    }
+
+    setLoadingGoogleLocations(true);
+
+    try {
+      const params = new URLSearchParams();
+      params.set('user_id', userId);
+
+      const response = await fetch(`/api/google/locations?${params.toString()}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Could not load Google locations.');
+      }
+
+      const locations = Array.isArray(result?.locations) ? result.locations : [];
+
+      setGoogleLocations(locations);
+      setSelectedGoogleLocationId(
+        result?.selectedLocationId ||
+          primaryGoogleConnection?.google_location_id ||
+          locations[0]?.locationId ||
+          ''
+      );
+      setShowGoogleLocationPicker(true);
+
+      if (locations.length === 0) {
+        alert('No Google business locations were found for this Google account.');
+      }
+    } catch (error: any) {
+      console.error('Load Google locations error:', error?.message || error);
+      alert(error?.message || 'Could not load Google locations.');
+    } finally {
+      setLoadingGoogleLocations(false);
+    }
+  };
+
+  const saveGoogleLocation = async () => {
+    if (!userId) {
+      alert('Please sign in again before saving the Google location.');
+      return;
+    }
+
+    const selectedLocation = googleLocations.find(
+      (location) => location.locationId === selectedGoogleLocationId
+    );
+
+    if (!selectedLocation) {
+      alert('Choose a Google location first.');
+      return;
+    }
+
+    setSavingGoogleLocation(true);
+
+    try {
+      const response = await fetch('/api/google/select-location', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          google_account_id: selectedLocation.accountId,
+          google_account_name: selectedLocation.accountName,
+          google_location_id: selectedLocation.locationId,
+          google_location_name: selectedLocation.locationName,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Could not save Google location.');
+      }
+
+      await loadSocialConnections(userId);
+      setShowGoogleLocationPicker(false);
+      alert('Google location saved.');
+    } catch (error: any) {
+      console.error('Save Google location error:', error?.message || error);
+      alert(error?.message || 'Could not save Google location.');
+    } finally {
+      setSavingGoogleLocation(false);
+    }
+  };
+
+  const handleManageGoogleConnection = () => {
+    if (!hasGoogleConnection) {
+      connectGoogleAccount();
+      return;
+    }
+
+    loadGoogleLocations();
   };
 
   const disconnectMetaAccount = async (connectionId?: string | null) => {
@@ -606,18 +719,21 @@ export default function SettingsPage() {
                   status={hasGoogleConnection ? 'connected' : 'not_connected'}
                   detail={
                     hasGoogleConnection
-                      ? `Connected to ${
-                          primaryGoogleConnection?.google_account_name ||
-                          primaryGoogleConnection?.provider_user_name ||
-                          'Google'
-                        }.`
+                      ? primaryGoogleConnection?.google_location_name
+                        ? `Publishing location: ${primaryGoogleConnection.google_location_name}.`
+                        : `Connected to ${
+                            primaryGoogleConnection?.google_account_name ||
+                            primaryGoogleConnection?.provider_user_name ||
+                            'Google'
+                          }. Choose a location next.`
                       : 'Connect Google so FromOne can prepare Google publishing next.'
                   }
                   onConnect={connectGoogleAccount}
-                  onManage={connectGoogleAccount}
+                  onManage={handleManageGoogleConnection}
                   onDisconnect={() =>
                     alert('Google disconnect will be added after Google location publishing is connected.')
                   }
+                  busy={loadingGoogleLocations || savingGoogleLocation}
                 />
 
                 <AccountPill
@@ -634,6 +750,72 @@ export default function SettingsPage() {
               </div>
             )}
           </section>
+
+          {hasGoogleConnection && showGoogleLocationPicker && (
+            <section className="manual-collapse-card manual-open-card" style={{ marginBottom: 24 }}>
+              <div className="manual-collapse-content manual-visible-content">
+                <div className="page-eyebrow">Google location</div>
+                <h2>Choose where Google posts should publish.</h2>
+                <p>
+                  Pick the Google business location FromOne should use for future Google posts.
+                </p>
+
+                {loadingGoogleLocations ? (
+                  <p>Loading Google locations...</p>
+                ) : googleLocations.length > 0 ? (
+                  <>
+                    <label>
+                      <strong>Google location</strong>
+                      <span>Select the business profile location to use.</span>
+                    </label>
+
+                    <select
+                      className="input"
+                      value={selectedGoogleLocationId}
+                      onChange={(event) => setSelectedGoogleLocationId(event.target.value)}
+                    >
+                      {googleLocations.map((location) => (
+                        <option key={location.locationId} value={location.locationId}>
+                          {location.locationName}
+                          {location.address ? ` — ${location.address}` : ''}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="button-row" style={{ marginTop: 14 }}>
+                      <button
+                        type="button"
+                        onClick={saveGoogleLocation}
+                        disabled={savingGoogleLocation}
+                      >
+                        {savingGoogleLocation ? 'Saving...' : 'Save Google location'}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => setShowGoogleLocationPicker(false)}
+                        disabled={savingGoogleLocation}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p>No Google business locations were found for this account.</p>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => setShowGoogleLocationPicker(false)}
+                    >
+                      Close
+                    </button>
+                  </>
+                )}
+              </div>
+            </section>
+          )}
 
           <section className="scan-feature-card settings-simple-scan">
             <div className="scan-feature-content">
