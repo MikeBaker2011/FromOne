@@ -399,3 +399,223 @@
     border: 0 !important;
   }
 }
+.fromone-publish-control-section {
+  position: relative !important;
+}
+
+.fromone-publish-control-card {
+  margin-top: 20px !important;
+  padding: 24px !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.16), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.045)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24) !important;
+}
+
+.fromone-publish-control-card.is-posted {
+  background:
+    radial-gradient(circle at top left, rgba(61, 220, 151, 0.2), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.045)) !important;
+  border-color: rgba(61, 220, 151, 0.36) !important;
+}
+
+.fromone-publish-control-card.needs-media {
+  background:
+    radial-gradient(circle at top left, rgba(251, 191, 36, 0.2), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.045)) !important;
+  border-color: rgba(251, 191, 36, 0.34) !important;
+}
+
+.fromone-publish-control-main {
+  display: grid !important;
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+
+.fromone-publish-status-icon {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #ffd43b !important;
+  color: #101420 !important;
+  font-size: 1.5rem !important;
+  font-weight: 950 !important;
+  box-shadow: 0 14px 30px rgba(255, 212, 59, 0.22) !important;
+}
+
+.fromone-publish-control-card.is-posted .fromone-publish-status-icon {
+  background: #3ddc97 !important;
+  color: #04130c !important;
+  box-shadow: 0 14px 30px rgba(61, 220, 151, 0.2) !important;
+}
+
+.fromone-publish-control-card.needs-media .fromone-publish-status-icon {
+  background: #fbbf24 !important;
+  color: #101420 !important;
+}
+
+.fromone-publish-card-kicker {
+  color: #ffd43b !important;
+  font-size: 0.78rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 6px !important;
+}
+
+.fromone-publish-control-card h3 {
+  margin: 0 !important;
+  font-size: clamp(1.45rem, 3vw, 2.2rem) !important;
+  line-height: 1.05 !important;
+}
+
+.fromone-publish-control-card p {
+  margin: 10px 0 0 !important;
+  max-width: 720px !important;
+  line-height: 1.55 !important;
+}
+
+.fromone-publish-schedule-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-top: 16px !important;
+  padding: 9px 13px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 212, 59, 0.13) !important;
+  border: 1px solid rgba(255, 212, 59, 0.26) !important;
+  color: #ffe58a !important;
+  font-size: 0.86rem !important;
+  font-weight: 850 !important;
+}
+
+.fromone-readiness-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+  gap: 10px !important;
+  margin-top: 22px !important;
+}
+
+.fromone-readiness-list span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 11px 13px !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(248, 250, 252, 0.84) !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+}
+
+.fromone-readiness-list span strong {
+  color: #3ddc97 !important;
+}
+
+.fromone-readiness-list span.is-not-ready strong {
+  color: #fbbf24 !important;
+}
+
+.fromone-publish-card-actions {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: 22px !important;
+}
+
+.fromone-publish-card-actions button {
+  min-height: 52px !important;
+  border-radius: 16px !important;
+  font-size: 0.96rem !important;
+  font-weight: 950 !important;
+}
+
+.fromone-publish-card-actions button:disabled {
+  opacity: 0.58 !important;
+  cursor: not-allowed !important;
+}
+
+.fromone-schedule-control-card {
+  margin-top: 18px !important;
+  padding: 22px !important;
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.fromone-schedule-card-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  margin-bottom: 16px !important;
+}
+
+.fromone-schedule-card-header strong {
+  display: block !important;
+  margin-bottom: 6px !important;
+}
+
+.fromone-schedule-card-header p {
+  margin: 0 !important;
+  line-height: 1.45 !important;
+}
+
+.fromone-schedule-card-header span {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 8px 12px !important;
+  border-radius: 999px !important;
+  background: rgba(61, 220, 151, 0.12) !important;
+  border: 1px solid rgba(61, 220, 151, 0.24) !important;
+  color: #a7f3d0 !important;
+  font-size: 0.8rem !important;
+  font-weight: 900 !important;
+}
+
+.fromone-schedule-control-card input.input {
+  width: 100% !important;
+}
+
+@media (max-width: 760px) {
+  .fromone-publish-control-card {
+    padding: 18px !important;
+    border-radius: 20px !important;
+  }
+
+  .fromone-publish-control-main {
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .fromone-publish-status-icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 16px !important;
+    font-size: 1.2rem !important;
+  }
+
+  .fromone-readiness-list {
+    grid-template-columns: 1fr !important;
+  }
+
+  .fromone-publish-card-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .fromone-schedule-card-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .fromone-schedule-card-header span {
+    justify-self: start !important;
+  }
+}

@@ -138,10 +138,17 @@ export default function PostActionModal({
 }: PostActionModalProps) {
   if (!selectedPost) return null;
 
-  const isFacebookPost = String(selectedPost.platform || '').toLowerCase().includes('facebook');
-  const isInstagramPost = String(selectedPost.platform || '').toLowerCase().includes('instagram');
+  const platformName = getPlatformDisplayName(selectedPost);
+  const platformKey = String(selectedPost.platform || '').toLowerCase();
+
+  const isFacebookPost = platformKey.includes('facebook');
+  const isInstagramPost = platformKey.includes('instagram');
   const canAutoPublish = isFacebookPost || isInstagramPost;
   const hasMedia = Boolean(selectedPost.media_url);
+  const needsMedia = mediaRequiredForPlatform(selectedPost.platform) && !hasMedia;
+  const hasSchedule = Boolean(selectedPost.scheduled_publish_at);
+  const posted = isPostPosted(selectedPost);
+  const isPublishing = publishingPostId === selectedPost.id;
 
   const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
 
@@ -153,6 +160,55 @@ export default function PostActionModal({
     ? `${autoPublishPlatformName} posts can auto-publish when the scheduler runs.`
     : 'This saves a reminder time only for this platform.';
 
+  const publishCardTitle = posted
+    ? 'Posted'
+    : needsMedia
+      ? 'Needs media'
+      : hasSchedule && canAutoPublish
+        ? 'Queued to publish'
+        : canAutoPublish
+          ? 'Ready to publish'
+          : 'Manual posting';
+
+  const publishCardDetail = posted
+    ? `${platformName} has been marked as posted.`
+    : needsMedia
+      ? `${platformName} needs an image or video before publishing.`
+      : hasSchedule && canAutoPublish
+        ? `${platformName} will auto-publish when the scheduler runs.`
+        : canAutoPublish
+          ? `${platformName} can publish now or be scheduled for later.`
+          : `${platformName} is copy/open for now.`;
+
+  const readinessItems = [
+    {
+      label: 'Wording ready',
+      ready: Boolean(selectedPost.caption || selectedPost.cta),
+    },
+    {
+      label: mediaRequiredForPlatform(selectedPost.platform) ? 'Media required' : 'Media optional',
+      ready: mediaRequiredForPlatform(selectedPost.platform) ? hasMedia : true,
+    },
+    {
+      label: canAutoPublish ? 'Auto-publish available' : 'Manual posting',
+      ready: canAutoPublish,
+    },
+  ];
+
+  const handlePrimaryPublish = () => {
+    if (canDirectPublishToFacebook(selectedPost)) {
+      onPublishToFacebook(selectedPost);
+      return;
+    }
+
+    if (canDirectPublishToInstagram(selectedPost)) {
+      onPublishToInstagram(selectedPost);
+      return;
+    }
+
+    onCopyPost(selectedPost);
+  };
+
   return (
     <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
       <section className="fromone-modal-card fromone-post-action-modal">
@@ -161,8 +217,7 @@ export default function PostActionModal({
             <div className="page-eyebrow">Post window</div>
             <h2>{selectedPost.title || 'Social media post'}</h2>
             <p>
-              {getPostPositionLabel(selectedPost)} · {getPlatformDisplayName(selectedPost)} ·{' '}
-              {getPostStatus(selectedPost)}
+              {getPostPositionLabel(selectedPost)} · {platformName} · {getPostStatus(selectedPost)}
             </p>
           </div>
 
@@ -173,9 +228,9 @@ export default function PostActionModal({
 
         <div className="selected-post-tags">
           <span>{getPostPositionLabel(selectedPost)}</span>
-          <span>{getPlatformDisplayName(selectedPost)}</span>
+          <span>{platformName}</span>
           <span>{getPostStatus(selectedPost)}</span>
-          {isPostScheduledToday(selectedPost) && !isPostPosted(selectedPost) && <span>Today</span>}
+          {isPostScheduledToday(selectedPost) && !posted && <span>Today</span>}
           {selectedPost.audience_target && <span>For {selectedPost.audience_target}</span>}
         </div>
 
@@ -187,7 +242,7 @@ export default function PostActionModal({
               <p>Improve or edit only if needed.</p>
             </div>
 
-            <span>{getPlatformDisplayName(selectedPost)}</span>
+            <span>{platformName}</span>
           </div>
 
           {editingPostId === selectedPost.id ? (
@@ -406,14 +461,10 @@ export default function PostActionModal({
             </div>
           ) : (
             <div className="fromone-image-guidance-note">
-              <strong>
-                {mediaRequiredForPlatform(selectedPost.platform) ? 'Media needed' : 'Optional'}
-              </strong>
+              <strong>{mediaRequiredForPlatform(selectedPost.platform) ? 'Media needed' : 'Optional'}</strong>
               <p>
                 {mediaRequiredForPlatform(selectedPost.platform)
-                  ? `${getPlatformDisplayName(
-                      selectedPost
-                    )} needs an image or video before publishing.`
+                  ? `${platformName} needs an image or video before publishing.`
                   : 'A clear photo or short video can make this post stronger.'}
               </p>
             </div>
@@ -437,15 +488,12 @@ export default function PostActionModal({
           </label>
         </section>
 
-        <section ref={publishRef} className="fromone-flow-tools-card">
+        <section ref={publishRef} className="fromone-flow-tools-card fromone-publish-control-section">
           <div className="fromone-flow-tools-header">
             <div>
               <div className="page-eyebrow">Publish</div>
-              <h3>Send it out.</h3>
-              <p>
-                Facebook and Instagram can publish directly when ready. Other platforms stay as
-                copy/open for now.
-              </p>
+              <h3>Control when this goes out.</h3>
+              <p>Publish now, queue it for later, or use copy/open for platforms not connected yet.</p>
             </div>
           </div>
 
@@ -456,102 +504,80 @@ export default function PostActionModal({
             </div>
           )}
 
-          {isInstagramPost && !hasMedia && !isPostPosted(selectedPost) && (
-            <div className="fromone-improvement-note">
-              <strong>Media needed</strong>
-              <p>Instagram needs an image or video before publishing.</p>
+          <div className={`fromone-publish-control-card ${posted ? 'is-posted' : ''} ${needsMedia ? 'needs-media' : ''}`}>
+            <div className="fromone-publish-control-main">
+              <div className="fromone-publish-status-icon">{posted ? '✓' : needsMedia ? '!' : hasSchedule ? '⏱' : '→'}</div>
+
+              <div>
+                <div className="fromone-publish-card-kicker">{platformName}</div>
+                <h3>{publishCardTitle}</h3>
+                <p>{publishCardDetail}</p>
+
+                {hasSchedule && !posted && (
+                  <div className="fromone-publish-schedule-pill">
+                    {scheduleStatusLabel}: {getReadableDateTime(selectedPost.scheduled_publish_at)}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
 
-          {selectedPost.scheduled_publish_at && (
-            <div className="fromone-improvement-note">
-              <strong>{scheduleStatusLabel}</strong>
-              <p>
-                {getReadableDateTime(selectedPost.scheduled_publish_at)}. {scheduleHelperText}
-              </p>
+            <div className="fromone-readiness-list">
+              {readinessItems.map((item) => (
+                <span key={item.label} className={item.ready ? 'is-ready' : 'is-not-ready'}>
+                  <strong>{item.ready ? '✓' : '•'}</strong> {item.label}
+                </span>
+              ))}
             </div>
-          )}
 
-          <div className="fromone-flow-publish-buttons">
-            {canDirectPublishToFacebook(selectedPost) ? (
-              <button
-                type="button"
-                onClick={() => onPublishToFacebook(selectedPost)}
-                disabled={publishingPostId === selectedPost.id || isPostPosted(selectedPost)}
-              >
-                {publishingPostId === selectedPost.id
-                  ? 'Publishing...'
-                  : isPostPosted(selectedPost)
-                    ? 'Posted to Facebook'
-                    : 'Publish to Facebook'}
-              </button>
-            ) : canDirectPublishToInstagram(selectedPost) ? (
-              <button
-                type="button"
-                onClick={() => onPublishToInstagram(selectedPost)}
-                disabled={publishingPostId === selectedPost.id || isPostPosted(selectedPost)}
-              >
-                {publishingPostId === selectedPost.id
-                  ? 'Publishing...'
-                  : isPostPosted(selectedPost)
-                    ? 'Posted to Instagram'
-                    : 'Publish to Instagram'}
-              </button>
-            ) : (
-              <button type="button" onClick={() => onCopyPost(selectedPost)}>
-                {String(selectedPost.platform || '').toLowerCase().includes('tiktok')
-                  ? 'Send to TikTok'
-                  : `Copy for ${getPlatformDisplayName(selectedPost)}`}
-              </button>
-            )}
+            <div className="fromone-publish-card-actions">
+              {canAutoPublish ? (
+                <button
+                  type="button"
+                  onClick={handlePrimaryPublish}
+                  disabled={isPublishing || posted || needsMedia}
+                >
+                  {isPublishing ? 'Publishing...' : posted ? `Posted to ${platformName}` : 'Publish now'}
+                </button>
+              ) : (
+                <button type="button" onClick={() => onCopyPost(selectedPost)}>
+                  {platformKey.includes('tiktok') ? 'Send to TikTok' : `Copy for ${platformName}`}
+                </button>
+              )}
 
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => onCopyPost(selectedPost)}
-            >
-              Copy post
-            </button>
-
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
-            >
-              Open {getPlatformDisplayName(selectedPost)}
-            </button>
-
-            {isPostPosted(selectedPost) ? (
               <button
                 type="button"
                 className="secondary-button"
-                onClick={() => onMarkAsNotPosted(selectedPost.id)}
+                onClick={() => onCopyPost(selectedPost)}
               >
-                Mark as not posted
+                Copy post
               </button>
-            ) : (
+
               <button
                 type="button"
-                className="posted-button"
-                onClick={() => onMarkAsPosted(selectedPost.id)}
+                className="secondary-button"
+                onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
               >
-                Mark as posted
+                Open {platformName}
               </button>
-            )}
+            </div>
           </div>
 
-          <div className="fromone-schedule-box">
-            <label>
-              <strong>{scheduleInputLabel}</strong>
-              <input
-                className="input"
-                type="datetime-local"
-                value={reminderValue}
-                onChange={(event) => onSetReminderValue(event.target.value)}
-              />
-            </label>
+          <div className="fromone-schedule-box fromone-schedule-control-card">
+            <div className="fromone-schedule-card-header">
+              <div>
+                <strong>{scheduleInputLabel}</strong>
+                <p>{scheduleHelperText}</p>
+              </div>
 
-            <p style={{ marginTop: 8 }}>{scheduleHelperText}</p>
+              {hasSchedule && !posted && <span>{scheduleStatusLabel}</span>}
+            </div>
+
+            <input
+              className="input"
+              type="datetime-local"
+              value={reminderValue}
+              onChange={(event) => onSetReminderValue(event.target.value)}
+            />
 
             <div className="fromone-flow-inline-actions">
               <button
@@ -563,7 +589,7 @@ export default function PostActionModal({
                 {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleLabel}
               </button>
 
-              {selectedPost.scheduled_publish_at && (
+              {hasSchedule && (
                 <button
                   type="button"
                   className="secondary-button"
@@ -571,6 +597,24 @@ export default function PostActionModal({
                   disabled={savingReminderPostId === selectedPost.id}
                 >
                   {clearScheduleLabel}
+                </button>
+              )}
+
+              {posted ? (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => onMarkAsNotPosted(selectedPost.id)}
+                >
+                  Mark as not posted
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="posted-button"
+                  onClick={() => onMarkAsPosted(selectedPost.id)}
+                >
+                  Mark as posted
                 </button>
               )}
             </div>
