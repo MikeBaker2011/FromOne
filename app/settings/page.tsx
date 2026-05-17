@@ -560,7 +560,7 @@ export default function SettingsPage() {
                 />
 
                 <AccountPill
-                  platform="Google Business"
+                  platform="Google"
                   status="not_connected"
                   detail="Worth adding next for local businesses and Google visibility."
                   onConnect={() => alert('Google Business Profile connection is coming next.')}
