@@ -140,14 +140,17 @@ export default function PostActionModal({
 
   const isFacebookPost = String(selectedPost.platform || '').toLowerCase().includes('facebook');
   const isInstagramPost = String(selectedPost.platform || '').toLowerCase().includes('instagram');
+  const canAutoPublish = isFacebookPost || isInstagramPost;
   const hasMedia = Boolean(selectedPost.media_url);
 
-  const scheduleStatusLabel = isFacebookPost ? 'Scheduled' : 'Reminder set';
-  const scheduleInputLabel = isFacebookPost ? 'Schedule publish time' : 'Reminder time';
-  const saveScheduleLabel = isFacebookPost ? 'Save schedule' : 'Save reminder';
-  const clearScheduleLabel = isFacebookPost ? 'Clear schedule' : 'Clear reminder';
-  const scheduleHelperText = isFacebookPost
-    ? 'Facebook posts can auto-publish when the scheduler runs.'
+  const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
+
+  const scheduleStatusLabel = canAutoPublish ? 'Scheduled' : 'Reminder set';
+  const scheduleInputLabel = canAutoPublish ? 'Schedule publish time' : 'Reminder time';
+  const saveScheduleLabel = canAutoPublish ? 'Save schedule' : 'Save reminder';
+  const clearScheduleLabel = canAutoPublish ? 'Clear schedule' : 'Clear reminder';
+  const scheduleHelperText = canAutoPublish
+    ? `${autoPublishPlatformName} posts can auto-publish when the scheduler runs.`
     : 'This saves a reminder time only for this platform.';
 
   return (
