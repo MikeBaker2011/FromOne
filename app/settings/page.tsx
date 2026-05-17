@@ -137,12 +137,6 @@ export default function SettingsPage() {
   const [contentPillars, setContentPillars] = useState('');
   const [businessGoals, setBusinessGoals] = useState('');
 
-  const [brandPrimaryColor, setBrandPrimaryColor] = useState('');
-  const [brandSecondaryColor, setBrandSecondaryColor] = useState('');
-  const [brandAccentColor, setBrandAccentColor] = useState('');
-  const [brandLogoUrl, setBrandLogoUrl] = useState('');
-  const [brandSummary, setBrandSummary] = useState('');
-
   const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
   const [disconnectingConnectionId, setDisconnectingConnectionId] = useState<string | null>(null);
@@ -154,7 +148,6 @@ export default function SettingsPage() {
   const [showGoogleLocationPicker, setShowGoogleLocationPicker] = useState(false);
 
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
-  const [showBrandDetails, setShowBrandDetails] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -522,25 +515,10 @@ export default function SettingsPage() {
         Array.isArray(data.business_goals) ? data.business_goals.join(', ') : ''
       );
 
-      setBrandPrimaryColor(data.brand_primary_color || '');
-      setBrandSecondaryColor(data.brand_secondary_color || '');
-      setBrandAccentColor(data.brand_accent_color || '');
-      setBrandLogoUrl(data.brand_logo_url || '');
-      setBrandSummary(data.brand_summary || '');
-
       if (data.business_name || data.industry || data.location || data.services?.length) {
         setShowBusinessDetails(true);
       }
 
-      if (
-        data.brand_primary_color ||
-        data.brand_secondary_color ||
-        data.brand_accent_color ||
-        data.brand_logo_url ||
-        data.brand_summary
-      ) {
-        setShowBrandDetails(true);
-      }
     }
 
     setLoading(false);
@@ -570,12 +548,6 @@ export default function SettingsPage() {
       main_offer: mainOffer.trim() || null,
       content_pillars: splitList(contentPillars),
       business_goals: splitList(businessGoals),
-
-      brand_primary_color: brandPrimaryColor.trim() || null,
-      brand_secondary_color: brandSecondaryColor.trim() || null,
-      brand_accent_color: brandAccentColor.trim() || null,
-      brand_logo_url: brandLogoUrl.trim() || null,
-      brand_summary: brandSummary.trim() || null,
 
       updated_at: new Date().toISOString(),
     };
@@ -647,14 +619,7 @@ export default function SettingsPage() {
     setContentPillars('');
     setBusinessGoals('');
 
-    setBrandPrimaryColor('');
-    setBrandSecondaryColor('');
-    setBrandAccentColor('');
-    setBrandLogoUrl('');
-    setBrandSummary('');
-
     setShowBusinessDetails(false);
-    setShowBrandDetails(false);
   };
 
   const handleDeleteProfile = async () => {
@@ -702,7 +667,7 @@ export default function SettingsPage() {
         <div className="page-eyebrow">Settings</div>
         <h1 className="page-title">Settings.</h1>
         <p className="page-description">
-          Manage business details, brand details, and the accounts FromOne can publish to.
+          Manage business details and the accounts FromOne can publish to.
         </p>
       </div>
 
@@ -903,13 +868,6 @@ export default function SettingsPage() {
                 {showBusinessDetails ? 'Hide business details' : 'Edit business details'}
               </button>
 
-              <button
-                type="button"
-                className="manual-open-button"
-                onClick={() => setShowBrandDetails(!showBrandDetails)}
-              >
-                {showBrandDetails ? 'Hide brand details' : 'Edit brand details'}
-              </button>
             </div>
           </section>
 
@@ -1042,85 +1000,6 @@ export default function SettingsPage() {
 
                 <button onClick={handleSaveProfile} disabled={saving}>
                   {saving ? 'Saving...' : 'Save Business Details'}
-                </button>
-              </div>
-            </section>
-          )}
-
-          {showBrandDetails && (
-            <section className="manual-collapse-card manual-open-card">
-              <div className="manual-collapse-content manual-visible-content">
-                <div className="page-eyebrow">Brand Details</div>
-                <h2>Adjust the brand details.</h2>
-                <p>
-                  These are usually detected during the website scan. You can correct them here if
-                  needed.
-                </p>
-
-                <div className="manual-backup-grid">
-                  <div>
-                    <label>
-                      <strong>Primary Brand Colour</strong>
-                      <span>Hex code used for campaign highlights.</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={brandPrimaryColor}
-                      onChange={(event) => setBrandPrimaryColor(event.target.value)}
-                      placeholder="#ffd43b"
-                    />
-
-                    <label>
-                      <strong>Secondary Brand Colour</strong>
-                      <span>Usually a dark, light, or supporting colour.</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={brandSecondaryColor}
-                      onChange={(event) => setBrandSecondaryColor(event.target.value)}
-                      placeholder="#101420"
-                    />
-
-                    <label>
-                      <strong>Accent Brand Colour</strong>
-                      <span>Used for smaller highlights and labels.</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={brandAccentColor}
-                      onChange={(event) => setBrandAccentColor(event.target.value)}
-                      placeholder="#3ddc97"
-                    />
-                  </div>
-
-                  <div>
-                    <label>
-                      <strong>Logo URL</strong>
-                      <span>Optional detected logo URL.</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={brandLogoUrl}
-                      onChange={(event) => setBrandLogoUrl(event.target.value)}
-                      placeholder="https://example.com/logo.png"
-                    />
-
-                    <label>
-                      <strong>Brand Summary</strong>
-                      <span>Short description of the visual style and tone.</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={brandSummary}
-                      onChange={(event) => setBrandSummary(event.target.value)}
-                      placeholder="Example: Clean, professional, service-led brand with blue and white colours."
-                      rows={6}
-                    />
-                  </div>
-                </div>
-
-                <button onClick={handleSaveProfile} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Brand Details'}
                 </button>
               </div>
             </section>
