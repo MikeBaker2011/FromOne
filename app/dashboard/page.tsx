@@ -71,7 +71,7 @@ const availablePlatforms: PlatformOption[] = [
     description: 'Visual captions, reels ideas, stories, and brand-led posts.',
   },
   {
-    name: 'Google Business',
+    name: 'Google',
     shortName: 'Google',
     description: 'Search-friendly updates for local visibility and enquiries.',
   },
@@ -121,42 +121,42 @@ const marketReachOptions = [
   },
 ];
 
-const defaultSelectedPlatforms = ['Facebook', 'Instagram', 'Google Business', 'LinkedIn'];
+const defaultSelectedPlatforms = ['Facebook', 'Instagram', 'Google', 'LinkedIn'];
 const PLATFORM_CAROUSEL_VISIBLE_COUNT = 3;
 
 const recommendedPlatformsByIndustry: Record<string, string[]> = {
-  plumbing: ['Facebook', 'Google Business', 'LinkedIn'],
-  plumber: ['Facebook', 'Google Business', 'LinkedIn'],
-  electrician: ['Facebook', 'Google Business', 'LinkedIn'],
-  electrical: ['Facebook', 'Google Business', 'LinkedIn'],
-  roofing: ['Facebook', 'Google Business', 'LinkedIn'],
-  roofer: ['Facebook', 'Google Business', 'LinkedIn'],
-  building: ['Facebook', 'Google Business', 'LinkedIn'],
-  construction: ['Facebook', 'Google Business', 'LinkedIn'],
-  landscaping: ['Facebook', 'Instagram', 'Google Business'],
-  gardener: ['Facebook', 'Instagram', 'Google Business'],
-  signage: ['Instagram', 'Facebook', 'LinkedIn', 'Google Business'],
-  print: ['Instagram', 'Facebook', 'LinkedIn', 'Google Business'],
+  plumbing: ['Facebook', 'Google', 'LinkedIn'],
+  plumber: ['Facebook', 'Google', 'LinkedIn'],
+  electrician: ['Facebook', 'Google', 'LinkedIn'],
+  electrical: ['Facebook', 'Google', 'LinkedIn'],
+  roofing: ['Facebook', 'Google', 'LinkedIn'],
+  roofer: ['Facebook', 'Google', 'LinkedIn'],
+  building: ['Facebook', 'Google', 'LinkedIn'],
+  construction: ['Facebook', 'Google', 'LinkedIn'],
+  landscaping: ['Facebook', 'Instagram', 'Google'],
+  gardener: ['Facebook', 'Instagram', 'Google'],
+  signage: ['Instagram', 'Facebook', 'LinkedIn', 'Google'],
+  print: ['Instagram', 'Facebook', 'LinkedIn', 'Google'],
   beauty: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
   hair: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
   salon: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
   aesthetics: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
   fitness: ['Instagram', 'TikTok', 'YouTube Shorts', 'Facebook'],
   gym: ['Instagram', 'TikTok', 'YouTube Shorts', 'Facebook'],
-  restaurant: ['Instagram', 'TikTok', 'Facebook', 'Google Business'],
-  cafe: ['Instagram', 'TikTok', 'Facebook', 'Google Business'],
-  food: ['Instagram', 'TikTok', 'Facebook', 'Google Business'],
-  bakery: ['Instagram', 'TikTok', 'Facebook', 'Google Business'],
-  estate: ['Facebook', 'LinkedIn', 'Google Business', 'Instagram'],
-  property: ['Facebook', 'LinkedIn', 'Google Business', 'Instagram'],
-  accounting: ['LinkedIn', 'Google Business', 'Facebook'],
-  accountant: ['LinkedIn', 'Google Business', 'Facebook'],
-  legal: ['LinkedIn', 'Google Business', 'Facebook'],
-  solicitor: ['LinkedIn', 'Google Business', 'Facebook'],
-  dental: ['Instagram', 'Facebook', 'Google Business'],
-  dentist: ['Instagram', 'Facebook', 'Google Business'],
-  mechanic: ['Facebook', 'Google Business', 'Instagram'],
-  garage: ['Facebook', 'Google Business', 'Instagram'],
+  restaurant: ['Instagram', 'TikTok', 'Facebook', 'Google'],
+  cafe: ['Instagram', 'TikTok', 'Facebook', 'Google'],
+  food: ['Instagram', 'TikTok', 'Facebook', 'Google'],
+  bakery: ['Instagram', 'TikTok', 'Facebook', 'Google'],
+  estate: ['Facebook', 'LinkedIn', 'Google', 'Instagram'],
+  property: ['Facebook', 'LinkedIn', 'Google', 'Instagram'],
+  accounting: ['LinkedIn', 'Google', 'Facebook'],
+  accountant: ['LinkedIn', 'Google', 'Facebook'],
+  legal: ['LinkedIn', 'Google', 'Facebook'],
+  solicitor: ['LinkedIn', 'Google', 'Facebook'],
+  dental: ['Instagram', 'Facebook', 'Google'],
+  dentist: ['Instagram', 'Facebook', 'Google'],
+  mechanic: ['Facebook', 'Google', 'Instagram'],
+  garage: ['Facebook', 'Google', 'Instagram'],
   ecommerce: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
   shop: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
   retail: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
@@ -165,7 +165,7 @@ const recommendedPlatformsByIndustry: Record<string, string[]> = {
 const platformFallback = [
   'Facebook',
   'Instagram',
-  'Google Business',
+  'Google',
   'LinkedIn',
   'Instagram',
   'TikTok',
@@ -1886,7 +1886,14 @@ Also detect or infer:
       ) : (
         <>
           {showCustomerReadyChecklist && (
-            <section className="dashboard-first-run-card">
+            <section
+              className="dashboard-first-run-card"
+              style={{
+                width: '100%',
+                maxWidth: 'none',
+                gridColumn: '1 / -1',
+              }}
+            >
               <div className="dashboard-first-run-heading">
                 <div>
                   <div className="page-eyebrow">Customer-ready setup</div>
