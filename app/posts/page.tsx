@@ -36,6 +36,19 @@ type AccessInfo = {
   subscription_status: string | null;
 };
 
+type MetaConnection = {
+  id: string;
+  provider: string;
+  provider_user_name: string | null;
+  page_id: string | null;
+  page_name: string | null;
+  instagram_business_account_id: string | null;
+  instagram_username: string | null;
+  expires_at: string | null;
+  status: string | null;
+  updated_at: string | null;
+};
+
 type SuccessMoment = {
   postsLeft: number;
   nextPostId: string | null;
@@ -67,7 +80,7 @@ const postsTourSteps = [
   },
   {
     title: 'Publish',
-    text: 'Publish to Facebook directly, or copy and open the platform when direct publishing is not ready yet.',
+    text: 'Publish to Facebook or Instagram directly, schedule connected posts, or copy/open platforms that are not connected yet.',
     target: 'publish',
   },
 ];
@@ -272,6 +285,10 @@ export default function PostsPage() {
   const [campaign, setCampaign] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
 
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [metaConnections, setMetaConnections] = useState<MetaConnection[]>([]);
+  const [loadingMetaConnections, setLoadingMetaConnections] = useState(false);
+
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [pendingCampaignId, setPendingCampaignId] = useState('');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
@@ -387,6 +404,20 @@ export default function PostsPage() {
 
   useEffect(() => {
     loadPageData();
+
+    const params = new URLSearchParams(window.location.search);
+    const metaConnected = params.get('meta_connected');
+    const metaError = params.get('meta_error');
+
+    if (metaConnected === 'true') {
+      alert('Facebook and Instagram connected.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (metaConnected === 'false') {
+      alert(metaError || 'Meta connection failed.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
 
     const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === 'true';
     const isMobile = window.innerWidth <= 760;
@@ -572,6 +603,46 @@ export default function PostsPage() {
     return false;
   };
 
+  const loadMetaConnections = async (userId: string) => {
+    setLoadingMetaConnections(true);
+
+    try {
+      const response = await axios.get('/api/social-connections', {
+        params: {
+          user_id: userId,
+        },
+      });
+
+      setMetaConnections(response.data?.connections || []);
+    } catch (error) {
+      console.error('Load Meta connections error:', error);
+      setMetaConnections([]);
+    } finally {
+      setLoadingMetaConnections(false);
+    }
+  };
+
+  const connectMetaAccount = async () => {
+    let userId = currentUserId;
+
+    if (!userId) {
+      const { data } = await supabase.auth.getUser();
+      userId = data.user?.id || null;
+    }
+
+    if (!userId) {
+      alert('Please sign in before connecting Facebook and Instagram.');
+      return;
+    }
+
+    const params = new URLSearchParams();
+
+    params.set('user_id', userId);
+    params.set('return_to', '/posts');
+
+    window.location.href = `/api/auth/meta/start?${params.toString()}`;
+  };
+
   const loadAccess = async () => {
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
@@ -584,6 +655,9 @@ export default function PostsPage() {
 
     const userId = authData.user?.id;
     if (!userId) return;
+
+    setCurrentUserId(userId);
+    await loadMetaConnections(userId);
 
     const { data, error } = await supabase
       .from('user_access')
@@ -2023,6 +2097,40 @@ export default function PostsPage() {
               </a>
             </section>
           )}
+
+          <section className="premium-card" style={{ marginBottom: 22 }}>
+            <div className="page-eyebrow">Connected accounts</div>
+            <h2 style={{ marginTop: 0 }}>Facebook & Instagram</h2>
+
+            {loadingMetaConnections ? (
+              <p>Checking connected accounts...</p>
+            ) : metaConnections.length > 0 ? (
+              <>
+                <p>
+                  Connected to{' '}
+                  <strong>{metaConnections[0].page_name || 'Facebook Page'}</strong>
+                  {metaConnections[0].instagram_username
+                    ? ` and Instagram @${metaConnections[0].instagram_username}`
+                    : '.'}
+                </p>
+
+                <button type="button" className="secondary-button" onClick={connectMetaAccount}>
+                  Reconnect Facebook & Instagram
+                </button>
+              </>
+            ) : (
+              <>
+                <p>
+                  Connect your Facebook Page and Instagram account so FromOne can publish using your
+                  own accounts.
+                </p>
+
+                <button type="button" onClick={connectMetaAccount}>
+                  Connect Facebook & Instagram
+                </button>
+              </>
+            )}
+          </section>
 
           <section className="posts-progress-plan-grid">
             <section className="weekly-progress-card">
