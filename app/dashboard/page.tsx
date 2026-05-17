@@ -30,6 +30,22 @@ type AccessInfo = {
   subscription_status: string | null;
 };
 
+type SocialConnection = {
+  id: string;
+  provider: string;
+  provider_user_name: string | null;
+  page_id: string | null;
+  page_name: string | null;
+  instagram_business_account_id: string | null;
+  instagram_username: string | null;
+  google_account_id?: string | null;
+  google_account_name?: string | null;
+  google_location_id?: string | null;
+  google_location_name?: string | null;
+  status: string | null;
+  updated_at: string | null;
+};
+
 type WeeklyProgress = {
   total: number;
   posted: number;
@@ -207,22 +223,41 @@ const dashboardTourSteps = [
   },
 ];
 
-const firstRunChecklist = [
+const customerReadyChecklist = [
   {
-    title: 'Add the business',
-    description: 'Use a website scan or enter the business details manually.',
+    key: 'business',
+    title: 'Add business profile',
+    description: 'Add a website or save the business details manually.',
   },
   {
-    title: 'Choose the reach',
-    description: 'Tell FromOne whether the posts are local, nationwide, or online.',
+    key: 'facebook',
+    title: 'Connect Facebook',
+    description: 'Connect the Facebook Page FromOne should publish to.',
   },
   {
-    title: 'Pick platforms',
-    description: 'Choose where you want posts for this week.',
+    key: 'instagram',
+    title: 'Connect Instagram',
+    description: 'Connect the Instagram professional account for direct posting.',
   },
   {
-    title: 'Create weekly posts',
-    description: 'Generate the seven-day plan and review it in Posts.',
+    key: 'google',
+    title: 'Connect Google',
+    description: 'Google is connected now; publishing waits for Google API approval.',
+  },
+  {
+    key: 'weekly_plan',
+    title: 'Create first weekly plan',
+    description: 'Generate the first seven-day content plan.',
+  },
+  {
+    key: 'scheduled_post',
+    title: 'Schedule first post',
+    description: 'Set at least one post to publish automatically.',
+  },
+  {
+    key: 'billing',
+    title: 'Choose billing plan',
+    description: 'Move from demo access to a paid plan when ready.',
   },
 ];
 
@@ -239,6 +274,8 @@ export default function DashboardPage() {
   const [weeklyScansUsed, setWeeklyScansUsed] = useState(0);
   const [savedCampaignsCount, setSavedCampaignsCount] = useState(0);
   const [todayPost, setTodayPost] = useState<any>(null);
+  const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
+  const [hasScheduledPost, setHasScheduledPost] = useState(false);
 
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultSelectedPlatforms);
   const [platformCarouselStart, setPlatformCarouselStart] = useState(0);
@@ -587,6 +624,42 @@ export default function DashboardPage() {
     date.setHours(23, 59, 59, 999);
 
     return date;
+  };
+
+  const loadSocialConnections = async (userId: string) => {
+    try {
+      const params = new URLSearchParams();
+      params.set('user_id', userId);
+
+      const response = await fetch(`/api/social-connections?${params.toString()}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Could not load connected accounts.');
+      }
+
+      setSocialConnections(result?.connections || []);
+    } catch (error: any) {
+      console.error('Error loading connected accounts:', error?.message || error);
+      setSocialConnections([]);
+    }
+  };
+
+  const loadScheduledPostStatus = async (userId: string) => {
+    const { count, error } = await supabase
+      .from('campaign_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .not('scheduled_publish_at', 'is', null)
+      .neq('publish_status', 'posted');
+
+    if (error) {
+      console.error('Error loading scheduled post status:', error.message);
+      setHasScheduledPost(false);
+      return;
+    }
+
+    setHasScheduledPost((count || 0) > 0);
   };
 
   const loadWeeklyProgress = async (userId: string) => {
@@ -952,6 +1025,8 @@ export default function DashboardPage() {
       loadOrCreateAccess(userId),
       loadTodayPost(userId),
       loadWeeklyProgress(userId),
+      loadSocialConnections(userId),
+      loadScheduledPostStatus(userId),
     ]);
 
     const { data, error } = await supabase
@@ -1607,7 +1682,11 @@ Also detect or infer:
     localStorage.setItem('fromone_has_new_posts', 'true');
     window.dispatchEvent(new Event('fromone-new-posts-updated'));
 
-    await Promise.all([loadSavedCampaignCount(userId), loadWeeklyProgress(userId)]);
+    await Promise.all([
+      loadSavedCampaignCount(userId),
+      loadWeeklyProgress(userId),
+      loadScheduledPostStatus(userId),
+    ]);
 
     router.push('/posts?created=true');
   };
@@ -1698,26 +1777,58 @@ Also detect or infer:
   const marketReachContext = getMarketReachContext(client);
 
   const hasBusinessSetup = Boolean(hasWebsite || hasManualProfile);
-  const hasChosenReach = Boolean(selectedMarketReach);
-  const hasChosenPlatforms = selectedPlatforms.length > 0;
   const hasCreatedPosts = weeklyProgress.total > 0 || savedCampaignsCount > 0;
-  const showFirstRunChecklist = !hasCreatedPosts;
 
-  const firstRunChecklistState = firstRunChecklist.map((item, index) => {
+  const primaryMetaConnection =
+    socialConnections.find((connection) => connection.provider === 'meta') || null;
+  const primaryGoogleConnection =
+    socialConnections.find((connection) => connection.provider === 'google') || null;
+
+  const hasFacebookConnection = Boolean(primaryMetaConnection?.page_id);
+  const hasInstagramConnection = Boolean(
+    primaryMetaConnection?.instagram_business_account_id
+  );
+  const hasGoogleConnection = Boolean(primaryGoogleConnection);
+  const googleLocationReady = Boolean(primaryGoogleConnection?.google_location_id);
+  const hasPaidPlan = isPaidSubscription(accessInfo?.subscription_status);
+
+  const customerReadyChecklistState = customerReadyChecklist.map((item) => {
     const complete =
-      index === 0
+      item.key === 'business'
         ? hasBusinessSetup
-        : index === 1
-          ? hasChosenReach
-          : index === 2
-            ? hasChosenPlatforms
-            : hasCreatedPosts;
+        : item.key === 'facebook'
+          ? hasFacebookConnection
+          : item.key === 'instagram'
+            ? hasInstagramConnection
+            : item.key === 'google'
+              ? hasGoogleConnection
+              : item.key === 'weekly_plan'
+                ? hasCreatedPosts
+                : item.key === 'scheduled_post'
+                  ? hasScheduledPost
+                  : item.key === 'billing'
+                    ? hasPaidPlan
+                    : false;
+
+    const pending =
+      item.key === 'google' && hasGoogleConnection && !googleLocationReady
+        ? 'API approval pending'
+        : item.key === 'billing' && !hasPaidPlan && !accessLocked
+          ? 'Demo active'
+          : '';
 
     return {
       ...item,
       complete,
+      pending,
     };
   });
+
+  const completedCustomerReadySteps = customerReadyChecklistState.filter(
+    (item) => item.complete
+  ).length;
+  const showCustomerReadyChecklist =
+    completedCustomerReadySteps < customerReadyChecklistState.length;
 
   return (
     <>
@@ -1774,26 +1885,24 @@ Also detect or infer:
         </div>
       ) : (
         <>
-          {showFirstRunChecklist && (
+          {showCustomerReadyChecklist && (
             <section className="dashboard-first-run-card">
               <div className="dashboard-first-run-heading">
                 <div>
-                  <div className="page-eyebrow">Quick setup</div>
-                  <h2>Set up your first weekly plan.</h2>
+                  <div className="page-eyebrow">Customer-ready setup</div>
+                  <h2>Your FromOne setup.</h2>
                   <p>
-                    Complete these steps once. After your first weekly plan is created, this
-                    checklist will disappear.
+                    Complete these steps to make the account ready for reliable weekly publishing.
                   </p>
                 </div>
 
                 <span>
-                  {firstRunChecklistState.filter((item) => item.complete).length}/
-                  {firstRunChecklistState.length} done
+                  {completedCustomerReadySteps}/{customerReadyChecklistState.length} done
                 </span>
               </div>
 
               <div className="dashboard-first-run-grid">
-                {firstRunChecklistState.map((item, index) => (
+                {customerReadyChecklistState.map((item, index) => (
                   <article
                     key={item.title}
                     className={
@@ -1808,10 +1917,26 @@ Also detect or infer:
 
                     <div>
                       <strong>{item.title}</strong>
-                      <p>{item.description}</p>
+                      <p>{item.pending ? `${item.description} · ${item.pending}` : item.description}</p>
                     </div>
                   </article>
                 ))}
+              </div>
+
+              <div className="button-row" style={{ marginTop: 18, gap: 12, flexWrap: 'wrap' }}>
+                <Link href="/settings" className="dashboard-profile-link">
+                  Manage connected accounts
+                </Link>
+
+                <Link href="/posts" className="dashboard-profile-link">
+                  View posts
+                </Link>
+
+                {!hasPaidPlan && (
+                  <Link href="/subscription" className="dashboard-profile-link">
+                    View billing options
+                  </Link>
+                )}
               </div>
             </section>
           )}
