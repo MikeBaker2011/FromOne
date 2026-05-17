@@ -1056,6 +1056,10 @@ export default function PostsPage() {
     return String(post?.platform || '').toLowerCase().includes('facebook');
   };
 
+  const canDirectPublishToInstagram = (post: any) => {
+    return String(post?.platform || '').toLowerCase().includes('instagram');
+  };
+
   const getMediaKind = (file: File) => {
     if (file.type.startsWith('video/')) return 'video';
     return 'image';
@@ -1494,6 +1498,108 @@ export default function PostsPage() {
     }
   };
 
+
+  const publishToInstagram = async (post: any) => {
+    if (!post?.id) return;
+
+    if (!canDirectPublishToInstagram(post)) {
+      alert('Direct publishing is currently only available for Instagram posts here.');
+      return;
+    }
+
+    const text = buildPostText(post);
+
+    if (!text) {
+      alert('This post needs wording before it can be published.');
+      return;
+    }
+
+    if (!post.media_url) {
+      alert('Instagram needs an image or video before publishing.');
+      return;
+    }
+
+    if (!post.media_type) {
+      alert('Instagram needs an image or video before publishing.');
+      return;
+    }
+
+    setPublishingPostId(post.id);
+
+    try {
+      const response = await axios.post('/api/instagram/publish', {
+        postId: post.id,
+        campaignPostId: post.id,
+        campaign_id: post.campaign_id,
+        platform: post.platform || 'Instagram',
+        message: text,
+        text,
+        caption: post.caption || '',
+        cta: post.cta || '',
+        hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
+        media_url: post.media_url || null,
+        mediaUrl: post.media_url || null,
+        media_type: post.media_type || null,
+        mediaType: post.media_type || null,
+      });
+
+      const instagramPostId =
+        response.data?.instagram_post_id ||
+        response.data?.instagramPostId ||
+        response.data?.postId ||
+        response.data?.post_id ||
+        response.data?.id ||
+        response.data?.result?.id ||
+        null;
+
+      const updates = {
+        is_posted: true,
+        status: 'posted',
+        publish_status: 'posted',
+        publish_error: null,
+        published_to: 'Instagram',
+        published_at: new Date().toISOString(),
+        instagram_post_id: instagramPostId,
+      };
+
+      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+
+      updatePostLocally(post.id, updates);
+      maybeShowReviewPrompt();
+
+      const postIndex = sortedPosts.findIndex((item) => item.id === post.id);
+      const updatedPosts = sortedPosts.map((item) =>
+        item.id === post.id ? { ...item, ...updates } : item
+      );
+      const postsLeftAfterPublishing = updatedPosts.filter((item) => !isPostPosted(item)).length;
+      const nextPost =
+        updatedPosts.slice(postIndex + 1).find((item) => !isPostPosted(item)) ||
+        updatedPosts.find((item) => !isPostPosted(item)) ||
+        null;
+
+      setSuccessMoment({
+        postsLeft: postsLeftAfterPublishing,
+        nextPostId: nextPost?.id || null,
+      });
+    } catch (error: any) {
+      const message = getReadableError(error, 'Instagram publishing failed.');
+
+      const updates = {
+        publish_status: 'failed',
+        publish_error: message,
+        status: 'failed',
+      };
+
+      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+      updatePostLocally(post.id, updates);
+
+      console.error('Instagram publish error:', error);
+      alert(message);
+    } finally {
+      setPublishingPostId(null);
+    }
+  };
+
   const markAsPosted = async (postId: string) => {
     const postIndex = sortedPosts.findIndex((post) => post.id === postId);
 
@@ -1542,6 +1648,7 @@ export default function PostsPage() {
       published_at: null,
       published_to: null,
       facebook_post_id: null,
+      instagram_post_id: null,
     };
 
     const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
@@ -2014,6 +2121,7 @@ export default function PostsPage() {
           getReadableDateTime={getReadableDateTime}
           mediaRequiredForPlatform={mediaRequiredForPlatform}
           canDirectPublishToFacebook={canDirectPublishToFacebook}
+          canDirectPublishToInstagram={canDirectPublishToInstagram}
           isPostPosted={isPostPosted}
           isPostScheduledToday={isPostScheduledToday}
           onClose={closePostModal}
@@ -2032,6 +2140,7 @@ export default function PostsPage() {
           onUploadMedia={uploadMedia}
           onRemoveMedia={removeMedia}
           onPublishToFacebook={publishToFacebook}
+          onPublishToInstagram={publishToInstagram}
           onCopyPost={copyPost}
           onOpenPlatform={openPlatform}
           onMarkAsPosted={markAsPosted}

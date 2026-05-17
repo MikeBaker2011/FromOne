@@ -46,6 +46,7 @@ type PostActionModalProps = {
   getReadableDateTime: (value?: string | null) => string;
   mediaRequiredForPlatform: (platform?: string) => boolean;
   canDirectPublishToFacebook: (post: any) => boolean;
+  canDirectPublishToInstagram: (post: any) => boolean;
   isPostPosted: (post: any) => boolean;
   isPostScheduledToday: (post: any) => boolean;
   onClose: () => void;
@@ -64,6 +65,7 @@ type PostActionModalProps = {
   onUploadMedia: (post: any, event: ChangeEvent<HTMLInputElement>) => void;
   onRemoveMedia: (post: any) => void;
   onPublishToFacebook: (post: any) => void;
+  onPublishToInstagram: (post: any) => void;
   onCopyPost: (post: any) => void;
   onOpenPlatform: (platform: string) => void;
   onMarkAsPosted: (postId: string) => void;
@@ -106,6 +108,7 @@ export default function PostActionModal({
   getReadableDateTime,
   mediaRequiredForPlatform,
   canDirectPublishToFacebook,
+  canDirectPublishToInstagram,
   isPostPosted,
   isPostScheduledToday,
   onClose,
@@ -124,6 +127,7 @@ export default function PostActionModal({
   onUploadMedia,
   onRemoveMedia,
   onPublishToFacebook,
+  onPublishToInstagram,
   onCopyPost,
   onOpenPlatform,
   onMarkAsPosted,
@@ -135,6 +139,8 @@ export default function PostActionModal({
   if (!selectedPost) return null;
 
   const isFacebookPost = String(selectedPost.platform || '').toLowerCase().includes('facebook');
+  const isInstagramPost = String(selectedPost.platform || '').toLowerCase().includes('instagram');
+  const hasMedia = Boolean(selectedPost.media_url);
 
   const scheduleStatusLabel = isFacebookPost ? 'Scheduled' : 'Reminder set';
   const scheduleInputLabel = isFacebookPost ? 'Schedule publish time' : 'Reminder time';
@@ -404,7 +410,7 @@ export default function PostActionModal({
                 {mediaRequiredForPlatform(selectedPost.platform)
                   ? `${getPlatformDisplayName(
                       selectedPost
-                    )} usually needs an image or video before publishing.`
+                    )} needs an image or video before publishing.`
                   : 'A clear photo or short video can make this post stronger.'}
               </p>
             </div>
@@ -433,7 +439,10 @@ export default function PostActionModal({
             <div>
               <div className="page-eyebrow">Publish</div>
               <h3>Send it out.</h3>
-              <p>Facebook can publish directly. Other platforms stay as copy/open for now.</p>
+              <p>
+                Facebook and Instagram can publish directly when ready. Other platforms stay as
+                copy/open for now.
+              </p>
             </div>
           </div>
 
@@ -441,6 +450,13 @@ export default function PostActionModal({
             <div className="fromone-improvement-note fromone-error-note">
               <strong>Publishing failed</strong>
               <p>{selectedPost.publish_error}</p>
+            </div>
+          )}
+
+          {isInstagramPost && !hasMedia && !isPostPosted(selectedPost) && (
+            <div className="fromone-improvement-note">
+              <strong>Media needed</strong>
+              <p>Instagram needs an image or video before publishing.</p>
             </div>
           )}
 
@@ -465,6 +481,18 @@ export default function PostActionModal({
                   : isPostPosted(selectedPost)
                     ? 'Posted to Facebook'
                     : 'Publish to Facebook'}
+              </button>
+            ) : canDirectPublishToInstagram(selectedPost) ? (
+              <button
+                type="button"
+                onClick={() => onPublishToInstagram(selectedPost)}
+                disabled={publishingPostId === selectedPost.id || isPostPosted(selectedPost)}
+              >
+                {publishingPostId === selectedPost.id
+                  ? 'Publishing...'
+                  : isPostPosted(selectedPost)
+                    ? 'Posted to Instagram'
+                    : 'Publish to Instagram'}
               </button>
             ) : (
               <button type="button" onClick={() => onCopyPost(selectedPost)}>
