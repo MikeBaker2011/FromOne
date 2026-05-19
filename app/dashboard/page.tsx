@@ -1975,6 +1975,47 @@ Also detect or infer:
 
   return (
     <>
+      <style jsx>{`
+        @media (max-width: 1320px) {
+          .dashboard-top-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+
+          .dashboard-top-grid > section:last-child {
+            grid-column: 1 / -1;
+          }
+        }
+
+        @media (max-width: 860px) {
+          .dashboard-top-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .dashboard-top-grid > section:last-child {
+            grid-column: auto;
+          }
+        }
+
+        .dashboard-top-grid .dashboard-personal-task-copy h2 {
+          font-size: clamp(34px, 3vw, 58px);
+          line-height: 0.94;
+        }
+
+        .dashboard-top-grid .dashboard-personal-task-copy h3 {
+          font-size: clamp(20px, 1.7vw, 30px);
+          line-height: 1.08;
+        }
+
+        .dashboard-top-grid .dashboard-weekly-progress-card h2 {
+          font-size: clamp(30px, 2.4vw, 44px);
+          line-height: 1;
+        }
+
+        .dashboard-top-grid .today-task-button,
+        .dashboard-top-grid .dashboard-weekly-progress-button {
+          margin-top: 18px;
+        }
+      `}</style>
       <div ref={dashboardHeaderRef} className="page-header dashboard-simple-header">
         <div className="page-eyebrow">FromOne Dashboard</div>
         <h1 className="page-title">Create this week’s posts.</h1>
@@ -2224,10 +2265,39 @@ Also detect or infer:
             </section>
           )}
 
-          <section className="dashboard-top-grid">
-            <section className="today-task-card dashboard-personal-task-card">
-              <div className="dashboard-personal-task-main">
-                <div className="dashboard-business-logo-frame" aria-hidden="true">
+          <section
+            className="dashboard-top-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr)',
+              gap: 22,
+              alignItems: 'stretch',
+            }}
+          >
+            <section
+              className="today-task-card dashboard-personal-task-card"
+              style={{
+                minHeight: 310,
+                height: '100%',
+                padding: 28,
+              }}
+            >
+              <div
+                className="dashboard-personal-task-main"
+                style={{
+                  gap: 22,
+                  alignItems: 'flex-start',
+                }}
+              >
+                <div
+                  className="dashboard-business-logo-frame"
+                  aria-hidden="true"
+                  style={{
+                    width: 96,
+                    height: 96,
+                    minWidth: 96,
+                  }}
+                >
                   {businessLogoUrl ? (
                     <img src={businessLogoUrl} alt="" />
                   ) : (
@@ -2235,7 +2305,12 @@ Also detect or infer:
                   )}
                 </div>
 
-                <div className="dashboard-personal-task-copy">
+                <div
+                  className="dashboard-personal-task-copy"
+                  style={{
+                    minWidth: 0,
+                  }}
+                >
                   <div className="page-eyebrow">Today’s Task</div>
 
                   {todayPost ? (
@@ -2285,7 +2360,14 @@ Also detect or infer:
               </button>
             </section>
 
-            <section className="dashboard-weekly-progress-card">
+            <section
+              className="dashboard-weekly-progress-card"
+              style={{
+                minHeight: 310,
+                height: '100%',
+                padding: 28,
+              }}
+            >
               <div className="dashboard-weekly-progress-header">
                 <div>
                   <div className="page-eyebrow">This week’s progress</div>
@@ -2330,7 +2412,14 @@ Also detect or infer:
               </button>
             </section>
 
-            <section className="dashboard-weekly-progress-card">
+            <section
+              className="dashboard-weekly-progress-card"
+              style={{
+                minHeight: 310,
+                height: '100%',
+                padding: 28,
+              }}
+            >
               <div className="dashboard-weekly-progress-header">
                 <div>
                   <div className="page-eyebrow">Recent activity</div>
