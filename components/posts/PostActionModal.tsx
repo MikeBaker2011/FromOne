@@ -327,7 +327,7 @@ export default function PostActionModal({
                         type="datetime-local"
                         className="input"
                         value={reminderValue}
-                        onChange={(event) => setReminderValue(event.target.value)}
+                        onChange={(event) => onSetReminderValue(event.target.value)}
                       />
 
                       <div className="button-row" style={{ marginTop: 12 }}>
