@@ -146,6 +146,9 @@ export default function PostActionModal({
 }: PostActionModalProps) {
   if (!selectedPost) return null;
 
+  const [showMorePostTools, setShowMorePostTools] = useState(false);
+  const [showMiniAnalytics, setShowMiniAnalytics] = useState(false);
+
   const platformName = getPlatformDisplayName(selectedPost);
   const platformKey = String(selectedPost.platform || '').toLowerCase();
 
@@ -183,7 +186,7 @@ export default function PostActionModal({
           ? 'Ready to publish'
           : tiktokDemoAvailable
             ? 'TikTok sandbox demo'
-            : 'Manual posting';
+            : 'Copy/open';
 
   const publishCardDetail = posted
     ? `${platformName} has been marked as posted.`
@@ -208,10 +211,10 @@ export default function PostActionModal({
     },
     {
       label: canAutoPublish
-        ? 'Auto-publish available'
+        ? 'Scheduling available'
         : tiktokDemoAvailable
-          ? 'Sandbox demo available'
-          : 'Manual posting',
+          ? 'Demo available'
+          : 'Copy/open',
       ready: canAutoPublish || tiktokDemoAvailable,
     },
   ];
@@ -289,20 +292,34 @@ export default function PostActionModal({
           </div>
 
           <div className="fromone-flow-inline-actions">
-            {onDeletePost && (
-              <button
-                type="button"
-                className="secondary-button danger-button"
-                onClick={() => onDeletePost(selectedPost)}
-                disabled={deletingPostId === selectedPost.id}
-              >
-                {deletingPostId === selectedPost.id
-                  ? 'Deleting...'
-                  : isPostPosted(selectedPost)
-                    ? 'Archive'
-                    : 'Delete'}
-              </button>
-            )}
+                {onDeletePost && (
+                  <div className="fromone-more-actions">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => setShowMorePostTools((current) => !current)}
+                    >
+                      {showMorePostTools ? 'Hide more actions' : 'More actions'}
+                    </button>
+
+                    {showMorePostTools && (
+                      <button
+                        type="button"
+                        className="secondary-button danger-button"
+                        onClick={() => onDeletePost(selectedPost)}
+                        disabled={deletingPostId === selectedPost.id}
+                      >
+                        {deletingPostId === selectedPost.id
+                          ? posted
+                            ? 'Archiving...'
+                            : 'Deleting...'
+                          : posted
+                            ? 'Archive post'
+                            : 'Delete post'}
+                      </button>
+                    )}
+                  </div>
+                )}
 
             <button type="button" className="secondary-button" onClick={onClose}>
               Close
@@ -322,8 +339,8 @@ export default function PostActionModal({
           <div className="fromone-flow-card-top">
             <div>
               <div className="page-eyebrow">Post</div>
-              <h3>Review the wording.</h3>
-              <p>Edit only if needed.</p>
+              <h3>Post wording</h3>
+              <p>Check the post, then copy, publish, or schedule it.</p>
             </div>
 
             <span>{platformName}</span>
@@ -506,7 +523,7 @@ export default function PostActionModal({
           <div className="fromone-flow-tools-header">
             <div>
               <div className="page-eyebrow">Media</div>
-              <h3>Add media.</h3>
+              <h3>Add media</h3>
               <p>{getImageGuidance(selectedPost)}</p>
             </div>
           </div>
@@ -576,7 +593,7 @@ export default function PostActionModal({
           <div className="fromone-flow-tools-header">
             <div>
               <div className="page-eyebrow">Publish</div>
-              <h3>Publish or schedule.</h3>
+              <h3>Publish or schedule</h3>
               <p>
                 Publish now, schedule for later, or copy the post if the platform is not connected.
               </p>
@@ -666,69 +683,79 @@ export default function PostActionModal({
             </div>
           </div>
 
-          <div className="fromone-schedule-box fromone-schedule-control-card">
+                    <div className="fromone-schedule-box fromone-schedule-control-card">
             <div className="fromone-schedule-card-header">
               <div>
                 <strong>Mini analytics</strong>
                 <p>
                   {posted
                     ? hasPerformanceData
-                      ? 'Performance saved for this post.'
+                      ? 'Stats are available for this post.'
                       : 'No stats recorded yet.'
                     : 'Stats appear after publishing.'}
                 </p>
               </div>
 
-              {hasPerformanceData && <span>{totalPerformanceActions} actions</span>}
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setShowMiniAnalytics((current) => !current)}
+              >
+                {showMiniAnalytics ? 'Hide stats' : 'Show stats'}
+              </button>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))',
-                gap: 10,
-              }}
-            >
-              {performanceMetrics.map((metric) => (
+            {showMiniAnalytics && (
+              <>
                 <div
-                  key={metric.label}
                   style={{
-                    padding: '12px',
-                    borderRadius: 16,
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))',
+                    gap: 10,
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      opacity: 0.68,
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                    }}
-                  >
-                    {metric.label}
-                  </div>
+                  {performanceMetrics.map((metric) => (
+                    <div
+                      key={metric.label}
+                      style={{
+                        padding: '12px',
+                        borderRadius: 16,
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 12,
+                          opacity: 0.68,
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        {metric.label}
+                      </div>
 
-                  <strong
-                    style={{
-                      display: 'block',
-                      marginTop: 6,
-                      fontSize: 22,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {formatMetricValue(metric.value)}
-                  </strong>
+                      <strong
+                        style={{
+                          display: 'block',
+                          marginTop: 6,
+                          fontSize: 22,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {formatMetricValue(metric.value)}
+                      </strong>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {!hasPerformanceData && (
-              <p style={{ marginBottom: 0, opacity: 0.72 }}>
-                Stats can be updated when platform analytics are connected.
-              </p>
+                {!hasPerformanceData && (
+                  <p style={{ marginBottom: 0, opacity: 0.72 }}>
+                    Stats can be updated when platform analytics are connected.
+                  </p>
+                )}
+              </>
             )}
           </div>
 
@@ -743,10 +770,10 @@ export default function PostActionModal({
             </div>
 
             <div className="fromone-image-guidance-note" style={{ marginBottom: 12 }}>
-              <strong>When should this go out?</strong>
+              <strong>Choose a time</strong>
               <p>
                 {queueDateLabel ? `Suggested day: ${queueDateLabel}. ` : ''}
-                Choose the date and time below.
+                Pick when this post should go out.
               </p>
             </div>
 
