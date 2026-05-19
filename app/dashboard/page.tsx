@@ -1821,55 +1821,6 @@ Also detect or infer:
   const googleLocationReady = Boolean(primaryGoogleConnection?.google_location_id);
   const hasPaidPlan = isPaidSubscription(accessInfo?.subscription_status);
 
-  const customerReadyChecklistState = customerReadyChecklist.map((item) => {
-    const complete =
-      item.key === 'business'
-        ? hasBusinessSetup
-        : item.key === 'facebook'
-          ? hasFacebookConnection
-          : item.key === 'instagram'
-            ? hasInstagramConnection
-            : item.key === 'google'
-              ? hasGoogleConnection
-              : item.key === 'weekly_plan'
-                ? hasCreatedPosts
-                : item.key === 'scheduled_post'
-                  ? hasScheduledPost
-                  : item.key === 'billing'
-                    ? hasPaidPlan
-                    : false;
-
-    const pending =
-      item.key === 'google' && hasGoogleConnection && !googleLocationReady
-        ? 'API approval pending'
-        : item.key === 'billing' && !hasPaidPlan && !accessLocked
-          ? 'Demo active'
-          : '';
-
-    return {
-      ...item,
-      complete,
-      pending,
-    };
-  });
-
-  const completedCustomerReadySteps = customerReadyChecklistState.filter(
-    (item) => item.complete
-  ).length;
-
-  const commandCentreReadySteps = [
-    hasBusinessSetup,
-    hasFacebookConnection,
-    hasInstagramConnection,
-    hasGoogleConnection,
-    !accessLocked,
-  ].filter(Boolean).length;
-
-  const commandCentreTotalSteps = 5;
-
-  const showCustomerReadyChecklist =
-    completedCustomerReadySteps < customerReadyChecklistState.length;
-
   return (
     <>
       <style jsx>{`
@@ -1932,63 +1883,7 @@ Also detect or infer:
         </div>
       ) : (
         <>
-                    {showCustomerReadyChecklist && (
-            <section className="dashboard-first-run-card" style={{ marginBottom: 24 }}>
-              <div className="dashboard-first-run-heading">
-                <div>
-                  <div className="page-eyebrow">Setup</div>
-                  <h2>
-                    {hasBusinessSetup
-                      ? hasCreatedPosts
-                        ? 'Ready to create and publish.'
-                        : 'Create your first weekly plan.'
-                      : 'Start by adding the business.'}
-                  </h2>
-                  <p>
-                    {hasBusinessSetup
-                      ? 'Your options are saved below. You can change them before creating posts.'
-                      : 'Add a website or business details, then FromOne can create the weekly posts.'}
-                  </p>
-                </div>
-
-                <span>
-                  {commandCentreReadySteps}/{commandCentreTotalSteps} ready
-                </span>
-              </div>
-
-              <div className="button-row" style={{ marginTop: 16, gap: 12, flexWrap: 'wrap' }}>
-                {!hasBusinessSetup && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const target = websiteInputRef.current;
-                      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }}
-                  >
-                    Add business
-                  </button>
-                )}
-
-                {hasCreatedPosts && (
-                  <Link href="/posts" className="dashboard-profile-link">
-                    Review posts
-                  </Link>
-                )}
-
-                <Link href="/settings" className="dashboard-profile-link">
-                  Connections
-                </Link>
-
-                {!hasPaidPlan && (
-                  <Link href="/subscription" className="dashboard-profile-link">
-                    Billing
-                  </Link>
-                )}
-              </div>
-            </section>
-          )}
-
-          <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
+                    <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
             <div className="dashboard-create-card">
               <div className="page-eyebrow">Create weekly posts</div>
 
