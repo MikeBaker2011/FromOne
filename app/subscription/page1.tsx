@@ -22,13 +22,6 @@ export default function SubscriptionPage() {
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const paypalCheckoutUrl =
-    process.env.NEXT_PUBLIC_PAYPAL_SUBSCRIPTION_URL ||
-    process.env.NEXT_PUBLIC_PAYPAL_CHECKOUT_URL ||
-    '';
-
-  const paypalLive = Boolean(paypalCheckoutUrl);
-
   useEffect(() => {
     loadSubscription();
   }, []);
@@ -191,16 +184,9 @@ export default function SubscriptionPage() {
       setStatus(nextStatus);
 
       if (selectedPlan === 'starter') {
-        if (paypalLive) {
-          window.open(paypalCheckoutUrl, '_blank', 'noopener,noreferrer');
-          alert(
-            'Monthly plan selected. PayPal checkout has opened in a new tab. After payment is confirmed, your FromOne access will be activated.'
-          );
-        } else {
-          alert(
-            'Monthly plan selected. Add NEXT_PUBLIC_PAYPAL_SUBSCRIPTION_URL in Render to enable live PayPal checkout.'
-          );
-        }
+        alert(
+          'Monthly plan selected. PayPal subscriptions are being activated, so you will not be charged yet.'
+        );
       } else {
         alert('Demo access saved.');
       }
@@ -317,14 +303,8 @@ export default function SubscriptionPage() {
     'Create weekly social media posts',
     'Website scan or manual business profile',
     'Choose your social platforms',
-    'Copy, paste, schedule, and publish workflow',
+    'Copy, paste, and publish workflow',
     '2 website scans per week',
-  ];
-
-  const starterOnlyFeatures = [
-    'Monthly access after the demo',
-    'PayPal subscription management',
-    'Keep creating weekly plans',
   ];
 
   const plans = [
@@ -346,7 +326,7 @@ export default function SubscriptionPage() {
       priceNote: '/ month',
       valueNote: 'Less than £1 a day for weekly social media content.',
       description: 'Continue using the full FromOne workflow every week for your business.',
-      buttonText: isCancelled ? 'Restart monthly plan' : paypalLive ? 'Continue with PayPal' : 'Choose monthly plan',
+      buttonText: isCancelled ? 'Restart monthly plan' : 'Choose monthly plan',
       disabled: false,
       features: sharedFeatures,
     },
@@ -374,8 +354,8 @@ export default function SubscriptionPage() {
         </h1>
         <p className="page-description">
           Start with a 7-day free demo, then continue with FromOne Monthly for £29.99 per
-          month. PayPal handles the monthly subscription securely, and FromOne updates your
-          access after payment is confirmed.
+          month. PayPal subscriptions are currently being activated, so launch users may
+          receive manual access while billing is being connected.
         </p>
       </div>
 
@@ -465,19 +445,6 @@ export default function SubscriptionPage() {
                 </>
               )}
 
-              {isPendingPayment && paypalLive && (
-                <div className="button-row" style={{ marginTop: 18 }}>
-                  <a
-                    href={paypalCheckoutUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="dashboard-profile-link"
-                  >
-                    Complete PayPal checkout
-                  </a>
-                </div>
-              )}
-
               {paypalSubscriptionId && (
                 <p>
                   PayPal subscription:{' '}
@@ -565,24 +532,6 @@ export default function SubscriptionPage() {
                         ✓ {feature}
                       </div>
                     ))}
-
-                    {plan.id === 'starter' &&
-                      starterOnlyFeatures.map((feature) => (
-                        <div
-                          key={feature}
-                          className="card"
-                          style={{
-                            padding: '12px',
-                            minHeight: '46px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            fontWeight: 800,
-                            border: '1px solid rgba(255, 212, 59, 0.24)',
-                          }}
-                        >
-                          ✓ {feature}
-                        </div>
-                      ))}
                   </div>
 
                   <div style={{ marginTop: 'auto' }}>
@@ -612,21 +561,15 @@ export default function SubscriptionPage() {
             <div className="page-eyebrow">Billing Management</div>
             <h2 style={{ marginTop: 0 }}>Manage your plan.</h2>
             <p>
-              PayPal manages monthly payments and renewals securely. Select the monthly plan,
-              open PayPal checkout, then FromOne will activate your access once payment is
-              confirmed.
+              PayPal will manage monthly payments and renewals once connected. Until then,
+              selecting the monthly plan saves your preference only and does not take payment.
+              You will be able to cancel anytime once live subscriptions are active.
             </p>
 
-            {!paypalLive && (
+            {!paypalSubscriptionId && currentPlan === 'starter' && (
               <p style={{ color: 'var(--muted)', fontWeight: 800 }}>
-                Add <code>NEXT_PUBLIC_PAYPAL_SUBSCRIPTION_URL</code> in Render to enable the live
-                PayPal checkout button.
-              </p>
-            )}
-
-            {paypalLive && currentPlan !== 'starter' && (
-              <p style={{ color: 'var(--gold)', fontWeight: 900 }}>
-                PayPal checkout is ready.
+                PayPal subscriptions are not live yet, so no payment has been taken and
+                cancellation is not required.
               </p>
             )}
 
@@ -635,22 +578,9 @@ export default function SubscriptionPage() {
                 {saving
                   ? 'Saving...'
                   : selectedPlan === 'starter'
-                    ? paypalLive
-                      ? 'Save & Open PayPal'
-                      : 'Save Monthly Plan'
+                    ? 'Save Monthly Plan'
                     : 'Save Demo Plan'}
               </button>
-
-              {selectedPlan === 'starter' && paypalLive && (
-                <a
-                  href={paypalCheckoutUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="dashboard-profile-link"
-                >
-                  Open PayPal checkout
-                </a>
-              )}
 
               <button
                 className="secondary-button"
@@ -671,16 +601,6 @@ export default function SubscriptionPage() {
                 </button>
               )}
             </div>
-          </div>
-
-          <div className="premium-card" style={{ marginTop: '24px' }}>
-            <div className="page-eyebrow">What happens after payment?</div>
-            <h2 style={{ marginTop: 0 }}>FromOne unlocks monthly access.</h2>
-            <p>
-              Once PayPal confirms the subscription, your account should move to active monthly
-              access. If it does not update straight away, contact support and include your PayPal
-              subscription reference.
-            </p>
           </div>
         </>
       )}
