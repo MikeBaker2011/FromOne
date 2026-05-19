@@ -1875,15 +1875,7 @@ Also detect or infer:
     <>
       <style jsx>{`
         @media (max-width: 980px) {
-          .dashboard-top-grid {
-            grid-template-columns: 1fr !important;
-          }
-
-          .dashboard-top-grid > section {
-            grid-column: auto !important;
-          }
-
-          .dashboard-platform-grid {
+          .dashboard-platform-selector-full > div[style*='repeat(3'] {
             grid-template-columns: 1fr !important;
           }
         }
@@ -2515,7 +2507,12 @@ Also detect or infer:
             </section>
 
 
-                                    <section className="dashboard-platform-selector dashboard-platform-selector-full">
+                                                <section
+              className="dashboard-platform-selector dashboard-platform-selector-full"
+              style={{
+                overflow: 'hidden',
+              }}
+            >
               <div className="dashboard-platform-selector-header">
                 <div>
                   <div className="page-eyebrow">Posting frequency</div>
@@ -2530,8 +2527,8 @@ Also detect or infer:
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 22,
-                  marginTop: 22,
+                  gap: 20,
+                  marginTop: 24,
                 }}
               >
                 {postingFrequencyOptions.map((option) => {
@@ -2542,49 +2539,90 @@ Also detect or infer:
                       key={option.value}
                       type="button"
                       onClick={() => setSelectedPostingFrequency(option.value)}
-                      className={selected ? 'dashboard-platform-card is-selected' : 'dashboard-platform-card'}
                       style={{
-                        minHeight: 170,
-                        padding: '26px 24px',
+                        width: '100%',
+                        minHeight: 168,
+                        padding: '24px',
+                        borderRadius: 24,
+                        border: selected
+                          ? '1px solid rgba(255, 212, 59, 0.82)'
+                          : '1px solid rgba(255, 255, 255, 0.13)',
+                        background: selected
+                          ? 'radial-gradient(circle at top right, rgba(255, 212, 59, 0.22), rgba(255, 255, 255, 0.06) 42%, rgba(15, 23, 42, 0.86))'
+                          : 'radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255, 255, 255, 0.05) 45%, rgba(15, 23, 42, 0.82))',
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        textAlign: 'left',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'flex-start',
-                        justifyContent: 'flex-start',
-                        gap: 12,
-                        textAlign: 'left',
+                        justifyContent: 'space-between',
+                        gap: 16,
+                        boxShadow: selected ? '0 18px 50px rgba(255, 212, 59, 0.14)' : 'none',
                       }}
                     >
-                      <span className="dashboard-platform-check">
+                      <span
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 999,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: selected
+                            ? 'rgba(61, 220, 151, 0.2)'
+                            : 'rgba(255, 212, 59, 0.12)',
+                          border: selected
+                            ? '1px solid rgba(61, 220, 151, 0.55)'
+                            : '1px solid rgba(255, 212, 59, 0.48)',
+                          color: selected ? '#3ddc97' : '#ffd43b',
+                          fontWeight: 950,
+                          fontSize: 18,
+                          flex: '0 0 auto',
+                        }}
+                      >
                         {selected ? '✓' : '+'}
                       </span>
 
-                      <strong
-                        style={{
-                          display: 'block',
-                          fontSize: 24,
-                          lineHeight: 1.05,
-                          marginTop: 8,
-                        }}
-                      >
-                        {option.title}
-                      </strong>
+                      <div style={{ display: 'grid', gap: 8 }}>
+                        <strong
+                          style={{
+                            display: 'block',
+                            fontSize: 26,
+                            lineHeight: 1,
+                            letterSpacing: '-0.03em',
+                          }}
+                        >
+                          {option.title}
+                        </strong>
 
-                      <small
-                        style={{
-                          display: 'block',
-                          maxWidth: 320,
-                          lineHeight: 1.35,
-                          opacity: 0.8,
-                        }}
-                      >
-                        {option.description}
-                      </small>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: 14,
+                            lineHeight: 1.35,
+                            fontWeight: 800,
+                            color: 'rgba(255, 255, 255, 0.72)',
+                          }}
+                        >
+                          {option.description}
+                        </span>
+                      </div>
 
                       {selected && (
                         <span
-                          className="dashboard-platform-recommended"
                           style={{
-                            marginTop: 'auto',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            minHeight: 24,
+                            padding: '5px 10px',
+                            borderRadius: 999,
+                            background: 'rgba(255, 212, 59, 0.16)',
+                            color: '#ffd43b',
+                            fontSize: 11,
+                            fontWeight: 950,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
                           }}
                         >
                           Selected
@@ -2595,10 +2633,15 @@ Also detect or infer:
                 })}
               </div>
 
-              <div className="dashboard-selected-platforms-line">
-                <strong>Frequency</strong>
-                <span>{selectedPostingFrequencyOption.title} per week</span>
-              </div>
+              <p
+                style={{
+                  margin: '16px 0 0',
+                  color: 'rgba(255, 255, 255, 0.72)',
+                  fontWeight: 800,
+                }}
+              >
+                Selected frequency: <strong>{selectedPostingFrequencyOption.title} per week</strong>
+              </p>
             </section>
 
             <div
