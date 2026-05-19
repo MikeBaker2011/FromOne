@@ -47,7 +47,6 @@ type PostActionModalProps = {
   mediaRequiredForPlatform: (platform?: string) => boolean;
   canDirectPublishToFacebook: (post: any) => boolean;
   canDirectPublishToInstagram: (post: any) => boolean;
-  canDemoPublishToTikTok?: (post: any) => boolean;
   isPostPosted: (post: any) => boolean;
   isPostScheduledToday: (post: any) => boolean;
   onClose: () => void;
@@ -67,7 +66,6 @@ type PostActionModalProps = {
   onRemoveMedia: (post: any) => void;
   onPublishToFacebook: (post: any) => void;
   onPublishToInstagram: (post: any) => void;
-  onPublishToTikTokDemo?: (post: any) => void;
   onCopyPost: (post: any) => void;
   onOpenPlatform: (platform: string) => void;
   onMarkAsPosted: (postId: string) => void;
@@ -111,7 +109,6 @@ export default function PostActionModal({
   mediaRequiredForPlatform,
   canDirectPublishToFacebook,
   canDirectPublishToInstagram,
-  canDemoPublishToTikTok,
   isPostPosted,
   isPostScheduledToday,
   onClose,
@@ -131,7 +128,6 @@ export default function PostActionModal({
   onRemoveMedia,
   onPublishToFacebook,
   onPublishToInstagram,
-  onPublishToTikTokDemo,
   onCopyPost,
   onOpenPlatform,
   onMarkAsPosted,
@@ -147,8 +143,6 @@ export default function PostActionModal({
 
   const isFacebookPost = platformKey.includes('facebook');
   const isInstagramPost = platformKey.includes('instagram');
-  const isTikTokPost = platformKey.includes('tiktok');
-  const tiktokDemoAvailable = Boolean(canDemoPublishToTikTok?.(selectedPost));
   const canAutoPublish = isFacebookPost || isInstagramPost;
   const hasMedia = Boolean(selectedPost.media_url);
   const needsMedia = mediaRequiredForPlatform(selectedPost.platform) && !hasMedia;
@@ -174,9 +168,7 @@ export default function PostActionModal({
         ? 'Queued to publish'
         : canAutoPublish
           ? 'Ready to publish'
-          : tiktokDemoAvailable
-            ? 'TikTok sandbox demo'
-            : 'Manual posting';
+          : 'Manual posting';
 
   const publishCardDetail = posted
     ? `${platformName} has been marked as posted.`
@@ -186,9 +178,7 @@ export default function PostActionModal({
         ? `${platformName} will auto-publish when the scheduler runs.`
         : canAutoPublish
           ? `${platformName} can publish now or be scheduled for later.`
-          : tiktokDemoAvailable
-            ? 'Run a TikTok sandbox demo publish for app review. No live TikTok post will be published.'
-            : `${platformName} is copy/open for now.`;
+          : `${platformName} is copy/open for now.`;
 
   const readinessItems = [
     {
@@ -200,12 +190,8 @@ export default function PostActionModal({
       ready: mediaRequiredForPlatform(selectedPost.platform) ? hasMedia : true,
     },
     {
-      label: canAutoPublish
-        ? 'Auto-publish available'
-        : tiktokDemoAvailable
-          ? 'Sandbox demo available'
-          : 'Manual posting',
-      ready: canAutoPublish || tiktokDemoAvailable,
+      label: canAutoPublish ? 'Auto-publish available' : 'Manual posting',
+      ready: canAutoPublish,
     },
   ];
 
@@ -217,11 +203,6 @@ export default function PostActionModal({
 
     if (canDirectPublishToInstagram(selectedPost)) {
       onPublishToInstagram(selectedPost);
-      return;
-    }
-
-    if (tiktokDemoAvailable && onPublishToTikTokDemo) {
-      onPublishToTikTokDemo(selectedPost);
       return;
     }
 
@@ -523,16 +504,6 @@ export default function PostActionModal({
             </div>
           )}
 
-          {tiktokDemoAvailable && !posted && (
-            <div className="fromone-improvement-note">
-              <strong>TikTok sandbox demo</strong>
-              <p>
-                This demonstrates the TikTok connect and publish flow for app review. No live
-                TikTok post will be published.
-              </p>
-            </div>
-          )}
-
           <div className={`fromone-publish-control-card ${posted ? 'is-posted' : ''} ${needsMedia ? 'needs-media' : ''}`}>
             <div className="fromone-publish-control-main">
               <div className="fromone-publish-status-icon">{posted ? '✓' : needsMedia ? '!' : hasSchedule ? '⏱' : '→'}</div>
@@ -559,25 +530,17 @@ export default function PostActionModal({
             </div>
 
             <div className="fromone-publish-card-actions">
-              {canAutoPublish || tiktokDemoAvailable ? (
+              {canAutoPublish ? (
                 <button
                   type="button"
                   onClick={handlePrimaryPublish}
                   disabled={isPublishing || posted || needsMedia}
                 >
-                  {isPublishing
-                    ? tiktokDemoAvailable
-                      ? 'Running demo...'
-                      : 'Publishing...'
-                    : posted
-                      ? `Posted to ${platformName}`
-                      : tiktokDemoAvailable
-                        ? 'Run TikTok demo publish'
-                        : 'Publish now'}
+                  {isPublishing ? 'Publishing...' : posted ? `Posted to ${platformName}` : 'Publish now'}
                 </button>
               ) : (
                 <button type="button" onClick={() => onCopyPost(selectedPost)}>
-                  {platformKey.includes('tiktok') ? 'Copy for TikTok' : `Copy for ${platformName}`}
+                  {platformKey.includes('tiktok') ? 'Send to TikTok' : `Copy for ${platformName}`}
                 </button>
               )}
 

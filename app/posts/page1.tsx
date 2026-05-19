@@ -1136,11 +1136,6 @@ export default function PostsPage() {
     return String(post?.platform || '').toLowerCase().includes('instagram');
   };
 
-  const canDemoPublishToTikTok = (post: any) => {
-    const demoMode = process.env.NEXT_PUBLIC_TIKTOK_DEMO_MODE === 'true';
-    return demoMode && String(post?.platform || '').toLowerCase().includes('tiktok');
-  };
-
   const getMediaKind = (file: File) => {
     if (file.type.startsWith('video/')) return 'video';
     return 'image';
@@ -1681,107 +1676,6 @@ export default function PostsPage() {
     }
   };
 
-
-  const publishToTikTokDemo = async (post: any) => {
-    if (!post?.id) return;
-
-    if (!canDemoPublishToTikTok(post)) {
-      alert('TikTok sandbox demo mode is not enabled.');
-      return;
-    }
-
-    const text = buildPostText(post);
-
-    if (!text) {
-      alert('This TikTok post needs wording before it can run through the demo publish flow.');
-      return;
-    }
-
-    if (!post.media_url) {
-      alert('Add an image or video first so the TikTok demo shows the complete publish flow.');
-      return;
-    }
-
-    setPublishingPostId(post.id);
-
-    try {
-      const response = await axios.post('/api/tiktok/demo-publish', {
-        postId: post.id,
-        campaignPostId: post.id,
-        userId: currentUserId,
-        user_id: currentUserId,
-        campaign_id: post.campaign_id,
-        platform: post.platform || 'TikTok',
-        message: text,
-        text,
-        caption: post.caption || '',
-        cta: post.cta || '',
-        hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
-        media_url: post.media_url || null,
-        mediaUrl: post.media_url || null,
-        media_type: post.media_type || null,
-        mediaType: post.media_type || null,
-      });
-
-      const tiktokPostId =
-        response.data?.tiktokPostId ||
-        response.data?.tiktok_post_id ||
-        response.data?.postId ||
-        response.data?.post_id ||
-        null;
-
-      const updates = {
-        is_posted: true,
-        status: 'posted',
-        publish_status: 'posted',
-        publish_error: null,
-        published_to: 'TikTok sandbox demo',
-        published_at: new Date().toISOString(),
-        tiktok_post_id: tiktokPostId,
-        publish_source: 'tiktok_sandbox_demo',
-      };
-
-      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
-
-      updatePostLocally(post.id, updates);
-      maybeShowReviewPrompt();
-
-      const postIndex = sortedPosts.findIndex((item) => item.id === post.id);
-      const updatedPosts = sortedPosts.map((item) =>
-        item.id === post.id ? { ...item, ...updates } : item
-      );
-      const postsLeftAfterPublishing = updatedPosts.filter((item) => !isPostPosted(item)).length;
-      const nextPost =
-        updatedPosts.slice(postIndex + 1).find((item) => !isPostPosted(item)) ||
-        updatedPosts.find((item) => !isPostPosted(item)) ||
-        null;
-
-      setSuccessMoment({
-        postsLeft: postsLeftAfterPublishing,
-        nextPostId: nextPost?.id || null,
-      });
-
-      alert('TikTok sandbox demo publish complete. No live TikTok post was published.');
-    } catch (error: any) {
-      const message = getReadableError(error, 'TikTok sandbox demo publish failed.');
-
-      const updates = {
-        publish_status: 'failed',
-        publish_error: message,
-        status: 'failed',
-      };
-
-      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
-      updatePostLocally(post.id, updates);
-
-      console.error('TikTok demo publish error:', error);
-      alert(message);
-    } finally {
-      setPublishingPostId(null);
-    }
-  };
-
-
   const markAsPosted = async (postId: string) => {
     const postIndex = sortedPosts.findIndex((post) => post.id === postId);
 
@@ -1831,8 +1725,6 @@ export default function PostsPage() {
       published_to: null,
       facebook_post_id: null,
       instagram_post_id: null,
-      tiktok_post_id: null,
-      publish_source: null,
     };
 
     const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
@@ -2310,25 +2202,6 @@ export default function PostsPage() {
                       <span>•</span>
                       Google soon
                     </span>
-
-                    {process.env.NEXT_PUBLIC_TIKTOK_DEMO_MODE === 'true' && (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 7,
-                          minHeight: 34,
-                          padding: '8px 12px',
-                          borderRadius: 999,
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          border: '1px solid rgba(255, 255, 255, 0.12)',
-                          fontWeight: 900,
-                        }}
-                      >
-                        <span>•</span>
-                        TikTok sandbox demo
-                      </span>
-                    )}
                   </>
                 )}
               </div>
@@ -2460,7 +2333,6 @@ export default function PostsPage() {
           mediaRequiredForPlatform={mediaRequiredForPlatform}
           canDirectPublishToFacebook={canDirectPublishToFacebook}
           canDirectPublishToInstagram={canDirectPublishToInstagram}
-          canDemoPublishToTikTok={canDemoPublishToTikTok}
           isPostPosted={isPostPosted}
           isPostScheduledToday={isPostScheduledToday}
           onClose={closePostModal}
@@ -2480,7 +2352,6 @@ export default function PostsPage() {
           onRemoveMedia={removeMedia}
           onPublishToFacebook={publishToFacebook}
           onPublishToInstagram={publishToInstagram}
-          onPublishToTikTokDemo={publishToTikTokDemo}
           onCopyPost={copyPost}
           onOpenPlatform={openPlatform}
           onMarkAsPosted={markAsPosted}
