@@ -1889,15 +1889,15 @@ Also detect or infer:
 
               <h2>
                 {hasWebsite
-                  ? 'Scan this website and create the week.'
+                  ? 'Use this website to create posts.'
                   : hasManualProfile
-                    ? 'Use the saved business details or add a website.'
-                    : 'Enter a website, or add business details.'}
+                    ? 'Use the saved business details.'
+                    : 'Add a website or business details.'}
               </h2>
 
               <p>
-                Add a website or use saved business details first. Then check the post options and
-                create this week’s posts.
+                FromOne uses the business details, reach, frequency, and selected platforms to
+                create a weekly post plan.
               </p>
 
               <div className="button-row" style={{ marginBottom: 18 }}>
@@ -1908,10 +1908,10 @@ Also detect or infer:
 
               <div ref={websiteInputRef} className="dashboard-tour-target-wrap">
                 <label>
-                  <strong>Business website URL</strong>
+                  <strong>Business website</strong>
                   <span>
-                    Website scans are limited to {WEEKLY_SCAN_LIMIT} every 7 days. You can save up
-                    to {MAX_SAVED_CAMPAIGNS} weekly plans.
+                    Add the website you want FromOne to understand. You can also use business
+                    details instead.
                   </span>
                 </label>
 
@@ -1924,7 +1924,7 @@ Also detect or infer:
               </div>
 
               <div className="dashboard-scan-usage-pill">
-                {weeklyScansRemaining} of {WEEKLY_SCAN_LIMIT} website scans remaining this week
+                {weeklyScansRemaining} of {WEEKLY_SCAN_LIMIT} website scans left this week
               </div>
 
               <div className="dashboard-create-action-row">
@@ -1934,7 +1934,7 @@ Also detect or infer:
                   onClick={handleSaveWebsiteOnly}
                   disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
                 >
-                  {savingWebsite ? 'Saving website...' : 'Save Website'}
+                  {savingWebsite ? 'Saving website...' : 'Use this website'}
                 </button>
 
                 <button
@@ -1970,10 +1970,9 @@ Also detect or infer:
                 <div className="dashboard-manual-profile-header">
                   <div>
                     <div className="page-eyebrow">Business Details</div>
-                    <h2>Add the business details.</h2>
+                    <h2>Add business details.</h2>
                     <p>
-                      Add enough detail for FromOne to understand the business when there is no
-                      website to scan.
+                      Use this when there is no website, or when you want to guide FromOne manually.
                     </p>
                   </div>
                 </div>
@@ -2083,9 +2082,9 @@ Also detect or infer:
 
                 <div className="dashboard-manual-profile-actions dashboard-manual-profile-actions-clean">
                   <div>
-                    <strong>Save these business details first.</strong>
+                    <strong>Save the business details.</strong>
                     <span>
-                      Then choose the reach and platforms below before creating the weekly posts.
+                      Then check the post options and create the weekly posts.
                     </span>
                   </div>
 
@@ -2102,7 +2101,7 @@ Also detect or infer:
 
                         <section className="premium-card dashboard-options-summary-card" style={{ marginTop: 22 }}>
               <div className="page-eyebrow">Post options</div>
-              <h2 style={{ marginTop: 0 }}>Use these settings for this week.</h2>
+              <h2 style={{ marginTop: 0 }}>Post options for this week.</h2>
 
               <div
                 style={{
@@ -2429,13 +2428,14 @@ Also detect or infer:
               }}
             >
               <div>
-                <div className="page-eyebrow">Ready to create?</div>
+                <div className="page-eyebrow">Ready</div>
                 <h2 style={{ margin: '0 0 8px' }}>
-                  Create this week’s posts.
+                  Create weekly posts.
                 </h2>
                 <p style={{ margin: 0 }}>
-                  FromOne will create {selectedPostingFrequency} posts
-                  for {marketReachContext.toLowerCase()} using {selectedPlatformSummary || 'the selected platforms'}.
+                  FromOne will create {selectedPostingFrequency} posts for{' '}
+                  {marketReachContext.toLowerCase()} using{' '}
+                  {selectedPlatformSummary || 'the selected platforms'}.
                 </p>
               </div>
 
@@ -2451,10 +2451,10 @@ Also detect or infer:
                     ? 'Scanning website...'
                     : 'Creating posts from business details...'
                   : hasWebsite
-                    ? 'Scan Website & Create Weekly Posts'
+                    ? 'Create weekly posts'
                     : hasManualProfile
-                      ? 'Create Posts From Business Details'
-                      : 'Create Weekly Posts'}
+                      ? 'Create weekly posts'
+                      : 'Create weekly posts'}
               </button>
             </section>
           </section>
