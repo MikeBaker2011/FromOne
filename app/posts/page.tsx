@@ -281,6 +281,7 @@ const industryAudienceTargets: Record<string, string[]> = {
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
+  const [deletedPosts, setDeletedPosts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [campaign, setCampaign] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -738,6 +739,7 @@ export default function PostsPage() {
   const loadPosts = async (campaignId?: string | null) => {
     if (!campaignId) {
       setPosts([]);
+      setDeletedPosts([]);
       setSelectedPostId(null);
       return;
     }
@@ -758,6 +760,21 @@ export default function PostsPage() {
 
     const loadedPosts = sortPostsByDate(data || []);
     setPosts(loadedPosts);
+
+    const { data: deletedData, error: deletedError } = await supabase
+      .from('campaign_posts')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
+      .limit(10);
+
+    if (deletedError) {
+      console.error('Error loading deleted posts:', deletedError.message);
+      setDeletedPosts([]);
+    } else {
+      setDeletedPosts(deletedData || []);
+    }
 
     if (loadedPosts.length === 0) {
       setSelectedPostId(null);
@@ -1826,14 +1843,20 @@ export default function PostsPage() {
 
       if (error) throw error;
 
-      setRecentlyDeletedPost({ ...post, ...updates });
+      const deletedPost = { ...post, ...updates };
+
+      setRecentlyDeletedPost(deletedPost);
+      setDeletedPosts((currentDeletedPosts) => [
+        deletedPost,
+        ...currentDeletedPosts.filter((item) => item.id !== post.id),
+      ]);
       setPosts((currentPosts) => currentPosts.filter((item) => item.id !== post.id));
       setSelectedPostId(null);
       setImprovementNote(null);
       setShowImproveTools(false);
       cancelEditingPost();
 
-      alert('Post deleted. Use the Undo delete button at the top of the page to restore it.');
+      alert('Post deleted. Use Undo delete at the top of the page, or restore it later from Deleted posts.');
 
       window.setTimeout(() => {
         setRecentlyDeletedPost((current: any | null) =>
@@ -1888,6 +1911,55 @@ export default function PostsPage() {
     } catch (error: any) {
       const message = getReadableError(error, 'Error restoring post.');
       console.error('Undo delete post error:', error);
+      alert(message);
+    } finally {
+      setDeletingPostId(null);
+    }
+  };
+
+
+
+  const restoreDeletedPost = async (post: any) => {
+    if (!post?.id) return;
+
+    setDeletingPostId(post.id);
+
+    try {
+      const updates = {
+        deleted_at: null,
+        deleted_by: null,
+        delete_reason: null,
+        status:
+          post.publish_status === 'posted' || post.is_posted
+            ? 'posted'
+            : post.scheduled_publish_at
+              ? 'scheduled'
+              : 'ready',
+        publish_status:
+          post.publish_status === 'posted'
+            ? 'posted'
+            : post.scheduled_publish_at
+              ? 'scheduled'
+              : null,
+      };
+
+      const { error } = await supabase
+        .from('campaign_posts')
+        .update(updates)
+        .eq('id', post.id);
+
+      if (error) throw error;
+
+      setRecentlyDeletedPost(null);
+      setDeletedPosts((currentDeletedPosts) =>
+        currentDeletedPosts.filter((item) => item.id !== post.id)
+      );
+
+      await loadPosts(selectedCampaignId || campaign?.id || post.campaign_id || null);
+      setSelectedPostId(post.id);
+    } catch (error: any) {
+      const message = getReadableError(error, 'Error restoring post.');
+      console.error('Restore deleted post error:', error);
       alert(message);
     } finally {
       setDeletingPostId(null);
@@ -2508,6 +2580,52 @@ export default function PostsPage() {
             isPostPosted={isPostPosted}
             queueRef={queueRef}
           />
+
+          {deletedPosts.length > 0 && (
+            <section className="premium-card" style={{ marginTop: 22 }}>
+              <div className="page-eyebrow">Deleted posts</div>
+              <h2 style={{ marginTop: 0 }}>Restore a deleted post.</h2>
+              <p>
+                Deleted posts are hidden from the weekly queue, but you can bring them back here.
+              </p>
+
+              <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+                {deletedPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      padding: '12px 14px',
+                      borderRadius: 16,
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <strong>{post.title || post.platform || 'Deleted post'}</strong>
+                      <p style={{ margin: '4px 0 0', opacity: 0.78 }}>
+                        {post.platform || 'Post'} · deleted{' '}
+                        {post.deleted_at ? getReadableDateTime(post.deleted_at) : 'recently'}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => restoreDeletedPost(post)}
+                      disabled={deletingPostId === post.id}
+                    >
+                      {deletingPostId === post.id ? 'Restoring...' : 'Restore'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
 
           {posts.length > 0 && (
             <section className="premium-card" style={{ marginTop: 22 }}>
