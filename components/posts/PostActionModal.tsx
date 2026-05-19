@@ -162,13 +162,16 @@ export default function PostActionModal({
 
   const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
 
-  const scheduleStatusLabel = canAutoPublish ? 'Scheduled' : 'Reminder set';
-  const scheduleInputLabel = canAutoPublish ? 'Schedule publish time' : 'Reminder time';
-  const saveScheduleLabel = canAutoPublish ? 'Save schedule' : 'Save reminder';
-  const clearScheduleLabel = canAutoPublish ? 'Clear schedule' : 'Clear reminder';
+  const scheduleStatusLabel = canAutoPublish ? 'Autopublish queued' : 'Reminder set';
+  const scheduleInputLabel = canAutoPublish ? 'Autopublish date and time' : 'Reminder date and time';
+  const saveScheduleLabel = canAutoPublish ? 'Save autopublish time' : 'Save reminder';
+  const clearScheduleLabel = canAutoPublish ? 'Clear autopublish time' : 'Clear reminder';
+  const queueDateLabel = selectedPost.scheduled_at
+    ? getReadableDateTime(selectedPost.scheduled_at)
+    : '';
   const scheduleHelperText = canAutoPublish
-    ? `${autoPublishPlatformName} posts can auto-publish when the scheduler runs.`
-    : 'This saves a reminder time only for this platform.';
+    ? `Choose the exact date and time ${autoPublishPlatformName} should go live. This can be different from the weekly queue day.`
+    : 'This saves a reminder only. This platform is not connected for autopublishing yet.';
 
   const publishCardTitle = posted
     ? 'Posted'
@@ -533,7 +536,10 @@ export default function PostActionModal({
             <div>
               <div className="page-eyebrow">Publish</div>
               <h3>Control when this goes out.</h3>
-              <p>Publish now, queue it for later, or use copy/open for platforms not connected yet.</p>
+              <p>
+                Publish now, choose the exact autopublish time, or use copy/open for platforms not
+                connected yet.
+              </p>
             </div>
           </div>
 
@@ -584,7 +590,7 @@ export default function PostActionModal({
 
                 {hasSchedule && !posted && (
                   <div className="fromone-publish-schedule-pill">
-                    {scheduleStatusLabel}: {getReadableDateTime(selectedPost.scheduled_publish_at)}
+                    Goes live: {getReadableDateTime(selectedPost.scheduled_publish_at)}
                   </div>
                 )}
               </div>
@@ -647,6 +653,18 @@ export default function PostActionModal({
               </div>
 
               {hasSchedule && !posted && <span>{scheduleStatusLabel}</span>}
+            </div>
+
+            <div className="fromone-image-guidance-note" style={{ marginBottom: 12 }}>
+              <strong>Queue day vs autopublish time</strong>
+              <p>
+                {queueDateLabel
+                  ? `Weekly queue day: ${queueDateLabel}.`
+                  : 'Weekly queue day is the suggested content day.'}{' '}
+                {canAutoPublish
+                  ? 'The date and time below is the exact go-live time.'
+                  : 'The date and time below is only a reminder.'}
+              </p>
             </div>
 
             <input
