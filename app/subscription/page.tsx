@@ -353,18 +353,20 @@ export default function SubscriptionPage() {
     status === 'active' &&
     Boolean(paypalSubscriptionId);
 
-  const sharedFeatures = [
+  const demoFeatures = [
     'Create weekly social media posts',
     'Website scan or manual business profile',
     'Choose your social platforms',
-    'Copy, paste, schedule, and publish workflow',
-    '2 website scans per week',
+    'Copy, schedule, and publish workflow',
+    '1 website scan per week',
   ];
 
-  const starterOnlyFeatures = [
-    'Monthly access after the demo',
-    'PayPal subscription management',
-    'Keep creating weekly plans',
+  const monthlyFeatures = [
+    'Create weekly social media posts',
+    'Website scan or manual business profile',
+    'Choose your social platforms',
+    'Copy, schedule, and publish workflow',
+    '2 website scans per week',
   ];
 
   const plans = [
@@ -373,11 +375,11 @@ export default function SubscriptionPage() {
       name: '7-Day Demo',
       price: 'Free',
       priceNote: 'for 7 days',
-      valueNote: 'Demo access locks after 7 days unless you move to the monthly plan.',
-      description: 'Try the full FromOne workflow free for 7 days.',
+      valueNote: 'Try the full FromOne workflow before subscribing.',
+      description: 'A simple 7-day demo to create and test your first weekly posts.',
       buttonText: 'Use free demo',
       disabled: isDemoExpired,
-      features: sharedFeatures,
+      features: demoFeatures,
     },
     {
       id: 'starter' as Plan,
@@ -385,10 +387,10 @@ export default function SubscriptionPage() {
       price: '£29.99',
       priceNote: '/ month',
       valueNote: 'Less than £1 a day for weekly social media content.',
-      description: 'Continue using the full FromOne workflow every week for your business.',
+      description: 'Full monthly access for creating weekly social media plans.',
       buttonText: isCancelled ? 'Restart monthly plan' : 'Continue with PayPal',
       disabled: false,
-      features: sharedFeatures,
+      features: monthlyFeatures,
     },
   ];
 
@@ -553,10 +555,10 @@ export default function SubscriptionPage() {
                     transform: isSelected ? 'translateY(-3px)' : undefined,
                     display: 'flex',
                     flexDirection: 'column',
-                    minHeight: '620px',
+                    minHeight: '560px',
                   }}
                 >
-                  <div style={{ minHeight: '220px' }}>
+                  <div style={{ minHeight: '190px' }}>
                     <div className="page-eyebrow">{plan.name}</div>
 
                     <h2
@@ -611,24 +613,6 @@ export default function SubscriptionPage() {
                         ✓ {feature}
                       </div>
                     ))}
-
-                    {plan.id === 'starter' &&
-                      starterOnlyFeatures.map((feature) => (
-                        <div
-                          key={feature}
-                          className="card"
-                          style={{
-                            padding: '12px',
-                            minHeight: '46px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            fontWeight: 800,
-                            border: '1px solid rgba(255, 212, 59, 0.24)',
-                          }}
-                        >
-                          ✓ {feature}
-                        </div>
-                      ))}
                   </div>
 
                   <div style={{ marginTop: 'auto' }}>
