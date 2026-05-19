@@ -25,20 +25,6 @@ type FacebookCredentials = {
   connectionId?: string | null;
 };
 
-type PublishLogInput = {
-  userId?: string | null;
-  postId?: string | null;
-  platform: string;
-  action: string;
-  status: string;
-  message?: string | null;
-  error?: string | null;
-  credentialSource?: string | null;
-  socialConnectionId?: string | null;
-  providerPostId?: string | null;
-  metadata?: Record<string, any>;
-};
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -97,45 +83,6 @@ function buildPublishedToValue(currentValue: any) {
 
   return ['facebook'];
 }
-
-async function insertPublishLog({
-  userId,
-  postId,
-  platform,
-  action,
-  status,
-  message,
-  error,
-  credentialSource,
-  socialConnectionId,
-  providerPostId,
-  metadata = {},
-}: PublishLogInput) {
-  try {
-    const supabase = getSupabaseAdmin();
-
-    const { error: logError } = await supabase.from('publish_logs').insert({
-      user_id: userId || null,
-      post_id: postId || null,
-      platform,
-      action,
-      status,
-      message: message || null,
-      error: error || null,
-      credential_source: credentialSource || null,
-      social_connection_id: socialConnectionId || null,
-      provider_post_id: providerPostId || null,
-      metadata,
-    });
-
-    if (logError) {
-      console.error('Publish log insert failed:', logError.message);
-    }
-  } catch (logError: any) {
-    console.error('Publish log insert error:', logError?.message || logError);
-  }
-}
-
 
 async function findUserIdForPost({
   supabase,
@@ -377,26 +324,10 @@ export async function POST(req: NextRequest) {
 
     const message = buildMessage(body);
     const postId = cleanText(body.postId || body.campaignPostId);
-    const userId = await findUserIdForPost({ supabase: getSupabaseAdmin(), body });
     const mediaUrl = cleanText(body.mediaUrl || body.media_url);
     const mediaType = cleanText(body.mediaType || body.media_type);
 
     if (!message) {
-      await insertPublishLog({
-        userId,
-        postId,
-        platform: 'facebook',
-        action: 'manual_publish',
-        status: 'failed',
-        message: 'Facebook publish failed.',
-        error: 'Message is required.',
-        credentialSource: credentials.source,
-        socialConnectionId: credentials.connectionId || null,
-        metadata: {
-          reason: 'missing_message',
-        },
-      });
-
       return NextResponse.json(
         {
           error: 'Message is required.',
@@ -425,21 +356,6 @@ export async function POST(req: NextRequest) {
     const facebookPostId = getFacebookPostId(result);
 
     if (!facebookPostId) {
-      await insertPublishLog({
-        userId,
-        postId,
-        platform: 'facebook',
-        action: 'manual_publish',
-        status: 'failed',
-        message: 'Facebook published but did not return a post ID.',
-        error: 'Missing Facebook post ID.',
-        credentialSource: credentials.source,
-        socialConnectionId: credentials.connectionId || null,
-        metadata: {
-          facebook_result: result,
-        },
-      });
-
       return NextResponse.json(
         {
           error: 'Facebook published the post but did not return a post ID.',
@@ -456,24 +372,6 @@ export async function POST(req: NextRequest) {
       connectionId: credentials.connectionId,
     });
 
-    await insertPublishLog({
-      userId,
-      postId,
-      platform: 'facebook',
-      action: 'manual_publish',
-      status: 'posted',
-      message: 'Facebook posted successfully.',
-      error: null,
-      credentialSource: credentials.source,
-      socialConnectionId: credentials.connectionId || null,
-      providerPostId: facebookPostId,
-      metadata: {
-        media_url: mediaUrl || null,
-        media_type: mediaType || null,
-        used_media: Boolean(mediaUrl),
-      },
-    });
-
     return NextResponse.json({
       success: true,
       provider: 'facebook',
@@ -488,18 +386,6 @@ export async function POST(req: NextRequest) {
     console.error('Facebook publish API error:', error?.message || error);
 
     const postId = cleanText(body?.postId || body?.campaignPostId);
-    let userId = cleanText(body?.userId || body?.user_id);
-
-    try {
-      if (!userId) {
-        userId = await findUserIdForPost({
-          supabase: getSupabaseAdmin(),
-          body,
-        });
-      }
-    } catch (userLookupError: any) {
-      console.error('Failed to resolve user for Facebook publish log:', userLookupError?.message);
-    }
 
     if (postId) {
       try {
@@ -516,21 +402,6 @@ export async function POST(req: NextRequest) {
         console.error('Failed to save Facebook publish error:', databaseError?.message);
       }
     }
-
-    await insertPublishLog({
-      userId,
-      postId,
-      platform: 'facebook',
-      action: 'manual_publish',
-      status: 'failed',
-      message: 'Facebook publish failed.',
-      error: error?.message || 'Something went wrong publishing to Facebook.',
-      credentialSource: null,
-      socialConnectionId: null,
-      metadata: {
-        route: '/api/facebook/publish',
-      },
-    });
 
     return NextResponse.json(
       {
