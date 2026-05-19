@@ -299,6 +299,7 @@ export default function DashboardPage() {
   const [platformCarouselStart, setPlatformCarouselStart] = useState(0);
   const [selectedMarketReach, setSelectedMarketReach] = useState('Local customers');
   const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(7);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({
     total: 0,
@@ -1806,6 +1807,11 @@ Also detect or infer:
     postingFrequencyOptions.find((option) => option.value === selectedPostingFrequency) ||
     postingFrequencyOptions[postingFrequencyOptions.length - 1];
 
+  const selectedPlatformSummary =
+    selectedPlatforms.length > 3
+      ? `${selectedPlatforms.slice(0, 3).join(', ')} +${selectedPlatforms.length - 3} more`
+      : selectedPlatforms.join(', ');
+
   const hasBusinessSetup = Boolean(hasWebsite || hasManualProfile);
   const hasCreatedPosts = weeklyProgress.total > 0 || savedCampaignsCount > 0;
 
@@ -1933,31 +1939,22 @@ Also detect or infer:
         </div>
       ) : (
         <>
-          {showCustomerReadyChecklist && (
-            <section
-              className="dashboard-first-run-card"
-              style={{
-                width: '100%',
-                maxWidth: 'none',
-                gridColumn: '1 / -1',
-              }}
-            >
+                    {showCustomerReadyChecklist && (
+            <section className="dashboard-first-run-card" style={{ marginBottom: 24 }}>
               <div className="dashboard-first-run-heading">
                 <div>
-                  <div className="page-eyebrow">Command centre</div>
+                  <div className="page-eyebrow">Setup</div>
                   <h2>
                     {hasBusinessSetup
                       ? hasCreatedPosts
-                        ? 'You are set up and ready.'
+                        ? 'Ready to create and publish.'
                         : 'Create your first weekly plan.'
-                      : 'Start here: add your business.'}
+                      : 'Start by adding the business.'}
                   </h2>
                   <p>
                     {hasBusinessSetup
-                      ? hasCreatedPosts
-                        ? 'FromOne is ready to help you review, schedule, and publish this week.'
-                        : 'Your account is nearly ready. Create a weekly plan to start publishing.'
-                      : 'Add a website or business details, then FromOne can create your first week of posts.'}
+                      ? 'Your options are saved below. You can change them before creating posts.'
+                      : 'Add a website or business details, then FromOne can create the weekly posts.'}
                   </p>
                 </div>
 
@@ -1966,126 +1963,7 @@ Also detect or infer:
                 </span>
               </div>
 
-              <div
-                className="dashboard-first-run-grid"
-                style={{
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                }}
-              >
-                <article
-                  className={
-                    hasBusinessSetup
-                      ? 'dashboard-first-run-step is-complete'
-                      : 'dashboard-first-run-step'
-                  }
-                >
-                  <div className="dashboard-first-run-step-number">
-                    {hasBusinessSetup ? '✓' : '1'}
-                  </div>
-
-                  <div>
-                    <strong>Business</strong>
-                    <p>
-                      {hasBusinessSetup
-                        ? 'Business profile started.'
-                        : 'Add a website or business details.'}
-                    </p>
-                  </div>
-                </article>
-
-                <article
-                  className={
-                    hasFacebookConnection
-                      ? 'dashboard-first-run-step is-complete'
-                      : 'dashboard-first-run-step'
-                  }
-                >
-                  <div className="dashboard-first-run-step-number">
-                    {hasFacebookConnection ? '✓' : '2'}
-                  </div>
-
-                  <div>
-                    <strong>Facebook</strong>
-                    <p>
-                      {hasFacebookConnection
-                        ? 'Connected and ready.'
-                        : 'Connect Meta in Settings.'}
-                    </p>
-                  </div>
-                </article>
-
-                <article
-                  className={
-                    hasInstagramConnection
-                      ? 'dashboard-first-run-step is-complete'
-                      : 'dashboard-first-run-step'
-                  }
-                >
-                  <div className="dashboard-first-run-step-number">
-                    {hasInstagramConnection ? '✓' : '3'}
-                  </div>
-
-                  <div>
-                    <strong>Instagram</strong>
-                    <p>
-                      {hasInstagramConnection
-                        ? 'Connected and ready.'
-                        : hasFacebookConnection
-                          ? 'No linked Instagram account found.'
-                          : 'Connect Meta in Settings.'}
-                    </p>
-                  </div>
-                </article>
-
-                <article
-                  className={
-                    hasGoogleConnection
-                      ? 'dashboard-first-run-step is-complete'
-                      : 'dashboard-first-run-step'
-                  }
-                >
-                  <div className="dashboard-first-run-step-number">
-                    {hasGoogleConnection ? '✓' : '4'}
-                  </div>
-
-                  <div>
-                    <strong>Google</strong>
-                    <p>
-                      {hasGoogleConnection
-                        ? googleLocationReady
-                          ? 'Location selected.'
-                          : 'Connected · approval pending.'
-                        : 'Optional next platform.'}
-                    </p>
-                  </div>
-                </article>
-
-                <article
-                  className={
-                    hasPaidPlan
-                      ? 'dashboard-first-run-step is-complete'
-                      : 'dashboard-first-run-step'
-                  }
-                >
-                  <div className="dashboard-first-run-step-number">
-                    {hasPaidPlan ? '✓' : '5'}
-                  </div>
-
-                  <div>
-                    <strong>Access</strong>
-                    <p>{hasPaidPlan ? 'Paid plan active.' : accessLocked ? accessMessage : accessMessage || 'Demo access active.'}</p>
-                  </div>
-                </article>
-              </div>
-
-              <div
-                className="button-row"
-                style={{
-                  marginTop: 18,
-                  gap: 12,
-                  flexWrap: 'wrap',
-                }}
-              >
+              <div className="button-row" style={{ marginTop: 16, gap: 12, flexWrap: 'wrap' }}>
                 {!hasBusinessSetup && (
                   <button
                     type="button"
@@ -2098,46 +1976,26 @@ Also detect or infer:
                   </button>
                 )}
 
-                {hasBusinessSetup && !hasCreatedPosts && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const target = generateButtonRef.current;
-                      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }}
-                  >
-                    Create my first weekly plan
-                  </button>
-                )}
-
                 {hasCreatedPosts && (
                   <Link href="/posts" className="dashboard-profile-link">
-                    Review this week
+                    Review posts
                   </Link>
                 )}
 
                 <Link href="/settings" className="dashboard-profile-link">
-                  Manage connected accounts
+                  Connections
                 </Link>
 
                 {!hasPaidPlan && (
                   <Link href="/subscription" className="dashboard-profile-link">
-                    View billing options
+                    Billing
                   </Link>
                 )}
               </div>
             </section>
           )}
 
-          <section
-            className="dashboard-top-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-              gap: 28,
-              alignItems: 'stretch',
-            }}
-          >
+          <section className="dashboard-top-grid">
             <section className="today-task-card dashboard-personal-task-card">
               <div className="dashboard-personal-task-main">
                 <div className="dashboard-business-logo-frame" aria-hidden="true">
@@ -2458,7 +2316,51 @@ Also detect or infer:
               </section>
             )}
 
-            <section
+                        <section className="premium-card dashboard-options-summary-card" style={{ marginTop: 22 }}>
+              <div className="page-eyebrow">Post options</div>
+              <h2 style={{ marginTop: 0 }}>Use these settings for this week.</h2>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  gap: 12,
+                  marginTop: 14,
+                }}
+              >
+                <div className="card" style={{ padding: 14 }}>
+                  <strong>Reach</strong>
+                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>{marketReachDisplayLabel}</p>
+                </div>
+
+                <div className="card" style={{ padding: 14 }}>
+                  <strong>Frequency</strong>
+                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
+                    {selectedPostingFrequencyOption.title} per week
+                  </p>
+                </div>
+
+                <div className="card" style={{ padding: 14 }}>
+                  <strong>Platforms</strong>
+                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
+                    {selectedPlatformSummary || 'Choose platforms'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ marginTop: 16 }}
+                onClick={() => setShowAdvancedOptions((current) => !current)}
+              >
+                {showAdvancedOptions ? 'Hide options' : 'Change options'}
+              </button>
+            </section>
+
+            {showAdvancedOptions && (
+              <>
+<section
               ref={marketReachRef}
               className="dashboard-platform-selector dashboard-platform-selector-full"
             >
@@ -2729,7 +2631,7 @@ Also detect or infer:
                 <div>
                   <strong>Ready to create?</strong>
                   <span>
-                    FromOne will create seven posts for {marketReachContext.toLowerCase()} using
+                    FromOne will create {selectedPostingFrequencyOption.title.toLowerCase()} of posts for {marketReachContext.toLowerCase()} using
                     the selected platforms above.
                   </span>
                 </div>
@@ -2753,6 +2655,9 @@ Also detect or infer:
                 </button>
               </div>
             </div>
+
+              </>
+            )}
           </section>
         </>
       )}
