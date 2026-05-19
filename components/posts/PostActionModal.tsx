@@ -1,4 +1,4 @@
-import { ChangeEvent } from 'react';
+import { ChangeEvent, useState } from 'react';
 
 type PostStatus = 'Ready' | 'Reminder set' | 'Posted' | 'Failed';
 
@@ -297,7 +297,7 @@ export default function PostActionModal({
                     <button
                       type="button"
                       className="secondary-button"
-                      onClick={() => setShowMorePostTools((current) => !current)}
+                      onClick={() => setShowMorePostTools((current: boolean) => !current)}
                     >
                       {showMorePostTools ? 'Hide more actions' : 'More actions'}
                     </button>
@@ -699,7 +699,7 @@ export default function PostActionModal({
               <button
                 type="button"
                 className="secondary-button"
-                onClick={() => setShowMiniAnalytics((current) => !current)}
+                onClick={() => setShowMiniAnalytics((current: boolean) => !current)}
               >
                 {showMiniAnalytics ? 'Hide stats' : 'Show stats'}
               </button>
