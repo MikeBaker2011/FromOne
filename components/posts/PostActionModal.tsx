@@ -162,23 +162,23 @@ export default function PostActionModal({
 
   const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
 
-  const scheduleStatusLabel = canAutoPublish ? 'Autopublish queued' : 'Reminder set';
-  const scheduleInputLabel = canAutoPublish ? 'Autopublish date and time' : 'Reminder date and time';
-  const saveScheduleLabel = canAutoPublish ? 'Save autopublish time' : 'Save reminder';
-  const clearScheduleLabel = canAutoPublish ? 'Clear autopublish time' : 'Clear reminder';
+  const scheduleStatusLabel = canAutoPublish ? 'Scheduled' : 'Scheduled reminder';
+  const scheduleInputLabel = canAutoPublish ? 'Schedule post' : 'Schedule reminder';
+  const saveScheduleLabel = canAutoPublish ? 'Save schedule' : 'Save reminder';
+  const clearScheduleLabel = canAutoPublish ? 'Clear schedule' : 'Clear reminder';
   const queueDateLabel = selectedPost.scheduled_at
     ? getReadableDateTime(selectedPost.scheduled_at)
     : '';
   const scheduleHelperText = canAutoPublish
-    ? `Choose the exact date and time ${autoPublishPlatformName} should go live. This can be different from the weekly queue day.`
-    : 'This saves a reminder only. This platform is not connected for autopublishing yet.';
+    ? `${autoPublishPlatformName} can publish automatically at the time you choose.`
+    : `${platformName} is not connected for autopublishing yet, so this creates a reminder.`;
 
   const publishCardTitle = posted
     ? 'Posted'
     : needsMedia
       ? 'Needs media'
       : hasSchedule && canAutoPublish
-        ? 'Queued to publish'
+        ? 'Scheduled'
         : canAutoPublish
           ? 'Ready to publish'
           : tiktokDemoAvailable
@@ -190,12 +190,12 @@ export default function PostActionModal({
     : needsMedia
       ? `${platformName} needs an image or video before publishing.`
       : hasSchedule && canAutoPublish
-        ? `${platformName} will auto-publish when the scheduler runs.`
+        ? `${platformName} is scheduled to publish automatically.`
         : canAutoPublish
           ? `${platformName} can publish now or be scheduled for later.`
           : tiktokDemoAvailable
             ? 'Run a TikTok sandbox demo publish for app review. No live TikTok post will be published.'
-            : `${platformName} is copy/open for now.`;
+            : `Copy this post and open ${platformName}.`;
 
   const readinessItems = [
     {
@@ -322,8 +322,8 @@ export default function PostActionModal({
           <div className="fromone-flow-card-top">
             <div>
               <div className="page-eyebrow">Post</div>
-              <h3>Check the wording.</h3>
-              <p>Improve or edit only if needed.</p>
+              <h3>Review the wording.</h3>
+              <p>Edit only if needed.</p>
             </div>
 
             <span>{platformName}</span>
@@ -506,7 +506,7 @@ export default function PostActionModal({
           <div className="fromone-flow-tools-header">
             <div>
               <div className="page-eyebrow">Media</div>
-              <h3>Add an image or video.</h3>
+              <h3>Add media.</h3>
               <p>{getImageGuidance(selectedPost)}</p>
             </div>
           </div>
@@ -576,10 +576,9 @@ export default function PostActionModal({
           <div className="fromone-flow-tools-header">
             <div>
               <div className="page-eyebrow">Publish</div>
-              <h3>Control when this goes out.</h3>
+              <h3>Publish or schedule.</h3>
               <p>
-                Publish now, choose the exact autopublish time, or use copy/open for platforms not
-                connected yet.
+                Publish now, schedule for later, or copy the post if the platform is not connected.
               </p>
             </div>
           </div>
@@ -601,25 +600,6 @@ export default function PostActionModal({
             </div>
           )}
 
-
-          {onDeletePost && !posted && (
-            <div className="fromone-improvement-note fromone-error-note">
-              <strong>Need to remove this post?</strong>
-              <p>
-                Delete removes it from the weekly queue. You can restore it using the Undo delete
-                button after deleting.
-              </p>
-              <button
-                type="button"
-                className="secondary-button danger-button"
-                onClick={() => onDeletePost(selectedPost)}
-                disabled={deletingPostId === selectedPost.id}
-              >
-                {deletingPostId === selectedPost.id ? 'Deleting...' : 'Delete this post'}
-              </button>
-            </div>
-          )}
-
           <div className={`fromone-publish-control-card ${posted ? 'is-posted' : ''} ${needsMedia ? 'needs-media' : ''}`}>
             <div className="fromone-publish-control-main">
               <div className="fromone-publish-status-icon">{posted ? '✓' : needsMedia ? '!' : hasSchedule ? '⏱' : '→'}</div>
@@ -631,7 +611,7 @@ export default function PostActionModal({
 
                 {hasSchedule && !posted && (
                   <div className="fromone-publish-schedule-pill">
-                    Goes live: {getReadableDateTime(selectedPost.scheduled_publish_at)}
+                    Scheduled: {getReadableDateTime(selectedPost.scheduled_publish_at)}
                   </div>
                 )}
               </div>
@@ -693,9 +673,9 @@ export default function PostActionModal({
                 <p>
                   {posted
                     ? hasPerformanceData
-                      ? 'Post performance saved for this post.'
-                      : 'No performance has been recorded yet. Stats will appear here once available.'
-                    : 'Performance appears here after the post is published.'}
+                      ? 'Performance saved for this post.'
+                      : 'No stats recorded yet.'
+                    : 'Stats appear after publishing.'}
                 </p>
               </div>
 
@@ -747,8 +727,7 @@ export default function PostActionModal({
 
             {!hasPerformanceData && (
               <p style={{ marginBottom: 0, opacity: 0.72 }}>
-                Next phase: add a Refresh stats button to pull the latest Facebook and Instagram
-                performance automatically.
+                Stats can be updated when platform analytics are connected.
               </p>
             )}
           </div>
@@ -764,14 +743,10 @@ export default function PostActionModal({
             </div>
 
             <div className="fromone-image-guidance-note" style={{ marginBottom: 12 }}>
-              <strong>Queue day vs autopublish time</strong>
+              <strong>When should this go out?</strong>
               <p>
-                {queueDateLabel
-                  ? `Weekly queue day: ${queueDateLabel}.`
-                  : 'Weekly queue day is the suggested content day.'}{' '}
-                {canAutoPublish
-                  ? 'The date and time below is the exact go-live time.'
-                  : 'The date and time below is only a reminder.'}
+                {queueDateLabel ? `Suggested day: ${queueDateLabel}. ` : ''}
+                Choose the date and time below.
               </p>
             </div>
 
@@ -800,21 +775,6 @@ export default function PostActionModal({
                   disabled={savingReminderPostId === selectedPost.id}
                 >
                   {clearScheduleLabel}
-                </button>
-              )}
-
-              {onDeletePost && (
-                <button
-                  type="button"
-                  className="secondary-button danger-button"
-                  onClick={() => onDeletePost(selectedPost)}
-                  disabled={deletingPostId === selectedPost.id}
-                >
-                  {deletingPostId === selectedPost.id
-                    ? 'Deleting...'
-                    : posted
-                      ? 'Archive post'
-                      : 'Delete post'}
                 </button>
               )}
 

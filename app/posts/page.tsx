@@ -2059,9 +2059,9 @@ export default function PostsPage() {
       if (error) throw error;
 
       updatePostLocally(post.id, updates);
-      alert('Reminder time saved.');
+      alert('Schedule time saved.');
     } catch (error: any) {
-      const message = getReadableError(error, 'Error saving reminder time.');
+      const message = getReadableError(error, 'Error saving schedule time.');
       console.error('Save reminder error:', error);
       alert(message);
     } finally {
@@ -2091,9 +2091,9 @@ export default function PostsPage() {
 
       updatePostLocally(post.id, updates);
       setReminderValue('');
-      alert('Reminder removed.');
+      alert('Schedule cleared.');
     } catch (error: any) {
-      const message = getReadableError(error, 'Error clearing reminder.');
+      const message = getReadableError(error, 'Error clearing schedule.');
       console.error('Clear reminder error:', error);
       alert(message);
     } finally {
@@ -2339,9 +2339,9 @@ export default function PostsPage() {
       <div className="campaigns-page-header simplified-posts-header">
         <div>
           <div className="page-eyebrow">Posts</div>
-          <h1 className="page-title">Choose today’s post.</h1>
+          <h1 className="page-title">Manage this week’s posts.</h1>
           <p className="page-description">
-            Pick a card from the weekly queue. The post opens in a simple window.
+            Open a post to review, add media, schedule, publish, or edit it.
           </p>
 
           <div className="simplified-posts-meta">
