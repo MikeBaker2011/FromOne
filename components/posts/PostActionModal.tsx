@@ -216,6 +216,47 @@ export default function PostActionModal({
     },
   ];
 
+  const performanceMetrics = [
+    {
+      label: 'Reach',
+      value: Number(selectedPost.reach || 0),
+    },
+    {
+      label: 'Likes',
+      value: Number(selectedPost.likes || 0),
+    },
+    {
+      label: 'Comments',
+      value: Number(selectedPost.comments || 0),
+    },
+    {
+      label: 'Shares',
+      value: Number(selectedPost.shares || 0),
+    },
+    {
+      label: 'Saves',
+      value: Number(selectedPost.saves || 0),
+    },
+    {
+      label: 'Clicks',
+      value: Number(selectedPost.clicks || 0),
+    },
+  ];
+
+  const totalPerformanceActions = performanceMetrics.reduce(
+    (total, metric) => total + metric.value,
+    0
+  );
+
+  const hasPerformanceData = totalPerformanceActions > 0;
+
+  const formatMetricValue = (value: number) => {
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}m`;
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+
+    return String(value);
+  };
+
   const handlePrimaryPublish = () => {
     if (canDirectPublishToFacebook(selectedPost)) {
       onPublishToFacebook(selectedPost);
@@ -643,6 +684,73 @@ export default function PostActionModal({
                 Open {platformName}
               </button>
             </div>
+          </div>
+
+          <div className="fromone-schedule-box fromone-schedule-control-card">
+            <div className="fromone-schedule-card-header">
+              <div>
+                <strong>Mini analytics</strong>
+                <p>
+                  {posted
+                    ? hasPerformanceData
+                      ? 'Post performance saved for this post.'
+                      : 'No performance has been recorded yet. Stats will appear here once available.'
+                    : 'Performance appears here after the post is published.'}
+                </p>
+              </div>
+
+              {hasPerformanceData && <span>{totalPerformanceActions} actions</span>}
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))',
+                gap: 10,
+              }}
+            >
+              {performanceMetrics.map((metric) => (
+                <div
+                  key={metric.label}
+                  style={{
+                    padding: '12px',
+                    borderRadius: 16,
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      opacity: 0.68,
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    {metric.label}
+                  </div>
+
+                  <strong
+                    style={{
+                      display: 'block',
+                      marginTop: 6,
+                      fontSize: 22,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {formatMetricValue(metric.value)}
+                  </strong>
+                </div>
+              ))}
+            </div>
+
+            {!hasPerformanceData && (
+              <p style={{ marginBottom: 0, opacity: 0.72 }}>
+                Next phase: add a Refresh stats button to pull the latest Facebook and Instagram
+                performance automatically.
+              </p>
+            )}
           </div>
 
           <div className="fromone-schedule-box fromone-schedule-control-card">
