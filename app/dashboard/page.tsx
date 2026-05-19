@@ -137,6 +137,24 @@ const marketReachOptions = [
   },
 ];
 
+const postingFrequencyOptions = [
+  {
+    value: 3,
+    title: '3 days',
+    description: 'A light weekly plan for businesses that want simple consistency.',
+  },
+  {
+    value: 5,
+    title: '5 days',
+    description: 'A steady weekday plan for regular visibility.',
+  },
+  {
+    value: 7,
+    title: '7 days',
+    description: 'A full weekly plan for maximum activity.',
+  },
+];
+
 const defaultSelectedPlatforms = ['Facebook', 'Instagram', 'Google', 'LinkedIn'];
 const PLATFORM_CAROUSEL_VISIBLE_COUNT = 3;
 
@@ -222,7 +240,7 @@ const dashboardTourSteps = [
   {
     title: 'Create weekly posts',
     text:
-      'Once the website or business details, reach, and platforms are ready, create seven ready-to-use posts for the week.',
+      'Once the website or business details, reach, and platforms are ready, create the right number of ready-to-use posts for the week.',
     target: 'generate',
   },
   {
@@ -263,7 +281,7 @@ const customerReadyChecklist = [
   {
     key: 'weekly_plan',
     title: 'Create first weekly plan',
-    description: 'Generate the first seven-day content plan.',
+    description: 'Generate the first weekly content plan.',
   },
   {
     key: 'scheduled_post',
@@ -297,6 +315,7 @@ export default function DashboardPage() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultSelectedPlatforms);
   const [platformCarouselStart, setPlatformCarouselStart] = useState(0);
   const [selectedMarketReach, setSelectedMarketReach] = useState('Local customers');
+  const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(7);
 
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({
     total: 0,
@@ -428,8 +447,9 @@ export default function DashboardPage() {
 
   const buildPlatformPlanText = (platforms: string[]) => {
     const safePlatforms = platforms.length > 0 ? platforms : defaultSelectedPlatforms;
+    const postCount = Math.max(1, Math.min(selectedPostingFrequency, 7));
 
-    return Array.from({ length: 7 })
+    return Array.from({ length: postCount })
       .map((_, index) => {
         const platform = safePlatforms[index % safePlatforms.length];
         return `Day ${index + 1} ${platform}`;
@@ -1282,6 +1302,10 @@ Use the market reach to shape the posts:
 Selected social media platforms for this weekly plan:
 ${selectedPlatforms.join(', ')}
 
+Posting frequency for this weekly plan:
+${selectedPostingFrequency} posts this week.
+
+Only create ${selectedPostingFrequency} posts for this weekly plan.
 Only create posts for the selected social media platforms above. Do not use platforms that are not selected.
 
 When a website URL is available, scan the website and infer the business details, tone, audience, services, content pillars, CTAs, and branding from the website.
@@ -1633,10 +1657,12 @@ Also detect or infer:
       description: buildBusinessDescription(activeClient),
       provider: 'gemini',
       platforms: selectedPlatforms,
+      postingFrequency: selectedPostingFrequency,
+      numberOfPosts: selectedPostingFrequency,
       marketReach: marketReachContext,
       requestedOutput: {
         posts:
-          'array of 7 post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only the selected platforms supplied in the request. Shape posts around the supplied marketReach, including the business location when local reach is selected.',
+          `array of ${selectedPostingFrequency} post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only the selected platforms supplied in the request. Shape posts around the supplied marketReach, including the business location when local reach is selected.`, 
         selected_platforms: selectedPlatforms,
         market_reach: marketReachContext,
         business_name: 'detected business name',
@@ -1656,7 +1682,7 @@ Also detect or infer:
       },
     });
 
-    const posts: GeneratedPost[] = response.data.posts || [];
+    const posts: GeneratedPost[] = (response.data.posts || []).slice(0, selectedPostingFrequency);
 
     if (!posts.length) {
       alert(response.data.error || 'No posts were created.');
@@ -1674,7 +1700,7 @@ Also detect or infer:
     const campaignIdea =
       scanData?.campaign_idea ||
       scanData?.brand_summary ||
-      `Seven-day ${marketReachContext.toLowerCase()} weekly post plan`;
+      `Weekly ${marketReachContext.toLowerCase()} weekly post plan`;
 
     const detectedBusinessName =
       scanData?.business_name || activeClient.business_name || 'Website Scan Weekly Plan';
@@ -1716,7 +1742,7 @@ Also detect or infer:
         launch_date: new Date().toISOString().split('T')[0],
         campaign_area: detectedLocation,
         tone: detectedTone,
-        posting_frequency: 'Daily',
+        posting_frequency: `${selectedPostingFrequency} posts per week`,
         platform_plan: `${buildPlatformPlanText(selectedPlatforms)}. Market reach: ${marketReachContext}`,
       })
       .select()
@@ -1775,6 +1801,7 @@ Also detect or infer:
           client_id: activeClient.id,
           campaign_id: campaign.id,
           platforms: selectedPlatforms,
+          postingFrequency: selectedPostingFrequency,
           marketReach: marketReachContext,
           marketReachDisplayLabel,
         });
@@ -1877,6 +1904,9 @@ Also detect or infer:
   const businessLogoUrl = client?.brand_logo_url || '';
   const marketReachDisplayLabel = getMarketReachDisplayLabel(client);
   const marketReachContext = getMarketReachContext(client);
+  const selectedPostingFrequencyOption =
+    postingFrequencyOptions.find((option) => option.value === selectedPostingFrequency) ||
+    postingFrequencyOptions[postingFrequencyOptions.length - 1];
 
   const hasBusinessSetup = Boolean(hasWebsite || hasManualProfile);
   const hasCreatedPosts = weeklyProgress.total > 0 || savedCampaignsCount > 0;
@@ -1950,7 +1980,7 @@ Also detect or infer:
         <h1 className="page-title">Create this week’s posts.</h1>
         <p className="page-description">
           Add the business website, or use business details if there is no website. FromOne will
-          create seven ready-to-use posts for the week.
+          create the right number of ready-to-use posts for the week.
         </p>
 
         <div className="dashboard-header-actions-row">
@@ -2640,6 +2670,38 @@ Also detect or infer:
               <div className="dashboard-selected-platforms-line">
                 <strong>Reach</strong>
                 <span>{marketReachDisplayLabel}</span>
+              </div>
+            </section>
+
+
+            <section className="dashboard-choice-card">
+              <div className="page-eyebrow">Posting frequency</div>
+              <h3>How many posts this week?</h3>
+              <p>
+                Choose how often FromOne should create posts for this weekly plan.
+              </p>
+
+              <div className="dashboard-market-reach-grid">
+                {postingFrequencyOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={
+                      selectedPostingFrequency === option.value
+                        ? 'dashboard-market-reach-card is-selected'
+                        : 'dashboard-market-reach-card'
+                    }
+                    onClick={() => setSelectedPostingFrequency(option.value)}
+                  >
+                    <strong>{option.title}</strong>
+                    <span>{option.description}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="dashboard-selected-platforms-line">
+                <strong>Frequency</strong>
+                <span>{selectedPostingFrequencyOption.title} per week</span>
               </div>
             </section>
 
