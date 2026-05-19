@@ -26,6 +26,19 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     loadSubscription();
+
+    const params = new URLSearchParams(window.location.search);
+    const paypalStatus = params.get('paypal');
+
+    if (paypalStatus === 'approved') {
+      alert('PayPal checkout approved. Your account will update once PayPal confirms the subscription.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (paypalStatus === 'cancelled') {
+      alert('PayPal checkout was cancelled. You can try again whenever you are ready.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
 
   const calculateDaysRemaining = (endDate: string | null) => {
@@ -253,6 +266,69 @@ export default function SubscriptionPage() {
     }
   };
 
+  const cancelPendingPayment = async () => {
+    if (!isPendingPayment) {
+      alert('There is no pending PayPal checkout to cancel.');
+      return;
+    }
+
+    const confirmed = confirm(
+      'Cancel this pending PayPal checkout?\n\nThis will return your account to the demo plan. No PayPal payment will be taken from this pending checkout.'
+    );
+
+    if (!confirmed) return;
+
+    setCancelling(true);
+
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id;
+
+      if (!userId) {
+        alert('Please sign in first.');
+        return;
+      }
+
+      const nextStatus = daysRemaining > 0 ? 'trialing' : 'expired';
+
+      const { error: billingError } = await supabase
+        .from('user_billing')
+        .update({
+          plan: 'demo',
+          status: nextStatus,
+          paypal_subscription_id: null,
+          cancelled_at: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      if (billingError) {
+        throw billingError;
+      }
+
+      await supabase
+        .from('user_access')
+        .update({
+          access_status: nextStatus === 'trialing' ? 'trial' : 'expired',
+          subscription_status: 'none',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      setCurrentPlan('demo');
+      setSelectedPlan(nextStatus === 'expired' ? 'starter' : 'demo');
+      setStatus(nextStatus);
+      setPaypalSubscriptionId(null);
+
+      alert('Pending PayPal checkout cancelled.');
+      await loadSubscription();
+    } catch (error: any) {
+      alert(error?.message || 'Error cancelling pending payment.');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const cancelSubscription = async () => {
     if (!canCancel) {
       alert('There is no active PayPal subscription to cancel yet.');
@@ -352,6 +428,20 @@ export default function SubscriptionPage() {
     currentPlan === 'starter' &&
     status === 'active' &&
     Boolean(paypalSubscriptionId);
+
+  const nextPaymentLabel = hasPaidAccess
+    ? 'Managed in PayPal'
+    : isPendingPayment
+      ? 'Available after PayPal confirms your subscription'
+      : 'No active monthly payment';
+
+  const paypalStatusLabel = isPendingPayment
+    ? 'Pending checkout'
+    : hasPaidAccess
+      ? 'Active recurring subscription'
+      : isCancelled
+        ? 'Cancelled'
+        : 'No active PayPal subscription';
 
   const demoFeatures = [
     'Create weekly social media posts',
@@ -475,13 +565,24 @@ export default function SubscriptionPage() {
                 FromOne Monthly.
               </p>
 
-              <button
-                type="button"
-                onClick={startPayPalCheckout}
-                disabled={saving || cancelling}
-              >
-                {saving ? 'Opening PayPal...' : 'Complete PayPal checkout'}
-              </button>
+              <div className="button-row" style={{ marginTop: '18px' }}>
+                <button
+                  type="button"
+                  onClick={startPayPalCheckout}
+                  disabled={saving || cancelling}
+                >
+                  {saving ? 'Opening PayPal...' : 'Complete PayPal checkout'}
+                </button>
+
+                <button
+                  type="button"
+                  className="secondary-button danger-button"
+                  onClick={cancelPendingPayment}
+                  disabled={saving || cancelling}
+                >
+                  {cancelling ? 'Cancelling...' : 'Cancel pending payment'}
+                </button>
+              </div>
             </div>
           )}
 
@@ -512,18 +613,6 @@ export default function SubscriptionPage() {
                     Trial ends: <strong>{formatDate(trialEndsAt)}</strong>
                   </p>
                 </>
-              )}
-
-              {isPendingPayment && (
-                <div className="button-row" style={{ marginTop: 18 }}>
-                  <button
-                    type="button"
-                    onClick={startPayPalCheckout}
-                    disabled={saving || cancelling}
-                  >
-                    {saving ? 'Opening PayPal...' : 'Complete PayPal checkout'}
-                  </button>
-                </div>
               )}
 
               {paypalSubscriptionId && (
@@ -638,21 +727,84 @@ export default function SubscriptionPage() {
             })}
           </div>
 
-          <div className="premium-card" style={{ marginTop: '24px' }}>
-            <div className="page-eyebrow">Billing Management</div>
-            <h2 style={{ marginTop: 0 }}>Manage your plan.</h2>
+          <div
+            className="premium-card"
+            style={{
+              marginTop: '24px',
+              border: '1px solid rgba(255, 212, 59, 0.28)',
+              background:
+                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255, 255, 255, 0.04) 42%, rgba(15, 23, 42, 0.88))',
+            }}
+          >
+            <div className="page-eyebrow">PayPal Billing</div>
+            <h2 style={{ marginTop: 0 }}>Secure recurring billing.</h2>
+
             <p>
-              PayPal manages monthly payments and renewals securely. Choose FromOne Monthly,
-              continue to PayPal, then FromOne will activate your access once payment is confirmed.
+              FromOne Monthly is a recurring PayPal subscription at{' '}
+              <strong>£29.99 per month</strong>. PayPal manages the payment securely, and
+              FromOne unlocks monthly access once PayPal confirms the subscription.
             </p>
 
-            {paypalReady && currentPlan !== 'starter' && (
-              <p style={{ color: 'var(--gold)', fontWeight: 900 }}>
-                PayPal checkout is ready.
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '12px',
+                marginTop: '20px',
+              }}
+            >
+              <div className="card" style={{ padding: '14px' }}>
+                <strong>Status</strong>
+                <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 800 }}>
+                  {paypalStatusLabel}
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: '14px' }}>
+                <strong>Recurring payment</strong>
+                <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 800 }}>
+                  £29.99/month
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: '14px' }}>
+                <strong>Next payment</strong>
+                <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 800 }}>
+                  {nextPaymentLabel}
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: '14px' }}>
+                <strong>PayPal reference</strong>
+                <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 800 }}>
+                  {paypalSubscriptionId
+                    ? `${paypalSubscriptionId.slice(0, 12)}...`
+                    : 'Not connected yet'}
+                </p>
+              </div>
+            </div>
+
+            {isPendingPayment && (
+              <p style={{ marginTop: '18px', color: 'var(--gold)', fontWeight: 900 }}>
+                You started PayPal checkout but it has not been confirmed yet. You can complete
+                checkout or cancel the pending setup below.
               </p>
             )}
 
-            <div className="button-row" style={{ marginTop: '20px' }}>
+            {hasPaidAccess && (
+              <p style={{ marginTop: '18px', color: 'var(--gold)', fontWeight: 900 }}>
+                Your subscription is active. Future payments and renewals are managed securely by
+                PayPal.
+              </p>
+            )}
+
+            {!hasPaidAccess && !isPendingPayment && (
+              <p style={{ marginTop: '18px', color: 'var(--muted)', fontWeight: 800 }}>
+                Choose FromOne Monthly above, then continue to PayPal to start the subscription.
+              </p>
+            )}
+
+            <div className="button-row" style={{ marginTop: '22px' }}>
               <button onClick={savePlan} disabled={saving || cancelling}>
                 {saving
                   ? selectedPlan === 'starter'
@@ -662,6 +814,17 @@ export default function SubscriptionPage() {
                     ? 'Continue with PayPal'
                     : 'Save Demo Plan'}
               </button>
+
+              {isPendingPayment && (
+                <button
+                  type="button"
+                  className="secondary-button danger-button"
+                  onClick={cancelPendingPayment}
+                  disabled={saving || cancelling}
+                >
+                  {cancelling ? 'Cancelling...' : 'Cancel pending payment'}
+                </button>
+              )}
 
               <button
                 className="secondary-button"
@@ -682,16 +845,6 @@ export default function SubscriptionPage() {
                 </button>
               )}
             </div>
-          </div>
-
-          <div className="premium-card" style={{ marginTop: '24px' }}>
-            <div className="page-eyebrow">What happens after payment?</div>
-            <h2 style={{ marginTop: 0 }}>FromOne unlocks monthly access.</h2>
-            <p>
-              Once PayPal confirms the subscription, your account should move to active monthly
-              access. If it does not update straight away, contact support and include your PayPal
-              subscription reference.
-            </p>
           </div>
         </>
       )}
