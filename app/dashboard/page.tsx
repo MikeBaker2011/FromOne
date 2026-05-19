@@ -53,22 +53,6 @@ type WeeklyProgress = {
   nextPost: any | null;
 };
 
-type PublishLog = {
-  id: string;
-  user_id: string | null;
-  post_id: string | null;
-  platform: string;
-  action: string;
-  status: string;
-  message: string | null;
-  error: string | null;
-  credential_source: string | null;
-  social_connection_id: string | null;
-  provider_post_id: string | null;
-  metadata: Record<string, any> | null;
-  created_at: string;
-};
-
 type PlatformOption = {
   name: string;
   shortName: string;
@@ -310,7 +294,6 @@ export default function DashboardPage() {
   const [todayPost, setTodayPost] = useState<any>(null);
   const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
   const [hasScheduledPost, setHasScheduledPost] = useState(false);
-  const [recentActivity, setRecentActivity] = useState<PublishLog[]>([]);
 
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultSelectedPlatforms);
   const [platformCarouselStart, setPlatformCarouselStart] = useState(0);
@@ -699,90 +682,6 @@ export default function DashboardPage() {
     setHasScheduledPost((count || 0) > 0);
   };
 
-  const loadRecentActivity = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('publish_logs')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    if (error) {
-      console.error('Error loading recent activity:', error.message);
-      setRecentActivity([]);
-      return;
-    }
-
-    setRecentActivity((data || []) as PublishLog[]);
-  };
-
-  const formatActivityPlatform = (platform?: string | null) => {
-    const cleanPlatform = String(platform || '').trim();
-
-    if (!cleanPlatform) return 'Post';
-
-    return cleanPlatform.charAt(0).toUpperCase() + cleanPlatform.slice(1);
-  };
-
-  const formatActivityTime = (value?: string | null) => {
-    if (!value) return '';
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) return '';
-
-    const diffMs = Date.now() - date.getTime();
-    const diffMinutes = Math.max(0, Math.round(diffMs / 60000));
-
-    if (diffMinutes < 1) return 'Just now';
-    if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes === 1 ? '' : 's'} ago`;
-
-    const diffHours = Math.round(diffMinutes / 60);
-
-    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-
-    return date.toLocaleDateString(undefined, {
-      day: '2-digit',
-      month: 'short',
-    });
-  };
-
-  const getActivityLabel = (activity: PublishLog) => {
-    if (activity.message) return activity.message;
-
-    const platform = formatActivityPlatform(activity.platform);
-    const action = String(activity.action || '').toLowerCase();
-    const status = String(activity.status || '').toLowerCase();
-
-    if (status === 'posted' && action.includes('scheduled')) {
-      return `${platform} posted automatically.`;
-    }
-
-    if (status === 'posted') {
-      return `${platform} posted successfully.`;
-    }
-
-    if (status === 'failed') {
-      return `${platform} publish failed.`;
-    }
-
-    if (action.includes('demo')) {
-      return `${platform} sandbox demo complete.`;
-    }
-
-    return `${platform} activity recorded.`;
-  };
-
-  const getActivityStatusSymbol = (activity: PublishLog) => {
-    const status = String(activity.status || '').toLowerCase();
-
-    if (status === 'posted') return '✓';
-    if (status === 'failed') return '!';
-    if (status === 'scheduled') return '⏱';
-
-    return '•';
-  };
-
   const loadWeeklyProgress = async (userId: string) => {
     const startOfWeek = getStartOfWeek();
     const endOfWeek = getEndOfWeek();
@@ -1148,7 +1047,6 @@ export default function DashboardPage() {
       loadWeeklyProgress(userId),
       loadSocialConnections(userId),
       loadScheduledPostStatus(userId),
-      loadRecentActivity(userId),
     ]);
 
     const { data, error } = await supabase
@@ -2353,93 +2251,8 @@ Also detect or infer:
               </button>
             </section>
 
-            <section
-              className="dashboard-weekly-progress-card"
-              style={{
-                gridColumn: '1 / -1',
-              }}
-            >
-              <div className="dashboard-weekly-progress-header">
-                <div>
-                  <div className="page-eyebrow">Recent activity</div>
-                  <h2>
-                    {recentActivity.length > 0
-                      ? 'What happened recently'
-                      : 'No activity yet'}
-                  </h2>
-                </div>
+            
 
-                <span className="dashboard-weekly-progress-count">
-                  {recentActivity.length}
-                </span>
-              </div>
-
-              {recentActivity.length > 0 ? (
-                <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
-                  {recentActivity.map((activity) => {
-                    const failed = String(activity.status || '').toLowerCase() === 'failed';
-
-                    return (
-                      <div
-                        key={activity.id}
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: '34px 1fr',
-                          gap: 10,
-                          alignItems: 'start',
-                          padding: '10px 0',
-                          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 999,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 900,
-                            background: failed
-                              ? 'rgba(255, 91, 91, 0.16)'
-                              : 'rgba(61, 220, 151, 0.14)',
-                            color: failed ? '#ff8a8a' : '#3ddc97',
-                          }}
-                        >
-                          {getActivityStatusSymbol(activity)}
-                        </span>
-
-                        <div>
-                          <strong>{getActivityLabel(activity)}</strong>
-                          {activity.error && (
-                            <p style={{ margin: '4px 0 0', opacity: 0.78 }}>
-                              {activity.error}
-                            </p>
-                          )}
-                          <p style={{ margin: '4px 0 0', opacity: 0.64 }}>
-                            {formatActivityPlatform(activity.platform)} ·{' '}
-                            {formatActivityTime(activity.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p>
-                  Once posts are published or scheduled jobs run, FromOne will show the latest
-                  activity here.
-                </p>
-              )}
-
-              <button
-                type="button"
-                className="secondary-button dashboard-weekly-progress-button"
-                onClick={fetchClient}
-              >
-                Refresh activity
-              </button>
-            </section>
           </section>
 
           <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
@@ -2702,7 +2515,7 @@ Also detect or infer:
             </section>
 
 
-                        <section className="dashboard-platform-selector dashboard-platform-selector-full">
+                                    <section className="dashboard-platform-selector dashboard-platform-selector-full">
               <div className="dashboard-platform-selector-header">
                 <div>
                   <div className="page-eyebrow">Posting frequency</div>
@@ -2714,35 +2527,72 @@ Also detect or infer:
               </div>
 
               <div
-                className="dashboard-platform-grid"
                 style={{
+                  display: 'grid',
                   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 18,
+                  gap: 22,
+                  marginTop: 22,
                 }}
               >
-                {postingFrequencyOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={
-                      selectedPostingFrequency === option.value
-                        ? 'dashboard-platform-card is-selected'
-                        : 'dashboard-platform-card'
-                    }
-                    onClick={() => setSelectedPostingFrequency(option.value)}
-                  >
-                    <span className="dashboard-platform-check">
-                      {selectedPostingFrequency === option.value ? '✓' : '+'}
-                    </span>
+                {postingFrequencyOptions.map((option) => {
+                  const selected = selectedPostingFrequency === option.value;
 
-                    <strong>{option.title}</strong>
-                    <small>{option.description}</small>
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setSelectedPostingFrequency(option.value)}
+                      className={selected ? 'dashboard-platform-card is-selected' : 'dashboard-platform-card'}
+                      style={{
+                        minHeight: 170,
+                        padding: '26px 24px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-start',
+                        gap: 12,
+                        textAlign: 'left',
+                      }}
+                    >
+                      <span className="dashboard-platform-check">
+                        {selected ? '✓' : '+'}
+                      </span>
 
-                    {selectedPostingFrequency === option.value && (
-                      <span className="dashboard-platform-recommended">Selected</span>
-                    )}
-                  </button>
-                ))}
+                      <strong
+                        style={{
+                          display: 'block',
+                          fontSize: 24,
+                          lineHeight: 1.05,
+                          marginTop: 8,
+                        }}
+                      >
+                        {option.title}
+                      </strong>
+
+                      <small
+                        style={{
+                          display: 'block',
+                          maxWidth: 320,
+                          lineHeight: 1.35,
+                          opacity: 0.8,
+                        }}
+                      >
+                        {option.description}
+                      </small>
+
+                      {selected && (
+                        <span
+                          className="dashboard-platform-recommended"
+                          style={{
+                            marginTop: 'auto',
+                          }}
+                        >
+                          Selected
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="dashboard-selected-platforms-line">
