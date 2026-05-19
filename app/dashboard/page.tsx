@@ -2681,28 +2681,70 @@ Also detect or infer:
                 Choose how often FromOne should create posts for this weekly plan.
               </p>
 
-              <div className="dashboard-market-reach-grid">
-                {postingFrequencyOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={
-                      selectedPostingFrequency === option.value
-                        ? 'dashboard-market-reach-card is-selected'
-                        : 'dashboard-market-reach-card'
-                    }
-                    onClick={() => setSelectedPostingFrequency(option.value)}
-                  >
-                    <strong>{option.title}</strong>
-                    <span>{option.description}</span>
-                  </button>
-                ))}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 18,
+                  marginTop: 18,
+                }}
+              >
+                {postingFrequencyOptions.map((option) => {
+                  const selected = selectedPostingFrequency === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setSelectedPostingFrequency(option.value)}
+                      style={{
+                        width: '100%',
+                        minHeight: 150,
+                        padding: '28px 30px',
+                        borderRadius: 22,
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        background: selected
+                          ? 'linear-gradient(135deg, #ffd43b, #f5b82e)'
+                          : 'rgba(255, 255, 255, 0.06)',
+                        border: selected
+                          ? '1px solid rgba(255, 212, 59, 0.9)'
+                          : '1px solid rgba(255, 255, 255, 0.12)',
+                        boxShadow: selected
+                          ? '0 18px 40px rgba(255, 212, 59, 0.18)'
+                          : 'none',
+                        color: selected ? '#05070d' : 'inherit',
+                      }}
+                    >
+                      <strong
+                        style={{
+                          display: 'block',
+                          fontSize: 24,
+                          lineHeight: 1,
+                          marginBottom: 10,
+                        }}
+                      >
+                        {option.title}
+                      </strong>
+
+                      <span
+                        style={{
+                          display: 'block',
+                          fontWeight: 800,
+                          lineHeight: 1.35,
+                          opacity: selected ? 0.92 : 0.72,
+                        }}
+                      >
+                        {option.description}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="dashboard-selected-platforms-line">
-                <strong>Frequency</strong>
-                <span>{selectedPostingFrequencyOption.title} per week</span>
-              </div>
+              <p style={{ margin: '14px 0 0', opacity: 0.78 }}>
+                Selected: <strong>{selectedPostingFrequencyOption.title} per week</strong>
+              </p>
             </section>
 
             <div
