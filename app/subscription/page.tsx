@@ -22,12 +22,7 @@ export default function SubscriptionPage() {
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const paypalCheckoutUrl =
-    process.env.NEXT_PUBLIC_PAYPAL_SUBSCRIPTION_URL ||
-    process.env.NEXT_PUBLIC_PAYPAL_CHECKOUT_URL ||
-    '';
-
-  const paypalLive = Boolean(paypalCheckoutUrl);
+  const paypalReady = true;
 
   useEffect(() => {
     loadSubscription();
@@ -155,7 +150,56 @@ export default function SubscriptionPage() {
     setLoading(false);
   };
 
+  const startPayPalCheckout = async () => {
+    setSaving(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        alert('Please sign in first.');
+        return;
+      }
+
+      const response = await fetch('/api/paypal/create-subscription', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || !result?.approve_url) {
+        throw new Error(
+          result?.error ||
+            result?.message ||
+            'Could not start PayPal checkout. Please try again.'
+        );
+      }
+
+      setCurrentPlan('starter');
+      setSelectedPlan('starter');
+      setStatus('pending_payment');
+      setPaypalSubscriptionId(result.subscription_id || null);
+
+      window.location.href = result.approve_url;
+    } catch (error: any) {
+      alert(error?.message || 'Error starting PayPal checkout.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const savePlan = async () => {
+    if (selectedPlan === 'starter') {
+      await startPayPalCheckout();
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -174,12 +218,20 @@ export default function SubscriptionPage() {
         return;
       }
 
-      const nextStatus = selectedPlan === 'demo' ? 'trialing' : 'pending_payment';
+      const trialDates =
+        !trialStartedAt || !trialEndsAt
+          ? createTrialDates()
+          : {
+              trial_started_at: trialStartedAt,
+              trial_ends_at: trialEndsAt,
+            };
 
       const { error } = await supabase.from('user_billing').upsert({
         user_id: userId,
-        plan: selectedPlan,
-        status: nextStatus,
+        plan: 'demo',
+        status: 'trialing',
+        trial_started_at: trialDates.trial_started_at,
+        trial_ends_at: trialDates.trial_ends_at,
         updated_at: new Date().toISOString(),
       });
 
@@ -187,23 +239,11 @@ export default function SubscriptionPage() {
         throw error;
       }
 
-      setCurrentPlan(selectedPlan);
-      setStatus(nextStatus);
+      setCurrentPlan('demo');
+      setSelectedPlan('demo');
+      setStatus('trialing');
 
-      if (selectedPlan === 'starter') {
-        if (paypalLive) {
-          window.open(paypalCheckoutUrl, '_blank', 'noopener,noreferrer');
-          alert(
-            'Monthly plan selected. PayPal checkout has opened in a new tab. After payment is confirmed, your FromOne access will be activated.'
-          );
-        } else {
-          alert(
-            'Monthly plan selected. Add NEXT_PUBLIC_PAYPAL_SUBSCRIPTION_URL in Render to enable live PayPal checkout.'
-          );
-        }
-      } else {
-        alert('Demo access saved.');
-      }
+      alert('Demo access saved.');
 
       await loadSubscription();
     } catch (error: any) {
@@ -346,7 +386,7 @@ export default function SubscriptionPage() {
       priceNote: '/ month',
       valueNote: 'Less than £1 a day for weekly social media content.',
       description: 'Continue using the full FromOne workflow every week for your business.',
-      buttonText: isCancelled ? 'Restart monthly plan' : paypalLive ? 'Continue with PayPal' : 'Choose monthly plan',
+      buttonText: isCancelled ? 'Restart monthly plan' : 'Continue with PayPal',
       disabled: false,
       features: sharedFeatures,
     },
@@ -359,7 +399,7 @@ export default function SubscriptionPage() {
 
     if (isDemoExpired) return 'Demo expired';
     if (hasPaidAccess) return 'Monthly plan active';
-    if (isPendingPayment) return 'Payment setup pending';
+    if (isPendingPayment) return 'Payment pending';
     if (isCancelled) return 'Subscription cancelled';
 
     return 'Demo access';
@@ -426,13 +466,20 @@ export default function SubscriptionPage() {
                 border: '1px solid rgba(255, 212, 59, 0.45)',
               }}
             >
-              <div className="page-eyebrow">Payment Setup Pending</div>
-              <h2 style={{ marginTop: 0 }}>PayPal checkout is being connected.</h2>
+              <div className="page-eyebrow">Payment Pending</div>
+              <h2 style={{ marginTop: 0 }}>Complete PayPal checkout.</h2>
               <p>
-                Your monthly plan preference has been saved, but you have not been charged yet.
-                PayPal subscriptions are being activated. During this launch period, access may
-                be extended manually before live billing starts.
+                Your monthly plan is waiting for PayPal approval. Complete checkout to activate
+                FromOne Monthly.
               </p>
+
+              <button
+                type="button"
+                onClick={startPayPalCheckout}
+                disabled={saving || cancelling}
+              >
+                {saving ? 'Opening PayPal...' : 'Complete PayPal checkout'}
+              </button>
             </div>
           )}
 
@@ -465,16 +512,15 @@ export default function SubscriptionPage() {
                 </>
               )}
 
-              {isPendingPayment && paypalLive && (
+              {isPendingPayment && (
                 <div className="button-row" style={{ marginTop: 18 }}>
-                  <a
-                    href={paypalCheckoutUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="dashboard-profile-link"
+                  <button
+                    type="button"
+                    onClick={startPayPalCheckout}
+                    disabled={saving || cancelling}
                   >
-                    Complete PayPal checkout
-                  </a>
+                    {saving ? 'Opening PayPal...' : 'Complete PayPal checkout'}
+                  </button>
                 </div>
               )}
 
@@ -612,19 +658,11 @@ export default function SubscriptionPage() {
             <div className="page-eyebrow">Billing Management</div>
             <h2 style={{ marginTop: 0 }}>Manage your plan.</h2>
             <p>
-              PayPal manages monthly payments and renewals securely. Select the monthly plan,
-              open PayPal checkout, then FromOne will activate your access once payment is
-              confirmed.
+              PayPal manages monthly payments and renewals securely. Choose FromOne Monthly,
+              continue to PayPal, then FromOne will activate your access once payment is confirmed.
             </p>
 
-            {!paypalLive && (
-              <p style={{ color: 'var(--muted)', fontWeight: 800 }}>
-                Add <code>NEXT_PUBLIC_PAYPAL_SUBSCRIPTION_URL</code> in Render to enable the live
-                PayPal checkout button.
-              </p>
-            )}
-
-            {paypalLive && currentPlan !== 'starter' && (
+            {paypalReady && currentPlan !== 'starter' && (
               <p style={{ color: 'var(--gold)', fontWeight: 900 }}>
                 PayPal checkout is ready.
               </p>
@@ -633,24 +671,13 @@ export default function SubscriptionPage() {
             <div className="button-row" style={{ marginTop: '20px' }}>
               <button onClick={savePlan} disabled={saving || cancelling}>
                 {saving
-                  ? 'Saving...'
+                  ? selectedPlan === 'starter'
+                    ? 'Opening PayPal...'
+                    : 'Saving...'
                   : selectedPlan === 'starter'
-                    ? paypalLive
-                      ? 'Save & Open PayPal'
-                      : 'Save Monthly Plan'
+                    ? 'Continue with PayPal'
                     : 'Save Demo Plan'}
               </button>
-
-              {selectedPlan === 'starter' && paypalLive && (
-                <a
-                  href={paypalCheckoutUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="dashboard-profile-link"
-                >
-                  Open PayPal checkout
-                </a>
-              )}
 
               <button
                 className="secondary-button"
