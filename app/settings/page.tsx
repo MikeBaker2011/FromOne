@@ -37,13 +37,17 @@ type TikTokDemoConnection = {
   connectedAt: string | null;
 };
 
+type AccountStatus = 'auto_connected' | 'manual_ready' | 'connected' | 'not_connected' | 'coming_soon';
+
 type AccountPillProps = {
   platform: string;
-  status: 'connected' | 'not_connected' | 'coming_soon';
+  status: AccountStatus;
   detail: string;
   onConnect?: () => void;
   onManage?: () => void;
   onDisconnect?: () => void;
+  onManualOpen?: () => void;
+  manualLabel?: string;
   manageLabel?: string;
   disconnectLabel?: string;
   showDisconnect?: boolean;
@@ -57,13 +61,21 @@ function AccountPill({
   onConnect,
   onManage,
   onDisconnect,
+  onManualOpen,
+  manualLabel = 'Open manually',
   manageLabel = 'Manage',
   disconnectLabel = 'Disconnect',
   showDisconnect = true,
   busy = false,
 }: AccountPillProps) {
   const statusLabel =
-    status === 'connected' ? 'Connected' : status === 'coming_soon' ? 'Coming soon' : 'Not connected';
+    status === 'auto_connected' || status === 'connected'
+      ? 'Auto connected'
+      : status === 'manual_ready'
+        ? 'Manual ready'
+        : status === 'coming_soon'
+          ? 'Auto coming soon'
+          : 'Not connected';
 
   return (
     <div
@@ -86,17 +98,21 @@ function AccountPill({
               fontSize: 12,
               fontWeight: 800,
               background:
-                status === 'connected'
-                  ? 'rgba(61, 220, 151, 0.14)'
-                  : status === 'coming_soon'
-                    ? 'rgba(255, 255, 255, 0.08)'
-                    : 'rgba(255, 212, 59, 0.16)',
+                status === 'auto_connected' || status === 'connected'
+                  ? 'rgba(255, 212, 59, 0.18)'
+                  : status === 'manual_ready'
+                    ? 'rgba(56, 189, 248, 0.15)'
+                    : status === 'coming_soon'
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : 'rgba(255, 255, 255, 0.08)',
               color:
-                status === 'connected'
-                  ? '#3ddc97'
-                  : status === 'coming_soon'
-                    ? 'rgba(255,255,255,0.72)'
-                    : '#ffd43b',
+                status === 'auto_connected' || status === 'connected'
+                  ? '#ffd43b'
+                  : status === 'manual_ready'
+                    ? '#7dd3fc'
+                    : status === 'coming_soon'
+                      ? 'rgba(255,255,255,0.72)'
+                      : 'rgba(255,255,255,0.72)',
             }}
           >
             {statusLabel}
@@ -106,7 +122,7 @@ function AccountPill({
         <p style={{ marginBottom: 0 }}>{detail}</p>
       </div>
 
-      {status === 'connected' ? (
+      {status === 'connected' || status === 'auto_connected' ? (
         <div className="button-row" style={{ gap: 10, flexWrap: 'wrap' }}>
           <button type="button" className="secondary-button" onClick={onManage} disabled={busy}>
             {manageLabel}
@@ -123,13 +139,27 @@ function AccountPill({
             </button>
           )}
         </div>
+      ) : status === 'manual_ready' ? (
+        <div className="button-row" style={{ gap: 10, flexWrap: 'wrap' }}>
+          {onManualOpen && (
+            <button type="button" className="secondary-button" onClick={onManualOpen} disabled={busy}>
+              {manualLabel}
+            </button>
+          )}
+
+          {onConnect && (
+            <button type="button" onClick={onConnect} disabled={busy}>
+              Connect
+            </button>
+          )}
+        </div>
       ) : status === 'not_connected' ? (
         <button type="button" onClick={onConnect} disabled={busy}>
           Connect
         </button>
       ) : (
         <button type="button" className="secondary-button" disabled>
-          Coming soon
+          Auto coming soon
         </button>
       )}
     </div>
@@ -244,6 +274,18 @@ export default function SettingsPage() {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
+
+  const openGoogleBusinessProfile = () => {
+    window.open('https://business.google.com/', '_blank', 'noopener,noreferrer');
+  };
+
+  const openLinkedIn = () => {
+    window.open('https://www.linkedin.com/feed/', '_blank', 'noopener,noreferrer');
+  };
+
+  const openTikTok = () => {
+    window.open('https://www.tiktok.com/upload', '_blank', 'noopener,noreferrer');
+  };
 
   const normaliseWebsiteUrl = (value: string) => {
     const trimmed = value.trim();
@@ -761,10 +803,10 @@ export default function SettingsPage() {
         <>
           <section className="premium-card" style={{ marginBottom: 24 }}>
             <div className="page-eyebrow">Connected accounts</div>
-            <h2 style={{ marginTop: 0 }}>Where FromOne can publish.</h2>
+            <h2 style={{ marginTop: 0 }}>Publishing options.</h2>
             <p>
-              Connect the accounts you want FromOne to publish to. Facebook and Instagram are ready
-              now. More platforms can be added later.
+              Yellow means auto posting is available. Blue means manual posting is ready using
+              copy/open. Grey means auto posting is coming soon.
             </p>
 
             <p style={{ marginTop: 10, opacity: 0.82 }}>
@@ -792,7 +834,7 @@ export default function SettingsPage() {
               >
                 <AccountPill
                   platform="Facebook"
-                  status={hasMetaConnection ? 'connected' : 'not_connected'}
+                  status={hasMetaConnection ? 'auto_connected' : 'not_connected'}
                   detail={
                     hasMetaConnection
                       ? `Connected to ${primaryMetaConnection?.page_name || 'Facebook Page'}. This is part of your Meta connection.`
@@ -808,7 +850,7 @@ export default function SettingsPage() {
 
                 <AccountPill
                   platform="Instagram"
-                  status={hasInstagramConnection ? 'connected' : 'not_connected'}
+                  status={hasInstagramConnection ? 'auto_connected' : hasMetaConnection ? 'manual_ready' : 'not_connected'}
                   detail={
                     hasInstagramConnection
                       ? `Connected @${primaryMetaConnection?.instagram_username || 'Instagram'} via the Facebook Page.`
@@ -825,21 +867,20 @@ export default function SettingsPage() {
 
                 <AccountPill
                   platform="Google"
-                  status={hasGoogleConnection ? 'connected' : 'not_connected'}
+                  status="manual_ready"
                   detail={
                     hasGoogleConnection
                       ? primaryGoogleConnection?.google_location_name
-                        ? `Publishing location: ${primaryGoogleConnection.google_location_name}.`
-                        : `Connected to ${
-                            primaryGoogleConnection?.google_account_name ||
-                            primaryGoogleConnection?.provider_user_name ||
-                            'Google'
-                          }. Choose a location next.`
-                      : 'Connect Google so FromOne can prepare Google publishing next.'
+                        ? `Manual Google posting ready for ${primaryGoogleConnection.google_location_name}.`
+                        : 'Google connected. Manual posting is ready.'
+                      : 'Manual Google posting is ready using copy/open.'
                   }
-                  onConnect={connectGoogleAccount}
+                  onConnect={hasGoogleConnection ? undefined : connectGoogleAccount}
+                  onManualOpen={openGoogleBusinessProfile}
                   onManage={handleManageGoogleConnection}
                   onDisconnect={() => disconnectGoogleAccount(primaryGoogleConnection?.id)}
+                  manualLabel="Open Google"
+                  showDisconnect={Boolean(hasGoogleConnection)}
                   busy={
                     disconnectingConnectionId === primaryGoogleConnection?.id ||
                     loadingGoogleLocations ||
@@ -849,31 +890,28 @@ export default function SettingsPage() {
 
                 <AccountPill
                   platform="LinkedIn"
-                  status="coming_soon"
-                  detail="Keep using copy/open until LinkedIn posting permissions are ready."
+                  status="manual_ready"
+                  detail="Manual LinkedIn posting is ready using copy/open. Auto posting coming soon."
+                  onManualOpen={openLinkedIn}
+                  manualLabel="Open LinkedIn"
                 />
 
                 <AccountPill
                   platform="TikTok"
-                  status={
-                    hasTikTokDemoConnection
-                      ? 'connected'
-                      : tiktokDemoMode
-                        ? 'not_connected'
-                        : 'coming_soon'
-                  }
+                  status="manual_ready"
                   detail={
-                    tiktokDemoMode
-                      ? hasTikTokDemoConnection
-                        ? 'Sandbox demo connected. No live TikTok account is connected and no live TikTok post is published in demo mode.'
-                        : 'Sandbox demo mode for TikTok review. This demonstrates the connect and publish flow without posting live.'
-                      : 'Video publishing can be added once TikTok approval is usable.'
+                    tiktokDemoMode && hasTikTokDemoConnection
+                      ? 'Manual TikTok posting ready. Sandbox demo connected for app review.'
+                      : 'Manual TikTok posting is ready using copy/open. Auto posting coming soon.'
                   }
-                  onConnect={connectTikTokDemoAccount}
-                  onManage={connectTikTokDemoAccount}
-                  onDisconnect={disconnectTikTokDemoAccount}
+                  onConnect={tiktokDemoMode && !hasTikTokDemoConnection ? connectTikTokDemoAccount : undefined}
+                  onManualOpen={openTikTok}
+                  onManage={tiktokDemoMode && hasTikTokDemoConnection ? connectTikTokDemoAccount : undefined}
+                  onDisconnect={tiktokDemoMode && hasTikTokDemoConnection ? disconnectTikTokDemoAccount : undefined}
+                  manualLabel="Open TikTok"
                   manageLabel="Reconnect demo"
                   disconnectLabel="Disconnect demo"
+                  showDisconnect={tiktokDemoMode && hasTikTokDemoConnection}
                 />
               </div>
             )}
