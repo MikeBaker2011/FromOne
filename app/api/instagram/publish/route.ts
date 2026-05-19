@@ -25,6 +25,20 @@ type InstagramCredentials = {
   connectionId?: string | null;
 };
 
+type PublishLogInput = {
+  userId?: string | null;
+  postId?: string | null;
+  platform: string;
+  action: string;
+  status: string;
+  message?: string | null;
+  error?: string | null;
+  credentialSource?: string | null;
+  socialConnectionId?: string | null;
+  providerPostId?: string | null;
+  metadata?: Record<string, any>;
+};
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -313,6 +327,44 @@ function buildPublishedToValue(currentValue: any) {
   return ['instagram'];
 }
 
+async function insertPublishLog({
+  userId,
+  postId,
+  platform,
+  action,
+  status,
+  message,
+  error,
+  credentialSource,
+  socialConnectionId,
+  providerPostId,
+  metadata = {},
+}: PublishLogInput) {
+  try {
+    const supabase = getSupabaseAdmin();
+
+    const { error: logError } = await supabase.from('publish_logs').insert({
+      user_id: userId || null,
+      post_id: postId || null,
+      platform,
+      action,
+      status,
+      message: message || null,
+      error: error || null,
+      credential_source: credentialSource || null,
+      social_connection_id: socialConnectionId || null,
+      provider_post_id: providerPostId || null,
+      metadata,
+    });
+
+    if (logError) {
+      console.error('Publish log insert failed:', logError.message);
+    }
+  } catch (logError: any) {
+    console.error('Publish log insert error:', logError?.message || logError);
+  }
+}
+
 async function updatePostAfterPublish({
   postId,
   instagramPostId,
@@ -387,11 +439,27 @@ export async function POST(req: NextRequest) {
     body = await req.json();
 
     const postId = cleanText(body.postId || body.campaignPostId);
+    const userId = await findUserIdForPost({ supabase: getSupabaseAdmin(), body });
     const caption = buildCaption(body);
     const mediaUrl = cleanText(body.mediaUrl || body.media_url);
     const mediaType = cleanText(body.mediaType || body.media_type);
 
     if (!caption) {
+      await insertPublishLog({
+        userId,
+        postId,
+        platform: 'instagram',
+        action: 'manual_publish',
+        status: 'failed',
+        message: 'Instagram publish failed.',
+        error: 'Instagram post wording is required.',
+        credentialSource: null,
+        socialConnectionId: null,
+        metadata: {
+          reason: 'missing_caption',
+        },
+      });
+
       return NextResponse.json(
         {
           error: 'Instagram post wording is required.',
@@ -401,6 +469,21 @@ export async function POST(req: NextRequest) {
     }
 
     if (!mediaUrl) {
+      await insertPublishLog({
+        userId,
+        postId,
+        platform: 'instagram',
+        action: 'manual_publish',
+        status: 'failed',
+        message: 'Instagram publish failed.',
+        error: 'Instagram needs an image or video before publishing.',
+        credentialSource: null,
+        socialConnectionId: null,
+        metadata: {
+          reason: 'missing_media',
+        },
+      });
+
       return NextResponse.json(
         {
           error: 'Instagram needs an image or video before publishing.',
@@ -410,6 +493,22 @@ export async function POST(req: NextRequest) {
     }
 
     if (!isImageMedia(mediaType) && !isVideoMedia(mediaType)) {
+      await insertPublishLog({
+        userId,
+        postId,
+        platform: 'instagram',
+        action: 'manual_publish',
+        status: 'failed',
+        message: 'Instagram publish failed.',
+        error: 'Instagram needs an image or video before publishing.',
+        credentialSource: null,
+        socialConnectionId: null,
+        metadata: {
+          reason: 'invalid_media_type',
+          media_type: mediaType || null,
+        },
+      });
+
       return NextResponse.json(
         {
           error: 'Instagram needs an image or video before publishing.',
@@ -442,6 +541,22 @@ export async function POST(req: NextRequest) {
     const instagramPostId = getInstagramMediaId(publishResult);
 
     if (!instagramPostId) {
+      await insertPublishLog({
+        userId,
+        postId,
+        platform: 'instagram',
+        action: 'manual_publish',
+        status: 'failed',
+        message: 'Instagram published but did not return a post ID.',
+        error: 'Missing Instagram post ID.',
+        credentialSource: credentials.source,
+        socialConnectionId: credentials.connectionId || null,
+        metadata: {
+          creation_id: creationId,
+          instagram_result: publishResult,
+        },
+      });
+
       return NextResponse.json(
         {
           error: 'Instagram published the post but did not return a post ID.',
@@ -456,6 +571,24 @@ export async function POST(req: NextRequest) {
       instagramPostId,
       credentialSource: credentials.source,
       connectionId: credentials.connectionId,
+    });
+
+    await insertPublishLog({
+      userId,
+      postId,
+      platform: 'instagram',
+      action: 'manual_publish',
+      status: 'posted',
+      message: 'Instagram posted successfully.',
+      error: null,
+      credentialSource: credentials.source,
+      socialConnectionId: credentials.connectionId || null,
+      providerPostId: instagramPostId,
+      metadata: {
+        creation_id: creationId,
+        media_url: mediaUrl || null,
+        media_type: mediaType || null,
+      },
     });
 
     return NextResponse.json({
@@ -473,6 +606,18 @@ export async function POST(req: NextRequest) {
     console.error('Instagram publish API error:', error?.message || error);
 
     const postId = cleanText(body?.postId || body?.campaignPostId);
+    let userId = cleanText(body?.userId || body?.user_id);
+
+    try {
+      if (!userId) {
+        userId = await findUserIdForPost({
+          supabase: getSupabaseAdmin(),
+          body,
+        });
+      }
+    } catch (userLookupError: any) {
+      console.error('Failed to resolve user for Instagram publish log:', userLookupError?.message);
+    }
 
     if (postId) {
       try {
@@ -490,6 +635,21 @@ export async function POST(req: NextRequest) {
         console.error('Failed to save Instagram publish error:', databaseError?.message);
       }
     }
+
+    await insertPublishLog({
+      userId,
+      postId,
+      platform: 'instagram',
+      action: 'manual_publish',
+      status: 'failed',
+      message: 'Instagram publish failed.',
+      error: error?.message || 'Something went wrong publishing to Instagram.',
+      credentialSource: null,
+      socialConnectionId: null,
+      metadata: {
+        route: '/api/instagram/publish',
+      },
+    });
 
     return NextResponse.json(
       {
