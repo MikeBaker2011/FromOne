@@ -53,22 +53,6 @@ type WeeklyProgress = {
   nextPost: any | null;
 };
 
-type PublishLog = {
-  id: string;
-  user_id: string | null;
-  post_id: string | null;
-  platform: string;
-  action: string;
-  status: string;
-  message: string | null;
-  error: string | null;
-  credential_source: string | null;
-  social_connection_id: string | null;
-  provider_post_id: string | null;
-  metadata: Record<string, any> | null;
-  created_at: string;
-};
-
 type PlatformOption = {
   name: string;
   shortName: string;
@@ -292,7 +276,6 @@ export default function DashboardPage() {
   const [todayPost, setTodayPost] = useState<any>(null);
   const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
   const [hasScheduledPost, setHasScheduledPost] = useState(false);
-  const [recentActivity, setRecentActivity] = useState<PublishLog[]>([]);
 
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultSelectedPlatforms);
   const [platformCarouselStart, setPlatformCarouselStart] = useState(0);
@@ -679,90 +662,6 @@ export default function DashboardPage() {
     setHasScheduledPost((count || 0) > 0);
   };
 
-  const loadRecentActivity = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('publish_logs')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    if (error) {
-      console.error('Error loading recent activity:', error.message);
-      setRecentActivity([]);
-      return;
-    }
-
-    setRecentActivity((data || []) as PublishLog[]);
-  };
-
-  const formatActivityPlatform = (platform?: string | null) => {
-    const cleanPlatform = String(platform || '').trim();
-
-    if (!cleanPlatform) return 'Post';
-
-    return cleanPlatform.charAt(0).toUpperCase() + cleanPlatform.slice(1);
-  };
-
-  const formatActivityTime = (value?: string | null) => {
-    if (!value) return '';
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) return '';
-
-    const diffMs = Date.now() - date.getTime();
-    const diffMinutes = Math.max(0, Math.round(diffMs / 60000));
-
-    if (diffMinutes < 1) return 'Just now';
-    if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes === 1 ? '' : 's'} ago`;
-
-    const diffHours = Math.round(diffMinutes / 60);
-
-    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-
-    return date.toLocaleDateString(undefined, {
-      day: '2-digit',
-      month: 'short',
-    });
-  };
-
-  const getActivityLabel = (activity: PublishLog) => {
-    if (activity.message) return activity.message;
-
-    const platform = formatActivityPlatform(activity.platform);
-    const action = String(activity.action || '').toLowerCase();
-    const status = String(activity.status || '').toLowerCase();
-
-    if (status === 'posted' && action.includes('scheduled')) {
-      return `${platform} posted automatically.`;
-    }
-
-    if (status === 'posted') {
-      return `${platform} posted successfully.`;
-    }
-
-    if (status === 'failed') {
-      return `${platform} publish failed.`;
-    }
-
-    if (action.includes('demo')) {
-      return `${platform} sandbox demo complete.`;
-    }
-
-    return `${platform} activity recorded.`;
-  };
-
-  const getActivityStatusSymbol = (activity: PublishLog) => {
-    const status = String(activity.status || '').toLowerCase();
-
-    if (status === 'posted') return '✓';
-    if (status === 'failed') return '!';
-    if (status === 'scheduled') return '⏱';
-
-    return '•';
-  };
-
   const loadWeeklyProgress = async (userId: string) => {
     const startOfWeek = getStartOfWeek();
     const endOfWeek = getEndOfWeek();
@@ -1128,7 +1027,6 @@ export default function DashboardPage() {
       loadWeeklyProgress(userId),
       loadSocialConnections(userId),
       loadScheduledPostStatus(userId),
-      loadRecentActivity(userId),
     ]);
 
     const { data, error } = await supabase
@@ -2297,89 +2195,6 @@ Also detect or infer:
                 onClick={() => router.push('/posts')}
               >
                 View posts
-              </button>
-            </section>
-
-            <section className="dashboard-weekly-progress-card">
-              <div className="dashboard-weekly-progress-header">
-                <div>
-                  <div className="page-eyebrow">Recent activity</div>
-                  <h2>
-                    {recentActivity.length > 0
-                      ? 'What happened recently'
-                      : 'No activity yet'}
-                  </h2>
-                </div>
-
-                <span className="dashboard-weekly-progress-count">
-                  {recentActivity.length}
-                </span>
-              </div>
-
-              {recentActivity.length > 0 ? (
-                <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
-                  {recentActivity.map((activity) => {
-                    const failed = String(activity.status || '').toLowerCase() === 'failed';
-
-                    return (
-                      <div
-                        key={activity.id}
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: '34px 1fr',
-                          gap: 10,
-                          alignItems: 'start',
-                          padding: '10px 0',
-                          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 999,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 900,
-                            background: failed
-                              ? 'rgba(255, 91, 91, 0.16)'
-                              : 'rgba(61, 220, 151, 0.14)',
-                            color: failed ? '#ff8a8a' : '#3ddc97',
-                          }}
-                        >
-                          {getActivityStatusSymbol(activity)}
-                        </span>
-
-                        <div>
-                          <strong>{getActivityLabel(activity)}</strong>
-                          {activity.error && (
-                            <p style={{ margin: '4px 0 0', opacity: 0.78 }}>
-                              {activity.error}
-                            </p>
-                          )}
-                          <p style={{ margin: '4px 0 0', opacity: 0.64 }}>
-                            {formatActivityPlatform(activity.platform)} ·{' '}
-                            {formatActivityTime(activity.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p>
-                  Once posts are published or scheduled jobs run, FromOne will show the latest
-                  activity here.
-                </p>
-              )}
-
-              <button
-                type="button"
-                className="secondary-button dashboard-weekly-progress-button"
-                onClick={fetchClient}
-              >
-                Refresh activity
               </button>
             </section>
           </section>
