@@ -1833,10 +1833,12 @@ export default function PostsPage() {
       setShowImproveTools(false);
       cancelEditingPost();
 
+      alert('Post deleted. Use the Undo delete button at the top of the page to restore it.');
+
       window.setTimeout(() => {
         setRecentlyDeletedPost((current: any | null) =>
-  current?.id === post.id ? null : current
-);
+          current?.id === post.id ? null : current
+        );
       }, 12000);
     } catch (error: any) {
       const message = getReadableError(error, 'Error deleting post.');
@@ -2323,38 +2325,6 @@ export default function PostsPage() {
             </section>
           )}
 
-          {recentlyDeletedPost && (
-            <section
-              className="premium-card"
-              style={{
-                marginBottom: 22,
-                padding: '14px 16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 14,
-                flexWrap: 'wrap',
-                borderColor: 'rgba(255, 212, 59, 0.35)',
-              }}
-            >
-              <div>
-                <div className="page-eyebrow">Post deleted</div>
-                <p style={{ margin: 0 }}>
-                  {recentlyDeletedPost.title || recentlyDeletedPost.platform || 'Post'} was removed
-                  from this weekly queue.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={undoDeletePost}
-                disabled={deletingPostId === recentlyDeletedPost.id}
-              >
-                {deletingPostId === recentlyDeletedPost.id ? 'Restoring...' : 'Undo'}
-              </button>
-            </section>
-          )}
-
           <section
             className="premium-card"
             style={{
@@ -2477,32 +2447,16 @@ export default function PostsPage() {
               </div>
             </div>
 
-            <div
+            <p
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                gap: 10,
-                flexWrap: 'wrap',
+                margin: 0,
+                opacity: 0.78,
+                fontSize: 13,
+                fontWeight: 700,
               }}
             >
-              {!loadingMetaConnections && !facebookConnected && !instagramConnected && (
-                <button type="button" onClick={connectMetaAccount} style={{ flex: '0 0 auto' }}>
-                  Connect
-                </button>
-              )}
-
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  window.location.href = '/settings';
-                }}
-                style={{ flex: '0 0 auto' }}
-              >
-                Manage accounts
-              </button>
-            </div>
+              Manage connections in Settings.
+            </p>
           </section>
 
           <section className="posts-progress-plan-grid">

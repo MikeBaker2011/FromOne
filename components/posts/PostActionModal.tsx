@@ -554,6 +554,25 @@ export default function PostActionModal({
             </div>
           )}
 
+
+          {onDeletePost && !posted && (
+            <div className="fromone-improvement-note fromone-error-note">
+              <strong>Need to remove this post?</strong>
+              <p>
+                Delete removes it from the weekly queue. You can restore it using the Undo delete
+                button after deleting.
+              </p>
+              <button
+                type="button"
+                className="secondary-button danger-button"
+                onClick={() => onDeletePost(selectedPost)}
+                disabled={deletingPostId === selectedPost.id}
+              >
+                {deletingPostId === selectedPost.id ? 'Deleting...' : 'Delete this post'}
+              </button>
+            </div>
+          )}
+
           <div className={`fromone-publish-control-card ${posted ? 'is-posted' : ''} ${needsMedia ? 'needs-media' : ''}`}>
             <div className="fromone-publish-control-main">
               <div className="fromone-publish-status-icon">{posted ? '✓' : needsMedia ? '!' : hasSchedule ? '⏱' : '→'}</div>
