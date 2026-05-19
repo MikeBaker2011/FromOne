@@ -1976,44 +1976,18 @@ Also detect or infer:
   return (
     <>
       <style jsx>{`
-        @media (max-width: 1320px) {
-          .dashboard-top-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          }
-
-          .dashboard-top-grid > section:last-child {
-            grid-column: 1 / -1;
-          }
-        }
-
-        @media (max-width: 860px) {
+        @media (max-width: 980px) {
           .dashboard-top-grid {
             grid-template-columns: 1fr !important;
           }
 
-          .dashboard-top-grid > section:last-child {
-            grid-column: auto;
+          .dashboard-top-grid > section {
+            grid-column: auto !important;
           }
-        }
 
-        .dashboard-top-grid .dashboard-personal-task-copy h2 {
-          font-size: clamp(34px, 3vw, 58px);
-          line-height: 0.94;
-        }
-
-        .dashboard-top-grid .dashboard-personal-task-copy h3 {
-          font-size: clamp(20px, 1.7vw, 30px);
-          line-height: 1.08;
-        }
-
-        .dashboard-top-grid .dashboard-weekly-progress-card h2 {
-          font-size: clamp(30px, 2.4vw, 44px);
-          line-height: 1;
-        }
-
-        .dashboard-top-grid .today-task-button,
-        .dashboard-top-grid .dashboard-weekly-progress-button {
-          margin-top: 18px;
+          .dashboard-platform-grid {
+            grid-template-columns: 1fr !important;
+          }
         }
       `}</style>
       <div ref={dashboardHeaderRef} className="page-header dashboard-simple-header">
@@ -2269,35 +2243,14 @@ Also detect or infer:
             className="dashboard-top-grid"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr)',
-              gap: 22,
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              gap: 28,
               alignItems: 'stretch',
             }}
           >
-            <section
-              className="today-task-card dashboard-personal-task-card"
-              style={{
-                minHeight: 310,
-                height: '100%',
-                padding: 28,
-              }}
-            >
-              <div
-                className="dashboard-personal-task-main"
-                style={{
-                  gap: 22,
-                  alignItems: 'flex-start',
-                }}
-              >
-                <div
-                  className="dashboard-business-logo-frame"
-                  aria-hidden="true"
-                  style={{
-                    width: 96,
-                    height: 96,
-                    minWidth: 96,
-                  }}
-                >
+            <section className="today-task-card dashboard-personal-task-card">
+              <div className="dashboard-personal-task-main">
+                <div className="dashboard-business-logo-frame" aria-hidden="true">
                   {businessLogoUrl ? (
                     <img src={businessLogoUrl} alt="" />
                   ) : (
@@ -2305,12 +2258,7 @@ Also detect or infer:
                   )}
                 </div>
 
-                <div
-                  className="dashboard-personal-task-copy"
-                  style={{
-                    minWidth: 0,
-                  }}
-                >
+                <div className="dashboard-personal-task-copy">
                   <div className="page-eyebrow">Today’s Task</div>
 
                   {todayPost ? (
@@ -2360,14 +2308,7 @@ Also detect or infer:
               </button>
             </section>
 
-            <section
-              className="dashboard-weekly-progress-card"
-              style={{
-                minHeight: 310,
-                height: '100%',
-                padding: 28,
-              }}
-            >
+            <section className="dashboard-weekly-progress-card">
               <div className="dashboard-weekly-progress-header">
                 <div>
                   <div className="page-eyebrow">This week’s progress</div>
@@ -2415,9 +2356,7 @@ Also detect or infer:
             <section
               className="dashboard-weekly-progress-card"
               style={{
-                minHeight: 310,
-                height: '100%',
-                padding: 28,
+                gridColumn: '1 / -1',
               }}
             >
               <div className="dashboard-weekly-progress-header">
@@ -2763,31 +2702,45 @@ Also detect or infer:
             </section>
 
 
-            <section className="dashboard-choice-card">
-              <div className="page-eyebrow">Posting frequency</div>
-              <h3>How many posts this week?</h3>
-              <p>
-                Choose how often FromOne should create posts for this weekly plan.
-              </p>
+                        <section className="dashboard-platform-selector dashboard-platform-selector-full">
+              <div className="dashboard-platform-selector-header">
+                <div>
+                  <div className="page-eyebrow">Posting frequency</div>
+                  <h3>How many posts this week?</h3>
+                  <p>
+                    Choose how often FromOne should create posts for this weekly plan.
+                  </p>
+                </div>
+              </div>
 
-              <div className="dashboard-market-reach-grid">
+              <div
+                className="dashboard-platform-grid"
+                style={{
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 18,
+                }}
+              >
                 {postingFrequencyOptions.map((option) => (
                   <button
                     key={option.value}
                     type="button"
                     className={
                       selectedPostingFrequency === option.value
-                        ? 'dashboard-market-reach-card is-selected'
-                        : 'dashboard-market-reach-card'
+                        ? 'dashboard-platform-card is-selected'
+                        : 'dashboard-platform-card'
                     }
                     onClick={() => setSelectedPostingFrequency(option.value)}
                   >
-                    <span className="dashboard-market-reach-icon">
+                    <span className="dashboard-platform-check">
                       {selectedPostingFrequency === option.value ? '✓' : '+'}
                     </span>
 
                     <strong>{option.title}</strong>
-                    <small className="is-visible">{option.description}</small>
+                    <small>{option.description}</small>
+
+                    {selectedPostingFrequency === option.value && (
+                      <span className="dashboard-platform-recommended">Selected</span>
+                    )}
                   </button>
                 ))}
               </div>
