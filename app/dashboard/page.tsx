@@ -1793,14 +1793,7 @@ Also detect or infer:
   const hasManualProfile = Boolean(client?.business_name && client?.industry);
   const hasWebsite = Boolean(websiteUrl.trim());
   const weeklyScansRemaining = Math.max(WEEKLY_SCAN_LIMIT - weeklyScansUsed, 0);
-  const weeklyProgressPercent =
-    weeklyProgress.total > 0
-      ? Math.min(100, Math.round((weeklyProgress.posted / weeklyProgress.total) * 100))
-      : 0;
-
   const businessName = client?.business_name || 'your business';
-  const businessInitial = String(businessName).trim().charAt(0).toUpperCase() || 'F';
-  const businessLogoUrl = client?.brand_logo_url || '';
   const marketReachDisplayLabel = getMarketReachDisplayLabel(client);
   const marketReachContext = getMarketReachContext(client);
   const selectedPostingFrequencyOption =
@@ -1995,89 +1988,6 @@ Also detect or infer:
             </section>
           )}
 
-          <section className="dashboard-top-grid">
-            <section
-              className="dashboard-weekly-progress-card"
-              style={{
-                gridColumn: '1 / -1',
-              }}
-            >
-              <div className="dashboard-weekly-progress-header">
-                <div>
-                  <div className="page-eyebrow">Weekly status</div>
-                  <h2>
-                    {weeklyProgress.total > 0
-                      ? `${weeklyProgress.posted} of ${weeklyProgress.total} posts done`
-                      : 'No weekly posts yet'}
-                  </h2>
-                </div>
-
-                <span className="dashboard-weekly-progress-count">
-                  {weeklyProgress.remaining} left
-                </span>
-              </div>
-
-              <div className="dashboard-weekly-progress-track">
-                <span style={{ width: `${weeklyProgressPercent}%` }} />
-              </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: 16,
-                  marginTop: 22,
-                }}
-              >
-                <div className="card" style={{ padding: 16 }}>
-                  <strong>Today</strong>
-                  {todayPost ? (
-                    <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
-                      Review your {todayPost.platform || 'social'} post:{' '}
-                      {todayPost.title || todayPost.scheduled_day || 'today’s post'}.
-                    </p>
-                  ) : (
-                    <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
-                      No post is due today.
-                    </p>
-                  )}
-                </div>
-
-                <div className="card" style={{ padding: 16 }}>
-                  <strong>Next up</strong>
-                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
-                    {weeklyProgress.total > 0
-                      ? weeklyProgress.remaining === 0
-                        ? 'This week’s posts are complete.'
-                        : weeklyProgress.nextPost
-                          ? weeklyProgress.nextPost.title ||
-                            weeklyProgress.nextPost.scheduled_day ||
-                            'Your next post'
-                          : 'Open Posts to finish the remaining items.'
-                      : 'Create weekly posts to start tracking progress.'}
-                  </p>
-                </div>
-
-                <div className="card" style={{ padding: 16 }}>
-                  <strong>Business</strong>
-                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
-                    {businessName}
-                  </p>
-                </div>
-              </div>
-
-              <div className="button-row" style={{ marginTop: 22 }}>
-                <button
-                  type="button"
-                  className="secondary-button dashboard-weekly-progress-button"
-                  onClick={() => router.push(todayPost ? '/posts?today=true' : '/posts')}
-                >
-                  {todayPost ? `Review ${todayPost.platform || 'post'}` : 'View this week'}
-                </button>
-              </div>
-            </section>
-          </section>
-
           <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
             <div className="dashboard-create-card">
               <div className="page-eyebrow">Create weekly posts</div>
@@ -2091,9 +2001,15 @@ Also detect or infer:
               </h2>
 
               <p>
-                Add a website or use saved business details first. Then choose who the posts should
-                reach and select the platforms for this week.
+                Add a website or use saved business details first. Then check the post options and
+                create this week’s posts.
               </p>
+
+              <div className="button-row" style={{ marginBottom: 18 }}>
+                <Link href="/posts" className="dashboard-profile-link">
+                  View existing posts
+                </Link>
+              </div>
 
               <div ref={websiteInputRef} className="dashboard-tour-target-wrap">
                 <label>
