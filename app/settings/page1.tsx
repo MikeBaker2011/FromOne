@@ -32,11 +32,6 @@ type GoogleLocationOption = {
   address?: string;
 };
 
-type TikTokDemoConnection = {
-  connected: boolean;
-  connectedAt: string | null;
-};
-
 type AccountPillProps = {
   platform: string;
   status: 'connected' | 'not_connected' | 'coming_soon';
@@ -161,11 +156,6 @@ export default function SettingsPage() {
   const [savingGoogleLocation, setSavingGoogleLocation] = useState(false);
   const [showGoogleLocationPicker, setShowGoogleLocationPicker] = useState(false);
 
-  const [tiktokDemoConnection, setTiktokDemoConnection] = useState<TikTokDemoConnection>({
-    connected: false,
-    connectedAt: null,
-  });
-
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
 
@@ -185,9 +175,6 @@ export default function SettingsPage() {
     disconnectingConnectionId === primaryMetaConnection?.id ||
     disconnectingConnectionId === 'all';
 
-  const tiktokDemoMode = process.env.NEXT_PUBLIC_TIKTOK_DEMO_MODE === 'true';
-  const hasTikTokDemoConnection = tiktokDemoMode && tiktokDemoConnection.connected;
-
   useEffect(() => {
     loadBusinessProfile();
 
@@ -196,8 +183,6 @@ export default function SettingsPage() {
     const metaError = params.get('meta_error');
     const googleConnected = params.get('google_connected');
     const googleError = params.get('google_error');
-    const tiktokConnected = params.get('tiktok_connected');
-    const tiktokDemo = params.get('tiktok_demo');
 
     if (metaConnected === 'true') {
       alert('Facebook and Instagram connected.');
@@ -216,31 +201,6 @@ export default function SettingsPage() {
 
     if (googleConnected === 'false') {
       alert(googleError || 'Google connection failed.');
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-
-    const savedTikTokDemoConnection =
-      window.localStorage.getItem('fromone_tiktok_demo_connected') === 'true';
-
-    if (savedTikTokDemoConnection) {
-      setTiktokDemoConnection({
-        connected: true,
-        connectedAt: window.localStorage.getItem('fromone_tiktok_demo_connected_at'),
-      });
-    }
-
-    if (tiktokConnected === 'true' && tiktokDemo === 'true') {
-      const connectedAt = new Date().toISOString();
-
-      window.localStorage.setItem('fromone_tiktok_demo_connected', 'true');
-      window.localStorage.setItem('fromone_tiktok_demo_connected_at', connectedAt);
-
-      setTiktokDemoConnection({
-        connected: true,
-        connectedAt,
-      });
-
-      alert('TikTok sandbox demo connected. No live TikTok account has been connected.');
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -417,36 +377,6 @@ export default function SettingsPage() {
     }
 
     loadGoogleLocations();
-  };
-
-  const connectTikTokDemoAccount = async () => {
-    if (!tiktokDemoMode) {
-      alert('TikTok demo mode is not enabled.');
-      return;
-    }
-
-    const params = new URLSearchParams();
-    params.set('return_to', '/settings');
-
-    window.location.href = `/api/auth/tiktok/demo-connect?${params.toString()}`;
-  };
-
-  const disconnectTikTokDemoAccount = () => {
-    const confirmed = confirm(
-      'Disconnect the TikTok sandbox demo from FromOne? This only removes the local demo connection and does not affect any live TikTok account.'
-    );
-
-    if (!confirmed) return;
-
-    window.localStorage.removeItem('fromone_tiktok_demo_connected');
-    window.localStorage.removeItem('fromone_tiktok_demo_connected_at');
-
-    setTiktokDemoConnection({
-      connected: false,
-      connectedAt: null,
-    });
-
-    alert('TikTok sandbox demo disconnected.');
   };
 
   const disconnectMetaAccount = async (connectionId?: string | null) => {
@@ -772,13 +702,6 @@ export default function SettingsPage() {
               removes both Facebook and Instagram publishing access.
             </p>
 
-            {tiktokDemoMode && (
-              <p style={{ marginTop: 10, opacity: 0.82 }}>
-                TikTok is currently shown as a sandbox demo for app review. It demonstrates the
-                connect and publish flow without publishing a live TikTok post.
-              </p>
-            )}
-
             {loadingConnections ? (
               <p>Checking connected accounts...</p>
             ) : (
@@ -855,25 +778,8 @@ export default function SettingsPage() {
 
                 <AccountPill
                   platform="TikTok"
-                  status={
-                    hasTikTokDemoConnection
-                      ? 'connected'
-                      : tiktokDemoMode
-                        ? 'not_connected'
-                        : 'coming_soon'
-                  }
-                  detail={
-                    tiktokDemoMode
-                      ? hasTikTokDemoConnection
-                        ? 'Sandbox demo connected. No live TikTok account is connected and no live TikTok post is published in demo mode.'
-                        : 'Sandbox demo mode for TikTok review. This demonstrates the connect and publish flow without posting live.'
-                      : 'Video publishing can be added once TikTok approval is usable.'
-                  }
-                  onConnect={connectTikTokDemoAccount}
-                  onManage={connectTikTokDemoAccount}
-                  onDisconnect={disconnectTikTokDemoAccount}
-                  manageLabel="Reconnect demo"
-                  disconnectLabel="Disconnect demo"
+                  status="coming_soon"
+                  detail="Video publishing can be added once the app approval is usable."
                 />
               </div>
             )}
