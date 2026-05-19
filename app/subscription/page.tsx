@@ -550,42 +550,6 @@ export default function SubscriptionPage() {
             </div>
           )}
 
-          {isPendingPayment && (
-            <div
-              className="premium-card"
-              style={{
-                marginBottom: '24px',
-                border: '1px solid rgba(255, 212, 59, 0.45)',
-              }}
-            >
-              <div className="page-eyebrow">Payment Pending</div>
-              <h2 style={{ marginTop: 0 }}>Complete PayPal checkout.</h2>
-              <p>
-                Your monthly plan is waiting for PayPal approval. Complete checkout to activate
-                FromOne Monthly.
-              </p>
-
-              <div className="button-row" style={{ marginTop: '18px' }}>
-                <button
-                  type="button"
-                  onClick={startPayPalCheckout}
-                  disabled={saving || cancelling}
-                >
-                  {saving ? 'Opening PayPal...' : 'Complete PayPal checkout'}
-                </button>
-
-                <button
-                  type="button"
-                  className="secondary-button danger-button"
-                  onClick={cancelPendingPayment}
-                  disabled={saving || cancelling}
-                >
-                  {cancelling ? 'Cancelling...' : 'Cancel pending payment'}
-                </button>
-              </div>
-            </div>
-          )}
-
           <div style={{ marginBottom: '24px' }}>
             <section className="hero-card">
               <div className="page-eyebrow">Current Access</div>
@@ -613,13 +577,6 @@ export default function SubscriptionPage() {
                     Trial ends: <strong>{formatDate(trialEndsAt)}</strong>
                   </p>
                 </>
-              )}
-
-              {paypalSubscriptionId && (
-                <p>
-                  PayPal subscription:{' '}
-                  <strong>{paypalSubscriptionId.slice(0, 8)}...</strong>
-                </p>
               )}
 
               {cancelledAt && (
