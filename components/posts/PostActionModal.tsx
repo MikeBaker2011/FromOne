@@ -146,8 +146,8 @@ export default function PostActionModal({
 }: PostActionModalProps) {
   if (!selectedPost) return null;
 
-  const [showMorePostTools, setShowMorePostTools] = useState(false);
   const [showMiniAnalytics, setShowMiniAnalytics] = useState(false);
+  const [showScheduleControls, setShowScheduleControls] = useState(false);
 
   const platformName = getPlatformDisplayName(selectedPost);
   const platformKey = String(selectedPost.platform || '').toLowerCase();
@@ -165,16 +165,6 @@ export default function PostActionModal({
 
   const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
 
-  const scheduleStatusLabel = canAutoPublish ? 'Scheduled' : 'Scheduled reminder';
-  const scheduleInputLabel = canAutoPublish ? 'Schedule post' : 'Schedule reminder';
-  const saveScheduleLabel = canAutoPublish ? 'Save schedule' : 'Save reminder';
-  const clearScheduleLabel = canAutoPublish ? 'Clear schedule' : 'Clear reminder';
-  const queueDateLabel = selectedPost.scheduled_at
-    ? getReadableDateTime(selectedPost.scheduled_at)
-    : '';
-  const scheduleHelperText = canAutoPublish
-    ? `${autoPublishPlatformName} can publish automatically at the time you choose.`
-    : `${platformName} is not connected for autopublishing yet, so this creates a reminder.`;
 
   const publishCardTitle = posted
     ? 'Posted'
@@ -292,32 +282,100 @@ export default function PostActionModal({
           </div>
 
           <div className="fromone-flow-inline-actions">
+
+                <div
+                  style={{
+                    width: '100%',
+                    marginTop: 12,
+                    paddingTop: 12,
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setShowScheduleControls((current: boolean) => !current)}
+                    disabled={posted}
+                  >
+                    {showScheduleControls ? 'Hide schedule' : hasSchedule ? 'Change schedule' : 'Schedule for later'}
+                  </button>
+
+                  {hasSchedule && !posted && !showScheduleControls && (
+                    <span
+                      className="fromone-publish-schedule-pill"
+                      style={{ marginLeft: 10 }}
+                    >
+                      Scheduled: {getReadableDateTime(selectedPost.scheduled_publish_at)}
+                    </span>
+                  )}
+
+                  {showScheduleControls && !posted && (
+                    <div
+                      className="fromone-image-guidance-note"
+                      style={{
+                        marginTop: 12,
+                      }}
+                    >
+                      <strong>Pick a date and time</strong>
+                      <p>
+                        {canAutoPublish
+                          ? `${autoPublishPlatformName} can publish automatically at this time.`
+                          : `This saves a schedule time for ${platformName}.`}
+                      </p>
+
+                      <input
+                        type="datetime-local"
+                        className="input"
+                        value={reminderValue}
+                        onChange={(event) => setReminderValue(event.target.value)}
+                      />
+
+                      <div className="button-row" style={{ marginTop: 12 }}>
+                        <button
+                          type="button"
+                          onClick={() => onSaveReminder(selectedPost)}
+                          disabled={savingReminderPostId === selectedPost.id || !reminderValue}
+                        >
+                          {savingReminderPostId === selectedPost.id ? 'Saving...' : 'Save schedule'}
+                        </button>
+
+                        {hasSchedule && (
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => onClearReminder(selectedPost)}
+                            disabled={savingReminderPostId === selectedPost.id}
+                          >
+                            Clear schedule
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {onDeletePost && (
-                  <div className="fromone-more-actions">
+                  <div
+                    style={{
+                      marginTop: 14,
+                      paddingTop: 14,
+                      borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                    }}
+                  >
                     <button
                       type="button"
-                      className="secondary-button"
-                      onClick={() => setShowMorePostTools((current: boolean) => !current)}
+                      className="secondary-button danger-button"
+                      onClick={() => onDeletePost(selectedPost)}
+                      disabled={deletingPostId === selectedPost.id}
                     >
-                      {showMorePostTools ? 'Hide more actions' : 'More actions'}
+                      {deletingPostId === selectedPost.id
+                        ? posted
+                          ? 'Archiving...'
+                          : 'Deleting...'
+                        : posted
+                          ? 'Archive post'
+                          : 'Delete post'}
                     </button>
-
-                    {showMorePostTools && (
-                      <button
-                        type="button"
-                        className="secondary-button danger-button"
-                        onClick={() => onDeletePost(selectedPost)}
-                        disabled={deletingPostId === selectedPost.id}
-                      >
-                        {deletingPostId === selectedPost.id
-                          ? posted
-                            ? 'Archiving...'
-                            : 'Deleting...'
-                          : posted
-                            ? 'Archive post'
-                            : 'Delete post'}
-                      </button>
-                    )}
                   </div>
                 )}
 
@@ -339,8 +397,8 @@ export default function PostActionModal({
           <div className="fromone-flow-card-top">
             <div>
               <div className="page-eyebrow">Post</div>
-              <h3>Post wording</h3>
-              <p>Check the post, then copy, publish, or schedule it.</p>
+              <h3>Wording</h3>
+              <p>Review the post before it goes out.</p>
             </div>
 
             <span>{platformName}</span>
@@ -523,7 +581,7 @@ export default function PostActionModal({
           <div className="fromone-flow-tools-header">
             <div>
               <div className="page-eyebrow">Media</div>
-              <h3>Add media</h3>
+              <h3>Media</h3>
               <p>{getImageGuidance(selectedPost)}</p>
             </div>
           </div>
@@ -592,10 +650,10 @@ export default function PostActionModal({
         <section ref={publishRef} className="fromone-flow-tools-card fromone-publish-control-section">
           <div className="fromone-flow-tools-header">
             <div>
-              <div className="page-eyebrow">Publish</div>
-              <h3>Publish or schedule</h3>
+              <div className="page-eyebrow">Next step</div>
+              <h3>Choose what happens next</h3>
               <p>
-                Publish now, schedule for later, or copy the post if the platform is not connected.
+                Publish now, schedule for later, or copy it.
               </p>
             </div>
           </div>
@@ -683,7 +741,8 @@ export default function PostActionModal({
             </div>
           </div>
 
-                    <div className="fromone-schedule-box fromone-schedule-control-card">
+                    {(posted || hasPerformanceData) && (
+          <div className="fromone-schedule-box fromone-schedule-control-card">
             <div className="fromone-schedule-card-header">
               <div>
                 <strong>Mini analytics</strong>
@@ -758,72 +817,10 @@ export default function PostActionModal({
               </>
             )}
           </div>
+          )}
 
-          <div className="fromone-schedule-box fromone-schedule-control-card">
-            <div className="fromone-schedule-card-header">
-              <div>
-                <strong>{scheduleInputLabel}</strong>
-                <p>{scheduleHelperText}</p>
-              </div>
 
-              {hasSchedule && !posted && <span>{scheduleStatusLabel}</span>}
-            </div>
 
-            <div className="fromone-image-guidance-note" style={{ marginBottom: 12 }}>
-              <strong>Choose a time</strong>
-              <p>
-                {queueDateLabel ? `Suggested day: ${queueDateLabel}. ` : ''}
-                Pick when this post should go out.
-              </p>
-            </div>
-
-            <input
-              className="input"
-              type="datetime-local"
-              value={reminderValue}
-              onChange={(event) => onSetReminderValue(event.target.value)}
-            />
-
-            <div className="fromone-flow-inline-actions">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onSaveReminder(selectedPost)}
-                disabled={savingReminderPostId === selectedPost.id}
-              >
-                {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleLabel}
-              </button>
-
-              {hasSchedule && (
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => onClearReminder(selectedPost)}
-                  disabled={savingReminderPostId === selectedPost.id}
-                >
-                  {clearScheduleLabel}
-                </button>
-              )}
-
-              {posted ? (
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => onMarkAsNotPosted(selectedPost.id)}
-                >
-                  Mark as not posted
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="posted-button"
-                  onClick={() => onMarkAsPosted(selectedPost.id)}
-                >
-                  Mark as posted
-                </button>
-              )}
-            </div>
-          </div>
         </section>
       </section>
     </div>
