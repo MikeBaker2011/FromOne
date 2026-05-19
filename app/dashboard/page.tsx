@@ -190,7 +190,8 @@ const platformFallback = [
   'Facebook',
 ];
 
-const WEEKLY_SCAN_LIMIT = 2;
+const DEMO_WEEKLY_SCAN_LIMIT = 1;
+const PAID_WEEKLY_SCAN_LIMIT = 2;
 const MAX_SAVED_CAMPAIGNS = 4;
 const WEBSITE_SCAN_EVENT_TYPES = ['website_scan', 'campaign_regenerate'];
 
@@ -328,6 +329,7 @@ export default function DashboardPage() {
   } | null>(null);
 
   const [accessInfo, setAccessInfo] = useState<AccessInfo | null>(null);
+  const [billingPlan, setBillingPlan] = useState<'demo' | 'starter'>('demo');
   const [accessLocked, setAccessLocked] = useState(false);
   const [accessMessage, setAccessMessage] = useState('');
 
@@ -881,6 +883,25 @@ export default function DashboardPage() {
     return used;
   };
 
+  const loadBillingPlan = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_billing')
+      .select('plan, status')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading billing plan:', error.message);
+      setBillingPlan('demo');
+      return 'demo';
+    }
+
+    const plan = data?.plan === 'starter' && data?.status === 'active' ? 'starter' : 'demo';
+
+    setBillingPlan(plan);
+    return plan;
+  };
+
   const isAdminUser = async (userId: string) => {
     const { data, error } = await supabase
       .from('admin_users')
@@ -913,11 +934,15 @@ export default function DashboardPage() {
       return true;
     }
 
+    const plan = await loadBillingPlan(userId);
+    const limit = plan === 'starter' ? PAID_WEEKLY_SCAN_LIMIT : DEMO_WEEKLY_SCAN_LIMIT;
     const used = await loadWeeklyScanUsage(userId);
 
-    if (used >= WEEKLY_SCAN_LIMIT) {
+    if (used >= limit) {
       alert(
-        `You have used your ${WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create weekly posts using the business details route.`
+        plan === 'starter'
+          ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create weekly posts using the business details route.`
+          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Upgrade to FromOne Monthly for ${PAID_WEEKLY_SCAN_LIMIT} scans per week, or use the business details route.`
       );
       return false;
     }
@@ -1042,6 +1067,7 @@ export default function DashboardPage() {
 
     await Promise.all([
       loadWeeklyScanUsage(userId),
+      loadBillingPlan(userId),
       loadSavedCampaignCount(userId),
       loadOrCreateAccess(userId),
       loadTodayPost(userId),
@@ -1792,7 +1818,6 @@ Also detect or infer:
 
   const hasManualProfile = Boolean(client?.business_name && client?.industry);
   const hasWebsite = Boolean(websiteUrl.trim());
-  const weeklyScansRemaining = Math.max(WEEKLY_SCAN_LIMIT - weeklyScansUsed, 0);
   const businessName = client?.business_name || 'your business';
   const marketReachDisplayLabel = getMarketReachDisplayLabel(client);
   const marketReachContext = getMarketReachContext(client);
@@ -1819,7 +1844,11 @@ Also detect or infer:
   );
   const hasGoogleConnection = Boolean(primaryGoogleConnection);
   const googleLocationReady = Boolean(primaryGoogleConnection?.google_location_id);
-  const hasPaidPlan = isPaidSubscription(accessInfo?.subscription_status);
+  const hasPaidPlan =
+    billingPlan === 'starter' || isPaidSubscription(accessInfo?.subscription_status);
+
+  const weeklyScanLimit = hasPaidPlan ? PAID_WEEKLY_SCAN_LIMIT : DEMO_WEEKLY_SCAN_LIMIT;
+  const weeklyScansRemaining = Math.max(weeklyScanLimit - weeklyScansUsed, 0);
 
   return (
     <>
@@ -1834,8 +1863,7 @@ Also detect or infer:
         <div className="page-eyebrow">FromOne Dashboard</div>
         <h1 className="page-title">Create this week’s posts.</h1>
         <p className="page-description">
-          Add the business website, or use business details if there is no website. FromOne will
-          create the right number of ready-to-use posts for the week.
+          Add the business, check the options, then let FromOne create this week’s posts.
         </p>
 
         <div className="dashboard-header-actions-row">
@@ -1924,7 +1952,7 @@ Also detect or infer:
               </div>
 
               <div className="dashboard-scan-usage-pill">
-                {weeklyScansRemaining} of {WEEKLY_SCAN_LIMIT} website scans left this week
+                {weeklyScansRemaining} of {weeklyScanLimit} website scans left this week
               </div>
 
               <div className="dashboard-create-action-row">
