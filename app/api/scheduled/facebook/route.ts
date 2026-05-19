@@ -10,6 +10,20 @@ type FacebookCredentials = {
   connectionId?: string | null;
 };
 
+type PublishLogInput = {
+  userId?: string | null;
+  postId?: string | null;
+  platform: string;
+  action: string;
+  status: string;
+  message?: string | null;
+  error?: string | null;
+  credentialSource?: string | null;
+  socialConnectionId?: string | null;
+  providerPostId?: string | null;
+  metadata?: Record<string, any>;
+};
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -117,6 +131,44 @@ function buildPublishedToValue(currentValue: any) {
   }
 
   return ['facebook'];
+}
+
+async function insertPublishLog({
+  userId,
+  postId,
+  platform,
+  action,
+  status,
+  message,
+  error,
+  credentialSource,
+  socialConnectionId,
+  providerPostId,
+  metadata = {},
+}: PublishLogInput) {
+  try {
+    const supabase = getSupabaseAdmin();
+
+    const { error: logError } = await supabase.from('publish_logs').insert({
+      user_id: userId || null,
+      post_id: postId || null,
+      platform,
+      action,
+      status,
+      message: message || null,
+      error: error || null,
+      credential_source: credentialSource || null,
+      social_connection_id: socialConnectionId || null,
+      provider_post_id: providerPostId || null,
+      metadata,
+    });
+
+    if (logError) {
+      console.error('Publish log insert failed:', logError.message);
+    }
+  } catch (logError: any) {
+    console.error('Publish log insert error:', logError?.message || logError);
+  }
 }
 
 async function findUserIdForPost({
@@ -339,6 +391,7 @@ async function runFacebookScheduledPublish(request: NextRequest) {
     .select('*')
     .not('scheduled_publish_at', 'is', null)
     .lte('scheduled_publish_at', nowIso)
+    .is('deleted_at', null)
     .order('scheduled_publish_at', { ascending: true })
     .limit(MAX_POSTS_PER_RUN * 3);
 
@@ -369,6 +422,11 @@ async function runFacebookScheduledPublish(request: NextRequest) {
   }> = [];
 
   for (const post of candidates) {
+    const userId = await findUserIdForPost({
+      supabase,
+      post,
+    });
+
     const postText = buildPostText(post);
 
     if (!postText) {
@@ -382,6 +440,20 @@ async function runFacebookScheduledPublish(request: NextRequest) {
           publish_error: message,
         })
         .eq('id', post.id);
+
+      await insertPublishLog({
+        userId,
+        postId: post.id,
+        platform: 'facebook',
+        action: 'scheduled_publish',
+        status: 'failed',
+        message: 'Scheduled Facebook publish failed.',
+        error: message,
+        metadata: {
+          scheduled_publish_at: post.scheduled_publish_at || null,
+          reason: 'missing_wording',
+        },
+      });
 
       results.push({
         postId: post.id,
@@ -401,6 +473,20 @@ async function runFacebookScheduledPublish(request: NextRequest) {
       .eq('id', post.id);
 
     if (lockError) {
+      await insertPublishLog({
+        userId,
+        postId: post.id,
+        platform: 'facebook',
+        action: 'scheduled_publish',
+        status: 'failed',
+        message: 'Scheduled Facebook publish could not start.',
+        error: lockError.message,
+        metadata: {
+          scheduled_publish_at: post.scheduled_publish_at || null,
+          reason: 'lock_failed',
+        },
+      });
+
       results.push({
         postId: post.id,
         status: 'failed',
@@ -466,6 +552,25 @@ async function runFacebookScheduledPublish(request: NextRequest) {
           .eq('id', post.id);
       }
 
+      await insertPublishLog({
+        userId,
+        postId: post.id,
+        platform: 'facebook',
+        action: 'scheduled_publish',
+        status: 'posted',
+        message: 'Facebook posted automatically.',
+        error: null,
+        credentialSource: facebookResult.credentialSource,
+        socialConnectionId: facebookResult.connectionId || null,
+        providerPostId: facebookPostId,
+        metadata: {
+          scheduled_publish_at: post.scheduled_publish_at || null,
+          media_url: post.media_url || null,
+          media_type: post.media_type || null,
+          used_media: Boolean(post.media_url),
+        },
+      });
+
       results.push({
         postId: post.id,
         status: 'posted',
@@ -484,6 +589,20 @@ async function runFacebookScheduledPublish(request: NextRequest) {
           publish_error: message,
         })
         .eq('id', post.id);
+
+      await insertPublishLog({
+        userId,
+        postId: post.id,
+        platform: 'facebook',
+        action: 'scheduled_publish',
+        status: 'failed',
+        message: 'Scheduled Facebook publish failed.',
+        error: message,
+        metadata: {
+          scheduled_publish_at: post.scheduled_publish_at || null,
+          route: '/api/scheduled/facebook',
+        },
+      });
 
       results.push({
         postId: post.id,
