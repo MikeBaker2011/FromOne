@@ -36,6 +36,7 @@ type PostActionModalProps = {
   publishingPostId: string | null;
   savingReminderPostId: string | null;
   reminderValue: string;
+  deletingPostId?: string | null;
   postRef?: React.RefObject<HTMLElement | null>;
   mediaRef?: React.RefObject<HTMLElement | null>;
   publishRef?: React.RefObject<HTMLElement | null>;
@@ -75,6 +76,7 @@ type PostActionModalProps = {
   onSetReminderValue: (value: string) => void;
   onSaveReminder: (post: any) => void;
   onClearReminder: (post: any) => void;
+  onDeletePost?: (post: any) => void;
 };
 
 export default function PostActionModal({
@@ -100,6 +102,7 @@ export default function PostActionModal({
   publishingPostId,
   savingReminderPostId,
   reminderValue,
+  deletingPostId,
   postRef,
   mediaRef,
   publishRef,
@@ -139,6 +142,7 @@ export default function PostActionModal({
   onSetReminderValue,
   onSaveReminder,
   onClearReminder,
+  onDeletePost,
 }: PostActionModalProps) {
   if (!selectedPost) return null;
 
@@ -240,9 +244,26 @@ export default function PostActionModal({
             </p>
           </div>
 
-          <button type="button" className="secondary-button" onClick={onClose}>
-            Close
-          </button>
+          <div className="fromone-flow-inline-actions">
+            {onDeletePost && (
+              <button
+                type="button"
+                className="secondary-button danger-button"
+                onClick={() => onDeletePost(selectedPost)}
+                disabled={deletingPostId === selectedPost.id}
+              >
+                {deletingPostId === selectedPost.id
+                  ? 'Deleting...'
+                  : isPostPosted(selectedPost)
+                    ? 'Archive'
+                    : 'Delete'}
+              </button>
+            )}
+
+            <button type="button" className="secondary-button" onClick={onClose}>
+              Close
+            </button>
+          </div>
         </div>
 
         <div className="selected-post-tags">
@@ -634,6 +655,21 @@ export default function PostActionModal({
                   disabled={savingReminderPostId === selectedPost.id}
                 >
                   {clearScheduleLabel}
+                </button>
+              )}
+
+              {onDeletePost && (
+                <button
+                  type="button"
+                  className="secondary-button danger-button"
+                  onClick={() => onDeletePost(selectedPost)}
+                  disabled={deletingPostId === selectedPost.id}
+                >
+                  {deletingPostId === selectedPost.id
+                    ? 'Deleting...'
+                    : posted
+                      ? 'Archive post'
+                      : 'Delete post'}
                 </button>
               )}
 

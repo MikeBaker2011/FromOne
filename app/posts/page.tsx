@@ -320,6 +320,8 @@ export default function PostsPage() {
   const [publishingPostId, setPublishingPostId] = useState<string | null>(null);
   const [savingReminderPostId, setSavingReminderPostId] = useState<string | null>(null);
   const [reminderValue, setReminderValue] = useState('');
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [recentlyDeletedPost, setRecentlyDeletedPost] = useState<any | null>(null);
 
   const [showTodayReminder, setShowTodayReminder] = useState(false);
   const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(null);
@@ -744,6 +746,7 @@ export default function PostsPage() {
       .from('campaign_posts')
       .select('*')
       .eq('campaign_id', campaignId)
+      .is('deleted_at', null)
       .order('scheduled_at', { ascending: true });
 
     if (error) {
@@ -1782,6 +1785,114 @@ export default function PostsPage() {
   };
 
 
+
+  const deletePostWithUndo = async (post: any) => {
+    if (!post?.id) return;
+
+    if (!ensureAccessAllowed()) return;
+
+    const scheduled = Boolean(post.scheduled_publish_at);
+    const posted = isPostPosted(post);
+
+    const confirmMessage = posted
+      ? 'Archive this posted item from the weekly queue? Publish history will stay saved.'
+      : scheduled
+        ? 'Delete this scheduled post from the weekly queue? You can undo this straight after deleting.'
+        : 'Delete this post from the weekly queue? You can undo this straight after deleting.';
+
+    const confirmed = confirm(confirmMessage);
+
+    if (!confirmed) return;
+
+    setDeletingPostId(post.id);
+
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const authUserId = authData.user?.id || currentUserId || null;
+
+      const updates = {
+        deleted_at: new Date().toISOString(),
+        deleted_by: authUserId,
+        delete_reason: posted ? 'archived_from_posts_page' : 'deleted_from_posts_page',
+        scheduled_publish_at: posted ? post.scheduled_publish_at || null : null,
+        publish_status: posted ? post.publish_status || 'posted' : null,
+        status: posted ? post.status || 'posted' : 'deleted',
+      };
+
+      const { error } = await supabase
+        .from('campaign_posts')
+        .update(updates)
+        .eq('id', post.id);
+
+      if (error) throw error;
+
+      setRecentlyDeletedPost({ ...post, ...updates });
+      setPosts((currentPosts) => currentPosts.filter((item) => item.id !== post.id));
+      setSelectedPostId(null);
+      setImprovementNote(null);
+      setShowImproveTools(false);
+      cancelEditingPost();
+
+      window.setTimeout(() => {
+        setRecentlyDeletedPost((current: any | null) =>
+  current?.id === post.id ? null : current
+);
+      }, 12000);
+    } catch (error: any) {
+      const message = getReadableError(error, 'Error deleting post.');
+      console.error('Delete post error:', error);
+      alert(message);
+    } finally {
+      setDeletingPostId(null);
+    }
+  };
+
+  const undoDeletePost = async () => {
+    if (!recentlyDeletedPost?.id) return;
+
+    const postToRestore = recentlyDeletedPost;
+
+    setDeletingPostId(postToRestore.id);
+
+    try {
+      const updates = {
+        deleted_at: null,
+        deleted_by: null,
+        delete_reason: null,
+        status:
+          postToRestore.publish_status === 'posted' || postToRestore.is_posted
+            ? 'posted'
+            : postToRestore.scheduled_publish_at
+              ? 'scheduled'
+              : 'ready',
+        publish_status:
+          postToRestore.publish_status === 'posted'
+            ? 'posted'
+            : postToRestore.scheduled_publish_at
+              ? 'scheduled'
+              : null,
+      };
+
+      const { error } = await supabase
+        .from('campaign_posts')
+        .update(updates)
+        .eq('id', postToRestore.id);
+
+      if (error) throw error;
+
+      setRecentlyDeletedPost(null);
+      await loadPosts(selectedCampaignId || campaign?.id || postToRestore.campaign_id || null);
+      setSelectedPostId(postToRestore.id);
+    } catch (error: any) {
+      const message = getReadableError(error, 'Error restoring post.');
+      console.error('Undo delete post error:', error);
+      alert(message);
+    } finally {
+      setDeletingPostId(null);
+    }
+  };
+
+
   const markAsPosted = async (postId: string) => {
     const postIndex = sortedPosts.findIndex((post) => post.id === postId);
 
@@ -2212,6 +2323,38 @@ export default function PostsPage() {
             </section>
           )}
 
+          {recentlyDeletedPost && (
+            <section
+              className="premium-card"
+              style={{
+                marginBottom: 22,
+                padding: '14px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 14,
+                flexWrap: 'wrap',
+                borderColor: 'rgba(255, 212, 59, 0.35)',
+              }}
+            >
+              <div>
+                <div className="page-eyebrow">Post deleted</div>
+                <p style={{ margin: 0 }}>
+                  {recentlyDeletedPost.title || recentlyDeletedPost.platform || 'Post'} was removed
+                  from this weekly queue.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={undoDeletePost}
+                disabled={deletingPostId === recentlyDeletedPost.id}
+              >
+                {deletingPostId === recentlyDeletedPost.id ? 'Restoring...' : 'Undo'}
+              </button>
+            </section>
+          )}
+
           <section
             className="premium-card"
             style={{
@@ -2449,6 +2592,7 @@ export default function PostsPage() {
           publishingPostId={publishingPostId}
           savingReminderPostId={savingReminderPostId}
           reminderValue={reminderValue}
+          deletingPostId={deletingPostId}
           postRef={postRef}
           mediaRef={mediaRef}
           publishRef={publishRef}
@@ -2488,6 +2632,7 @@ export default function PostsPage() {
           onSetReminderValue={setReminderValue}
           onSaveReminder={saveReminder}
           onClearReminder={clearReminder}
+          onDeletePost={deletePostWithUndo}
         />
       )}
 
