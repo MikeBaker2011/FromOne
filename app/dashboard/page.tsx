@@ -1996,70 +1996,15 @@ Also detect or infer:
           )}
 
           <section className="dashboard-top-grid">
-            <section className="today-task-card dashboard-personal-task-card">
-              <div className="dashboard-personal-task-main">
-                <div className="dashboard-business-logo-frame" aria-hidden="true">
-                  {businessLogoUrl ? (
-                    <img src={businessLogoUrl} alt="" />
-                  ) : (
-                    <span>{businessInitial}</span>
-                  )}
-                </div>
-
-                <div className="dashboard-personal-task-copy">
-                  <div className="page-eyebrow">Today’s Task</div>
-
-                  {todayPost ? (
-                    <>
-                      <h2>Review your {todayPost.platform || 'social'} post</h2>
-                      <h3>{businessName} has one post ready to publish today.</h3>
-                      <p>
-                        Review the post, use the image idea if helpful, copy it to{' '}
-                        {todayPost.platform || 'the selected platform'}, then mark it as posted.
-                      </p>
-
-                      <div className="today-task-premium-meta">
-                        <div>
-                          <span>Posting to</span>
-                          <strong>{todayPost.platform || 'Social post'}</strong>
-                        </div>
-
-                        <i />
-
-                        <div>
-                          <span>Post theme</span>
-                          <strong>
-                            {todayPost.title || todayPost.scheduled_day || 'Today’s post'}
-                          </strong>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <h2>Welcome back.</h2>
-                      <h3>{businessName}, you’re all clear today.</h3>
-                      <p>
-                        No post is due right now. You can still view this week’s posts whenever you
-                        need.
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="today-task-button"
-                onClick={() => router.push(todayPost ? '/posts?today=true' : '/posts')}
-              >
-                {todayPost ? `Review ${todayPost.platform || 'social'} post` : 'View this week'}
-              </button>
-            </section>
-
-            <section className="dashboard-weekly-progress-card">
+            <section
+              className="dashboard-weekly-progress-card"
+              style={{
+                gridColumn: '1 / -1',
+              }}
+            >
               <div className="dashboard-weekly-progress-header">
                 <div>
-                  <div className="page-eyebrow">This week’s progress</div>
+                  <div className="page-eyebrow">Weekly status</div>
                   <h2>
                     {weeklyProgress.total > 0
                       ? `${weeklyProgress.posted} of ${weeklyProgress.total} posts done`
@@ -2076,33 +2021,61 @@ Also detect or infer:
                 <span style={{ width: `${weeklyProgressPercent}%` }} />
               </div>
 
-              {weeklyProgress.total > 0 ? (
-                <p>
-                  {weeklyProgress.remaining === 0
-                    ? 'Nice work — this week’s posts are complete 🎉'
-                    : weeklyProgress.nextPost
-                      ? `Next up: ${
-                          weeklyProgress.nextPost.title ||
-                          weeklyProgress.nextPost.scheduled_day ||
-                          'your next post'
-                        }`
-                      : 'Keep going — open Posts to finish the remaining items.'}
-                </p>
-              ) : (
-                <p>Create weekly posts to start tracking your progress here.</p>
-              )}
-
-              <button
-                type="button"
-                className="secondary-button dashboard-weekly-progress-button"
-                onClick={() => router.push('/posts')}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: 16,
+                  marginTop: 22,
+                }}
               >
-                View posts
-              </button>
+                <div className="card" style={{ padding: 16 }}>
+                  <strong>Today</strong>
+                  {todayPost ? (
+                    <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
+                      Review your {todayPost.platform || 'social'} post:{' '}
+                      {todayPost.title || todayPost.scheduled_day || 'today’s post'}.
+                    </p>
+                  ) : (
+                    <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
+                      No post is due today.
+                    </p>
+                  )}
+                </div>
+
+                <div className="card" style={{ padding: 16 }}>
+                  <strong>Next up</strong>
+                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
+                    {weeklyProgress.total > 0
+                      ? weeklyProgress.remaining === 0
+                        ? 'This week’s posts are complete.'
+                        : weeklyProgress.nextPost
+                          ? weeklyProgress.nextPost.title ||
+                            weeklyProgress.nextPost.scheduled_day ||
+                            'Your next post'
+                          : 'Open Posts to finish the remaining items.'
+                      : 'Create weekly posts to start tracking progress.'}
+                  </p>
+                </div>
+
+                <div className="card" style={{ padding: 16 }}>
+                  <strong>Business</strong>
+                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
+                    {businessName}
+                  </p>
+                </div>
+              </div>
+
+              <div className="button-row" style={{ marginTop: 22 }}>
+                <button
+                  type="button"
+                  className="secondary-button dashboard-weekly-progress-button"
+                  onClick={() => router.push(todayPost ? '/posts?today=true' : '/posts')}
+                >
+                  {todayPost ? `Review ${todayPost.platform || 'post'}` : 'View this week'}
+                </button>
+              </div>
             </section>
-
-            
-
           </section>
 
           <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
@@ -2627,37 +2600,52 @@ Also detect or infer:
                 </small>
               </div>
 
-              <div className="dashboard-platform-create-row">
-                <div>
-                  <strong>Ready to create?</strong>
-                  <span>
-                    FromOne will create {selectedPostingFrequencyOption.title.toLowerCase()} of posts for {marketReachContext.toLowerCase()} using
-                    the selected platforms above.
-                  </span>
-                </div>
 
-                <button
-                  ref={generateButtonRef}
-                  type="button"
-                  className="dashboard-platform-create-button"
-                  onClick={handleGeneratePosts}
-                  disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
-                >
-                  {scanning || savingWebsite
-                    ? hasWebsite
-                      ? 'Scanning website...'
-                      : 'Creating posts from business details...'
-                    : hasWebsite
-                      ? 'Scan Website & Create Weekly Posts'
-                      : hasManualProfile
-                        ? 'Create Posts From Business Details'
-                        : 'Create Weekly Posts'}
-                </button>
-              </div>
             </div>
 
               </>
             )}
+
+            <section
+              className="premium-card"
+              style={{
+                marginTop: 22,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 16,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <div className="page-eyebrow">Ready to create?</div>
+                <h2 style={{ margin: '0 0 8px' }}>
+                  Create this week’s posts.
+                </h2>
+                <p style={{ margin: 0 }}>
+                  FromOne will create {selectedPostingFrequency} posts
+                  for {marketReachContext.toLowerCase()} using {selectedPlatformSummary || 'the selected platforms'}.
+                </p>
+              </div>
+
+              <button
+                ref={generateButtonRef}
+                type="button"
+                className="dashboard-platform-create-button"
+                onClick={handleGeneratePosts}
+                disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
+              >
+                {scanning || savingWebsite
+                  ? hasWebsite
+                    ? 'Scanning website...'
+                    : 'Creating posts from business details...'
+                  : hasWebsite
+                    ? 'Scan Website & Create Weekly Posts'
+                    : hasManualProfile
+                      ? 'Create Posts From Business Details'
+                      : 'Create Weekly Posts'}
+              </button>
+            </section>
           </section>
         </>
       )}
