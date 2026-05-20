@@ -406,14 +406,31 @@ export async function POST(req: NextRequest) {
     }
 
     let result;
+    let usedMedia = false;
+    let mediaFallbackReason: string | null = null;
 
     if (mediaUrl && isImageMedia(mediaType)) {
-      result = await publishImagePost({
-        pageId: credentials.pageId,
-        pageAccessToken: credentials.pageAccessToken,
-        message,
-        mediaUrl,
-      });
+      try {
+        result = await publishImagePost({
+          pageId: credentials.pageId,
+          pageAccessToken: credentials.pageAccessToken,
+          message,
+          mediaUrl,
+        });
+        usedMedia = true;
+      } catch (mediaError: any) {
+        const mediaErrorMessage = mediaError?.message || 'Facebook image post failed.';
+
+        console.error('Facebook image publish failed. Retrying as text-only post:', mediaErrorMessage);
+
+        mediaFallbackReason = mediaErrorMessage;
+
+        result = await publishTextPost({
+          pageId: credentials.pageId,
+          pageAccessToken: credentials.pageAccessToken,
+          message,
+        });
+      }
     } else {
       result = await publishTextPost({
         pageId: credentials.pageId,
@@ -470,7 +487,8 @@ export async function POST(req: NextRequest) {
       metadata: {
         media_url: mediaUrl || null,
         media_type: mediaType || null,
-        used_media: Boolean(mediaUrl),
+        used_media: usedMedia,
+        media_fallback_reason: mediaFallbackReason,
       },
     });
 
