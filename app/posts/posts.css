@@ -17,7 +17,15 @@
 
 .simplified-campaign-controls label strong {
   display: block !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 6px !important;
+}
+
+.simplified-campaign-controls label span {
+  display: block !important;
+  margin-bottom: 10px !important;
+  color: rgba(255, 255, 255, 0.68) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.4 !important;
 }
 
 .simplified-campaign-controls select.input {
@@ -64,6 +72,69 @@
   border-radius: 14px !important;
 }
 
+/* Weekly post review queue */
+
+.simplified-week-section .simplified-section-heading h2 {
+  margin-bottom: 6px !important;
+}
+
+.fromone-weekly-queue {
+  align-items: stretch !important;
+}
+
+.fromone-queue-card {
+  min-height: 360px !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  text-align: left !important;
+}
+
+.fromone-queue-card .premium-calendar-day-label {
+  align-self: flex-start !important;
+}
+
+.fromone-queue-card .premium-calendar-post-info {
+  width: 100% !important;
+  margin-top: 6px !important;
+}
+
+.fromone-queue-card .premium-calendar-post-info strong {
+  display: block !important;
+  margin-bottom: 6px !important;
+}
+
+.fromone-queue-card .premium-calendar-post-info p {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  min-height: 58px !important;
+}
+
+.fromone-queue-media-preview,
+.fromone-queue-media-placeholder {
+  flex: 0 0 auto !important;
+}
+
+.premium-calendar-date-row span,
+.premium-calendar-date-row small,
+.premium-calendar-day-label {
+  color: rgba(255, 255, 255, 0.82) !important;
+  opacity: 1 !important;
+}
+
+.premium-calendar-date-row strong {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.fromone-queue-card::before,
+.premium-calendar-day-card::before {
+  opacity: 0.18 !important;
+}
+
+/* Modal shell */
+
 .fromone-modal-overlay {
   overflow-y: auto !important;
   align-items: flex-start !important;
@@ -94,7 +165,8 @@
 .fromone-post-action-modal .fromone-post-preview-body,
 .fromone-post-action-modal .fromone-flow-edit-box,
 .fromone-post-action-modal .fromone-media-preview-card,
-.fromone-post-action-modal .fromone-schedule-box {
+.fromone-post-action-modal .fromone-schedule-box,
+.fromone-post-action-modal .fromone-image-guidance-note {
   background: rgba(255, 255, 255, 0.055) !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 20px !important;
@@ -121,14 +193,39 @@
   color: #ffd43b !important;
 }
 
+.fromone-post-action-modal .selected-post-tags {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 18px 0 4px !important;
+}
+
+.fromone-post-action-modal .selected-post-tags span {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 7px 11px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+}
+
 .fromone-post-action-modal .secondary-button {
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.09) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
+.fromone-post-action-modal .danger-button {
+  color: #fecaca !important;
+  border-color: rgba(248, 113, 113, 0.32) !important;
+  background: rgba(127, 29, 29, 0.18) !important;
+}
+
 .fromone-post-action-modal .fromone-flow-publish-buttons,
-.fromone-post-action-modal .fromone-flow-inline-actions {
+.fromone-post-action-modal .fromone-flow-inline-actions,
+.fromone-post-action-modal .button-row {
   display: grid !important;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
   gap: 12px !important;
@@ -140,7 +237,8 @@
 }
 
 .fromone-post-action-modal .fromone-flow-publish-buttons button,
-.fromone-post-action-modal .fromone-flow-inline-actions button {
+.fromone-post-action-modal .fromone-flow-inline-actions button,
+.fromone-post-action-modal .button-row button {
   min-height: 44px !important;
   border-radius: 14px !important;
   font-size: 0.95rem !important;
@@ -158,10 +256,13 @@
 }
 
 .fromone-post-action-modal .fromone-media-preview {
+  width: 100% !important;
   max-width: 100% !important;
   max-height: 420px !important;
+  object-fit: contain !important;
   border-radius: 18px !important;
   display: block !important;
+  background: rgba(0, 0, 0, 0.24) !important;
 }
 
 .fromone-post-action-modal .fromone-upload-button {
@@ -188,6 +289,7 @@
 }
 
 /* Improve section layout */
+
 .fromone-post-action-modal .fromone-flow-tools-list {
   display: grid !important;
   gap: 16px !important;
@@ -254,153 +356,8 @@
   border-radius: 16px !important;
 }
 
-.fromone-post-action-modal .fromone-schedule-box {
-  margin-top: 6px !important;
-}
-
-.fromone-post-action-modal .fromone-schedule-box label strong {
-  display: block !important;
-  margin-bottom: 10px !important;
-  font-size: 0.95rem !important;
-}
-
-.fromone-post-action-modal .fromone-schedule-box input.input {
-  height: 56px !important;
-  border-radius: 16px !important;
-  padding: 0 18px !important;
-}
-
-.fromone-post-action-modal .fromone-schedule-box p {
-  margin-top: 16px !important;
-  margin-bottom: 0 !important;
-  line-height: 1.5 !important;
-}
-
-.premium-calendar-date-row span,
-.premium-calendar-date-row small,
-.premium-calendar-day-label {
-  color: rgba(255, 255, 255, 0.82) !important;
-  opacity: 1 !important;
-}
-
-.premium-calendar-date-row strong {
-  color: #ffffff !important;
-  opacity: 1 !important;
-}
-
-.fromone-queue-card::before,
-.premium-calendar-day-card::before {
-  opacity: 0.18 !important;
-}
-
-@media (max-width: 760px) {
-  .posts-plan-actions {
-    grid-template-columns: 1fr !important;
-  }
-
-  .posts-plan-actions button {
-    height: 46px !important;
-    min-height: 46px !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-    font-size: 0.82rem !important;
-  }
-
-  .fromone-modal-overlay {
-    padding: 14px 10px !important;
-  }
-
-  .fromone-post-action-modal {
-    width: calc(100vw - 20px) !important;
-    max-height: calc(100vh - 28px) !important;
-    padding: 18px !important;
-    border-radius: 22px !important;
-  }
-
-  .fromone-post-action-modal .fromone-flow-publish-buttons {
-    gap: 10px !important;
-    margin-top: 14px !important;
-    margin-bottom: 28px !important;
-  }
-
-  .fromone-post-action-modal .fromone-schedule-box {
-    margin-top: 14px !important;
-    padding: 16px !important;
-  }
-
-  .fromone-post-action-modal .fromone-schedule-box label strong {
-    margin-bottom: 9px !important;
-  }
-
-  .fromone-post-action-modal .fromone-schedule-box input.input {
-    height: 54px !important;
-    border-radius: 15px !important;
-    padding: 0 16px !important;
-  }
-
-  .fromone-post-action-modal .fromone-schedule-box p {
-    margin-top: 14px !important;
-    line-height: 1.45 !important;
-  }
-
-  .fromone-post-action-modal .fromone-flow-tools-card,
-  .fromone-post-action-modal .fromone-flow-preview-card {
-    margin-top: 14px !important;
-    padding: 18px !important;
-  }
-
-  .fromone-post-action-modal .fromone-flow-tool-row {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-    padding: 18px !important;
-  }
-
-  .fromone-post-action-modal .fromone-flow-tool-copy p {
-    max-width: none !important;
-  }
-
-  .fromone-post-action-modal .fromone-quick-improve-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .fromone-post-action-modal .fromone-quick-improve-button {
-    width: 100% !important;
-  }
-
-  .premium-calendar-day-card,
-  .fromone-queue-card {
-    background: linear-gradient(145deg, #111827 0%, #182235 100%) !important;
-  }
-
-  .premium-calendar-date-row span,
-  .premium-calendar-date-row small,
-  .premium-calendar-day-label {
-    color: rgba(255, 255, 255, 0.84) !important;
-    opacity: 1 !important;
-  }
-
-  .premium-calendar-date-row strong {
-    color: #ffffff !important;
-    opacity: 1 !important;
-    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.38) !important;
-  }
-
-  .premium-calendar-post-info strong {
-    color: #ffffff !important;
-  }
-
-  .premium-calendar-post-info p {
-    color: rgba(255, 255, 255, 0.76) !important;
-  }
-
-  .premium-calendar-status {
-    color: #101420 !important;
-    background: #ffd43b !important;
-    border: 0 !important;
-  }
-}
-
 /* Premium publish control card */
+
 .fromone-publish-control-section {
   position: relative !important;
 }
@@ -587,7 +544,118 @@
   width: 100% !important;
 }
 
+/* Mobile */
+
 @media (max-width: 760px) {
+  .posts-plan-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .posts-plan-actions button {
+    height: 46px !important;
+    min-height: 46px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .fromone-modal-overlay {
+    padding: 14px 10px !important;
+  }
+
+  .fromone-post-action-modal {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 28px) !important;
+    padding: 18px !important;
+    border-radius: 22px !important;
+  }
+
+  .fromone-post-action-modal .fromone-flow-publish-buttons {
+    gap: 10px !important;
+    margin-top: 14px !important;
+    margin-bottom: 28px !important;
+  }
+
+  .fromone-post-action-modal .fromone-schedule-box {
+    margin-top: 14px !important;
+    padding: 16px !important;
+  }
+
+  .fromone-post-action-modal .fromone-schedule-box label strong {
+    margin-bottom: 9px !important;
+  }
+
+  .fromone-post-action-modal .fromone-schedule-box input.input {
+    height: 54px !important;
+    border-radius: 15px !important;
+    padding: 0 16px !important;
+  }
+
+  .fromone-post-action-modal .fromone-schedule-box p {
+    margin-top: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  .fromone-post-action-modal .fromone-flow-tools-card,
+  .fromone-post-action-modal .fromone-flow-preview-card {
+    margin-top: 14px !important;
+    padding: 18px !important;
+  }
+
+  .fromone-post-action-modal .fromone-flow-tool-row {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 18px !important;
+  }
+
+  .fromone-post-action-modal .fromone-flow-tool-copy p {
+    max-width: none !important;
+  }
+
+  .fromone-post-action-modal .fromone-quick-improve-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .fromone-post-action-modal .fromone-quick-improve-button {
+    width: 100% !important;
+  }
+
+  .premium-calendar-day-card,
+  .fromone-queue-card {
+    background: linear-gradient(145deg, #111827 0%, #182235 100%) !important;
+  }
+
+  .fromone-queue-card {
+    min-height: 330px !important;
+  }
+
+  .premium-calendar-date-row span,
+  .premium-calendar-date-row small,
+  .premium-calendar-day-label {
+    color: rgba(255, 255, 255, 0.84) !important;
+    opacity: 1 !important;
+  }
+
+  .premium-calendar-date-row strong {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.38) !important;
+  }
+
+  .premium-calendar-post-info strong {
+    color: #ffffff !important;
+  }
+
+  .premium-calendar-post-info p {
+    color: rgba(255, 255, 255, 0.76) !important;
+  }
+
+  .premium-calendar-status {
+    color: #101420 !important;
+    background: #ffd43b !important;
+    border: 0 !important;
+  }
+
   .fromone-publish-control-card {
     padding: 18px !important;
     border-radius: 20px !important;
