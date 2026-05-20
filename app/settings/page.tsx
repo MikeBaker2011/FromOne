@@ -1,6 +1,6 @@
-'use client';
+use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -20,6 +20,34 @@ type SocialConnection = {
   updated_at: string | null;
 };
 
+type ScannedBusinessProfile = {
+  business_name?: string;
+  industry?: string;
+  location?: string;
+  services?: string[];
+  target_audience?: string[];
+  tone_of_voice?: string;
+  content_pillars?: string[];
+  main_offer?: string;
+  business_goals?: string[];
+  brand_primary_color?: string;
+  brand_secondary_color?: string;
+  brand_accent_color?: string;
+  brand_logo_url?: string | null;
+  brand_summary?: string;
+  campaign_idea?: string;
+};
+
+const toneOptions = [
+  'Professional',
+  'Friendly',
+  'Premium',
+  'Direct',
+  'Helpful',
+  'Fun',
+  'Local and trustworthy',
+];
+
 export default function SettingsPage() {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -35,15 +63,24 @@ export default function SettingsPage() {
   const [contentPillars, setContentPillars] = useState('');
   const [businessGoals, setBusinessGoals] = useState('');
 
+  const [brandPrimaryColor, setBrandPrimaryColor] = useState('#ffd43b');
+  const [brandSecondaryColor, setBrandSecondaryColor] = useState('#101420');
+  const [brandAccentColor, setBrandAccentColor] = useState('#3ddc97');
+  const [brandLogoUrl, setBrandLogoUrl] = useState('');
+  const [brandSummary, setBrandSummary] = useState('');
+
   const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
   const [disconnectingConnectionId, setDisconnectingConnectionId] = useState<string | null>(null);
 
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
+  const [showBrandDetails, setShowBrandDetails] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [scanningWebsite, setScanningWebsite] = useState(false);
+  const [scanMessage, setScanMessage] = useState('');
 
   const metaConnections = socialConnections.filter((connection) => connection.provider === 'meta');
   const primaryMetaConnection = metaConnections[0] || null;
@@ -54,6 +91,23 @@ export default function SettingsPage() {
   const metaConnectionBusy =
     disconnectingConnectionId === primaryMetaConnection?.id ||
     disconnectingConnectionId === 'all';
+
+  const profileCompletionItems = useMemo(
+    () => [
+      { label: 'Website', ready: Boolean(websiteUrl.trim()) },
+      { label: 'Business name', ready: Boolean(businessName.trim()) },
+      { label: 'Industry', ready: Boolean(industry.trim()) },
+      { label: 'Location', ready: Boolean(location.trim()) },
+      { label: 'Services', ready: Boolean(services.trim()) },
+      { label: 'Tone', ready: Boolean(toneOfVoice.trim()) },
+    ],
+    [websiteUrl, businessName, industry, location, services, toneOfVoice]
+  );
+
+  const completedProfileItems = profileCompletionItems.filter((item) => item.ready).length;
+  const profileCompletionPercent = Math.round(
+    (completedProfileItems / profileCompletionItems.length) * 100
+  );
 
   useEffect(() => {
     loadBusinessProfile();
@@ -88,6 +142,17 @@ export default function SettingsPage() {
     }
 
     return `https://${trimmed}`;
+  };
+
+  const splitList = (value: string) => {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  };
+
+  const joinList = (value: any) => {
+    return Array.isArray(value) ? value.join(', ') : '';
   };
 
   const loadSocialConnections = async (authUserId: string) => {
@@ -140,7 +205,7 @@ export default function SettingsPage() {
     }
 
     const confirmed = confirm(
-      'Disconnect the Meta connection from FromOne? This removes Facebook and Instagram publishing access. Existing posts will stay saved, but FromOne will not be able to publish through this connection until you reconnect.'
+      'Disconnect Facebook and Instagram from FromOne? Existing posts will stay saved, but FromOne will not be able to publish through this connection until you reconnect.'
     );
 
     if (!confirmed) return;
@@ -178,6 +243,86 @@ export default function SettingsPage() {
 
   const handleManageMetaConnection = () => {
     connectMetaAccount();
+  };
+
+  const applyScannedProfile = (profile: ScannedBusinessProfile) => {
+    if (profile.business_name) setBusinessName(profile.business_name);
+    if (profile.industry) setIndustry(profile.industry);
+    if (profile.location) setLocation(profile.location);
+    if (Array.isArray(profile.services)) setServices(profile.services.join(', '));
+    if (Array.isArray(profile.target_audience)) {
+      setTargetAudience(profile.target_audience.join(', '));
+    }
+    if (profile.tone_of_voice) setToneOfVoice(profile.tone_of_voice);
+    if (profile.main_offer) setMainOffer(profile.main_offer);
+    if (Array.isArray(profile.content_pillars)) {
+      setContentPillars(profile.content_pillars.join(', '));
+    }
+    if (Array.isArray(profile.business_goals)) {
+      setBusinessGoals(profile.business_goals.join(', '));
+    }
+    if (profile.brand_primary_color) setBrandPrimaryColor(profile.brand_primary_color);
+    if (profile.brand_secondary_color) setBrandSecondaryColor(profile.brand_secondary_color);
+    if (profile.brand_accent_color) setBrandAccentColor(profile.brand_accent_color);
+    if (profile.brand_logo_url) setBrandLogoUrl(profile.brand_logo_url);
+    if (profile.brand_summary) setBrandSummary(profile.brand_summary);
+
+    setShowBusinessDetails(true);
+    setShowBrandDetails(true);
+  };
+
+  const handleScanWebsite = async () => {
+    const website = normaliseWebsiteUrl(websiteUrl);
+
+    if (!website) {
+      alert('Add a website URL first.');
+      return;
+    }
+
+    setWebsiteUrl(website);
+    setScanningWebsite(true);
+    setScanMessage('Scanning website...');
+
+    try {
+      const response = await fetch('/api/generatePosts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'gemini',
+          website,
+          clientName: businessName || 'the business',
+          industry: industry || 'general business',
+          description:
+            'Scan this website and return a business profile only. The posts can be ignored on this settings page.',
+          selectedPlatforms: ['Facebook'],
+          platforms: ['Facebook'],
+          marketReach: location ? `Local customers in and around ${location}` : 'Local customers',
+          numberOfPosts: 1,
+          postCount: 1,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Could not scan the website.');
+      }
+
+      if (!result?.businessProfile) {
+        throw new Error('The scan finished, but no business profile was returned.');
+      }
+
+      applyScannedProfile(result.businessProfile);
+      setScanMessage('Website scanned. Review the details, then save your Business Profile.');
+    } catch (error: any) {
+      console.error('Website scan error:', error?.message || error);
+      setScanMessage('');
+      alert(error?.message || 'Could not scan the website.');
+    } finally {
+      setScanningWebsite(false);
+    }
   };
 
   const loadBusinessProfile = async () => {
@@ -221,32 +366,34 @@ export default function SettingsPage() {
       setBusinessName(data.business_name || '');
       setIndustry(data.industry || '');
       setLocation(data.location || '');
-      setServices(Array.isArray(data.services) ? data.services.join(', ') : '');
-      setTargetAudience(
-        Array.isArray(data.target_audience) ? data.target_audience.join(', ') : ''
-      );
+      setServices(joinList(data.services));
+      setTargetAudience(joinList(data.target_audience));
       setToneOfVoice(data.tone_of_voice || 'Professional');
       setMainOffer(data.main_offer || '');
-      setContentPillars(
-        Array.isArray(data.content_pillars) ? data.content_pillars.join(', ') : ''
-      );
-      setBusinessGoals(
-        Array.isArray(data.business_goals) ? data.business_goals.join(', ') : ''
-      );
+      setContentPillars(joinList(data.content_pillars));
+      setBusinessGoals(joinList(data.business_goals));
+      setBrandPrimaryColor(data.brand_primary_color || '#ffd43b');
+      setBrandSecondaryColor(data.brand_secondary_color || '#101420');
+      setBrandAccentColor(data.brand_accent_color || '#3ddc97');
+      setBrandLogoUrl(data.brand_logo_url || '');
+      setBrandSummary(data.brand_summary || '');
 
       if (data.business_name || data.industry || data.location || data.services?.length) {
         setShowBusinessDetails(true);
       }
+
+      if (
+        data.brand_primary_color ||
+        data.brand_secondary_color ||
+        data.brand_accent_color ||
+        data.brand_logo_url ||
+        data.brand_summary
+      ) {
+        setShowBrandDetails(true);
+      }
     }
 
     setLoading(false);
-  };
-
-  const splitList = (value: string) => {
-    return value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
   };
 
   const buildPayload = async () => {
@@ -265,6 +412,11 @@ export default function SettingsPage() {
       main_offer: mainOffer.trim() || null,
       content_pillars: splitList(contentPillars),
       business_goals: splitList(businessGoals),
+      brand_primary_color: brandPrimaryColor.trim() || null,
+      brand_secondary_color: brandSecondaryColor.trim() || null,
+      brand_accent_color: brandAccentColor.trim() || null,
+      brand_logo_url: brandLogoUrl.trim() || null,
+      brand_summary: brandSummary.trim() || null,
       updated_at: new Date().toISOString(),
     };
   };
@@ -313,11 +465,11 @@ export default function SettingsPage() {
 
     try {
       await saveProfile();
-      alert('Business profile saved.');
+      alert('Business Profile saved.');
       await loadBusinessProfile();
     } catch (error: any) {
       console.error('Error saving business profile:', error?.message || error);
-      alert(error?.message || 'Error saving business profile.');
+      alert(error?.message || 'Error saving Business Profile.');
     } finally {
       setSaving(false);
     }
@@ -334,7 +486,14 @@ export default function SettingsPage() {
     setMainOffer('');
     setContentPillars('');
     setBusinessGoals('');
+    setBrandPrimaryColor('#ffd43b');
+    setBrandSecondaryColor('#101420');
+    setBrandAccentColor('#3ddc97');
+    setBrandLogoUrl('');
+    setBrandSummary('');
+    setScanMessage('');
     setShowBusinessDetails(false);
+    setShowBrandDetails(false);
   };
 
   const handleDeleteProfile = async () => {
@@ -349,7 +508,7 @@ export default function SettingsPage() {
     }
 
     const confirmed = confirm(
-      'Delete this business profile? This removes the saved profile settings. Existing weekly posts will not be deleted.'
+      'Delete this Business Profile? Existing weekly posts will not be deleted.'
     );
 
     if (!confirmed) return;
@@ -367,10 +526,10 @@ export default function SettingsPage() {
 
       setProfileId(null);
       handleResetForm();
-      alert('Business profile deleted.');
+      alert('Business Profile deleted.');
     } catch (error: any) {
       console.error('Error deleting business profile:', error?.message || error);
-      alert(error?.message || 'Error deleting business profile.');
+      alert(error?.message || 'Error deleting Business Profile.');
     } finally {
       setSaving(false);
     }
@@ -380,16 +539,16 @@ export default function SettingsPage() {
     <>
       <div className="page-header">
         <div className="page-eyebrow">Settings</div>
-        <h1 className="page-title">Settings.</h1>
+        <h1 className="page-title">Business Profile.</h1>
         <p className="page-description">
-          Manage the business profile, Facebook and Instagram auto posting, and TikTok manual
-          posting.
+          This is the information FromOne uses every week to turn your photos, videos and flyers
+          into posts that sound like your business.
         </p>
       </div>
 
       {loading ? (
         <div className="premium-card">
-          <p>Loading settings...</p>
+          <p>Loading Business Profile...</p>
         </div>
       ) : (
         <>
@@ -397,14 +556,382 @@ export default function SettingsPage() {
             className="premium-card"
             style={{
               marginBottom: 24,
-              border: '1px solid rgba(255, 212, 59, 0.18)',
+              border: '1px solid rgba(255, 212, 59, 0.2)',
+              background:
+                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255,255,255,0.045) 46%, rgba(15,23,42,0.92))',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1.2fr) minmax(260px, 0.8fr)',
+                gap: 24,
+                alignItems: 'start',
+              }}
+            >
+              <div>
+                <div className="page-eyebrow">Business brain</div>
+                <h2 style={{ marginTop: 0 }}>Set this up once. Use it every week.</h2>
+                <p style={{ maxWidth: 820 }}>
+                  Dashboard will stay simple: upload this week’s media and create posts. This
+                  Business Profile quietly gives FromOne the services, location, tone and offer it
+                  needs to write better posts.
+                </p>
+
+                <div className="button-row" style={{ marginTop: 18 }}>
+                  <a href="/dashboard" className="secondary-button">
+                    Go to weekly upload
+                  </a>
+                  <a href="/posts" className="secondary-button">
+                    View post calendar
+                  </a>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 18,
+                  borderRadius: 22,
+                  background: 'rgba(255,255,255,0.055)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <div className="page-eyebrow">Profile strength</div>
+                <h3 style={{ margin: '6px 0 8px' }}>{profileCompletionPercent}% ready</h3>
+
+                <div
+                  style={{
+                    height: 10,
+                    borderRadius: 999,
+                    overflow: 'hidden',
+                    background: 'rgba(255,255,255,0.1)',
+                    marginBottom: 14,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'block',
+                      width: `${profileCompletionPercent}%`,
+                      height: '100%',
+                      background: '#ffd43b',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {profileCompletionItems.map((item) => (
+                    <span
+                      key={item.label}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        padding: '8px 10px',
+                        borderRadius: 14,
+                        background: 'rgba(255,255,255,0.05)',
+                        color: item.ready ? '#a7f3d0' : 'rgba(255,255,255,0.68)',
+                        fontWeight: 850,
+                      }}
+                    >
+                      {item.label}
+                      <strong>{item.ready ? '✓' : '•'}</strong>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="scan-feature-card settings-simple-scan">
+            <div className="scan-feature-content">
+              <div>
+                <div className="page-eyebrow">Website scan</div>
+                <h2>Scan the business website.</h2>
+                <p>
+                  FromOne can read the website to build the Business Profile. You can edit anything
+                  afterwards.
+                </p>
+              </div>
+            </div>
+
+            <div className="scan-feature-form">
+              <label>
+                <strong>Website URL</strong>
+                <span>Used to detect business details, services, tone and brand style.</span>
+              </label>
+
+              <input
+                className="input"
+                value={websiteUrl}
+                onChange={(event) => setWebsiteUrl(event.target.value)}
+                placeholder="https://example.com"
+              />
+
+              <button type="button" onClick={handleScanWebsite} disabled={scanningWebsite || saving}>
+                {scanningWebsite ? 'Scanning...' : 'Scan website'}
+              </button>
+
+              <button type="button" className="secondary-button" onClick={handleSaveProfile} disabled={saving}>
+                {saving ? 'Saving...' : 'Save profile'}
+              </button>
+
+              {scanMessage && (
+                <p style={{ margin: '4px 0 0', color: '#ffe58a', fontWeight: 850 }}>
+                  {scanMessage}
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className="manual-collapse-card manual-open-card">
+            <div className="manual-collapse-content manual-visible-content">
+              <div className="page-eyebrow">Business details</div>
+              <h2>What should FromOne know?</h2>
+              <p>
+                These details help FromOne write stronger posts from the photos, videos and flyers
+                uploaded on Dashboard.
+              </p>
+
+              <div className="button-row" style={{ marginBottom: 18 }}>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowBusinessDetails(!showBusinessDetails)}
+                >
+                  {showBusinessDetails ? 'Hide details' : 'Edit details'}
+                </button>
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowBrandDetails(!showBrandDetails)}
+                >
+                  {showBrandDetails ? 'Hide brand' : 'Edit brand'}
+                </button>
+              </div>
+
+              {showBusinessDetails && (
+                <div className="manual-backup-grid">
+                  <div>
+                    <label>
+                      <strong>Business name</strong>
+                      <span>Who are we creating posts for?</span>
+                    </label>
+                    <input
+                      className="input"
+                      value={businessName}
+                      onChange={(event) => setBusinessName(event.target.value)}
+                      placeholder="Example: Baker Roofing"
+                    />
+
+                    <label>
+                      <strong>Industry</strong>
+                      <span>What type of business is it?</span>
+                    </label>
+                    <input
+                      className="input"
+                      value={industry}
+                      onChange={(event) => setIndustry(event.target.value)}
+                      placeholder="Example: Roofing, Beauty, Fitness"
+                    />
+
+                    <label>
+                      <strong>Location or service area</strong>
+                      <span>Where does the business operate?</span>
+                    </label>
+                    <input
+                      className="input"
+                      value={location}
+                      onChange={(event) => setLocation(event.target.value)}
+                      placeholder="Example: Manchester, UK"
+                    />
+
+                    <label>
+                      <strong>Services</strong>
+                      <span>Separate each service with a comma.</span>
+                    </label>
+                    <textarea
+                      className="input"
+                      value={services}
+                      onChange={(event) => setServices(event.target.value)}
+                      placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
+                      rows={5}
+                    />
+                  </div>
+
+                  <div>
+                    <label>
+                      <strong>Target customers</strong>
+                      <span>Who should the posts speak to?</span>
+                    </label>
+                    <textarea
+                      className="input"
+                      value={targetAudience}
+                      onChange={(event) => setTargetAudience(event.target.value)}
+                      placeholder="Example: Homeowners, landlords, local businesses"
+                      rows={5}
+                    />
+
+                    <label>
+                      <strong>Tone of voice</strong>
+                      <span>How should the content sound?</span>
+                    </label>
+                    <select
+                      className="input"
+                      value={toneOfVoice}
+                      onChange={(event) => setToneOfVoice(event.target.value)}
+                    >
+                      {toneOptions.map((tone) => (
+                        <option key={tone} value={tone}>
+                          {tone}
+                        </option>
+                      ))}
+                    </select>
+
+                    <label>
+                      <strong>Main offer or CTA</strong>
+                      <span>Optional offer, service, or action to promote.</span>
+                    </label>
+                    <textarea
+                      className="input"
+                      value={mainOffer}
+                      onChange={(event) => setMainOffer(event.target.value)}
+                      placeholder="Example: Book a free quote this month"
+                      rows={4}
+                    />
+
+                    <label>
+                      <strong>Content themes</strong>
+                      <span>Separate each theme with a comma.</span>
+                    </label>
+                    <textarea
+                      className="input"
+                      value={contentPillars}
+                      onChange={(event) => setContentPillars(event.target.value)}
+                      placeholder="Example: Tips, reviews, offers, before and afters"
+                      rows={4}
+                    />
+
+                    <label>
+                      <strong>Business goals</strong>
+                      <span>Separate each goal with a comma.</span>
+                    </label>
+                    <textarea
+                      className="input"
+                      value={businessGoals}
+                      onChange={(event) => setBusinessGoals(event.target.value)}
+                      placeholder="Example: More calls, more bookings, more enquiries"
+                      rows={4}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {showBrandDetails && (
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 18,
+                    marginTop: 18,
+                    paddingTop: 18,
+                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
+                  <div>
+                    <div className="page-eyebrow">Brand style</div>
+                    <h2 style={{ marginTop: 0 }}>Colours and logo.</h2>
+                    <p>
+                      These can be detected from the website scan. They help FromOne make the app
+                      and post guidance feel more like the business.
+                    </p>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                      gap: 14,
+                    }}
+                  >
+                    <label>
+                      <strong>Primary colour</strong>
+                      <input
+                        className="input"
+                        value={brandPrimaryColor}
+                        onChange={(event) => setBrandPrimaryColor(event.target.value)}
+                        placeholder="#ffd43b"
+                      />
+                    </label>
+
+                    <label>
+                      <strong>Secondary colour</strong>
+                      <input
+                        className="input"
+                        value={brandSecondaryColor}
+                        onChange={(event) => setBrandSecondaryColor(event.target.value)}
+                        placeholder="#101420"
+                      />
+                    </label>
+
+                    <label>
+                      <strong>Accent colour</strong>
+                      <input
+                        className="input"
+                        value={brandAccentColor}
+                        onChange={(event) => setBrandAccentColor(event.target.value)}
+                        placeholder="#3ddc97"
+                      />
+                    </label>
+                  </div>
+
+                  <label>
+                    <strong>Logo URL</strong>
+                    <input
+                      className="input"
+                      value={brandLogoUrl}
+                      onChange={(event) => setBrandLogoUrl(event.target.value)}
+                      placeholder="https://example.com/logo.png"
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Brand summary</strong>
+                    <textarea
+                      className="input"
+                      value={brandSummary}
+                      onChange={(event) => setBrandSummary(event.target.value)}
+                      placeholder="Example: Premium dark brand with yellow accent and practical local tone."
+                      rows={4}
+                    />
+                  </label>
+                </div>
+              )}
+
+              <div className="button-row" style={{ marginTop: 22 }}>
+                <button type="button" onClick={handleSaveProfile} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Business Profile'}
+                </button>
+
+                <a href="/dashboard" className="secondary-button">
+                  Create weekly posts
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <section
+            className="premium-card"
+            style={{
+              marginTop: 24,
+              marginBottom: 24,
+              border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
             <div className="page-eyebrow">Connected accounts</div>
-            <h2 style={{ marginTop: 0 }}>Publishing options.</h2>
+            <h2 style={{ marginTop: 0 }}>Publishing.</h2>
             <p style={{ maxWidth: 820 }}>
-              FromOne keeps publishing simple: Facebook and Instagram can auto publish through
-              Meta. TikTok is manual for now.
+              Facebook and Instagram can publish through Meta when connected. TikTok stays simple:
+              copy the post and open TikTok manually.
             </p>
 
             {loadingConnections ? (
@@ -430,9 +957,9 @@ export default function SettingsPage() {
                     }}
                   >
                     <div>
-                      <div className="page-eyebrow">Auto posting</div>
+                      <div className="page-eyebrow">Facebook & Instagram</div>
                       <h3 style={{ margin: '6px 0 8px', fontSize: 28 }}>
-                        Facebook & Instagram
+                        {hasMetaConnection ? 'Connected' : 'Connect Meta'}
                       </h3>
                       <p style={{ margin: 0, color: 'var(--muted)', maxWidth: 680 }}>
                         {hasMetaConnection
@@ -443,7 +970,7 @@ export default function SettingsPage() {
                                 ? `is connected as @${
                                     primaryMetaConnection?.instagram_username || 'Instagram'
                                   }.`
-                                : 'can be added through your Meta connection when a professional Instagram account is linked.'
+                                : 'can be added when a professional Instagram account is linked in Meta.'
                             }`
                           : 'Connect Meta once to enable Facebook Page publishing and Instagram publishing where available.'}
                       </p>
@@ -464,7 +991,7 @@ export default function SettingsPage() {
                           : '1px solid rgba(255, 255, 255, 0.12)',
                       }}
                     >
-                      {hasMetaConnection ? 'Auto connected' : 'Not connected'}
+                      {hasMetaConnection ? 'Ready' : 'Not connected'}
                     </span>
                   </div>
 
@@ -486,7 +1013,7 @@ export default function SettingsPage() {
                     >
                       <strong>Facebook</strong>
                       <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                        {hasFacebookConnection ? 'Auto publishing ready' : 'Connect Meta to enable'}
+                        {hasFacebookConnection ? 'Publishing ready' : 'Connect Meta to enable'}
                       </p>
                     </div>
 
@@ -501,7 +1028,7 @@ export default function SettingsPage() {
                       <strong>Instagram</strong>
                       <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
                         {hasInstagramConnection
-                          ? 'Auto publishing ready'
+                          ? 'Publishing ready'
                           : hasMetaConnection
                             ? 'Link a professional Instagram account in Meta'
                             : 'Connect Meta to enable'}
@@ -541,256 +1068,23 @@ export default function SettingsPage() {
                       'radial-gradient(circle at top right, rgba(56, 189, 248, 0.10), rgba(255, 255, 255, 0.035) 42%, rgba(15, 23, 42, 0.84))',
                   }}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      gap: 16,
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <div>
-                      <div className="page-eyebrow">Manual posting</div>
-                      <h3 style={{ margin: '6px 0 8px', fontSize: 28 }}>TikTok</h3>
-                      <p style={{ margin: 0, color: 'var(--muted)', maxWidth: 760 }}>
-                        FromOne creates the TikTok wording, hook, CTA and hashtags. You copy the
-                        post and open TikTok manually.
-                      </p>
-                    </div>
-
-                    <span
-                      style={{
-                        borderRadius: 999,
-                        padding: '7px 12px',
-                        fontSize: 12,
-                        fontWeight: 950,
-                        background: 'rgba(56, 189, 248, 0.15)',
-                        color: '#7dd3fc',
-                        border: '1px solid rgba(56, 189, 248, 0.32)',
-                      }}
-                    >
-                      Manual ready
-                    </span>
+                  <div>
+                    <div className="page-eyebrow">TikTok</div>
+                    <h3 style={{ margin: '6px 0 8px', fontSize: 28 }}>Manual posting</h3>
+                    <p style={{ margin: 0, color: 'var(--muted)', maxWidth: 760 }}>
+                      FromOne creates the TikTok wording, hook, CTA and hashtags. The user copies
+                      it and opens TikTok manually.
+                    </p>
                   </div>
 
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      display: 'grid',
-                      gap: 10,
-                      marginTop: 18,
-                    }}
-                  >
-                    <div>
-                      <strong>TikTok manual flow</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                        TikTok auto posting is not claimed yet. Use the Posts page to copy the
-                        generated wording, then open TikTok to publish manually.
-                      </p>
-                    </div>
-
-                    <div className="button-row" style={{ gap: 10 }}>
-                      <button type="button" className="secondary-button" onClick={openTikTok}>
-                        Open TikTok
-                      </button>
-                    </div>
+                  <div className="button-row" style={{ marginTop: 18 }}>
+                    <button type="button" className="secondary-button" onClick={openTikTok}>
+                      Open TikTok
+                    </button>
                   </div>
                 </section>
               </div>
             )}
-          </section>
-
-          <section className="scan-feature-card settings-simple-scan">
-            <div className="scan-feature-content">
-              <div>
-                <div className="page-eyebrow">Business profile</div>
-                <h2>Website details.</h2>
-                <p>
-                  Add or update the website FromOne uses when creating posts from Dashboard. Photos
-                  and flyers provide the post topic. This business profile provides the quality,
-                  local angle, tone and CTA.
-                </p>
-              </div>
-            </div>
-
-            <div className="scan-feature-form">
-              <label>
-                <strong>Website URL</strong>
-                <span>Used when generating new weekly posts from Dashboard.</span>
-              </label>
-
-              <input
-                className="input"
-                value={websiteUrl}
-                onChange={(event) => setWebsiteUrl(event.target.value)}
-                placeholder="https://example.com"
-              />
-
-              <button onClick={handleSaveProfile} disabled={saving}>
-                {saving ? 'Saving...' : 'Save Profile'}
-              </button>
-
-              <button
-                type="button"
-                className="manual-open-button"
-                onClick={() => setShowBusinessDetails(!showBusinessDetails)}
-              >
-                {showBusinessDetails ? 'Hide business details' : 'Edit business details'}
-              </button>
-            </div>
-          </section>
-
-          {showBusinessDetails && (
-            <section className="manual-collapse-card manual-open-card">
-              <div className="manual-collapse-content manual-visible-content">
-                <div className="page-eyebrow">Business Details</div>
-                <h2>Tell FromOne about the business.</h2>
-                <p>
-                  These details help FromOne create better posts. Uploaded photos and flyers decide
-                  what the post is about; these details decide how FromOne sells it properly.
-                </p>
-
-                <div className="manual-backup-grid">
-                  <div>
-                    <label>
-                      <strong>Business Name</strong>
-                      <span>Who are we creating posts for?</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={businessName}
-                      onChange={(event) => setBusinessName(event.target.value)}
-                      placeholder="Example: Baker Roofing"
-                    />
-
-                    <label>
-                      <strong>Industry</strong>
-                      <span>What type of business is it?</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={industry}
-                      onChange={(event) => setIndustry(event.target.value)}
-                      placeholder="Example: Roofing, Beauty, Fitness"
-                    />
-
-                    <label>
-                      <strong>Location</strong>
-                      <span>Where does the business operate?</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={location}
-                      onChange={(event) => setLocation(event.target.value)}
-                      placeholder="Example: Manchester, UK"
-                    />
-
-                    <label>
-                      <strong>Services</strong>
-                      <span>Separate each service with a comma.</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={services}
-                      onChange={(event) => setServices(event.target.value)}
-                      placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
-                      rows={5}
-                    />
-                  </div>
-
-                  <div>
-                    <label>
-                      <strong>Target Audience</strong>
-                      <span>Who should the posts speak to?</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={targetAudience}
-                      onChange={(event) => setTargetAudience(event.target.value)}
-                      placeholder="Example: Homeowners, landlords, local businesses"
-                      rows={5}
-                    />
-
-                    <label>
-                      <strong>Tone of Voice</strong>
-                      <span>How should the content sound by default?</span>
-                    </label>
-                    <select
-                      className="input"
-                      value={toneOfVoice}
-                      onChange={(event) => setToneOfVoice(event.target.value)}
-                    >
-                      <option value="Professional">Professional</option>
-                      <option value="Friendly">Friendly</option>
-                      <option value="Premium">Premium</option>
-                      <option value="Direct">Direct</option>
-                      <option value="Helpful">Helpful</option>
-                      <option value="Fun">Fun</option>
-                      <option value="Local and trustworthy">Local and trustworthy</option>
-                    </select>
-
-                    <label>
-                      <strong>Main Offer or CTA</strong>
-                      <span>Optional offer, service, or action to promote.</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={mainOffer}
-                      onChange={(event) => setMainOffer(event.target.value)}
-                      placeholder="Example: Book a free quote this month"
-                      rows={4}
-                    />
-
-                    <label>
-                      <strong>Content Themes</strong>
-                      <span>Separate each theme with a comma.</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={contentPillars}
-                      onChange={(event) => setContentPillars(event.target.value)}
-                      placeholder="Example: Tips, reviews, offers, before and afters"
-                      rows={4}
-                    />
-
-                    <label>
-                      <strong>Business Goals</strong>
-                      <span>Separate each goal with a comma.</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={businessGoals}
-                      onChange={(event) => setBusinessGoals(event.target.value)}
-                      placeholder="Example: More calls, more bookings, more enquiries"
-                      rows={4}
-                    />
-                  </div>
-                </div>
-
-                <button onClick={handleSaveProfile} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Business Details'}
-                </button>
-              </div>
-            </section>
-          )}
-
-          <section className="settings-save-bar">
-            <div>
-              <div className="page-eyebrow">Next Step</div>
-              <h2>Create weekly posts from Dashboard.</h2>
-              <p>
-                Settings stores the business profile and Meta connection. Dashboard is where users
-                upload photos or flyers and create weekly posts.
-              </p>
-            </div>
-
-            <button onClick={handleSaveProfile} disabled={saving}>
-              {saving ? 'Saving...' : 'Save All Settings'}
-            </button>
           </section>
 
           <section className="manual-collapse-card manual-open-card" style={{ marginTop: '24px' }}>
@@ -805,10 +1099,10 @@ export default function SettingsPage() {
 
               {showDangerZone && (
                 <div style={{ marginTop: '18px' }}>
-                  <div className="page-eyebrow">Danger Zone</div>
+                  <div className="page-eyebrow">Danger zone</div>
                   <h2>Reset or delete profile data.</h2>
                   <p>
-                    Reset clears the form on this page. Delete removes the saved business profile
+                    Reset clears the form on this page. Delete removes the saved Business Profile
                     from Supabase.
                   </p>
 
@@ -819,7 +1113,7 @@ export default function SettingsPage() {
                       onClick={handleResetForm}
                       disabled={saving}
                     >
-                      Reset Form
+                      Reset form
                     </button>
 
                     <button
