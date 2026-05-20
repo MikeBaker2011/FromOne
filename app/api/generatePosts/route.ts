@@ -510,7 +510,7 @@ function fallbackBusinessProfile({
     brand_summary: website
       ? 'Brand style detected from website HTML and stylesheet scan where possible.'
       : 'Brand style based on the saved business profile.',
-    campaign_idea: `Seven-day content campaign for ${marketReach.toLowerCase()}`,
+    campaign_idea: `Weekly post set for ${marketReach.toLowerCase()}`,
   };
 }
 
@@ -704,6 +704,7 @@ function buildPrompt({
             item.extractedText ? `Extracted flyer/text details: ${item.extractedText}` : '',
             item.name ? `Filename: ${item.name}` : '',
             item.type ? `Media type: ${item.type}` : '',
+            item.url ? `Stored media URL: ${item.url}` : '',
           ]
             .filter(Boolean)
             .join(' | ');
@@ -812,7 +813,7 @@ Industry quality rules:
 - Use local trust where location is available.
 - Avoid vague lines like "we are passionate about excellence" unless supported by details.
 - Avoid repeated wording across posts.
-- Each day must have a different purpose and angle.
+- Each post must have a different purpose and angle.
 - Make posts feel human, specific, and useful.
 
 Platform rules:
@@ -833,7 +834,7 @@ Caption style:
 
 CTA rules:
 - Make CTAs specific and natural.
-- Avoid using the same CTA seven times.
+- Avoid using the same CTA repeatedly.
 - CTAs should match the action: book, enquire, call, message, visit, request quote, learn more, reserve, order, etc.
 
 Hashtag rules:
@@ -1052,12 +1053,11 @@ async function generateWithGemini(prompt: string) {
   }
 }
 
-
 function normalisePostCount(value: any, mediaItems: UploadedMediaContext[]) {
   const requested = Number(value);
 
   if (mediaItems.length > 0) {
-    return Math.max(1, Math.min(mediaItems.length, 10));
+    return Math.max(1, Math.min(mediaItems.length, 7));
   }
 
   if (Number.isFinite(requested) && requested > 0) {
@@ -1072,13 +1072,13 @@ function normaliseMediaItems(value: any): UploadedMediaContext[] {
 
   return rawItems
     .map((item) => ({
-      id: cleanText(item?.id),
-      name: cleanText(item?.name || item?.fileName || item?.filename),
-      type: cleanText(item?.type || item?.media_type || item?.mimeType),
+      id: cleanText(item?.id || item?.upload_id),
+      name: cleanText(item?.name || item?.fileName || item?.filename || item?.file_name),
+      type: cleanText(item?.type || item?.media_type || item?.mimeType || item?.content_type),
       url: cleanText(item?.url || item?.media_url || item?.publicUrl),
       description: cleanText(item?.description || item?.alt || item?.summary),
       extractedText: cleanText(item?.extractedText || item?.extracted_text || item?.text),
-      context: cleanText(item?.context || item?.notes),
+      context: cleanText(item?.context || item?.notes || item?.topic_hint),
     }))
     .filter(
       (item) =>
@@ -1089,9 +1089,8 @@ function normaliseMediaItems(value: any): UploadedMediaContext[] {
         item.extractedText ||
         item.context
     )
-    .slice(0, 10);
+    .slice(0, 7);
 }
-
 
 export async function POST(req: NextRequest) {
   try {
