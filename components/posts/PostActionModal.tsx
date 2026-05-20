@@ -187,20 +187,6 @@ export default function PostActionModal({
 
   const rescanUsageLabel = isVideoMedia ? videoRescanUsageLabel : mediaRescanUsageLabel;
 
-  const rescanMediaTitle = isVideoMedia
-    ? 'Rewrite using this video'
-    : isFlyerMedia
-      ? 'Rewrite using this flyer'
-      : 'Rewrite using this image';
-
-  const rescanMediaDescription = isVideoMedia
-    ? 'Use this when you want the wording to match the video. Good for events, atmosphere, products, behind-the-scenes clips, or venue footage.'
-    : isFlyerMedia
-      ? 'Use this when you want the wording to match the flyer, offer, event, date, price, or booking details.'
-      : isImageMedia
-        ? 'Use this when you want the wording to match the photo.'
-        : 'Upload a photo, video, or flyer first. Then FromOne can rewrite the post around it.';
-
   const publishCardTitle = posted
     ? 'Posted'
     : needsMedia
@@ -456,36 +442,28 @@ export default function PostActionModal({
 
           {onRescanPostMedia && (
             <div className="fromone-rescan-step-card">
-              <div className="fromone-simple-step-header compact">
-                <div className="fromone-step-number">2</div>
+              <div className="fromone-rescan-action-card fromone-rescan-action-card-simple">
                 <div>
-                  <div className="page-eyebrow">Rewrite</div>
-                  <h3>Make the wording match</h3>
+                  <div className="page-eyebrow">Rewrite using media</div>
+                  <h3>Rewrite using media</h3>
                   <p>
-                    Tap this when you want FromOne to rewrite this one post using the media above.
+                    Create a fresh editable version of this post from the photo, video or flyer
+                    above.
                   </p>
-                </div>
-              </div>
-
-              <div className="fromone-rescan-action-card">
-                <div>
-                  <strong>{rescanMediaTitle}</strong>
-                  <p>{rescanMediaDescription}</p>
-
-                  {rescanUsageLabel && <span className="fromone-rescan-usage">{rescanUsageLabel}</span>}
 
                   {posted && (
                     <p className="fromone-rescan-note">
-                      This creates a new editable version inside FromOne. It will not change
-                      anything already posted on Facebook or Instagram.
+                      This will not change anything already posted on Facebook or Instagram.
                     </p>
                   )}
 
                   {!hasMedia && (
                     <p className="fromone-rescan-note">
-                      Upload media first, then FromOne can rewrite the post around it.
+                      Upload media first, then FromOne can rewrite this post.
                     </p>
                   )}
+
+                  {rescanUsageLabel && <span className="fromone-rescan-usage">{rescanUsageLabel}</span>}
                 </div>
 
                 <button

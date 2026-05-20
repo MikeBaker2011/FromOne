@@ -1047,3 +1047,44 @@
   }
 }
 
+/* Simplified rewrite using media card */
+
+.fromone-rescan-action-card-simple {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) !important;
+  padding: 22px !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.1), transparent 30%),
+    rgba(255, 255, 255, 0.055) !important;
+}
+
+.fromone-rescan-action-card-simple h3 {
+  margin: 4px 0 8px !important;
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem) !important;
+  line-height: 1.1 !important;
+  color: #ffffff !important;
+}
+
+.fromone-rescan-action-card-simple p {
+  max-width: 660px !important;
+  color: rgba(248, 250, 252, 0.82) !important;
+}
+
+.fromone-rescan-action-card-simple .fromone-rescan-note {
+  margin-top: 10px !important;
+  color: rgba(248, 250, 252, 0.68) !important;
+}
+
+.fromone-rescan-action-card-simple .fromone-rescan-usage {
+  margin-top: 14px !important;
+}
+
+.fromone-rescan-action-card-simple .fromone-rescan-primary-button {
+  align-self: center !important;
+}
+
+@media (max-width: 840px) {
+  .fromone-rescan-action-card-simple {
+    grid-template-columns: 1fr !important;
+  }
+}
+
