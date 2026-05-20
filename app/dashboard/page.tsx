@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,6 +9,8 @@ import axios from "axios";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+const MEDIA_BUCKET = "campaign-assets";
 
 type GeneratedPost = {
   day?: string;
@@ -30,22 +32,6 @@ type AccessInfo = {
   subscription_status: string | null;
 };
 
-type SocialConnection = {
-  id: string;
-  provider: string;
-  provider_user_name: string | null;
-  page_id: string | null;
-  page_name: string | null;
-  instagram_business_account_id: string | null;
-  instagram_username: string | null;
-  google_account_id?: string | null;
-  google_account_name?: string | null;
-  google_location_id?: string | null;
-  google_location_name?: string | null;
-  status: string | null;
-  updated_at: string | null;
-};
-
 type WeeklyProgress = {
   total: number;
   posted: number;
@@ -53,16 +39,30 @@ type WeeklyProgress = {
   nextPost: any | null;
 };
 
-type PlatformOption = {
-  name: string;
-  shortName: string;
-  description: string;
-};
-
 type WeeklyUpload = {
   id: string;
   file: File;
   previewUrl: string;
+  mediaUrl?: string;
+  mediaPath?: string;
+  mediaType?: "image" | "flyer";
+};
+
+type UploadedMediaItem = {
+  upload_id: string;
+  position: number;
+  file_name: string;
+  media_url: string;
+  media_path: string;
+  media_type: "image" | "flyer";
+  content_type: string;
+  topic_hint: string;
+};
+
+type PlatformOption = {
+  name: string;
+  shortName: string;
+  description: string;
 };
 
 const availablePlatforms: PlatformOption[] = [
@@ -93,8 +93,7 @@ const marketReachOptions = [
   {
     value: "Nationwide customers",
     title: "Nationwide",
-    description:
-      "Best for businesses that work across the UK or want broader reach.",
+    description: "Best for businesses that work across the UK or want broader reach.",
   },
   {
     value: "Online customers",
@@ -107,68 +106,28 @@ const marketReachOptions = [
 const postingFrequencyOptions = [
   {
     value: 3,
-    title: "3 days",
-    description:
-      "A light weekly plan for businesses that want simple consistency.",
+    title: "3 posts",
+    description: "A light weekly set for simple consistency.",
   },
   {
     value: 5,
-    title: "5 days",
-    description: "A steady weekday plan for regular visibility.",
+    title: "5 posts",
+    description: "A steady weekday set for regular visibility.",
   },
   {
     value: 7,
-    title: "7 days",
-    description: "A full weekly plan for maximum activity.",
+    title: "7 posts",
+    description: "A full weekly set for maximum activity.",
   },
 ];
 
 const defaultSelectedPlatforms = ["Facebook", "Instagram", "TikTok"];
-const PLATFORM_CAROUSEL_VISIBLE_COUNT = 3;
-
-const recommendedPlatformsByIndustry: Record<string, string[]> = {
-  plumbing: ["Facebook", "Google", "LinkedIn"],
-  plumber: ["Facebook", "Google", "LinkedIn"],
-  electrician: ["Facebook", "Google", "LinkedIn"],
-  electrical: ["Facebook", "Google", "LinkedIn"],
-  roofing: ["Facebook", "Google", "LinkedIn"],
-  roofer: ["Facebook", "Google", "LinkedIn"],
-  building: ["Facebook", "Google", "LinkedIn"],
-  construction: ["Facebook", "Google", "LinkedIn"],
-  landscaping: ["Facebook", "Instagram", "Google"],
-  gardener: ["Facebook", "Instagram", "Google"],
-  signage: ["Instagram", "Facebook", "LinkedIn", "Google"],
-  print: ["Instagram", "Facebook", "LinkedIn", "Google"],
-  beauty: ["Instagram", "TikTok", "Facebook", "Pinterest"],
-  hair: ["Instagram", "TikTok", "Facebook", "Pinterest"],
-  salon: ["Instagram", "TikTok", "Facebook", "Pinterest"],
-  aesthetics: ["Instagram", "TikTok", "Facebook", "Pinterest"],
-  fitness: ["Instagram", "TikTok", "YouTube Shorts", "Facebook"],
-  gym: ["Instagram", "TikTok", "YouTube Shorts", "Facebook"],
-  restaurant: ["Instagram", "TikTok", "Facebook", "Google"],
-  cafe: ["Instagram", "TikTok", "Facebook", "Google"],
-  food: ["Instagram", "TikTok", "Facebook", "Google"],
-  bakery: ["Instagram", "TikTok", "Facebook", "Google"],
-  estate: ["Facebook", "LinkedIn", "Google", "Instagram"],
-  property: ["Facebook", "LinkedIn", "Google", "Instagram"],
-  accounting: ["LinkedIn", "Google", "Facebook"],
-  accountant: ["LinkedIn", "Google", "Facebook"],
-  legal: ["LinkedIn", "Google", "Facebook"],
-  solicitor: ["LinkedIn", "Google", "Facebook"],
-  dental: ["Instagram", "Facebook", "Google"],
-  dentist: ["Instagram", "Facebook", "Google"],
-  mechanic: ["Facebook", "Google", "Instagram"],
-  garage: ["Facebook", "Google", "Instagram"],
-  ecommerce: ["Instagram", "TikTok", "Pinterest", "Facebook"],
-  shop: ["Instagram", "TikTok", "Pinterest", "Facebook"],
-  retail: ["Instagram", "TikTok", "Pinterest", "Facebook"],
-};
 
 const platformFallback = [
   "Facebook",
   "Instagram",
-  "Google",
-  "LinkedIn",
+  "TikTok",
+  "Facebook",
   "Instagram",
   "TikTok",
   "Facebook",
@@ -178,80 +137,6 @@ const DEMO_WEEKLY_SCAN_LIMIT = 1;
 const PAID_WEEKLY_SCAN_LIMIT = 2;
 const MAX_SAVED_CAMPAIGNS = 4;
 const WEBSITE_SCAN_EVENT_TYPES = ["website_scan", "campaign_regenerate"];
-
-const DASHBOARD_TOUR_SEEN_KEY = "fromone_dashboard_tour_seen";
-
-const dashboardTourSteps = [
-  {
-    title: "Welcome to your dashboard",
-    text: "Add the business profile, upload this week’s photos or flyers, then create posts for Facebook, Instagram, and TikTok.",
-    target: "header",
-  },
-  {
-    title: "Add the website",
-    text: "If the business has a website, paste it here. FromOne uses it to understand the services, audience, tone, and offer.",
-    target: "website",
-  },
-  {
-    title: "Choose the reach",
-    text: "Tell FromOne whether the posts should focus on local customers, nationwide customers, or online customers.",
-    target: "reach",
-  },
-  {
-    title: "Choose social platforms",
-    text: "FromOne currently focuses on Facebook, Instagram, and TikTok only.",
-    target: "platforms",
-  },
-  {
-    title: "Create weekly posts",
-    text: "Once the business profile and weekly uploads are ready, create ready-to-use posts.",
-    target: "generate",
-  },
-  {
-    title: "No website? Add business details",
-    text: "If there is no website, use this section to add the business details instead.",
-    target: "manual",
-  },
-  {
-    title: "Review your posts",
-    text: "After creating posts, open Posts to review the media and wording, then publish Facebook/Instagram or copy/open TikTok manually.",
-    target: "posts",
-  },
-];
-
-const customerReadyChecklist = [
-  {
-    key: "business",
-    title: "Add business profile",
-    description: "Add a website or save the business details manually.",
-  },
-  {
-    key: "facebook",
-    title: "Connect Facebook",
-    description: "Connect the Facebook Page FromOne should publish to.",
-  },
-  {
-    key: "instagram",
-    title: "Connect Instagram",
-    description:
-      "Connect the Instagram professional account for direct posting.",
-  },
-  {
-    key: "weekly_plan",
-    title: "Create first weekly plan",
-    description: "Generate the first weekly content plan.",
-  },
-  {
-    key: "scheduled_post",
-    title: "Schedule first post",
-    description: "Set at least one post to publish automatically.",
-  },
-  {
-    key: "billing",
-    title: "Choose billing plan",
-    description: "Move from demo access to a paid plan when ready.",
-  },
-];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -263,24 +148,9 @@ export default function DashboardPage() {
   const [savingWebsite, setSavingWebsite] = useState(false);
   const [showManualProfile, setShowManualProfile] = useState(false);
   const [savingManualProfile, setSavingManualProfile] = useState(false);
+
   const [weeklyScansUsed, setWeeklyScansUsed] = useState(0);
   const [savedCampaignsCount, setSavedCampaignsCount] = useState(0);
-  const [todayPost, setTodayPost] = useState<any>(null);
-  const [socialConnections, setSocialConnections] = useState<
-    SocialConnection[]
-  >([]);
-  const [hasScheduledPost, setHasScheduledPost] = useState(false);
-
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
-    defaultSelectedPlatforms,
-  );
-  const [platformCarouselStart, setPlatformCarouselStart] = useState(0);
-  const [selectedMarketReach, setSelectedMarketReach] =
-    useState("Local customers");
-  const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(7);
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
-  const [weeklyUploads, setWeeklyUploads] = useState<WeeklyUpload[]>([]);
-
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({
     total: 0,
     posted: 0,
@@ -288,29 +158,19 @@ export default function DashboardPage() {
     nextPost: null,
   });
 
-  const [showDashboardTour, setShowDashboardTour] = useState(false);
-  const [dashboardTourStep, setDashboardTourStep] = useState(0);
-
-  const dashboardHeaderRef = useRef<HTMLDivElement | null>(null);
-  const websiteInputRef = useRef<HTMLDivElement | null>(null);
-  const marketReachRef = useRef<HTMLDivElement | null>(null);
-  const platformSelectorRef = useRef<HTMLDivElement | null>(null);
-  const generateButtonRef = useRef<HTMLButtonElement | null>(null);
-  const manualButtonRef = useRef<HTMLButtonElement | null>(null);
-  const manualProfileSectionRef = useRef<HTMLDivElement | null>(null);
-  const postsLinkRef = useRef<HTMLSpanElement | null>(null);
-
-  const [tourRect, setTourRect] = useState<{
-    top: number;
-    left: number;
-    width: number;
-    height: number;
-  } | null>(null);
+  const [socialConnections, setSocialConnections] = useState<any[]>([]);
+  const [hasScheduledPost, setHasScheduledPost] = useState(false);
 
   const [accessInfo, setAccessInfo] = useState<AccessInfo | null>(null);
   const [billingPlan, setBillingPlan] = useState<"demo" | "starter">("demo");
   const [accessLocked, setAccessLocked] = useState(false);
   const [accessMessage, setAccessMessage] = useState("");
+
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultSelectedPlatforms);
+  const [selectedMarketReach, setSelectedMarketReach] = useState("Local customers");
+  const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(3);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [weeklyUploads, setWeeklyUploads] = useState<WeeklyUpload[]>([]);
 
   const [manualBusinessName, setManualBusinessName] = useState("");
   const [manualIndustry, setManualIndustry] = useState("");
@@ -324,13 +184,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchClient();
-
-    const tourSeen = localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY) === "true";
-    const isMobile = window.innerWidth <= 760;
-
-    if (!tourSeen && !isMobile) {
-      setShowDashboardTour(true);
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -339,244 +193,31 @@ export default function DashboardPage() {
     };
   }, [weeklyUploads]);
 
-  useEffect(() => {
-    if (!showDashboardTour || loading) return;
+  const getSafeAuthUser = async () => {
+    const { data, error } = await supabase.auth.getUser();
 
-    const target = getCurrentTourTarget();
+    if (error) {
+      const message = error.message || "";
 
-    if (target) {
-      target.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-        inline: "center",
-      });
-    }
-
-    const timer = window.setTimeout(() => {
-      updateTourRect();
-    }, 420);
-
-    window.addEventListener("resize", updateTourRect);
-    window.addEventListener("scroll", updateTourRect, true);
-
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("resize", updateTourRect);
-      window.removeEventListener("scroll", updateTourRect, true);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showDashboardTour, dashboardTourStep, loading, showManualProfile]);
-
-  const getRecommendedPlatforms = (industryValue?: string | null) => {
-    const industry = String(industryValue || "").toLowerCase();
-
-    const matchedKey = Object.keys(recommendedPlatformsByIndustry).find((key) =>
-      industry.includes(key),
-    );
-
-    const recommended = matchedKey
-      ? recommendedPlatformsByIndustry[matchedKey]
-      : defaultSelectedPlatforms;
-
-    const supported = recommended.filter((platform) =>
-      defaultSelectedPlatforms.includes(platform),
-    );
-
-    return supported.length > 0 ? supported : defaultSelectedPlatforms;
-  };
-
-  const recommendedPlatforms = useMemo(() => {
-    return getRecommendedPlatforms(client?.industry || manualIndustry);
-  }, [client?.industry, manualIndustry]);
-
-  const visiblePlatformCards = useMemo(() => {
-    return availablePlatforms.slice(
-      platformCarouselStart,
-      platformCarouselStart + PLATFORM_CAROUSEL_VISIBLE_COUNT,
-    );
-  }, [platformCarouselStart]);
-
-  const handleShowMorePlatforms = () => {
-    setPlatformCarouselStart((currentStart) => {
-      const nextStart = currentStart + PLATFORM_CAROUSEL_VISIBLE_COUNT;
-      return nextStart >= availablePlatforms.length ? 0 : nextStart;
-    });
-  };
-
-  const togglePlatform = (platformName: string) => {
-    setSelectedPlatforms((currentPlatforms) => {
-      if (currentPlatforms.includes(platformName)) {
-        if (currentPlatforms.length === 1) {
-          alert("Please choose at least one platform.");
-          return currentPlatforms;
-        }
-
-        return currentPlatforms.filter((item) => item !== platformName);
+      if (
+        message.includes("Invalid Refresh Token") ||
+        message.includes("Refresh Token Not Found") ||
+        message.includes("refresh_token_not_found")
+      ) {
+        await supabase.auth.signOut({ scope: "local" });
+        router.replace("/login");
+        return null;
       }
 
-      return [...currentPlatforms, platformName];
-    });
-  };
-
-  const selectRecommendedPlatforms = () => {
-    setSelectedPlatforms(recommendedPlatforms);
-  };
-
-  const buildPlatformPlanText = (platforms: string[]) => {
-    const safePlatforms =
-      platforms.length > 0 ? platforms : defaultSelectedPlatforms;
-    const postCount = Math.max(1, Math.min(selectedPostingFrequency, 7));
-
-    return Array.from({ length: postCount })
-      .map((_, index) => {
-        const platform = safePlatforms[index % safePlatforms.length];
-        return `Day ${index + 1} ${platform}`;
-      })
-      .join(", ");
-  };
-
-  const closeDashboardTour = () => {
-    localStorage.setItem(DASHBOARD_TOUR_SEEN_KEY, "true");
-    setShowDashboardTour(false);
-    setDashboardTourStep(0);
-    setTourRect(null);
-    setShowManualProfile(false);
-  };
-
-  const restartDashboardTour = () => {
-    setDashboardTourStep(0);
-    setTourRect(null);
-    setShowManualProfile(false);
-    setShowDashboardTour(true);
-  };
-
-  const goToNextTourStep = () => {
-    if (dashboardTourStep >= dashboardTourSteps.length - 1) {
-      closeDashboardTour();
-      return;
+      console.error("Auth user error:", error.message);
+      return null;
     }
 
-    const nextStep = dashboardTourStep + 1;
-    const nextTarget = dashboardTourSteps[nextStep]?.target;
-    const currentTarget = dashboardTourSteps[dashboardTourStep]?.target;
-
-    if (nextTarget === "manual") {
-      setShowManualProfile(true);
-    }
-
-    if (currentTarget === "manual" && nextTarget !== "manual") {
-      setShowManualProfile(false);
-    }
-
-    setDashboardTourStep(nextStep);
-  };
-
-  const goToPreviousTourStep = () => {
-    const previousStep = Math.max(0, dashboardTourStep - 1);
-    const previousTarget = dashboardTourSteps[previousStep]?.target;
-    const currentTarget = dashboardTourSteps[dashboardTourStep]?.target;
-
-    if (previousTarget === "manual") {
-      setShowManualProfile(true);
-    }
-
-    if (currentTarget === "manual" && previousTarget !== "manual") {
-      setShowManualProfile(false);
-    }
-
-    setDashboardTourStep(previousStep);
-  };
-
-  const getCurrentTourTarget = () => {
-    const currentTarget = dashboardTourSteps[dashboardTourStep]?.target;
-
-    if (currentTarget === "header") return dashboardHeaderRef.current;
-    if (currentTarget === "website") return websiteInputRef.current;
-    if (currentTarget === "reach") return marketReachRef.current;
-    if (currentTarget === "platforms") return platformSelectorRef.current;
-    if (currentTarget === "generate") return generateButtonRef.current;
-
-    if (currentTarget === "manual") {
-      return manualProfileSectionRef.current || manualButtonRef.current;
-    }
-
-    if (currentTarget === "posts") return postsLinkRef.current;
-
-    return null;
-  };
-
-  const updateTourRect = () => {
-    const target = getCurrentTourTarget();
-
-    if (!target) {
-      setTourRect(null);
-      return;
-    }
-
-    const rect = target.getBoundingClientRect();
-    const padding = 10;
-
-    setTourRect({
-      top: Math.max(rect.top - padding, 12),
-      left: Math.max(rect.left - padding, 12),
-      width: rect.width + padding * 2,
-      height: rect.height + padding * 2,
-    });
-  };
-
-  const getTourTooltipStyle = () => {
-    if (!tourRect || typeof window === "undefined") return {};
-
-    if (window.innerWidth <= 760) {
-      return {};
-    }
-
-    const cardWidth = 420;
-    const estimatedCardHeight = 330;
-    const gap = 42;
-    const safePadding = 26;
-
-    const spaceBelow = window.innerHeight - (tourRect.top + tourRect.height);
-    const spaceAbove = tourRect.top;
-    const spaceRight = window.innerWidth - (tourRect.left + tourRect.width);
-    const spaceLeft = tourRect.left;
-
-    let top = tourRect.top + tourRect.height + gap;
-    let left = tourRect.left + tourRect.width / 2 - cardWidth / 2;
-
-    if (spaceBelow >= estimatedCardHeight + gap) {
-      top = tourRect.top + tourRect.height + gap;
-      left = tourRect.left + tourRect.width / 2 - cardWidth / 2;
-    } else if (spaceAbove >= estimatedCardHeight + gap) {
-      top = tourRect.top - estimatedCardHeight - gap;
-      left = tourRect.left + tourRect.width / 2 - cardWidth / 2;
-    } else if (spaceRight >= cardWidth + gap) {
-      top = tourRect.top;
-      left = tourRect.left + tourRect.width + gap;
-    } else if (spaceLeft >= cardWidth + gap) {
-      top = tourRect.top;
-      left = tourRect.left - cardWidth - gap;
-    }
-
-    left = Math.max(
-      safePadding,
-      Math.min(left, window.innerWidth - cardWidth - safePadding),
-    );
-    top = Math.max(
-      safePadding,
-      Math.min(top, window.innerHeight - estimatedCardHeight - safePadding),
-    );
-
-    return {
-      top: `${top}px`,
-      left: `${left}px`,
-      width: `${cardWidth}px`,
-    };
+    return data.user || null;
   };
 
   const getErrorMessage = (error: any) => {
     if (!error) return "Unknown error.";
-
     if (typeof error === "string") return error;
 
     if (axios.isAxiosError(error)) {
@@ -589,21 +230,15 @@ export default function DashboardPage() {
       );
     }
 
-    if (error?.response?.data?.error) return error.response.data.error;
-    if (error?.response?.data?.message) return error.response.data.message;
-    if (error?.response?.data)
-      return JSON.stringify(error.response.data, null, 2);
-
-    if (error?.message) return error.message;
-    if (error?.error_description) return error.error_description;
-    if (error?.details) return error.details;
-    if (error?.hint) return error.hint;
-
-    try {
-      return JSON.stringify(error, null, 2);
-    } catch {
-      return "Unknown error creating or saving posts.";
-    }
+    return (
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      error?.error_description ||
+      error?.details ||
+      error?.hint ||
+      "Unknown error creating or saving posts."
+    );
   };
 
   const throwSupabaseError = (error: any) => {
@@ -613,8 +248,33 @@ export default function DashboardPage() {
         error?.hint ||
         error?.code ||
         JSON.stringify(error) ||
-        "Supabase error.",
+        "Supabase error."
     );
+  };
+
+  const normaliseWebsiteUrl = (value: string) => {
+    const trimmed = value.trim();
+
+    if (!trimmed) return "";
+
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return trimmed;
+    }
+
+    return `https://${trimmed}`;
+  };
+
+  const safeArray = (value: any) => {
+    if (Array.isArray(value)) return value;
+
+    if (typeof value === "string" && value.trim()) {
+      return value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    return [];
   };
 
   const isFutureDate = (value?: string | null) => {
@@ -623,9 +283,61 @@ export default function DashboardPage() {
   };
 
   const isPaidSubscription = (status?: string | null) => {
-    return ["active", "paid", "trialing"].includes(
-      String(status || "").toLowerCase(),
-    );
+    return ["active", "paid", "trialing"].includes(String(status || "").toLowerCase());
+  };
+
+  const calculateAccess = (access: AccessInfo | null) => {
+    if (!access) {
+      return {
+        locked: false,
+        message: "Demo access is being prepared.",
+      };
+    }
+
+    if (isPaidSubscription(access.subscription_status)) {
+      return {
+        locked: false,
+        message: "Subscription active.",
+      };
+    }
+
+    if (isFutureDate(access.extension_ends_at)) {
+      const date = new Date(access.extension_ends_at as string).toLocaleDateString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+
+      return {
+        locked: false,
+        message: `Manual extension active until ${date}.`,
+      };
+    }
+
+    if (isFutureDate(access.trial_ends_at)) {
+      const date = new Date(access.trial_ends_at as string).toLocaleDateString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+
+      return {
+        locked: false,
+        message: `Demo active until ${date}.`,
+      };
+    }
+
+    return {
+      locked: true,
+      message:
+        "Your 7-day demo has ended. You can still view existing posts, but creating new weekly posts is locked until access is extended or a subscription is active.",
+    };
+  };
+
+  const getSevenDaysAgoIso = () => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return sevenDaysAgo.toISOString();
   };
 
   const getStartOfWeek = () => {
@@ -647,45 +359,59 @@ export default function DashboardPage() {
     return date;
   };
 
-  const loadSocialConnections = async (userId: string) => {
-    try {
-      const params = new URLSearchParams();
-      params.set("user_id", userId);
-
-      const response = await fetch(
-        `/api/social-connections?${params.toString()}`,
-      );
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result?.error || "Could not load connected accounts.");
-      }
-
-      setSocialConnections(result?.connections || []);
-    } catch (error: any) {
-      console.error(
-        "Error loading connected accounts:",
-        error?.message || error,
-      );
-      setSocialConnections([]);
-    }
-  };
-
-  const loadScheduledPostStatus = async (userId: string) => {
+  const loadWeeklyScanUsage = async (userId: string) => {
     const { count, error } = await supabase
-      .from("campaign_posts")
+      .from("usage_events")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
-      .not("scheduled_publish_at", "is", null)
-      .neq("publish_status", "posted");
+      .in("event_type", WEBSITE_SCAN_EVENT_TYPES)
+      .gte("created_at", getSevenDaysAgoIso());
 
     if (error) {
-      console.error("Error loading scheduled post status:", error.message);
-      setHasScheduledPost(false);
-      return;
+      console.error("Error loading scan usage:", error.message);
+      setWeeklyScansUsed(0);
+      return 0;
     }
 
-    setHasScheduledPost((count || 0) > 0);
+    const used = count || 0;
+    setWeeklyScansUsed(used);
+    return used;
+  };
+
+  const loadBillingPlan = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("user_billing")
+      .select("plan, status")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error loading billing plan:", error.message);
+      setBillingPlan("demo");
+      return "demo";
+    }
+
+    const plan = data?.plan === "starter" && data?.status === "active" ? "starter" : "demo";
+
+    setBillingPlan(plan);
+    return plan;
+  };
+
+  const loadSavedCampaignCount = async (userId: string) => {
+    const { count, error } = await supabase
+      .from("campaigns")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("Error loading weekly post set count:", error.message);
+      setSavedCampaignsCount(0);
+      return 0;
+    }
+
+    const total = count || 0;
+    setSavedCampaignsCount(total);
+    return total;
   };
 
   const loadWeeklyProgress = async (userId: string) => {
@@ -717,8 +443,7 @@ export default function DashboardPage() {
     const nextPost =
       posts.find(
         (post) =>
-          !post.is_posted &&
-          new Date(post.scheduled_at).getTime() >= Date.now(),
+          !post.is_posted && new Date(post.scheduled_at).getTime() >= Date.now()
       ) ||
       posts.find((post) => !post.is_posted) ||
       null;
@@ -731,57 +456,40 @@ export default function DashboardPage() {
     });
   };
 
-  const calculateAccess = (access: AccessInfo | null) => {
-    if (!access) {
-      return {
-        locked: false,
-        message: "Demo access is being prepared.",
-      };
+  const loadSocialConnections = async (userId: string) => {
+    try {
+      const params = new URLSearchParams();
+      params.set("user_id", userId);
+
+      const response = await fetch(`/api/social-connections?${params.toString()}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || "Could not load connected accounts.");
+      }
+
+      setSocialConnections(result?.connections || []);
+    } catch (error: any) {
+      console.error("Error loading connected accounts:", error?.message || error);
+      setSocialConnections([]);
+    }
+  };
+
+  const loadScheduledPostStatus = async (userId: string) => {
+    const { count, error } = await supabase
+      .from("campaign_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .not("scheduled_publish_at", "is", null)
+      .neq("publish_status", "posted");
+
+    if (error) {
+      console.error("Error loading scheduled post status:", error.message);
+      setHasScheduledPost(false);
+      return;
     }
 
-    if (isPaidSubscription(access.subscription_status)) {
-      return {
-        locked: false,
-        message: "Subscription active.",
-      };
-    }
-
-    if (isFutureDate(access.extension_ends_at)) {
-      const date = new Date(
-        access.extension_ends_at as string,
-      ).toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-
-      return {
-        locked: false,
-        message: `Manual extension active until ${date}.`,
-      };
-    }
-
-    if (isFutureDate(access.trial_ends_at)) {
-      const date = new Date(access.trial_ends_at as string).toLocaleDateString(
-        undefined,
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        },
-      );
-
-      return {
-        locked: false,
-        message: `Demo active until ${date}.`,
-      };
-    }
-
-    return {
-      locked: true,
-      message:
-        "Your 7-day demo has ended. You can still view existing posts, but creating new weekly posts is locked until access is extended or a subscription is active.",
-    };
+    setHasScheduledPost((count || 0) > 0);
   };
 
   const loadOrCreateAccess = async (userId: string) => {
@@ -825,33 +533,16 @@ export default function DashboardPage() {
         },
         {
           onConflict: "user_id",
-        },
+        }
       )
       .select()
       .single();
 
     if (accessUpsertError) {
       console.error("Error creating user access:", accessUpsertError.message);
-
-      const { data: fallbackAccess, error: fallbackError } = await supabase
-        .from("user_access")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (fallbackError || !fallbackAccess) {
-        setAccessInfo(null);
-        setAccessLocked(false);
-        setAccessMessage("Access check unavailable.");
-        return;
-      }
-
-      const access = fallbackAccess as AccessInfo;
-      const calculated = calculateAccess(access);
-
-      setAccessInfo(access);
-      setAccessLocked(calculated.locked);
-      setAccessMessage(calculated.message);
+      setAccessInfo(null);
+      setAccessLocked(false);
+      setAccessMessage("Access check unavailable.");
       return;
     }
 
@@ -863,58 +554,76 @@ export default function DashboardPage() {
     setAccessMessage(calculated.message);
   };
 
+  const fetchClient = async () => {
+    setLoading(true);
+
+    const user = await getSafeAuthUser();
+    const userId = user?.id;
+
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    await Promise.all([
+      loadWeeklyScanUsage(userId),
+      loadBillingPlan(userId),
+      loadSavedCampaignCount(userId),
+      loadOrCreateAccess(userId),
+      loadWeeklyProgress(userId),
+      loadSocialConnections(userId),
+      loadScheduledPostStatus(userId),
+    ]);
+
+    const { data, error } = await supabase
+      .from("business_profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error loading business profile:", error);
+      setClient(null);
+      setWebsiteUrl("");
+      setLoading(false);
+      return;
+    }
+
+    setClient(data);
+    setWebsiteUrl(data?.website_url || "");
+
+    if (data) {
+      setManualBusinessName(data.business_name || "");
+      setManualIndustry(data.industry || "");
+      setManualLocation(data.location || "");
+      setManualServices(Array.isArray(data.services) ? data.services.join(", ") : "");
+      setManualAudience(
+        Array.isArray(data.target_audience) ? data.target_audience.join(", ") : ""
+      );
+      setManualTone(data.tone_of_voice || "Professional");
+      setManualMainOffer(data.main_offer || "");
+      setManualGoals(Array.isArray(data.business_goals) ? data.business_goals.join(", ") : "");
+      setManualContentPillars(
+        Array.isArray(data.content_pillars) ? data.content_pillars.join(", ") : ""
+      );
+
+      if (String(data.industry || "").toLowerCase().includes("online")) {
+        setSelectedMarketReach("Online customers");
+      } else if (data.location) {
+        setSelectedMarketReach("Local customers");
+      }
+    }
+
+    setLoading(false);
+  };
+
   const ensureAccessAllowed = () => {
     if (!accessLocked) return true;
 
     alert(accessMessage);
     return false;
-  };
-
-  const getSevenDaysAgoIso = () => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return sevenDaysAgo.toISOString();
-  };
-
-  const loadWeeklyScanUsage = async (userId: string) => {
-    const { count, error } = await supabase
-      .from("usage_events")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .in("event_type", WEBSITE_SCAN_EVENT_TYPES)
-      .gte("created_at", getSevenDaysAgoIso());
-
-    if (error) {
-      console.error("Error loading scan usage:", error.message);
-      setWeeklyScansUsed(0);
-      return 0;
-    }
-
-    const used = count || 0;
-    setWeeklyScansUsed(used);
-    return used;
-  };
-
-  const loadBillingPlan = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("user_billing")
-      .select("plan, status")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error loading billing plan:", error.message);
-      setBillingPlan("demo");
-      return "demo";
-    }
-
-    const plan =
-      data?.plan === "starter" && data?.status === "active"
-        ? "starter"
-        : "demo";
-
-    setBillingPlan(plan);
-    return plan;
   };
 
   const isAdminUser = async (userId: string) => {
@@ -945,20 +654,30 @@ export default function DashboardPage() {
   const checkWeeklyScanLimit = async (userId: string) => {
     const admin = await isAdminUser(userId);
 
-    if (admin) {
-      return true;
-    }
+    if (admin) return true;
 
     const plan = await loadBillingPlan(userId);
-    const limit =
-      plan === "starter" ? PAID_WEEKLY_SCAN_LIMIT : DEMO_WEEKLY_SCAN_LIMIT;
+    const limit = plan === "starter" ? PAID_WEEKLY_SCAN_LIMIT : DEMO_WEEKLY_SCAN_LIMIT;
     const used = await loadWeeklyScanUsage(userId);
 
     if (used >= limit) {
       alert(
         plan === "starter"
-          ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create weekly posts using the business details route.`
-          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Upgrade to FromOne Monthly for ${PAID_WEEKLY_SCAN_LIMIT} scans per week, or use the business details route.`,
+          ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create posts using the business details route.`
+          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Use the business details route or upgrade to FromOne Monthly.`
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const checkSavedCampaignLimit = async (userId: string) => {
+    const total = await loadSavedCampaignCount(userId);
+
+    if (total >= MAX_SAVED_CAMPAIGNS) {
+      alert(
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly post sets. Delete an old set from Posts before creating a new one.`
       );
       return false;
     }
@@ -969,7 +688,7 @@ export default function DashboardPage() {
   const recordUsageEvent = async (
     userId: string,
     eventType: "website_scan" | "campaign_regenerate",
-    metadata: Record<string, any> = {},
+    metadata: Record<string, any> = {}
   ) => {
     const { error } = await supabase.from("usage_events").insert({
       user_id: userId,
@@ -983,208 +702,6 @@ export default function DashboardPage() {
     }
 
     await loadWeeklyScanUsage(userId);
-  };
-
-  const loadSavedCampaignCount = async (userId: string) => {
-    const { count, error } = await supabase
-      .from("campaigns")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId);
-
-    if (error) {
-      console.error("Error loading weekly plan count:", error.message);
-      setSavedCampaignsCount(0);
-      return 0;
-    }
-
-    const total = count || 0;
-    setSavedCampaignsCount(total);
-    return total;
-  };
-
-  const checkSavedCampaignLimit = async (userId: string) => {
-    const total = await loadSavedCampaignCount(userId);
-
-    if (total >= MAX_SAVED_CAMPAIGNS) {
-      alert(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans. Delete an old weekly plan from Posts before creating a new one.`,
-      );
-      return false;
-    }
-
-    return true;
-  };
-
-  const loadTodayPost = async (userId: string) => {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999);
-
-    const { data, error } = await supabase
-      .from("campaign_posts")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("is_posted", false)
-      .gte("scheduled_at", startOfToday.toISOString())
-      .lte("scheduled_at", endOfToday.toISOString())
-      .order("scheduled_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error loading today post:", error.message);
-      setTodayPost(null);
-      return;
-    }
-
-    setTodayPost(data);
-  };
-
-  const getSafeAuthUser = async () => {
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error) {
-      const message = error.message || "";
-
-      if (
-        message.includes("Invalid Refresh Token") ||
-        message.includes("Refresh Token Not Found") ||
-        message.includes("refresh_token_not_found")
-      ) {
-        await supabase.auth.signOut({ scope: "local" });
-
-        if (typeof window !== "undefined") {
-          localStorage.removeItem(DASHBOARD_TOUR_SEEN_KEY);
-        }
-
-        router.replace("/login");
-        return null;
-      }
-
-      console.error("Auth user error:", error.message);
-      return null;
-    }
-
-    return data.user || null;
-  };
-
-  const fetchClient = async () => {
-    setLoading(true);
-
-    const user = await getSafeAuthUser();
-    const userId = user?.id;
-
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
-    await Promise.all([
-      loadWeeklyScanUsage(userId),
-      loadBillingPlan(userId),
-      loadSavedCampaignCount(userId),
-      loadOrCreateAccess(userId),
-      loadTodayPost(userId),
-      loadWeeklyProgress(userId),
-      loadSocialConnections(userId),
-      loadScheduledPostStatus(userId),
-    ]);
-
-    const { data, error } = await supabase
-      .from("business_profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error loading business profile:", error);
-      setClient(null);
-      setWebsiteUrl("");
-    } else {
-      setClient(data);
-      setWebsiteUrl(data?.website_url || "");
-
-      if (data) {
-        setManualBusinessName(data.business_name || "");
-        setManualIndustry(data.industry || "");
-        setManualLocation(data.location || "");
-        setManualServices(
-          Array.isArray(data.services) ? data.services.join(", ") : "",
-        );
-        setManualAudience(
-          Array.isArray(data.target_audience)
-            ? data.target_audience.join(", ")
-            : "",
-        );
-        setManualTone(data.tone_of_voice || "Professional");
-        setManualMainOffer(data.main_offer || "");
-        setManualGoals(
-          Array.isArray(data.business_goals)
-            ? data.business_goals.join(", ")
-            : "",
-        );
-        setManualContentPillars(
-          Array.isArray(data.content_pillars)
-            ? data.content_pillars.join(", ")
-            : "",
-        );
-
-        const industry = String(data.industry || "").toLowerCase();
-
-        if (industry.includes("ecommerce") || industry.includes("online")) {
-          setSelectedMarketReach("Online customers");
-        } else if (data.location) {
-          setSelectedMarketReach("Local customers");
-        }
-
-        const recommendedForLoadedProfile = getRecommendedPlatforms(
-          data.industry,
-        );
-
-        setSelectedPlatforms((currentPlatforms) => {
-          const isDefaultSelection =
-            currentPlatforms.length === defaultSelectedPlatforms.length &&
-            defaultSelectedPlatforms.every((platform) =>
-              currentPlatforms.includes(platform),
-            );
-
-          return isDefaultSelection
-            ? recommendedForLoadedProfile
-            : currentPlatforms;
-        });
-      }
-    }
-
-    setLoading(false);
-  };
-
-  const normaliseWebsiteUrl = (value: string) => {
-    const trimmed = value.trim();
-
-    if (!trimmed) return "";
-
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-      return trimmed;
-    }
-
-    return `https://${trimmed}`;
-  };
-
-  const safeArray = (value: any) => {
-    if (Array.isArray(value)) return value;
-
-    if (typeof value === "string" && value.trim()) {
-      return value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-    }
-
-    return [];
   };
 
   const getBusinessLocation = (profile?: any) => {
@@ -1208,6 +725,7 @@ export default function DashboardPage() {
 
     return selectedMarketReach;
   };
+
   const getMarketReachDisplayLabel = (profile?: any) => {
     const location = getBusinessLocation(profile);
 
@@ -1237,50 +755,21 @@ Industry: ${profile.industry || ""}
 Location: ${businessLocation}
 Services: ${Array.isArray(profile.services) ? profile.services.join(", ") : ""}
 Target audience: ${
-      Array.isArray(profile.target_audience)
-        ? profile.target_audience.join(", ")
-        : ""
+      Array.isArray(profile.target_audience) ? profile.target_audience.join(", ") : ""
     }
 Tone of voice: ${profile.tone_of_voice || ""}
-Content pillars: ${
-      Array.isArray(profile.content_pillars)
-        ? profile.content_pillars.join(", ")
-        : ""
-    }
+Content pillars: ${Array.isArray(profile.content_pillars) ? profile.content_pillars.join(", ") : ""}
 Main offer: ${profile.main_offer || ""}
-Business goals: ${
-      Array.isArray(profile.business_goals)
-        ? profile.business_goals.join(", ")
-        : ""
-    }
+Business goals: ${Array.isArray(profile.business_goals) ? profile.business_goals.join(", ") : ""}
 
-Market reach for this weekly plan:
+Market reach:
 ${marketReachContext}
 
-Use the market reach to shape the posts:
-- Local customers: write for customers in and around the business location. Use local trust, service area wording, nearby customer needs, and location-led phrasing where useful.
-- Nationwide customers: avoid over-local wording unless it is directly relevant. Make the posts suitable for a wider UK audience.
-- Online customers: focus on digital buying intent, online enquiries, delivery, remote service, ecommerce, or online conversion where relevant.
-
-Selected social media platforms for this weekly plan:
-${selectedPlatforms.join(", ")}
-
-Posting frequency for this weekly plan:
-${selectedPostingFrequency} posts this week.
-
-Only create ${selectedPostingFrequency} posts for this weekly plan.
-Only create posts for the selected social media platforms above. Do not use platforms that are not selected.
-
-When a website URL is available, scan the website and infer the business details, tone, audience, services, content pillars, CTAs, and branding from the website.
-
-When no website URL is available, use the manual business profile above. Treat it as the main source of truth and create strong, specific content from those details.
-
-Also detect or infer:
-- brand_primary_color as a hex code
-- brand_secondary_color as a hex code
-- brand_accent_color as a hex code
-- brand_logo_url if visible
-- brand_summary
+Core FromOne rule:
+- Uploaded media provides the topic.
+- The business profile provides the quality, local angle, industry relevance, tone, CTA and sales angle.
+- Do not only describe a photo or flyer.
+- Turn each upload into a useful post that sounds like the business.
 `;
   };
 
@@ -1300,13 +789,28 @@ Also detect or infer:
       .replace(/\s+/g, "")
       .replace(/[^a-zA-Z0-9]/g, "");
 
-    return [
-      `#${industry}`,
-      `#${location}`,
-      "#SmallBusiness",
-      "#Marketing",
-      "#FromOne",
-    ];
+    return [`#${industry}`, `#${location}`, "#SmallBusiness", "#FromOne"];
+  };
+
+  const getRecommendedPlatforms = () => {
+    return defaultSelectedPlatforms;
+  };
+
+  const selectedPostingFrequencyOption =
+    postingFrequencyOptions.find((option) => option.value === selectedPostingFrequency) ||
+    postingFrequencyOptions[0];
+
+  const recommendedPlatforms = useMemo(() => getRecommendedPlatforms(), []);
+
+  const buildPlatformPlanText = (platforms: string[], postCount: number) => {
+    const safePlatforms = platforms.length > 0 ? platforms : defaultSelectedPlatforms;
+
+    return Array.from({ length: postCount })
+      .map((_, index) => {
+        const platform = safePlatforms[index % safePlatforms.length];
+        return `Post ${index + 1} ${platform}`;
+      })
+      .join(", ");
   };
 
   const saveWebsiteToProfile = async () => {
@@ -1374,8 +878,6 @@ Also detect or infer:
       const message = getErrorMessage(error);
 
       console.error("Error saving website profile:", error);
-      console.error("Readable save website error:", message);
-
       alert(message);
       return null;
     } finally {
@@ -1426,8 +928,6 @@ Also detect or infer:
         if (error) throwSupabaseError(error);
 
         setClient(data);
-        setSelectedPlatforms(getRecommendedPlatforms(data.industry));
-
         return data;
       }
 
@@ -1443,8 +943,6 @@ Also detect or infer:
       if (error) throwSupabaseError(error);
 
       setClient(data);
-      setSelectedPlatforms(getRecommendedPlatforms(data.industry));
-
       return data;
     } catch (error: any) {
       const message = getErrorMessage(error);
@@ -1457,48 +955,33 @@ Also detect or infer:
     }
   };
 
-  const updateBusinessProfileFromScan = async (
-    scanData: any,
-    activeClient: any,
-  ) => {
+  const updateBusinessProfileFromScan = async (scanData: any, activeClient: any) => {
     if (!activeClient?.id || !scanData) return;
 
     const businessProfileUpdates: any = {
       updated_at: new Date().toISOString(),
     };
 
-    if (scanData.business_name)
-      businessProfileUpdates.business_name = scanData.business_name;
+    if (scanData.business_name) businessProfileUpdates.business_name = scanData.business_name;
     if (scanData.industry) businessProfileUpdates.industry = scanData.industry;
     if (scanData.location) businessProfileUpdates.location = scanData.location;
-    if (scanData.main_offer)
-      businessProfileUpdates.main_offer = scanData.main_offer;
-    if (scanData.tone_of_voice)
-      businessProfileUpdates.tone_of_voice = scanData.tone_of_voice;
-
-    if (scanData.services)
-      businessProfileUpdates.services = safeArray(scanData.services);
+    if (scanData.main_offer) businessProfileUpdates.main_offer = scanData.main_offer;
+    if (scanData.tone_of_voice) businessProfileUpdates.tone_of_voice = scanData.tone_of_voice;
+    if (scanData.services) businessProfileUpdates.services = safeArray(scanData.services);
     if (scanData.target_audience) {
-      businessProfileUpdates.target_audience = safeArray(
-        scanData.target_audience,
-      );
+      businessProfileUpdates.target_audience = safeArray(scanData.target_audience);
     }
     if (scanData.content_pillars) {
-      businessProfileUpdates.content_pillars = safeArray(
-        scanData.content_pillars,
-      );
+      businessProfileUpdates.content_pillars = safeArray(scanData.content_pillars);
     }
     if (scanData.business_goals) {
-      businessProfileUpdates.business_goals = safeArray(
-        scanData.business_goals,
-      );
+      businessProfileUpdates.business_goals = safeArray(scanData.business_goals);
     }
     if (scanData.brand_primary_color) {
       businessProfileUpdates.brand_primary_color = scanData.brand_primary_color;
     }
     if (scanData.brand_secondary_color) {
-      businessProfileUpdates.brand_secondary_color =
-        scanData.brand_secondary_color;
+      businessProfileUpdates.brand_secondary_color = scanData.brand_secondary_color;
     }
     if (scanData.brand_accent_color) {
       businessProfileUpdates.brand_accent_color = scanData.brand_accent_color;
@@ -1526,70 +1009,64 @@ Also detect or infer:
     }
 
     setClient(data);
-
-    if (data?.industry) {
-      setSelectedPlatforms(getRecommendedPlatforms(data.industry));
-    }
   };
 
-  const normaliseGeneratedPost = (
-    post: GeneratedPost | string,
-    index: number,
-    activeClient: any,
-    detectedIndustry: string,
-    detectedLocation: string,
-  ) => {
-    const selectedPlatformFallback =
-      selectedPlatforms[index % selectedPlatforms.length] ||
-      platformFallback[index] ||
-      "Facebook";
+  const getSafeFileName = (fileName: string) => {
+    const cleanName = fileName
+      .toLowerCase()
+      .replace(/[^a-z0-9.\-_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
 
-    const fallbackHashtags = buildHashtags({
-      ...activeClient,
-      industry: detectedIndustry,
-      location:
-        selectedMarketReach === "Nationwide customers"
-          ? "UK"
-          : selectedMarketReach === "Online customers"
-            ? "Online"
-            : detectedLocation,
-    });
+    return cleanName || "media";
+  };
 
-    if (typeof post === "string") {
-      return {
-        day: `Day ${index + 1}`,
-        platform: selectedPlatformFallback,
-        title: `${selectedPlatformFallback} Post`,
-        caption: post,
-        cta: activeClient.main_offer || "Contact us today to find out more.",
-        hashtags: fallbackHashtags,
-        image_prompt:
-          "Use a clean, professional image that supports the message of this post.",
-      };
+  const getWeeklyUploadMediaType = (file: File): "image" | "flyer" => {
+    if (file.type === "application/pdf") return "flyer";
+    return "image";
+  };
+
+  const uploadWeeklyMediaToStorage = async (userId: string): Promise<UploadedMediaItem[]> => {
+    if (weeklyUploads.length === 0) return [];
+
+    const uploadedItems: UploadedMediaItem[] = [];
+
+    for (let index = 0; index < weeklyUploads.length; index++) {
+      const upload = weeklyUploads[index];
+      const safeFileName = getSafeFileName(upload.file.name);
+      const mediaType = getWeeklyUploadMediaType(upload.file);
+      const path = `${userId}/weekly-uploads/${Date.now()}-${index + 1}-${safeFileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(MEDIA_BUCKET)
+        .upload(path, upload.file, {
+          cacheControl: "3600",
+          upsert: true,
+          contentType: upload.file.type,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+
+      uploadedItems.push({
+        upload_id: upload.id,
+        position: index + 1,
+        file_name: upload.file.name,
+        media_url: publicUrlData.publicUrl,
+        media_path: path,
+        media_type: mediaType,
+        content_type: upload.file.type,
+        topic_hint:
+          mediaType === "flyer"
+            ? "Flyer, poster, offer graphic or PDF upload. Extract the offer/details where possible and rewrite it as a natural business post."
+            : "Business photo upload. Use the image as the topic, but write the post using the business profile.",
+      });
     }
 
-    const allowedPlatform = selectedPlatforms.includes(post.platform || "")
-      ? post.platform
-      : selectedPlatformFallback;
-
-    return {
-      day: post.day || `Day ${index + 1}`,
-      platform: allowedPlatform || selectedPlatformFallback,
-      title:
-        post.title || `${allowedPlatform || selectedPlatformFallback} Post`,
-      caption: post.caption || "",
-      cta:
-        post.cta ||
-        activeClient.main_offer ||
-        "Contact us today to find out more.",
-      hashtags:
-        Array.isArray(post.hashtags) && post.hashtags.length > 0
-          ? post.hashtags
-          : fallbackHashtags,
-      image_prompt:
-        post.image_prompt ||
-        "Use a clean, professional image that supports the message of this post.",
-    };
+    return uploadedItems;
   };
 
   const buildCampaignName = (businessName: string) => {
@@ -1604,12 +1081,66 @@ Also detect or infer:
       minute: "2-digit",
     });
 
-    return `${businessName || "Weekly plan"} — ${date} ${time}`;
+    return `${businessName || "Weekly posts"} — ${date} ${time}`;
+  };
+
+  const normaliseGeneratedPost = (
+    post: GeneratedPost | string,
+    index: number,
+    activeClient: any,
+    detectedIndustry: string,
+    detectedLocation: string
+  ) => {
+    const selectedPlatformFallback =
+      selectedPlatforms[index % selectedPlatforms.length] || platformFallback[index] || "Facebook";
+
+    const fallbackHashtags = buildHashtags({
+      ...activeClient,
+      industry: detectedIndustry,
+      location:
+        selectedMarketReach === "Nationwide customers"
+          ? "UK"
+          : selectedMarketReach === "Online customers"
+            ? "Online"
+            : detectedLocation,
+    });
+
+    if (typeof post === "string") {
+      return {
+        day: `Post ${index + 1}`,
+        platform: selectedPlatformFallback,
+        title: `${selectedPlatformFallback} Post`,
+        caption: post,
+        cta: activeClient.main_offer || "Contact us today to find out more.",
+        hashtags: fallbackHashtags,
+        image_prompt:
+          "Use a clear business photo, flyer, product image, finished work image, or short clip that supports this post.",
+      };
+    }
+
+    const allowedPlatform = selectedPlatforms.includes(post.platform || "")
+      ? post.platform
+      : selectedPlatformFallback;
+
+    return {
+      day: post.day || `Post ${index + 1}`,
+      platform: allowedPlatform || selectedPlatformFallback,
+      title: post.title || `${allowedPlatform || selectedPlatformFallback} Post`,
+      caption: post.caption || "",
+      cta: post.cta || activeClient.main_offer || "Contact us today to find out more.",
+      hashtags:
+        Array.isArray(post.hashtags) && post.hashtags.length > 0
+          ? post.hashtags
+          : fallbackHashtags,
+      image_prompt:
+        post.image_prompt ||
+        "Use a clear business photo, flyer, product image, finished work image, or short clip that supports this post.",
+    };
   };
 
   const createCampaignFromProfile = async (
     activeClient: any,
-    source: "website_scan" | "manual_profile",
+    source: "website_scan" | "manual_profile"
   ) => {
     const user = await getSafeAuthUser();
     const userId = user?.id;
@@ -1628,8 +1159,8 @@ Also detect or infer:
     const marketReachDisplayLabel = getMarketReachDisplayLabel(activeClient);
     const postCount =
       weeklyUploads.length > 0
-        ? weeklyUploads.length
-        : selectedPostingFrequency;
+        ? Math.min(weeklyUploads.length, 7)
+        : Math.max(1, Math.min(selectedPostingFrequency, 7));
 
     const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
 
@@ -1641,22 +1172,35 @@ Also detect or infer:
       if (!allowed) return;
     }
 
+    const uploadedMediaItems =
+      weeklyUploads.length > 0 ? await uploadWeeklyMediaToStorage(userId) : [];
+
     const response = await axios.post("/api/generatePosts", {
       website: source === "website_scan" ? activeClient.website_url : "",
       clientName: activeClient.business_name,
       industry: activeClient.industry,
       description: `${buildBusinessDescription(activeClient)}
 
-Weekly uploaded media count: ${weeklyUploads.length}. If media context is available in a later API step, use each upload as the topic and the business profile as the quality layer.`,
+Weekly uploaded media count: ${uploadedMediaItems.length}.
+If uploads are supplied:
+- Post 1 must use Upload 1 as the topic.
+- Post 2 must use Upload 2 as the topic.
+- Continue one post per upload.
+- Do not only describe the image or flyer.
+- Use the business profile to add quality, local angle, industry relevance, tone, CTA and sales angle.`,
       provider: "gemini",
       platforms: selectedPlatforms,
       postingFrequency: postCount,
       numberOfPosts: postCount,
       marketReach: marketReachContext,
+      mediaItems: uploadedMediaItems,
+      weeklyUploads: uploadedMediaItems,
+      uploads: uploadedMediaItems,
       requestedOutput: {
-        posts: `array of ${postCount} post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only the selected platforms supplied in the request. Shape posts around the supplied marketReach, including the business location when local reach is selected.`,
+        posts: `array of ${postCount} post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only Facebook, Instagram and TikTok. If mediaItems are supplied, create one post per media item in the same order.`,
         selected_platforms: selectedPlatforms,
         market_reach: marketReachContext,
+        uploaded_media: uploadedMediaItems,
         business_name: "detected business name",
         industry: "detected industry",
         location: "detected location",
@@ -1674,10 +1218,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
       },
     });
 
-    const posts: GeneratedPost[] = (response.data.posts || []).slice(
-      0,
-      postCount,
-    );
+    const posts: GeneratedPost[] = (response.data.posts || []).slice(0, postCount);
 
     if (!posts.length) {
       alert(response.data.error || "No posts were created.");
@@ -1695,15 +1236,12 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
     const campaignIdea =
       scanData?.campaign_idea ||
       scanData?.brand_summary ||
-      `Weekly ${marketReachContext.toLowerCase()} weekly post plan`;
+      `Weekly ${marketReachContext.toLowerCase()} post set`;
 
     const detectedBusinessName =
-      scanData?.business_name ||
-      activeClient.business_name ||
-      "Website Scan Weekly Plan";
+      scanData?.business_name || activeClient.business_name || "Weekly Posts";
 
-    const detectedIndustry =
-      scanData?.industry || activeClient.industry || "General";
+    const detectedIndustry = scanData?.industry || activeClient.industry || "General";
     const detectedLocation =
       scanData?.location ||
       activeClient.location ||
@@ -1716,8 +1254,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
         ? activeClient.target_audience.join(", ")
         : marketReachContext;
 
-    const detectedTone =
-      scanData?.tone_of_voice || activeClient.tone_of_voice || "Professional";
+    const detectedTone = scanData?.tone_of_voice || activeClient.tone_of_voice || "Professional";
 
     const { data: campaign, error: campaignError } = await supabase
       .from("campaigns")
@@ -1736,13 +1273,13 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
         audience: detectedAudience,
         drafts: posts.length,
         scheduled: posts.length,
-        assets: 0,
+        assets: uploadedMediaItems.length,
         posted: 0,
         launch_date: new Date().toISOString().split("T")[0],
         campaign_area: detectedLocation,
         tone: detectedTone,
-        posting_frequency: `${postCount} posts per week`,
-        platform_plan: `${buildPlatformPlanText(selectedPlatforms)}. Market reach: ${marketReachContext}`,
+        posting_frequency: `${postCount} posts`,
+        platform_plan: `${buildPlatformPlanText(selectedPlatforms, postCount)}. Market reach: ${marketReachContext}`,
       })
       .select()
       .single();
@@ -1761,34 +1298,37 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
         i,
         activeClient,
         detectedIndustry,
-        detectedLocation,
+        detectedLocation
       );
 
-      const { error: postError } = await supabase
-        .from("campaign_posts")
-        .insert({
-          user_id: userId,
-          campaign_id: campaign.id,
-          keyword: detectedIndustry || "business",
-          title: post.title,
-          caption: post.caption,
-          cta: post.cta,
-          hashtags: post.hashtags,
-          platform: post.platform,
-          type: source,
-          scheduled_day: post.day,
-          scheduled_at: postDate.toISOString(),
-          status: "scheduled",
-          is_posted: false,
-          client_id: activeClient.id,
-          image_prompt: post.image_prompt,
-          reach: 0,
-          clicks: 0,
-          likes: 0,
-          comments: 0,
-          shares: 0,
-          saves: 0,
-        });
+      const mediaItem = uploadedMediaItems[i] || null;
+
+      const { error: postError } = await supabase.from("campaign_posts").insert({
+        user_id: userId,
+        campaign_id: campaign.id,
+        keyword: detectedIndustry || "business",
+        title: post.title,
+        caption: post.caption,
+        cta: post.cta,
+        hashtags: post.hashtags,
+        platform: post.platform,
+        type: source,
+        scheduled_day: post.day,
+        scheduled_at: postDate.toISOString(),
+        status: "scheduled",
+        is_posted: false,
+        client_id: activeClient.id,
+        image_prompt: post.image_prompt,
+        media_url: mediaItem?.media_url || null,
+        media_path: mediaItem?.media_path || null,
+        media_type: mediaItem?.media_type || null,
+        reach: 0,
+        clicks: 0,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        saves: 0,
+      });
 
       if (postError) throwSupabaseError(postError);
     }
@@ -1805,6 +1345,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
           postingFrequency: postCount,
           marketReach: marketReachContext,
           marketReachDisplayLabel,
+          uploadedMediaCount: uploadedMediaItems.length,
         });
       }
     }
@@ -1856,9 +1397,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
       }
 
       const source =
-        activeClient.website_url && websiteUrl.trim()
-          ? "website_scan"
-          : "manual_profile";
+        activeClient.website_url && websiteUrl.trim() ? "website_scan" : "manual_profile";
 
       await createCampaignFromProfile(activeClient, source);
     } catch (error: any) {
@@ -1883,8 +1422,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
     if (!files || files.length === 0) return;
 
     const acceptedFiles = Array.from(files).filter(
-      (file) =>
-        file.type.startsWith("image/") || file.type === "application/pdf",
+      (file) => file.type.startsWith("image/") || file.type === "application/pdf"
     );
 
     if (acceptedFiles.length === 0) {
@@ -1899,6 +1437,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
           id: `${file.name}-${file.size}-${crypto.randomUUID()}`,
           file,
           previewUrl: URL.createObjectURL(file),
+          mediaType: getWeeklyUploadMediaType(file),
         })),
       ].slice(0, 7);
 
@@ -1909,20 +1448,14 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
 
   const removeWeeklyUpload = (uploadId: string) => {
     setWeeklyUploads((currentUploads) => {
-      const uploadToRemove = currentUploads.find(
-        (upload) => upload.id === uploadId,
-      );
+      const uploadToRemove = currentUploads.find((upload) => upload.id === uploadId);
 
       if (uploadToRemove) {
         URL.revokeObjectURL(uploadToRemove.previewUrl);
       }
 
-      const nextUploads = currentUploads.filter(
-        (upload) => upload.id !== uploadId,
-      );
-      setSelectedPostingFrequency(
-        nextUploads.length > 0 ? nextUploads.length : 3,
-      );
+      const nextUploads = currentUploads.filter((upload) => upload.id !== uploadId);
+      setSelectedPostingFrequency(nextUploads.length > 0 ? nextUploads.length : 3);
       return nextUploads;
     });
   };
@@ -1938,88 +1471,65 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
     const savedClient = await saveWebsiteToProfile();
 
     if (savedClient) {
-      alert(
-        "Website saved. Now choose who you want to reach and create weekly posts below.",
-      );
+      alert("Website saved. Now upload photos or flyers, then create weekly posts.");
     }
+  };
+
+  const togglePlatform = (platformName: string) => {
+    setSelectedPlatforms((currentPlatforms) => {
+      if (currentPlatforms.includes(platformName)) {
+        if (currentPlatforms.length === 1) {
+          alert("Please choose at least one platform.");
+          return currentPlatforms;
+        }
+
+        return currentPlatforms.filter((item) => item !== platformName);
+      }
+
+      return [...currentPlatforms, platformName];
+    });
+  };
+
+  const selectRecommendedPlatforms = () => {
+    setSelectedPlatforms(recommendedPlatforms);
   };
 
   const hasManualProfile = Boolean(client?.business_name && client?.industry);
   const hasWebsite = Boolean(websiteUrl.trim());
-  const businessName = client?.business_name || "your business";
   const marketReachDisplayLabel = getMarketReachDisplayLabel(client);
   const marketReachContext = getMarketReachContext(client);
-  const selectedPostingFrequencyOption =
-    postingFrequencyOptions.find(
-      (option) => option.value === selectedPostingFrequency,
-    ) || postingFrequencyOptions[postingFrequencyOptions.length - 1];
+
+  const uploadDrivenPostCount = weeklyUploads.length;
+  const effectivePostCount =
+    uploadDrivenPostCount > 0 ? uploadDrivenPostCount : selectedPostingFrequency;
 
   const selectedPlatformSummary =
     selectedPlatforms.length > 3
       ? `${selectedPlatforms.slice(0, 3).join(", ")} +${selectedPlatforms.length - 3} more`
       : selectedPlatforms.join(", ");
 
-  const uploadDrivenPostCount = weeklyUploads.length;
-  const effectivePostCount =
-    uploadDrivenPostCount > 0
-      ? uploadDrivenPostCount
-      : selectedPostingFrequency;
-  const hasBusinessSetup = Boolean(hasWebsite || hasManualProfile);
-  const hasCreatedPosts = weeklyProgress.total > 0 || savedCampaignsCount > 0;
-
   const primaryMetaConnection =
-    socialConnections.find((connection) => connection.provider === "meta") ||
-    null;
-  const primaryGoogleConnection =
-    socialConnections.find((connection) => connection.provider === "google") ||
-    null;
+    socialConnections.find((connection) => connection.provider === "meta") || null;
 
   const hasFacebookConnection = Boolean(primaryMetaConnection?.page_id);
-  const hasInstagramConnection = Boolean(
-    primaryMetaConnection?.instagram_business_account_id,
-  );
-  const hasGoogleConnection = Boolean(primaryGoogleConnection);
-  const googleLocationReady = Boolean(
-    primaryGoogleConnection?.google_location_id,
-  );
+  const hasInstagramConnection = Boolean(primaryMetaConnection?.instagram_business_account_id);
   const hasPaidPlan =
-    billingPlan === "starter" ||
-    isPaidSubscription(accessInfo?.subscription_status);
+    billingPlan === "starter" || isPaidSubscription(accessInfo?.subscription_status);
 
-  const weeklyScanLimit = hasPaidPlan
-    ? PAID_WEEKLY_SCAN_LIMIT
-    : DEMO_WEEKLY_SCAN_LIMIT;
+  const weeklyScanLimit = hasPaidPlan ? PAID_WEEKLY_SCAN_LIMIT : DEMO_WEEKLY_SCAN_LIMIT;
   const weeklyScansRemaining = Math.max(weeklyScanLimit - weeklyScansUsed, 0);
 
   return (
     <>
-      <style jsx>{`
-        @media (max-width: 980px) {
-          .dashboard-platform-selector-full > div[style*="repeat(3"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
-      <div
-        ref={dashboardHeaderRef}
-        className="page-header dashboard-simple-header"
-      >
+      <div className="page-header dashboard-simple-header">
         <div className="page-eyebrow">FromOne Dashboard</div>
         <h1 className="page-title">Upload. Review. Publish.</h1>
         <p className="page-description">
-          Upload your business photos or flyers. FromOne turns them into
-          Facebook, Instagram and TikTok posts.
+          Upload your business photos or flyers. FromOne turns them into Facebook, Instagram and
+          TikTok posts.
         </p>
 
         <div className="dashboard-header-actions-row">
-          <button
-            type="button"
-            className="secondary-button dashboard-tour-restart-button"
-            onClick={restartDashboardTour}
-          >
-            Show me around
-          </button>
-
           {!loading && (
             <section
               className={
@@ -2029,13 +1539,11 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
               }
             >
               <div>
-                <div className="page-eyebrow">
-                  {accessLocked ? "Demo Ended" : "Access Active"}
-                </div>
+                <div className="page-eyebrow">{accessLocked ? "Demo ended" : "Access active"}</div>
                 <h2>
                   {accessLocked
                     ? "Creating weekly posts is currently locked."
-                    : "Your demo access is active."}
+                    : "Your access is active."}
                 </h2>
                 <p>{accessMessage}</p>
               </div>
@@ -2069,9 +1577,8 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
               </h2>
 
               <p>
-                Add your business details once, then upload this week’s photos
-                or flyers. FromOne uses the business profile to write stronger
-                posts.
+                Add your business details once, then upload this week’s photos or flyers. FromOne
+                uses the business profile to write stronger posts.
               </p>
 
               <div className="button-row" style={{ marginBottom: 18 }}>
@@ -2080,12 +1587,12 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                 </Link>
               </div>
 
-              <div ref={websiteInputRef} className="dashboard-tour-target-wrap">
+              <div className="dashboard-tour-target-wrap">
                 <label>
                   <strong>Business website</strong>
                   <span>
-                    Add the website you want FromOne to understand. You can also
-                    use business details instead.
+                    Add the website you want FromOne to understand. You can also use business
+                    details instead.
                   </span>
                 </label>
 
@@ -2098,8 +1605,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
               </div>
 
               <div className="dashboard-scan-usage-pill">
-                {weeklyScansRemaining} of {weeklyScanLimit} website scans left
-                this week
+                {weeklyScansRemaining} of {weeklyScanLimit} website scans left this week
               </div>
 
               <div className="dashboard-create-action-row">
@@ -2107,18 +1613,12 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                   type="button"
                   className="dashboard-primary-scan-button"
                   onClick={handleSaveWebsiteOnly}
-                  disabled={
-                    accessLocked ||
-                    scanning ||
-                    savingWebsite ||
-                    savingManualProfile
-                  }
+                  disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
                 >
                   {savingWebsite ? "Saving website..." : "Use this website"}
                 </button>
 
                 <button
-                  ref={manualButtonRef}
                   type="button"
                   className="secondary-button dashboard-manual-toggle-button"
                   onClick={() => setShowManualProfile(!showManualProfile)}
@@ -2131,10 +1631,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                       : "No website? Add business details"}
                 </button>
 
-                <span
-                  ref={postsLinkRef}
-                  className="dashboard-tour-link-target dashboard-view-posts-action"
-                >
+                <span className="dashboard-tour-link-target dashboard-view-posts-action">
                   <Link href="/posts" className="dashboard-profile-link">
                     View posts
                   </Link>
@@ -2143,17 +1640,13 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
             </div>
 
             {showManualProfile && (
-              <section
-                ref={manualProfileSectionRef}
-                className="dashboard-manual-profile-card dashboard-manual-profile-card-inline"
-              >
+              <section className="dashboard-manual-profile-card dashboard-manual-profile-card-inline">
                 <div className="dashboard-manual-profile-header">
                   <div>
-                    <div className="page-eyebrow">Business Details</div>
+                    <div className="page-eyebrow">Business details</div>
                     <h2>Add business details.</h2>
                     <p>
-                      Use this when there is no website, or when you want to
-                      guide FromOne manually.
+                      Use this when there is no website, or when you want to guide FromOne manually.
                     </p>
                   </div>
                 </div>
@@ -2164,9 +1657,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     <input
                       className="input"
                       value={manualBusinessName}
-                      onChange={(event) =>
-                        setManualBusinessName(event.target.value)
-                      }
+                      onChange={(event) => setManualBusinessName(event.target.value)}
                       placeholder="Example: Baker & Co Plumbing"
                     />
                   </label>
@@ -2176,9 +1667,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     <input
                       className="input"
                       value={manualIndustry}
-                      onChange={(event) =>
-                        setManualIndustry(event.target.value)
-                      }
+                      onChange={(event) => setManualIndustry(event.target.value)}
                       placeholder="Example: Plumbing, beauty, signage"
                     />
                   </label>
@@ -2188,9 +1677,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     <input
                       className="input"
                       value={manualLocation}
-                      onChange={(event) =>
-                        setManualLocation(event.target.value)
-                      }
+                      onChange={(event) => setManualLocation(event.target.value)}
                       placeholder="Example: Manchester"
                     />
                   </label>
@@ -2218,9 +1705,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     <textarea
                       className="input"
                       value={manualServices}
-                      onChange={(event) =>
-                        setManualServices(event.target.value)
-                      }
+                      onChange={(event) => setManualServices(event.target.value)}
                       placeholder="Emergency callouts, installations, repairs"
                     />
                   </label>
@@ -2231,9 +1716,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     <textarea
                       className="input"
                       value={manualAudience}
-                      onChange={(event) =>
-                        setManualAudience(event.target.value)
-                      }
+                      onChange={(event) => setManualAudience(event.target.value)}
                       placeholder="Homeowners, landlords, small business owners"
                     />
                   </label>
@@ -2243,9 +1726,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     <textarea
                       className="input"
                       value={manualMainOffer}
-                      onChange={(event) =>
-                        setManualMainOffer(event.target.value)
-                      }
+                      onChange={(event) => setManualMainOffer(event.target.value)}
                       placeholder="Book a free quote today"
                     />
                   </label>
@@ -2267,9 +1748,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     <textarea
                       className="input"
                       value={manualContentPillars}
-                      onChange={(event) =>
-                        setManualContentPillars(event.target.value)
-                      }
+                      onChange={(event) => setManualContentPillars(event.target.value)}
                       placeholder="Helpful advice, customer trust, services, offers"
                     />
                   </label>
@@ -2278,9 +1757,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                 <div className="dashboard-manual-profile-actions dashboard-manual-profile-actions-clean">
                   <div>
                     <strong>Save the business details.</strong>
-                    <span>
-                      Then check the post options and create the weekly posts.
-                    </span>
+                    <span>Then upload photos or flyers and create the weekly posts.</span>
                   </div>
 
                   <button
@@ -2288,9 +1765,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     onClick={saveManualProfile}
                     disabled={scanning || savingManualProfile}
                   >
-                    {savingManualProfile
-                      ? "Saving details..."
-                      : "Save business details"}
+                    {savingManualProfile ? "Saving details..." : "Save business details"}
                   </button>
                 </div>
               </section>
@@ -2301,13 +1776,10 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
               style={{ marginTop: 22 }}
             >
               <div className="page-eyebrow">Weekly uploads</div>
-              <h2 style={{ marginTop: 0 }}>
-                Upload this week’s photos or flyers.
-              </h2>
+              <h2 style={{ marginTop: 0 }}>Upload this week’s photos or flyers.</h2>
               <p style={{ marginTop: 0 }}>
-                Add job photos, before/after images, offer graphics, flyers,
-                product shots, food photos, or salon results. The number of
-                uploads decides the number of posts.
+                Add job photos, before/after images, offer graphics, flyers, product shots, food
+                photos, or salon results. The number of uploads decides the number of posts.
               </p>
 
               <label
@@ -2325,9 +1797,10 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                   type="file"
                   accept="image/*,application/pdf"
                   multiple
-                  onChange={(event) =>
-                    handleWeeklyUploadFiles(event.target.files)
-                  }
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    handleWeeklyUploadFiles(event.target.files);
+                    event.target.value = "";
+                  }}
                   style={{ display: "none" }}
                 />
               </label>
@@ -2337,18 +1810,13 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fit, minmax(140px, 1fr))",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
                       gap: 12,
                       marginTop: 18,
                     }}
                   >
                     {weeklyUploads.map((upload, index) => (
-                      <div
-                        key={upload.id}
-                        className="card"
-                        style={{ padding: 10 }}
-                      >
+                      <div key={upload.id} className="card" style={{ padding: 10 }}>
                         <div
                           style={{
                             minHeight: 110,
@@ -2375,6 +1843,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                             <strong>Flyer PDF</strong>
                           )}
                         </div>
+
                         <strong>Post {index + 1}</strong>
                         <p
                           style={{
@@ -2385,10 +1854,12 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                         >
                           {upload.file.name}
                         </p>
+
                         <button
                           type="button"
                           className="secondary-button"
                           onClick={() => removeWeeklyUpload(upload.id)}
+                          disabled={scanning}
                         >
                           Remove
                         </button>
@@ -2396,21 +1867,14 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     ))}
                   </div>
 
-                  <div
-                    className="dashboard-scan-usage-pill"
-                    style={{ marginTop: 16 }}
-                  >
-                    {weeklyUploads.length} uploads = {weeklyUploads.length}{" "}
-                    posts
+                  <div className="dashboard-scan-usage-pill" style={{ marginTop: 16 }}>
+                    {weeklyUploads.length} uploads = {weeklyUploads.length} posts
                   </div>
                 </>
               ) : (
-                <div
-                  className="dashboard-scan-usage-pill"
-                  style={{ marginTop: 16 }}
-                >
-                  No photos yet? FromOne can still create posts from your
-                  website or business details.
+                <div className="dashboard-scan-usage-pill" style={{ marginTop: 16 }}>
+                  No photos yet? FromOne can still create posts from your website or business
+                  details.
                 </div>
               )}
             </section>
@@ -2442,7 +1906,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                   <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
                     {uploadDrivenPostCount > 0
                       ? `${uploadDrivenPostCount} uploads = ${uploadDrivenPostCount} posts`
-                      : `${selectedPostingFrequencyOption.title} per week backup`}
+                      : `${selectedPostingFrequencyOption.title} backup`}
                   </p>
                 </div>
 
@@ -2466,17 +1930,14 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
 
             {showAdvancedOptions && (
               <>
-                <section
-                  ref={marketReachRef}
-                  className="dashboard-platform-selector dashboard-platform-selector-full"
-                >
+                <section className="dashboard-platform-selector dashboard-platform-selector-full">
                   <div className="dashboard-platform-selector-header">
                     <div>
                       <div className="page-eyebrow">Choose your reach</div>
                       <h3>Who are these posts aimed at?</h3>
                       <p>
-                        This helps FromOne decide whether to write with local,
-                        nationwide, or online customer intent.
+                        This helps FromOne decide whether to write with local, nationwide, or
+                        online customer intent.
                       </p>
                     </div>
                   </div>
@@ -2502,9 +1963,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                           </span>
 
                           <strong>{option.title}</strong>
-                          <small className="is-visible">
-                            {option.description}
-                          </small>
+                          <small className="is-visible">{option.description}</small>
                         </button>
                       );
                     })}
@@ -2516,19 +1975,14 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                   </div>
                 </section>
 
-                <section
-                  className="dashboard-platform-selector dashboard-platform-selector-full"
-                  style={{
-                    overflow: "hidden",
-                  }}
-                >
+                <section className="dashboard-platform-selector dashboard-platform-selector-full">
                   <div className="dashboard-platform-selector-header">
                     <div>
-                      <div className="page-eyebrow">Posting frequency</div>
-                      <h3>How many posts this week?</h3>
+                      <div className="page-eyebrow">Backup post count</div>
+                      <h3>How many posts without uploads?</h3>
                       <p>
-                        Choose how often FromOne should create posts for this
-                        weekly plan.
+                        Uploads control the post count. This backup is only used when there are no
+                        uploaded photos or flyers.
                       </p>
                     </div>
                   </div>
@@ -2542,138 +1996,36 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                     }}
                   >
                     {postingFrequencyOptions.map((option) => {
-                      const selected =
-                        selectedPostingFrequency === option.value;
+                      const selected = selectedPostingFrequency === option.value;
 
                       return (
                         <button
                           key={option.value}
                           type="button"
-                          onClick={() =>
-                            setSelectedPostingFrequency(option.value)
+                          onClick={() => setSelectedPostingFrequency(option.value)}
+                          className={
+                            selected
+                              ? "dashboard-platform-carousel-card is-selected"
+                              : "dashboard-platform-carousel-card"
                           }
-                          style={{
-                            width: "100%",
-                            minHeight: 168,
-                            padding: "24px",
-                            borderRadius: 24,
-                            border: selected
-                              ? "1px solid rgba(255, 212, 59, 0.82)"
-                              : "1px solid rgba(255, 255, 255, 0.13)",
-                            background: selected
-                              ? "radial-gradient(circle at top right, rgba(255, 212, 59, 0.22), rgba(255, 255, 255, 0.06) 42%, rgba(15, 23, 42, 0.86))"
-                              : "radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255, 255, 255, 0.05) 45%, rgba(15, 23, 42, 0.82))",
-                            color: "#ffffff",
-                            cursor: "pointer",
-                            textAlign: "left",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "flex-start",
-                            justifyContent: "space-between",
-                            gap: 16,
-                            boxShadow: selected
-                              ? "0 18px 50px rgba(255, 212, 59, 0.14)"
-                              : "none",
-                          }}
                         >
-                          <span
-                            style={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: 999,
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background: selected
-                                ? "rgba(61, 220, 151, 0.2)"
-                                : "rgba(255, 212, 59, 0.12)",
-                              border: selected
-                                ? "1px solid rgba(61, 220, 151, 0.55)"
-                                : "1px solid rgba(255, 212, 59, 0.48)",
-                              color: selected ? "#3ddc97" : "#ffd43b",
-                              fontWeight: 950,
-                              fontSize: 18,
-                              flex: "0 0 auto",
-                            }}
-                          >
+                          <span className="dashboard-platform-check">
                             {selected ? "✓" : "+"}
                           </span>
-
-                          <div style={{ display: "grid", gap: 8 }}>
-                            <strong
-                              style={{
-                                display: "block",
-                                fontSize: 26,
-                                lineHeight: 1,
-                                letterSpacing: "-0.03em",
-                              }}
-                            >
-                              {option.title}
-                            </strong>
-
-                            <span
-                              style={{
-                                display: "block",
-                                fontSize: 14,
-                                lineHeight: 1.35,
-                                fontWeight: 800,
-                                color: "rgba(255, 255, 255, 0.72)",
-                              }}
-                            >
-                              {option.description}
-                            </span>
-                          </div>
-
-                          {selected && (
-                            <span
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                minHeight: 24,
-                                padding: "5px 10px",
-                                borderRadius: 999,
-                                background: "rgba(255, 212, 59, 0.16)",
-                                color: "#ffd43b",
-                                fontSize: 11,
-                                fontWeight: 950,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.04em",
-                              }}
-                            >
-                              Selected
-                            </span>
-                          )}
+                          <strong>{option.title}</strong>
+                          <small className="is-visible">{option.description}</small>
                         </button>
                       );
                     })}
                   </div>
-
-                  <p
-                    style={{
-                      margin: "16px 0 0",
-                      color: "rgba(255, 255, 255, 0.72)",
-                      fontWeight: 800,
-                    }}
-                  >
-                    Selected frequency:{" "}
-                    <strong>
-                      {selectedPostingFrequencyOption.title} per week
-                    </strong>
-                  </p>
                 </section>
 
-                <div
-                  ref={platformSelectorRef}
-                  className="dashboard-platform-selector dashboard-platform-selector-full"
-                >
+                <section className="dashboard-platform-selector dashboard-platform-selector-full">
                   <div className="dashboard-platform-selector-header">
                     <div>
                       <div className="page-eyebrow">Choose your platforms</div>
-                      <h3>Where should we create posts for?</h3>
-                      <p>
-                        Click a card to add or remove that platform. Use More to
-                        cycle through the social cards.
-                      </p>
+                      <h3>Where should FromOne create posts?</h3>
+                      <p>FromOne currently focuses on Facebook, Instagram and TikTok.</p>
                     </div>
 
                     <div className="dashboard-platform-carousel-actions">
@@ -2688,17 +2040,9 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                   </div>
 
                   <div className="dashboard-platform-carousel-wrap">
-                    <div
-                      className="dashboard-platform-carousel"
-                      aria-label="Social platform selector"
-                    >
-                      {visiblePlatformCards.map((platform) => {
-                        const isSelected = selectedPlatforms.includes(
-                          platform.name,
-                        );
-                        const isRecommended = recommendedPlatforms.includes(
-                          platform.name,
-                        );
+                    <div className="dashboard-platform-carousel" aria-label="Social platform selector">
+                      {availablePlatforms.map((platform) => {
+                        const isSelected = selectedPlatforms.includes(platform.name);
 
                         return (
                           <button
@@ -2717,46 +2061,18 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                             </span>
 
                             <strong>{platform.shortName}</strong>
-
-                            <small
-                              className={
-                                isRecommended ? "is-visible" : "is-hidden"
-                              }
-                            >
-                              Recommended
-                            </small>
+                            <small className="is-visible">{platform.description}</small>
                           </button>
                         );
                       })}
                     </div>
-
-                    {availablePlatforms.length >
-                      PLATFORM_CAROUSEL_VISIBLE_COUNT && (
-                      <button
-                        type="button"
-                        className="dashboard-platform-more-button"
-                        onClick={handleShowMorePlatforms}
-                        aria-label="Show more social platforms"
-                      >
-                        <span>More</span>
-                        <b>›</b>
-                      </button>
-                    )}
                   </div>
 
                   <div className="dashboard-selected-platforms-line">
                     <strong>{selectedPlatforms.length}</strong>
                     <span>selected: {selectedPlatforms.join(", ")}</span>
-                    <small>
-                      Showing {platformCarouselStart + 1}–
-                      {Math.min(
-                        platformCarouselStart + PLATFORM_CAROUSEL_VISIBLE_COUNT,
-                        availablePlatforms.length,
-                      )}{" "}
-                      of {availablePlatforms.length}
-                    </small>
                   </div>
-                </div>
+                </section>
               </>
             )}
 
@@ -2776,32 +2092,29 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
                 <h2 style={{ margin: "0 0 8px" }}>Create weekly posts.</h2>
                 <p style={{ margin: 0 }}>
                   FromOne will create {effectivePostCount} posts for{" "}
-                  {marketReachContext.toLowerCase()} using Facebook, Instagram
-                  and TikTok.
+                  {marketReachContext.toLowerCase()} using Facebook, Instagram and TikTok.
                 </p>
+
+                {(hasFacebookConnection || hasInstagramConnection || hasScheduledPost) && (
+                  <p style={{ margin: "8px 0 0", opacity: 0.76 }}>
+                    {hasFacebookConnection ? "Facebook connected. " : ""}
+                    {hasInstagramConnection ? "Instagram connected. " : ""}
+                    {hasScheduledPost ? "You already have scheduled posts." : ""}
+                  </p>
+                )}
               </div>
 
               <button
-                ref={generateButtonRef}
                 type="button"
                 className="dashboard-platform-create-button"
                 onClick={handleGeneratePosts}
-                disabled={
-                  accessLocked ||
-                  scanning ||
-                  savingWebsite ||
-                  savingManualProfile
-                }
+                disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
               >
                 {scanning || savingWebsite
                   ? hasWebsite
-                    ? "Scanning website..."
-                    : "Creating posts from business details..."
-                  : hasWebsite
-                    ? "Create weekly posts"
-                    : hasManualProfile
-                      ? "Create weekly posts"
-                      : "Create weekly posts"}
+                    ? "Saving uploads and scanning..."
+                    : "Saving uploads and creating posts..."
+                  : "Create weekly posts"}
               </button>
             </section>
           </section>
@@ -2809,11 +2122,7 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
       )}
 
       {scanning && (
-        <div
-          className="fromone-loading-overlay"
-          role="status"
-          aria-live="polite"
-        >
+        <div className="fromone-loading-overlay" role="status" aria-live="polite">
           <section className="fromone-loading-card">
             <div className="fromone-loading-orb">
               <span />
@@ -2822,126 +2131,27 @@ Weekly uploaded media count: ${weeklyUploads.length}. If media context is availa
             </div>
 
             <div className="page-eyebrow">
-              {hasWebsite
-                ? "Website scan in progress"
-                : "Creating weekly posts"}
+              {weeklyUploads.length > 0 ? "Saving uploads" : hasWebsite ? "Website scan" : "Creating posts"}
             </div>
 
             <h2>
-              {hasWebsite
-                ? "Scanning your website."
-                : "Creating your weekly plan."}
+              {weeklyUploads.length > 0
+                ? "Saving your photos and creating posts."
+                : hasWebsite
+                  ? "Scanning your website."
+                  : "Creating your weekly posts."}
             </h2>
 
             <p>
-              FromOne is reading the business details, understanding the
-              audience, and creating seven ready-to-use posts for the week.
+              FromOne is using the business profile, weekly uploads, local angle and selected
+              platforms to create ready-to-review posts.
             </p>
 
             <div className="fromone-loading-steps">
-              <span>Scanning business details</span>
-              <span>Finding services and audience</span>
-              <span>Planning platform content</span>
-              <span>Writing seven posts</span>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {showDashboardTour && !loading && (
-        <div className="dashboard-spotlight-tour">
-          {tourRect && (
-            <>
-              <div
-                className="dashboard-tour-shade"
-                style={{
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: tourRect.top,
-                }}
-              />
-
-              <div
-                className="dashboard-tour-shade"
-                style={{
-                  top: tourRect.top,
-                  left: 0,
-                  width: tourRect.left,
-                  height: tourRect.height,
-                }}
-              />
-
-              <div
-                className="dashboard-tour-shade"
-                style={{
-                  top: tourRect.top,
-                  left: tourRect.left + tourRect.width,
-                  right: 0,
-                  height: tourRect.height,
-                }}
-              />
-
-              <div
-                className="dashboard-tour-shade"
-                style={{
-                  top: tourRect.top + tourRect.height,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                }}
-              />
-
-              <div
-                className="dashboard-tour-highlight"
-                style={{
-                  top: tourRect.top,
-                  left: tourRect.left,
-                  width: tourRect.width,
-                  height: tourRect.height,
-                }}
-              />
-            </>
-          )}
-
-          {!tourRect && <div className="dashboard-tour-full-shade" />}
-
-          <section
-            className="dashboard-tour-tooltip"
-            style={getTourTooltipStyle()}
-          >
-            <div className="dashboard-tour-progress">
-              Step {dashboardTourStep + 1} of {dashboardTourSteps.length}
-            </div>
-
-            <h2>{dashboardTourSteps[dashboardTourStep].title}</h2>
-            <p>{dashboardTourSteps[dashboardTourStep].text}</p>
-
-            <div className="dashboard-tour-actions">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={closeDashboardTour}
-              >
-                Skip
-              </button>
-
-              <div>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={goToPreviousTourStep}
-                  disabled={dashboardTourStep === 0}
-                >
-                  Back
-                </button>
-
-                <button type="button" onClick={goToNextTourStep}>
-                  {dashboardTourStep === dashboardTourSteps.length - 1
-                    ? "Finish"
-                    : "Next"}
-                </button>
-              </div>
+              <span>Saving weekly uploads</span>
+              <span>Reading business details</span>
+              <span>Creating one post per upload</span>
+              <span>Attaching media to posts</span>
             </div>
           </section>
         </div>
