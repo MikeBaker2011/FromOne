@@ -11,17 +11,36 @@ export default function PostSuccessModal({
   onViewNextPost,
   onBackToDashboard,
 }: PostSuccessModalProps) {
+  const isComplete = postsLeft === 0;
+
   return (
     <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
       <section className="fromone-modal-card fromone-success-card">
         <div className="fromone-modal-icon">✓</div>
-        <div className="page-eyebrow">Post done</div>
-        <h2>That post is complete.</h2>
+
+        <div className="page-eyebrow">Post complete</div>
+
+        <h2>{isComplete ? "This weekly set is complete." : "That post is done."}</h2>
+
         <p>
-          {postsLeft === 0
-            ? 'All posts in this set are done. Upload more photos or flyers from Dashboard when you are ready to create the next set.'
-            : `${postsLeft} posts left to review this week.`}
+          {isComplete
+            ? "Nice work. All posts in this set are complete. When you are ready, go back to Dashboard, upload more photos, flyers or videos, and create the next set."
+            : `${postsLeft} ${postsLeft === 1 ? "post" : "posts"} left to review in this set.`}
         </p>
+
+        {!isComplete && (
+          <div className="fromone-success-next-step">
+            <strong>Next step</strong>
+            <span>Review the next post, check the media and wording, then publish or copy.</span>
+          </div>
+        )}
+
+        {isComplete && (
+          <div className="fromone-success-next-step">
+            <strong>Create more posts</strong>
+            <span>Use Dashboard to upload fresh business photos, flyers or event videos.</span>
+          </div>
+        )}
 
         <div className="fromone-modal-actions">
           {nextPostId && (
