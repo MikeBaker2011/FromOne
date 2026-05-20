@@ -454,7 +454,11 @@ export default function PostActionModal({
                     onClick={() => onQuickImprovePost(selectedPost, action.value)}
                     disabled={accessLocked || rewritingPost || isRescanning}
                   >
-                    {rewritingPost && rewritingAction === action.value ? 'Improving...' : action.label}
+                    {rewritingPost && rewritingAction === action.value
+                      ? 'Improving...'
+                      : action.value === 'make_sales_focused'
+                        ? 'Sales focused'
+                        : action.label}
                   </button>
                 ))}
               </div>
