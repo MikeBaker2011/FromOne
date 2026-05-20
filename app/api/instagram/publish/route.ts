@@ -59,6 +59,25 @@ function cleanText(value: unknown) {
   return String(value || '').trim();
 }
 
+function getFriendlyInstagramError(message: string) {
+  const cleanMessage = cleanText(message);
+  const lowerMessage = cleanMessage.toLowerCase();
+
+  if (lowerMessage.includes('aspect ratio')) {
+    return 'Instagram needs a square, portrait, or supported video shape. Replace the media with an Instagram-friendly image/video, or post it manually.';
+  }
+
+  if (lowerMessage.includes('media') && lowerMessage.includes('unsupported')) {
+    return 'Instagram could not use this media. Replace it with a square/portrait image or supported video, then try again.';
+  }
+
+  if (lowerMessage.includes('video') && lowerMessage.includes('processing')) {
+    return 'Instagram is still processing this video. Try again shortly, or replace the video if it keeps failing.';
+  }
+
+  return cleanMessage || 'Instagram publish failed.';
+}
+
 function isImageMedia(mediaType: string) {
   return mediaType.toLowerCase().startsWith('image');
 }
@@ -603,7 +622,10 @@ export async function POST(req: NextRequest) {
       instagramResult: publishResult,
     });
   } catch (error: any) {
-    console.error('Instagram publish API error:', error?.message || error);
+    const rawErrorMessage = error?.message || 'Something went wrong publishing to Instagram.';
+    const friendlyErrorMessage = getFriendlyInstagramError(rawErrorMessage);
+
+    console.error('Instagram publish API error:', rawErrorMessage);
 
     const postId = cleanText(body?.postId || body?.campaignPostId);
     let userId = cleanText(body?.userId || body?.user_id);
@@ -627,7 +649,7 @@ export async function POST(req: NextRequest) {
           .from('campaign_posts')
           .update({
             publish_status: 'failed',
-            publish_error: error?.message || 'Instagram publish failed.',
+            publish_error: friendlyErrorMessage,
             status: 'failed',
           })
           .eq('id', postId);
@@ -643,17 +665,18 @@ export async function POST(req: NextRequest) {
       action: 'manual_publish',
       status: 'failed',
       message: 'Instagram publish failed.',
-      error: error?.message || 'Something went wrong publishing to Instagram.',
+      error: friendlyErrorMessage,
       credentialSource: null,
       socialConnectionId: null,
       metadata: {
         route: '/api/instagram/publish',
+        raw_error: rawErrorMessage,
       },
     });
 
     return NextResponse.json(
       {
-        error: error?.message || 'Something went wrong publishing to Instagram.',
+        error: friendlyErrorMessage,
       },
       { status: 500 }
     );
