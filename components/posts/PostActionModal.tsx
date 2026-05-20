@@ -461,20 +461,58 @@ export default function PostActionModal({
                 </p>
               )}
 
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onRescanPostMedia(selectedPost)}
-                disabled={accessLocked || !hasMedia || posted || isRescanning}
-                style={{
-                  marginTop: 12,
-                  width: '100%',
-                }}
-              >
-                {isRescanning ? 'Rescanning media...' : rescanMediaTitle}
-              </button>
+              {posted ? (
+                <>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => onMarkAsNotPosted(selectedPost.id)}
+                    disabled={isRescanning}
+                    style={{
+                      marginTop: 12,
+                      width: '100%',
+                      minHeight: 52,
+                      color: '#101420',
+                      background: '#ffd43b',
+                      borderColor: 'rgba(255, 212, 59, 0.55)',
+                      fontWeight: 950,
+                    }}
+                  >
+                    Mark as not posted to rescan
+                  </button>
 
-              {posted && (
+                  <p
+                    style={{
+                      marginTop: 10,
+                      marginBottom: 0,
+                      opacity: 0.82,
+                    }}
+                  >
+                    This post is already marked as posted, so FromOne will not rewrite it yet.
+                    Mark it as not posted, then press the rescan button.
+                  </p>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => onRescanPostMedia(selectedPost)}
+                  disabled={accessLocked || !hasMedia || isRescanning}
+                  style={{
+                    marginTop: 12,
+                    width: '100%',
+                    minHeight: 52,
+                    color: '#101420',
+                    background: '#ffd43b',
+                    borderColor: 'rgba(255, 212, 59, 0.55)',
+                    fontWeight: 950,
+                  }}
+                >
+                  {isRescanning ? 'Rescanning media...' : rescanMediaTitle}
+                </button>
+              )}
+
+              {!posted && !hasMedia && (
                 <p
                   style={{
                     marginTop: 10,
@@ -482,8 +520,7 @@ export default function PostActionModal({
                     opacity: 0.72,
                   }}
                 >
-                  Posted items cannot be rewritten. Mark this post as not posted first if you need
-                  to change it.
+                  Upload media first, then FromOne can rescan it and rewrite this one post.
                 </p>
               )}
             </div>
