@@ -212,10 +212,12 @@
   font-weight: 800 !important;
 }
 
-.fromone-post-action-modal .secondary-button {
+.fromone-post-action-modal .secondary-button,
+.fromone-post-action-modal a.secondary-button {
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.09) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  text-decoration: none !important;
 }
 
 .fromone-post-action-modal .danger-button {
@@ -238,12 +240,23 @@
 }
 
 .fromone-post-action-modal .fromone-flow-publish-buttons button,
+.fromone-post-action-modal .fromone-flow-publish-buttons a,
 .fromone-post-action-modal .fromone-flow-inline-actions button,
-.fromone-post-action-modal .button-row button {
+.fromone-post-action-modal .fromone-flow-inline-actions a,
+.fromone-post-action-modal .button-row button,
+.fromone-post-action-modal .button-row a {
   min-height: 44px !important;
   border-radius: 14px !important;
   font-size: 0.95rem !important;
   font-weight: 900 !important;
+  width: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
 }
 
 .fromone-post-action-modal .input {
@@ -490,11 +503,20 @@
   margin-top: 22px !important;
 }
 
-.fromone-publish-card-actions button {
+.fromone-publish-card-actions button,
+.fromone-publish-card-actions a {
   min-height: 52px !important;
   border-radius: 16px !important;
   font-size: 0.96rem !important;
   font-weight: 950 !important;
+  width: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
 }
 
 .fromone-publish-card-actions button:disabled {
