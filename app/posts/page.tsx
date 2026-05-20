@@ -2569,11 +2569,27 @@ Important:
                           alignItems: "center",
                         }}
                       >
-                        <div>
-                          <div className="page-eyebrow">
+                        <div style={{ minWidth: 0 }}>
+                          <div
+                            className="page-eyebrow"
+                            style={{
+                              display: "block",
+                              marginBottom: 8,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {dateParts.weekday} {dateParts.day} {dateParts.month}
                           </div>
-                          <strong style={{ fontSize: "1.05rem", color: "#fff" }}>
+
+                          <strong
+                            style={{
+                              display: "block",
+                              fontSize: "1.05rem",
+                              color: "#fff",
+                              lineHeight: 1.18,
+                              wordBreak: "normal",
+                            }}
+                          >
                             {post.title || `${platformName} post`}
                           </strong>
                         </div>
