@@ -50,10 +50,19 @@ const howItWorks = [
   },
 ];
 
+const benefits = [
+  'One upload becomes one post',
+  'Posts are based on real business media',
+  'Suggested times are created automatically',
+  'Images can be made Instagram-safe',
+  'Facebook and Instagram can autopost',
+  'TikTok stays simple with copy/open',
+];
+
 const starterFeatures = [
   'Upload photos, videos and flyers',
   'Business Profile setup',
-  'Posts written from real uploaded media',
+  'Posts written from uploaded media',
   'Automatic suggested post times',
   'Facebook and Instagram autoposting',
   'Instagram-safe image resizing',
@@ -62,12 +71,11 @@ const starterFeatures = [
   'Cancel anytime',
 ];
 
-
 const faqs = [
   {
     question: 'What does FromOne actually do?',
     answer:
-      'FromOne turns your weekly photos, videos and flyers into ready-to-review social media posts. It suggests posting times and can autopost to Facebook and Instagram.',
+      'FromOne turns your weekly photos, videos and flyers into ready-to-review social media posts. It suggests times and can autopost to Facebook and Instagram.',
   },
   {
     question: 'Is it easy for non-technical users?',
@@ -75,9 +83,9 @@ const faqs = [
       'Yes. The weekly flow is simple: set up the business once, upload this week’s media, create posts, review them, then publish or schedule.',
   },
   {
-    question: 'Can I edit the posts before they go live?',
+    question: 'Can I edit before posts go live?',
     answer:
-      'Yes. You can edit the wording, replace media, rewrite using the uploaded media, or change the suggested posting time.',
+      'Yes. You can edit wording, replace media, rewrite using the uploaded media, or change the suggested posting time.',
   },
   {
     question: 'Does FromOne post to TikTok automatically?',
@@ -85,7 +93,7 @@ const faqs = [
       'Not yet. FromOne creates TikTok-ready wording and keeps the process manual: copy the post, open TikTok and publish it yourself.',
   },
   {
-    question: 'What happens if Instagram does not like my image size?',
+    question: 'What if Instagram rejects my image size?',
     answer:
       'FromOne can create an Instagram-safe version of an image before publishing, which helps reduce failed Instagram posts.',
   },
@@ -103,73 +111,98 @@ export default function Home() {
         <PublicNav />
 
         <div
-          className="sales-hero-grid"
           style={{
-            display: 'block',
+            maxWidth: 1040,
+            margin: '0 auto',
+            padding: 'clamp(64px, 10vw, 118px) 16px clamp(52px, 8vw, 90px)',
+            textAlign: 'center',
           }}
         >
-          <div
-            className="sales-hero-copy"
+          <div className="page-eyebrow">Simple social media for small businesses</div>
+
+          <h1
             style={{
-              maxWidth: 980,
-              margin: '0 auto',
+              margin: '18px auto 22px',
+              maxWidth: 940,
+              fontSize: 'clamp(3.25rem, 8vw, 7.8rem)',
+              lineHeight: 0.92,
+              letterSpacing: '-0.075em',
               textAlign: 'center',
             }}
           >
-            <div className="page-eyebrow">Simple social media for small businesses</div>
+            <span style={{ display: 'block' }}>Upload media.</span>
+            <span style={{ display: 'block' }}>Get scheduled posts.</span>
+          </h1>
 
-            <h1 style={{ lineHeight: 0.95, letterSpacing: '-0.07em' }}>
-              Upload media. FromOne creates the posts.
-            </h1>
+          <p
+            style={{
+              maxWidth: 720,
+              margin: '0 auto',
+              color: 'var(--muted)',
+              fontSize: 'clamp(1rem, 1.45vw, 1.22rem)',
+              lineHeight: 1.7,
+            }}
+          >
+            FromOne turns your photos, videos and flyers into ready-to-review posts, chooses
+            sensible posting times, and can autopost to Facebook and Instagram.
+          </p>
 
-            <p style={{ marginLeft: 'auto', marginRight: 'auto', maxWidth: 760 }}>
-              FromOne turns your photos, videos and flyers into scheduled social media posts.
-              Review the posts, edit anything, then autopost to Facebook and Instagram or copy/open
-              TikTok.
-            </p>
+          <div
+            className="sales-hero-actions"
+            style={{
+              justifyContent: 'center',
+              marginTop: 30,
+            }}
+          >
+            <Link href="/signin" className="sales-primary-button">
+              Start 7-day demo
+            </Link>
 
-            <div
-              className="sales-hero-actions"
-              style={{
-                justifyContent: 'center',
-              }}
-            >
-              <Link href="/signin" className="sales-primary-button">
-                Start 7-day demo
-              </Link>
+            <Link href="/tutorial" className="sales-secondary-button">
+              See how it works
+            </Link>
+          </div>
 
-              <Link href="/tutorial" className="sales-secondary-button">
-                See how it works
-              </Link>
-            </div>
-
-            <div
-              className="sales-trust-row"
-              style={{
-                justifyContent: 'center',
-              }}
-            >
-              <span>✓ Uploads become posts</span>
-              <span>✓ Times chosen for you</span>
-              <span>✓ Autopost Facebook & Instagram</span>
-            </div>
+          <div
+            className="sales-trust-row"
+            style={{
+              justifyContent: 'center',
+              marginTop: 22,
+            }}
+          >
+            <span>✓ Uploads become posts</span>
+            <span>✓ Times chosen for you</span>
+            <span>✓ Facebook & Instagram autopost</span>
           </div>
         </div>
       </section>
 
       <section className="sales-section sales-steps-section">
-        <div className="sales-section-heading">
+        <div
+          className="sales-section-heading"
+          style={{
+            textAlign: 'center',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          }}
+        >
           <div className="page-eyebrow">How it works</div>
           <h2>Four simple steps.</h2>
           <p>
-            FromOne is designed to match the app itself: clear, guided and simple enough for small
-            businesses that do not want another complicated marketing dashboard.
+            The app is designed to feel obvious: business setup, upload media, create posts, review
+            and autopost.
           </p>
         </div>
 
         <div className="sales-steps-grid">
           {howItWorks.map((step, index) => (
-            <article key={step.title} className="sales-step-card">
+            <article
+              key={step.title}
+              className="sales-step-card"
+              style={{
+                textAlign: 'left',
+              }}
+            >
               <span>{String(index + 1).padStart(2, '0')}</span>
               <h3>{step.title}</h3>
               <p>{step.description}</p>
@@ -179,36 +212,60 @@ export default function Home() {
       </section>
 
       <section className="sales-section sales-scan-section">
-        <div className="sales-section-heading">
+        <div
+          className="sales-section-heading"
+          style={{
+            textAlign: 'center',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          }}
+        >
           <div className="page-eyebrow">Why it is different</div>
           <h2>It starts with what the business already has.</h2>
           <p>
-            Most businesses already have the raw material: job photos, product shots, flyers,
-            menus, offer graphics, event clips and behind-the-scenes videos. FromOne turns those
-            into the week’s content.
+            Most businesses already have job photos, product shots, flyers, menus, offers, event
+            clips and behind-the-scenes videos. FromOne turns those into the week’s content.
           </p>
         </div>
 
-        <div className="sales-scan-grid">
-          <div className="sales-scan-card">
+        <div
+          style={{
+            maxWidth: 960,
+            margin: '0 auto',
+            display: 'grid',
+            gap: 18,
+          }}
+        >
+          <div
+            className="sales-scan-card"
+            style={{
+              textAlign: 'center',
+              padding: 'clamp(26px, 4vw, 44px)',
+            }}
+          >
             <small>The weekly promise</small>
             <h3>Upload files. Get posts with planned times.</h3>
-            <p>
+            <p style={{ maxWidth: 680, marginLeft: 'auto', marginRight: 'auto' }}>
               FromOne does not ask users to think like marketers. It takes the media they already
               have, writes the posts, suggests the times and keeps publishing simple.
             </p>
           </div>
 
-          <div className="sales-scan-list">
-            {[
-              'One upload becomes one post',
-              'Posts are based on real business media',
-              'Suggested times are created automatically',
-              'Images can be made Instagram-safe',
-              'Facebook and Instagram can autopost',
-              'TikTok stays simple with copy/open',
-            ].map((item) => (
-              <div key={item} className="card">
+          <div
+            className="sales-scan-list"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            }}
+          >
+            {benefits.map((item) => (
+              <div
+                key={item}
+                className="card"
+                style={{
+                  textAlign: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 ✓ {item}
               </div>
             ))}
@@ -217,7 +274,14 @@ export default function Home() {
       </section>
 
       <section className="sales-section sales-pricing-section">
-        <div className="sales-section-heading">
+        <div
+          className="sales-section-heading"
+          style={{
+            textAlign: 'center',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          }}
+        >
           <div className="page-eyebrow">Pricing</div>
           <h2>Simple monthly pricing.</h2>
           <p>
@@ -232,28 +296,38 @@ export default function Home() {
             maxWidth: 760,
             margin: '0 auto',
             textAlign: 'center',
+            padding: 'clamp(28px, 4vw, 46px)',
             background:
               'radial-gradient(circle at top, rgba(255, 212, 59, 0.2), transparent 38%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.04))',
             border: '1px solid rgba(255, 212, 59, 0.28)',
           }}
         >
-          <div>
-            <small>FromOne Starter</small>
-            <h3>
-              £39.99 <span>/ month</span>
-            </h3>
-            <p style={{ maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
-              For small businesses that want their weekly media turned into scheduled social posts
-              without agency costs.
-            </p>
-          </div>
+          <small>FromOne Starter</small>
+
+          <h3
+            style={{
+              margin: '14px 0 10px',
+              fontSize: 'clamp(3.2rem, 7vw, 5.8rem)',
+              lineHeight: 0.9,
+            }}
+          >
+            £39.99 <span>/ month</span>
+          </h3>
+
+          <p style={{ maxWidth: 560, margin: '0 auto', color: 'var(--muted)' }}>
+            For small businesses that want their weekly media turned into scheduled social posts
+            without agency costs.
+          </p>
 
           <div
             className="sales-pricing-features"
             style={{
               textAlign: 'left',
               maxWidth: 560,
-              margin: '22px auto',
+              margin: '26px auto',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+              gap: 10,
             }}
           >
             {starterFeatures.map((feature) => (
@@ -273,7 +347,14 @@ export default function Home() {
       </section>
 
       <section className="sales-section sales-faq-section">
-        <div className="sales-section-heading">
+        <div
+          className="sales-section-heading"
+          style={{
+            textAlign: 'center',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          }}
+        >
           <div className="page-eyebrow">Questions</div>
           <h2>Simple answers.</h2>
           <p>
@@ -282,7 +363,13 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="sales-faq-grid">
+        <div
+          className="sales-faq-grid"
+          style={{
+            maxWidth: 960,
+            margin: '0 auto',
+          }}
+        >
           {faqs.map((item) => (
             <article key={item.question} className="sales-faq-card">
               <h3>{item.question}</h3>
