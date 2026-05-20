@@ -47,6 +47,13 @@ type UploadedMediaContext = {
   context?: string;
 };
 
+type InlineMediaPart = {
+  uploadIndex: number;
+  name: string;
+  mimeType: string;
+  data: string;
+};
+
 type GenerateResult = {
   posts: GeneratedPost[];
   businessProfile: BusinessProfileResult;
@@ -57,7 +64,7 @@ const defaultPlatformPlan = ['Facebook', 'Instagram', 'TikTok'];
 const allowedPlatformOptions = ['Facebook', 'Instagram', 'TikTok'];
 
 const weeklyAngles = [
-  'Uploaded photo or flyer spotlight',
+  'Uploaded media spotlight',
   'Service or offer explanation',
   'Local trust and credibility',
   'Customer problem solved',
@@ -77,6 +84,8 @@ const fallbackColours: BrandColours = {
   secondary: '#101420',
   accent: '#27ae60',
 };
+
+const MAX_INLINE_MEDIA_BYTES = 8 * 1024 * 1024;
 
 function getPlatformCaptionLimit(platform: string) {
   return platformCaptionLimits[platform] || 700;
@@ -665,6 +674,69 @@ async function getWebsiteHtml(website: string) {
   }
 }
 
+function isVisionSupportedMedia(item: UploadedMediaContext) {
+  const type = String(item.type || '').toLowerCase();
+  const url = String(item.url || '').toLowerCase();
+  const name = String(item.name || '').toLowerCase();
+
+  if (type.startsWith('image/')) return true;
+  if (url.match(/\.(jpg|jpeg|png|webp)(\?|$)/)) return true;
+  if (name.match(/\.(jpg|jpeg|png|webp)$/)) return true;
+
+  return false;
+}
+
+function inferMimeType(item: UploadedMediaContext, responseContentType?: string) {
+  const explicitType = String(item.type || '').toLowerCase();
+  const contentType = String(responseContentType || '').toLowerCase();
+  const source = `${item.url || ''} ${item.name || ''}`.toLowerCase();
+
+  if (explicitType.startsWith('image/')) return explicitType;
+  if (contentType.startsWith('image/')) return contentType.split(';')[0];
+  if (source.includes('.png')) return 'image/png';
+  if (source.includes('.webp')) return 'image/webp';
+  if (source.includes('.jpg') || source.includes('.jpeg')) return 'image/jpeg';
+
+  return 'image/jpeg';
+}
+
+async function fetchInlineMediaParts(mediaItems: UploadedMediaContext[]) {
+  const visionItems = mediaItems
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => item.url && isVisionSupportedMedia(item))
+    .slice(0, 7);
+
+  const settled = await Promise.allSettled(
+    visionItems.map(async ({ item, index }) => {
+      const response = await axios.get(item.url as string, {
+        responseType: 'arraybuffer',
+        timeout: 15000,
+        maxContentLength: MAX_INLINE_MEDIA_BYTES,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; FromOneBot/1.0; +https://fromone.app)',
+        },
+      });
+
+      const buffer = Buffer.from(response.data);
+
+      if (buffer.length > MAX_INLINE_MEDIA_BYTES) {
+        throw new Error(`Upload ${index + 1} is too large for inline vision.`);
+      }
+
+      return {
+        uploadIndex: index,
+        name: item.name || `Upload ${index + 1}`,
+        mimeType: inferMimeType(item, String(response.headers?.['content-type'] || '')),
+        data: buffer.toString('base64'),
+      } satisfies InlineMediaPart;
+    })
+  );
+
+  return settled
+    .filter((result): result is PromiseFulfilledResult<InlineMediaPart> => result.status === 'fulfilled')
+    .map((result) => result.value);
+}
+
 function buildPrompt({
   clientName,
   industry,
@@ -677,6 +749,7 @@ function buildPrompt({
   marketReach,
   postCount,
   mediaItems,
+  inlineMediaParts,
 }: {
   clientName: string;
   industry: string;
@@ -689,12 +762,19 @@ function buildPrompt({
   marketReach: string;
   postCount: number;
   mediaItems: UploadedMediaContext[];
+  inlineMediaParts: InlineMediaPart[];
 }) {
   const selectedPlatformPlan = buildSelectedPlatformPlan(selectedPlatforms, postCount)
     .map((item) => `- ${item.day}: ${item.platform} — ${item.angle}`)
     .join('\n');
 
   const platformLimitGuide = buildPlatformLimitGuide(selectedPlatforms);
+
+  const visualUploads = inlineMediaParts.length
+    ? inlineMediaParts
+        .map((item) => `- Upload ${item.uploadIndex + 1}: visual image attached for direct analysis (${item.name}).`)
+        .join('\n')
+    : 'No image pixels were available to the AI. Use metadata and business details only.';
 
   const mediaContext = mediaItems.length
     ? mediaItems
@@ -719,9 +799,16 @@ function buildPrompt({
     : `No uploads were supplied. Create exactly ${postCount} posts from the website/business profile.`;
 
   return `
-You are FromOne's premium social media strategist, website analyst, brand interpreter, and local business copywriter.
+You are FromOne's premium social media strategist, website analyst, brand interpreter, visual media analyst, and local business copywriter.
 
 Your task is to create a simple weekly set of posts that feels like it was written by a skilled social media manager who understands the client's industry and can turn photos or flyers into strong business posts.
+
+CRITICAL VISION RULE:
+- When image uploads are attached in this request, visually inspect the actual image content.
+- Do not guess what is in an image from the business name, website, filename, or industry.
+- If the visual image shows a shopfront, vehicle, sign, food, beauty result, building work, product, flyer, or anything else, the post must match what is actually visible.
+- If the image conflicts with the business profile, trust the visible image for the post subject.
+- Example: if the photo shows a restaurant shopfront, do not write about van graphics unless a van is actually visible.
 
 The output must make a small business owner think:
 "That sounds like us. That is useful. I could post that today."
@@ -783,20 +870,23 @@ Market reach rules:
 Weekly platform and content strategy:
 ${selectedPlatformPlan}
 
-Uploaded media context:
+Uploaded media metadata:
 ${mediaContext}
+
+Visual uploads attached to this Gemini request:
+${visualUploads}
 
 Media matching rule:
 ${mediaModeRule}
 
 Core media quality rule:
-- The uploaded image, flyer, poster, offer graphic, product photo, food image, salon result, job photo, or before/after image gives you the subject of the post.
+- The uploaded image, flyer, poster, offer graphic, product photo, food image, salon result, job photo, shopfront, sign, van, or before/after image gives you the subject of the post.
 - The business profile and website scan give you the quality layer: business name, industry, services, location/service area, audience, tone, offer, CTA, business goals, content pillars, and sales angle.
 - Do not only describe the image.
 - Turn the upload into a professional business post.
 - For flyers, extract offer, date, price, service, location, contact details, and CTA where supplied, then rewrite them naturally as a social post.
-- For photos, infer the likely business topic and write a useful, local, industry-specific caption.
-- If no uploaded media is supplied, use the website/business profile exactly as before.
+- For photos, identify what is visibly in the photo first, then write a useful, local, industry-specific caption around that visible subject.
+- If no uploaded media is supplied, use the website/business profile.
 
 Strict platform rule:
 - You must only use these selected platforms: ${selectedPlatforms.join(', ')}.
@@ -845,12 +935,12 @@ Hashtag rules:
 - Hashtags must start with # and have no spaces.
 
 Image prompt rules:
-- Every image_prompt must be specific enough for a user to choose or create an image.
+- Every image_prompt must describe the actual uploaded visual subject when an image is attached.
 - Include subject, setting, mood, and brand style where useful.
 - Avoid generic prompts like "professional image".
 
 Brand rules:
-- Use the detected brand colours provided unless the website strongly suggests otherwise.
+- Use the detected brand colours provided unless the website or visible uploaded image strongly suggests otherwise.
 - If logo is unclear, return an empty string.
 - Brand summary should explain the style in plain language.
 
@@ -924,7 +1014,30 @@ async function generateWithOpenAI(prompt: string) {
   return extractJsonFromText(text);
 }
 
-async function generateWithGemini(prompt: string) {
+function buildGeminiParts(prompt: string, inlineMediaParts: InlineMediaPart[]) {
+  const parts: any[] = [
+    {
+      text: prompt,
+    },
+  ];
+
+  for (const media of inlineMediaParts) {
+    parts.push({
+      text: `Visual upload ${media.uploadIndex + 1}: ${media.name}. Analyse this exact image and use it as the subject for Post ${media.uploadIndex + 1}.`,
+    });
+
+    parts.push({
+      inlineData: {
+        mimeType: media.mimeType,
+        data: media.data,
+      },
+    });
+  }
+
+  return parts;
+}
+
+async function generateWithGemini(prompt: string, inlineMediaParts: InlineMediaPart[] = []) {
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
@@ -936,16 +1049,12 @@ async function generateWithGemini(prompt: string) {
     {
       contents: [
         {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
+          parts: buildGeminiParts(prompt, inlineMediaParts),
         },
       ],
       generationConfig: {
-        temperature: 0.62,
-        maxOutputTokens: 5200,
+        temperature: 0.55,
+        maxOutputTokens: 6200,
         responseMimeType: 'application/json',
         responseSchema: {
           type: 'OBJECT',
@@ -1130,6 +1239,8 @@ export async function POST(req: NextRequest) {
       colours = extractBrandColours(`${websiteHtml}\n${styleBlocks}\n${externalCss}`);
     }
 
+    const inlineMediaParts = provider === 'gemini' ? await fetchInlineMediaParts(mediaItems) : [];
+
     const fallback = fallbackBusinessProfile({
       clientName,
       industry,
@@ -1151,12 +1262,13 @@ export async function POST(req: NextRequest) {
       marketReach,
       postCount,
       mediaItems,
+      inlineMediaParts,
     });
 
     const rawResult =
       provider === 'openai'
         ? await generateWithOpenAI(prompt)
-        : await generateWithGemini(prompt);
+        : await generateWithGemini(prompt, inlineMediaParts);
 
     const result = normaliseResult(rawResult, fallback, selectedPlatforms, marketReach, postCount);
 
@@ -1169,6 +1281,7 @@ export async function POST(req: NextRequest) {
           marketReach,
           postCount,
           mediaItemsUsed: mediaItems.length,
+          visionMediaUsed: inlineMediaParts.length,
           error: 'No posts were generated.',
         },
         { status: 500 }
@@ -1183,6 +1296,7 @@ export async function POST(req: NextRequest) {
       marketReach,
       postCount,
       mediaItemsUsed: mediaItems.length,
+      visionMediaUsed: inlineMediaParts.length,
       usedWebsiteScan: Boolean(website && websiteContent),
       detectedBrandColours: colours,
       platformCaptionLimits,
