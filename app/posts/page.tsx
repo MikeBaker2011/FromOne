@@ -2277,6 +2277,19 @@ Important:
     });
   };
 
+  const getShortScheduledTime = (value?: string | null) => {
+    if (!value) return "";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    return date.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const submitReviewPrompt = async () => {
     if (!reviewText.trim()) {
       alert("Please write a short review.");
@@ -2494,6 +2507,17 @@ Important:
                 const platformName = getPlatformDisplayName(post);
                 const hasMedia = Boolean(post.media_url);
                 const captionPreview = String(post.caption || "").slice(0, 120);
+                const scheduledTime = getShortScheduledTime(
+                  post.scheduled_publish_at || post.scheduled_at,
+                );
+                const statusDisplay =
+                  status === "Reminder set"
+                    ? scheduledTime
+                      ? `Planned · ${scheduledTime}`
+                      : "Planned"
+                    : status === "Ready" && scheduledTime
+                      ? `Ready · ${scheduledTime}`
+                      : status;
 
                 return (
                   <button
@@ -2594,12 +2618,34 @@ Important:
                           </strong>
                         </div>
 
-                        <span
-                          className={`premium-calendar-status ${getStatusClass(status)}`}
-                          style={{ flex: "0 0 auto" }}
+                        <div
+                          style={{
+                            display: "grid",
+                            gap: 6,
+                            justifyItems: "end",
+                            flex: "0 0 auto",
+                          }}
                         >
-                          {status === "Reminder set" ? "Planned" : status}
-                        </span>
+                          <span
+                            className={`premium-calendar-status ${getStatusClass(status)}`}
+                            style={{ flex: "0 0 auto" }}
+                          >
+                            {status === "Reminder set" ? "Planned" : status}
+                          </span>
+
+                          {scheduledTime && status !== "Posted" && (
+                            <small
+                              style={{
+                                color: "rgba(248, 250, 252, 0.72)",
+                                fontWeight: 900,
+                                fontSize: 12,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {scheduledTime}
+                            </small>
+                          )}
+                        </div>
                       </div>
 
                       <p
