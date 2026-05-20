@@ -801,118 +801,315 @@ export default function SettingsPage() {
         </div>
       ) : (
         <>
-          <section className="premium-card" style={{ marginBottom: 24 }}>
+          <section
+            className="premium-card"
+            style={{
+              marginBottom: 24,
+              border: '1px solid rgba(255, 212, 59, 0.18)',
+            }}
+          >
             <div className="page-eyebrow">Connected accounts</div>
             <h2 style={{ marginTop: 0 }}>Publishing options.</h2>
-            <p>
-              Yellow means auto posting is available. Blue means manual posting is ready using
-              copy/open. Grey means auto posting is coming soon.
+            <p style={{ maxWidth: 820 }}>
+              Connect Meta for automatic Facebook and Instagram publishing. For the other
+              platforms, FromOne keeps the workflow simple with copy/open manual posting.
             </p>
-
-            <p style={{ marginTop: 10, opacity: 0.82 }}>
-              Facebook and Instagram are managed through one Meta connection, so disconnecting Meta
-              removes both Facebook and Instagram publishing access.
-            </p>
-
-            {tiktokDemoMode && (
-              <p style={{ marginTop: 10, opacity: 0.82 }}>
-                TikTok is currently shown as a sandbox demo for app review. It demonstrates the
-                connect and publish flow without publishing a live TikTok post.
-              </p>
-            )}
 
             {loadingConnections ? (
               <p>Checking connected accounts...</p>
             ) : (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-                  gap: 14,
-                  marginTop: 18,
-                }}
-              >
-                <AccountPill
-                  platform="Facebook"
-                  status={hasMetaConnection ? 'auto_connected' : 'not_connected'}
-                  detail={
-                    hasMetaConnection
-                      ? `Connected to ${primaryMetaConnection?.page_name || 'Facebook Page'}. This is part of your Meta connection.`
-                      : 'Connect your Meta account to enable Facebook Page publishing.'
-                  }
-                  onConnect={connectMetaAccount}
-                  onManage={handleManageMetaConnection}
-                  onDisconnect={() => disconnectMetaAccount(primaryMetaConnection?.id)}
-                  manageLabel="Manage Meta"
-                  disconnectLabel="Disconnect Meta"
-                  busy={metaConnectionBusy}
-                />
+              <div style={{ display: 'grid', gap: 18, marginTop: 20 }}>
+                <section
+                  className="card"
+                  style={{
+                    padding: 18,
+                    border: '1px solid rgba(255, 212, 59, 0.28)',
+                    background:
+                      'radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), rgba(255, 255, 255, 0.04) 45%, rgba(15, 23, 42, 0.84))',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 16,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <div className="page-eyebrow">Auto posting</div>
+                      <h3 style={{ margin: '6px 0 8px', fontSize: 28 }}>
+                        Facebook & Instagram
+                      </h3>
+                      <p style={{ margin: 0, color: 'var(--muted)', maxWidth: 680 }}>
+                        {hasMetaConnection
+                          ? `Connected to ${
+                              primaryMetaConnection?.page_name || 'your Facebook Page'
+                            }. Instagram ${
+                              hasInstagramConnection
+                                ? `is connected as @${
+                                    primaryMetaConnection?.instagram_username || 'Instagram'
+                                  }.`
+                                : 'can be added through your Meta connection when a professional account is linked.'
+                            }`
+                          : 'Connect Meta once to enable Facebook Page publishing and Instagram publishing where available.'}
+                      </p>
+                    </div>
 
-                <AccountPill
-                  platform="Instagram"
-                  status={hasInstagramConnection ? 'auto_connected' : hasMetaConnection ? 'manual_ready' : 'not_connected'}
-                  detail={
-                    hasInstagramConnection
-                      ? `Connected @${primaryMetaConnection?.instagram_username || 'Instagram'} via the Facebook Page.`
-                      : hasMetaConnection
-                        ? 'No linked Instagram professional account was found for this Facebook Page.'
-                        : 'Connect Meta to enable Instagram publishing with image or video.'
-                  }
-                  onConnect={connectMetaAccount}
-                  onManage={handleManageMetaConnection}
-                  manageLabel="Manage Meta"
-                  showDisconnect={false}
-                  busy={metaConnectionBusy}
-                />
+                    <span
+                      style={{
+                        borderRadius: 999,
+                        padding: '7px 12px',
+                        fontSize: 12,
+                        fontWeight: 950,
+                        background: hasMetaConnection
+                          ? 'rgba(255, 212, 59, 0.18)'
+                          : 'rgba(255, 255, 255, 0.08)',
+                        color: hasMetaConnection ? '#ffd43b' : 'rgba(255,255,255,0.72)',
+                        border: hasMetaConnection
+                          ? '1px solid rgba(255, 212, 59, 0.36)'
+                          : '1px solid rgba(255, 255, 255, 0.12)',
+                      }}
+                    >
+                      {hasMetaConnection ? 'Auto connected' : 'Not connected'}
+                    </span>
+                  </div>
 
-                <AccountPill
-                  platform="Google"
-                  status="manual_ready"
-                  detail={
-                    hasGoogleConnection
-                      ? primaryGoogleConnection?.google_location_name
-                        ? `Manual Google posting ready for ${primaryGoogleConnection.google_location_name}.`
-                        : 'Google connected. Manual posting is ready.'
-                      : 'Manual Google posting is ready using copy/open.'
-                  }
-                  onConnect={hasGoogleConnection ? undefined : connectGoogleAccount}
-                  onManualOpen={openGoogleBusinessProfile}
-                  onManage={handleManageGoogleConnection}
-                  onDisconnect={() => disconnectGoogleAccount(primaryGoogleConnection?.id)}
-                  manualLabel="Open Google"
-                  showDisconnect={Boolean(hasGoogleConnection)}
-                  busy={
-                    disconnectingConnectionId === primaryGoogleConnection?.id ||
-                    loadingGoogleLocations ||
-                    savingGoogleLocation
-                  }
-                />
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+                      gap: 12,
+                      marginTop: 18,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <strong>Facebook</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
+                        {hasMetaConnection ? 'Auto publishing ready' : 'Connect Meta to enable'}
+                      </p>
+                    </div>
 
-                <AccountPill
-                  platform="LinkedIn"
-                  status="manual_ready"
-                  detail="Manual LinkedIn posting is ready using copy/open. Auto posting coming soon."
-                  onManualOpen={openLinkedIn}
-                  manualLabel="Open LinkedIn"
-                />
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <strong>Instagram</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
+                        {hasInstagramConnection
+                          ? 'Auto publishing ready'
+                          : hasMetaConnection
+                            ? 'Manual ready, link professional account for auto'
+                            : 'Connect Meta to enable'}
+                      </p>
+                    </div>
+                  </div>
 
-                <AccountPill
-                  platform="TikTok"
-                  status="manual_ready"
-                  detail={
-                    tiktokDemoMode && hasTikTokDemoConnection
-                      ? 'Manual TikTok posting ready. Sandbox demo connected for app review.'
-                      : 'Manual TikTok posting is ready using copy/open. Auto posting coming soon.'
-                  }
-                  onConnect={tiktokDemoMode && !hasTikTokDemoConnection ? connectTikTokDemoAccount : undefined}
-                  onManualOpen={openTikTok}
-                  onManage={tiktokDemoMode && hasTikTokDemoConnection ? connectTikTokDemoAccount : undefined}
-                  onDisconnect={tiktokDemoMode && hasTikTokDemoConnection ? disconnectTikTokDemoAccount : undefined}
-                  manualLabel="Open TikTok"
-                  manageLabel="Reconnect demo"
-                  disconnectLabel="Disconnect demo"
-                  showDisconnect={tiktokDemoMode && hasTikTokDemoConnection}
-                />
+                  <div className="button-row" style={{ marginTop: 18 }}>
+                    <button
+                      type="button"
+                      className={hasMetaConnection ? 'secondary-button' : undefined}
+                      onClick={hasMetaConnection ? handleManageMetaConnection : connectMetaAccount}
+                      disabled={metaConnectionBusy}
+                    >
+                      {hasMetaConnection ? 'Manage Meta' : 'Connect Meta'}
+                    </button>
+
+                    {hasMetaConnection && (
+                      <button
+                        type="button"
+                        className="secondary-button danger-button"
+                        onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
+                        disabled={metaConnectionBusy}
+                      >
+                        {metaConnectionBusy ? 'Disconnecting...' : 'Disconnect Meta'}
+                      </button>
+                    )}
+                  </div>
+                </section>
+
+                <section
+                  className="card"
+                  style={{
+                    padding: 18,
+                    border: '1px solid rgba(56, 189, 248, 0.18)',
+                    background:
+                      'radial-gradient(circle at top right, rgba(56, 189, 248, 0.10), rgba(255, 255, 255, 0.035) 42%, rgba(15, 23, 42, 0.84))',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 16,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <div className="page-eyebrow">Manual posting</div>
+                      <h3 style={{ margin: '6px 0 8px', fontSize: 28 }}>
+                        Google, LinkedIn & TikTok
+                      </h3>
+                      <p style={{ margin: 0, color: 'var(--muted)', maxWidth: 760 }}>
+                        FromOne creates the posts. You copy/open the platform and publish manually.
+                        Auto posting for these platforms can be added later when approval is ready.
+                      </p>
+                    </div>
+
+                    <span
+                      style={{
+                        borderRadius: 999,
+                        padding: '7px 12px',
+                        fontSize: 12,
+                        fontWeight: 950,
+                        background: 'rgba(56, 189, 248, 0.15)',
+                        color: '#7dd3fc',
+                        border: '1px solid rgba(56, 189, 248, 0.32)',
+                      }}
+                    >
+                      Manual ready
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                      gap: 12,
+                      marginTop: 18,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        display: 'grid',
+                        gap: 10,
+                      }}
+                    >
+                      <div>
+                        <strong>Google Business Profile</strong>
+                        <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
+                          {hasGoogleConnection
+                            ? primaryGoogleConnection?.google_location_name
+                              ? `Connected: ${primaryGoogleConnection.google_location_name}`
+                              : 'Connected. Choose a location for future auto posting.'
+                            : 'Manual posting ready. Auto coming soon.'}
+                        </p>
+                      </div>
+
+                      <div className="button-row" style={{ gap: 10 }}>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={openGoogleBusinessProfile}
+                        >
+                          Open Google
+                        </button>
+
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={hasGoogleConnection ? handleManageGoogleConnection : connectGoogleAccount}
+                          disabled={
+                            disconnectingConnectionId === primaryGoogleConnection?.id ||
+                            loadingGoogleLocations ||
+                            savingGoogleLocation
+                          }
+                        >
+                          {hasGoogleConnection ? 'Choose location' : 'Connect'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        display: 'grid',
+                        gap: 10,
+                      }}
+                    >
+                      <div>
+                        <strong>LinkedIn</strong>
+                        <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
+                          Manual posting ready. Auto posting coming soon.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={openLinkedIn}
+                      >
+                        Open LinkedIn
+                      </button>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        display: 'grid',
+                        gap: 10,
+                      }}
+                    >
+                      <div>
+                        <strong>TikTok</strong>
+                        <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
+                          {tiktokDemoMode && hasTikTokDemoConnection
+                            ? 'Sandbox demo connected. Manual posting ready.'
+                            : 'Manual posting ready. Auto posting coming soon.'}
+                        </p>
+                      </div>
+
+                      <div className="button-row" style={{ gap: 10 }}>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={openTikTok}
+                        >
+                          Open TikTok
+                        </button>
+
+                        {tiktokDemoMode && !hasTikTokDemoConnection && (
+                          <button type="button" onClick={connectTikTokDemoAccount}>
+                            Connect demo
+                          </button>
+                        )}
+
+                        {tiktokDemoMode && hasTikTokDemoConnection && (
+                          <button
+                            type="button"
+                            className="secondary-button danger-button"
+                            onClick={disconnectTikTokDemoAccount}
+                          >
+                            Disconnect demo
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </section>
               </div>
             )}
           </section>
