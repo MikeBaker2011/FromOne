@@ -126,7 +126,6 @@ async function markPostPublishing(postId: string) {
       publish_status: 'publishing',
       status: 'publishing',
       publish_error: null,
-      publishing_started_at: new Date().toISOString(),
     })
     .eq('id', postId)
     .is('deleted_at', null)
@@ -147,7 +146,6 @@ async function markPostFailed(postId: string, message: string) {
       publish_status: 'failed',
       status: 'failed',
       publish_error: message,
-      publishing_started_at: null,
     })
     .eq('id', postId);
 }
@@ -161,7 +159,6 @@ async function markPostPosted(postId: string, platform: string, providerPostId?:
     publish_status: 'posted',
     publish_error: null,
     published_at: new Date().toISOString(),
-    publishing_started_at: null,
   };
 
   if (platform === 'facebook' && providerPostId) {
