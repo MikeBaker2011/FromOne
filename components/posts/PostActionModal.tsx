@@ -37,6 +37,9 @@ type PostActionModalProps = {
   savingReminderPostId: string | null;
   reminderValue: string;
   deletingPostId?: string | null;
+  rescanningMediaPostId?: string | null;
+  mediaRescanUsageLabel?: string;
+  videoRescanUsageLabel?: string;
   postRef?: RefObject<HTMLElement | null>;
   mediaRef?: RefObject<HTMLElement | null>;
   publishRef?: RefObject<HTMLElement | null>;
@@ -61,6 +64,7 @@ type PostActionModalProps = {
   onToggleImproveTools: () => void;
   onQuickImprovePost: (post: any, action: string) => void;
   onRewriteForAudience: (post: any) => void;
+  onRescanPostMedia?: (post: any) => void;
   onSetAudienceTarget: (value: string) => void;
   onSetCustomAudienceTarget: (value: string) => void;
   onSetToneTarget: (value: string) => void;
@@ -103,6 +107,9 @@ export default function PostActionModal({
   savingReminderPostId,
   reminderValue,
   deletingPostId,
+  rescanningMediaPostId,
+  mediaRescanUsageLabel,
+  videoRescanUsageLabel,
   postRef,
   mediaRef,
   publishRef,
@@ -127,6 +134,7 @@ export default function PostActionModal({
   onToggleImproveTools,
   onQuickImprovePost,
   onRewriteForAudience,
+  onRescanPostMedia,
   onSetAudienceTarget,
   onSetCustomAudienceTarget,
   onSetToneTarget,
@@ -169,10 +177,29 @@ export default function PostActionModal({
   const hasSchedule = Boolean(selectedPost.scheduled_publish_at);
   const posted = isPostPosted(selectedPost);
   const isPublishing = publishingPostId === selectedPost.id;
+  const isRescanning =
+    rescanningMediaPostId === selectedPost.id ||
+    (rewritingPost && rewritingAction === 'media_rescan');
 
   const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
   const hasPublishableMediaForInstagram = hasMedia && !isFlyerMedia;
   const instagramHasFlyerOnly = isInstagramPost && isFlyerMedia;
+
+  const rescanUsageLabel = isVideoMedia ? videoRescanUsageLabel : mediaRescanUsageLabel;
+
+  const rescanMediaTitle = isVideoMedia
+    ? 'Rescan video + rewrite post'
+    : isFlyerMedia
+      ? 'Rescan flyer + rewrite post'
+      : 'Rescan image + rewrite post';
+
+  const rescanMediaDescription = isVideoMedia
+    ? 'Use this when the video has changed, such as live event footage, a club night, a product demo, or behind-the-scenes content. Video rescans are limited weekly because they cost more to process.'
+    : isFlyerMedia
+      ? 'Use this when the flyer has changed or you want FromOne to rewrite this post around the uploaded flyer.'
+      : isImageMedia
+        ? 'Use this when the photo has changed or you want FromOne to rewrite this post around the uploaded image.'
+        : 'Upload media first, then FromOne can rewrite this post around the image, flyer, or video.';
 
   const publishCardTitle = posted
     ? 'Posted'
@@ -319,6 +346,7 @@ export default function PostActionModal({
           {selectedPost.audience_target && <span>For {selectedPost.audience_target}</span>}
           {isTikTokPost && <span>Manual posting</span>}
           {isFlyerMedia && <span>PDF flyer</span>}
+          {isVideoMedia && <span>Video</span>}
         </div>
 
         <section ref={mediaRef} className="fromone-flow-tools-card">
@@ -410,6 +438,56 @@ export default function PostActionModal({
                   : 'Choose media'}
             </span>
           </label>
+
+          {onRescanPostMedia && (
+            <div
+              className="fromone-image-guidance-note"
+              style={{
+                marginTop: 16,
+              }}
+            >
+              <strong>{rescanMediaTitle}</strong>
+              <p>{rescanMediaDescription}</p>
+
+              {rescanUsageLabel && (
+                <p
+                  style={{
+                    marginTop: 10,
+                    fontWeight: 850,
+                    color: '#ffe58a',
+                  }}
+                >
+                  {rescanUsageLabel}
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onRescanPostMedia(selectedPost)}
+                disabled={accessLocked || !hasMedia || posted || isRescanning}
+                style={{
+                  marginTop: 12,
+                  width: '100%',
+                }}
+              >
+                {isRescanning ? 'Rescanning media...' : rescanMediaTitle}
+              </button>
+
+              {posted && (
+                <p
+                  style={{
+                    marginTop: 10,
+                    marginBottom: 0,
+                    opacity: 0.72,
+                  }}
+                >
+                  Posted items cannot be rewritten. Mark this post as not posted first if you need
+                  to change it.
+                </p>
+              )}
+            </div>
+          )}
         </section>
 
         <section ref={postRef} className="fromone-flow-preview-card">
@@ -508,7 +586,7 @@ export default function PostActionModal({
               type="button"
               className="secondary-button"
               onClick={onToggleImproveTools}
-              disabled={accessLocked || rewritingPost}
+              disabled={accessLocked || rewritingPost || isRescanning}
             >
               {showImproveTools ? 'Hide improve' : 'Improve wording'}
             </button>
@@ -530,7 +608,7 @@ export default function PostActionModal({
                         type="button"
                         className="secondary-button fromone-quick-improve-button"
                         onClick={() => onQuickImprovePost(selectedPost, action.value)}
-                        disabled={accessLocked || rewritingPost}
+                        disabled={accessLocked || rewritingPost || isRescanning}
                       >
                         {rewritingPost && rewritingAction === action.value
                           ? 'Improving...'
@@ -584,7 +662,7 @@ export default function PostActionModal({
                   <button
                     type="button"
                     onClick={() => onRewriteForAudience(selectedPost)}
-                    disabled={accessLocked || rewritingPost}
+                    disabled={accessLocked || rewritingPost || isRescanning}
                   >
                     {rewritingPost && rewritingAction === 'audience'
                       ? 'Improving...'
@@ -602,7 +680,8 @@ export default function PostActionModal({
               <div className="page-eyebrow">Next step</div>
               <h3>Publish or copy</h3>
               <p>
-                Facebook and Instagram can auto publish when connected. TikTok is copy/open manual posting for now.
+                Facebook and Instagram can auto publish when connected. TikTok is copy/open manual
+                posting for now.
               </p>
             </div>
           </div>
@@ -666,7 +745,7 @@ export default function PostActionModal({
                 <button
                   type="button"
                   onClick={handlePrimaryPublish}
-                  disabled={isPublishing || posted || needsMedia || instagramHasFlyerOnly}
+                  disabled={isPublishing || posted || needsMedia || instagramHasFlyerOnly || isRescanning}
                 >
                   {isPublishing
                     ? tiktokDemoAvailable
@@ -679,7 +758,11 @@ export default function PostActionModal({
                         : `Publish to ${autoPublishPlatformName}`}
                 </button>
               ) : (
-                <button type="button" onClick={() => onCopyPost(selectedPost)} disabled={posted}>
+                <button
+                  type="button"
+                  onClick={() => onCopyPost(selectedPost)}
+                  disabled={posted || isRescanning}
+                >
                   {isTikTokPost ? 'Copy for TikTok' : `Copy for ${platformName}`}
                 </button>
               )}
@@ -688,6 +771,7 @@ export default function PostActionModal({
                 type="button"
                 className="secondary-button"
                 onClick={() => onCopyPost(selectedPost)}
+                disabled={isRescanning}
               >
                 Copy post
               </button>
@@ -696,6 +780,7 @@ export default function PostActionModal({
                 type="button"
                 className="secondary-button"
                 onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
+                disabled={isRescanning}
               >
                 Open {platformName}
               </button>
@@ -705,6 +790,7 @@ export default function PostActionModal({
                   type="button"
                   className="secondary-button"
                   onClick={() => onMarkAsNotPosted(selectedPost.id)}
+                  disabled={isRescanning}
                 >
                   Mark as not posted
                 </button>
@@ -713,6 +799,7 @@ export default function PostActionModal({
                   type="button"
                   className="secondary-button"
                   onClick={() => onMarkAsPosted(selectedPost.id)}
+                  disabled={isRescanning}
                 >
                   Mark as posted
                 </button>
@@ -739,7 +826,7 @@ export default function PostActionModal({
                   type="button"
                   className="secondary-button"
                   onClick={() => setShowScheduleControls(true)}
-                  disabled={posted}
+                  disabled={posted || isRescanning}
                 >
                   {hasSchedule ? 'Change schedule' : 'Schedule for later'}
                 </button>
@@ -763,7 +850,7 @@ export default function PostActionModal({
                   <button
                     type="button"
                     onClick={() => onSaveReminder(selectedPost)}
-                    disabled={savingReminderPostId === selectedPost.id || !reminderValue}
+                    disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning}
                   >
                     {savingReminderPostId === selectedPost.id ? 'Saving...' : 'Save schedule'}
                   </button>
@@ -773,7 +860,7 @@ export default function PostActionModal({
                       type="button"
                       className="secondary-button"
                       onClick={() => onClearReminder(selectedPost)}
-                      disabled={savingReminderPostId === selectedPost.id}
+                      disabled={savingReminderPostId === selectedPost.id || isRescanning}
                     >
                       Clear schedule
                     </button>
@@ -783,7 +870,7 @@ export default function PostActionModal({
                     type="button"
                     className="secondary-button"
                     onClick={() => setShowScheduleControls(false)}
-                    disabled={savingReminderPostId === selectedPost.id}
+                    disabled={savingReminderPostId === selectedPost.id || isRescanning}
                   >
                     Hide schedule
                   </button>
@@ -882,7 +969,7 @@ export default function PostActionModal({
                 type="button"
                 className="secondary-button danger-button"
                 onClick={() => onDeletePost(selectedPost)}
-                disabled={deletingPostId === selectedPost.id}
+                disabled={deletingPostId === selectedPost.id || isRescanning}
               >
                 {deletingPostId === selectedPost.id
                   ? posted

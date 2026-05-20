@@ -25,6 +25,14 @@ const REVIEW_PROMPT_SUBMITTED_KEY = "fromone_review_prompt_submitted";
 const REVIEW_PROMPT_POSTED_COUNT_KEY = "fromone_review_prompt_posted_count";
 const REVIEW_PROMPT_TRIGGER_COUNT = 3;
 
+const DEMO_WEEKLY_MEDIA_RESCAN_LIMIT = 3;
+const PAID_WEEKLY_MEDIA_RESCAN_LIMIT = 10;
+const DEMO_WEEKLY_VIDEO_RESCAN_LIMIT = 1;
+const PAID_WEEKLY_VIDEO_RESCAN_LIMIT = 2;
+
+const MEDIA_RESCAN_EVENT_TYPES = ["post_media_rescan", "post_image_rescan", "post_flyer_rescan"];
+const VIDEO_RESCAN_EVENT_TYPES = ["post_video_rescan"];
+
 type AccessInfo = {
   id: string;
   user_id: string;
@@ -60,6 +68,7 @@ type ImprovementNote = {
 };
 
 type PostStatus = "Ready" | "Reminder set" | "Posted" | "Failed";
+type BillingPlan = "demo" | "starter";
 
 const MAIN_POST_PLATFORMS = ["Facebook", "Instagram", "TikTok"];
 
@@ -255,6 +264,33 @@ const industryAudienceTargets: Record<string, string[]> = {
     "Van owners",
     "Custom audience",
   ],
+  club: [
+    "Local nightlife customers",
+    "Students",
+    "Weekend groups",
+    "Birthday groups",
+    "Event bookers",
+    "VIP table customers",
+    "Custom audience",
+  ],
+  nightclub: [
+    "Local nightlife customers",
+    "Students",
+    "Weekend groups",
+    "Birthday groups",
+    "Event bookers",
+    "VIP table customers",
+    "Custom audience",
+  ],
+  bar: [
+    "Local nightlife customers",
+    "After-work customers",
+    "Weekend groups",
+    "Event bookers",
+    "Couples",
+    "Regular customers",
+    "Custom audience",
+  ],
 };
 
 const normaliseMainPlatform = (platform?: string | null) => {
@@ -276,6 +312,11 @@ export default function PostsPage() {
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [metaConnections, setMetaConnections] = useState<MetaConnection[]>([]);
+
+  const [billingPlan, setBillingPlan] = useState<BillingPlan>("demo");
+  const [weeklyMediaRescansUsed, setWeeklyMediaRescansUsed] = useState(0);
+  const [weeklyVideoRescansUsed, setWeeklyVideoRescansUsed] = useState(0);
+  const [rescanningMediaPostId, setRescanningMediaPostId] = useState<string | null>(null);
 
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [pendingCampaignId, setPendingCampaignId] = useState("");
@@ -456,6 +497,12 @@ export default function PostsPage() {
     return `${year}-${month}-${day}`;
   };
 
+  const getSevenDaysAgoIso = () => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return sevenDaysAgo.toISOString();
+  };
+
   const shouldOpenTodayPost = () => {
     const params = new URLSearchParams(window.location.search);
     return params.get("today") === "true";
@@ -568,6 +615,161 @@ export default function PostsPage() {
     return data.user?.id || null;
   };
 
+  const isAdminUser = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("admin_users")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      const message = error.message || "";
+
+      if (
+        message.includes("Could not find the table 'public.admin_users'") ||
+        message.includes("admin_users") ||
+        error.code === "PGRST205"
+      ) {
+        return false;
+      }
+
+      console.warn("Admin check unavailable:", message);
+      return false;
+    }
+
+    return Boolean(data);
+  };
+
+  const loadBillingPlan = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("user_billing")
+      .select("plan, status")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error loading billing plan:", error.message);
+      setBillingPlan("demo");
+      return "demo" as BillingPlan;
+    }
+
+    const plan = data?.plan === "starter" && data?.status === "active" ? "starter" : "demo";
+
+    setBillingPlan(plan);
+    return plan as BillingPlan;
+  };
+
+  const loadRescanUsage = async (userId: string) => {
+    const since = getSevenDaysAgoIso();
+
+    const [{ count: mediaCount, error: mediaError }, { count: videoCount, error: videoError }] =
+      await Promise.all([
+        supabase
+          .from("usage_events")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .in("event_type", MEDIA_RESCAN_EVENT_TYPES)
+          .gte("created_at", since),
+        supabase
+          .from("usage_events")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .in("event_type", VIDEO_RESCAN_EVENT_TYPES)
+          .gte("created_at", since),
+      ]);
+
+    if (mediaError) {
+      console.error("Error loading media rescan usage:", mediaError.message);
+      setWeeklyMediaRescansUsed(0);
+    } else {
+      setWeeklyMediaRescansUsed(mediaCount || 0);
+    }
+
+    if (videoError) {
+      console.error("Error loading video rescan usage:", videoError.message);
+      setWeeklyVideoRescansUsed(0);
+    } else {
+      setWeeklyVideoRescansUsed(videoCount || 0);
+    }
+
+    return {
+      mediaUsed: mediaError ? 0 : mediaCount || 0,
+      videoUsed: videoError ? 0 : videoCount || 0,
+    };
+  };
+
+  const recordUsageEvent = async (
+    userId: string,
+    eventType: string,
+    metadata: Record<string, any> = {},
+  ) => {
+    const { error } = await supabase.from("usage_events").insert({
+      user_id: userId,
+      event_type: eventType,
+      metadata,
+    });
+
+    if (error) {
+      console.error("Error recording usage event:", error.message);
+      return;
+    }
+
+    await loadRescanUsage(userId);
+  };
+
+  const getWeeklyMediaRescanLimit = () => {
+    return billingPlan === "starter" ? PAID_WEEKLY_MEDIA_RESCAN_LIMIT : DEMO_WEEKLY_MEDIA_RESCAN_LIMIT;
+  };
+
+  const getWeeklyVideoRescanLimit = () => {
+    return billingPlan === "starter" ? PAID_WEEKLY_VIDEO_RESCAN_LIMIT : DEMO_WEEKLY_VIDEO_RESCAN_LIMIT;
+  };
+
+  const getMediaRescanUsageLabel = () => {
+    const limit = getWeeklyMediaRescanLimit();
+    const remaining = Math.max(limit - weeklyMediaRescansUsed, 0);
+    return `${remaining} of ${limit} image/flyer rescans left this week`;
+  };
+
+  const getVideoRescanUsageLabel = () => {
+    const limit = getWeeklyVideoRescanLimit();
+    const remaining = Math.max(limit - weeklyVideoRescansUsed, 0);
+    return `${remaining} of ${limit} video rescans left this week`;
+  };
+
+  const checkMediaRescanLimit = async (userId: string, mediaType: string) => {
+    const admin = await isAdminUser(userId);
+
+    if (admin) return true;
+
+    const plan = await loadBillingPlan(userId);
+    const usage = await loadRescanUsage(userId);
+
+    const isVideo = mediaType === "video";
+
+    const limit = isVideo
+      ? plan === "starter"
+        ? PAID_WEEKLY_VIDEO_RESCAN_LIMIT
+        : DEMO_WEEKLY_VIDEO_RESCAN_LIMIT
+      : plan === "starter"
+        ? PAID_WEEKLY_MEDIA_RESCAN_LIMIT
+        : DEMO_WEEKLY_MEDIA_RESCAN_LIMIT;
+
+    const used = isVideo ? usage.videoUsed : usage.mediaUsed;
+
+    if (used >= limit) {
+      alert(
+        isVideo
+          ? `You have used your ${limit} video rescans for this 7-day period. You can still edit the wording manually or replace the video without rescanning.`
+          : `You have used your ${limit} image/flyer rescans for this 7-day period. You can still edit the wording manually or replace the media without rescanning.`,
+      );
+
+      return false;
+    }
+
+    return true;
+  };
+
   const loadMetaConnections = async (userId: string) => {
     try {
       const response = await axios.get("/api/social-connections", {
@@ -597,7 +799,12 @@ export default function PostsPage() {
     if (!userId) return;
 
     setCurrentUserId(userId);
-    await loadMetaConnections(userId);
+
+    await Promise.all([
+      loadMetaConnections(userId),
+      loadBillingPlan(userId),
+      loadRescanUsage(userId),
+    ]);
 
     const { data, error } = await supabase
       .from("user_access")
@@ -1058,6 +1265,15 @@ export default function PostsPage() {
     return "image";
   };
 
+  const getPostMediaKind = (post: any) => {
+    const mediaType = String(post?.media_type || "").toLowerCase();
+    const mediaUrl = String(post?.media_url || "").toLowerCase();
+
+    if (mediaType === "video" || mediaUrl.match(/\.(mp4|mov|webm|m4v)(\?|$)/)) return "video";
+    if (mediaType === "flyer" || mediaType === "pdf" || mediaUrl.includes(".pdf")) return "flyer";
+    return "image";
+  };
+
   const getSafeFileName = (fileName: string) => {
     const cleanName = fileName
       .toLowerCase()
@@ -1108,9 +1324,7 @@ export default function PostsPage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage
-        .from(MEDIA_BUCKET)
-        .getPublicUrl(path);
+      const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
 
       const updates = {
         media_url: publicUrlData.publicUrl,
@@ -1132,7 +1346,7 @@ export default function PostsPage() {
           ? "Video added."
           : mediaType === "flyer"
             ? "Flyer added."
-            : "Image added."
+            : "Image added.",
       );
     } catch (error: any) {
       const message = getReadableError(error, "Error uploading media.");
@@ -1402,6 +1616,173 @@ export default function PostsPage() {
       console.error("Improve post error:", error);
       alert(message);
     } finally {
+      setRewritingAction("");
+      setRewritingPost(false);
+    }
+  };
+
+  const handleRescanPostMedia = async (post: any) => {
+    if (!post?.id) return;
+
+    if (!ensureAccessAllowed()) return;
+
+    if (!post.media_url) {
+      alert("Add media first, then rescan this post.");
+      return;
+    }
+
+    if (isPostPosted(post)) {
+      alert("Posted items cannot be rewritten. Mark this post as not posted first if you need to change it.");
+      return;
+    }
+
+    const userId = await getSignedInUserId();
+
+    if (!userId) {
+      alert("Please sign in again.");
+      return;
+    }
+
+    const mediaKind = getPostMediaKind(post);
+    const allowed = await checkMediaRescanLimit(userId, mediaKind);
+
+    if (!allowed) return;
+
+    setRescanningMediaPostId(post.id);
+    setRewritingAction("media_rescan");
+    setRewritingPost(true);
+
+    try {
+      const response = await axios.post("/api/generatePosts", {
+        provider: "gemini",
+        website: "",
+        clientName: profile?.business_name || campaign?.business_name || "the business",
+        industry: profile?.industry || campaign?.business_type || "general business",
+        description: `
+Rewrite this single existing post after rescanning its attached media.
+
+Business name: ${profile?.business_name || campaign?.business_name || "the business"}
+Industry: ${profile?.industry || campaign?.business_type || "general business"}
+Location: ${profile?.location || campaign?.location || campaign?.campaign_area || ""}
+Tone: ${profile?.tone_of_voice || campaign?.tone || "Professional"}
+Main offer: ${profile?.main_offer || ""}
+Services: ${Array.isArray(profile?.services) ? profile.services.join(", ") : ""}
+Target audience: ${
+          Array.isArray(profile?.target_audience) ? profile.target_audience.join(", ") : ""
+        }
+
+Current post:
+Platform: ${post.platform || "Facebook"}
+Title: ${post.title || ""}
+Caption: ${post.caption || ""}
+CTA: ${post.cta || ""}
+Hashtags: ${Array.isArray(post.hashtags) ? post.hashtags.join(" ") : ""}
+
+Important:
+- Create one improved post only.
+- Use the attached media as the main topic.
+- If this is a club night, event, venue, restaurant, bar, product demo, job photo, flyer, or live video, write around what that media is likely showing.
+- Make the post more useful and more likely to generate enquiries, bookings, visits, orders, or messages.
+- Keep the same platform unless there is a strong reason not to.
+- Do not mention that AI rescanned the media.
+`,
+        platforms: [post.platform || "Facebook"],
+        selectedPlatforms: [post.platform || "Facebook"],
+        postingFrequency: 1,
+        numberOfPosts: 1,
+        postCount: 1,
+        marketReach: profile?.location ? `Local customers in and around ${profile.location}` : "Local customers",
+        mediaItems: [
+          {
+            id: post.id,
+            name: post.media_path || post.title || "Post media",
+            type: mediaKind,
+            url: post.media_url,
+            context:
+              mediaKind === "video"
+                ? "Video attached to an existing post. Rescan it and rewrite the caption around the live footage, activity, atmosphere, event, offer, or product shown."
+                : mediaKind === "flyer"
+                  ? "Flyer or PDF attached to an existing post. Rescan it and rewrite the caption around the event, offer, date, service, price, or call to action."
+                  : "Image attached to an existing post. Rescan it and rewrite the caption around the subject shown.",
+            extractedText: "",
+          },
+        ],
+        uploads: [
+          {
+            id: post.id,
+            name: post.media_path || post.title || "Post media",
+            type: mediaKind,
+            url: post.media_url,
+            context:
+              mediaKind === "video"
+                ? "Video attached to an existing post. Rescan it and rewrite the caption around the live footage, activity, atmosphere, event, offer, or product shown."
+                : mediaKind === "flyer"
+                  ? "Flyer or PDF attached to an existing post. Rescan it and rewrite the caption around the event, offer, date, service, price, or call to action."
+                  : "Image attached to an existing post. Rescan it and rewrite the caption around the subject shown.",
+            extractedText: "",
+          },
+        ],
+      });
+
+      const rewrittenPost = response.data?.posts?.[0];
+
+      if (!rewrittenPost?.caption) {
+        alert("The media rescan did not return a new post. Please try again.");
+        return;
+      }
+
+      const saved = await applyRewrittenPost(post, rewrittenPost, {
+        title: rewrittenPost.title || post.title,
+        status: "ready",
+        publish_status: null,
+        publish_error: null,
+        media_rescanned_at: new Date().toISOString(),
+        media_rescan_type: mediaKind,
+      });
+
+      if (!saved) return;
+
+      const eventType =
+        mediaKind === "video"
+          ? "post_video_rescan"
+          : mediaKind === "flyer"
+            ? "post_flyer_rescan"
+            : "post_image_rescan";
+
+      const admin = await isAdminUser(userId);
+
+      if (!admin) {
+        await recordUsageEvent(userId, eventType, {
+          post_id: post.id,
+          campaign_id: post.campaign_id,
+          media_type: mediaKind,
+          platform: post.platform || null,
+        });
+      }
+
+      setImprovementNote({
+        postId: post.id,
+        label:
+          mediaKind === "video"
+            ? "Video rescanned"
+            : mediaKind === "flyer"
+              ? "Flyer rescanned"
+              : "Image rescanned",
+        detail:
+          mediaKind === "video"
+            ? "The post wording has been rebuilt around the attached video."
+            : mediaKind === "flyer"
+              ? "The post wording has been rebuilt around the attached flyer."
+              : "The post wording has been rebuilt around the attached image.",
+      });
+
+      alert("Post rescanned and rewritten.");
+    } catch (error: any) {
+      const message = getReadableError(error, "Error rescanning media.");
+      console.error("Media rescan error:", error);
+      alert(message);
+    } finally {
+      setRescanningMediaPostId(null);
       setRewritingAction("");
       setRewritingPost(false);
     }
@@ -2198,6 +2579,9 @@ export default function PostsPage() {
           savingReminderPostId={savingReminderPostId}
           reminderValue={reminderValue}
           deletingPostId={deletingPostId}
+          rescanningMediaPostId={rescanningMediaPostId}
+          mediaRescanUsageLabel={getMediaRescanUsageLabel()}
+          videoRescanUsageLabel={getVideoRescanUsageLabel()}
           postRef={postRef}
           mediaRef={mediaRef}
           publishRef={publishRef}
@@ -2222,6 +2606,7 @@ export default function PostsPage() {
           onToggleImproveTools={() => setShowImproveTools(!showImproveTools)}
           onQuickImprovePost={handleQuickImprovePost}
           onRewriteForAudience={handleRewriteForAudience}
+          onRescanPostMedia={handleRescanPostMedia}
           onSetAudienceTarget={setAudienceTarget}
           onSetCustomAudienceTarget={setCustomAudienceTarget}
           onSetToneTarget={setToneTarget}
