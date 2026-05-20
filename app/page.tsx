@@ -62,20 +62,6 @@ const starterFeatures = [
   'Cancel anytime',
 ];
 
-const futurePlans = [
-  {
-    title: 'Pro',
-    price: 'Coming later',
-    description:
-      'For businesses that need more uploads, more video processing, more posts and higher usage limits.',
-  },
-  {
-    title: 'Enterprise / Agency',
-    price: 'Custom',
-    description:
-      'For agencies, multi-location businesses, franchises and teams that need higher limits or managed onboarding.',
-  },
-];
 
 const faqs = [
   {
@@ -119,24 +105,35 @@ export default function Home() {
         <div
           className="sales-hero-grid"
           style={{
-            alignItems: 'center',
-            gap: 'clamp(28px, 5vw, 70px)',
+            display: 'block',
           }}
         >
-          <div className="sales-hero-copy">
+          <div
+            className="sales-hero-copy"
+            style={{
+              maxWidth: 980,
+              margin: '0 auto',
+              textAlign: 'center',
+            }}
+          >
             <div className="page-eyebrow">Simple social media for small businesses</div>
 
             <h1 style={{ lineHeight: 0.95, letterSpacing: '-0.07em' }}>
               Upload media. FromOne creates the posts.
             </h1>
 
-            <p>
+            <p style={{ marginLeft: 'auto', marginRight: 'auto', maxWidth: 760 }}>
               FromOne turns your photos, videos and flyers into scheduled social media posts.
               Review the posts, edit anything, then autopost to Facebook and Instagram or copy/open
               TikTok.
             </p>
 
-            <div className="sales-hero-actions">
+            <div
+              className="sales-hero-actions"
+              style={{
+                justifyContent: 'center',
+              }}
+            >
               <Link href="/signin" className="sales-primary-button">
                 Start 7-day demo
               </Link>
@@ -146,45 +143,15 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="sales-trust-row">
+            <div
+              className="sales-trust-row"
+              style={{
+                justifyContent: 'center',
+              }}
+            >
               <span>✓ Uploads become posts</span>
               <span>✓ Times chosen for you</span>
               <span>✓ Autopost Facebook & Instagram</span>
-            </div>
-          </div>
-
-          <div className="sales-hero-preview">
-            <div className="sales-preview-top">
-              <span />
-              <span />
-              <span />
-            </div>
-
-            <div className="sales-preview-card">
-              <small>This week</small>
-              <h2>3 uploads became 3 posts</h2>
-
-              <div className="sales-preview-list">
-                <p>
-                  <strong>Facebook</strong>
-                  <span>Autopost · 09:30</span>
-                </p>
-
-                <p>
-                  <strong>Instagram</strong>
-                  <span>Autopost · 12:45</span>
-                </p>
-
-                <p>
-                  <strong>TikTok</strong>
-                  <span>Copy/open · 18:30</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="sales-preview-floating">
-              <strong>Simple weekly flow</strong>
-              <span>Upload → Create → Review → Autopost</span>
             </div>
           </div>
         </div>
@@ -262,60 +229,46 @@ export default function Home() {
         <div
           className="sales-pricing-card"
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 0.95fr) minmax(280px, 1.05fr)',
-            gap: 24,
-            alignItems: 'stretch',
+            maxWidth: 760,
+            margin: '0 auto',
+            textAlign: 'center',
+            background:
+              'radial-gradient(circle at top, rgba(255, 212, 59, 0.2), transparent 38%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.04))',
+            border: '1px solid rgba(255, 212, 59, 0.28)',
           }}
         >
-          <div
-            style={{
-              padding: 24,
-              borderRadius: 28,
-              background:
-                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.18), transparent 36%), rgba(255, 255, 255, 0.055)',
-              border: '1px solid rgba(255, 212, 59, 0.28)',
-            }}
-          >
+          <div>
             <small>FromOne Starter</small>
             <h3>
               £39.99 <span>/ month</span>
             </h3>
-            <p>
+            <p style={{ maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
               For small businesses that want their weekly media turned into scheduled social posts
               without agency costs.
             </p>
-
-            <Link href="/signin" className="sales-primary-button" style={{ marginTop: 18 }}>
-              Start 7-day demo
-            </Link>
-
-            <p style={{ marginTop: 14, color: 'var(--muted)', fontSize: 14 }}>
-              Questions before starting? Email{' '}
-              <a href="mailto:info@fromone.co.uk">info@fromone.co.uk</a>
-            </p>
           </div>
 
-          <div className="sales-pricing-features">
+          <div
+            className="sales-pricing-features"
+            style={{
+              textAlign: 'left',
+              maxWidth: 560,
+              margin: '22px auto',
+            }}
+          >
             {starterFeatures.map((feature) => (
               <span key={feature}>✓ {feature}</span>
             ))}
           </div>
-        </div>
 
-        <div
-          className="sales-steps-grid"
-          style={{
-            marginTop: 18,
-          }}
-        >
-          {futurePlans.map((plan) => (
-            <article key={plan.title} className="sales-step-card">
-              <span>{plan.price}</span>
-              <h3>{plan.title}</h3>
-              <p>{plan.description}</p>
-            </article>
-          ))}
+          <Link href="/signin" className="sales-primary-button">
+            Start 7-day demo
+          </Link>
+
+          <p style={{ marginTop: 16, color: 'var(--muted)', fontSize: 14 }}>
+            Questions before starting? Email{' '}
+            <a href="mailto:info@fromone.co.uk">info@fromone.co.uk</a>
+          </p>
         </div>
       </section>
 
