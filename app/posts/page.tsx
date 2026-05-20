@@ -1631,11 +1631,6 @@ export default function PostsPage() {
       return;
     }
 
-    if (isPostPosted(post)) {
-      alert("Posted items cannot be rewritten. Mark this post as not posted first if you need to change it.");
-      return;
-    }
-
     const userId = await getSignedInUserId();
 
     if (!userId) {
@@ -1685,6 +1680,7 @@ Important:
 - Make the post more useful and more likely to generate enquiries, bookings, visits, orders, or messages.
 - Keep the same platform unless there is a strong reason not to.
 - Do not mention that AI rescanned the media.
+- If the existing post was previously marked as posted, still create a fresh editable version for the app.
 `,
         platforms: [post.platform || "Facebook"],
         selectedPlatforms: [post.platform || "Facebook"],

@@ -188,18 +188,18 @@ export default function PostActionModal({
   const rescanUsageLabel = isVideoMedia ? videoRescanUsageLabel : mediaRescanUsageLabel;
 
   const rescanMediaTitle = isVideoMedia
-    ? 'Rescan video + rewrite post'
+    ? 'Rewrite using this video'
     : isFlyerMedia
-      ? 'Rescan flyer + rewrite post'
-      : 'Rescan image + rewrite post';
+      ? 'Rewrite using this flyer'
+      : 'Rewrite using this image';
 
   const rescanMediaDescription = isVideoMedia
-    ? 'Use this when the video has changed, such as live event footage, a club night, a product demo, or behind-the-scenes content. Video rescans are limited weekly because they cost more to process.'
+    ? 'Use this when you want the wording to match the video. Good for events, atmosphere, products, behind-the-scenes clips, or venue footage.'
     : isFlyerMedia
-      ? 'Use this when the flyer has changed or you want FromOne to rewrite this post around the uploaded flyer.'
+      ? 'Use this when you want the wording to match the flyer, offer, event, date, price, or booking details.'
       : isImageMedia
-        ? 'Use this when the photo has changed or you want FromOne to rewrite this post around the uploaded image.'
-        : 'Upload media first, then FromOne can rewrite this post around the image, flyer, or video.';
+        ? 'Use this when you want the wording to match the photo.'
+        : 'Upload a photo, video, or flyer first. Then FromOne can rewrite the post around it.';
 
   const publishCardTitle = posted
     ? 'Posted'
@@ -459,11 +459,10 @@ export default function PostActionModal({
               <div className="fromone-simple-step-header compact">
                 <div className="fromone-step-number">2</div>
                 <div>
-                  <div className="page-eyebrow">Rewrite from media</div>
-                  <h3>Make the wording match the media</h3>
+                  <div className="page-eyebrow">Rewrite</div>
+                  <h3>Make the wording match</h3>
                   <p>
-                    Use this after replacing the photo, flyer or video. FromOne rewrites only this
-                    post.
+                    Tap this when you want FromOne to rewrite this one post using the media above.
                   </p>
                 </div>
               </div>
@@ -477,36 +476,26 @@ export default function PostActionModal({
 
                   {posted && (
                     <p className="fromone-rescan-note">
-                      This post is marked as posted. Mark it as not posted first, then rescan.
+                      This creates a new editable version inside FromOne. It will not change
+                      anything already posted on Facebook or Instagram.
                     </p>
                   )}
 
-                  {!posted && !hasMedia && (
+                  {!hasMedia && (
                     <p className="fromone-rescan-note">
                       Upload media first, then FromOne can rewrite the post around it.
                     </p>
                   )}
                 </div>
 
-                {posted ? (
-                  <button
-                    type="button"
-                    className="fromone-rescan-primary-button"
-                    onClick={() => onMarkAsNotPosted(selectedPost.id)}
-                    disabled={isRescanning}
-                  >
-                    Mark as not posted
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="fromone-rescan-primary-button"
-                    onClick={() => onRescanPostMedia(selectedPost)}
-                    disabled={accessLocked || !hasMedia || isRescanning}
-                  >
-                    {isRescanning ? 'Rewriting...' : 'Rewrite from media'}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="fromone-rescan-primary-button"
+                  onClick={() => onRescanPostMedia(selectedPost)}
+                  disabled={accessLocked || !hasMedia || isRescanning}
+                >
+                  {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
+                </button>
               </div>
             </div>
           )}
@@ -516,8 +505,8 @@ export default function PostActionModal({
           <div className="fromone-flow-card-top">
             <div>
               <div className="page-eyebrow">Wording</div>
-              <h3>Review the wording</h3>
-              <p>Check the caption, CTA and hashtags before publishing.</p>
+              <h3>Check the wording</h3>
+              <p>Read it once, make any changes, then publish or copy.</p>
             </div>
 
             <span>{platformName}</span>
