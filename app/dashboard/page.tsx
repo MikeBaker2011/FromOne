@@ -1159,6 +1159,95 @@ Core FromOne rule:
     return `${businessName || "Weekly posts"} — ${date} ${time}`;
   };
 
+  const isNightlifeBusiness = (profile: any, industry?: string) => {
+    const source = [
+      profile?.industry,
+      industry,
+      profile?.business_name,
+      profile?.main_offer,
+      Array.isArray(profile?.services) ? profile.services.join(" ") : "",
+      Array.isArray(profile?.content_pillars) ? profile.content_pillars.join(" ") : "",
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return (
+      source.includes("club") ||
+      source.includes("nightclub") ||
+      source.includes("bar") ||
+      source.includes("pub") ||
+      source.includes("venue") ||
+      source.includes("nightlife")
+    );
+  };
+
+  const getSuggestedPostTime = (
+    index: number,
+    platform: string,
+    activeClient: any,
+    detectedIndustry: string
+  ) => {
+    const now = new Date();
+    const suggestedDate = new Date(now);
+    const nightlife = isNightlifeBusiness(activeClient, detectedIndustry);
+    const cleanPlatform = String(platform || "").toLowerCase();
+
+    suggestedDate.setDate(now.getDate() + index);
+
+    if (nightlife) {
+      const nightlifeTimes = [
+        { hour: 19, minute: 0 },
+        { hour: 16, minute: 30 },
+        { hour: 18, minute: 0 },
+        { hour: 14, minute: 0 },
+        { hour: 19, minute: 30 },
+        { hour: 12, minute: 30 },
+        { hour: 18, minute: 30 },
+      ];
+
+      const selected = nightlifeTimes[index % nightlifeTimes.length];
+      suggestedDate.setHours(selected.hour, selected.minute, 0, 0);
+    } else {
+      const standardTimes = [
+        { hour: 9, minute: 30 },
+        { hour: 12, minute: 30 },
+        { hour: 18, minute: 30 },
+        { hour: 10, minute: 30 },
+        { hour: 15, minute: 30 },
+        { hour: 11, minute: 0 },
+        { hour: 17, minute: 30 },
+      ];
+
+      const selected = standardTimes[index % standardTimes.length];
+      suggestedDate.setHours(selected.hour, selected.minute, 0, 0);
+    }
+
+    if (cleanPlatform.includes("instagram") && !nightlife) {
+      suggestedDate.setMinutes(suggestedDate.getMinutes() + 15);
+    }
+
+    if (cleanPlatform.includes("tiktok")) {
+      suggestedDate.setMinutes(suggestedDate.getMinutes() + 30);
+    }
+
+    if (suggestedDate.getTime() <= now.getTime() + 10 * 60 * 1000) {
+      suggestedDate.setDate(now.getDate() + 1);
+    }
+
+    return suggestedDate;
+  };
+
+  const getReadableSuggestedTime = (value: Date) => {
+    return value.toLocaleString(undefined, {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const normaliseGeneratedPost = (
     post: GeneratedPost | string,
     index: number,
@@ -1368,19 +1457,26 @@ If uploads are supplied:
 
     if (campaignError) throwSupabaseError(campaignError);
 
-    const today = new Date();
+    const suggestedScheduleSummary: string[] = [];
 
     for (let i = 0; i < posts.length; i++) {
-      const postDate = new Date(today);
-      postDate.setDate(today.getDate() + i);
-      postDate.setHours(9, 0, 0, 0);
-
       const post = normaliseGeneratedPost(
         posts[i],
         i,
         activeClient,
         detectedIndustry,
         detectedLocation
+      );
+
+      const suggestedPublishTime = getSuggestedPostTime(
+        i,
+        post.platform,
+        activeClient,
+        detectedIndustry
+      );
+
+      suggestedScheduleSummary.push(
+        `${post.platform}: ${getReadableSuggestedTime(suggestedPublishTime)}`
       );
 
       const mediaItem = uploadedMediaItems[i] || null;
@@ -1396,7 +1492,9 @@ If uploads are supplied:
         platform: post.platform,
         type: source,
         scheduled_day: post.day,
-        scheduled_at: postDate.toISOString(),
+        scheduled_at: suggestedPublishTime.toISOString(),
+        scheduled_publish_at: suggestedPublishTime.toISOString(),
+        publish_status: "scheduled",
         status: "scheduled",
         is_posted: false,
         client_id: activeClient.id,
@@ -1428,6 +1526,7 @@ If uploads are supplied:
           marketReach: marketReachContext,
           marketReachDisplayLabel,
           uploadedMediaCount: uploadedMediaItems.length,
+          suggestedSchedule: suggestedScheduleSummary,
         });
       }
     }
@@ -1642,8 +1741,8 @@ If uploads are supplied:
               Upload. Generate. Post.
             </h1>
             <p className="page-description" style={{ margin: "0 auto", maxWidth: 680 }}>
-              Add this week’s photos, videos or flyers. FromOne uses your Business Profile to turn
-              them into ready-to-review posts.
+              Add this week’s photos, videos or flyers. FromOne creates the posts and suggests
+              the posting times for you.
             </p>
           </div>
 
@@ -1809,17 +1908,17 @@ If uploads are supplied:
                 {
                   name: "Facebook",
                   title: "Facebook",
-                  description: "Good for local customers, offers, updates and enquiries.",
+                  description: "FromOne can autopost at the suggested time.",
                 },
                 {
                   name: "Instagram",
                   title: "Instagram",
-                  description: "Best for photos, videos, flyers, products and visual posts.",
+                  description: "FromOne can autopost image or video posts.",
                 },
                 {
                   name: "TikTok",
                   title: "TikTok",
-                  description: "Creates copy and ideas. You copy/open TikTok manually.",
+                  description: "FromOne plans the reminder. You copy/open TikTok.",
                 },
               ].map((platform) => {
                 const selected = selectedPlatforms.includes(platform.name);
@@ -1984,6 +2083,7 @@ If uploads are supplied:
               <span>Saving uploads</span>
               <span>Reading Business Profile</span>
               <span>Writing posts</span>
+              <span>Choosing times</span>
               <span>Opening calendar</span>
             </div>
           </section>
