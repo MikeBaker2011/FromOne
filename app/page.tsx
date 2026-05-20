@@ -5,16 +5,16 @@ import PublicNav from './components/PublicNav';
 import PublicFooter from './components/PublicFooter';
 
 export const metadata: Metadata = {
-  title: 'FromOne | Weekly Social Media Posts for Small Businesses',
+  title: 'FromOne | Turn Weekly Media Into Scheduled Social Posts',
   description:
-    'Create a full week of ready-to-publish social media posts for your small business from one website scan or simple business profile. Try FromOne free for 7 days, then continue for £29.99/month.',
+    'Upload photos, videos or flyers. FromOne turns them into ready-to-review posts, chooses posting times, and can autopost to Facebook and Instagram.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'FromOne | Weekly Social Media Posts for Small Businesses',
+    title: 'FromOne | Turn Weekly Media Into Scheduled Social Posts',
     description:
-      'Create seven ready-to-publish posts from one website scan or simple business profile. Built for busy small businesses.',
+      'Upload photos, videos or flyers. FromOne creates posts, suggests times, and can autopost to Facebook and Instagram.',
     url: '/',
     type: 'website',
     images: [
@@ -29,86 +29,86 @@ export const metadata: Metadata = {
 };
 
 const scanHighlights = [
-  'Services and offers',
-  'Target audience',
+  'Business name and services',
+  'Target customers',
   'Tone of voice',
   'Location and local context',
+  'Offers and calls to action',
   'Brand colours and style',
-  'Useful calls to action',
 ];
 
 const workflow = [
   {
-    title: 'Scan or set up',
+    title: 'Set up once',
     description:
-      'Add the website URL, or use the manual profile if the business does not have a website.',
+      'Create a Business Profile so FromOne knows the business, services, location, tone, offers and customers.',
   },
   {
-    title: 'Choose platforms',
+    title: 'Upload weekly media',
     description:
-      'Select the channels you want content for, including Facebook, Instagram, Google Business, LinkedIn, TikTok, and more.',
+      'Add the photos, videos or flyers you want to promote this week.',
   },
   {
-    title: 'Create the plan',
+    title: 'Create scheduled posts',
     description:
-      'FromOne builds a seven-day content plan with platform-specific posts ready to review.',
+      'FromOne turns each upload into a post and chooses sensible posting times automatically.',
   },
   {
-    title: 'Publish with control',
+    title: 'Review and autopost',
     description:
-      'FromOne gives you ready-to-copy posts and image ideas. You choose what to publish, where to publish it, and when.',
+      'Edit anything you want, then let FromOne publish Facebook and Instagram. TikTok stays copy/open manual.',
   },
 ];
 
 const examplePosts = [
   {
     platform: 'Facebook',
-    goal: 'Build trust',
+    goal: 'Local enquiry',
     caption:
-      'Not every plumbing problem starts with a big leak. Sometimes it is a slow drip, a strange noise, or a small patch of damp that gets worse over time. If something does not look or sound right, it is always better to get it checked early before it turns into a bigger repair.',
-    cta: 'Message us today to arrange a quote.',
-    hashtags: '#Plumbing #LocalPlumber #HomeMaintenance #SmallBusiness',
-    imageIdea: 'A clear photo of a finished repair, van, tools, or team member on-site.',
+      'This week’s offer is ready. Whether you are booking ahead, asking a quick question, or comparing options, we are here to make it simple. Send us a message and we will point you in the right direction.',
+    cta: 'Message us today to book or ask a question.',
+    hashtags: '#LocalBusiness #SmallBusiness #FromOne',
+    imageIdea: 'Uses the uploaded photo, flyer or short video as the main post topic.',
   },
   {
     platform: 'Instagram',
-    goal: 'Show the work',
+    goal: 'Visual promotion',
     caption:
-      'A clean finish matters. Whether it is a small repair or a full installation, customers want someone who turns up, explains the job clearly, and leaves things tidy afterwards. That is the kind of service people remember.',
-    cta: 'Save this post for when you need a reliable local service.',
-    hashtags: '#LocalBusiness #TradeBusiness #CustomerTrust #BeforeAndAfter',
-    imageIdea: 'A before-and-after photo, finished job detail, or behind-the-scenes work shot.',
+      'A quick look at what is happening this week. FromOne turns your real photos, videos and flyers into posts that feel specific to the business, not generic filler content.',
+    cta: 'Save this post or message us to find out more.',
+    hashtags: '#InstagramMarketing #LocalBusiness #SmallBusiness',
+    imageIdea: 'Publishes an Instagram-safe version if the image needs resizing.',
   },
   {
-    platform: 'Google Business',
-    goal: 'Drive enquiries',
+    platform: 'TikTok',
+    goal: 'Manual short-form post',
     caption:
-      'Need help with a repair, installation, or maintenance job? We help local customers with reliable service, clear communication, and practical advice before any work begins.',
-    cta: 'Call or message us to book your next job.',
-    hashtags: '#LocalService #GoogleBusiness #CustomerEnquiries',
-    imageIdea: 'A simple service photo, shopfront, team photo, or completed customer job.',
+      'Use this as the caption when posting the video manually on TikTok. Keep it simple, show the moment, and give people one clear next step.',
+    cta: 'Copy the caption, open TikTok, and post manually.',
+    hashtags: '#TikTokBusiness #SmallBusiness #BehindTheScenes',
+    imageIdea: 'Best for event clips, before-and-after videos, product demos, food, beauty, fitness, or behind-the-scenes footage.',
   },
 ];
 
 const productScreenshots = [
   {
-    title: 'Dashboard setup',
+    title: 'Upload-first dashboard',
     description:
-      'Add the website or profile, confirm the business details, choose platforms, and create the plan.',
+      'Upload this week’s photos, videos or flyers, choose platforms, and create posts in one simple flow.',
     image: '/dashboard-preview.png',
     alt: 'FromOne dashboard for creating weekly social media posts',
   },
   {
-    title: 'Post-by-post workflow',
+    title: 'Weekly post review',
     description:
-      'Move through the week, review each post, copy the content, publish manually, and track progress.',
+      'Review each scheduled post, edit the wording or media, and see what is planned for the week.',
     image: '/posts-preview.png',
     alt: 'FromOne posts page showing weekly post workflow',
   },
   {
-    title: 'Audience and tone adjustments',
+    title: 'Autopost and rewrite tools',
     description:
-      'Make a post more specific for different customer types without starting again.',
+      'Rewrite using media, schedule autoposting, publish Facebook and Instagram, or copy/open TikTok.',
     image: '/audience-preview.png',
     alt: 'FromOne audience rewrite tool for social media posts',
   },
@@ -116,10 +116,11 @@ const productScreenshots = [
 
 const planFeatures = [
   '7-day free demo',
-  '£29.99/month after demo',
-  '2 website scans per week',
-  'Seven posts per weekly plan',
-  'Manual profile option',
+  'Upload photos, videos and flyers',
+  'Business Profile setup',
+  'Automatic suggested post times',
+  'Facebook and Instagram autoposting',
+  'TikTok copy/open workflow',
   'Cancel anytime',
 ];
 
@@ -131,13 +132,14 @@ export default function Home() {
 
         <div className="sales-hero-grid">
           <div className="sales-hero-copy">
-            <div className="page-eyebrow">Content planning for small businesses</div>
+            <div className="page-eyebrow">Weekly social posts from your real media</div>
 
-            <h1>One website. One week of content.</h1>
+            <h1>Upload your media. Get your posts.</h1>
 
             <p>
-              FromOne helps busy small businesses create, review, and publish a full week of
-              social media content without hiring an agency or staring at a blank screen.
+              FromOne turns this week’s photos, videos and flyers into scheduled social media
+              posts. Review the posts, edit anything, then autopost Facebook and Instagram or
+              copy/open TikTok.
             </p>
 
             <div className="sales-hero-actions">
@@ -152,8 +154,8 @@ export default function Home() {
 
             <div className="sales-trust-row">
               <span>✓ Free 7-day demo</span>
-              <span>✓ £29.99/month</span>
-              <span>✓ You stay in control</span>
+              <span>✓ Autopost Facebook & Instagram</span>
+              <span>✓ TikTok copy/open</span>
             </div>
           </div>
 
@@ -165,30 +167,30 @@ export default function Home() {
             </div>
 
             <div className="sales-preview-card">
-              <small>Website scan complete</small>
-              <h2>Weekly plan created</h2>
+              <small>Media uploaded</small>
+              <h2>Posts scheduled</h2>
 
               <div className="sales-preview-list">
                 <p>
                   <strong>Mon</strong>
-                  <span>Trust-building Facebook post</span>
+                  <span>Facebook post · 09:30</span>
                 </p>
 
                 <p>
                   <strong>Tue</strong>
-                  <span>Instagram caption and image idea</span>
+                  <span>Instagram post · 12:45</span>
                 </p>
 
                 <p>
                   <strong>Wed</strong>
-                  <span>Google Business update</span>
+                  <span>TikTok copy/open · 18:30</span>
                 </p>
               </div>
             </div>
 
             <div className="sales-preview-floating">
-              <strong>Ready to publish</strong>
-              <span>Review → Copy → Publish → Done</span>
+              <strong>Ready to review</strong>
+              <span>Review → Edit → Autopost</span>
             </div>
           </div>
         </div>
@@ -196,22 +198,21 @@ export default function Home() {
 
       <section className="sales-section sales-scan-section">
         <div className="sales-section-heading">
-          <div className="page-eyebrow">Website intelligence</div>
-          <h2>The scan does the briefing work.</h2>
+          <div className="page-eyebrow">Business Profile</div>
+          <h2>The business setup does the briefing work.</h2>
           <p>
-            Instead of asking the business owner to write a marketing brief, FromOne uses the
-            website to understand what matters and turns it into practical content.
+            Set up the Business Profile once. Then each week, FromOne uses that profile with the
+            uploaded media to create posts that sound like the business.
           </p>
         </div>
 
         <div className="sales-scan-grid">
           <div className="sales-scan-card">
-            <small>From one website URL</small>
-            <h3>Less setup. More relevant posts.</h3>
+            <small>Set up once</small>
+            <h3>The Business Profile becomes the brain.</h3>
             <p>
-              FromOne looks for the information that normally shapes good content: what the
-              business offers, who it serves, where it works, how it sounds, and what customers
-              should do next.
+              FromOne learns the services, customers, tone, location and offers once, then uses
+              that information every time new photos, videos or flyers are uploaded.
             </p>
           </div>
 
@@ -228,10 +229,10 @@ export default function Home() {
       <section className="sales-section sales-example-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Example output</div>
-          <h2>See what a weekly post can look like.</h2>
+          <h2>Posts built from real business media.</h2>
           <p>
-            FromOne creates practical, ready-to-use posts with a caption, call to action,
-            hashtags, and image guidance for the platform.
+            FromOne uses each upload as the topic, then adds the business context, tone, CTA,
+            hashtags and platform-specific wording.
           </p>
         </div>
 
@@ -267,10 +268,10 @@ export default function Home() {
       <section className="sales-section sales-steps-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Workflow</div>
-          <h2>From setup to published post.</h2>
+          <h2>From upload to autopost.</h2>
           <p>
-            Every part of FromOne is designed to guide the user through the same simple flow:
-            set up, create, review, publish, and track.
+            The weekly flow stays simple enough for non-technical users: upload the media, create
+            the posts, review them, then let FromOne handle Facebook and Instagram timing.
           </p>
         </div>
 
@@ -288,9 +289,9 @@ export default function Home() {
       <section className="sales-section sales-screenshots-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Product preview</div>
-          <h2>Simple to use. Useful every week.</h2>
+          <h2>Simple enough to use every week.</h2>
           <p>
-            The product keeps the weekly content process focused, visual, and easy to follow.
+            Dashboard is upload-first. Posts are review-first. Publishing is clear and controlled.
           </p>
         </div>
 
@@ -319,22 +320,22 @@ export default function Home() {
       <section className="sales-section sales-pricing-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Pricing</div>
-          <h2>Start free. Keep it simple.</h2>
+          <h2>Start free. Keep posting simple.</h2>
           <p>
-            Try the full workflow during the demo. If it saves time and keeps the business
-            posting consistently, continue monthly.
+            Try the full workflow during the demo. Upload media, create posts, review them, and
+            see how much time FromOne saves.
           </p>
         </div>
 
         <div className="sales-pricing-card">
           <div>
-            <small>FromOne Monthly</small>
+            <small>FromOne Starter</small>
             <h3>
-              £29.99 <span>/ month</span>
+              £39.99 <span>/ month</span>
             </h3>
             <p>
-              A practical content assistant for small businesses that want consistent social
-              media without agency costs.
+              For small businesses that want their weekly photos, videos and flyers turned into
+              scheduled posts without agency costs.
             </p>
           </div>
 
@@ -363,8 +364,8 @@ export default function Home() {
     <article className="sales-faq-card">
       <h3>Does FromOne post automatically?</h3>
       <p>
-        Not at the moment. FromOne creates the posts, captions, hashtags, calls to action, and
-        image ideas. You review and publish them yourself so you stay in control of what goes live.
+        Yes. FromOne can autopost Facebook and Instagram at the suggested time after you review
+        the post. TikTok stays manual, so you copy the post and open TikTok to publish it yourself.
       </p>
     </article>
 
@@ -379,16 +380,16 @@ export default function Home() {
     <article className="sales-faq-card">
       <h3>Which platforms does it support?</h3>
       <p>
-        FromOne can create content for Facebook, Instagram, Google Business, LinkedIn, TikTok,
-        YouTube Shorts, X / Twitter, and Pinterest.
+        FromOne currently focuses on Facebook, Instagram and TikTok. Facebook and Instagram can
+        be published or scheduled. TikTok is copy/open manual for now.
       </p>
     </article>
 
     <article className="sales-faq-card">
       <h3>Can I edit the posts?</h3>
       <p>
-        Yes. You can improve a post, make it more specific for an audience, adjust the tone, or
-        edit the wording before publishing.
+        Yes. You can edit wording, replace media, rewrite using the media, or change the
+        suggested posting time before it goes live.
       </p>
     </article>
   </div>
