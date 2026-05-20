@@ -216,7 +216,18 @@ export default function PostActionModal({
   const primaryPublishDisabled =
     posted || isPublishing || needsMedia || instagramHasFlyerOnly || isRescanning;
 
-  const statusLabel = getPostStatus(selectedPost) === 'Reminder set' ? 'Planned' : getPostStatus(selectedPost);
+  const statusLabel = getPostStatus(selectedPost) === 'Reminder set' ? 'Scheduled' : getPostStatus(selectedPost);
+  const scheduleActionLabel = canAutoPublish
+    ? hasSchedule
+      ? 'Change autopost time'
+      : 'Schedule autopost'
+    : hasSchedule
+      ? 'Change reminder time'
+      : isTikTokPost
+        ? 'Plan TikTok reminder'
+        : 'Plan reminder';
+  const savedScheduleLabel = canAutoPublish ? 'Autopost scheduled' : 'Reminder planned';
+  const saveScheduleButtonLabel = canAutoPublish ? 'Save autopost time' : 'Save reminder time';
 
   return (
     <div className="fromone-modal-overlay fromone-simple-modal-overlay" role="dialog" aria-modal="true">
@@ -539,12 +550,16 @@ export default function PostActionModal({
                 {posted
                   ? `${platformName} has been marked as posted.`
                   : canAutoPublish
-                    ? `${platformName} can publish now when connected.`
-                    : 'Copy the post, open TikTok, then paste and publish manually.'}
+                    ? `${platformName} can publish now or autopost at the time you choose.`
+                    : isTikTokPost
+                      ? 'Copy the post, open TikTok, then paste and publish manually.'
+                      : `Copy the post and open ${platformName}.`}
               </p>
 
               {hasSchedule && !posted && (
-                <small>Planned: {getReadableDateTime(selectedPost.scheduled_publish_at)}</small>
+                <small>
+                  {savedScheduleLabel}: {getReadableDateTime(selectedPost.scheduled_publish_at)}
+                </small>
               )}
             </div>
 
@@ -586,7 +601,7 @@ export default function PostActionModal({
                 onClick={() => setShowScheduleControls(true)}
                 disabled={posted || isRescanning}
               >
-                {hasSchedule ? 'Change planned time' : 'Plan for later'}
+                {scheduleActionLabel}
               </button>
             ) : (
               <div className="fromone-simple-schedule-grid">
@@ -602,7 +617,7 @@ export default function PostActionModal({
                   onClick={() => onSaveReminder(selectedPost)}
                   disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning}
                 >
-                  {savingReminderPostId === selectedPost.id ? 'Saving...' : 'Save time'}
+                  {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleButtonLabel}
                 </button>
 
                 {hasSchedule && (
