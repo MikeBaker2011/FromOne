@@ -1459,3 +1459,132 @@
   }
 }
 
+/* Spacing refinement for simple post modal */
+
+.fromone-simple-post-modal {
+  display: grid !important;
+  gap: 18px !important;
+}
+
+.fromone-simple-section {
+  margin-top: 0 !important;
+  padding: clamp(18px, 2.4vw, 24px) !important;
+}
+
+.fromone-simple-section + .fromone-simple-section {
+  margin-top: 0 !important;
+}
+
+.fromone-simple-section-title {
+  margin-bottom: 16px !important;
+}
+
+.fromone-simple-wording-card {
+  padding: 20px 22px !important;
+  margin-bottom: 14px !important;
+}
+
+.fromone-simple-wording-card p {
+  margin-top: 0 !important;
+  margin-bottom: 10px !important;
+}
+
+.fromone-simple-wording-card p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.fromone-simple-section .fromone-simple-two-actions {
+  margin-top: 12px !important;
+}
+
+.fromone-simple-publish-card {
+  margin-top: 0 !important;
+  padding: 18px 20px !important;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 350px) !important;
+}
+
+.fromone-simple-publish-card strong {
+  display: block !important;
+  margin-bottom: 6px !important;
+}
+
+.fromone-simple-publish-card .fromone-simple-primary-action {
+  min-height: 58px !important;
+  align-self: center !important;
+}
+
+.fromone-simple-schedule {
+  margin-top: 12px !important;
+}
+
+.fromone-simple-admin-actions {
+  margin-top: 12px !important;
+  padding-top: 12px !important;
+}
+
+.fromone-simple-post-modal .fromone-simple-two-actions {
+  gap: 12px !important;
+}
+
+.fromone-simple-post-modal .fromone-simple-two-actions button,
+.fromone-simple-post-modal .fromone-simple-two-actions a {
+  min-height: 52px !important;
+}
+
+.fromone-simple-post-modal .secondary-button,
+.fromone-simple-post-modal a.secondary-button {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+}
+
+.fromone-simple-post-modal .fromone-simple-primary-action,
+.fromone-simple-post-modal button.fromone-simple-primary-action {
+  color: #101420 !important;
+}
+
+.fromone-simple-post-modal .fromone-simple-primary-action:disabled {
+  color: rgba(16, 20, 32, 0.72) !important;
+}
+
+.fromone-simple-post-modal .page-eyebrow {
+  margin-bottom: 6px !important;
+}
+
+/* Make section 4 feel like one compact publish panel */
+.fromone-simple-section:has(.fromone-simple-publish-card) {
+  padding-bottom: 18px !important;
+}
+
+.fromone-simple-section:has(.fromone-simple-publish-card) .fromone-simple-section-title {
+  margin-bottom: 14px !important;
+}
+
+.fromone-simple-section:has(.fromone-simple-publish-card) .fromone-simple-two-actions {
+  margin-top: 10px !important;
+}
+
+.fromone-simple-section:has(.fromone-simple-publish-card) .fromone-simple-schedule > button {
+  min-height: 48px !important;
+  padding: 0 22px !important;
+  width: auto !important;
+}
+
+@media (max-width: 840px) {
+  .fromone-simple-post-modal {
+    gap: 14px !important;
+  }
+
+  .fromone-simple-publish-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .fromone-simple-publish-card .fromone-simple-primary-action {
+    width: 100% !important;
+  }
+
+  .fromone-simple-section:has(.fromone-simple-publish-card) .fromone-simple-schedule > button {
+    width: 100% !important;
+  }
+}
+
