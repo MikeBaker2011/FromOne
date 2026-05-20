@@ -1601,7 +1601,7 @@ If uploads are supplied:
   const weeklyVideoScansRemaining = Math.max(weeklyVideoScanLimit - weeklyVideoScansUsed, 0);
 
   const businessProfileReady = hasManualProfile;
-  const canCreatePosts = businessProfileReady && weeklyUploads.length > 0 && !accessLocked && !scanning;
+  const canCreatePosts = businessProfileReady && weeklyUploads.length > 0 && selectedPlatforms.length > 0 && !accessLocked && !scanning;
 
   return (
     <main
@@ -1798,17 +1798,98 @@ If uploads are supplied:
               </div>
             )}
 
-            <textarea
-              className="input"
-              value={weeklyPostNote}
-              onChange={(event) => setWeeklyPostNote(event.target.value)}
-              placeholder="Optional note: what should FromOne promote? Example: Friday event, new offer, summer menu, new stock..."
-              rows={3}
+            <div
               style={{
-                width: "100%",
-                borderRadius: 20,
+                display: "grid",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: 14,
               }}
-            />
+            >
+              {[
+                {
+                  name: "Facebook",
+                  title: "Facebook",
+                  description: "Good for local customers, offers, updates and enquiries.",
+                },
+                {
+                  name: "Instagram",
+                  title: "Instagram",
+                  description: "Best for photos, videos, flyers, products and visual posts.",
+                },
+                {
+                  name: "TikTok",
+                  title: "TikTok",
+                  description: "Creates copy and ideas. You copy/open TikTok manually.",
+                },
+              ].map((platform) => {
+                const selected = selectedPlatforms.includes(platform.name);
+
+                return (
+                  <button
+                    key={platform.name}
+                    type="button"
+                    onClick={() => togglePlatform(platform.name)}
+                    aria-pressed={selected}
+                    style={{
+                      minHeight: 148,
+                      borderRadius: 24,
+                      padding: 18,
+                      textAlign: "left",
+                      cursor: "pointer",
+                      background: selected
+                        ? "radial-gradient(circle at top right, rgba(255, 212, 59, 0.2), rgba(255,255,255,0.075))"
+                        : "rgba(255,255,255,0.045)",
+                      border: selected
+                        ? "1px solid rgba(255, 212, 59, 0.46)"
+                        : "1px solid rgba(255,255,255,0.1)",
+                      color: "#f8fafc",
+                      boxShadow: selected
+                        ? "0 18px 42px rgba(255, 212, 59, 0.11)"
+                        : "none",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 13,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 14,
+                        background: selected ? "#ffd43b" : "rgba(255,255,255,0.09)",
+                        color: selected ? "#101420" : "rgba(248,250,252,0.78)",
+                        fontWeight: 950,
+                      }}
+                    >
+                      {selected ? "✓" : "+"}
+                    </span>
+
+                    <strong
+                      style={{
+                        display: "block",
+                        fontSize: "1.12rem",
+                        marginBottom: 8,
+                        color: "#ffffff",
+                      }}
+                    >
+                      {platform.title}
+                    </strong>
+
+                    <small
+                      style={{
+                        display: "block",
+                        color: "rgba(248,250,252,0.68)",
+                        lineHeight: 1.45,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {platform.description}
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
 
             {!businessProfileReady && (
               <div
@@ -1849,6 +1930,12 @@ If uploads are supplied:
                 <strong>Access locked</strong>
                 <p style={{ margin: "5px 0 0", color: "var(--muted)" }}>{accessMessage}</p>
               </div>
+            )}
+
+            {selectedPlatforms.length === 0 && (
+              <p style={{ textAlign: "center", margin: 0, color: "var(--gold)", fontWeight: 900 }}>
+                Choose at least one platform.
+              </p>
             )}
 
             <button
