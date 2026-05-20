@@ -1,29 +1,36 @@
-'use client';
+"use client";
 
-import './posts.css';
+import "./posts.css";
 
-import { CSSProperties, ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import axios from 'axios';
+import {
+  CSSProperties,
+  ChangeEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createClient } from "@supabase/supabase-js";
+import axios from "axios";
 
-import WeeklyPlanControls from '@/components/posts/WeeklyPlanControls';
-import WeeklyQueue from '@/components/posts/WeeklyQueue';
-import PostActionModal from '@/components/posts/PostActionModal';
-import TodayReminderModal from '@/components/posts/TodayReminderModal';
-import PostSuccessModal from '@/components/posts/PostSuccessModal';
-import ReviewPromptModal from '@/components/posts/ReviewPromptModal';
+import WeeklyPlanControls from "@/components/posts/WeeklyPlanControls";
+import WeeklyQueue from "@/components/posts/WeeklyQueue";
+import PostActionModal from "@/components/posts/PostActionModal";
+import TodayReminderModal from "@/components/posts/TodayReminderModal";
+import PostSuccessModal from "@/components/posts/PostSuccessModal";
+import ReviewPromptModal from "@/components/posts/ReviewPromptModal";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const MEDIA_BUCKET = 'campaign-assets';
+const MEDIA_BUCKET = "campaign-assets";
 const MAX_SAVED_CAMPAIGNS = 4;
 
-const POSTS_TOUR_SEEN_KEY = 'fromone_posts_tour_seen';
-const REVIEW_PROMPT_DISMISSED_KEY = 'fromone_review_prompt_dismissed';
-const REVIEW_PROMPT_SUBMITTED_KEY = 'fromone_review_prompt_submitted';
-const REVIEW_PROMPT_POSTED_COUNT_KEY = 'fromone_review_prompt_posted_count';
+const POSTS_TOUR_SEEN_KEY = "fromone_posts_tour_seen";
+const REVIEW_PROMPT_DISMISSED_KEY = "fromone_review_prompt_dismissed";
+const REVIEW_PROMPT_SUBMITTED_KEY = "fromone_review_prompt_submitted";
+const REVIEW_PROMPT_POSTED_COUNT_KEY = "fromone_review_prompt_posted_count";
 const REVIEW_PROMPT_TRIGGER_COUNT = 3;
 
 type AccessInfo = {
@@ -60,222 +67,234 @@ type ImprovementNote = {
   detail: string;
 };
 
-type PostStatus = 'Ready' | 'Reminder set' | 'Posted' | 'Failed';
+type PostStatus = "Ready" | "Reminder set" | "Posted" | "Failed";
+
+const MAIN_POST_PLATFORMS = ["Facebook", "Instagram", "TikTok"];
+
+const normaliseMainPlatform = (platform?: string | null) => {
+  const cleanPlatform = String(platform || "").toLowerCase();
+
+  if (cleanPlatform.includes("facebook")) return "Facebook";
+  if (cleanPlatform.includes("instagram")) return "Instagram";
+  if (cleanPlatform.includes("tiktok")) return "TikTok";
+
+  return "Post";
+};
 
 const postsTourSteps = [
   {
-    title: 'Choose today’s post',
-    text: 'Start with the weekly queue. Pick the post you want to work on.',
-    target: 'queue',
+    title: "Choose a post",
+    text: "Start with the weekly queue. Each card is one post to review.",
+    target: "queue",
   },
   {
-    title: 'Check the wording',
-    text: 'Click a card to open the post window. Review the wording first.',
-    target: 'post',
+    title: "Check the media and wording",
+    text: "Open a card to check the uploaded media, caption, CTA and hashtags.",
+    target: "post",
   },
   {
-    title: 'Add media',
-    text: 'Add an image or video when the post needs one.',
-    target: 'media',
+    title: "Swap or add media",
+    text: "Use the media section to upload, replace, or remove the image or video for this post.",
+    target: "media",
   },
   {
-    title: 'Publish',
-    text: 'Publish to Facebook or Instagram directly, schedule connected posts, or copy/open platforms that are not connected yet.',
-    target: 'publish',
+    title: "Publish or copy",
+    text: "Publish or schedule Facebook and Instagram when Meta is connected. Copy/open TikTok manually for now.",
+    target: "publish",
   },
 ];
 
 const quickImproveActions = [
-  { value: 'make_shorter', label: 'Make shorter' },
-  { value: 'make_more_local', label: 'More local' },
-  { value: 'make_sales_focused', label: 'More sales-focused' },
-  { value: 'make_less_generic', label: 'Less generic' },
-  { value: 'different_version', label: 'Different version' },
+  { value: "make_shorter", label: "Make shorter" },
+  { value: "make_more_local", label: "More local" },
+  { value: "make_sales_focused", label: "More sales-focused" },
+  { value: "make_less_generic", label: "Less generic" },
+  { value: "different_version", label: "Different version" },
 ];
 
 const defaultAudienceTargets = [
-  'Local customers',
-  'Small business owners',
-  'Busy professionals',
-  'Families',
-  'Homeowners',
-  'New customers',
-  'Returning customers',
-  'Custom audience',
+  "Local customers",
+  "Small business owners",
+  "Busy professionals",
+  "Families",
+  "Homeowners",
+  "New customers",
+  "Returning customers",
+  "Custom audience",
 ];
 
 const toneOptions = [
-  'Use current tone',
-  'More friendly',
-  'More professional',
-  'More premium',
-  'More direct',
-  'More fun',
-  'More trustworthy',
+  "Use current tone",
+  "More friendly",
+  "More professional",
+  "More premium",
+  "More direct",
+  "More fun",
+  "More trustworthy",
 ];
 
 const industryAudienceTargets: Record<string, string[]> = {
   plumbing: [
-    'Homeowners',
-    'Landlords',
-    'Property managers',
-    'Letting agents',
-    'Small business owners',
-    'Emergency callout customers',
-    'Custom audience',
+    "Homeowners",
+    "Landlords",
+    "Property managers",
+    "Letting agents",
+    "Small business owners",
+    "Emergency callout customers",
+    "Custom audience",
   ],
   electrician: [
-    'Homeowners',
-    'Landlords',
-    'Property managers',
-    'Small business owners',
-    'Emergency repair customers',
-    'New homeowners',
-    'Custom audience',
+    "Homeowners",
+    "Landlords",
+    "Property managers",
+    "Small business owners",
+    "Emergency repair customers",
+    "New homeowners",
+    "Custom audience",
   ],
   roofing: [
-    'Homeowners',
-    'Landlords',
-    'Property managers',
-    'Commercial property owners',
-    'Storm damage customers',
-    'Home sellers',
-    'Custom audience',
+    "Homeowners",
+    "Landlords",
+    "Property managers",
+    "Commercial property owners",
+    "Storm damage customers",
+    "Home sellers",
+    "Custom audience",
   ],
   signage: [
-    'Small business owners',
-    'Retail shops',
-    'Construction companies',
-    'Estate agents',
-    'Event organisers',
-    'Local tradespeople',
-    'Custom audience',
+    "Small business owners",
+    "Retail shops",
+    "Construction companies",
+    "Estate agents",
+    "Event organisers",
+    "Local tradespeople",
+    "Custom audience",
   ],
   print: [
-    'Small business owners',
-    'Event organisers',
-    'Retail shops',
-    'Startups',
-    'Local organisations',
-    'Marketing managers',
-    'Custom audience',
+    "Small business owners",
+    "Event organisers",
+    "Retail shops",
+    "Startups",
+    "Local organisations",
+    "Marketing managers",
+    "Custom audience",
   ],
   beauty: [
-    'Local shoppers',
-    'Brides',
-    'Busy professionals',
-    'Luxury buyers',
-    'Regular clients',
-    'New clients',
-    'Custom audience',
+    "Local shoppers",
+    "Brides",
+    "Busy professionals",
+    "Luxury buyers",
+    "Regular clients",
+    "New clients",
+    "Custom audience",
   ],
   hair: [
-    'Local clients',
-    'Brides',
-    'Busy professionals',
-    'Regular clients',
-    'New clients',
-    'Style-conscious customers',
-    'Custom audience',
+    "Local clients",
+    "Brides",
+    "Busy professionals",
+    "Regular clients",
+    "New clients",
+    "Style-conscious customers",
+    "Custom audience",
   ],
   fitness: [
-    'Beginners',
-    'Busy professionals',
-    'Parents',
-    'Weight loss clients',
-    'Strength training clients',
-    'Local residents',
-    'Custom audience',
+    "Beginners",
+    "Busy professionals",
+    "Parents",
+    "Weight loss clients",
+    "Strength training clients",
+    "Local residents",
+    "Custom audience",
   ],
   restaurant: [
-    'Local diners',
-    'Families',
-    'Couples',
-    'Office workers',
-    'Weekend customers',
-    'Event bookings',
-    'Custom audience',
+    "Local diners",
+    "Families",
+    "Couples",
+    "Office workers",
+    "Weekend customers",
+    "Event bookings",
+    "Custom audience",
   ],
   cafe: [
-    'Local shoppers',
-    'Office workers',
-    'Students',
-    'Remote workers',
-    'Families',
-    'Weekend customers',
-    'Custom audience',
+    "Local shoppers",
+    "Office workers",
+    "Students",
+    "Remote workers",
+    "Families",
+    "Weekend customers",
+    "Custom audience",
   ],
   estate: [
-    'First-time buyers',
-    'Homeowners',
-    'Landlords',
-    'Property investors',
-    'Sellers',
-    'Tenants',
-    'Custom audience',
+    "First-time buyers",
+    "Homeowners",
+    "Landlords",
+    "Property investors",
+    "Sellers",
+    "Tenants",
+    "Custom audience",
   ],
   property: [
-    'First-time buyers',
-    'Homeowners',
-    'Landlords',
-    'Property investors',
-    'Sellers',
-    'Tenants',
-    'Custom audience',
+    "First-time buyers",
+    "Homeowners",
+    "Landlords",
+    "Property investors",
+    "Sellers",
+    "Tenants",
+    "Custom audience",
   ],
   ecommerce: [
-    'Online shoppers',
-    'Gift buyers',
-    'Returning customers',
-    'Deal seekers',
-    'Luxury buyers',
-    'New customers',
-    'Custom audience',
+    "Online shoppers",
+    "Gift buyers",
+    "Returning customers",
+    "Deal seekers",
+    "Luxury buyers",
+    "New customers",
+    "Custom audience",
   ],
   accounting: [
-    'Small business owners',
-    'Sole traders',
-    'Startups',
-    'Limited company directors',
-    'Self-employed professionals',
-    'Landlords',
-    'Custom audience',
+    "Small business owners",
+    "Sole traders",
+    "Startups",
+    "Limited company directors",
+    "Self-employed professionals",
+    "Landlords",
+    "Custom audience",
   ],
   legal: [
-    'Small business owners',
-    'Families',
-    'Homeowners',
-    'Landlords',
-    'Employers',
-    'People needing advice',
-    'Custom audience',
+    "Small business owners",
+    "Families",
+    "Homeowners",
+    "Landlords",
+    "Employers",
+    "People needing advice",
+    "Custom audience",
   ],
   dental: [
-    'Families',
-    'Nervous patients',
-    'New patients',
-    'Cosmetic dentistry clients',
-    'Parents',
-    'Local residents',
-    'Custom audience',
+    "Families",
+    "Nervous patients",
+    "New patients",
+    "Cosmetic dentistry clients",
+    "Parents",
+    "Local residents",
+    "Custom audience",
   ],
   mechanic: [
-    'Car owners',
-    'Fleet owners',
-    'Commuters',
-    'Families',
-    'Local drivers',
-    'Van owners',
-    'Custom audience',
+    "Car owners",
+    "Fleet owners",
+    "Commuters",
+    "Families",
+    "Local drivers",
+    "Van owners",
+    "Custom audience",
   ],
   garage: [
-    'Car owners',
-    'Fleet owners',
-    'Commuters',
-    'Families',
-    'Local drivers',
-    'Van owners',
-    'Custom audience',
+    "Car owners",
+    "Fleet owners",
+    "Commuters",
+    "Families",
+    "Local drivers",
+    "Van owners",
+    "Custom audience",
   ],
 };
 
@@ -290,8 +309,10 @@ export default function PostsPage() {
   const [metaConnections, setMetaConnections] = useState<MetaConnection[]>([]);
   const [loadingMetaConnections, setLoadingMetaConnections] = useState(false);
 
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
-  const [pendingCampaignId, setPendingCampaignId] = useState('');
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
+    null,
+  );
+  const [pendingCampaignId, setPendingCampaignId] = useState("");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -300,38 +321,51 @@ export default function PostsPage() {
   const [renamingCampaign, setRenamingCampaign] = useState(false);
 
   const [accessLocked, setAccessLocked] = useState(false);
-  const [accessMessage, setAccessMessage] = useState('');
+  const [accessMessage, setAccessMessage] = useState("");
 
-  const [audienceTarget, setAudienceTarget] = useState('Local customers');
-  const [customAudienceTarget, setCustomAudienceTarget] = useState('');
-  const [toneTarget, setToneTarget] = useState('Use current tone');
+  const [audienceTarget, setAudienceTarget] = useState("Local customers");
+  const [customAudienceTarget, setCustomAudienceTarget] = useState("");
+  const [toneTarget, setToneTarget] = useState("Use current tone");
   const [rewritingPost, setRewritingPost] = useState(false);
-  const [rewritingAction, setRewritingAction] = useState('');
-  const [improvementNote, setImprovementNote] = useState<ImprovementNote | null>(null);
+  const [rewritingAction, setRewritingAction] = useState("");
+  const [improvementNote, setImprovementNote] =
+    useState<ImprovementNote | null>(null);
   const [showImproveTools, setShowImproveTools] = useState(false);
 
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const [editCaption, setEditCaption] = useState('');
-  const [editCta, setEditCta] = useState('');
-  const [editHashtags, setEditHashtags] = useState('');
+  const [editCaption, setEditCaption] = useState("");
+  const [editCta, setEditCta] = useState("");
+  const [editHashtags, setEditHashtags] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const [uploadingMediaPostId, setUploadingMediaPostId] = useState<string | null>(null);
-  const [removingMediaPostId, setRemovingMediaPostId] = useState<string | null>(null);
+  const [uploadingMediaPostId, setUploadingMediaPostId] = useState<
+    string | null
+  >(null);
+  const [removingMediaPostId, setRemovingMediaPostId] = useState<string | null>(
+    null,
+  );
   const [publishingPostId, setPublishingPostId] = useState<string | null>(null);
-  const [savingReminderPostId, setSavingReminderPostId] = useState<string | null>(null);
-  const [reminderValue, setReminderValue] = useState('');
+  const [savingReminderPostId, setSavingReminderPostId] = useState<
+    string | null
+  >(null);
+  const [reminderValue, setReminderValue] = useState("");
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
-  const [recentlyDeletedPost, setRecentlyDeletedPost] = useState<any | null>(null);
+  const [recentlyDeletedPost, setRecentlyDeletedPost] = useState<any | null>(
+    null,
+  );
 
   const [showTodayReminder, setShowTodayReminder] = useState(false);
-  const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(null);
-  const [successMoment, setSuccessMoment] = useState<SuccessMoment | null>(null);
+  const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(
+    null,
+  );
+  const [successMoment, setSuccessMoment] = useState<SuccessMoment | null>(
+    null,
+  );
 
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewHoverRating, setReviewHoverRating] = useState(0);
-  const [reviewText, setReviewText] = useState('');
+  const [reviewText, setReviewText] = useState("");
   const [savingReview, setSavingReview] = useState(false);
 
   const [showPostsTour, setShowPostsTour] = useState(false);
@@ -350,8 +384,12 @@ export default function PostsPage() {
 
   function sortPostsByDate(items: any[]) {
     return [...items].sort((firstPost, secondPost) => {
-      const firstTime = firstPost.scheduled_at ? new Date(firstPost.scheduled_at).getTime() : 0;
-      const secondTime = secondPost.scheduled_at ? new Date(secondPost.scheduled_at).getTime() : 0;
+      const firstTime = firstPost.scheduled_at
+        ? new Date(firstPost.scheduled_at).getTime()
+        : 0;
+      const secondTime = secondPost.scheduled_at
+        ? new Date(secondPost.scheduled_at).getTime()
+        : 0;
       return firstTime - secondTime;
     });
   }
@@ -359,13 +397,13 @@ export default function PostsPage() {
   function isPostPosted(post: any) {
     return (
       post?.is_posted === true ||
-      String(post?.status || '').toLowerCase() === 'posted' ||
-      String(post?.publish_status || '').toLowerCase() === 'posted'
+      String(post?.status || "").toLowerCase() === "posted" ||
+      String(post?.publish_status || "").toLowerCase() === "posted"
     );
   }
 
   function isPostFailed(post: any) {
-    return String(post?.publish_status || '').toLowerCase() === 'failed';
+    return String(post?.publish_status || "").toLowerCase() === "failed";
   }
 
   function isPostReminderSet(post: any) {
@@ -374,23 +412,23 @@ export default function PostsPage() {
 
     return (
       Boolean(post?.scheduled_publish_at) ||
-      String(post?.status || '').toLowerCase() === 'scheduled' ||
-      String(post?.publish_status || '').toLowerCase() === 'scheduled'
+      String(post?.status || "").toLowerCase() === "scheduled" ||
+      String(post?.publish_status || "").toLowerCase() === "scheduled"
     );
   }
 
   function getPostStatus(post: any): PostStatus {
-    if (isPostFailed(post)) return 'Failed';
-    if (isPostPosted(post)) return 'Posted';
-    if (isPostReminderSet(post)) return 'Reminder set';
-    return 'Ready';
+    if (isPostFailed(post)) return "Failed";
+    if (isPostPosted(post)) return "Posted";
+    if (isPostReminderSet(post)) return "Reminder set";
+    return "Ready";
   }
 
   function getStatusClass(status: PostStatus) {
-    if (status === 'Posted') return 'is-posted';
-    if (status === 'Reminder set') return 'is-scheduled';
-    if (status === 'Failed') return 'is-failed';
-    return 'is-ready';
+    if (status === "Posted") return "is-posted";
+    if (status === "Reminder set") return "is-scheduled";
+    if (status === "Failed") return "is-failed";
+    return "is-ready";
   }
 
   const sortedPosts = useMemo(() => sortPostsByDate(posts), [posts]);
@@ -409,20 +447,20 @@ export default function PostsPage() {
     loadPageData();
 
     const params = new URLSearchParams(window.location.search);
-    const metaConnected = params.get('meta_connected');
-    const metaError = params.get('meta_error');
+    const metaConnected = params.get("meta_connected");
+    const metaError = params.get("meta_error");
 
-    if (metaConnected === 'true') {
-      alert('Facebook and Instagram connected.');
-      window.history.replaceState({}, '', window.location.pathname);
+    if (metaConnected === "true") {
+      alert("Facebook and Instagram connected.");
+      window.history.replaceState({}, "", window.location.pathname);
     }
 
-    if (metaConnected === 'false') {
-      alert(metaError || 'Meta connection failed.');
-      window.history.replaceState({}, '', window.location.pathname);
+    if (metaConnected === "false") {
+      alert(metaError || "Meta connection failed.");
+      window.history.replaceState({}, "", window.location.pathname);
     }
 
-    const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === 'true';
+    const tourSeen = localStorage.getItem(POSTS_TOUR_SEEN_KEY) === "true";
     const isMobile = window.innerWidth <= 760;
 
     if (!tourSeen && !isMobile) {
@@ -436,27 +474,29 @@ export default function PostsPage() {
     if (loading || posts.length === 0) return;
 
     const todayUnpostedPost = posts.find(
-      (post) => isPostScheduledToday(post) && !isPostPosted(post)
+      (post) => isPostScheduledToday(post) && !isPostPosted(post),
     );
 
     if (!todayUnpostedPost) return;
 
     const storageKey = getTodayReminderStorageKey();
 
-    if (localStorage.getItem(storageKey) === 'true') return;
+    if (localStorage.getItem(storageKey) === "true") return;
 
-    localStorage.setItem(storageKey, 'true');
+    localStorage.setItem(storageKey, "true");
     setTodayReminderPostId(todayUnpostedPost.id);
     setShowTodayReminder(true);
   }, [loading, posts]);
 
   useEffect(() => {
     if (!selectedPost) {
-      setReminderValue('');
+      setReminderValue("");
       return;
     }
 
-    setReminderValue(toDateTimeInputValue(selectedPost.scheduled_publish_at || ''));
+    setReminderValue(
+      toDateTimeInputValue(selectedPost.scheduled_publish_at || ""),
+    );
   }, [selectedPost]);
 
   useEffect(() => {
@@ -466,9 +506,9 @@ export default function PostsPage() {
 
     if (target) {
       target.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'center',
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
       });
     }
 
@@ -476,13 +516,13 @@ export default function PostsPage() {
       updatePostsTourRect();
     }, 420);
 
-    window.addEventListener('resize', updatePostsTourRect);
-    window.addEventListener('scroll', updatePostsTourRect, true);
+    window.addEventListener("resize", updatePostsTourRect);
+    window.addEventListener("scroll", updatePostsTourRect, true);
 
     return () => {
       window.clearTimeout(timer);
-      window.removeEventListener('resize', updatePostsTourRect);
-      window.removeEventListener('scroll', updatePostsTourRect, true);
+      window.removeEventListener("resize", updatePostsTourRect);
+      window.removeEventListener("scroll", updatePostsTourRect, true);
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -491,8 +531,8 @@ export default function PostsPage() {
   const getTodayKey = () => {
     const today = new Date();
     const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
@@ -501,9 +541,9 @@ export default function PostsPage() {
   };
 
   const shouldOpenTodayPost = () => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
     const params = new URLSearchParams(window.location.search);
-    return params.get('today') === 'true';
+    return params.get("today") === "true";
   };
 
   const isSameDate = (firstDate: Date, secondDate: Date) => {
@@ -525,29 +565,33 @@ export default function PostsPage() {
   };
 
   const isPaidSubscription = (status?: string | null) => {
-    return ['active', 'paid', 'trialing'].includes(String(status || '').toLowerCase());
+    return ["active", "paid", "trialing"].includes(
+      String(status || "").toLowerCase(),
+    );
   };
 
   const calculateAccess = (access: AccessInfo | null) => {
     if (!access) {
       return {
         locked: false,
-        message: 'Demo access is being prepared.',
+        message: "Demo access is being prepared.",
       };
     }
 
     if (isPaidSubscription(access.subscription_status)) {
       return {
         locked: false,
-        message: 'Subscription active.',
+        message: "Subscription active.",
       };
     }
 
     if (isFutureDate(access.extension_ends_at)) {
-      const date = new Date(access.extension_ends_at as string).toLocaleDateString(undefined, {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
+      const date = new Date(
+        access.extension_ends_at as string,
+      ).toLocaleDateString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
       });
 
       return {
@@ -557,11 +601,14 @@ export default function PostsPage() {
     }
 
     if (isFutureDate(access.trial_ends_at)) {
-      const date = new Date(access.trial_ends_at as string).toLocaleDateString(undefined, {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
+      const date = new Date(access.trial_ends_at as string).toLocaleDateString(
+        undefined,
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        },
+      );
 
       return {
         locked: false,
@@ -572,13 +619,13 @@ export default function PostsPage() {
     return {
       locked: true,
       message:
-        'Your 7-day demo has ended. You can still view and publish existing posts, but editing, media upload, and improving posts are locked until access is extended or a subscription is active.',
+        "Your 7-day demo has ended. You can still view and publish existing posts, but editing, media upload, and improving posts are locked until access is extended or a subscription is active.",
     };
   };
 
-  const getReadableError = (error: any, fallback = 'Something went wrong.') => {
+  const getReadableError = (error: any, fallback = "Something went wrong.") => {
     if (!error) return fallback;
-    if (typeof error === 'string') return error;
+    if (typeof error === "string") return error;
 
     if (axios.isAxiosError(error)) {
       return (
@@ -610,7 +657,7 @@ export default function PostsPage() {
     setLoadingMetaConnections(true);
 
     try {
-      const response = await axios.get('/api/social-connections', {
+      const response = await axios.get("/api/social-connections", {
         params: {
           user_id: userId,
         },
@@ -618,7 +665,7 @@ export default function PostsPage() {
 
       setMetaConnections(response.data?.connections || []);
     } catch (error) {
-      console.error('Load Meta connections error:', error);
+      console.error("Load Meta connections error:", error);
       setMetaConnections([]);
     } finally {
       setLoadingMetaConnections(false);
@@ -636,14 +683,14 @@ export default function PostsPage() {
     const userId = await getSignedInUserId();
 
     if (!userId) {
-      alert('Please sign in before connecting Facebook and Instagram.');
+      alert("Please sign in before connecting Facebook and Instagram.");
       return;
     }
 
     const params = new URLSearchParams();
 
-    params.set('user_id', userId);
-    params.set('return_to', '/posts');
+    params.set("user_id", userId);
+    params.set("return_to", "/posts");
 
     window.location.href = `/api/auth/meta/start?${params.toString()}`;
   };
@@ -652,9 +699,9 @@ export default function PostsPage() {
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError) {
-      console.error('Auth session error:', authError.message);
+      console.error("Auth session error:", authError.message);
       setAccessLocked(false);
-      setAccessMessage('Please sign in again.');
+      setAccessMessage("Please sign in again.");
       return;
     }
 
@@ -665,15 +712,15 @@ export default function PostsPage() {
     await loadMetaConnections(userId);
 
     const { data, error } = await supabase
-      .from('user_access')
-      .select('*')
-      .eq('user_id', userId)
+      .from("user_access")
+      .select("*")
+      .eq("user_id", userId)
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading user access:', error.message);
+      console.error("Error loading user access:", error.message);
       setAccessLocked(false);
-      setAccessMessage('Access check unavailable.');
+      setAccessMessage("Access check unavailable.");
       return;
     }
 
@@ -694,21 +741,25 @@ export default function PostsPage() {
 
     setCampaign(activeCampaign);
     setSelectedCampaignId(activeCampaign?.id || null);
-    setPendingCampaignId(activeCampaign?.id || '');
+    setPendingCampaignId(activeCampaign?.id || "");
 
-    await Promise.all([loadPosts(activeCampaign?.id || null), loadProfile(), loadAccess()]);
+    await Promise.all([
+      loadPosts(activeCampaign?.id || null),
+      loadProfile(),
+      loadAccess(),
+    ]);
 
     setLoading(false);
   };
 
   const loadCampaigns = async () => {
     const { data, error } = await supabase
-      .from('campaigns')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("campaigns")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('Error loading weekly plans:', error.message);
+      console.error("Error loading weekly plans:", error.message);
       setCampaigns([]);
       setCampaign(null);
       return [];
@@ -721,14 +772,14 @@ export default function PostsPage() {
 
   const loadProfile = async () => {
     const { data, error } = await supabase
-      .from('business_profiles')
-      .select('*')
-      .order('updated_at', { ascending: false })
+      .from("business_profiles")
+      .select("*")
+      .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading business details:', error.message);
+      console.error("Error loading business details:", error.message);
       setProfile(null);
       return;
     }
@@ -745,14 +796,14 @@ export default function PostsPage() {
     }
 
     const { data, error } = await supabase
-      .from('campaign_posts')
-      .select('*')
-      .eq('campaign_id', campaignId)
-      .is('deleted_at', null)
-      .order('scheduled_at', { ascending: true });
+      .from("campaign_posts")
+      .select("*")
+      .eq("campaign_id", campaignId)
+      .is("deleted_at", null)
+      .order("scheduled_at", { ascending: true });
 
     if (error) {
-      console.error('Error loading posts:', error.message);
+      console.error("Error loading posts:", error.message);
       setPosts([]);
       setSelectedPostId(null);
       return;
@@ -762,15 +813,15 @@ export default function PostsPage() {
     setPosts(loadedPosts);
 
     const { data: deletedData, error: deletedError } = await supabase
-      .from('campaign_posts')
-      .select('*')
-      .eq('campaign_id', campaignId)
-      .not('deleted_at', 'is', null)
-      .order('deleted_at', { ascending: false })
+      .from("campaign_posts")
+      .select("*")
+      .eq("campaign_id", campaignId)
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false })
       .limit(10);
 
     if (deletedError) {
-      console.error('Error loading deleted posts:', deletedError.message);
+      console.error("Error loading deleted posts:", deletedError.message);
       setDeletedPosts([]);
     } else {
       setDeletedPosts(deletedData || []);
@@ -782,7 +833,7 @@ export default function PostsPage() {
     }
 
     const todayUnpostedPost = loadedPosts.find(
-      (post) => isPostScheduledToday(post) && !isPostPosted(post)
+      (post) => isPostScheduledToday(post) && !isPostPosted(post),
     );
 
     if (shouldOpenTodayPost() && todayUnpostedPost) {
@@ -797,23 +848,25 @@ export default function PostsPage() {
     profile?.business_name ||
     campaign?.business_name ||
     selectedPost?.business_name ||
-    'Your business';
+    "Your business";
 
   const activeIndustry = String(
-    profile?.industry || campaign?.business_type || campaign?.industry || ''
+    profile?.industry || campaign?.business_type || campaign?.industry || "",
   ).toLowerCase();
 
   const dynamicAudienceTargets = useMemo(() => {
     const matchedKey = Object.keys(industryAudienceTargets).find((key) =>
-      activeIndustry.includes(key)
+      activeIndustry.includes(key),
     );
 
-    return matchedKey ? industryAudienceTargets[matchedKey] : defaultAudienceTargets;
+    return matchedKey
+      ? industryAudienceTargets[matchedKey]
+      : defaultAudienceTargets;
   }, [activeIndustry]);
 
   useEffect(() => {
     if (!dynamicAudienceTargets.includes(audienceTarget)) {
-      setAudienceTarget(dynamicAudienceTargets[0] || 'Custom audience');
+      setAudienceTarget(dynamicAudienceTargets[0] || "Custom audience");
     }
   }, [dynamicAudienceTargets, audienceTarget]);
 
@@ -822,23 +875,27 @@ export default function PostsPage() {
   const weeklyProgressPercent =
     posts.length > 0 ? Math.round((postedCount / posts.length) * 100) : 0;
 
-  const todayReminderPost = posts.find((post) => post.id === todayReminderPostId) || null;
+  const todayReminderPost =
+    posts.find((post) => post.id === todayReminderPostId) || null;
 
   const activeImprovementNote =
-    selectedPost && improvementNote?.postId === selectedPost.id ? improvementNote : null;
+    selectedPost && improvementNote?.postId === selectedPost.id
+      ? improvementNote
+      : null;
 
-  const brandPrimary = profile?.brand_primary_color || '#ffd43b';
-  const brandSecondary = profile?.brand_secondary_color || '#101420';
-  const brandAccent = profile?.brand_accent_color || '#3ddc97';
+  const brandPrimary = profile?.brand_primary_color || "#ffd43b";
+  const brandSecondary = profile?.brand_secondary_color || "#101420";
+  const brandAccent = profile?.brand_accent_color || "#3ddc97";
 
   const brandStyle = {
-    '--client-primary': brandPrimary,
-    '--client-secondary': brandSecondary,
-    '--client-accent': brandAccent,
+    "--client-primary": brandPrimary,
+    "--client-secondary": brandSecondary,
+    "--client-accent": brandAccent,
   } as CSSProperties;
 
   const switchCampaign = async (campaignId: string) => {
-    const nextCampaign = campaigns.find((item) => item.id === campaignId) || null;
+    const nextCampaign =
+      campaigns.find((item) => item.id === campaignId) || null;
 
     setSelectedCampaignId(campaignId);
     setPendingCampaignId(campaignId);
@@ -853,7 +910,7 @@ export default function PostsPage() {
 
   const loadSelectedPlan = async () => {
     if (!pendingCampaignId) {
-      alert('Please choose a weekly plan first.');
+      alert("Please choose a weekly plan first.");
       return;
     }
 
@@ -868,19 +925,20 @@ export default function PostsPage() {
 
   const renameSelectedCampaign = async () => {
     if (!campaign?.id) {
-      alert('No weekly plan selected.');
+      alert("No weekly plan selected.");
       return;
     }
 
-    const currentName = campaign.name || campaign.campaign_idea || 'Untitled weekly plan';
-    const newName = prompt('Rename weekly plan:', currentName);
+    const currentName =
+      campaign.name || campaign.campaign_idea || "Untitled weekly plan";
+    const newName = prompt("Rename weekly plan:", currentName);
 
     if (newName === null) return;
 
     const cleanName = newName.trim();
 
     if (!cleanName) {
-      alert('Weekly plan name cannot be empty.');
+      alert("Weekly plan name cannot be empty.");
       return;
     }
 
@@ -888,9 +946,9 @@ export default function PostsPage() {
 
     try {
       const { error } = await supabase
-        .from('campaigns')
+        .from("campaigns")
         .update({ name: cleanName })
-        .eq('id', campaign.id);
+        .eq("id", campaign.id);
 
       if (error) {
         alert(error.message);
@@ -901,14 +959,14 @@ export default function PostsPage() {
 
       setCampaigns((currentCampaigns) =>
         currentCampaigns.map((item) =>
-          item.id === campaign.id ? { ...item, name: cleanName } : item
-        )
+          item.id === campaign.id ? { ...item, name: cleanName } : item,
+        ),
       );
 
-      alert('Weekly plan renamed.');
+      alert("Weekly plan renamed.");
     } catch (error: any) {
-      const message = getReadableError(error, 'Error renaming weekly plan.');
-      console.error('Rename weekly plan error:', error);
+      const message = getReadableError(error, "Error renaming weekly plan.");
+      console.error("Rename weekly plan error:", error);
       alert(message);
     } finally {
       setRenamingCampaign(false);
@@ -917,14 +975,15 @@ export default function PostsPage() {
 
   const deleteSelectedCampaign = async () => {
     if (!campaign?.id) {
-      alert('No weekly plan selected.');
+      alert("No weekly plan selected.");
       return;
     }
 
-    const campaignName = campaign.name || campaign.campaign_idea || 'Selected weekly plan';
+    const campaignName =
+      campaign.name || campaign.campaign_idea || "Selected weekly plan";
 
     const confirmed = confirm(
-      `Delete this weekly plan and all its posts?\n\n${campaignName}\n\nThis cannot be undone.`
+      `Delete this weekly plan and all its posts?\n\n${campaignName}\n\nThis cannot be undone.`,
     );
 
     if (!confirmed) return;
@@ -935,9 +994,9 @@ export default function PostsPage() {
       const campaignIdToDelete = campaign.id;
 
       const { data: campaignPosts, error: postsLoadError } = await supabase
-        .from('campaign_posts')
-        .select('id, image_path, media_path')
-        .eq('campaign_id', campaignIdToDelete);
+        .from("campaign_posts")
+        .select("id, image_path, media_path")
+        .eq("campaign_id", campaignIdToDelete);
 
       if (postsLoadError) {
         alert(postsLoadError.message);
@@ -948,7 +1007,8 @@ export default function PostsPage() {
         campaignPosts
           ?.flatMap((post) => [post.image_path, post.media_path])
           .filter(Boolean)
-          .filter((value, index, array) => array.indexOf(value) === index) || [];
+          .filter((value, index, array) => array.indexOf(value) === index) ||
+        [];
 
       if (storagePaths.length > 0) {
         const { error: storageError } = await supabase.storage
@@ -956,14 +1016,17 @@ export default function PostsPage() {
           .remove(storagePaths);
 
         if (storageError) {
-          console.error('Weekly plan media delete error:', storageError.message);
+          console.error(
+            "Weekly plan media delete error:",
+            storageError.message,
+          );
         }
       }
 
       const { error: campaignDeleteError } = await supabase
-        .from('campaigns')
+        .from("campaigns")
         .delete()
-        .eq('id', campaignIdToDelete);
+        .eq("id", campaignIdToDelete);
 
       if (campaignDeleteError) {
         alert(campaignDeleteError.message);
@@ -971,7 +1034,7 @@ export default function PostsPage() {
       }
 
       setSelectedCampaignId(null);
-      setPendingCampaignId('');
+      setPendingCampaignId("");
       setCampaign(null);
       setPosts([]);
       setSelectedPostId(null);
@@ -979,11 +1042,11 @@ export default function PostsPage() {
       setShowImproveTools(false);
       cancelEditingPost();
 
-      alert('Weekly plan deleted.');
+      alert("Weekly plan deleted.");
       await loadPageData();
     } catch (error: any) {
-      const message = getReadableError(error, 'Error deleting weekly plan.');
-      console.error('Delete weekly plan error:', error);
+      const message = getReadableError(error, "Error deleting weekly plan.");
+      console.error("Delete weekly plan error:", error);
       alert(message);
     } finally {
       setDeletingCampaign(false);
@@ -991,14 +1054,20 @@ export default function PostsPage() {
   };
 
   const cleanCampaignLabel = (value: any) => {
-    const raw = String(value || '').trim();
+    const raw = String(value || "").trim();
 
     return (
       raw
-        .replace(/\s+—\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}(?:\s+\d{1,2}:\d{2})?(?:\s+—.*)?$/g, '')
-        .replace(/\s+-\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}.*$/g, '')
-        .replace(/\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}(?:\s+\d{1,2}:\d{2})?$/g, '')
-        .trim() || 'Weekly plan'
+        .replace(
+          /\s+—\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}(?:\s+\d{1,2}:\d{2})?(?:\s+—.*)?$/g,
+          "",
+        )
+        .replace(/\s+-\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}.*$/g, "")
+        .replace(
+          /\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}(?:\s+\d{1,2}:\d{2})?$/g,
+          "",
+        )
+        .trim() || "Weekly plan"
     );
   };
 
@@ -1009,7 +1078,7 @@ export default function PostsPage() {
       item.business_type ||
       item.campaign_area ||
       item.campaign_idea ||
-      'Weekly plan';
+      "Weekly plan";
 
     return cleanCampaignLabel(label);
   };
@@ -1036,7 +1105,9 @@ export default function PostsPage() {
       return;
     }
 
-    const selectedIndex = sortedPosts.findIndex((post) => post.id === selectedPost.id);
+    const selectedIndex = sortedPosts.findIndex(
+      (post) => post.id === selectedPost.id,
+    );
     const safeIndex = selectedIndex >= 0 ? selectedIndex : 0;
     const nextIndex = (safeIndex + 1) % sortedPosts.length;
     const nextPost = sortedPosts[nextIndex];
@@ -1050,21 +1121,21 @@ export default function PostsPage() {
     const date = post?.scheduled_at ? new Date(post.scheduled_at) : new Date();
 
     return {
-      weekday: date.toLocaleDateString(undefined, { weekday: 'short' }),
-      day: date.toLocaleDateString(undefined, { day: '2-digit' }),
-      month: date.toLocaleDateString(undefined, { month: 'short' }),
+      weekday: date.toLocaleDateString(undefined, { weekday: "short" }),
+      day: date.toLocaleDateString(undefined, { day: "2-digit" }),
+      month: date.toLocaleDateString(undefined, { month: "short" }),
     };
   };
 
   const getPostPositionLabel = (post: any) => {
     const index = sortedPosts.findIndex((item) => item.id === post?.id);
-    return index >= 0 ? `Day ${index + 1}` : post?.scheduled_day || 'Day';
+    return index >= 0 ? `Day ${index + 1}` : post?.scheduled_day || "Day";
   };
 
   const hashtagsToString = (hashtags: any) => {
-    if (Array.isArray(hashtags)) return hashtags.join(' ');
-    if (typeof hashtags === 'string') return hashtags;
-    return '';
+    if (Array.isArray(hashtags)) return hashtags.join(" ");
+    if (typeof hashtags === "string") return hashtags;
+    return "";
   };
 
   const stringToHashtags = (value: string) => {
@@ -1072,27 +1143,29 @@ export default function PostsPage() {
       .split(/[\s,]+/)
       .map((item) => item.trim())
       .filter(Boolean)
-      .map((item) => (item.startsWith('#') ? item : `#${item}`));
+      .map((item) => (item.startsWith("#") ? item : `#${item}`));
   };
 
   const buildPostText = (post: any) => {
-    const caption = post?.caption || '';
-    const cta = post?.cta ? `CTA: ${post.cta}` : '';
-    const hashtags = Array.isArray(post?.hashtags) ? post.hashtags.join(' ') : '';
+    const caption = post?.caption || "";
+    const cta = post?.cta ? `CTA: ${post.cta}` : "";
+    const hashtags = Array.isArray(post?.hashtags)
+      ? post.hashtags.join(" ")
+      : "";
 
-    return [caption, cta, hashtags].filter(Boolean).join('\n\n').trim();
+    return [caption, cta, hashtags].filter(Boolean).join("\n\n").trim();
   };
 
   const copyPost = async (post: any) => {
     const textToCopy = buildPostText(post);
 
     if (!textToCopy) {
-      alert('There is no post text to copy yet.');
+      alert("There is no post text to copy yet.");
       return;
     }
 
     await navigator.clipboard.writeText(textToCopy);
-    alert('Post copied.');
+    alert("Post copied.");
   };
 
   const getImageGuidance = (post: any) => {
@@ -1100,104 +1173,99 @@ export default function PostsPage() {
       return post.image_prompt.trim();
     }
 
-    const platform = String(post?.platform || '').toLowerCase();
+    const platform = String(post?.platform || "").toLowerCase();
 
-    if (
-      platform.includes('instagram') ||
-      platform.includes('tiktok') ||
-      platform.includes('pinterest') ||
-      platform.includes('shorts')
-    ) {
-      return 'Use a clear image or video that matches the post: finished work, product detail, team moment, venue, customer result, or behind-the-scenes clip.';
+    if (platform.includes("instagram") || platform.includes("tiktok")) {
+      return "Use the uploaded photo, flyer, result image, product image, offer graphic, or short clip that matches this post.";
     }
 
-    return 'Choose a clear photo or short video that supports the post, such as your work, product, team, premises, or a customer result.';
+    return "Choose a clear photo or flyer that supports the post, such as finished work, a product, an offer, your team, premises, or a customer result.";
   };
 
   const mediaRequiredForPlatform = (platform?: string) => {
-    const cleanPlatform = String(platform || '').toLowerCase();
+    const cleanPlatform = String(platform || "").toLowerCase();
 
     return (
-      cleanPlatform.includes('instagram') ||
-      cleanPlatform.includes('tiktok') ||
-      cleanPlatform.includes('pinterest') ||
-      cleanPlatform.includes('shorts')
+      cleanPlatform.includes("instagram") || cleanPlatform.includes("tiktok")
     );
   };
 
   const getPlatformUrl = (platform: string) => {
-    const cleanPlatform = String(platform || '').toLowerCase();
+    const cleanPlatform = String(platform || "").toLowerCase();
 
-    if (cleanPlatform.includes('facebook')) return 'https://www.facebook.com';
-    if (cleanPlatform.includes('instagram')) return 'https://www.instagram.com';
-    if (cleanPlatform.includes('google')) return 'https://business.google.com';
-    if (cleanPlatform.includes('pinterest')) return 'https://www.pinterest.com';
-    if (cleanPlatform.includes('linkedin')) return 'https://www.linkedin.com';
-    if (cleanPlatform.includes('tiktok')) return 'https://www.tiktok.com';
-    if (cleanPlatform.includes('youtube')) return 'https://www.youtube.com';
-    if (cleanPlatform.includes('twitter') || cleanPlatform.includes('x')) return 'https://x.com';
+    if (cleanPlatform.includes("facebook")) return "https://www.facebook.com";
+    if (cleanPlatform.includes("instagram")) return "https://www.instagram.com";
+    if (cleanPlatform.includes("tiktok")) return "https://www.tiktok.com";
 
-    return 'https://www.google.com';
+    return "https://www.facebook.com";
   };
 
   const openPlatform = (platform: string) => {
-    window.open(getPlatformUrl(platform), '_blank');
+    window.open(getPlatformUrl(platform), "_blank");
   };
 
   const getPlatformDisplayName = (post: any) => {
-    return post?.platform || 'Facebook';
+    return normaliseMainPlatform(post?.platform);
   };
 
   const canDirectPublishToFacebook = (post: any) => {
-    return String(post?.platform || '').toLowerCase().includes('facebook');
+    return String(post?.platform || "")
+      .toLowerCase()
+      .includes("facebook");
   };
 
   const canDirectPublishToInstagram = (post: any) => {
-    return String(post?.platform || '').toLowerCase().includes('instagram');
+    return String(post?.platform || "")
+      .toLowerCase()
+      .includes("instagram");
   };
 
-  const canDemoPublishToTikTok = (post: any) => {
-    const demoMode = process.env.NEXT_PUBLIC_TIKTOK_DEMO_MODE === 'true';
-    return demoMode && String(post?.platform || '').toLowerCase().includes('tiktok');
+  const canDemoPublishToTikTok = (_post: any) => {
+    // TikTok is manual for now: copy/open rather than direct posting.
+    return false;
   };
 
   const getMediaKind = (file: File) => {
-    if (file.type.startsWith('video/')) return 'video';
-    return 'image';
+    if (file.type.startsWith("video/")) return "video";
+    return "image";
   };
 
   const getSafeFileName = (fileName: string) => {
     const cleanName = fileName
       .toLowerCase()
-      .replace(/[^a-z0-9.\-_]+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+      .replace(/[^a-z0-9.\-_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
 
-    return cleanName || 'media';
+    return cleanName || "media";
   };
 
-  const uploadMedia = async (post: any, event: ChangeEvent<HTMLInputElement>) => {
+  const uploadMedia = async (
+    post: any,
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
 
-    event.target.value = '';
+    event.target.value = "";
 
     if (!file || !post?.id) return;
 
     if (!ensureAccessAllowed()) return;
 
-    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-      alert('Please upload an image or video file.');
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      alert("Please upload an image or video file.");
       return;
     }
 
     setUploadingMediaPostId(post.id);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
 
       if (authError) throw authError;
 
-      const userId = authData.user?.id || 'anonymous';
+      const userId = authData.user?.id || "anonymous";
       const mediaType = getMediaKind(file);
       const safeFileName = getSafeFileName(file.name);
       const path = `${userId}/posts/${post.id}/${Date.now()}-${safeFileName}`;
@@ -1205,14 +1273,16 @@ export default function PostsPage() {
       const { error: uploadError } = await supabase.storage
         .from(MEDIA_BUCKET)
         .upload(path, file, {
-          cacheControl: '3600',
+          cacheControl: "3600",
           upsert: true,
           contentType: file.type,
         });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+      const { data: publicUrlData } = supabase.storage
+        .from(MEDIA_BUCKET)
+        .getPublicUrl(path);
 
       const updates = {
         media_url: publicUrlData.publicUrl,
@@ -1221,17 +1291,17 @@ export default function PostsPage() {
       };
 
       const { error: updateError } = await supabase
-        .from('campaign_posts')
+        .from("campaign_posts")
         .update(updates)
-        .eq('id', post.id);
+        .eq("id", post.id);
 
       if (updateError) throw updateError;
 
       updatePostLocally(post.id, updates);
-      alert(`${mediaType === 'video' ? 'Video' : 'Image'} added.`);
+      alert(`${mediaType === "video" ? "Video" : "Image"} added.`);
     } catch (error: any) {
-      const message = getReadableError(error, 'Error uploading media.');
-      console.error('Upload media error:', error);
+      const message = getReadableError(error, "Error uploading media.");
+      console.error("Upload media error:", error);
       alert(message);
     } finally {
       setUploadingMediaPostId(null);
@@ -1243,7 +1313,7 @@ export default function PostsPage() {
 
     if (!ensureAccessAllowed()) return;
 
-    const confirmed = confirm('Remove this media from the post?');
+    const confirmed = confirm("Remove this media from the post?");
 
     if (!confirmed) return;
 
@@ -1256,7 +1326,7 @@ export default function PostsPage() {
           .remove([post.media_path]);
 
         if (storageError) {
-          console.error('Remove media storage error:', storageError.message);
+          console.error("Remove media storage error:", storageError.message);
         }
       }
 
@@ -1267,17 +1337,17 @@ export default function PostsPage() {
       };
 
       const { error } = await supabase
-        .from('campaign_posts')
+        .from("campaign_posts")
         .update(updates)
-        .eq('id', post.id);
+        .eq("id", post.id);
 
       if (error) throw error;
 
       updatePostLocally(post.id, updates);
-      alert('Media removed.');
+      alert("Media removed.");
     } catch (error: any) {
-      const message = getReadableError(error, 'Error removing media.');
-      console.error('Remove media error:', error);
+      const message = getReadableError(error, "Error removing media.");
+      console.error("Remove media error:", error);
       alert(message);
     } finally {
       setRemovingMediaPostId(null);
@@ -1286,22 +1356,24 @@ export default function PostsPage() {
 
   const updatePostLocally = (postId: string, updates: any) => {
     setPosts((currentPosts) =>
-      currentPosts.map((post) => (post.id === postId ? { ...post, ...updates } : post))
+      currentPosts.map((post) =>
+        post.id === postId ? { ...post, ...updates } : post,
+      ),
     );
   };
 
   const startEditingPost = (post: any) => {
     setEditingPostId(post.id);
-    setEditCaption(post.caption || '');
-    setEditCta(post.cta || '');
+    setEditCaption(post.caption || "");
+    setEditCta(post.cta || "");
     setEditHashtags(hashtagsToString(post.hashtags));
   };
 
   const cancelEditingPost = () => {
     setEditingPostId(null);
-    setEditCaption('');
-    setEditCta('');
-    setEditHashtags('');
+    setEditCaption("");
+    setEditCta("");
+    setEditHashtags("");
   };
 
   const saveEditedPost = async () => {
@@ -1310,7 +1382,7 @@ export default function PostsPage() {
     if (!ensureAccessAllowed()) return;
 
     if (!editCaption.trim()) {
-      alert('Caption cannot be empty.');
+      alert("Caption cannot be empty.");
       return;
     }
 
@@ -1324,9 +1396,9 @@ export default function PostsPage() {
       };
 
       const { error } = await supabase
-        .from('campaign_posts')
+        .from("campaign_posts")
         .update(updates)
-        .eq('id', activePostForEditing.id);
+        .eq("id", activePostForEditing.id);
 
       if (error) {
         alert(error.message);
@@ -1337,15 +1409,16 @@ export default function PostsPage() {
 
       setImprovementNote({
         postId: activePostForEditing.id,
-        label: 'Wording saved',
-        detail: 'Review the updated post, then add media or publish when ready.',
+        label: "Wording saved",
+        detail:
+          "Review the updated post, then add media or publish when ready.",
       });
 
       cancelEditingPost();
-      alert('Post updated.');
+      alert("Post updated.");
     } catch (error: any) {
-      const message = getReadableError(error, 'Error saving post changes.');
-      console.error('Save edited post error:', error);
+      const message = getReadableError(error, "Error saving post changes.");
+      console.error("Save edited post error:", error);
       alert(message);
     } finally {
       setSavingEdit(false);
@@ -1353,9 +1426,10 @@ export default function PostsPage() {
   };
 
   const getToneForRewrite = () => {
-    const currentTone = profile?.tone_of_voice || campaign?.tone || 'Professional';
+    const currentTone =
+      profile?.tone_of_voice || campaign?.tone || "Professional";
 
-    if (toneTarget === 'Use current tone') {
+    if (toneTarget === "Use current tone") {
       return currentTone;
     }
 
@@ -1365,20 +1439,20 @@ export default function PostsPage() {
   const applyRewrittenPost = async (
     post: any,
     rewritten: any,
-    extraUpdates: Record<string, any> = {}
+    extraUpdates: Record<string, any> = {},
   ) => {
     const updates = {
       caption: rewritten.caption,
       cta: rewritten.cta,
       hashtags: Array.isArray(rewritten.hashtags) ? rewritten.hashtags : [],
-      image_prompt: rewritten.image_prompt || post.image_prompt || '',
+      image_prompt: rewritten.image_prompt || post.image_prompt || "",
       ...extraUpdates,
     };
 
     const { error } = await supabase
-      .from('campaign_posts')
+      .from("campaign_posts")
       .update(updates)
-      .eq('id', post.id);
+      .eq("id", post.id);
 
     if (error) {
       alert(error.message);
@@ -1388,8 +1462,8 @@ export default function PostsPage() {
     updatePostLocally(post.id, updates);
 
     if (editingPostId === post.id) {
-      setEditCaption(updates.caption || '');
-      setEditCta(updates.cta || '');
+      setEditCaption(updates.caption || "");
+      setEditCta(updates.cta || "");
       setEditHashtags(hashtagsToString(updates.hashtags));
     }
 
@@ -1402,36 +1476,38 @@ export default function PostsPage() {
     if (!ensureAccessAllowed()) return;
 
     const finalAudience =
-      audienceTarget === 'Custom audience'
+      audienceTarget === "Custom audience"
         ? customAudienceTarget.trim()
         : audienceTarget.trim();
 
     if (!finalAudience) {
-      alert('Please enter who this post is for.');
+      alert("Please enter who this post is for.");
       return;
     }
 
     if (!post.caption?.trim()) {
-      alert('This post needs a caption before it can be improved.');
+      alert("This post needs a caption before it can be improved.");
       return;
     }
 
-    setRewritingAction('audience');
+    setRewritingAction("audience");
     setRewritingPost(true);
 
     try {
-      const response = await axios.post('/api/rewritePost', {
-        provider: 'gemini',
+      const response = await axios.post("/api/rewritePost", {
+        provider: "gemini",
         audienceTarget: finalAudience,
         tone: getToneForRewrite(),
         toneAdjustment: toneTarget,
-        businessName: profile?.business_name || campaign?.business_name || 'the business',
-        industry: profile?.industry || campaign?.business_type || 'general business',
-        platform: post.platform || 'Facebook',
-        caption: post.caption || '',
-        cta: post.cta || '',
+        businessName:
+          profile?.business_name || campaign?.business_name || "the business",
+        industry:
+          profile?.industry || campaign?.business_type || "general business",
+        platform: post.platform || "Facebook",
+        caption: post.caption || "",
+        cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
-        image_prompt: post.image_prompt || '',
+        image_prompt: post.image_prompt || "",
       });
 
       const saved = await applyRewrittenPost(post, response.data, {
@@ -1445,46 +1521,53 @@ export default function PostsPage() {
         label: `Improved for ${finalAudience}`,
         detail:
           response.data.improvement_summary ||
-          'Made the post more specific for the selected audience.',
+          "Made the post more specific for the selected audience.",
       });
     } catch (error: any) {
-      const message = getReadableError(error, 'Error improving post.');
-      console.error('Make more specific error:', error);
+      const message = getReadableError(error, "Error improving post.");
+      console.error("Make more specific error:", error);
       alert(message);
     } finally {
-      setRewritingAction('');
+      setRewritingAction("");
       setRewritingPost(false);
     }
   };
 
-  const handleQuickImprovePost = async (post: any, improvementAction: string) => {
+  const handleQuickImprovePost = async (
+    post: any,
+    improvementAction: string,
+  ) => {
     if (!post?.id) return;
 
     if (!ensureAccessAllowed()) return;
 
     if (!post.caption?.trim()) {
-      alert('This post needs a caption before it can be improved.');
+      alert("This post needs a caption before it can be improved.");
       return;
     }
 
-    const selectedAction = quickImproveActions.find((item) => item.value === improvementAction);
-    const actionLabel = selectedAction?.label || 'Improve post';
+    const selectedAction = quickImproveActions.find(
+      (item) => item.value === improvementAction,
+    );
+    const actionLabel = selectedAction?.label || "Improve post";
 
     setRewritingAction(improvementAction);
     setRewritingPost(true);
 
     try {
-      const response = await axios.post('/api/rewritePost', {
-        provider: 'gemini',
+      const response = await axios.post("/api/rewritePost", {
+        provider: "gemini",
         improvementAction,
         tone: getToneForRewrite(),
-        businessName: profile?.business_name || campaign?.business_name || 'the business',
-        industry: profile?.industry || campaign?.business_type || 'general business',
-        platform: post.platform || 'Facebook',
-        caption: post.caption || '',
-        cta: post.cta || '',
+        businessName:
+          profile?.business_name || campaign?.business_name || "the business",
+        industry:
+          profile?.industry || campaign?.business_type || "general business",
+        platform: post.platform || "Facebook",
+        caption: post.caption || "",
+        cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
-        image_prompt: post.image_prompt || '',
+        image_prompt: post.image_prompt || "",
       });
 
       const saved = await applyRewrittenPost(post, response.data, {
@@ -1498,14 +1581,14 @@ export default function PostsPage() {
         label: `Improved: ${actionLabel}`,
         detail:
           response.data.improvement_summary ||
-          'Review the updated post, then add media or publish when ready.',
+          "Review the updated post, then add media or publish when ready.",
       });
     } catch (error: any) {
-      const message = getReadableError(error, 'Error improving post.');
-      console.error('Improve post error:', error);
+      const message = getReadableError(error, "Error improving post.");
+      console.error("Improve post error:", error);
       alert(message);
     } finally {
-      setRewritingAction('');
+      setRewritingAction("");
       setRewritingPost(false);
     }
   };
@@ -1514,29 +1597,29 @@ export default function PostsPage() {
     if (!post?.id) return;
 
     if (!canDirectPublishToFacebook(post)) {
-      alert('Direct publishing is currently only available for Facebook.');
+      alert("Direct publishing is currently only available for Facebook.");
       return;
     }
 
     const text = buildPostText(post);
 
     if (!text) {
-      alert('This post needs wording before it can be published.');
+      alert("This post needs wording before it can be published.");
       return;
     }
 
     setPublishingPostId(post.id);
 
     try {
-      const response = await axios.post('/api/facebook/publish', {
+      const response = await axios.post("/api/facebook/publish", {
         postId: post.id,
         campaignPostId: post.id,
         campaign_id: post.campaign_id,
-        platform: post.platform || 'Facebook',
+        platform: post.platform || "Facebook",
         message: text,
         text,
-        caption: post.caption || '',
-        cta: post.cta || '',
+        caption: post.caption || "",
+        cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
         media_url: post.media_url || null,
         mediaUrl: post.media_url || null,
@@ -1553,24 +1636,26 @@ export default function PostsPage() {
 
       const updates = {
         is_posted: true,
-        status: 'posted',
-        publish_status: 'posted',
+        status: "posted",
+        publish_status: "posted",
         publish_error: null,
-        published_to: 'Facebook',
+        published_to: "Facebook",
         published_at: new Date().toISOString(),
         facebook_post_id: facebookPostId,
       };
 
-      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+      await supabase.from("campaign_posts").update(updates).eq("id", post.id);
 
       updatePostLocally(post.id, updates);
       maybeShowReviewPrompt();
 
       const postIndex = sortedPosts.findIndex((item) => item.id === post.id);
       const updatedPosts = sortedPosts.map((item) =>
-        item.id === post.id ? { ...item, ...updates } : item
+        item.id === post.id ? { ...item, ...updates } : item,
       );
-      const postsLeftAfterPublishing = updatedPosts.filter((item) => !isPostPosted(item)).length;
+      const postsLeftAfterPublishing = updatedPosts.filter(
+        (item) => !isPostPosted(item),
+      ).length;
       const nextPost =
         updatedPosts.slice(postIndex + 1).find((item) => !isPostPosted(item)) ||
         updatedPosts.find((item) => !isPostPosted(item)) ||
@@ -1581,62 +1666,63 @@ export default function PostsPage() {
         nextPostId: nextPost?.id || null,
       });
     } catch (error: any) {
-      const message = getReadableError(error, 'Facebook publishing failed.');
+      const message = getReadableError(error, "Facebook publishing failed.");
 
       const updates = {
-        publish_status: 'failed',
+        publish_status: "failed",
         publish_error: message,
-        status: 'failed',
+        status: "failed",
       };
 
-      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+      await supabase.from("campaign_posts").update(updates).eq("id", post.id);
       updatePostLocally(post.id, updates);
 
-      console.error('Facebook publish error:', error);
+      console.error("Facebook publish error:", error);
       alert(message);
     } finally {
       setPublishingPostId(null);
     }
   };
 
-
   const publishToInstagram = async (post: any) => {
     if (!post?.id) return;
 
     if (!canDirectPublishToInstagram(post)) {
-      alert('Direct publishing is currently only available for Instagram posts here.');
+      alert(
+        "Direct publishing is currently only available for Instagram posts here.",
+      );
       return;
     }
 
     const text = buildPostText(post);
 
     if (!text) {
-      alert('This post needs wording before it can be published.');
+      alert("This post needs wording before it can be published.");
       return;
     }
 
     if (!post.media_url) {
-      alert('Instagram needs an image or video before publishing.');
+      alert("Instagram needs an image or video before publishing.");
       return;
     }
 
     if (!post.media_type) {
-      alert('Instagram needs an image or video before publishing.');
+      alert("Instagram needs an image or video before publishing.");
       return;
     }
 
     setPublishingPostId(post.id);
 
     try {
-      const response = await axios.post('/api/instagram/publish', {
+      const response = await axios.post("/api/instagram/publish", {
         postId: post.id,
         campaignPostId: post.id,
         campaign_id: post.campaign_id,
-        platform: post.platform || 'Instagram',
+        platform: post.platform || "Instagram",
         message: text,
         text,
-        caption: post.caption || '',
-        cta: post.cta || '',
+        caption: post.caption || "",
+        cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
         media_url: post.media_url || null,
         mediaUrl: post.media_url || null,
@@ -1655,24 +1741,26 @@ export default function PostsPage() {
 
       const updates = {
         is_posted: true,
-        status: 'posted',
-        publish_status: 'posted',
+        status: "posted",
+        publish_status: "posted",
         publish_error: null,
-        published_to: 'Instagram',
+        published_to: "Instagram",
         published_at: new Date().toISOString(),
         instagram_post_id: instagramPostId,
       };
 
-      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+      await supabase.from("campaign_posts").update(updates).eq("id", post.id);
 
       updatePostLocally(post.id, updates);
       maybeShowReviewPrompt();
 
       const postIndex = sortedPosts.findIndex((item) => item.id === post.id);
       const updatedPosts = sortedPosts.map((item) =>
-        item.id === post.id ? { ...item, ...updates } : item
+        item.id === post.id ? { ...item, ...updates } : item,
       );
-      const postsLeftAfterPublishing = updatedPosts.filter((item) => !isPostPosted(item)).length;
+      const postsLeftAfterPublishing = updatedPosts.filter(
+        (item) => !isPostPosted(item),
+      ).length;
       const nextPost =
         updatedPosts.slice(postIndex + 1).find((item) => !isPostPosted(item)) ||
         updatedPosts.find((item) => !isPostPosted(item)) ||
@@ -1683,59 +1771,64 @@ export default function PostsPage() {
         nextPostId: nextPost?.id || null,
       });
     } catch (error: any) {
-      const message = getReadableError(error, 'Instagram publishing failed.');
+      const message = getReadableError(error, "Instagram publishing failed.");
 
       const updates = {
-        publish_status: 'failed',
+        publish_status: "failed",
         publish_error: message,
-        status: 'failed',
+        status: "failed",
       };
 
-      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+      await supabase.from("campaign_posts").update(updates).eq("id", post.id);
       updatePostLocally(post.id, updates);
 
-      console.error('Instagram publish error:', error);
+      console.error("Instagram publish error:", error);
       alert(message);
     } finally {
       setPublishingPostId(null);
     }
   };
 
-
   const publishToTikTokDemo = async (post: any) => {
     if (!post?.id) return;
 
     if (!canDemoPublishToTikTok(post)) {
-      alert('TikTok sandbox demo mode is not enabled.');
+      alert(
+        "TikTok is manual for now. Copy the post and open TikTok to publish it.",
+      );
       return;
     }
 
     const text = buildPostText(post);
 
     if (!text) {
-      alert('This TikTok post needs wording before it can run through the demo publish flow.');
+      alert(
+        "This TikTok post needs wording before it can run through the demo publish flow.",
+      );
       return;
     }
 
     if (!post.media_url) {
-      alert('Add an image or video first so the TikTok demo shows the complete publish flow.');
+      alert(
+        "Add an image or video first so the TikTok demo shows the complete publish flow.",
+      );
       return;
     }
 
     setPublishingPostId(post.id);
 
     try {
-      const response = await axios.post('/api/tiktok/demo-publish', {
+      const response = await axios.post("/api/tiktok/demo-publish", {
         postId: post.id,
         campaignPostId: post.id,
         userId: currentUserId,
         user_id: currentUserId,
         campaign_id: post.campaign_id,
-        platform: post.platform || 'TikTok',
+        platform: post.platform || "TikTok",
         message: text,
         text,
-        caption: post.caption || '',
-        cta: post.cta || '',
+        caption: post.caption || "",
+        cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
         media_url: post.media_url || null,
         mediaUrl: post.media_url || null,
@@ -1752,25 +1845,27 @@ export default function PostsPage() {
 
       const updates = {
         is_posted: true,
-        status: 'posted',
-        publish_status: 'posted',
+        status: "posted",
+        publish_status: "posted",
         publish_error: null,
-        published_to: 'TikTok sandbox demo',
+        published_to: "TikTok sandbox demo",
         published_at: new Date().toISOString(),
         tiktok_post_id: tiktokPostId,
-        publish_source: 'tiktok_sandbox_demo',
+        publish_source: "tiktok_sandbox_demo",
       };
 
-      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+      await supabase.from("campaign_posts").update(updates).eq("id", post.id);
 
       updatePostLocally(post.id, updates);
       maybeShowReviewPrompt();
 
       const postIndex = sortedPosts.findIndex((item) => item.id === post.id);
       const updatedPosts = sortedPosts.map((item) =>
-        item.id === post.id ? { ...item, ...updates } : item
+        item.id === post.id ? { ...item, ...updates } : item,
       );
-      const postsLeftAfterPublishing = updatedPosts.filter((item) => !isPostPosted(item)).length;
+      const postsLeftAfterPublishing = updatedPosts.filter(
+        (item) => !isPostPosted(item),
+      ).length;
       const nextPost =
         updatedPosts.slice(postIndex + 1).find((item) => !isPostPosted(item)) ||
         updatedPosts.find((item) => !isPostPosted(item)) ||
@@ -1781,27 +1876,30 @@ export default function PostsPage() {
         nextPostId: nextPost?.id || null,
       });
 
-      alert('TikTok sandbox demo publish complete. No live TikTok post was published.');
+      alert(
+        "TikTok sandbox demo publish complete. No live TikTok post was published.",
+      );
     } catch (error: any) {
-      const message = getReadableError(error, 'TikTok sandbox demo publish failed.');
+      const message = getReadableError(
+        error,
+        "TikTok sandbox demo publish failed.",
+      );
 
       const updates = {
-        publish_status: 'failed',
+        publish_status: "failed",
         publish_error: message,
-        status: 'failed',
+        status: "failed",
       };
 
-      await supabase.from('campaign_posts').update(updates).eq('id', post.id);
+      await supabase.from("campaign_posts").update(updates).eq("id", post.id);
       updatePostLocally(post.id, updates);
 
-      console.error('TikTok demo publish error:', error);
+      console.error("TikTok demo publish error:", error);
       alert(message);
     } finally {
       setPublishingPostId(null);
     }
   };
-
-
 
   const deletePostWithUndo = async (post: any) => {
     if (!post?.id) return;
@@ -1812,10 +1910,10 @@ export default function PostsPage() {
     const posted = isPostPosted(post);
 
     const confirmMessage = posted
-      ? 'Archive this posted item from the weekly queue? Publish history will stay saved.'
+      ? "Archive this posted item from the weekly queue? Publish history will stay saved."
       : scheduled
-        ? 'Delete this scheduled post from the weekly queue? You can undo this straight after deleting.'
-        : 'Delete this post from the weekly queue? You can undo this straight after deleting.';
+        ? "Delete this scheduled post from the weekly queue? You can undo this straight after deleting."
+        : "Delete this post from the weekly queue? You can undo this straight after deleting.";
 
     const confirmed = confirm(confirmMessage);
 
@@ -1830,16 +1928,18 @@ export default function PostsPage() {
       const updates = {
         deleted_at: new Date().toISOString(),
         deleted_by: authUserId,
-        delete_reason: posted ? 'archived_from_posts_page' : 'deleted_from_posts_page',
+        delete_reason: posted
+          ? "archived_from_posts_page"
+          : "deleted_from_posts_page",
         scheduled_publish_at: posted ? post.scheduled_publish_at || null : null,
-        publish_status: posted ? post.publish_status || 'posted' : null,
-        status: posted ? post.status || 'posted' : 'deleted',
+        publish_status: posted ? post.publish_status || "posted" : null,
+        status: posted ? post.status || "posted" : "deleted",
       };
 
       const { error } = await supabase
-        .from('campaign_posts')
+        .from("campaign_posts")
         .update(updates)
-        .eq('id', post.id);
+        .eq("id", post.id);
 
       if (error) throw error;
 
@@ -1850,22 +1950,26 @@ export default function PostsPage() {
         deletedPost,
         ...currentDeletedPosts.filter((item) => item.id !== post.id),
       ]);
-      setPosts((currentPosts) => currentPosts.filter((item) => item.id !== post.id));
+      setPosts((currentPosts) =>
+        currentPosts.filter((item) => item.id !== post.id),
+      );
       setSelectedPostId(null);
       setImprovementNote(null);
       setShowImproveTools(false);
       cancelEditingPost();
 
-      alert('Post deleted. Use Undo delete at the top of the page, or restore it later from Deleted posts.');
+      alert(
+        "Post deleted. Use Undo delete at the top of the page, or restore it later from Deleted posts.",
+      );
 
       window.setTimeout(() => {
         setRecentlyDeletedPost((current: any | null) =>
-          current?.id === post.id ? null : current
+          current?.id === post.id ? null : current,
         );
       }, 12000);
     } catch (error: any) {
-      const message = getReadableError(error, 'Error deleting post.');
-      console.error('Delete post error:', error);
+      const message = getReadableError(error, "Error deleting post.");
+      console.error("Delete post error:", error);
       alert(message);
     } finally {
       setDeletingPostId(null);
@@ -1885,39 +1989,39 @@ export default function PostsPage() {
         deleted_by: null,
         delete_reason: null,
         status:
-          postToRestore.publish_status === 'posted' || postToRestore.is_posted
-            ? 'posted'
+          postToRestore.publish_status === "posted" || postToRestore.is_posted
+            ? "posted"
             : postToRestore.scheduled_publish_at
-              ? 'scheduled'
-              : 'ready',
+              ? "scheduled"
+              : "ready",
         publish_status:
-          postToRestore.publish_status === 'posted'
-            ? 'posted'
+          postToRestore.publish_status === "posted"
+            ? "posted"
             : postToRestore.scheduled_publish_at
-              ? 'scheduled'
+              ? "scheduled"
               : null,
       };
 
       const { error } = await supabase
-        .from('campaign_posts')
+        .from("campaign_posts")
         .update(updates)
-        .eq('id', postToRestore.id);
+        .eq("id", postToRestore.id);
 
       if (error) throw error;
 
       setRecentlyDeletedPost(null);
-      await loadPosts(selectedCampaignId || campaign?.id || postToRestore.campaign_id || null);
+      await loadPosts(
+        selectedCampaignId || campaign?.id || postToRestore.campaign_id || null,
+      );
       setSelectedPostId(postToRestore.id);
     } catch (error: any) {
-      const message = getReadableError(error, 'Error restoring post.');
-      console.error('Undo delete post error:', error);
+      const message = getReadableError(error, "Error restoring post.");
+      console.error("Undo delete post error:", error);
       alert(message);
     } finally {
       setDeletingPostId(null);
     }
   };
-
-
 
   const restoreDeletedPost = async (post: any) => {
     if (!post?.id) return;
@@ -1930,66 +2034,72 @@ export default function PostsPage() {
         deleted_by: null,
         delete_reason: null,
         status:
-          post.publish_status === 'posted' || post.is_posted
-            ? 'posted'
+          post.publish_status === "posted" || post.is_posted
+            ? "posted"
             : post.scheduled_publish_at
-              ? 'scheduled'
-              : 'ready',
+              ? "scheduled"
+              : "ready",
         publish_status:
-          post.publish_status === 'posted'
-            ? 'posted'
+          post.publish_status === "posted"
+            ? "posted"
             : post.scheduled_publish_at
-              ? 'scheduled'
+              ? "scheduled"
               : null,
       };
 
       const { error } = await supabase
-        .from('campaign_posts')
+        .from("campaign_posts")
         .update(updates)
-        .eq('id', post.id);
+        .eq("id", post.id);
 
       if (error) throw error;
 
       setRecentlyDeletedPost(null);
       setDeletedPosts((currentDeletedPosts) =>
-        currentDeletedPosts.filter((item) => item.id !== post.id)
+        currentDeletedPosts.filter((item) => item.id !== post.id),
       );
 
-      await loadPosts(selectedCampaignId || campaign?.id || post.campaign_id || null);
+      await loadPosts(
+        selectedCampaignId || campaign?.id || post.campaign_id || null,
+      );
       setSelectedPostId(post.id);
     } catch (error: any) {
-      const message = getReadableError(error, 'Error restoring post.');
-      console.error('Restore deleted post error:', error);
+      const message = getReadableError(error, "Error restoring post.");
+      console.error("Restore deleted post error:", error);
       alert(message);
     } finally {
       setDeletingPostId(null);
     }
   };
 
-
   const markAsPosted = async (postId: string) => {
     const postIndex = sortedPosts.findIndex((post) => post.id === postId);
 
     const updates = {
       is_posted: true,
-      status: 'posted',
-      publish_status: 'posted',
+      status: "posted",
+      publish_status: "posted",
       publish_error: null,
       published_at: new Date().toISOString(),
     };
 
     const updatedPosts = sortedPosts.map((post) =>
-      post.id === postId ? { ...post, ...updates } : post
+      post.id === postId ? { ...post, ...updates } : post,
     );
 
-    const postsLeftAfterMarking = updatedPosts.filter((post) => !isPostPosted(post)).length;
+    const postsLeftAfterMarking = updatedPosts.filter(
+      (post) => !isPostPosted(post),
+    ).length;
 
     const nextPost =
       updatedPosts.slice(postIndex + 1).find((post) => !isPostPosted(post)) ||
       updatedPosts.find((post) => !isPostPosted(post)) ||
       null;
 
-    const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
+    const { error } = await supabase
+      .from("campaign_posts")
+      .update(updates)
+      .eq("id", postId);
 
     if (error) {
       alert(error.message);
@@ -2009,7 +2119,7 @@ export default function PostsPage() {
   const markAsNotPosted = async (postId: string) => {
     const updates = {
       is_posted: false,
-      status: 'ready',
+      status: "ready",
       publish_status: null,
       publish_error: null,
       published_at: null,
@@ -2020,7 +2130,10 @@ export default function PostsPage() {
       publish_source: null,
     };
 
-    const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
+    const { error } = await supabase
+      .from("campaign_posts")
+      .update(updates)
+      .eq("id", postId);
 
     if (error) {
       alert(error.message);
@@ -2034,7 +2147,7 @@ export default function PostsPage() {
     if (!post?.id) return;
 
     if (!reminderValue) {
-      alert('Choose a date and time first.');
+      alert("Choose a date and time first.");
       return;
     }
 
@@ -2045,24 +2158,24 @@ export default function PostsPage() {
 
       const updates = {
         scheduled_publish_at: scheduledIso,
-        status: 'scheduled',
-        publish_status: 'scheduled',
+        status: "scheduled",
+        publish_status: "scheduled",
         publish_error: null,
         is_posted: false,
       };
 
       const { error } = await supabase
-        .from('campaign_posts')
+        .from("campaign_posts")
         .update(updates)
-        .eq('id', post.id);
+        .eq("id", post.id);
 
       if (error) throw error;
 
       updatePostLocally(post.id, updates);
-      alert('Schedule time saved.');
+      alert("Schedule time saved.");
     } catch (error: any) {
-      const message = getReadableError(error, 'Error saving schedule time.');
-      console.error('Save reminder error:', error);
+      const message = getReadableError(error, "Error saving schedule time.");
+      console.error("Save reminder error:", error);
       alert(message);
     } finally {
       setSavingReminderPostId(null);
@@ -2077,24 +2190,24 @@ export default function PostsPage() {
     try {
       const updates = {
         scheduled_publish_at: null,
-        status: 'ready',
+        status: "ready",
         publish_status: null,
         publish_error: null,
       };
 
       const { error } = await supabase
-        .from('campaign_posts')
+        .from("campaign_posts")
         .update(updates)
-        .eq('id', post.id);
+        .eq("id", post.id);
 
       if (error) throw error;
 
       updatePostLocally(post.id, updates);
-      setReminderValue('');
-      alert('Schedule cleared.');
+      setReminderValue("");
+      alert("Schedule cleared.");
     } catch (error: any) {
-      const message = getReadableError(error, 'Error clearing schedule.');
-      console.error('Clear reminder error:', error);
+      const message = getReadableError(error, "Error clearing schedule.");
+      console.error("Clear reminder error:", error);
       alert(message);
     } finally {
       setSavingReminderPostId(null);
@@ -2102,11 +2215,11 @@ export default function PostsPage() {
   };
 
   const toDateTimeInputValue = (value?: string | null) => {
-    if (!value) return '';
+    if (!value) return "";
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return "";
 
     const offsetMs = date.getTimezoneOffset() * 60 * 1000;
     const localDate = new Date(date.getTime() - offsetMs);
@@ -2115,29 +2228,33 @@ export default function PostsPage() {
   };
 
   const getReadableDateTime = (value?: string | null) => {
-    if (!value) return '';
+    if (!value) return "";
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return "";
 
     return date.toLocaleString(undefined, {
-      day: '2-digit',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const maybeShowReviewPrompt = () => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
-    const hasSubmitted = localStorage.getItem(REVIEW_PROMPT_SUBMITTED_KEY) === 'true';
-    const hasDismissed = localStorage.getItem(REVIEW_PROMPT_DISMISSED_KEY) === 'true';
+    const hasSubmitted =
+      localStorage.getItem(REVIEW_PROMPT_SUBMITTED_KEY) === "true";
+    const hasDismissed =
+      localStorage.getItem(REVIEW_PROMPT_DISMISSED_KEY) === "true";
 
     if (hasSubmitted || hasDismissed) return;
 
-    const currentCount = Number(localStorage.getItem(REVIEW_PROMPT_POSTED_COUNT_KEY) || '0');
+    const currentCount = Number(
+      localStorage.getItem(REVIEW_PROMPT_POSTED_COUNT_KEY) || "0",
+    );
     const nextCount = currentCount + 1;
 
     localStorage.setItem(REVIEW_PROMPT_POSTED_COUNT_KEY, String(nextCount));
@@ -2149,7 +2266,7 @@ export default function PostsPage() {
 
   const submitReviewPrompt = async () => {
     if (!reviewText.trim()) {
-      alert('Please write a short review.');
+      alert("Please write a short review.");
       return;
     }
 
@@ -2160,37 +2277,37 @@ export default function PostsPage() {
       const userId = authData.user?.id || null;
 
       if (!userId) {
-        alert('Please sign in before leaving a review.');
+        alert("Please sign in before leaving a review.");
         return;
       }
 
-      const { error } = await supabase.from('user_reviews').insert({
+      const { error } = await supabase.from("user_reviews").insert({
         user_id: userId,
         rating: reviewRating,
         review_text: reviewText.trim(),
-        status: 'new',
+        status: "new",
         created_at: new Date().toISOString(),
       });
 
       if (error) throw error;
 
-      localStorage.setItem(REVIEW_PROMPT_SUBMITTED_KEY, 'true');
+      localStorage.setItem(REVIEW_PROMPT_SUBMITTED_KEY, "true");
 
       setShowReviewPrompt(false);
       setReviewRating(5);
       setReviewHoverRating(0);
-      setReviewText('');
+      setReviewText("");
 
-      alert('Thank you — your review has been sent.');
+      alert("Thank you — your review has been sent.");
     } catch (error: any) {
-      alert(error?.message || 'Error submitting review.');
+      alert(error?.message || "Error submitting review.");
     } finally {
       setSavingReview(false);
     }
   };
 
   const dismissReviewPrompt = () => {
-    localStorage.setItem(REVIEW_PROMPT_DISMISSED_KEY, 'true');
+    localStorage.setItem(REVIEW_PROMPT_DISMISSED_KEY, "true");
     setShowReviewPrompt(false);
   };
 
@@ -2213,7 +2330,7 @@ export default function PostsPage() {
   };
 
   const closePostsTour = () => {
-    localStorage.setItem(POSTS_TOUR_SEEN_KEY, 'true');
+    localStorage.setItem(POSTS_TOUR_SEEN_KEY, "true");
     setShowPostsTour(false);
     setPostsTourStep(0);
     setPostsTourRect(null);
@@ -2247,10 +2364,12 @@ export default function PostsPage() {
   const getCurrentPostsTourTarget = () => {
     const currentTarget = postsTourSteps[postsTourStep]?.target;
 
-    if (currentTarget === 'queue') return queueRef.current;
-    if (currentTarget === 'post') return postRef.current || queueRef.current;
-    if (currentTarget === 'media') return mediaRef.current || postRef.current || queueRef.current;
-    if (currentTarget === 'publish') return publishRef.current || postRef.current || queueRef.current;
+    if (currentTarget === "queue") return queueRef.current;
+    if (currentTarget === "post") return postRef.current || queueRef.current;
+    if (currentTarget === "media")
+      return mediaRef.current || postRef.current || queueRef.current;
+    if (currentTarget === "publish")
+      return publishRef.current || postRef.current || queueRef.current;
 
     return null;
   };
@@ -2275,7 +2394,7 @@ export default function PostsPage() {
   };
 
   const getPostsTourTooltipStyle = () => {
-    if (!postsTourRect || typeof window === 'undefined') return {};
+    if (!postsTourRect || typeof window === "undefined") return {};
 
     if (window.innerWidth <= 760) {
       const mobilePadding = 12;
@@ -2284,9 +2403,9 @@ export default function PostsPage() {
       return {
         left: `${mobilePadding}px`,
         right: `${mobilePadding}px`,
-        bottom: '14px',
+        bottom: "14px",
         width: `${mobileCardWidth}px`,
-        top: 'auto',
+        top: "auto",
       };
     }
 
@@ -2295,9 +2414,11 @@ export default function PostsPage() {
     const gap = 42;
     const safePadding = 26;
 
-    const spaceBelow = window.innerHeight - (postsTourRect.top + postsTourRect.height);
+    const spaceBelow =
+      window.innerHeight - (postsTourRect.top + postsTourRect.height);
     const spaceAbove = postsTourRect.top;
-    const spaceRight = window.innerWidth - (postsTourRect.left + postsTourRect.width);
+    const spaceRight =
+      window.innerWidth - (postsTourRect.left + postsTourRect.width);
     const spaceLeft = postsTourRect.left;
 
     let top = postsTourRect.top + postsTourRect.height + gap;
@@ -2317,10 +2438,13 @@ export default function PostsPage() {
       left = postsTourRect.left - cardWidth - gap;
     }
 
-    left = Math.max(safePadding, Math.min(left, window.innerWidth - cardWidth - safePadding));
+    left = Math.max(
+      safePadding,
+      Math.min(left, window.innerWidth - cardWidth - safePadding),
+    );
     top = Math.max(
       safePadding,
-      Math.min(top, window.innerHeight - estimatedCardHeight - safePadding)
+      Math.min(top, window.innerHeight - estimatedCardHeight - safePadding),
     );
 
     return {
@@ -2332,16 +2456,22 @@ export default function PostsPage() {
 
   const primaryMetaConnection = metaConnections[0] || null;
   const facebookConnected = Boolean(primaryMetaConnection?.page_id);
-  const instagramConnected = Boolean(primaryMetaConnection?.instagram_business_account_id);
+  const instagramConnected = Boolean(
+    primaryMetaConnection?.instagram_business_account_id,
+  );
 
   return (
-    <div className="campaign-brand-shell simplified-posts-page" style={brandStyle}>
+    <div
+      className="campaign-brand-shell simplified-posts-page"
+      style={brandStyle}
+    >
       <div className="campaigns-page-header simplified-posts-header">
         <div>
           <div className="page-eyebrow">Posts</div>
-          <h1 className="page-title">Manage this week’s posts.</h1>
+          <h1 className="page-title">Review this week’s posts.</h1>
           <p className="page-description">
-            Open a post to review, add media, schedule, publish, or edit it.
+            Check the media and wording, then publish Facebook and Instagram or
+            copy/open TikTok manually.
           </p>
 
           <div className="simplified-posts-meta">
@@ -2349,6 +2479,7 @@ export default function PostsPage() {
             <span>
               {postedCount}/{posts.length || 0} posted
             </span>
+            <span>{MAIN_POST_PLATFORMS.join(", ")}</span>
             {!accessLocked && accessMessage && <span>{accessMessage}</span>}
           </div>
         </div>
@@ -2362,7 +2493,10 @@ export default function PostsPage() {
             Show me around
           </button>
 
-          <button className="secondary-button refresh-button" onClick={loadPageData}>
+          <button
+            className="secondary-button refresh-button"
+            onClick={loadPageData}
+          >
             ↻ Refresh
           </button>
         </div>
@@ -2377,8 +2511,9 @@ export default function PostsPage() {
           <div className="page-eyebrow">No weekly plan yet</div>
           <h2 style={{ marginTop: 0 }}>Create your weekly posts first.</h2>
           <p>
-            Go to Dashboard, scan the website or add business details, then create weekly posts.
-            They will appear here ready to publish.
+            Go to Dashboard, add your business details, upload this week’s
+            photos or flyers, then create posts. They will appear here ready to
+            review and publish.
           </p>
         </div>
       ) : (
@@ -2406,12 +2541,15 @@ export default function PostsPage() {
                 </h3>
                 <p>
                   {posts.length > 0 && postedCount === posts.length
-                    ? 'Nice work — this week is complete 🎉'
+                    ? "Nice work — this week is complete 🎉"
                     : `${postsLeftThisWeek} posts left this week.`}
                 </p>
               </div>
 
-              <div className="weekly-progress-bar" aria-label="Weekly post progress">
+              <div
+                className="weekly-progress-bar"
+                aria-label="Weekly post progress"
+              >
                 <span style={{ width: `${weeklyProgressPercent}%` }} />
               </div>
             </section>
@@ -2452,30 +2590,35 @@ export default function PostsPage() {
               <div className="page-eyebrow">Deleted posts</div>
               <h2 style={{ marginTop: 0 }}>Restore a deleted post.</h2>
               <p>
-                Deleted posts are hidden from the weekly queue, but you can bring them back here.
+                Deleted posts are hidden from the weekly queue, but you can
+                bring them back here.
               </p>
 
-              <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+              <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
                 {deletedPosts.map((post) => (
                   <div
                     key={post.id}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                       gap: 12,
-                      padding: '12px 14px',
+                      padding: "12px 14px",
                       borderRadius: 16,
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      flexWrap: 'wrap',
+                      background: "rgba(255, 255, 255, 0.06)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      flexWrap: "wrap",
                     }}
                   >
                     <div>
-                      <strong>{post.title || post.platform || 'Deleted post'}</strong>
-                      <p style={{ margin: '4px 0 0', opacity: 0.78 }}>
-                        {post.platform || 'Post'} · deleted{' '}
-                        {post.deleted_at ? getReadableDateTime(post.deleted_at) : 'recently'}
+                      <strong>
+                        {post.title || post.platform || "Deleted post"}
+                      </strong>
+                      <p style={{ margin: "4px 0 0", opacity: 0.78 }}>
+                        {post.platform || "Post"} · deleted{" "}
+                        {post.deleted_at
+                          ? getReadableDateTime(post.deleted_at)
+                          : "recently"}
                       </p>
                     </div>
 
@@ -2484,7 +2627,7 @@ export default function PostsPage() {
                       onClick={() => restoreDeletedPost(post)}
                       disabled={deletingPostId === post.id}
                     >
-                      {deletingPostId === post.id ? 'Restoring...' : 'Restore'}
+                      {deletingPostId === post.id ? "Restoring..." : "Restore"}
                     </button>
                   </div>
                 ))}
@@ -2492,14 +2635,16 @@ export default function PostsPage() {
             </section>
           )}
 
-
           {posts.length > 0 && (
             <section className="premium-card" style={{ marginTop: 22 }}>
-              <div className="page-eyebrow">Simple workflow</div>
-              <h2 style={{ marginTop: 0 }}>Choose a card to start.</h2>
+              <div className="page-eyebrow">Upload. Review. Publish.</div>
+              <h2 style={{ marginTop: 0 }}>
+                Open a post to check media and wording.
+              </h2>
               <p>
-                The post, media, and publishing tools stay inside the post window so this page stays
-                clean.
+                Each card should feel simple: media, wording, then the next
+                step. Publish or schedule Facebook and Instagram when Meta is
+                connected. Copy/open TikTok manually.
               </p>
             </section>
           )}
@@ -2588,7 +2733,7 @@ export default function PostsPage() {
           nextPostId={successMoment.nextPostId}
           onViewNextPost={viewNextPostAfterSuccess}
           onBackToDashboard={() => {
-            window.location.href = '/dashboard';
+            window.location.href = "/dashboard";
           }}
         />
       )}
@@ -2665,7 +2810,10 @@ export default function PostsPage() {
 
           {!postsTourRect && <div className="dashboard-tour-full-shade" />}
 
-          <section className="dashboard-tour-tooltip" style={getPostsTourTooltipStyle()}>
+          <section
+            className="dashboard-tour-tooltip"
+            style={getPostsTourTooltipStyle()}
+          >
             <div className="dashboard-tour-progress">
               Step {postsTourStep + 1} of {postsTourSteps.length}
             </div>
@@ -2674,7 +2822,11 @@ export default function PostsPage() {
             <p>{postsTourSteps[postsTourStep].text}</p>
 
             <div className="dashboard-tour-actions">
-              <button type="button" className="secondary-button" onClick={closePostsTour}>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={closePostsTour}
+              >
                 Skip
               </button>
 
@@ -2689,7 +2841,9 @@ export default function PostsPage() {
                 </button>
 
                 <button type="button" onClick={goToNextPostsTourStep}>
-                  {postsTourStep === postsTourSteps.length - 1 ? 'Finish' : 'Next'}
+                  {postsTourStep === postsTourSteps.length - 1
+                    ? "Finish"
+                    : "Next"}
                 </button>
               </div>
             </div>
