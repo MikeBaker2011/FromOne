@@ -22,8 +22,6 @@ export default function SubscriptionPage() {
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const paypalReady = true;
-
   useEffect(() => {
     loadSubscription();
 
@@ -444,40 +442,46 @@ export default function SubscriptionPage() {
         : 'No active PayPal subscription';
 
   const demoFeatures = [
-    'Create weekly social media posts',
-    'Website scan or manual business profile',
-    'Choose your social platforms',
-    'Copy, schedule, and publish workflow',
-    '1 website scan per week',
+    '7-day access',
+    'Limited uploads and posts',
+    'Limited website scans',
+    'Create posts from business details',
+    'Review and copy posts manually',
+    'Facebook and Instagram publishing where connected',
+    'TikTok manual posting',
   ];
 
   const monthlyFeatures = [
-    'Create weekly social media posts',
-    'Website scan or manual business profile',
-    'Choose your social platforms',
-    'Copy, schedule, and publish workflow',
-    '2 website scans per week',
+    'Full weekly photo and flyer post creation',
+    'More uploads and posts per week',
+    'Website scan or saved business profile',
+    'Facebook publishing where Meta is connected',
+    'Instagram publishing where Meta is connected',
+    'TikTok manual copy/open posting',
+    'PayPal monthly billing',
   ];
 
   const plans = [
     {
       id: 'demo' as Plan,
-      name: '7-Day Demo',
+      name: 'Demo',
       price: 'Free',
       priceNote: 'for 7 days',
-      valueNote: 'Try the full FromOne workflow before subscribing.',
-      description: 'A simple 7-day demo to create and test your first weekly posts.',
-      buttonText: 'Use free demo',
+      valueNote: 'Try FromOne with limited uploads, posts and website scans.',
+      description:
+        'Best for testing the simple upload, review and publish workflow before subscribing.',
+      buttonText: 'Use demo',
       disabled: isDemoExpired,
       features: demoFeatures,
     },
     {
       id: 'starter' as Plan,
-      name: 'FromOne Monthly',
+      name: 'Monthly',
       price: '£29.99',
       priceNote: '/ month',
-      valueNote: 'Less than £1 a day for weekly social media content.',
-      description: 'Full monthly access for creating weekly social media plans.',
+      valueNote: 'Weekly photo and flyer post creation for local businesses.',
+      description:
+        'Full monthly access to turn your business photos and flyers into ready-to-use posts.',
       buttonText: isCancelled ? 'Restart monthly plan' : 'Continue with PayPal',
       disabled: false,
       features: monthlyFeatures,
@@ -500,20 +504,20 @@ export default function SubscriptionPage() {
   return (
     <>
       <div className="page-header">
-        <div className="page-eyebrow">FromOne Plan & Billing</div>
+        <div className="page-eyebrow">Subscription</div>
         <h1 className="page-title">
-          {isDemoExpired ? 'Your demo has ended.' : 'Simple pricing for small businesses.'}
+          {isDemoExpired ? 'Your demo has ended.' : 'Simple pricing for local businesses.'}
         </h1>
         <p className="page-description">
-          Start with a 7-day free demo, then continue with FromOne Monthly for £29.99 per
-          month. PayPal handles the monthly subscription securely, and FromOne updates your
-          access after payment is confirmed.
+          Start with a 7-day demo, then continue with FromOne Monthly for £29.99/month.
+          Upload your photos or flyers, review the posts, then publish Facebook and Instagram
+          where Meta is connected or copy/open TikTok manually.
         </p>
       </div>
 
       {loading ? (
         <div className="premium-card">
-          <p>Loading plan and billing...</p>
+          <p>Loading subscription...</p>
         </div>
       ) : (
         <>
@@ -525,11 +529,11 @@ export default function SubscriptionPage() {
                 border: '1px solid rgba(255, 95, 109, 0.45)',
               }}
             >
-              <div className="page-eyebrow">Demo Ended</div>
+              <div className="page-eyebrow">Demo ended</div>
               <h2 style={{ marginTop: 0 }}>Your 7-day demo has expired.</h2>
               <p>
-                Dashboard, Posts, and Settings are now locked. Choose the monthly plan to
-                continue using FromOne.
+                Choose the monthly plan to keep creating weekly posts from your business photos,
+                flyers, website or saved business details.
               </p>
             </div>
           )}
@@ -542,7 +546,7 @@ export default function SubscriptionPage() {
                 border: '1px solid rgba(255, 95, 109, 0.45)',
               }}
             >
-              <div className="page-eyebrow">Subscription Cancelled</div>
+              <div className="page-eyebrow">Subscription cancelled</div>
               <h2 style={{ marginTop: 0 }}>Your monthly plan has been cancelled.</h2>
               <p>
                 Future renewals have been stopped. You can restart the monthly plan anytime.
@@ -552,14 +556,14 @@ export default function SubscriptionPage() {
 
           <div style={{ marginBottom: '24px' }}>
             <section className="hero-card">
-              <div className="page-eyebrow">Current Access</div>
+              <div className="page-eyebrow">Current access</div>
 
               <h2 style={{ marginTop: 0, fontSize: '38px' }}>{getAccessTitle()}</h2>
 
               <p>
                 Plan:{' '}
                 <strong>
-                  {currentPlan === 'starter' ? 'FromOne Monthly' : '7-Day Demo'}
+                  {currentPlan === 'starter' ? 'Monthly' : 'Demo'}
                 </strong>
               </p>
 
@@ -570,11 +574,11 @@ export default function SubscriptionPage() {
               {currentPlan === 'demo' && (
                 <>
                   <p>
-                    Trial started: <strong>{formatDate(trialStartedAt)}</strong>
+                    Demo started: <strong>{formatDate(trialStartedAt)}</strong>
                   </p>
 
                   <p>
-                    Trial ends: <strong>{formatDate(trialEndsAt)}</strong>
+                    Demo ends: <strong>{formatDate(trialEndsAt)}</strong>
                   </p>
                 </>
               )}
@@ -673,7 +677,7 @@ export default function SubscriptionPage() {
                       style={{ width: '100%' }}
                     >
                       {plan.disabled
-                        ? 'Demo Ended'
+                        ? 'Demo ended'
                         : isSelected
                           ? 'Selected'
                           : plan.buttonText}
@@ -693,13 +697,13 @@ export default function SubscriptionPage() {
                 'radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255, 255, 255, 0.04) 42%, rgba(15, 23, 42, 0.88))',
             }}
           >
-            <div className="page-eyebrow">PayPal Billing</div>
-            <h2 style={{ marginTop: 0 }}>Secure recurring billing.</h2>
+            <div className="page-eyebrow">PayPal billing</div>
+            <h2 style={{ marginTop: 0 }}>Secure monthly billing.</h2>
 
             <p>
               FromOne Monthly is a recurring PayPal subscription at{' '}
-              <strong>£29.99 per month</strong>. PayPal manages the payment securely, and
-              FromOne unlocks monthly access once PayPal confirms the subscription.
+              <strong>£29.99/month</strong>. PayPal manages the payment securely, and FromOne
+              unlocks monthly access once PayPal confirms the subscription.
             </p>
 
             <div
@@ -757,7 +761,7 @@ export default function SubscriptionPage() {
 
             {!hasPaidAccess && !isPendingPayment && (
               <p style={{ marginTop: '18px', color: 'var(--muted)', fontWeight: 800 }}>
-                Choose FromOne Monthly above, then continue to PayPal to start the subscription.
+                Choose Monthly above, then continue to PayPal to start the subscription.
               </p>
             )}
 
@@ -788,7 +792,7 @@ export default function SubscriptionPage() {
                 onClick={() => setSelectedPlan(currentPlan)}
                 disabled={saving || cancelling}
               >
-                Cancel Changes
+                Cancel changes
               </button>
 
               {canCancel && (
@@ -798,7 +802,7 @@ export default function SubscriptionPage() {
                   onClick={cancelSubscription}
                   disabled={saving || cancelling}
                 >
-                  {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
+                  {cancelling ? 'Cancelling...' : 'Cancel subscription'}
                 </button>
               )}
             </div>
