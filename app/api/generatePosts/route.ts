@@ -145,6 +145,89 @@ function normaliseSelectedPlatforms(value: any) {
   return uniquePlatforms.length > 0 ? uniquePlatforms : defaultPlatformPlan;
 }
 
+function normaliseMediaTypeLabel(item: UploadedMediaContext) {
+  const type = String(item.type || '').toLowerCase();
+  const url = String(item.url || '').toLowerCase();
+  const name = String(item.name || '').toLowerCase();
+  const source = `${type} ${url} ${name}`;
+
+  if (type.startsWith('video/') || source.match(/\.(mp4|mov|webm|m4v)(\?|$)/)) {
+    return 'video';
+  }
+
+  if (
+    type === 'application/pdf' ||
+    type.includes('pdf') ||
+    source.match(/\.pdf(\?|$)/)
+  ) {
+    return 'flyer';
+  }
+
+  if (
+    type.startsWith('image/') ||
+    source.match(/\.(jpg|jpeg|png|webp|gif)(\?|$)/)
+  ) {
+    return 'image';
+  }
+
+  return 'media';
+}
+
+function buildMediaPurposeGuide(mediaItems: UploadedMediaContext[]) {
+  if (!mediaItems.length) {
+    return 'No uploads supplied. Create posts from the saved Business Profile, website scan, services, location, offer and platform selection.';
+  }
+
+  return mediaItems
+    .map((item, index) => {
+      const mediaKind = normaliseMediaTypeLabel(item);
+      const suppliedDetails = [
+        item.context ? `Context: ${item.context}` : '',
+        item.description ? `Description: ${item.description}` : '',
+        item.extractedText ? `Extracted text: ${item.extractedText}` : '',
+        item.name ? `Filename: ${item.name}` : '',
+        item.url ? `Media URL: ${item.url}` : '',
+      ]
+        .filter(Boolean)
+        .join(' | ');
+
+      if (mediaKind === 'video') {
+        return `Post ${index + 1} must be built from Upload ${index + 1}, which is a VIDEO. Use the video as the topic. If the business is a bar, club, nightclub, restaurant, event venue, gym, salon, trades business, product business, or service business, write around what a business video usually captures: atmosphere, movement, result, proof, process, crowd, music, offer, booking, table/reservation, product demo, behind-the-scenes, job progress, or next event. Details: ${suppliedDetails || 'No extra video details supplied.'}`;
+      }
+
+      if (mediaKind === 'flyer') {
+        return `Post ${index + 1} must be built from Upload ${index + 1}, which is a FLYER/PDF. Use any supplied text, filename and context to identify the offer, event, date, price, booking instruction, location or CTA. Rewrite the flyer into a natural social post, not a pasted flyer transcript. Details: ${suppliedDetails || 'No extra flyer details supplied.'}`;
+      }
+
+      if (mediaKind === 'image') {
+        return `Post ${index + 1} must be built from Upload ${index + 1}, which is an IMAGE. If image pixels are attached, visually inspect them and make the visible subject the post topic. Details: ${suppliedDetails || 'No extra image details supplied.'}`;
+      }
+
+      return `Post ${index + 1} must be built from Upload ${index + 1}. Use the supplied context, filename, URL and business profile to make one useful post. Details: ${suppliedDetails || 'No extra details supplied.'}`;
+    })
+    .join('\n');
+}
+
+function buildUploadDrivenPlatformPlan(platforms: string[], mediaItems: UploadedMediaContext[], postCount: number) {
+  return Array.from({ length: postCount }).map((_, index) => {
+    const platform = getPlatformForDay(platforms, index);
+    const mediaKind = mediaItems[index] ? normaliseMediaTypeLabel(mediaItems[index]) : 'profile';
+
+    return {
+      day: `Post ${index + 1}`,
+      platform,
+      angle:
+        mediaKind === 'video'
+          ? 'Video-led post: atmosphere, proof, process, event, product demo, or booking/enquiry driver'
+          : mediaKind === 'flyer'
+            ? 'Flyer-led post: offer, event, date, price, booking, or CTA made natural'
+            : mediaKind === 'image'
+              ? 'Image-led post: visible subject turned into a useful business post'
+              : weeklyAngles[index] || 'Helpful business post',
+    };
+  });
+}
+
 function getPlatformForDay(platforms: string[], index: number) {
   return platforms[index % platforms.length] || defaultPlatformPlan[index] || 'Facebook';
 }
@@ -764,9 +847,11 @@ function buildPrompt({
   mediaItems: UploadedMediaContext[];
   inlineMediaParts: InlineMediaPart[];
 }) {
-  const selectedPlatformPlan = buildSelectedPlatformPlan(selectedPlatforms, postCount)
+  const selectedPlatformPlan = buildUploadDrivenPlatformPlan(selectedPlatforms, mediaItems, postCount)
     .map((item) => `- ${item.day}: ${item.platform} — ${item.angle}`)
     .join('\n');
+
+  const mediaPurposeGuide = buildMediaPurposeGuide(mediaItems);
 
   const platformLimitGuide = buildPlatformLimitGuide(selectedPlatforms);
 
@@ -779,6 +864,7 @@ function buildPrompt({
   const mediaContext = mediaItems.length
     ? mediaItems
         .map((item, index) => {
+          const mediaKind = normaliseMediaTypeLabel(item);
           const details = [
             item.description || item.context || '',
             item.extractedText ? `Extracted flyer/text details: ${item.extractedText}` : '',
@@ -789,13 +875,13 @@ function buildPrompt({
             .filter(Boolean)
             .join(' | ');
 
-          return `- Upload ${index + 1}: ${details || 'Uploaded photo or flyer'}`;
+          return `- Upload ${index + 1} (${mediaKind.toUpperCase()}): ${details || 'Uploaded media'}`;
         })
         .join('\n')
     : 'No uploaded media supplied. Create posts from the business profile and website details.';
 
   const mediaModeRule = mediaItems.length
-    ? `There are ${mediaItems.length} uploaded item(s). Create exactly ${postCount} posts. Match Post 1 to Upload 1, Post 2 to Upload 2, and so on.`
+    ? `There are ${mediaItems.length} uploaded item(s). Create exactly ${postCount} posts. One upload should become one post. Match Post 1 to Upload 1, Post 2 to Upload 2, and so on. Do not ignore an upload. Do not create extra generic posts unless there are more requested posts than uploads.`
     : `No uploads were supplied. Create exactly ${postCount} posts from the website/business profile.`;
 
   return `
@@ -809,6 +895,9 @@ CRITICAL VISION RULE:
 - If the visual image shows a shopfront, vehicle, sign, food, beauty result, building work, product, flyer, or anything else, the post must match what is actually visible.
 - If the image conflicts with the business profile, trust the visible image for the post subject.
 - Example: if the photo shows a restaurant shopfront, do not write about van graphics unless a van is actually visible.
+- Videos and PDFs may not have pixels attached to the model. For videos, use the provided context, filename, business profile and industry to write around the likely footage without pretending you saw exact details you did not receive.
+- For club, nightclub, bar, restaurant, event, venue or hospitality videos, write naturally around vibe, crowd, music, atmosphere, tickets, tables, bookings, offers, opening times, or the next event when relevant.
+- For PDFs/flyers, use extracted text if supplied. If no extracted text is supplied, write a useful post from filename/context/business profile and make clear, natural CTA wording.
 
 The output must make a small business owner think:
 "That sounds like us. That is useful. I could post that today."
@@ -873,6 +962,9 @@ ${selectedPlatformPlan}
 Uploaded media metadata:
 ${mediaContext}
 
+Media-specific instructions:
+${mediaPurposeGuide}
+
 Visual uploads attached to this Gemini request:
 ${visualUploads}
 
@@ -885,8 +977,10 @@ Core media quality rule:
 - Do not only describe the image.
 - Turn the upload into a professional business post.
 - For flyers, extract offer, date, price, service, location, contact details, and CTA where supplied, then rewrite them naturally as a social post.
+- For videos, turn the video context into a post about the scene, action, proof, process, atmosphere, result, product, service, booking, or event. Keep it specific to the business and platform.
 - For photos, identify what is visibly in the photo first, then write a useful, local, industry-specific caption around that visible subject.
 - If no uploaded media is supplied, use the website/business profile.
+- Never make every post sound like a generic weekly tip. Each upload should feel like the reason that post exists.
 
 Strict platform rule:
 - You must only use these selected platforms: ${selectedPlatforms.join(', ')}.
