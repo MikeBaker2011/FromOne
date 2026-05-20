@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import axios from 'axios';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import axios from "axios";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -59,224 +59,197 @@ type PlatformOption = {
   description: string;
 };
 
+type WeeklyUpload = {
+  id: string;
+  file: File;
+  previewUrl: string;
+};
+
 const availablePlatforms: PlatformOption[] = [
   {
-    name: 'Facebook',
-    shortName: 'Facebook',
-    description: 'Local updates, trust posts, offers, and community content.',
+    name: "Facebook",
+    shortName: "Facebook",
+    description: "Auto posting when Meta is connected.",
   },
   {
-    name: 'Instagram',
-    shortName: 'Instagram',
-    description: 'Visual captions, reels ideas, stories, and brand-led posts.',
+    name: "Instagram",
+    shortName: "Instagram",
+    description: "Auto posting when Meta is connected.",
   },
   {
-    name: 'Google',
-    shortName: 'Google',
-    description: 'Search-friendly updates for local visibility and enquiries.',
-  },
-  {
-    name: 'LinkedIn',
-    shortName: 'LinkedIn',
-    description: 'Professional posts that build credibility and authority.',
-  },
-  {
-    name: 'TikTok',
-    shortName: 'TikTok',
-    description: 'Short-form video ideas, hooks, and simple talking points.',
-  },
-  {
-    name: 'YouTube Shorts',
-    shortName: 'Shorts',
-    description: 'Short video scripts and quick educational post ideas.',
-  },
-  {
-    name: 'X / Twitter',
-    shortName: 'X',
-    description: 'Short tips, updates, opinions, and quick announcements.',
-  },
-  {
-    name: 'Pinterest',
-    shortName: 'Pinterest',
-    description: 'Visual discovery posts for inspiration-led businesses.',
+    name: "TikTok",
+    shortName: "TikTok",
+    description: "Manual posting for now. Copy/open manually.",
   },
 ];
 
 const marketReachOptions = [
   {
-    value: 'Local customers',
-    title: 'Local',
+    value: "Local customers",
+    title: "Local",
     description:
-      'Best for trades, local services, venues, clinics, and businesses serving one area.',
+      "Best for trades, local services, venues, clinics, and businesses serving one area.",
   },
   {
-    value: 'Nationwide customers',
-    title: 'Nationwide',
-    description: 'Best for businesses that work across the UK or want broader reach.',
+    value: "Nationwide customers",
+    title: "Nationwide",
+    description:
+      "Best for businesses that work across the UK or want broader reach.",
   },
   {
-    value: 'Online customers',
-    title: 'Online',
-    description: 'Best for ecommerce, digital services, remote offers, and online-first brands.',
+    value: "Online customers",
+    title: "Online",
+    description:
+      "Best for ecommerce, digital services, remote offers, and online-first brands.",
   },
 ];
 
 const postingFrequencyOptions = [
   {
     value: 3,
-    title: '3 days',
-    description: 'A light weekly plan for businesses that want simple consistency.',
+    title: "3 days",
+    description:
+      "A light weekly plan for businesses that want simple consistency.",
   },
   {
     value: 5,
-    title: '5 days',
-    description: 'A steady weekday plan for regular visibility.',
+    title: "5 days",
+    description: "A steady weekday plan for regular visibility.",
   },
   {
     value: 7,
-    title: '7 days',
-    description: 'A full weekly plan for maximum activity.',
+    title: "7 days",
+    description: "A full weekly plan for maximum activity.",
   },
 ];
 
-const defaultSelectedPlatforms = ['Facebook', 'Instagram', 'Google', 'LinkedIn'];
+const defaultSelectedPlatforms = ["Facebook", "Instagram", "TikTok"];
 const PLATFORM_CAROUSEL_VISIBLE_COUNT = 3;
 
 const recommendedPlatformsByIndustry: Record<string, string[]> = {
-  plumbing: ['Facebook', 'Google', 'LinkedIn'],
-  plumber: ['Facebook', 'Google', 'LinkedIn'],
-  electrician: ['Facebook', 'Google', 'LinkedIn'],
-  electrical: ['Facebook', 'Google', 'LinkedIn'],
-  roofing: ['Facebook', 'Google', 'LinkedIn'],
-  roofer: ['Facebook', 'Google', 'LinkedIn'],
-  building: ['Facebook', 'Google', 'LinkedIn'],
-  construction: ['Facebook', 'Google', 'LinkedIn'],
-  landscaping: ['Facebook', 'Instagram', 'Google'],
-  gardener: ['Facebook', 'Instagram', 'Google'],
-  signage: ['Instagram', 'Facebook', 'LinkedIn', 'Google'],
-  print: ['Instagram', 'Facebook', 'LinkedIn', 'Google'],
-  beauty: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
-  hair: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
-  salon: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
-  aesthetics: ['Instagram', 'TikTok', 'Facebook', 'Pinterest'],
-  fitness: ['Instagram', 'TikTok', 'YouTube Shorts', 'Facebook'],
-  gym: ['Instagram', 'TikTok', 'YouTube Shorts', 'Facebook'],
-  restaurant: ['Instagram', 'TikTok', 'Facebook', 'Google'],
-  cafe: ['Instagram', 'TikTok', 'Facebook', 'Google'],
-  food: ['Instagram', 'TikTok', 'Facebook', 'Google'],
-  bakery: ['Instagram', 'TikTok', 'Facebook', 'Google'],
-  estate: ['Facebook', 'LinkedIn', 'Google', 'Instagram'],
-  property: ['Facebook', 'LinkedIn', 'Google', 'Instagram'],
-  accounting: ['LinkedIn', 'Google', 'Facebook'],
-  accountant: ['LinkedIn', 'Google', 'Facebook'],
-  legal: ['LinkedIn', 'Google', 'Facebook'],
-  solicitor: ['LinkedIn', 'Google', 'Facebook'],
-  dental: ['Instagram', 'Facebook', 'Google'],
-  dentist: ['Instagram', 'Facebook', 'Google'],
-  mechanic: ['Facebook', 'Google', 'Instagram'],
-  garage: ['Facebook', 'Google', 'Instagram'],
-  ecommerce: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
-  shop: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
-  retail: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
+  plumbing: ["Facebook", "Google", "LinkedIn"],
+  plumber: ["Facebook", "Google", "LinkedIn"],
+  electrician: ["Facebook", "Google", "LinkedIn"],
+  electrical: ["Facebook", "Google", "LinkedIn"],
+  roofing: ["Facebook", "Google", "LinkedIn"],
+  roofer: ["Facebook", "Google", "LinkedIn"],
+  building: ["Facebook", "Google", "LinkedIn"],
+  construction: ["Facebook", "Google", "LinkedIn"],
+  landscaping: ["Facebook", "Instagram", "Google"],
+  gardener: ["Facebook", "Instagram", "Google"],
+  signage: ["Instagram", "Facebook", "LinkedIn", "Google"],
+  print: ["Instagram", "Facebook", "LinkedIn", "Google"],
+  beauty: ["Instagram", "TikTok", "Facebook", "Pinterest"],
+  hair: ["Instagram", "TikTok", "Facebook", "Pinterest"],
+  salon: ["Instagram", "TikTok", "Facebook", "Pinterest"],
+  aesthetics: ["Instagram", "TikTok", "Facebook", "Pinterest"],
+  fitness: ["Instagram", "TikTok", "YouTube Shorts", "Facebook"],
+  gym: ["Instagram", "TikTok", "YouTube Shorts", "Facebook"],
+  restaurant: ["Instagram", "TikTok", "Facebook", "Google"],
+  cafe: ["Instagram", "TikTok", "Facebook", "Google"],
+  food: ["Instagram", "TikTok", "Facebook", "Google"],
+  bakery: ["Instagram", "TikTok", "Facebook", "Google"],
+  estate: ["Facebook", "LinkedIn", "Google", "Instagram"],
+  property: ["Facebook", "LinkedIn", "Google", "Instagram"],
+  accounting: ["LinkedIn", "Google", "Facebook"],
+  accountant: ["LinkedIn", "Google", "Facebook"],
+  legal: ["LinkedIn", "Google", "Facebook"],
+  solicitor: ["LinkedIn", "Google", "Facebook"],
+  dental: ["Instagram", "Facebook", "Google"],
+  dentist: ["Instagram", "Facebook", "Google"],
+  mechanic: ["Facebook", "Google", "Instagram"],
+  garage: ["Facebook", "Google", "Instagram"],
+  ecommerce: ["Instagram", "TikTok", "Pinterest", "Facebook"],
+  shop: ["Instagram", "TikTok", "Pinterest", "Facebook"],
+  retail: ["Instagram", "TikTok", "Pinterest", "Facebook"],
 };
 
 const platformFallback = [
-  'Facebook',
-  'Instagram',
-  'Google',
-  'LinkedIn',
-  'Instagram',
-  'TikTok',
-  'Facebook',
+  "Facebook",
+  "Instagram",
+  "Google",
+  "LinkedIn",
+  "Instagram",
+  "TikTok",
+  "Facebook",
 ];
 
 const DEMO_WEEKLY_SCAN_LIMIT = 1;
 const PAID_WEEKLY_SCAN_LIMIT = 2;
 const MAX_SAVED_CAMPAIGNS = 4;
-const WEBSITE_SCAN_EVENT_TYPES = ['website_scan', 'campaign_regenerate'];
+const WEBSITE_SCAN_EVENT_TYPES = ["website_scan", "campaign_regenerate"];
 
-const DASHBOARD_TOUR_SEEN_KEY = 'fromone_dashboard_tour_seen';
+const DASHBOARD_TOUR_SEEN_KEY = "fromone_dashboard_tour_seen";
 
 const dashboardTourSteps = [
   {
-    title: 'Welcome to your dashboard',
-    text:
-      'This is where you create weekly posts. Set up the business, choose who you want to reach, select platforms, then create the plan.',
-    target: 'header',
+    title: "Welcome to your dashboard",
+    text: "Add the business profile, upload this week’s photos or flyers, then create posts for Facebook, Instagram, and TikTok.",
+    target: "header",
   },
   {
-    title: 'Add the website',
-    text:
-      'If the business has a website, paste it here. FromOne uses it to understand the services, audience, tone, and offer.',
-    target: 'website',
+    title: "Add the website",
+    text: "If the business has a website, paste it here. FromOne uses it to understand the services, audience, tone, and offer.",
+    target: "website",
   },
   {
-    title: 'Choose the reach',
-    text:
-      'Tell FromOne whether the posts should focus on local customers, nationwide customers, or online customers.',
-    target: 'reach',
+    title: "Choose the reach",
+    text: "Tell FromOne whether the posts should focus on local customers, nationwide customers, or online customers.",
+    target: "reach",
   },
   {
-    title: 'Choose social platforms',
-    text:
-      'Select where you want FromOne to create posts for this week. Use the recommended platforms or choose your own.',
-    target: 'platforms',
+    title: "Choose social platforms",
+    text: "FromOne currently focuses on Facebook, Instagram, and TikTok only.",
+    target: "platforms",
   },
   {
-    title: 'Create weekly posts',
-    text:
-      'Once the website or business details, reach, and platforms are ready, create the right number of ready-to-use posts for the week.',
-    target: 'generate',
+    title: "Create weekly posts",
+    text: "Once the business profile and weekly uploads are ready, create ready-to-use posts.",
+    target: "generate",
   },
   {
-    title: 'No website? Add business details',
-    text:
-      'If there is no website, use this section to add the business details instead.',
-    target: 'manual',
+    title: "No website? Add business details",
+    text: "If there is no website, use this section to add the business details instead.",
+    target: "manual",
   },
   {
-    title: 'Review your posts',
-    text:
-      'After creating the weekly posts, open Posts to review, copy, publish manually, and mark posts as done.',
-    target: 'posts',
+    title: "Review your posts",
+    text: "After creating posts, open Posts to review the media and wording, then publish Facebook/Instagram or copy/open TikTok manually.",
+    target: "posts",
   },
 ];
 
 const customerReadyChecklist = [
   {
-    key: 'business',
-    title: 'Add business profile',
-    description: 'Add a website or save the business details manually.',
+    key: "business",
+    title: "Add business profile",
+    description: "Add a website or save the business details manually.",
   },
   {
-    key: 'facebook',
-    title: 'Connect Facebook',
-    description: 'Connect the Facebook Page FromOne should publish to.',
+    key: "facebook",
+    title: "Connect Facebook",
+    description: "Connect the Facebook Page FromOne should publish to.",
   },
   {
-    key: 'instagram',
-    title: 'Connect Instagram',
-    description: 'Connect the Instagram professional account for direct posting.',
+    key: "instagram",
+    title: "Connect Instagram",
+    description:
+      "Connect the Instagram professional account for direct posting.",
   },
   {
-    key: 'google',
-    title: 'Connect Google',
-    description: 'Google is connected now; publishing waits for Google API approval.',
+    key: "weekly_plan",
+    title: "Create first weekly plan",
+    description: "Generate the first weekly content plan.",
   },
   {
-    key: 'weekly_plan',
-    title: 'Create first weekly plan',
-    description: 'Generate the first weekly content plan.',
+    key: "scheduled_post",
+    title: "Schedule first post",
+    description: "Set at least one post to publish automatically.",
   },
   {
-    key: 'scheduled_post',
-    title: 'Schedule first post',
-    description: 'Set at least one post to publish automatically.',
-  },
-  {
-    key: 'billing',
-    title: 'Choose billing plan',
-    description: 'Move from demo access to a paid plan when ready.',
+    key: "billing",
+    title: "Choose billing plan",
+    description: "Move from demo access to a paid plan when ready.",
   },
 ];
 
@@ -284,7 +257,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [client, setClient] = useState<any>(null);
-  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [savingWebsite, setSavingWebsite] = useState(false);
@@ -293,14 +266,20 @@ export default function DashboardPage() {
   const [weeklyScansUsed, setWeeklyScansUsed] = useState(0);
   const [savedCampaignsCount, setSavedCampaignsCount] = useState(0);
   const [todayPost, setTodayPost] = useState<any>(null);
-  const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
+  const [socialConnections, setSocialConnections] = useState<
+    SocialConnection[]
+  >([]);
   const [hasScheduledPost, setHasScheduledPost] = useState(false);
 
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultSelectedPlatforms);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
+    defaultSelectedPlatforms,
+  );
   const [platformCarouselStart, setPlatformCarouselStart] = useState(0);
-  const [selectedMarketReach, setSelectedMarketReach] = useState('Local customers');
+  const [selectedMarketReach, setSelectedMarketReach] =
+    useState("Local customers");
   const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(7);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [weeklyUploads, setWeeklyUploads] = useState<WeeklyUpload[]>([]);
 
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({
     total: 0,
@@ -329,24 +308,24 @@ export default function DashboardPage() {
   } | null>(null);
 
   const [accessInfo, setAccessInfo] = useState<AccessInfo | null>(null);
-  const [billingPlan, setBillingPlan] = useState<'demo' | 'starter'>('demo');
+  const [billingPlan, setBillingPlan] = useState<"demo" | "starter">("demo");
   const [accessLocked, setAccessLocked] = useState(false);
-  const [accessMessage, setAccessMessage] = useState('');
+  const [accessMessage, setAccessMessage] = useState("");
 
-  const [manualBusinessName, setManualBusinessName] = useState('');
-  const [manualIndustry, setManualIndustry] = useState('');
-  const [manualLocation, setManualLocation] = useState('');
-  const [manualServices, setManualServices] = useState('');
-  const [manualAudience, setManualAudience] = useState('');
-  const [manualTone, setManualTone] = useState('Professional');
-  const [manualMainOffer, setManualMainOffer] = useState('');
-  const [manualGoals, setManualGoals] = useState('');
-  const [manualContentPillars, setManualContentPillars] = useState('');
+  const [manualBusinessName, setManualBusinessName] = useState("");
+  const [manualIndustry, setManualIndustry] = useState("");
+  const [manualLocation, setManualLocation] = useState("");
+  const [manualServices, setManualServices] = useState("");
+  const [manualAudience, setManualAudience] = useState("");
+  const [manualTone, setManualTone] = useState("Professional");
+  const [manualMainOffer, setManualMainOffer] = useState("");
+  const [manualGoals, setManualGoals] = useState("");
+  const [manualContentPillars, setManualContentPillars] = useState("");
 
   useEffect(() => {
     fetchClient();
 
-    const tourSeen = localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY) === 'true';
+    const tourSeen = localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY) === "true";
     const isMobile = window.innerWidth <= 760;
 
     if (!tourSeen && !isMobile) {
@@ -355,15 +334,21 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    return () => {
+      weeklyUploads.forEach((upload) => URL.revokeObjectURL(upload.previewUrl));
+    };
+  }, [weeklyUploads]);
+
+  useEffect(() => {
     if (!showDashboardTour || loading) return;
 
     const target = getCurrentTourTarget();
 
     if (target) {
       target.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'center',
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
       });
     }
 
@@ -371,27 +356,33 @@ export default function DashboardPage() {
       updateTourRect();
     }, 420);
 
-    window.addEventListener('resize', updateTourRect);
-    window.addEventListener('scroll', updateTourRect, true);
+    window.addEventListener("resize", updateTourRect);
+    window.addEventListener("scroll", updateTourRect, true);
 
     return () => {
       window.clearTimeout(timer);
-      window.removeEventListener('resize', updateTourRect);
-      window.removeEventListener('scroll', updateTourRect, true);
+      window.removeEventListener("resize", updateTourRect);
+      window.removeEventListener("scroll", updateTourRect, true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showDashboardTour, dashboardTourStep, loading, showManualProfile]);
 
   const getRecommendedPlatforms = (industryValue?: string | null) => {
-    const industry = String(industryValue || '').toLowerCase();
+    const industry = String(industryValue || "").toLowerCase();
 
     const matchedKey = Object.keys(recommendedPlatformsByIndustry).find((key) =>
-      industry.includes(key)
+      industry.includes(key),
     );
 
-    return matchedKey
+    const recommended = matchedKey
       ? recommendedPlatformsByIndustry[matchedKey]
       : defaultSelectedPlatforms;
+
+    const supported = recommended.filter((platform) =>
+      defaultSelectedPlatforms.includes(platform),
+    );
+
+    return supported.length > 0 ? supported : defaultSelectedPlatforms;
   };
 
   const recommendedPlatforms = useMemo(() => {
@@ -401,7 +392,7 @@ export default function DashboardPage() {
   const visiblePlatformCards = useMemo(() => {
     return availablePlatforms.slice(
       platformCarouselStart,
-      platformCarouselStart + PLATFORM_CAROUSEL_VISIBLE_COUNT
+      platformCarouselStart + PLATFORM_CAROUSEL_VISIBLE_COUNT,
     );
   }, [platformCarouselStart]);
 
@@ -416,7 +407,7 @@ export default function DashboardPage() {
     setSelectedPlatforms((currentPlatforms) => {
       if (currentPlatforms.includes(platformName)) {
         if (currentPlatforms.length === 1) {
-          alert('Please choose at least one platform.');
+          alert("Please choose at least one platform.");
           return currentPlatforms;
         }
 
@@ -432,7 +423,8 @@ export default function DashboardPage() {
   };
 
   const buildPlatformPlanText = (platforms: string[]) => {
-    const safePlatforms = platforms.length > 0 ? platforms : defaultSelectedPlatforms;
+    const safePlatforms =
+      platforms.length > 0 ? platforms : defaultSelectedPlatforms;
     const postCount = Math.max(1, Math.min(selectedPostingFrequency, 7));
 
     return Array.from({ length: postCount })
@@ -440,11 +432,11 @@ export default function DashboardPage() {
         const platform = safePlatforms[index % safePlatforms.length];
         return `Day ${index + 1} ${platform}`;
       })
-      .join(', ');
+      .join(", ");
   };
 
   const closeDashboardTour = () => {
-    localStorage.setItem(DASHBOARD_TOUR_SEEN_KEY, 'true');
+    localStorage.setItem(DASHBOARD_TOUR_SEEN_KEY, "true");
     setShowDashboardTour(false);
     setDashboardTourStep(0);
     setTourRect(null);
@@ -468,11 +460,11 @@ export default function DashboardPage() {
     const nextTarget = dashboardTourSteps[nextStep]?.target;
     const currentTarget = dashboardTourSteps[dashboardTourStep]?.target;
 
-    if (nextTarget === 'manual') {
+    if (nextTarget === "manual") {
       setShowManualProfile(true);
     }
 
-    if (currentTarget === 'manual' && nextTarget !== 'manual') {
+    if (currentTarget === "manual" && nextTarget !== "manual") {
       setShowManualProfile(false);
     }
 
@@ -484,11 +476,11 @@ export default function DashboardPage() {
     const previousTarget = dashboardTourSteps[previousStep]?.target;
     const currentTarget = dashboardTourSteps[dashboardTourStep]?.target;
 
-    if (previousTarget === 'manual') {
+    if (previousTarget === "manual") {
       setShowManualProfile(true);
     }
 
-    if (currentTarget === 'manual' && previousTarget !== 'manual') {
+    if (currentTarget === "manual" && previousTarget !== "manual") {
       setShowManualProfile(false);
     }
 
@@ -498,17 +490,17 @@ export default function DashboardPage() {
   const getCurrentTourTarget = () => {
     const currentTarget = dashboardTourSteps[dashboardTourStep]?.target;
 
-    if (currentTarget === 'header') return dashboardHeaderRef.current;
-    if (currentTarget === 'website') return websiteInputRef.current;
-    if (currentTarget === 'reach') return marketReachRef.current;
-    if (currentTarget === 'platforms') return platformSelectorRef.current;
-    if (currentTarget === 'generate') return generateButtonRef.current;
+    if (currentTarget === "header") return dashboardHeaderRef.current;
+    if (currentTarget === "website") return websiteInputRef.current;
+    if (currentTarget === "reach") return marketReachRef.current;
+    if (currentTarget === "platforms") return platformSelectorRef.current;
+    if (currentTarget === "generate") return generateButtonRef.current;
 
-    if (currentTarget === 'manual') {
+    if (currentTarget === "manual") {
       return manualProfileSectionRef.current || manualButtonRef.current;
     }
 
-    if (currentTarget === 'posts') return postsLinkRef.current;
+    if (currentTarget === "posts") return postsLinkRef.current;
 
     return null;
   };
@@ -533,7 +525,7 @@ export default function DashboardPage() {
   };
 
   const getTourTooltipStyle = () => {
-    if (!tourRect || typeof window === 'undefined') return {};
+    if (!tourRect || typeof window === "undefined") return {};
 
     if (window.innerWidth <= 760) {
       return {};
@@ -566,10 +558,13 @@ export default function DashboardPage() {
       left = tourRect.left - cardWidth - gap;
     }
 
-    left = Math.max(safePadding, Math.min(left, window.innerWidth - cardWidth - safePadding));
+    left = Math.max(
+      safePadding,
+      Math.min(left, window.innerWidth - cardWidth - safePadding),
+    );
     top = Math.max(
       safePadding,
-      Math.min(top, window.innerHeight - estimatedCardHeight - safePadding)
+      Math.min(top, window.innerHeight - estimatedCardHeight - safePadding),
     );
 
     return {
@@ -580,9 +575,9 @@ export default function DashboardPage() {
   };
 
   const getErrorMessage = (error: any) => {
-    if (!error) return 'Unknown error.';
+    if (!error) return "Unknown error.";
 
-    if (typeof error === 'string') return error;
+    if (typeof error === "string") return error;
 
     if (axios.isAxiosError(error)) {
       return (
@@ -590,13 +585,14 @@ export default function DashboardPage() {
         error.response?.data?.message ||
         error.response?.data?.details ||
         error.message ||
-        'Request failed.'
+        "Request failed."
       );
     }
 
     if (error?.response?.data?.error) return error.response.data.error;
     if (error?.response?.data?.message) return error.response.data.message;
-    if (error?.response?.data) return JSON.stringify(error.response.data, null, 2);
+    if (error?.response?.data)
+      return JSON.stringify(error.response.data, null, 2);
 
     if (error?.message) return error.message;
     if (error?.error_description) return error.error_description;
@@ -606,7 +602,7 @@ export default function DashboardPage() {
     try {
       return JSON.stringify(error, null, 2);
     } catch {
-      return 'Unknown error creating or saving posts.';
+      return "Unknown error creating or saving posts.";
     }
   };
 
@@ -617,7 +613,7 @@ export default function DashboardPage() {
         error?.hint ||
         error?.code ||
         JSON.stringify(error) ||
-        'Supabase error.'
+        "Supabase error.",
     );
   };
 
@@ -627,7 +623,9 @@ export default function DashboardPage() {
   };
 
   const isPaidSubscription = (status?: string | null) => {
-    return ['active', 'paid', 'trialing'].includes(String(status || '').toLowerCase());
+    return ["active", "paid", "trialing"].includes(
+      String(status || "").toLowerCase(),
+    );
   };
 
   const getStartOfWeek = () => {
@@ -652,32 +650,37 @@ export default function DashboardPage() {
   const loadSocialConnections = async (userId: string) => {
     try {
       const params = new URLSearchParams();
-      params.set('user_id', userId);
+      params.set("user_id", userId);
 
-      const response = await fetch(`/api/social-connections?${params.toString()}`);
+      const response = await fetch(
+        `/api/social-connections?${params.toString()}`,
+      );
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result?.error || 'Could not load connected accounts.');
+        throw new Error(result?.error || "Could not load connected accounts.");
       }
 
       setSocialConnections(result?.connections || []);
     } catch (error: any) {
-      console.error('Error loading connected accounts:', error?.message || error);
+      console.error(
+        "Error loading connected accounts:",
+        error?.message || error,
+      );
       setSocialConnections([]);
     }
   };
 
   const loadScheduledPostStatus = async (userId: string) => {
     const { count, error } = await supabase
-      .from('campaign_posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .not('scheduled_publish_at', 'is', null)
-      .neq('publish_status', 'posted');
+      .from("campaign_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .not("scheduled_publish_at", "is", null)
+      .neq("publish_status", "posted");
 
     if (error) {
-      console.error('Error loading scheduled post status:', error.message);
+      console.error("Error loading scheduled post status:", error.message);
       setHasScheduledPost(false);
       return;
     }
@@ -690,15 +693,15 @@ export default function DashboardPage() {
     const endOfWeek = getEndOfWeek();
 
     const { data, error } = await supabase
-      .from('campaign_posts')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('scheduled_at', startOfWeek.toISOString())
-      .lte('scheduled_at', endOfWeek.toISOString())
-      .order('scheduled_at', { ascending: true });
+      .from("campaign_posts")
+      .select("*")
+      .eq("user_id", userId)
+      .gte("scheduled_at", startOfWeek.toISOString())
+      .lte("scheduled_at", endOfWeek.toISOString())
+      .order("scheduled_at", { ascending: true });
 
     if (error) {
-      console.error('Error loading weekly progress:', error.message);
+      console.error("Error loading weekly progress:", error.message);
       setWeeklyProgress({
         total: 0,
         posted: 0,
@@ -712,7 +715,11 @@ export default function DashboardPage() {
     const posted = posts.filter((post) => post.is_posted).length;
     const remaining = Math.max(posts.length - posted, 0);
     const nextPost =
-      posts.find((post) => !post.is_posted && new Date(post.scheduled_at).getTime() >= Date.now()) ||
+      posts.find(
+        (post) =>
+          !post.is_posted &&
+          new Date(post.scheduled_at).getTime() >= Date.now(),
+      ) ||
       posts.find((post) => !post.is_posted) ||
       null;
 
@@ -728,22 +735,24 @@ export default function DashboardPage() {
     if (!access) {
       return {
         locked: false,
-        message: 'Demo access is being prepared.',
+        message: "Demo access is being prepared.",
       };
     }
 
     if (isPaidSubscription(access.subscription_status)) {
       return {
         locked: false,
-        message: 'Subscription active.',
+        message: "Subscription active.",
       };
     }
 
     if (isFutureDate(access.extension_ends_at)) {
-      const date = new Date(access.extension_ends_at as string).toLocaleDateString(undefined, {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
+      const date = new Date(
+        access.extension_ends_at as string,
+      ).toLocaleDateString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
       });
 
       return {
@@ -753,11 +762,14 @@ export default function DashboardPage() {
     }
 
     if (isFutureDate(access.trial_ends_at)) {
-      const date = new Date(access.trial_ends_at as string).toLocaleDateString(undefined, {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
+      const date = new Date(access.trial_ends_at as string).toLocaleDateString(
+        undefined,
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        },
+      );
 
       return {
         locked: false,
@@ -768,22 +780,22 @@ export default function DashboardPage() {
     return {
       locked: true,
       message:
-        'Your 7-day demo has ended. You can still view existing posts, but creating new weekly posts is locked until access is extended or a subscription is active.',
+        "Your 7-day demo has ended. You can still view existing posts, but creating new weekly posts is locked until access is extended or a subscription is active.",
     };
   };
 
   const loadOrCreateAccess = async (userId: string) => {
     const { data: existingAccess, error: accessLoadError } = await supabase
-      .from('user_access')
-      .select('*')
-      .eq('user_id', userId)
+      .from("user_access")
+      .select("*")
+      .eq("user_id", userId)
       .maybeSingle();
 
     if (accessLoadError) {
-      console.error('Error loading user access:', accessLoadError.message);
+      console.error("Error loading user access:", accessLoadError.message);
       setAccessInfo(null);
       setAccessLocked(false);
-      setAccessMessage('Access check unavailable.');
+      setAccessMessage("Access check unavailable.");
       return;
     }
 
@@ -802,35 +814,35 @@ export default function DashboardPage() {
     trialEndsAt.setDate(trialStartedAt.getDate() + 7);
 
     const { data: newAccess, error: accessUpsertError } = await supabase
-      .from('user_access')
+      .from("user_access")
       .upsert(
         {
           user_id: userId,
-          access_status: 'trial',
+          access_status: "trial",
           trial_started_at: trialStartedAt.toISOString(),
           trial_ends_at: trialEndsAt.toISOString(),
-          subscription_status: 'none',
+          subscription_status: "none",
         },
         {
-          onConflict: 'user_id',
-        }
+          onConflict: "user_id",
+        },
       )
       .select()
       .single();
 
     if (accessUpsertError) {
-      console.error('Error creating user access:', accessUpsertError.message);
+      console.error("Error creating user access:", accessUpsertError.message);
 
       const { data: fallbackAccess, error: fallbackError } = await supabase
-        .from('user_access')
-        .select('*')
-        .eq('user_id', userId)
+        .from("user_access")
+        .select("*")
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (fallbackError || !fallbackAccess) {
         setAccessInfo(null);
         setAccessLocked(false);
-        setAccessMessage('Access check unavailable.');
+        setAccessMessage("Access check unavailable.");
         return;
       }
 
@@ -866,14 +878,14 @@ export default function DashboardPage() {
 
   const loadWeeklyScanUsage = async (userId: string) => {
     const { count, error } = await supabase
-      .from('usage_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .in('event_type', WEBSITE_SCAN_EVENT_TYPES)
-      .gte('created_at', getSevenDaysAgoIso());
+      .from("usage_events")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .in("event_type", WEBSITE_SCAN_EVENT_TYPES)
+      .gte("created_at", getSevenDaysAgoIso());
 
     if (error) {
-      console.error('Error loading scan usage:', error.message);
+      console.error("Error loading scan usage:", error.message);
       setWeeklyScansUsed(0);
       return 0;
     }
@@ -885,18 +897,21 @@ export default function DashboardPage() {
 
   const loadBillingPlan = async (userId: string) => {
     const { data, error } = await supabase
-      .from('user_billing')
-      .select('plan, status')
-      .eq('user_id', userId)
+      .from("user_billing")
+      .select("plan, status")
+      .eq("user_id", userId)
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading billing plan:', error.message);
-      setBillingPlan('demo');
-      return 'demo';
+      console.error("Error loading billing plan:", error.message);
+      setBillingPlan("demo");
+      return "demo";
     }
 
-    const plan = data?.plan === 'starter' && data?.status === 'active' ? 'starter' : 'demo';
+    const plan =
+      data?.plan === "starter" && data?.status === "active"
+        ? "starter"
+        : "demo";
 
     setBillingPlan(plan);
     return plan;
@@ -904,23 +919,23 @@ export default function DashboardPage() {
 
   const isAdminUser = async (userId: string) => {
     const { data, error } = await supabase
-      .from('admin_users')
-      .select('id')
-      .eq('user_id', userId)
+      .from("admin_users")
+      .select("id")
+      .eq("user_id", userId)
       .maybeSingle();
 
     if (error) {
-      const message = error.message || '';
+      const message = error.message || "";
 
       if (
         message.includes("Could not find the table 'public.admin_users'") ||
-        message.includes('admin_users') ||
-        error.code === 'PGRST205'
+        message.includes("admin_users") ||
+        error.code === "PGRST205"
       ) {
         return false;
       }
 
-      console.warn('Admin check unavailable:', message);
+      console.warn("Admin check unavailable:", message);
       return false;
     }
 
@@ -935,14 +950,15 @@ export default function DashboardPage() {
     }
 
     const plan = await loadBillingPlan(userId);
-    const limit = plan === 'starter' ? PAID_WEEKLY_SCAN_LIMIT : DEMO_WEEKLY_SCAN_LIMIT;
+    const limit =
+      plan === "starter" ? PAID_WEEKLY_SCAN_LIMIT : DEMO_WEEKLY_SCAN_LIMIT;
     const used = await loadWeeklyScanUsage(userId);
 
     if (used >= limit) {
       alert(
-        plan === 'starter'
+        plan === "starter"
           ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create weekly posts using the business details route.`
-          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Upgrade to FromOne Monthly for ${PAID_WEEKLY_SCAN_LIMIT} scans per week, or use the business details route.`
+          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Upgrade to FromOne Monthly for ${PAID_WEEKLY_SCAN_LIMIT} scans per week, or use the business details route.`,
       );
       return false;
     }
@@ -952,17 +968,17 @@ export default function DashboardPage() {
 
   const recordUsageEvent = async (
     userId: string,
-    eventType: 'website_scan' | 'campaign_regenerate',
-    metadata: Record<string, any> = {}
+    eventType: "website_scan" | "campaign_regenerate",
+    metadata: Record<string, any> = {},
   ) => {
-    const { error } = await supabase.from('usage_events').insert({
+    const { error } = await supabase.from("usage_events").insert({
       user_id: userId,
       event_type: eventType,
       metadata,
     });
 
     if (error) {
-      console.error('Error recording usage event:', error.message);
+      console.error("Error recording usage event:", error.message);
       return;
     }
 
@@ -971,12 +987,12 @@ export default function DashboardPage() {
 
   const loadSavedCampaignCount = async (userId: string) => {
     const { count, error } = await supabase
-      .from('campaigns')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
+      .from("campaigns")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
 
     if (error) {
-      console.error('Error loading weekly plan count:', error.message);
+      console.error("Error loading weekly plan count:", error.message);
       setSavedCampaignsCount(0);
       return 0;
     }
@@ -991,7 +1007,7 @@ export default function DashboardPage() {
 
     if (total >= MAX_SAVED_CAMPAIGNS) {
       alert(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans. Delete an old weekly plan from Posts before creating a new one.`
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly plans. Delete an old weekly plan from Posts before creating a new one.`,
       );
       return false;
     }
@@ -1007,18 +1023,18 @@ export default function DashboardPage() {
     endOfToday.setHours(23, 59, 59, 999);
 
     const { data, error } = await supabase
-      .from('campaign_posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_posted', false)
-      .gte('scheduled_at', startOfToday.toISOString())
-      .lte('scheduled_at', endOfToday.toISOString())
-      .order('scheduled_at', { ascending: true })
+      .from("campaign_posts")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("is_posted", false)
+      .gte("scheduled_at", startOfToday.toISOString())
+      .lte("scheduled_at", endOfToday.toISOString())
+      .order("scheduled_at", { ascending: true })
       .limit(1)
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading today post:', error.message);
+      console.error("Error loading today post:", error.message);
       setTodayPost(null);
       return;
     }
@@ -1030,24 +1046,24 @@ export default function DashboardPage() {
     const { data, error } = await supabase.auth.getUser();
 
     if (error) {
-      const message = error.message || '';
+      const message = error.message || "";
 
       if (
-        message.includes('Invalid Refresh Token') ||
-        message.includes('Refresh Token Not Found') ||
-        message.includes('refresh_token_not_found')
+        message.includes("Invalid Refresh Token") ||
+        message.includes("Refresh Token Not Found") ||
+        message.includes("refresh_token_not_found")
       ) {
-        await supabase.auth.signOut({ scope: 'local' });
+        await supabase.auth.signOut({ scope: "local" });
 
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           localStorage.removeItem(DASHBOARD_TOUR_SEEN_KEY);
         }
 
-        router.replace('/login');
+        router.replace("/login");
         return null;
       }
 
-      console.error('Auth user error:', error.message);
+      console.error("Auth user error:", error.message);
       return null;
     }
 
@@ -1077,52 +1093,68 @@ export default function DashboardPage() {
     ]);
 
     const { data, error } = await supabase
-      .from('business_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .from("business_profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading business profile:', error);
+      console.error("Error loading business profile:", error);
       setClient(null);
-      setWebsiteUrl('');
+      setWebsiteUrl("");
     } else {
       setClient(data);
-      setWebsiteUrl(data?.website_url || '');
+      setWebsiteUrl(data?.website_url || "");
 
       if (data) {
-        setManualBusinessName(data.business_name || '');
-        setManualIndustry(data.industry || '');
-        setManualLocation(data.location || '');
-        setManualServices(Array.isArray(data.services) ? data.services.join(', ') : '');
+        setManualBusinessName(data.business_name || "");
+        setManualIndustry(data.industry || "");
+        setManualLocation(data.location || "");
+        setManualServices(
+          Array.isArray(data.services) ? data.services.join(", ") : "",
+        );
         setManualAudience(
-          Array.isArray(data.target_audience) ? data.target_audience.join(', ') : ''
+          Array.isArray(data.target_audience)
+            ? data.target_audience.join(", ")
+            : "",
         );
-        setManualTone(data.tone_of_voice || 'Professional');
-        setManualMainOffer(data.main_offer || '');
-        setManualGoals(Array.isArray(data.business_goals) ? data.business_goals.join(', ') : '');
+        setManualTone(data.tone_of_voice || "Professional");
+        setManualMainOffer(data.main_offer || "");
+        setManualGoals(
+          Array.isArray(data.business_goals)
+            ? data.business_goals.join(", ")
+            : "",
+        );
         setManualContentPillars(
-          Array.isArray(data.content_pillars) ? data.content_pillars.join(', ') : ''
+          Array.isArray(data.content_pillars)
+            ? data.content_pillars.join(", ")
+            : "",
         );
 
-        const industry = String(data.industry || '').toLowerCase();
+        const industry = String(data.industry || "").toLowerCase();
 
-        if (industry.includes('ecommerce') || industry.includes('online')) {
-          setSelectedMarketReach('Online customers');
+        if (industry.includes("ecommerce") || industry.includes("online")) {
+          setSelectedMarketReach("Online customers");
         } else if (data.location) {
-          setSelectedMarketReach('Local customers');
+          setSelectedMarketReach("Local customers");
         }
 
-        const recommendedForLoadedProfile = getRecommendedPlatforms(data.industry);
+        const recommendedForLoadedProfile = getRecommendedPlatforms(
+          data.industry,
+        );
 
         setSelectedPlatforms((currentPlatforms) => {
           const isDefaultSelection =
             currentPlatforms.length === defaultSelectedPlatforms.length &&
-            defaultSelectedPlatforms.every((platform) => currentPlatforms.includes(platform));
+            defaultSelectedPlatforms.every((platform) =>
+              currentPlatforms.includes(platform),
+            );
 
-          return isDefaultSelection ? recommendedForLoadedProfile : currentPlatforms;
+          return isDefaultSelection
+            ? recommendedForLoadedProfile
+            : currentPlatforms;
         });
       }
     }
@@ -1133,9 +1165,9 @@ export default function DashboardPage() {
   const normaliseWebsiteUrl = (value: string) => {
     const trimmed = value.trim();
 
-    if (!trimmed) return '';
+    if (!trimmed) return "";
 
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
       return trimmed;
     }
 
@@ -1145,9 +1177,9 @@ export default function DashboardPage() {
   const safeArray = (value: any) => {
     if (Array.isArray(value)) return value;
 
-    if (typeof value === 'string' && value.trim()) {
+    if (typeof value === "string" && value.trim()) {
       return value
-        .split(',')
+        .split(",")
         .map((item) => item.trim())
         .filter(Boolean);
     }
@@ -1156,39 +1188,39 @@ export default function DashboardPage() {
   };
 
   const getBusinessLocation = (profile?: any) => {
-    return String(profile?.location || manualLocation || '').trim();
+    return String(profile?.location || manualLocation || "").trim();
   };
 
   const getMarketReachContext = (profile?: any) => {
     const location = getBusinessLocation(profile);
 
-    if (selectedMarketReach === 'Local customers' && location) {
+    if (selectedMarketReach === "Local customers" && location) {
       return `Local customers in and around ${location}`;
     }
 
-    if (selectedMarketReach === 'Nationwide customers') {
-      return 'Nationwide customers across the UK';
+    if (selectedMarketReach === "Nationwide customers") {
+      return "Nationwide customers across the UK";
     }
 
-    if (selectedMarketReach === 'Online customers') {
-      return 'Online customers';
+    if (selectedMarketReach === "Online customers") {
+      return "Online customers";
     }
 
     return selectedMarketReach;
   };
-    const getMarketReachDisplayLabel = (profile?: any) => {
+  const getMarketReachDisplayLabel = (profile?: any) => {
     const location = getBusinessLocation(profile);
 
-    if (selectedMarketReach === 'Local customers' && location) {
+    if (selectedMarketReach === "Local customers" && location) {
       return `Local · ${location}`;
     }
 
-    if (selectedMarketReach === 'Nationwide customers') {
-      return 'Nationwide · UK';
+    if (selectedMarketReach === "Nationwide customers") {
+      return "Nationwide · UK";
     }
 
-    if (selectedMarketReach === 'Online customers') {
-      return 'Online';
+    if (selectedMarketReach === "Online customers") {
+      return "Online";
     }
 
     return selectedMarketReach;
@@ -1199,21 +1231,27 @@ export default function DashboardPage() {
     const businessLocation = getBusinessLocation(profile);
 
     return `
-Website URL: ${profile.website_url || ''}
-Business name: ${profile.business_name || ''}
-Industry: ${profile.industry || ''}
+Website URL: ${profile.website_url || ""}
+Business name: ${profile.business_name || ""}
+Industry: ${profile.industry || ""}
 Location: ${businessLocation}
-Services: ${Array.isArray(profile.services) ? profile.services.join(', ') : ''}
+Services: ${Array.isArray(profile.services) ? profile.services.join(", ") : ""}
 Target audience: ${
-      Array.isArray(profile.target_audience) ? profile.target_audience.join(', ') : ''
+      Array.isArray(profile.target_audience)
+        ? profile.target_audience.join(", ")
+        : ""
     }
-Tone of voice: ${profile.tone_of_voice || ''}
+Tone of voice: ${profile.tone_of_voice || ""}
 Content pillars: ${
-      Array.isArray(profile.content_pillars) ? profile.content_pillars.join(', ') : ''
+      Array.isArray(profile.content_pillars)
+        ? profile.content_pillars.join(", ")
+        : ""
     }
-Main offer: ${profile.main_offer || ''}
+Main offer: ${profile.main_offer || ""}
 Business goals: ${
-      Array.isArray(profile.business_goals) ? profile.business_goals.join(', ') : ''
+      Array.isArray(profile.business_goals)
+        ? profile.business_goals.join(", ")
+        : ""
     }
 
 Market reach for this weekly plan:
@@ -1225,7 +1263,7 @@ Use the market reach to shape the posts:
 - Online customers: focus on digital buying intent, online enquiries, delivery, remote service, ecommerce, or online conversion where relevant.
 
 Selected social media platforms for this weekly plan:
-${selectedPlatforms.join(', ')}
+${selectedPlatforms.join(", ")}
 
 Posting frequency for this weekly plan:
 ${selectedPostingFrequency} posts this week.
@@ -1247,29 +1285,35 @@ Also detect or infer:
   };
 
   const buildHashtags = (profile: any) => {
-    const industry = String(profile.industry || 'business')
-      .replace(/\s+/g, '')
-      .replace(/[^a-zA-Z0-9]/g, '');
+    const industry = String(profile.industry || "business")
+      .replace(/\s+/g, "")
+      .replace(/[^a-zA-Z0-9]/g, "");
 
     const locationSource =
-      selectedMarketReach === 'Nationwide customers'
-        ? 'UK'
-        : selectedMarketReach === 'Online customers'
-          ? 'Online'
-          : getBusinessLocation(profile) || 'Local';
+      selectedMarketReach === "Nationwide customers"
+        ? "UK"
+        : selectedMarketReach === "Online customers"
+          ? "Online"
+          : getBusinessLocation(profile) || "Local";
 
     const location = String(locationSource)
-      .replace(/\s+/g, '')
-      .replace(/[^a-zA-Z0-9]/g, '');
+      .replace(/\s+/g, "")
+      .replace(/[^a-zA-Z0-9]/g, "");
 
-    return [`#${industry}`, `#${location}`, '#SmallBusiness', '#Marketing', '#FromOne'];
+    return [
+      `#${industry}`,
+      `#${location}`,
+      "#SmallBusiness",
+      "#Marketing",
+      "#FromOne",
+    ];
   };
 
   const saveWebsiteToProfile = async () => {
     const cleanWebsiteUrl = normaliseWebsiteUrl(websiteUrl);
 
     if (!cleanWebsiteUrl) {
-      alert('Please enter a website URL, or use the business details option.');
+      alert("Please enter a website URL, or use the business details option.");
       return null;
     }
 
@@ -1280,37 +1324,37 @@ Also detect or infer:
       const userId = user?.id || null;
 
       if (!userId) {
-        alert('Please sign in again.');
+        alert("Please sign in again.");
         return null;
       }
 
       if (client?.id) {
         const { data, error } = await supabase
-          .from('business_profiles')
+          .from("business_profiles")
           .update({
             user_id: userId,
             website_url: cleanWebsiteUrl,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', client.id)
-          .eq('user_id', userId)
+          .eq("id", client.id)
+          .eq("user_id", userId)
           .select()
           .single();
 
         if (error) throwSupabaseError(error);
 
         setClient(data);
-        setWebsiteUrl(data.website_url || '');
+        setWebsiteUrl(data.website_url || "");
 
         return data;
       }
 
       const { data, error } = await supabase
-        .from('business_profiles')
+        .from("business_profiles")
         .insert({
           user_id: userId,
           website_url: cleanWebsiteUrl,
-          tone_of_voice: 'Professional',
+          tone_of_voice: "Professional",
           services: [],
           target_audience: [],
           content_pillars: [],
@@ -1323,14 +1367,14 @@ Also detect or infer:
       if (error) throwSupabaseError(error);
 
       setClient(data);
-      setWebsiteUrl(data.website_url || '');
+      setWebsiteUrl(data.website_url || "");
 
       return data;
     } catch (error: any) {
       const message = getErrorMessage(error);
 
-      console.error('Error saving website profile:', error);
-      console.error('Readable save website error:', message);
+      console.error("Error saving website profile:", error);
+      console.error("Readable save website error:", message);
 
       alert(message);
       return null;
@@ -1341,7 +1385,7 @@ Also detect or infer:
 
   const saveManualProfile = async () => {
     if (!manualBusinessName.trim() || !manualIndustry.trim()) {
-      alert('Please add at least the business name and industry.');
+      alert("Please add at least the business name and industry.");
       return null;
     }
 
@@ -1352,7 +1396,7 @@ Also detect or infer:
       const userId = user?.id || null;
 
       if (!userId) {
-        alert('Please sign in again.');
+        alert("Please sign in again.");
         return null;
       }
 
@@ -1363,7 +1407,7 @@ Also detect or infer:
         location: manualLocation.trim(),
         services: safeArray(manualServices),
         target_audience: safeArray(manualAudience),
-        tone_of_voice: manualTone.trim() || 'Professional',
+        tone_of_voice: manualTone.trim() || "Professional",
         main_offer: manualMainOffer.trim(),
         business_goals: safeArray(manualGoals),
         content_pillars: safeArray(manualContentPillars),
@@ -1372,10 +1416,10 @@ Also detect or infer:
 
       if (client?.id) {
         const { data, error } = await supabase
-          .from('business_profiles')
+          .from("business_profiles")
           .update(profilePayload)
-          .eq('id', client.id)
-          .eq('user_id', userId)
+          .eq("id", client.id)
+          .eq("user_id", userId)
           .select()
           .single();
 
@@ -1388,10 +1432,10 @@ Also detect or infer:
       }
 
       const { data, error } = await supabase
-        .from('business_profiles')
+        .from("business_profiles")
         .insert({
           ...profilePayload,
-          website_url: '',
+          website_url: "",
         })
         .select()
         .single();
@@ -1405,7 +1449,7 @@ Also detect or infer:
     } catch (error: any) {
       const message = getErrorMessage(error);
 
-      console.error('Error saving business details:', error);
+      console.error("Error saving business details:", error);
       alert(message);
       return null;
     } finally {
@@ -1413,34 +1457,48 @@ Also detect or infer:
     }
   };
 
-  const updateBusinessProfileFromScan = async (scanData: any, activeClient: any) => {
+  const updateBusinessProfileFromScan = async (
+    scanData: any,
+    activeClient: any,
+  ) => {
     if (!activeClient?.id || !scanData) return;
 
     const businessProfileUpdates: any = {
       updated_at: new Date().toISOString(),
     };
 
-    if (scanData.business_name) businessProfileUpdates.business_name = scanData.business_name;
+    if (scanData.business_name)
+      businessProfileUpdates.business_name = scanData.business_name;
     if (scanData.industry) businessProfileUpdates.industry = scanData.industry;
     if (scanData.location) businessProfileUpdates.location = scanData.location;
-    if (scanData.main_offer) businessProfileUpdates.main_offer = scanData.main_offer;
-    if (scanData.tone_of_voice) businessProfileUpdates.tone_of_voice = scanData.tone_of_voice;
+    if (scanData.main_offer)
+      businessProfileUpdates.main_offer = scanData.main_offer;
+    if (scanData.tone_of_voice)
+      businessProfileUpdates.tone_of_voice = scanData.tone_of_voice;
 
-    if (scanData.services) businessProfileUpdates.services = safeArray(scanData.services);
+    if (scanData.services)
+      businessProfileUpdates.services = safeArray(scanData.services);
     if (scanData.target_audience) {
-      businessProfileUpdates.target_audience = safeArray(scanData.target_audience);
+      businessProfileUpdates.target_audience = safeArray(
+        scanData.target_audience,
+      );
     }
     if (scanData.content_pillars) {
-      businessProfileUpdates.content_pillars = safeArray(scanData.content_pillars);
+      businessProfileUpdates.content_pillars = safeArray(
+        scanData.content_pillars,
+      );
     }
     if (scanData.business_goals) {
-      businessProfileUpdates.business_goals = safeArray(scanData.business_goals);
+      businessProfileUpdates.business_goals = safeArray(
+        scanData.business_goals,
+      );
     }
     if (scanData.brand_primary_color) {
       businessProfileUpdates.brand_primary_color = scanData.brand_primary_color;
     }
     if (scanData.brand_secondary_color) {
-      businessProfileUpdates.brand_secondary_color = scanData.brand_secondary_color;
+      businessProfileUpdates.brand_secondary_color =
+        scanData.brand_secondary_color;
     }
     if (scanData.brand_accent_color) {
       businessProfileUpdates.brand_accent_color = scanData.brand_accent_color;
@@ -1455,15 +1513,15 @@ Also detect or infer:
     if (Object.keys(businessProfileUpdates).length <= 1) return;
 
     const { data, error } = await supabase
-      .from('business_profiles')
+      .from("business_profiles")
       .update(businessProfileUpdates)
-      .eq('id', activeClient.id)
-      .eq('user_id', activeClient.user_id)
+      .eq("id", activeClient.id)
+      .eq("user_id", activeClient.user_id)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating scanned business profile:', error);
+      console.error("Error updating scanned business profile:", error);
       return;
     }
 
@@ -1479,138 +1537,150 @@ Also detect or infer:
     index: number,
     activeClient: any,
     detectedIndustry: string,
-    detectedLocation: string
+    detectedLocation: string,
   ) => {
     const selectedPlatformFallback =
       selectedPlatforms[index % selectedPlatforms.length] ||
       platformFallback[index] ||
-      'Facebook';
+      "Facebook";
 
     const fallbackHashtags = buildHashtags({
       ...activeClient,
       industry: detectedIndustry,
       location:
-        selectedMarketReach === 'Nationwide customers'
-          ? 'UK'
-          : selectedMarketReach === 'Online customers'
-            ? 'Online'
+        selectedMarketReach === "Nationwide customers"
+          ? "UK"
+          : selectedMarketReach === "Online customers"
+            ? "Online"
             : detectedLocation,
     });
 
-    if (typeof post === 'string') {
+    if (typeof post === "string") {
       return {
         day: `Day ${index + 1}`,
         platform: selectedPlatformFallback,
         title: `${selectedPlatformFallback} Post`,
         caption: post,
-        cta: activeClient.main_offer || 'Contact us today to find out more.',
+        cta: activeClient.main_offer || "Contact us today to find out more.",
         hashtags: fallbackHashtags,
         image_prompt:
-          'Use a clean, professional image that supports the message of this post.',
+          "Use a clean, professional image that supports the message of this post.",
       };
     }
 
-    const allowedPlatform = selectedPlatforms.includes(post.platform || '')
+    const allowedPlatform = selectedPlatforms.includes(post.platform || "")
       ? post.platform
       : selectedPlatformFallback;
 
     return {
       day: post.day || `Day ${index + 1}`,
       platform: allowedPlatform || selectedPlatformFallback,
-      title: post.title || `${allowedPlatform || selectedPlatformFallback} Post`,
-      caption: post.caption || '',
-      cta: post.cta || activeClient.main_offer || 'Contact us today to find out more.',
+      title:
+        post.title || `${allowedPlatform || selectedPlatformFallback} Post`,
+      caption: post.caption || "",
+      cta:
+        post.cta ||
+        activeClient.main_offer ||
+        "Contact us today to find out more.",
       hashtags:
         Array.isArray(post.hashtags) && post.hashtags.length > 0
           ? post.hashtags
           : fallbackHashtags,
       image_prompt:
         post.image_prompt ||
-        'Use a clean, professional image that supports the message of this post.',
+        "Use a clean, professional image that supports the message of this post.",
     };
   };
 
   const buildCampaignName = (businessName: string) => {
     const date = new Date().toLocaleDateString(undefined, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
 
     const time = new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
+      hour: "2-digit",
+      minute: "2-digit",
     });
 
-    return `${businessName || 'Weekly plan'} — ${date} ${time}`;
+    return `${businessName || "Weekly plan"} — ${date} ${time}`;
   };
 
   const createCampaignFromProfile = async (
     activeClient: any,
-    source: 'website_scan' | 'manual_profile'
+    source: "website_scan" | "manual_profile",
   ) => {
     const user = await getSafeAuthUser();
     const userId = user?.id;
 
     if (!userId) {
-      alert('You need to sign in before saving posts.');
+      alert("You need to sign in before saving posts.");
       return;
     }
 
     if (selectedPlatforms.length === 0) {
-      alert('Please choose at least one platform.');
+      alert("Please choose at least one platform.");
       return;
     }
 
     const marketReachContext = getMarketReachContext(activeClient);
     const marketReachDisplayLabel = getMarketReachDisplayLabel(activeClient);
+    const postCount =
+      weeklyUploads.length > 0
+        ? weeklyUploads.length
+        : selectedPostingFrequency;
 
     const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
 
     if (!campaignLimitAllowed) return;
 
-    if (source === 'website_scan') {
+    if (source === "website_scan") {
       const allowed = await checkWeeklyScanLimit(userId);
 
       if (!allowed) return;
     }
 
-    const response = await axios.post('/api/generatePosts', {
-      website: source === 'website_scan' ? activeClient.website_url : '',
+    const response = await axios.post("/api/generatePosts", {
+      website: source === "website_scan" ? activeClient.website_url : "",
       clientName: activeClient.business_name,
       industry: activeClient.industry,
-      description: buildBusinessDescription(activeClient),
-      provider: 'gemini',
+      description: `${buildBusinessDescription(activeClient)}
+
+Weekly uploaded media count: ${weeklyUploads.length}. If media context is available in a later API step, use each upload as the topic and the business profile as the quality layer.`,
+      provider: "gemini",
       platforms: selectedPlatforms,
-      postingFrequency: selectedPostingFrequency,
-      numberOfPosts: selectedPostingFrequency,
+      postingFrequency: postCount,
+      numberOfPosts: postCount,
       marketReach: marketReachContext,
       requestedOutput: {
-        posts:
-          `array of ${selectedPostingFrequency} post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only the selected platforms supplied in the request. Shape posts around the supplied marketReach, including the business location when local reach is selected.`, 
+        posts: `array of ${postCount} post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only the selected platforms supplied in the request. Shape posts around the supplied marketReach, including the business location when local reach is selected.`,
         selected_platforms: selectedPlatforms,
         market_reach: marketReachContext,
-        business_name: 'detected business name',
-        industry: 'detected industry',
-        location: 'detected location',
-        services: 'array',
-        target_audience: 'array',
-        tone_of_voice: 'detected tone',
-        content_pillars: 'array',
-        main_offer: 'main offer or CTA',
-        business_goals: 'array',
-        brand_primary_color: 'hex code',
-        brand_secondary_color: 'hex code',
-        brand_accent_color: 'hex code',
-        brand_logo_url: 'logo URL or null',
-        brand_summary: 'short brand style summary',
+        business_name: "detected business name",
+        industry: "detected industry",
+        location: "detected location",
+        services: "array",
+        target_audience: "array",
+        tone_of_voice: "detected tone",
+        content_pillars: "array",
+        main_offer: "main offer or CTA",
+        business_goals: "array",
+        brand_primary_color: "hex code",
+        brand_secondary_color: "hex code",
+        brand_accent_color: "hex code",
+        brand_logo_url: "logo URL or null",
+        brand_summary: "short brand style summary",
       },
     });
 
-    const posts: GeneratedPost[] = (response.data.posts || []).slice(0, selectedPostingFrequency);
+    const posts: GeneratedPost[] = (response.data.posts || []).slice(
+      0,
+      postCount,
+    );
 
     if (!posts.length) {
-      alert(response.data.error || 'No posts were created.');
+      alert(response.data.error || "No posts were created.");
       return;
     }
 
@@ -1628,9 +1698,12 @@ Also detect or infer:
       `Weekly ${marketReachContext.toLowerCase()} weekly post plan`;
 
     const detectedBusinessName =
-      scanData?.business_name || activeClient.business_name || 'Website Scan Weekly Plan';
+      scanData?.business_name ||
+      activeClient.business_name ||
+      "Website Scan Weekly Plan";
 
-    const detectedIndustry = scanData?.industry || activeClient.industry || 'General';
+    const detectedIndustry =
+      scanData?.industry || activeClient.industry || "General";
     const detectedLocation =
       scanData?.location ||
       activeClient.location ||
@@ -1638,15 +1711,16 @@ Also detect or infer:
       marketReachContext;
 
     const detectedAudience = Array.isArray(scanData?.target_audience)
-      ? scanData.target_audience.join(', ')
+      ? scanData.target_audience.join(", ")
       : Array.isArray(activeClient.target_audience)
-        ? activeClient.target_audience.join(', ')
+        ? activeClient.target_audience.join(", ")
         : marketReachContext;
 
-    const detectedTone = scanData?.tone_of_voice || activeClient.tone_of_voice || 'Professional';
+    const detectedTone =
+      scanData?.tone_of_voice || activeClient.tone_of_voice || "Professional";
 
     const { data: campaign, error: campaignError } = await supabase
-      .from('campaigns')
+      .from("campaigns")
       .insert({
         user_id: userId,
         name: buildCampaignName(detectedBusinessName),
@@ -1664,10 +1738,10 @@ Also detect or infer:
         scheduled: posts.length,
         assets: 0,
         posted: 0,
-        launch_date: new Date().toISOString().split('T')[0],
+        launch_date: new Date().toISOString().split("T")[0],
         campaign_area: detectedLocation,
         tone: detectedTone,
-        posting_frequency: `${selectedPostingFrequency} posts per week`,
+        posting_frequency: `${postCount} posts per week`,
         platform_plan: `${buildPlatformPlanText(selectedPlatforms)}. Market reach: ${marketReachContext}`,
       })
       .select()
@@ -1687,54 +1761,56 @@ Also detect or infer:
         i,
         activeClient,
         detectedIndustry,
-        detectedLocation
+        detectedLocation,
       );
 
-      const { error: postError } = await supabase.from('campaign_posts').insert({
-        user_id: userId,
-        campaign_id: campaign.id,
-        keyword: detectedIndustry || 'business',
-        title: post.title,
-        caption: post.caption,
-        cta: post.cta,
-        hashtags: post.hashtags,
-        platform: post.platform,
-        type: source,
-        scheduled_day: post.day,
-        scheduled_at: postDate.toISOString(),
-        status: 'scheduled',
-        is_posted: false,
-        client_id: activeClient.id,
-        image_prompt: post.image_prompt,
-        reach: 0,
-        clicks: 0,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        saves: 0,
-      });
+      const { error: postError } = await supabase
+        .from("campaign_posts")
+        .insert({
+          user_id: userId,
+          campaign_id: campaign.id,
+          keyword: detectedIndustry || "business",
+          title: post.title,
+          caption: post.caption,
+          cta: post.cta,
+          hashtags: post.hashtags,
+          platform: post.platform,
+          type: source,
+          scheduled_day: post.day,
+          scheduled_at: postDate.toISOString(),
+          status: "scheduled",
+          is_posted: false,
+          client_id: activeClient.id,
+          image_prompt: post.image_prompt,
+          reach: 0,
+          clicks: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          saves: 0,
+        });
 
       if (postError) throwSupabaseError(postError);
     }
 
-    if (source === 'website_scan') {
+    if (source === "website_scan") {
       const admin = await isAdminUser(userId);
 
       if (!admin) {
-        await recordUsageEvent(userId, 'website_scan', {
+        await recordUsageEvent(userId, "website_scan", {
           website: activeClient.website_url,
           client_id: activeClient.id,
           campaign_id: campaign.id,
           platforms: selectedPlatforms,
-          postingFrequency: selectedPostingFrequency,
+          postingFrequency: postCount,
           marketReach: marketReachContext,
           marketReachDisplayLabel,
         });
       }
     }
 
-    localStorage.setItem('fromone_has_new_posts', 'true');
-    window.dispatchEvent(new Event('fromone-new-posts-updated'));
+    localStorage.setItem("fromone_has_new_posts", "true");
+    window.dispatchEvent(new Event("fromone-new-posts-updated"));
 
     await Promise.all([
       loadSavedCampaignCount(userId),
@@ -1742,7 +1818,7 @@ Also detect or infer:
       loadScheduledPostStatus(userId),
     ]);
 
-    router.push('/posts?created=true');
+    router.push("/posts?created=true");
   };
 
   const handleGeneratePosts = async () => {
@@ -1768,31 +1844,33 @@ Also detect or infer:
       }
 
       if (!activeClient) {
-        alert('Please enter a website URL, or add business details.');
+        alert("Please enter a website URL, or add business details.");
         setScanning(false);
         return;
       }
 
       if (!activeClient.website_url && !activeClient.business_name) {
-        alert('Please enter a website URL, or add business details.');
+        alert("Please enter a website URL, or add business details.");
         setScanning(false);
         return;
       }
 
       const source =
-        activeClient.website_url && websiteUrl.trim() ? 'website_scan' : 'manual_profile';
+        activeClient.website_url && websiteUrl.trim()
+          ? "website_scan"
+          : "manual_profile";
 
       await createCampaignFromProfile(activeClient, source);
     } catch (error: any) {
       const message = getErrorMessage(error);
 
-      console.error('Readable weekly posts error:', message);
+      console.error("Readable weekly posts error:", message);
 
       if (axios.isAxiosError(error)) {
-        console.error('API response:', error.response?.data);
-        console.error('API status:', error.response?.status);
+        console.error("API response:", error.response?.data);
+        console.error("API status:", error.response?.status);
       } else {
-        console.error('Non-Axios weekly posts error:', error);
+        console.error("Non-Axios weekly posts error:", error);
       }
 
       alert(message);
@@ -1801,69 +1879,136 @@ Also detect or infer:
     }
   };
 
+  const handleWeeklyUploadFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const acceptedFiles = Array.from(files).filter(
+      (file) =>
+        file.type.startsWith("image/") || file.type === "application/pdf",
+    );
+
+    if (acceptedFiles.length === 0) {
+      alert("Please upload photos, flyers, posters, or offer graphics.");
+      return;
+    }
+
+    setWeeklyUploads((currentUploads) => {
+      const nextUploads = [
+        ...currentUploads,
+        ...acceptedFiles.map((file) => ({
+          id: `${file.name}-${file.size}-${crypto.randomUUID()}`,
+          file,
+          previewUrl: URL.createObjectURL(file),
+        })),
+      ].slice(0, 7);
+
+      setSelectedPostingFrequency(Math.max(1, nextUploads.length));
+      return nextUploads;
+    });
+  };
+
+  const removeWeeklyUpload = (uploadId: string) => {
+    setWeeklyUploads((currentUploads) => {
+      const uploadToRemove = currentUploads.find(
+        (upload) => upload.id === uploadId,
+      );
+
+      if (uploadToRemove) {
+        URL.revokeObjectURL(uploadToRemove.previewUrl);
+      }
+
+      const nextUploads = currentUploads.filter(
+        (upload) => upload.id !== uploadId,
+      );
+      setSelectedPostingFrequency(
+        nextUploads.length > 0 ? nextUploads.length : 3,
+      );
+      return nextUploads;
+    });
+  };
+
   const handleSaveWebsiteOnly = async () => {
     if (!ensureAccessAllowed()) return;
 
     if (!websiteUrl.trim()) {
-      alert('Please enter a website URL first.');
+      alert("Please enter a website URL first.");
       return;
     }
 
     const savedClient = await saveWebsiteToProfile();
 
     if (savedClient) {
-      alert('Website saved. Now choose who you want to reach and create weekly posts below.');
+      alert(
+        "Website saved. Now choose who you want to reach and create weekly posts below.",
+      );
     }
   };
 
   const hasManualProfile = Boolean(client?.business_name && client?.industry);
   const hasWebsite = Boolean(websiteUrl.trim());
-  const businessName = client?.business_name || 'your business';
+  const businessName = client?.business_name || "your business";
   const marketReachDisplayLabel = getMarketReachDisplayLabel(client);
   const marketReachContext = getMarketReachContext(client);
   const selectedPostingFrequencyOption =
-    postingFrequencyOptions.find((option) => option.value === selectedPostingFrequency) ||
-    postingFrequencyOptions[postingFrequencyOptions.length - 1];
+    postingFrequencyOptions.find(
+      (option) => option.value === selectedPostingFrequency,
+    ) || postingFrequencyOptions[postingFrequencyOptions.length - 1];
 
   const selectedPlatformSummary =
     selectedPlatforms.length > 3
-      ? `${selectedPlatforms.slice(0, 3).join(', ')} +${selectedPlatforms.length - 3} more`
-      : selectedPlatforms.join(', ');
+      ? `${selectedPlatforms.slice(0, 3).join(", ")} +${selectedPlatforms.length - 3} more`
+      : selectedPlatforms.join(", ");
 
+  const uploadDrivenPostCount = weeklyUploads.length;
+  const effectivePostCount =
+    uploadDrivenPostCount > 0
+      ? uploadDrivenPostCount
+      : selectedPostingFrequency;
   const hasBusinessSetup = Boolean(hasWebsite || hasManualProfile);
   const hasCreatedPosts = weeklyProgress.total > 0 || savedCampaignsCount > 0;
 
   const primaryMetaConnection =
-    socialConnections.find((connection) => connection.provider === 'meta') || null;
+    socialConnections.find((connection) => connection.provider === "meta") ||
+    null;
   const primaryGoogleConnection =
-    socialConnections.find((connection) => connection.provider === 'google') || null;
+    socialConnections.find((connection) => connection.provider === "google") ||
+    null;
 
   const hasFacebookConnection = Boolean(primaryMetaConnection?.page_id);
   const hasInstagramConnection = Boolean(
-    primaryMetaConnection?.instagram_business_account_id
+    primaryMetaConnection?.instagram_business_account_id,
   );
   const hasGoogleConnection = Boolean(primaryGoogleConnection);
-  const googleLocationReady = Boolean(primaryGoogleConnection?.google_location_id);
+  const googleLocationReady = Boolean(
+    primaryGoogleConnection?.google_location_id,
+  );
   const hasPaidPlan =
-    billingPlan === 'starter' || isPaidSubscription(accessInfo?.subscription_status);
+    billingPlan === "starter" ||
+    isPaidSubscription(accessInfo?.subscription_status);
 
-  const weeklyScanLimit = hasPaidPlan ? PAID_WEEKLY_SCAN_LIMIT : DEMO_WEEKLY_SCAN_LIMIT;
+  const weeklyScanLimit = hasPaidPlan
+    ? PAID_WEEKLY_SCAN_LIMIT
+    : DEMO_WEEKLY_SCAN_LIMIT;
   const weeklyScansRemaining = Math.max(weeklyScanLimit - weeklyScansUsed, 0);
 
   return (
     <>
       <style jsx>{`
         @media (max-width: 980px) {
-          .dashboard-platform-selector-full > div[style*='repeat(3'] {
+          .dashboard-platform-selector-full > div[style*="repeat(3"] {
             grid-template-columns: 1fr !important;
           }
         }
       `}</style>
-      <div ref={dashboardHeaderRef} className="page-header dashboard-simple-header">
+      <div
+        ref={dashboardHeaderRef}
+        className="page-header dashboard-simple-header"
+      >
         <div className="page-eyebrow">FromOne Dashboard</div>
-        <h1 className="page-title">Create this week’s posts.</h1>
+        <h1 className="page-title">Upload. Review. Publish.</h1>
         <p className="page-description">
-          Add the business, check the options, then let FromOne create this week’s posts.
+          Upload your business photos or flyers. FromOne turns them into
+          Facebook, Instagram and TikTok posts.
         </p>
 
         <div className="dashboard-header-actions-row">
@@ -1879,18 +2024,18 @@ Also detect or infer:
             <section
               className={
                 accessLocked
-                  ? 'access-status-card access-status-locked dashboard-access-pill'
-                  : 'access-status-card dashboard-access-pill'
+                  ? "access-status-card access-status-locked dashboard-access-pill"
+                  : "access-status-card dashboard-access-pill"
               }
             >
               <div>
                 <div className="page-eyebrow">
-                  {accessLocked ? 'Demo Ended' : 'Access Active'}
+                  {accessLocked ? "Demo Ended" : "Access Active"}
                 </div>
                 <h2>
                   {accessLocked
-                    ? 'Creating weekly posts is currently locked.'
-                    : 'Your demo access is active.'}
+                    ? "Creating weekly posts is currently locked."
+                    : "Your demo access is active."}
                 </h2>
                 <p>{accessMessage}</p>
               </div>
@@ -1911,21 +2056,22 @@ Also detect or infer:
         </div>
       ) : (
         <>
-                    <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
+          <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
             <div className="dashboard-create-card">
-              <div className="page-eyebrow">Create weekly posts</div>
+              <div className="page-eyebrow">Business profile</div>
 
               <h2>
                 {hasWebsite
-                  ? 'Use this website to create posts.'
+                  ? "Use this website to create posts."
                   : hasManualProfile
-                    ? 'Use the saved business details.'
-                    : 'Add a website or business details.'}
+                    ? "Use the saved business details."
+                    : "Add a website or business details."}
               </h2>
 
               <p>
-                FromOne uses the business details, reach, frequency, and selected platforms to
-                create a weekly post plan.
+                Add your business details once, then upload this week’s photos
+                or flyers. FromOne uses the business profile to write stronger
+                posts.
               </p>
 
               <div className="button-row" style={{ marginBottom: 18 }}>
@@ -1938,8 +2084,8 @@ Also detect or infer:
                 <label>
                   <strong>Business website</strong>
                   <span>
-                    Add the website you want FromOne to understand. You can also use business
-                    details instead.
+                    Add the website you want FromOne to understand. You can also
+                    use business details instead.
                   </span>
                 </label>
 
@@ -1952,7 +2098,8 @@ Also detect or infer:
               </div>
 
               <div className="dashboard-scan-usage-pill">
-                {weeklyScansRemaining} of {weeklyScanLimit} website scans left this week
+                {weeklyScansRemaining} of {weeklyScanLimit} website scans left
+                this week
               </div>
 
               <div className="dashboard-create-action-row">
@@ -1960,9 +2107,14 @@ Also detect or infer:
                   type="button"
                   className="dashboard-primary-scan-button"
                   onClick={handleSaveWebsiteOnly}
-                  disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
+                  disabled={
+                    accessLocked ||
+                    scanning ||
+                    savingWebsite ||
+                    savingManualProfile
+                  }
                 >
-                  {savingWebsite ? 'Saving website...' : 'Use this website'}
+                  {savingWebsite ? "Saving website..." : "Use this website"}
                 </button>
 
                 <button
@@ -1973,10 +2125,10 @@ Also detect or infer:
                   disabled={scanning || savingWebsite || savingManualProfile}
                 >
                   {showManualProfile
-                    ? 'Hide business details'
+                    ? "Hide business details"
                     : hasManualProfile
-                      ? 'Edit business details'
-                      : 'No website? Add business details'}
+                      ? "Edit business details"
+                      : "No website? Add business details"}
                 </button>
 
                 <span
@@ -2000,7 +2152,8 @@ Also detect or infer:
                     <div className="page-eyebrow">Business Details</div>
                     <h2>Add business details.</h2>
                     <p>
-                      Use this when there is no website, or when you want to guide FromOne manually.
+                      Use this when there is no website, or when you want to
+                      guide FromOne manually.
                     </p>
                   </div>
                 </div>
@@ -2011,7 +2164,9 @@ Also detect or infer:
                     <input
                       className="input"
                       value={manualBusinessName}
-                      onChange={(event) => setManualBusinessName(event.target.value)}
+                      onChange={(event) =>
+                        setManualBusinessName(event.target.value)
+                      }
                       placeholder="Example: Baker & Co Plumbing"
                     />
                   </label>
@@ -2021,7 +2176,9 @@ Also detect or infer:
                     <input
                       className="input"
                       value={manualIndustry}
-                      onChange={(event) => setManualIndustry(event.target.value)}
+                      onChange={(event) =>
+                        setManualIndustry(event.target.value)
+                      }
                       placeholder="Example: Plumbing, beauty, signage"
                     />
                   </label>
@@ -2031,7 +2188,9 @@ Also detect or infer:
                     <input
                       className="input"
                       value={manualLocation}
-                      onChange={(event) => setManualLocation(event.target.value)}
+                      onChange={(event) =>
+                        setManualLocation(event.target.value)
+                      }
                       placeholder="Example: Manchester"
                     />
                   </label>
@@ -2059,7 +2218,9 @@ Also detect or infer:
                     <textarea
                       className="input"
                       value={manualServices}
-                      onChange={(event) => setManualServices(event.target.value)}
+                      onChange={(event) =>
+                        setManualServices(event.target.value)
+                      }
                       placeholder="Emergency callouts, installations, repairs"
                     />
                   </label>
@@ -2070,7 +2231,9 @@ Also detect or infer:
                     <textarea
                       className="input"
                       value={manualAudience}
-                      onChange={(event) => setManualAudience(event.target.value)}
+                      onChange={(event) =>
+                        setManualAudience(event.target.value)
+                      }
                       placeholder="Homeowners, landlords, small business owners"
                     />
                   </label>
@@ -2080,7 +2243,9 @@ Also detect or infer:
                     <textarea
                       className="input"
                       value={manualMainOffer}
-                      onChange={(event) => setManualMainOffer(event.target.value)}
+                      onChange={(event) =>
+                        setManualMainOffer(event.target.value)
+                      }
                       placeholder="Book a free quote today"
                     />
                   </label>
@@ -2102,7 +2267,9 @@ Also detect or infer:
                     <textarea
                       className="input"
                       value={manualContentPillars}
-                      onChange={(event) => setManualContentPillars(event.target.value)}
+                      onChange={(event) =>
+                        setManualContentPillars(event.target.value)
+                      }
                       placeholder="Helpful advice, customer trust, services, offers"
                     />
                   </label>
@@ -2121,40 +2288,168 @@ Also detect or infer:
                     onClick={saveManualProfile}
                     disabled={scanning || savingManualProfile}
                   >
-                    {savingManualProfile ? 'Saving details...' : 'Save business details'}
+                    {savingManualProfile
+                      ? "Saving details..."
+                      : "Save business details"}
                   </button>
                 </div>
               </section>
             )}
 
-                        <section className="premium-card dashboard-options-summary-card" style={{ marginTop: 22 }}>
-              <div className="page-eyebrow">Post options</div>
-              <h2 style={{ marginTop: 0 }}>Post options for this week.</h2>
+            <section
+              className="premium-card dashboard-weekly-uploads-card"
+              style={{ marginTop: 22 }}
+            >
+              <div className="page-eyebrow">Weekly uploads</div>
+              <h2 style={{ marginTop: 0 }}>
+                Upload this week’s photos or flyers.
+              </h2>
+              <p style={{ marginTop: 0 }}>
+                Add job photos, before/after images, offer graphics, flyers,
+                product shots, food photos, or salon results. The number of
+                uploads decides the number of posts.
+              </p>
+
+              <label
+                className="dashboard-primary-scan-button"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  marginTop: 8,
+                }}
+              >
+                Upload photos or flyers
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  multiple
+                  onChange={(event) =>
+                    handleWeeklyUploadFiles(event.target.files)
+                  }
+                  style={{ display: "none" }}
+                />
+              </label>
+
+              {weeklyUploads.length > 0 ? (
+                <>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(140px, 1fr))",
+                      gap: 12,
+                      marginTop: 18,
+                    }}
+                  >
+                    {weeklyUploads.map((upload, index) => (
+                      <div
+                        key={upload.id}
+                        className="card"
+                        style={{ padding: 10 }}
+                      >
+                        <div
+                          style={{
+                            minHeight: 110,
+                            borderRadius: 16,
+                            overflow: "hidden",
+                            background: "rgba(255, 255, 255, 0.06)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginBottom: 10,
+                          }}
+                        >
+                          {upload.file.type.startsWith("image/") ? (
+                            <img
+                              src={upload.previewUrl}
+                              alt={`Weekly upload ${index + 1}`}
+                              style={{
+                                width: "100%",
+                                height: 130,
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            <strong>Flyer PDF</strong>
+                          )}
+                        </div>
+                        <strong>Post {index + 1}</strong>
+                        <p
+                          style={{
+                            margin: "6px 0",
+                            opacity: 0.76,
+                            fontSize: 13,
+                          }}
+                        >
+                          {upload.file.name}
+                        </p>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={() => removeWeeklyUpload(upload.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    className="dashboard-scan-usage-pill"
+                    style={{ marginTop: 16 }}
+                  >
+                    {weeklyUploads.length} uploads = {weeklyUploads.length}{" "}
+                    posts
+                  </div>
+                </>
+              ) : (
+                <div
+                  className="dashboard-scan-usage-pill"
+                  style={{ marginTop: 16 }}
+                >
+                  No photos yet? FromOne can still create posts from your
+                  website or business details.
+                </div>
+              )}
+            </section>
+
+            <section
+              className="premium-card dashboard-options-summary-card"
+              style={{ marginTop: 22 }}
+            >
+              <div className="page-eyebrow">Simple plan</div>
+              <h2 style={{ marginTop: 0 }}>Facebook, Instagram and TikTok.</h2>
 
               <div
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                   gap: 12,
                   marginTop: 14,
                 }}
               >
                 <div className="card" style={{ padding: 14 }}>
                   <strong>Reach</strong>
-                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>{marketReachDisplayLabel}</p>
+                  <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
+                    {marketReachDisplayLabel}
+                  </p>
                 </div>
 
                 <div className="card" style={{ padding: 14 }}>
-                  <strong>Frequency</strong>
-                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
-                    {selectedPostingFrequencyOption.title} per week
+                  <strong>Posts</strong>
+                  <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
+                    {uploadDrivenPostCount > 0
+                      ? `${uploadDrivenPostCount} uploads = ${uploadDrivenPostCount} posts`
+                      : `${selectedPostingFrequencyOption.title} per week backup`}
                   </p>
                 </div>
 
                 <div className="card" style={{ padding: 14 }}>
                   <strong>Platforms</strong>
-                  <p style={{ margin: '6px 0 0', opacity: 0.78 }}>
-                    {selectedPlatformSummary || 'Choose platforms'}
+                  <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
+                    {selectedPlatformSummary || "Choose platforms"}
                   </p>
                 </div>
               </div>
@@ -2165,282 +2460,303 @@ Also detect or infer:
                 style={{ marginTop: 16 }}
                 onClick={() => setShowAdvancedOptions((current) => !current)}
               >
-                {showAdvancedOptions ? 'Hide options' : 'Change options'}
+                {showAdvancedOptions ? "Hide options" : "Change options"}
               </button>
             </section>
 
             {showAdvancedOptions && (
               <>
-<section
-              ref={marketReachRef}
-              className="dashboard-platform-selector dashboard-platform-selector-full"
-            >
-              <div className="dashboard-platform-selector-header">
-                <div>
-                  <div className="page-eyebrow">Choose your reach</div>
-                  <h3>Who are these posts aimed at?</h3>
-                  <p>
-                    This helps FromOne decide whether to write with local, nationwide, or online
-                    customer intent.
-                  </p>
-                </div>
-              </div>
-
-              <div className="dashboard-platform-carousel dashboard-market-reach-grid">
-                {marketReachOptions.map((option) => {
-                  const isSelected = selectedMarketReach === option.value;
-
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      className={
-                        isSelected
-                          ? 'dashboard-platform-carousel-card dashboard-market-reach-card is-selected'
-                          : 'dashboard-platform-carousel-card dashboard-market-reach-card'
-                      }
-                      onClick={() => setSelectedMarketReach(option.value)}
-                      aria-pressed={isSelected}
-                    >
-                      <span className="dashboard-platform-check">
-                        {isSelected ? '✓' : '+'}
-                      </span>
-
-                      <strong>{option.title}</strong>
-                      <small className="is-visible">{option.description}</small>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="dashboard-selected-platforms-line">
-                <strong>Reach</strong>
-                <span>{marketReachDisplayLabel}</span>
-              </div>
-            </section>
-
-
-                                                <section
-              className="dashboard-platform-selector dashboard-platform-selector-full"
-              style={{
-                overflow: 'hidden',
-              }}
-            >
-              <div className="dashboard-platform-selector-header">
-                <div>
-                  <div className="page-eyebrow">Posting frequency</div>
-                  <h3>How many posts this week?</h3>
-                  <p>
-                    Choose how often FromOne should create posts for this weekly plan.
-                  </p>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 20,
-                  marginTop: 24,
-                }}
-              >
-                {postingFrequencyOptions.map((option) => {
-                  const selected = selectedPostingFrequency === option.value;
-
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setSelectedPostingFrequency(option.value)}
-                      style={{
-                        width: '100%',
-                        minHeight: 168,
-                        padding: '24px',
-                        borderRadius: 24,
-                        border: selected
-                          ? '1px solid rgba(255, 212, 59, 0.82)'
-                          : '1px solid rgba(255, 255, 255, 0.13)',
-                        background: selected
-                          ? 'radial-gradient(circle at top right, rgba(255, 212, 59, 0.22), rgba(255, 255, 255, 0.06) 42%, rgba(15, 23, 42, 0.86))'
-                          : 'radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255, 255, 255, 0.05) 45%, rgba(15, 23, 42, 0.82))',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        gap: 16,
-                        boxShadow: selected ? '0 18px 50px rgba(255, 212, 59, 0.14)' : 'none',
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 999,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: selected
-                            ? 'rgba(61, 220, 151, 0.2)'
-                            : 'rgba(255, 212, 59, 0.12)',
-                          border: selected
-                            ? '1px solid rgba(61, 220, 151, 0.55)'
-                            : '1px solid rgba(255, 212, 59, 0.48)',
-                          color: selected ? '#3ddc97' : '#ffd43b',
-                          fontWeight: 950,
-                          fontSize: 18,
-                          flex: '0 0 auto',
-                        }}
-                      >
-                        {selected ? '✓' : '+'}
-                      </span>
-
-                      <div style={{ display: 'grid', gap: 8 }}>
-                        <strong
-                          style={{
-                            display: 'block',
-                            fontSize: 26,
-                            lineHeight: 1,
-                            letterSpacing: '-0.03em',
-                          }}
-                        >
-                          {option.title}
-                        </strong>
-
-                        <span
-                          style={{
-                            display: 'block',
-                            fontSize: 14,
-                            lineHeight: 1.35,
-                            fontWeight: 800,
-                            color: 'rgba(255, 255, 255, 0.72)',
-                          }}
-                        >
-                          {option.description}
-                        </span>
-                      </div>
-
-                      {selected && (
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            minHeight: 24,
-                            padding: '5px 10px',
-                            borderRadius: 999,
-                            background: 'rgba(255, 212, 59, 0.16)',
-                            color: '#ffd43b',
-                            fontSize: 11,
-                            fontWeight: 950,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.04em',
-                          }}
-                        >
-                          Selected
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <p
-                style={{
-                  margin: '16px 0 0',
-                  color: 'rgba(255, 255, 255, 0.72)',
-                  fontWeight: 800,
-                }}
-              >
-                Selected frequency: <strong>{selectedPostingFrequencyOption.title} per week</strong>
-              </p>
-            </section>
-
-            <div
-              ref={platformSelectorRef}
-              className="dashboard-platform-selector dashboard-platform-selector-full"
-            >
-              <div className="dashboard-platform-selector-header">
-                <div>
-                  <div className="page-eyebrow">Choose your platforms</div>
-                  <h3>Where should we create posts for?</h3>
-                  <p>
-                    Click a card to add or remove that platform. Use More to cycle through the
-                    social cards.
-                  </p>
-                </div>
-
-                <div className="dashboard-platform-carousel-actions">
-                  <button
-                    type="button"
-                    className="secondary-button dashboard-platform-recommend-button"
-                    onClick={selectRecommendedPlatforms}
-                  >
-                    Use recommended
-                  </button>
-                </div>
-              </div>
-
-              <div className="dashboard-platform-carousel-wrap">
-                <div className="dashboard-platform-carousel" aria-label="Social platform selector">
-                  {visiblePlatformCards.map((platform) => {
-                    const isSelected = selectedPlatforms.includes(platform.name);
-                    const isRecommended = recommendedPlatforms.includes(platform.name);
-
-                    return (
-                      <button
-                        key={platform.name}
-                        type="button"
-                        className={
-                          isSelected
-                            ? 'dashboard-platform-carousel-card is-selected'
-                            : 'dashboard-platform-carousel-card'
-                        }
-                        onClick={() => togglePlatform(platform.name)}
-                        aria-pressed={isSelected}
-                      >
-                        <span className="dashboard-platform-check">
-                          {isSelected ? '✓' : '+'}
-                        </span>
-
-                        <strong>{platform.shortName}</strong>
-
-                        <small className={isRecommended ? 'is-visible' : 'is-hidden'}>
-                          Recommended
-                        </small>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  className="dashboard-platform-more-button"
-                  onClick={handleShowMorePlatforms}
-                  aria-label="Show more social platforms"
+                <section
+                  ref={marketReachRef}
+                  className="dashboard-platform-selector dashboard-platform-selector-full"
                 >
-                  <span>More</span>
-                  <b>›</b>
-                </button>
-              </div>
+                  <div className="dashboard-platform-selector-header">
+                    <div>
+                      <div className="page-eyebrow">Choose your reach</div>
+                      <h3>Who are these posts aimed at?</h3>
+                      <p>
+                        This helps FromOne decide whether to write with local,
+                        nationwide, or online customer intent.
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="dashboard-selected-platforms-line">
-                <strong>{selectedPlatforms.length}</strong>
-                <span>selected: {selectedPlatforms.join(', ')}</span>
-                <small>
-                  Showing {platformCarouselStart + 1}–
-                  {Math.min(
-                    platformCarouselStart + PLATFORM_CAROUSEL_VISIBLE_COUNT,
-                    availablePlatforms.length
-                  )}{' '}
-                  of {availablePlatforms.length}
-                </small>
-              </div>
+                  <div className="dashboard-platform-carousel dashboard-market-reach-grid">
+                    {marketReachOptions.map((option) => {
+                      const isSelected = selectedMarketReach === option.value;
 
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          className={
+                            isSelected
+                              ? "dashboard-platform-carousel-card dashboard-market-reach-card is-selected"
+                              : "dashboard-platform-carousel-card dashboard-market-reach-card"
+                          }
+                          onClick={() => setSelectedMarketReach(option.value)}
+                          aria-pressed={isSelected}
+                        >
+                          <span className="dashboard-platform-check">
+                            {isSelected ? "✓" : "+"}
+                          </span>
 
-            </div>
+                          <strong>{option.title}</strong>
+                          <small className="is-visible">
+                            {option.description}
+                          </small>
+                        </button>
+                      );
+                    })}
+                  </div>
 
+                  <div className="dashboard-selected-platforms-line">
+                    <strong>Reach</strong>
+                    <span>{marketReachDisplayLabel}</span>
+                  </div>
+                </section>
+
+                <section
+                  className="dashboard-platform-selector dashboard-platform-selector-full"
+                  style={{
+                    overflow: "hidden",
+                  }}
+                >
+                  <div className="dashboard-platform-selector-header">
+                    <div>
+                      <div className="page-eyebrow">Posting frequency</div>
+                      <h3>How many posts this week?</h3>
+                      <p>
+                        Choose how often FromOne should create posts for this
+                        weekly plan.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                      gap: 20,
+                      marginTop: 24,
+                    }}
+                  >
+                    {postingFrequencyOptions.map((option) => {
+                      const selected =
+                        selectedPostingFrequency === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() =>
+                            setSelectedPostingFrequency(option.value)
+                          }
+                          style={{
+                            width: "100%",
+                            minHeight: 168,
+                            padding: "24px",
+                            borderRadius: 24,
+                            border: selected
+                              ? "1px solid rgba(255, 212, 59, 0.82)"
+                              : "1px solid rgba(255, 255, 255, 0.13)",
+                            background: selected
+                              ? "radial-gradient(circle at top right, rgba(255, 212, 59, 0.22), rgba(255, 255, 255, 0.06) 42%, rgba(15, 23, 42, 0.86))"
+                              : "radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255, 255, 255, 0.05) 45%, rgba(15, 23, 42, 0.82))",
+                            color: "#ffffff",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                            justifyContent: "space-between",
+                            gap: 16,
+                            boxShadow: selected
+                              ? "0 18px 50px rgba(255, 212, 59, 0.14)"
+                              : "none",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 999,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: selected
+                                ? "rgba(61, 220, 151, 0.2)"
+                                : "rgba(255, 212, 59, 0.12)",
+                              border: selected
+                                ? "1px solid rgba(61, 220, 151, 0.55)"
+                                : "1px solid rgba(255, 212, 59, 0.48)",
+                              color: selected ? "#3ddc97" : "#ffd43b",
+                              fontWeight: 950,
+                              fontSize: 18,
+                              flex: "0 0 auto",
+                            }}
+                          >
+                            {selected ? "✓" : "+"}
+                          </span>
+
+                          <div style={{ display: "grid", gap: 8 }}>
+                            <strong
+                              style={{
+                                display: "block",
+                                fontSize: 26,
+                                lineHeight: 1,
+                                letterSpacing: "-0.03em",
+                              }}
+                            >
+                              {option.title}
+                            </strong>
+
+                            <span
+                              style={{
+                                display: "block",
+                                fontSize: 14,
+                                lineHeight: 1.35,
+                                fontWeight: 800,
+                                color: "rgba(255, 255, 255, 0.72)",
+                              }}
+                            >
+                              {option.description}
+                            </span>
+                          </div>
+
+                          {selected && (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                minHeight: 24,
+                                padding: "5px 10px",
+                                borderRadius: 999,
+                                background: "rgba(255, 212, 59, 0.16)",
+                                color: "#ffd43b",
+                                fontSize: 11,
+                                fontWeight: 950,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.04em",
+                              }}
+                            >
+                              Selected
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <p
+                    style={{
+                      margin: "16px 0 0",
+                      color: "rgba(255, 255, 255, 0.72)",
+                      fontWeight: 800,
+                    }}
+                  >
+                    Selected frequency:{" "}
+                    <strong>
+                      {selectedPostingFrequencyOption.title} per week
+                    </strong>
+                  </p>
+                </section>
+
+                <div
+                  ref={platformSelectorRef}
+                  className="dashboard-platform-selector dashboard-platform-selector-full"
+                >
+                  <div className="dashboard-platform-selector-header">
+                    <div>
+                      <div className="page-eyebrow">Choose your platforms</div>
+                      <h3>Where should we create posts for?</h3>
+                      <p>
+                        Click a card to add or remove that platform. Use More to
+                        cycle through the social cards.
+                      </p>
+                    </div>
+
+                    <div className="dashboard-platform-carousel-actions">
+                      <button
+                        type="button"
+                        className="secondary-button dashboard-platform-recommend-button"
+                        onClick={selectRecommendedPlatforms}
+                      >
+                        Use recommended
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="dashboard-platform-carousel-wrap">
+                    <div
+                      className="dashboard-platform-carousel"
+                      aria-label="Social platform selector"
+                    >
+                      {visiblePlatformCards.map((platform) => {
+                        const isSelected = selectedPlatforms.includes(
+                          platform.name,
+                        );
+                        const isRecommended = recommendedPlatforms.includes(
+                          platform.name,
+                        );
+
+                        return (
+                          <button
+                            key={platform.name}
+                            type="button"
+                            className={
+                              isSelected
+                                ? "dashboard-platform-carousel-card is-selected"
+                                : "dashboard-platform-carousel-card"
+                            }
+                            onClick={() => togglePlatform(platform.name)}
+                            aria-pressed={isSelected}
+                          >
+                            <span className="dashboard-platform-check">
+                              {isSelected ? "✓" : "+"}
+                            </span>
+
+                            <strong>{platform.shortName}</strong>
+
+                            <small
+                              className={
+                                isRecommended ? "is-visible" : "is-hidden"
+                              }
+                            >
+                              Recommended
+                            </small>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {availablePlatforms.length >
+                      PLATFORM_CAROUSEL_VISIBLE_COUNT && (
+                      <button
+                        type="button"
+                        className="dashboard-platform-more-button"
+                        onClick={handleShowMorePlatforms}
+                        aria-label="Show more social platforms"
+                      >
+                        <span>More</span>
+                        <b>›</b>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="dashboard-selected-platforms-line">
+                    <strong>{selectedPlatforms.length}</strong>
+                    <span>selected: {selectedPlatforms.join(", ")}</span>
+                    <small>
+                      Showing {platformCarouselStart + 1}–
+                      {Math.min(
+                        platformCarouselStart + PLATFORM_CAROUSEL_VISIBLE_COUNT,
+                        availablePlatforms.length,
+                      )}{" "}
+                      of {availablePlatforms.length}
+                    </small>
+                  </div>
+                </div>
               </>
             )}
 
@@ -2448,22 +2764,20 @@ Also detect or infer:
               className="premium-card"
               style={{
                 marginTop: 22,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
                 gap: 16,
-                flexWrap: 'wrap',
+                flexWrap: "wrap",
               }}
             >
               <div>
                 <div className="page-eyebrow">Ready</div>
-                <h2 style={{ margin: '0 0 8px' }}>
-                  Create weekly posts.
-                </h2>
+                <h2 style={{ margin: "0 0 8px" }}>Create weekly posts.</h2>
                 <p style={{ margin: 0 }}>
-                  FromOne will create {selectedPostingFrequency} posts for{' '}
-                  {marketReachContext.toLowerCase()} using{' '}
-                  {selectedPlatformSummary || 'the selected platforms'}.
+                  FromOne will create {effectivePostCount} posts for{" "}
+                  {marketReachContext.toLowerCase()} using Facebook, Instagram
+                  and TikTok.
                 </p>
               </div>
 
@@ -2472,17 +2786,22 @@ Also detect or infer:
                 type="button"
                 className="dashboard-platform-create-button"
                 onClick={handleGeneratePosts}
-                disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
+                disabled={
+                  accessLocked ||
+                  scanning ||
+                  savingWebsite ||
+                  savingManualProfile
+                }
               >
                 {scanning || savingWebsite
                   ? hasWebsite
-                    ? 'Scanning website...'
-                    : 'Creating posts from business details...'
+                    ? "Scanning website..."
+                    : "Creating posts from business details..."
                   : hasWebsite
-                    ? 'Create weekly posts'
+                    ? "Create weekly posts"
                     : hasManualProfile
-                      ? 'Create weekly posts'
-                      : 'Create weekly posts'}
+                      ? "Create weekly posts"
+                      : "Create weekly posts"}
               </button>
             </section>
           </section>
@@ -2490,7 +2809,11 @@ Also detect or infer:
       )}
 
       {scanning && (
-        <div className="fromone-loading-overlay" role="status" aria-live="polite">
+        <div
+          className="fromone-loading-overlay"
+          role="status"
+          aria-live="polite"
+        >
           <section className="fromone-loading-card">
             <div className="fromone-loading-orb">
               <span />
@@ -2499,14 +2822,20 @@ Also detect or infer:
             </div>
 
             <div className="page-eyebrow">
-              {hasWebsite ? 'Website scan in progress' : 'Creating weekly posts'}
+              {hasWebsite
+                ? "Website scan in progress"
+                : "Creating weekly posts"}
             </div>
 
-            <h2>{hasWebsite ? 'Scanning your website.' : 'Creating your weekly plan.'}</h2>
+            <h2>
+              {hasWebsite
+                ? "Scanning your website."
+                : "Creating your weekly plan."}
+            </h2>
 
             <p>
-              FromOne is reading the business details, understanding the audience, and creating
-              seven ready-to-use posts for the week.
+              FromOne is reading the business details, understanding the
+              audience, and creating seven ready-to-use posts for the week.
             </p>
 
             <div className="fromone-loading-steps">
@@ -2577,7 +2906,10 @@ Also detect or infer:
 
           {!tourRect && <div className="dashboard-tour-full-shade" />}
 
-          <section className="dashboard-tour-tooltip" style={getTourTooltipStyle()}>
+          <section
+            className="dashboard-tour-tooltip"
+            style={getTourTooltipStyle()}
+          >
             <div className="dashboard-tour-progress">
               Step {dashboardTourStep + 1} of {dashboardTourSteps.length}
             </div>
@@ -2586,7 +2918,11 @@ Also detect or infer:
             <p>{dashboardTourSteps[dashboardTourStep].text}</p>
 
             <div className="dashboard-tour-actions">
-              <button type="button" className="secondary-button" onClick={closeDashboardTour}>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={closeDashboardTour}
+              >
                 Skip
               </button>
 
@@ -2601,7 +2937,9 @@ Also detect or infer:
                 </button>
 
                 <button type="button" onClick={goToNextTourStep}>
-                  {dashboardTourStep === dashboardTourSteps.length - 1 ? 'Finish' : 'Next'}
+                  {dashboardTourStep === dashboardTourSteps.length - 1
+                    ? "Finish"
+                    : "Next"}
                 </button>
               </div>
             </div>
