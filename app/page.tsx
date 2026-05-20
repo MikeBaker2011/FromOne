@@ -5,16 +5,16 @@ import PublicNav from './components/PublicNav';
 import PublicFooter from './components/PublicFooter';
 
 export const metadata: Metadata = {
-  title: 'FromOne | Turn Weekly Media Into Scheduled Social Posts',
+  title: 'FromOne | Upload Media. Get Scheduled Social Posts.',
   description:
-    'Upload photos, videos or flyers. FromOne turns them into ready-to-review posts, chooses posting times, and can autopost to Facebook and Instagram.',
+    'Upload photos, videos or flyers. FromOne creates social posts, chooses posting times, resizes Instagram images, and autoposts to Facebook and Instagram.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'FromOne | Turn Weekly Media Into Scheduled Social Posts',
+    title: 'FromOne | Upload Media. Get Scheduled Social Posts.',
     description:
-      'Upload photos, videos or flyers. FromOne creates posts, suggests times, and can autopost to Facebook and Instagram.',
+      'FromOne turns weekly business media into scheduled Facebook, Instagram and TikTok-ready posts.',
     url: '/',
     type: 'website',
     images: [
@@ -28,37 +28,61 @@ export const metadata: Metadata = {
   },
 };
 
-const scanHighlights = [
-  'Business name and services',
-  'Target customers',
-  'Tone of voice',
-  'Location and local context',
-  'Offers and calls to action',
-  'Brand colours and style',
+const productHighlights = [
+  'Upload photos, videos and flyers',
+  'One upload becomes one post',
+  'Posts are written from real media',
+  'Posting times are chosen for you',
+  'Facebook and Instagram can autopost',
+  'Instagram images can be resized safely',
 ];
 
 const workflow = [
   {
-    title: 'Set up once',
+    title: 'Upload files',
     description:
-      'Create a Business Profile so FromOne knows the business, services, location, tone, offers and customers.',
+      'Add this week’s photos, videos, flyers, menus, offers, event clips or product shots.',
   },
   {
-    title: 'Upload weekly media',
+    title: 'Create posts',
     description:
-      'Add the photos, videos or flyers you want to promote this week.',
+      'FromOne turns each upload into a platform-ready post using the business details and tone.',
   },
   {
-    title: 'Create scheduled posts',
+    title: 'Review the week',
     description:
-      'FromOne turns each upload into a post and chooses sensible posting times automatically.',
+      'See the posts in a simple weekly calendar. Edit wording, replace media or rewrite using the upload.',
   },
   {
-    title: 'Review and autopost',
+    title: 'Autopost or copy',
     description:
-      'Edit anything you want, then let FromOne publish Facebook and Instagram. TikTok stays copy/open manual.',
+      'Facebook and Instagram can autopost at the chosen times. TikTok is copy/open manual for now.',
   },
 ];
+
+const appStrengths = [
+  {
+    title: 'Media-first posts',
+    description:
+      'FromOne does not just write generic captions. It uses the uploaded image, video or flyer as the reason for the post.',
+  },
+  {
+    title: 'Automatic times',
+    description:
+      'FromOne suggests posting times automatically, so users are not forced to understand content scheduling.',
+  },
+  {
+    title: 'Instagram-safe images',
+    description:
+      'If an image is the wrong shape for Instagram, FromOne can create a safer version before publishing.',
+  },
+  {
+    title: 'Autopost where possible',
+    description:
+      'Facebook and Instagram can publish automatically. TikTok remains simple: copy the post and open TikTok.',
+  },
+];
+
 
 const examplePosts = [
   {
@@ -94,23 +118,23 @@ const productScreenshots = [
   {
     title: 'Upload-first dashboard',
     description:
-      'Upload this week’s photos, videos or flyers, choose platforms, and create posts in one simple flow.',
+      'The user starts with one simple action: upload this week’s media and create posts.',
     image: '/dashboard-preview.png',
-    alt: 'FromOne dashboard for creating weekly social media posts',
+    alt: 'FromOne upload dashboard for creating social media posts',
   },
   {
-    title: 'Weekly post review',
+    title: 'Weekly post calendar',
     description:
-      'Review each scheduled post, edit the wording or media, and see what is planned for the week.',
+      'Posts are organised by day, platform and planned time so the week is easy to review.',
     image: '/posts-preview.png',
-    alt: 'FromOne posts page showing weekly post workflow',
+    alt: 'FromOne weekly post calendar showing scheduled posts',
   },
   {
-    title: 'Autopost and rewrite tools',
+    title: 'Powerful post editor',
     description:
-      'Rewrite using media, schedule autoposting, publish Facebook and Instagram, or copy/open TikTok.',
+      'Edit wording, replace media, rewrite using the upload, schedule autoposting or copy/open TikTok.',
     image: '/audience-preview.png',
-    alt: 'FromOne audience rewrite tool for social media posts',
+    alt: 'FromOne post editor for reviewing and publishing social media posts',
   },
 ];
 
@@ -132,14 +156,14 @@ export default function Home() {
 
         <div className="sales-hero-grid">
           <div className="sales-hero-copy">
-            <div className="page-eyebrow">Weekly social posts from your real media</div>
+            <div className="page-eyebrow">Social media made from your real business media</div>
 
-            <h1>Upload your media. Get your posts.</h1>
+            <h1 style={{ lineHeight: 0.9 }}>Upload media. Get scheduled posts.</h1>
 
             <p>
-              FromOne turns this week’s photos, videos and flyers into scheduled social media
-              posts. Review the posts, edit anything, then autopost Facebook and Instagram or
-              copy/open TikTok.
+              FromOne turns photos, videos and flyers into ready-to-review posts, chooses sensible
+              posting times, resizes Instagram images when needed, and can autopost to Facebook
+              and Instagram.
             </p>
 
             <div className="sales-hero-actions">
@@ -153,9 +177,9 @@ export default function Home() {
             </div>
 
             <div className="sales-trust-row">
-              <span>✓ Free 7-day demo</span>
-              <span>✓ Autopost Facebook & Instagram</span>
-              <span>✓ TikTok copy/open</span>
+              <span>✓ Uploads become posts</span>
+              <span>✓ Auto-scheduled times</span>
+              <span>✓ Facebook & Instagram autopost</span>
             </div>
           </div>
 
@@ -190,7 +214,7 @@ export default function Home() {
 
             <div className="sales-preview-floating">
               <strong>Ready to review</strong>
-              <span>Review → Edit → Autopost</span>
+              <span>Upload → Review → Autopost</span>
             </div>
           </div>
         </div>
@@ -198,26 +222,27 @@ export default function Home() {
 
       <section className="sales-section sales-scan-section">
         <div className="sales-section-heading">
-          <div className="page-eyebrow">Business Profile</div>
-          <h2>The business setup does the briefing work.</h2>
+          <div className="page-eyebrow">Why it feels different</div>
+          <h2>FromOne starts with what the business already has.</h2>
           <p>
-            Set up the Business Profile once. Then each week, FromOne uses that profile with the
-            uploaded media to create posts that sound like the business.
+            Most small businesses already have photos, videos, flyers, menus, event clips or
+            product shots. FromOne turns those real assets into useful scheduled posts.
           </p>
         </div>
 
         <div className="sales-scan-grid">
           <div className="sales-scan-card">
-            <small>Set up once</small>
-            <h3>The Business Profile becomes the brain.</h3>
+            <small>Simple weekly promise</small>
+            <h3>Upload files. FromOne creates the week.</h3>
             <p>
-              FromOne learns the services, customers, tone, location and offers once, then uses
-              that information every time new photos, videos or flyers are uploaded.
+              No complicated marketing dashboard. No confusing settings upfront. The user uploads
+              the media, chooses the platforms, reviews the posts and lets FromOne handle the
+              posting times.
             </p>
           </div>
 
           <div className="sales-scan-list">
-            {scanHighlights.map((item) => (
+            {productHighlights.map((item) => (
               <div key={item} className="card">
                 ✓ {item}
               </div>
@@ -228,11 +253,11 @@ export default function Home() {
 
       <section className="sales-section sales-example-section">
         <div className="sales-section-heading">
-          <div className="page-eyebrow">Example output</div>
-          <h2>Posts built from real business media.</h2>
+          <div className="page-eyebrow">What FromOne creates</div>
+          <h2>Posts that are based on the upload, not generic filler.</h2>
           <p>
-            FromOne uses each upload as the topic, then adds the business context, tone, CTA,
-            hashtags and platform-specific wording.
+            Each post gets a caption, CTA, hashtags and platform-specific direction. The upload
+            stays at the centre of the post.
           </p>
         </div>
 
@@ -265,13 +290,33 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="sales-section sales-scan-section">
+        <div className="sales-section-heading">
+          <div className="page-eyebrow">Built for the real workflow</div>
+          <h2>The best parts are automatic, but still editable.</h2>
+          <p>
+            FromOne makes the hard decisions for the user, then lets them change anything before
+            it goes live.
+          </p>
+        </div>
+
+        <div className="sales-steps-grid">
+          {appStrengths.map((item, index) => (
+            <article key={item.title} className="sales-step-card">
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="sales-section sales-steps-section">
         <div className="sales-section-heading">
           <div className="page-eyebrow">Workflow</div>
-          <h2>From upload to autopost.</h2>
+          <h2>A weekly flow anyone can understand.</h2>
           <p>
-            The weekly flow stays simple enough for non-technical users: upload the media, create
-            the posts, review them, then let FromOne handle Facebook and Instagram timing.
+            FromOne keeps the product path clear: upload, generate, review, autopost.
           </p>
         </div>
 
@@ -322,8 +367,8 @@ export default function Home() {
           <div className="page-eyebrow">Pricing</div>
           <h2>Start free. Keep posting simple.</h2>
           <p>
-            Try the full workflow during the demo. Upload media, create posts, review them, and
-            see how much time FromOne saves.
+            Try the full workflow during the demo. Upload media, create posts, review the week,
+            and see how much time FromOne saves.
           </p>
         </div>
 
@@ -370,10 +415,10 @@ export default function Home() {
     </article>
 
     <article className="sales-faq-card">
-      <h3>Can I use it without a website?</h3>
+      <h3>Does it resize images for Instagram?</h3>
       <p>
-        Yes. You can add business details manually if the business does not have a website, then
-        FromOne can create a weekly plan from that profile.
+        Yes. If an uploaded image is not a good shape for Instagram, FromOne can create an
+        Instagram-safe version so the post has a better chance of publishing cleanly.
       </p>
     </article>
 
@@ -386,7 +431,7 @@ export default function Home() {
     </article>
 
     <article className="sales-faq-card">
-      <h3>Can I edit the posts?</h3>
+      <h3>Can I change the posts or times?</h3>
       <p>
         Yes. You can edit wording, replace media, rewrite using the media, or change the
         suggested posting time before it goes live.
