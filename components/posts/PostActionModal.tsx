@@ -349,180 +349,165 @@ export default function PostActionModal({
           {isVideoMedia && <span>Video</span>}
         </div>
 
-        <section ref={mediaRef} className="fromone-flow-tools-card">
-          <div className="fromone-flow-tools-header">
+        <section ref={mediaRef} className="fromone-flow-tools-card fromone-media-step-card">
+          <div className="fromone-simple-step-header">
+            <div className="fromone-step-number">1</div>
             <div>
               <div className="page-eyebrow">Media</div>
-              <h3>Check the media</h3>
-              <p>{getImageGuidance(selectedPost)}</p>
+              <h3>Choose the photo, video or flyer</h3>
+              <p>
+                Upload the media you want this post to be about. FromOne can then rewrite this one
+                post around it.
+              </p>
             </div>
           </div>
 
-          {selectedPost.media_url ? (
-            <div className="fromone-media-preview-card">
-              {isVideoMedia ? (
-                <video src={selectedPost.media_url} controls className="fromone-media-preview" />
-              ) : isFlyerMedia ? (
-                <div className="fromone-image-guidance-note">
-                  <strong>PDF flyer attached</strong>
+          <div className={`fromone-media-workflow ${hasMedia ? 'has-media' : 'needs-media'}`}>
+            <div className="fromone-media-preview-shell">
+              {selectedPost.media_url ? (
+                <>
+                  {isVideoMedia ? (
+                    <video src={selectedPost.media_url} controls className="fromone-media-preview" />
+                  ) : isFlyerMedia ? (
+                    <div className="fromone-flyer-preview-card">
+                      <div className="fromone-file-icon">PDF</div>
+                      <div>
+                        <strong>Flyer attached</strong>
+                        <p>Open the flyer to check the details before rewriting or posting.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={selectedPost.media_url}
+                      alt="Uploaded post media"
+                      className="fromone-media-preview"
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="fromone-empty-media-card">
+                  <div className="fromone-empty-media-icon">+</div>
+                  <strong>No media added yet</strong>
                   <p>
-                    This post was created from a PDF flyer. Open the flyer in a new tab to review
-                    the original upload.
+                    Add a photo, short video or PDF flyer. This keeps the post specific and easy to
+                    review.
                   </p>
+                </div>
+              )}
+            </div>
 
+            <div className="fromone-media-side-panel">
+              <div className="fromone-media-status-card">
+                <span className={hasMedia ? 'is-ready' : 'is-needed'}>
+                  {hasMedia ? 'Media ready' : 'Add media first'}
+                </span>
+                <h4>
+                  {hasMedia
+                    ? isVideoMedia
+                      ? 'Video selected'
+                      : isFlyerMedia
+                        ? 'Flyer selected'
+                        : 'Image selected'
+                    : 'Upload media'}
+                </h4>
+                <p>{hasMedia ? getImageGuidance(selectedPost) : 'Choose the media this post should use.'}</p>
+              </div>
+
+              <label className="fromone-upload-button fromone-media-primary-upload">
+                <input
+                  type="file"
+                  accept="image/*,video/*,application/pdf"
+                  onChange={(event) => onUploadMedia(selectedPost, event)}
+                  disabled={uploadingMediaPostId === selectedPost.id || accessLocked}
+                  style={{ display: 'none' }}
+                />
+                <span>
+                  {uploadingMediaPostId === selectedPost.id
+                    ? 'Uploading...'
+                    : selectedPost.media_url
+                      ? 'Replace media'
+                      : 'Choose media'}
+                </span>
+              </label>
+
+              {hasMedia && (
+                <div className="fromone-media-small-actions">
                   <a
                     href={selectedPost.media_url}
                     target="_blank"
                     rel="noreferrer"
                     className="secondary-button"
-                    style={{
-                      display: 'inline-flex',
-                      marginTop: 12,
-                    }}
                   >
-                    View flyer
+                    {isFlyerMedia ? 'Open flyer' : 'View media'}
                   </a>
-                </div>
-              ) : (
-                <img
-                  src={selectedPost.media_url}
-                  alt="Uploaded post media"
-                  className="fromone-media-preview"
-                />
-              )}
 
-              <div className="fromone-flow-inline-actions">
-                <a
-                  href={selectedPost.media_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="secondary-button"
-                >
-                  {isFlyerMedia ? 'Open flyer' : 'View media'}
-                </a>
-
-                <button
-                  type="button"
-                  className="secondary-button danger-button"
-                  onClick={() => onRemoveMedia(selectedPost)}
-                  disabled={removingMediaPostId === selectedPost.id || accessLocked}
-                >
-                  {removingMediaPostId === selectedPost.id ? 'Removing...' : 'Remove media'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="fromone-image-guidance-note">
-              <strong>{mediaRequiredForPlatform(selectedPost.platform) ? 'Media needed' : 'Optional'}</strong>
-              <p>
-                {mediaRequiredForPlatform(selectedPost.platform)
-                  ? `${platformName} needs a photo, flyer, graphic, or short video before publishing.`
-                  : 'A clear photo, flyer, graphic, or short video can make this post stronger.'}
-              </p>
-            </div>
-          )}
-
-          <label className="fromone-upload-button">
-            <input
-              type="file"
-              accept="image/*,video/*,application/pdf"
-              onChange={(event) => onUploadMedia(selectedPost, event)}
-              disabled={uploadingMediaPostId === selectedPost.id || accessLocked}
-              style={{ display: 'none' }}
-            />
-            <span>
-              {uploadingMediaPostId === selectedPost.id
-                ? 'Uploading...'
-                : selectedPost.media_url
-                  ? 'Replace media'
-                  : 'Choose media'}
-            </span>
-          </label>
-
-          {onRescanPostMedia && (
-            <div
-              className="fromone-image-guidance-note"
-              style={{
-                marginTop: 16,
-              }}
-            >
-              <strong>{rescanMediaTitle}</strong>
-              <p>{rescanMediaDescription}</p>
-
-              {rescanUsageLabel && (
-                <p
-                  style={{
-                    marginTop: 10,
-                    fontWeight: 850,
-                    color: '#ffe58a',
-                  }}
-                >
-                  {rescanUsageLabel}
-                </p>
-              )}
-
-              {posted ? (
-                <>
                   <button
                     type="button"
-                    className="secondary-button"
+                    className="secondary-button danger-button"
+                    onClick={() => onRemoveMedia(selectedPost)}
+                    disabled={removingMediaPostId === selectedPost.id || accessLocked}
+                  >
+                    {removingMediaPostId === selectedPost.id ? 'Removing...' : 'Remove'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {onRescanPostMedia && (
+            <div className="fromone-rescan-step-card">
+              <div className="fromone-simple-step-header compact">
+                <div className="fromone-step-number">2</div>
+                <div>
+                  <div className="page-eyebrow">Rewrite from media</div>
+                  <h3>Make the wording match the media</h3>
+                  <p>
+                    Use this after replacing the photo, flyer or video. FromOne rewrites only this
+                    post.
+                  </p>
+                </div>
+              </div>
+
+              <div className="fromone-rescan-action-card">
+                <div>
+                  <strong>{rescanMediaTitle}</strong>
+                  <p>{rescanMediaDescription}</p>
+
+                  {rescanUsageLabel && <span className="fromone-rescan-usage">{rescanUsageLabel}</span>}
+
+                  {posted && (
+                    <p className="fromone-rescan-note">
+                      This post is marked as posted. Mark it as not posted first, then rescan.
+                    </p>
+                  )}
+
+                  {!posted && !hasMedia && (
+                    <p className="fromone-rescan-note">
+                      Upload media first, then FromOne can rewrite the post around it.
+                    </p>
+                  )}
+                </div>
+
+                {posted ? (
+                  <button
+                    type="button"
+                    className="fromone-rescan-primary-button"
                     onClick={() => onMarkAsNotPosted(selectedPost.id)}
                     disabled={isRescanning}
-                    style={{
-                      marginTop: 12,
-                      width: '100%',
-                      minHeight: 52,
-                      color: '#101420',
-                      background: '#ffd43b',
-                      borderColor: 'rgba(255, 212, 59, 0.55)',
-                      fontWeight: 950,
-                    }}
                   >
-                    Mark as not posted to rescan
+                    Mark as not posted
                   </button>
-
-                  <p
-                    style={{
-                      marginTop: 10,
-                      marginBottom: 0,
-                      opacity: 0.82,
-                    }}
+                ) : (
+                  <button
+                    type="button"
+                    className="fromone-rescan-primary-button"
+                    onClick={() => onRescanPostMedia(selectedPost)}
+                    disabled={accessLocked || !hasMedia || isRescanning}
                   >
-                    This post is already marked as posted, so FromOne will not rewrite it yet.
-                    Mark it as not posted, then press the rescan button.
-                  </p>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => onRescanPostMedia(selectedPost)}
-                  disabled={accessLocked || !hasMedia || isRescanning}
-                  style={{
-                    marginTop: 12,
-                    width: '100%',
-                    minHeight: 52,
-                    color: '#101420',
-                    background: '#ffd43b',
-                    borderColor: 'rgba(255, 212, 59, 0.55)',
-                    fontWeight: 950,
-                  }}
-                >
-                  {isRescanning ? 'Rescanning media...' : rescanMediaTitle}
-                </button>
-              )}
-
-              {!posted && !hasMedia && (
-                <p
-                  style={{
-                    marginTop: 10,
-                    marginBottom: 0,
-                    opacity: 0.72,
-                  }}
-                >
-                  Upload media first, then FromOne can rescan it and rewrite this one post.
-                </p>
-              )}
+                    {isRescanning ? 'Rewriting...' : 'Rewrite from media'}
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </section>
