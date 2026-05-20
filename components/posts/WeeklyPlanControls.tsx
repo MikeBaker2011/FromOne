@@ -31,7 +31,8 @@ export default function WeeklyPlanControls({
     <section className="simplified-control-card">
       <div className="simplified-campaign-controls">
         <label>
-          <strong>Saved weekly plan</strong>
+          <strong>Weekly posts</strong>
+          <span>Choose a set of generated posts to review.</span>
 
           <select
             className="input"
@@ -51,7 +52,7 @@ export default function WeeklyPlanControls({
           <strong>
             {campaigns.length}/{maxSavedCampaigns}
           </strong>
-          <span>saved plans</span>
+          <span>saved sets</span>
         </div>
 
         <div className="posts-plan-actions">
@@ -65,7 +66,7 @@ export default function WeeklyPlanControls({
               renamingCampaign
             }
           >
-            {loadingSelectedPlan ? 'Loading...' : 'Load'}
+            {loadingSelectedPlan ? 'Loading...' : 'Review selected'}
           </button>
 
           <button

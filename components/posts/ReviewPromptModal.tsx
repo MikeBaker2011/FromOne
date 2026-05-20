@@ -25,11 +25,11 @@ export default function ReviewPromptModal({
     <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
       <section className="fromone-modal-card">
         <div className="fromone-modal-icon">⭐</div>
-        <div className="page-eyebrow">Quick favour</div>
-        <h2>How are you finding FromOne?</h2>
+        <div className="page-eyebrow">Quick feedback</div>
+        <h2>How is FromOne working for you?</h2>
         <p>
-          A short review helps improve FromOne and helps other small businesses understand whether
-          it could save them time.
+          A short review helps us improve the upload, review and publish flow for local
+          businesses.
         </p>
 
         <div className="review-star-row" onMouseLeave={() => onSetReviewHoverRating(0)}>
@@ -55,13 +55,13 @@ export default function ReviewPromptModal({
           className="input"
           value={reviewText}
           onChange={(event) => onSetReviewText(event.target.value)}
-          placeholder="Example: FromOne made it much easier to plan my posts for the week."
+          placeholder="Example: FromOne helped me turn this week’s photos into posts much faster."
           rows={5}
         />
 
         <div className="fromone-modal-actions">
           <button type="button" onClick={onSubmitReview} disabled={savingReview}>
-            {savingReview ? 'Sending...' : 'Send review'}
+            {savingReview ? 'Sending...' : 'Send feedback'}
           </button>
 
           <button

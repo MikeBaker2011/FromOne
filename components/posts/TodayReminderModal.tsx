@@ -11,20 +11,22 @@ export default function TodayReminderModal({
 }: TodayReminderModalProps) {
   if (!post) return null;
 
+  const platform = post.platform || 'social';
+
   return (
     <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
       <section className="fromone-modal-card">
         <div className="fromone-modal-icon">📌</div>
-        <div className="page-eyebrow">Today’s post</div>
-        <h2>You have a post to make today</h2>
+        <div className="page-eyebrow">Ready to review</div>
+        <h2>You have a post ready today</h2>
         <p>
-          Your {post.platform || 'social'} post is ready. Open it, publish it, then mark it as
-          posted.
+          Your {platform} post is ready. Check the media and wording, then publish Facebook or
+          Instagram, or copy/open TikTok manually.
         </p>
 
         <div className="fromone-modal-actions">
           <button type="button" onClick={onStartTodayPost}>
-            Start today’s post
+            Review post
           </button>
 
           <button type="button" className="secondary-button" onClick={onClose}>

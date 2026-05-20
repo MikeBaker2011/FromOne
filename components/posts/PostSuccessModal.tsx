@@ -14,24 +14,24 @@ export default function PostSuccessModal({
   return (
     <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
       <section className="fromone-modal-card fromone-success-card">
-        <div className="fromone-modal-icon">🎉</div>
-        <div className="page-eyebrow">Post complete</div>
-        <h2>Nice work — that post is done 🎉</h2>
+        <div className="fromone-modal-icon">✓</div>
+        <div className="page-eyebrow">Post done</div>
+        <h2>That post is complete.</h2>
         <p>
           {postsLeft === 0
-            ? 'That was the last post in this weekly plan.'
-            : `${postsLeft} posts left this week.`}
+            ? 'All posts in this set are done. Upload more photos or flyers from Dashboard when you are ready to create the next set.'
+            : `${postsLeft} posts left to review this week.`}
         </p>
 
         <div className="fromone-modal-actions">
           {nextPostId && (
             <button type="button" onClick={onViewNextPost}>
-              View next post
+              Review next post
             </button>
           )}
 
           <button type="button" className="secondary-button" onClick={onBackToDashboard}>
-            Back to dashboard
+            Back to Dashboard
           </button>
         </div>
       </section>
