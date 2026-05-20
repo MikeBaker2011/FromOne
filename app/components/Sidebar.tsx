@@ -53,13 +53,16 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     setShowPostsDot(hasNewPosts);
   };
 
-  const handlePostsClick = () => {
-    localStorage.removeItem(NEW_POSTS_KEY);
-    window.dispatchEvent(new Event('fromone-new-posts-updated'));
-
+  const closeMenu = () => {
     if (onClose) {
       onClose();
     }
+  };
+
+  const handlePostsClick = () => {
+    localStorage.removeItem(NEW_POSTS_KEY);
+    window.dispatchEvent(new Event('fromone-new-posts-updated'));
+    closeMenu();
   };
 
   const checkUser = async () => {
@@ -91,11 +94,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     }
 
     setIsSignedIn(false);
-
-    if (onClose) {
-      onClose();
-    }
-
+    closeMenu();
     router.push('/signin');
   };
 
@@ -111,7 +110,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
           <div>
             <h1 className="sidebar-title">FromOne</h1>
-            <p className="sidebar-subtitle">Step-by-step content workflow</p>
+            <p className="sidebar-subtitle">Upload. Review. Publish.</p>
           </div>
         </div>
 
@@ -120,9 +119,9 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         </button>
       </div>
 
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav" aria-label="Main navigation">
         <div className="sidebar-nav-main">
-          <Link className="sidebar-link" href="/dashboard" onClick={onClose}>
+          <Link className="sidebar-link" href="/dashboard" onClick={closeMenu}>
             <span className="sidebar-link-icon">⌂</span>
             Dashboard
           </Link>
@@ -139,24 +138,24 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </span>
           </Link>
 
-          <Link className="sidebar-link" href="/settings" onClick={onClose}>
+          <Link className="sidebar-link" href="/settings" onClick={closeMenu}>
             <span className="sidebar-link-icon">⚙</span>
             Settings
           </Link>
 
-          <Link className="sidebar-link" href="/subscription" onClick={onClose}>
+          <Link className="sidebar-link" href="/subscription" onClick={closeMenu}>
             <span className="sidebar-link-icon">£</span>
-            Plan & Billing
+            Subscription
           </Link>
         </div>
 
         <div className="sidebar-nav-bottom">
-          <Link className="sidebar-link" href="/tutorial" onClick={onClose}>
+          <Link className="sidebar-link" href="/tutorial" onClick={closeMenu}>
             <span className="sidebar-link-icon">?</span>
-            Help Guide
+            Help
           </Link>
 
-          <Link className="sidebar-link" href="/bugreport" onClick={onClose}>
+          <Link className="sidebar-link" href="/bugreport" onClick={closeMenu}>
             <span className="sidebar-link-icon">✉</span>
             Support
           </Link>
@@ -173,12 +172,12 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               onClick={handleSignOut}
             >
               <span className="sidebar-link-icon">×</span>
-              Sign Out
+              Sign out
             </button>
           ) : (
-            <Link className="sidebar-link" href="/signin" onClick={onClose}>
+            <Link className="sidebar-link" href="/signin" onClick={closeMenu}>
               <span className="sidebar-link-icon">→</span>
-              Sign In
+              Sign in
             </Link>
           )}
         </div>
