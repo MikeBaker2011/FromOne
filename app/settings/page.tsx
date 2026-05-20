@@ -15,156 +15,10 @@ type SocialConnection = {
   page_name: string | null;
   instagram_business_account_id: string | null;
   instagram_username: string | null;
-  google_account_id?: string | null;
-  google_account_name?: string | null;
-  google_location_id?: string | null;
-  google_location_name?: string | null;
   expires_at: string | null;
   status: string | null;
   updated_at: string | null;
 };
-
-type GoogleLocationOption = {
-  accountId: string;
-  accountName: string;
-  locationId: string;
-  locationName: string;
-  address?: string;
-};
-
-type TikTokDemoConnection = {
-  connected: boolean;
-  connectedAt: string | null;
-};
-
-type AccountStatus = 'auto_connected' | 'manual_ready' | 'connected' | 'not_connected' | 'coming_soon';
-
-type AccountPillProps = {
-  platform: string;
-  status: AccountStatus;
-  detail: string;
-  onConnect?: () => void;
-  onManage?: () => void;
-  onDisconnect?: () => void;
-  onManualOpen?: () => void;
-  manualLabel?: string;
-  manageLabel?: string;
-  disconnectLabel?: string;
-  showDisconnect?: boolean;
-  busy?: boolean;
-};
-
-function AccountPill({
-  platform,
-  status,
-  detail,
-  onConnect,
-  onManage,
-  onDisconnect,
-  onManualOpen,
-  manualLabel = 'Open manually',
-  manageLabel = 'Manage',
-  disconnectLabel = 'Disconnect',
-  showDisconnect = true,
-  busy = false,
-}: AccountPillProps) {
-  const statusLabel =
-    status === 'auto_connected' || status === 'connected'
-      ? 'Auto connected'
-      : status === 'manual_ready'
-        ? 'Manual ready'
-        : status === 'coming_soon'
-          ? 'Auto coming soon'
-          : 'Not connected';
-
-  return (
-    <div
-      className="premium-card"
-      style={{
-        padding: 16,
-        display: 'grid',
-        gap: 12,
-        alignContent: 'space-between',
-        minHeight: 154,
-      }}
-    >
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-          <strong>{platform}</strong>
-          <span
-            style={{
-              borderRadius: 999,
-              padding: '5px 10px',
-              fontSize: 12,
-              fontWeight: 800,
-              background:
-                status === 'auto_connected' || status === 'connected'
-                  ? 'rgba(255, 212, 59, 0.18)'
-                  : status === 'manual_ready'
-                    ? 'rgba(56, 189, 248, 0.15)'
-                    : status === 'coming_soon'
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : 'rgba(255, 255, 255, 0.08)',
-              color:
-                status === 'auto_connected' || status === 'connected'
-                  ? '#ffd43b'
-                  : status === 'manual_ready'
-                    ? '#7dd3fc'
-                    : status === 'coming_soon'
-                      ? 'rgba(255,255,255,0.72)'
-                      : 'rgba(255,255,255,0.72)',
-            }}
-          >
-            {statusLabel}
-          </span>
-        </div>
-
-        <p style={{ marginBottom: 0 }}>{detail}</p>
-      </div>
-
-      {status === 'connected' || status === 'auto_connected' ? (
-        <div className="button-row" style={{ gap: 10, flexWrap: 'wrap' }}>
-          <button type="button" className="secondary-button" onClick={onManage} disabled={busy}>
-            {manageLabel}
-          </button>
-
-          {showDisconnect && (
-            <button
-              type="button"
-              className="secondary-button danger-button"
-              onClick={onDisconnect}
-              disabled={busy}
-            >
-              {busy ? 'Disconnecting...' : disconnectLabel}
-            </button>
-          )}
-        </div>
-      ) : status === 'manual_ready' ? (
-        <div className="button-row" style={{ gap: 10, flexWrap: 'wrap' }}>
-          {onManualOpen && (
-            <button type="button" className="secondary-button" onClick={onManualOpen} disabled={busy}>
-              {manualLabel}
-            </button>
-          )}
-
-          {onConnect && (
-            <button type="button" onClick={onConnect} disabled={busy}>
-              Connect
-            </button>
-          )}
-        </div>
-      ) : status === 'not_connected' ? (
-        <button type="button" onClick={onConnect} disabled={busy}>
-          Connect
-        </button>
-      ) : (
-        <button type="button" className="secondary-button" disabled>
-          Auto coming soon
-        </button>
-      )}
-    </div>
-  );
-}
 
 export default function SettingsPage() {
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -185,17 +39,6 @@ export default function SettingsPage() {
   const [loadingConnections, setLoadingConnections] = useState(false);
   const [disconnectingConnectionId, setDisconnectingConnectionId] = useState<string | null>(null);
 
-  const [googleLocations, setGoogleLocations] = useState<GoogleLocationOption[]>([]);
-  const [selectedGoogleLocationId, setSelectedGoogleLocationId] = useState('');
-  const [loadingGoogleLocations, setLoadingGoogleLocations] = useState(false);
-  const [savingGoogleLocation, setSavingGoogleLocation] = useState(false);
-  const [showGoogleLocationPicker, setShowGoogleLocationPicker] = useState(false);
-
-  const [tiktokDemoConnection, setTiktokDemoConnection] = useState<TikTokDemoConnection>({
-    connected: false,
-    connectedAt: null,
-  });
-
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
 
@@ -203,20 +46,14 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
 
   const metaConnections = socialConnections.filter((connection) => connection.provider === 'meta');
-  const googleConnections = socialConnections.filter((connection) => connection.provider === 'google');
-
   const primaryMetaConnection = metaConnections[0] || null;
-  const primaryGoogleConnection = googleConnections[0] || null;
 
   const hasMetaConnection = Boolean(primaryMetaConnection);
+  const hasFacebookConnection = Boolean(primaryMetaConnection?.page_id);
   const hasInstagramConnection = Boolean(primaryMetaConnection?.instagram_business_account_id);
-  const hasGoogleConnection = Boolean(primaryGoogleConnection);
   const metaConnectionBusy =
     disconnectingConnectionId === primaryMetaConnection?.id ||
     disconnectingConnectionId === 'all';
-
-  const tiktokDemoMode = process.env.NEXT_PUBLIC_TIKTOK_DEMO_MODE === 'true';
-  const hasTikTokDemoConnection = tiktokDemoMode && tiktokDemoConnection.connected;
 
   useEffect(() => {
     loadBusinessProfile();
@@ -224,10 +61,6 @@ export default function SettingsPage() {
     const params = new URLSearchParams(window.location.search);
     const metaConnected = params.get('meta_connected');
     const metaError = params.get('meta_error');
-    const googleConnected = params.get('google_connected');
-    const googleError = params.get('google_error');
-    const tiktokConnected = params.get('tiktok_connected');
-    const tiktokDemo = params.get('tiktok_demo');
 
     if (metaConnected === 'true') {
       alert('Facebook and Instagram connected.');
@@ -238,50 +71,8 @@ export default function SettingsPage() {
       alert(metaError || 'Meta connection failed.');
       window.history.replaceState({}, '', window.location.pathname);
     }
-
-    if (googleConnected === 'true') {
-      alert('Google connected.');
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-
-    if (googleConnected === 'false') {
-      alert(googleError || 'Google connection failed.');
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-
-    const savedTikTokDemoConnection =
-      window.localStorage.getItem('fromone_tiktok_demo_connected') === 'true';
-
-    if (savedTikTokDemoConnection) {
-      setTiktokDemoConnection({
-        connected: true,
-        connectedAt: window.localStorage.getItem('fromone_tiktok_demo_connected_at'),
-      });
-    }
-
-    if (tiktokConnected === 'true' && tiktokDemo === 'true') {
-      const connectedAt = new Date().toISOString();
-
-      window.localStorage.setItem('fromone_tiktok_demo_connected', 'true');
-      window.localStorage.setItem('fromone_tiktok_demo_connected_at', connectedAt);
-
-      setTiktokDemoConnection({
-        connected: true,
-        connectedAt,
-      });
-
-      alert('TikTok sandbox demo connected. No live TikTok account has been connected.');
-      window.history.replaceState({}, '', window.location.pathname);
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const openGoogleBusinessProfile = () => {
-    window.open('https://business.google.com/', '_blank', 'noopener,noreferrer');
-  };
-
-  const openLinkedIn = () => {
-    window.open('https://www.linkedin.com/feed/', '_blank', 'noopener,noreferrer');
-  };
 
   const openTikTok = () => {
     window.open('https://www.tiktok.com/upload', '_blank', 'noopener,noreferrer');
@@ -342,155 +133,6 @@ export default function SettingsPage() {
     window.location.href = `/api/auth/meta/start?${params.toString()}`;
   };
 
-  const connectGoogleAccount = async () => {
-    let authUserId = userId;
-
-    if (!authUserId) {
-      const { data } = await supabase.auth.getUser();
-      authUserId = data.user?.id || null;
-    }
-
-    if (!authUserId) {
-      alert('Please sign in before connecting Google.');
-      return;
-    }
-
-    const params = new URLSearchParams();
-    params.set('user_id', authUserId);
-    params.set('return_to', '/settings');
-
-    window.location.href = `/api/auth/google/start?${params.toString()}`;
-  };
-
-  const loadGoogleLocations = async () => {
-    if (!userId) {
-      alert('Please sign in again before loading Google locations.');
-      return;
-    }
-
-    setLoadingGoogleLocations(true);
-
-    try {
-      const params = new URLSearchParams();
-      params.set('user_id', userId);
-
-      const response = await fetch(`/api/google/locations?${params.toString()}`);
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result?.error || 'Could not load Google locations.');
-      }
-
-      const locations = Array.isArray(result?.locations) ? result.locations : [];
-
-      setGoogleLocations(locations);
-      setSelectedGoogleLocationId(
-        result?.selectedLocationId ||
-          primaryGoogleConnection?.google_location_id ||
-          locations[0]?.locationId ||
-          ''
-      );
-      setShowGoogleLocationPicker(true);
-
-      if (locations.length === 0) {
-        alert('No Google business locations were found for this Google account.');
-      }
-    } catch (error: any) {
-      console.error('Load Google locations error:', error?.message || error);
-      alert(error?.message || 'Could not load Google locations.');
-    } finally {
-      setLoadingGoogleLocations(false);
-    }
-  };
-
-  const saveGoogleLocation = async () => {
-    if (!userId) {
-      alert('Please sign in again before saving the Google location.');
-      return;
-    }
-
-    const selectedLocation = googleLocations.find(
-      (location) => location.locationId === selectedGoogleLocationId
-    );
-
-    if (!selectedLocation) {
-      alert('Choose a Google location first.');
-      return;
-    }
-
-    setSavingGoogleLocation(true);
-
-    try {
-      const response = await fetch('/api/google/select-location', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          google_account_id: selectedLocation.accountId,
-          google_account_name: selectedLocation.accountName,
-          google_location_id: selectedLocation.locationId,
-          google_location_name: selectedLocation.locationName,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result?.error || 'Could not save Google location.');
-      }
-
-      await loadSocialConnections(userId);
-      setShowGoogleLocationPicker(false);
-      alert('Google location saved.');
-    } catch (error: any) {
-      console.error('Save Google location error:', error?.message || error);
-      alert(error?.message || 'Could not save Google location.');
-    } finally {
-      setSavingGoogleLocation(false);
-    }
-  };
-
-  const handleManageGoogleConnection = () => {
-    if (!hasGoogleConnection) {
-      connectGoogleAccount();
-      return;
-    }
-
-    loadGoogleLocations();
-  };
-
-  const connectTikTokDemoAccount = async () => {
-    if (!tiktokDemoMode) {
-      alert('TikTok demo mode is not enabled.');
-      return;
-    }
-
-    const params = new URLSearchParams();
-    params.set('return_to', '/settings');
-
-    window.location.href = `/api/auth/tiktok/demo-connect?${params.toString()}`;
-  };
-
-  const disconnectTikTokDemoAccount = () => {
-    const confirmed = confirm(
-      'Disconnect the TikTok sandbox demo from FromOne? This only removes the local demo connection and does not affect any live TikTok account.'
-    );
-
-    if (!confirmed) return;
-
-    window.localStorage.removeItem('fromone_tiktok_demo_connected');
-    window.localStorage.removeItem('fromone_tiktok_demo_connected_at');
-
-    setTiktokDemoConnection({
-      connected: false,
-      connectedAt: null,
-    });
-
-    alert('TikTok sandbox demo disconnected.');
-  };
-
   const disconnectMetaAccount = async (connectionId?: string | null) => {
     if (!userId) {
       alert('Please sign in again before disconnecting.');
@@ -514,6 +156,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           user_id: userId,
           connection_id: connectionId || undefined,
+          provider: 'meta',
         }),
       });
 
@@ -528,53 +171,6 @@ export default function SettingsPage() {
     } catch (error: any) {
       console.error('Disconnect Meta account error:', error?.message || error);
       alert(error?.message || 'Could not disconnect account.');
-    } finally {
-      setDisconnectingConnectionId(null);
-    }
-  };
-
-  const disconnectGoogleAccount = async (connectionId?: string | null) => {
-    if (!userId) {
-      alert('Please sign in again before disconnecting.');
-      return;
-    }
-
-    const confirmed = confirm(
-      'Disconnect Google from FromOne? Existing posts will stay saved, but FromOne will not be able to publish through this Google connection until you reconnect.'
-    );
-
-    if (!confirmed) return;
-
-    setDisconnectingConnectionId(connectionId || 'google');
-
-    try {
-      const response = await fetch('/api/social-connections/disconnect', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          connection_id: connectionId || undefined,
-          provider: 'google',
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result?.error || 'Could not disconnect Google.');
-      }
-
-      await loadSocialConnections(userId);
-      setGoogleLocations([]);
-      setSelectedGoogleLocationId('');
-      setShowGoogleLocationPicker(false);
-
-      alert('Google disconnected.');
-    } catch (error: any) {
-      console.error('Disconnect Google account error:', error?.message || error);
-      alert(error?.message || 'Could not disconnect Google.');
     } finally {
       setDisconnectingConnectionId(null);
     }
@@ -621,7 +217,6 @@ export default function SettingsPage() {
 
     if (data) {
       setProfileId(data.id || null);
-
       setWebsiteUrl(data.website_url || '');
       setBusinessName(data.business_name || '');
       setIndustry(data.industry || '');
@@ -642,7 +237,6 @@ export default function SettingsPage() {
       if (data.business_name || data.industry || data.location || data.services?.length) {
         setShowBusinessDetails(true);
       }
-
     }
 
     setLoading(false);
@@ -662,7 +256,6 @@ export default function SettingsPage() {
     return {
       user_id: authUserId,
       website_url: normaliseWebsiteUrl(websiteUrl) || null,
-
       business_name: businessName.trim() || null,
       industry: industry.trim() || null,
       location: location.trim() || null,
@@ -672,7 +265,6 @@ export default function SettingsPage() {
       main_offer: mainOffer.trim() || null,
       content_pillars: splitList(contentPillars),
       business_goals: splitList(businessGoals),
-
       updated_at: new Date().toISOString(),
     };
   };
@@ -742,7 +334,6 @@ export default function SettingsPage() {
     setMainOffer('');
     setContentPillars('');
     setBusinessGoals('');
-
     setShowBusinessDetails(false);
   };
 
@@ -791,7 +382,8 @@ export default function SettingsPage() {
         <div className="page-eyebrow">Settings</div>
         <h1 className="page-title">Settings.</h1>
         <p className="page-description">
-          Manage business details and the accounts FromOne can publish to.
+          Manage the business profile, Facebook and Instagram auto posting, and TikTok manual
+          posting.
         </p>
       </div>
 
@@ -811,8 +403,8 @@ export default function SettingsPage() {
             <div className="page-eyebrow">Connected accounts</div>
             <h2 style={{ marginTop: 0 }}>Publishing options.</h2>
             <p style={{ maxWidth: 820 }}>
-              Connect Meta for automatic Facebook and Instagram publishing. For the other
-              platforms, FromOne keeps the workflow simple with copy/open manual posting.
+              FromOne keeps publishing simple: Facebook and Instagram can auto publish through
+              Meta. TikTok is manual for now.
             </p>
 
             {loadingConnections ? (
@@ -851,7 +443,7 @@ export default function SettingsPage() {
                                 ? `is connected as @${
                                     primaryMetaConnection?.instagram_username || 'Instagram'
                                   }.`
-                                : 'can be added through your Meta connection when a professional account is linked.'
+                                : 'can be added through your Meta connection when a professional Instagram account is linked.'
                             }`
                           : 'Connect Meta once to enable Facebook Page publishing and Instagram publishing where available.'}
                       </p>
@@ -894,7 +486,7 @@ export default function SettingsPage() {
                     >
                       <strong>Facebook</strong>
                       <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                        {hasMetaConnection ? 'Auto publishing ready' : 'Connect Meta to enable'}
+                        {hasFacebookConnection ? 'Auto publishing ready' : 'Connect Meta to enable'}
                       </p>
                     </div>
 
@@ -911,7 +503,7 @@ export default function SettingsPage() {
                         {hasInstagramConnection
                           ? 'Auto publishing ready'
                           : hasMetaConnection
-                            ? 'Manual ready, link professional account for auto'
+                            ? 'Link a professional Instagram account in Meta'
                             : 'Connect Meta to enable'}
                       </p>
                     </div>
@@ -960,12 +552,10 @@ export default function SettingsPage() {
                   >
                     <div>
                       <div className="page-eyebrow">Manual posting</div>
-                      <h3 style={{ margin: '6px 0 8px', fontSize: 28 }}>
-                        Google, LinkedIn & TikTok
-                      </h3>
+                      <h3 style={{ margin: '6px 0 8px', fontSize: 28 }}>TikTok</h3>
                       <p style={{ margin: 0, color: 'var(--muted)', maxWidth: 760 }}>
-                        FromOne creates the posts. You copy/open the platform and publish manually.
-                        Auto posting for these platforms can be added later when approval is ready.
+                        FromOne creates the TikTok wording, hook, CTA and hashtags. You copy the
+                        post and open TikTok manually.
                       </p>
                     </div>
 
@@ -986,127 +576,27 @@ export default function SettingsPage() {
 
                   <div
                     style={{
+                      padding: 14,
+                      borderRadius: 18,
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.08)',
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                      gap: 12,
+                      gap: 10,
                       marginTop: 18,
                     }}
                   >
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        display: 'grid',
-                        gap: 10,
-                      }}
-                    >
-                      <div>
-                        <strong>Google Business Profile</strong>
-                        <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                          {hasGoogleConnection
-                            ? primaryGoogleConnection?.google_location_name
-                              ? `Connected: ${primaryGoogleConnection.google_location_name}`
-                              : 'Connected. Choose a location for future auto posting.'
-                            : 'Manual posting ready. Auto coming soon.'}
-                        </p>
-                      </div>
-
-                      <div className="button-row" style={{ gap: 10 }}>
-                        <button
-                          type="button"
-                          className="secondary-button"
-                          onClick={openGoogleBusinessProfile}
-                        >
-                          Open Google
-                        </button>
-
-                        <button
-                          type="button"
-                          className="secondary-button"
-                          onClick={hasGoogleConnection ? handleManageGoogleConnection : connectGoogleAccount}
-                          disabled={
-                            disconnectingConnectionId === primaryGoogleConnection?.id ||
-                            loadingGoogleLocations ||
-                            savingGoogleLocation
-                          }
-                        >
-                          {hasGoogleConnection ? 'Choose location' : 'Connect'}
-                        </button>
-                      </div>
+                    <div>
+                      <strong>TikTok manual flow</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
+                        TikTok auto posting is not claimed yet. Use the Posts page to copy the
+                        generated wording, then open TikTok to publish manually.
+                      </p>
                     </div>
 
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        display: 'grid',
-                        gap: 10,
-                      }}
-                    >
-                      <div>
-                        <strong>LinkedIn</strong>
-                        <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                          Manual posting ready. Auto posting coming soon.
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        onClick={openLinkedIn}
-                      >
-                        Open LinkedIn
+                    <div className="button-row" style={{ gap: 10 }}>
+                      <button type="button" className="secondary-button" onClick={openTikTok}>
+                        Open TikTok
                       </button>
-                    </div>
-
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        display: 'grid',
-                        gap: 10,
-                      }}
-                    >
-                      <div>
-                        <strong>TikTok</strong>
-                        <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                          {tiktokDemoMode && hasTikTokDemoConnection
-                            ? 'Sandbox demo connected. Manual posting ready.'
-                            : 'Manual posting ready. Auto posting coming soon.'}
-                        </p>
-                      </div>
-
-                      <div className="button-row" style={{ gap: 10 }}>
-                        <button
-                          type="button"
-                          className="secondary-button"
-                          onClick={openTikTok}
-                        >
-                          Open TikTok
-                        </button>
-
-                        {tiktokDemoMode && !hasTikTokDemoConnection && (
-                          <button type="button" onClick={connectTikTokDemoAccount}>
-                            Connect demo
-                          </button>
-                        )}
-
-                        {tiktokDemoMode && hasTikTokDemoConnection && (
-                          <button
-                            type="button"
-                            className="secondary-button danger-button"
-                            onClick={disconnectTikTokDemoAccount}
-                          >
-                            Disconnect demo
-                          </button>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </section>
@@ -1114,80 +604,15 @@ export default function SettingsPage() {
             )}
           </section>
 
-          {hasGoogleConnection && showGoogleLocationPicker && (
-            <section className="manual-collapse-card manual-open-card" style={{ marginBottom: 24 }}>
-              <div className="manual-collapse-content manual-visible-content">
-                <div className="page-eyebrow">Google location</div>
-                <h2>Choose where Google posts should publish.</h2>
-                <p>
-                  Pick the Google business location FromOne should use for future Google posts.
-                </p>
-
-                {loadingGoogleLocations ? (
-                  <p>Loading Google locations...</p>
-                ) : googleLocations.length > 0 ? (
-                  <>
-                    <label>
-                      <strong>Google location</strong>
-                      <span>Select the business profile location to use.</span>
-                    </label>
-
-                    <select
-                      className="input"
-                      value={selectedGoogleLocationId}
-                      onChange={(event) => setSelectedGoogleLocationId(event.target.value)}
-                    >
-                      {googleLocations.map((location) => (
-                        <option key={location.locationId} value={location.locationId}>
-                          {location.locationName}
-                          {location.address ? ` — ${location.address}` : ''}
-                        </option>
-                      ))}
-                    </select>
-
-                    <div className="button-row" style={{ marginTop: 14 }}>
-                      <button
-                        type="button"
-                        onClick={saveGoogleLocation}
-                        disabled={savingGoogleLocation}
-                      >
-                        {savingGoogleLocation ? 'Saving...' : 'Save Google location'}
-                      </button>
-
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        onClick={() => setShowGoogleLocationPicker(false)}
-                        disabled={savingGoogleLocation}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p>No Google business locations were found for this account.</p>
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => setShowGoogleLocationPicker(false)}
-                    >
-                      Close
-                    </button>
-                  </>
-                )}
-              </div>
-            </section>
-          )}
-
           <section className="scan-feature-card settings-simple-scan">
             <div className="scan-feature-content">
               <div>
-                <div className="page-eyebrow">Business Website</div>
+                <div className="page-eyebrow">Business profile</div>
                 <h2>Website details.</h2>
                 <p>
-                  Add or update the website FromOne uses when creating weekly posts. The Dashboard
-                  still controls when a website scan happens.
+                  Add or update the website FromOne uses when creating posts from Dashboard. Photos
+                  and flyers provide the post topic. This business profile provides the quality,
+                  local angle, tone and CTA.
                 </p>
               </div>
             </div>
@@ -1216,7 +641,6 @@ export default function SettingsPage() {
               >
                 {showBusinessDetails ? 'Hide business details' : 'Edit business details'}
               </button>
-
             </div>
           </section>
 
@@ -1226,8 +650,8 @@ export default function SettingsPage() {
                 <div className="page-eyebrow">Business Details</div>
                 <h2>Tell FromOne about the business.</h2>
                 <p>
-                  These details help FromOne create better posts, especially when there is no
-                  website or the website does not explain everything clearly.
+                  These details help FromOne create better posts. Uploaded photos and flyers decide
+                  what the post is about; these details decide how FromOne sells it properly.
                 </p>
 
                 <div className="manual-backup-grid">
@@ -1359,8 +783,8 @@ export default function SettingsPage() {
               <div className="page-eyebrow">Next Step</div>
               <h2>Create weekly posts from Dashboard.</h2>
               <p>
-                Settings stores the business profile and connected accounts. Dashboard uses the
-                profile to scan, generate, and save weekly posts.
+                Settings stores the business profile and Meta connection. Dashboard is where users
+                upload photos or flyers and create weekly posts.
               </p>
             </div>
 
