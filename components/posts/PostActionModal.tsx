@@ -152,8 +152,8 @@ export default function PostActionModal({
   onClearReminder,
   onDeletePost,
 }: PostActionModalProps) {
-  const [showMiniAnalytics, setShowMiniAnalytics] = useState(false);
   const [showScheduleControls, setShowScheduleControls] = useState(false);
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
 
   if (!selectedPost) return null;
 
@@ -172,7 +172,6 @@ export default function PostActionModal({
     mediaType === 'flyer' ||
     mediaType === 'pdf' ||
     String(selectedPost.media_url || '').toLowerCase().includes('.pdf');
-  const isImageMedia = hasMedia && !isVideoMedia && !isFlyerMedia;
   const needsMedia = mediaRequiredForPlatform(selectedPost.platform) && !hasMedia;
   const hasSchedule = Boolean(selectedPost.scheduled_publish_at);
   const posted = isPostPosted(selectedPost);
@@ -181,110 +180,9 @@ export default function PostActionModal({
     rescanningMediaPostId === selectedPost.id ||
     (rewritingPost && rewritingAction === 'media_rescan');
 
-  const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
-  const hasPublishableMediaForInstagram = hasMedia && !isFlyerMedia;
   const instagramHasFlyerOnly = isInstagramPost && isFlyerMedia;
-
+  const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
   const rescanUsageLabel = isVideoMedia ? videoRescanUsageLabel : mediaRescanUsageLabel;
-
-  const publishCardTitle = posted
-    ? 'Posted'
-    : needsMedia
-      ? 'Needs media'
-      : instagramHasFlyerOnly
-        ? 'Needs image or video'
-        : hasSchedule && canAutoPublish
-          ? 'Scheduled'
-          : canAutoPublish
-            ? 'Ready to publish'
-            : tiktokDemoAvailable
-              ? 'TikTok sandbox demo'
-              : isTikTokPost
-                ? 'Manual TikTok post'
-                : 'Copy/open';
-
-  const publishCardDetail = posted
-    ? `${platformName} has been marked as posted.`
-    : needsMedia
-      ? `${platformName} needs media before publishing.`
-      : instagramHasFlyerOnly
-        ? 'Instagram needs an image or video. PDF flyers can be viewed and copied from here, but cannot be direct-published to Instagram.'
-        : hasSchedule && canAutoPublish
-          ? `${platformName} is scheduled to publish automatically.`
-          : canAutoPublish
-            ? `${platformName} can publish now or be scheduled for later.`
-            : tiktokDemoAvailable
-              ? 'Run a TikTok sandbox demo publish for app review. No live TikTok post will be published.'
-              : isTikTokPost
-                ? 'Copy this post, open TikTok, then paste and publish manually.'
-                : `Copy this post and open ${platformName}.`;
-
-  const mediaReadyForPlatform =
-    mediaRequiredForPlatform(selectedPost.platform)
-      ? isInstagramPost
-        ? hasPublishableMediaForInstagram
-        : hasMedia
-      : true;
-
-  const readinessItems = [
-    {
-      label: 'Wording ready',
-      ready: Boolean(selectedPost.caption || selectedPost.cta),
-    },
-    {
-      label: mediaRequiredForPlatform(selectedPost.platform) ? 'Media ready' : 'Media optional',
-      ready: mediaReadyForPlatform,
-    },
-    {
-      label: canAutoPublish
-        ? 'Auto posting available'
-        : tiktokDemoAvailable
-          ? 'Demo available'
-          : 'Manual posting',
-      ready: true,
-    },
-  ];
-
-  const performanceMetrics = [
-    {
-      label: 'Reach',
-      value: Number(selectedPost.reach || 0),
-    },
-    {
-      label: 'Likes',
-      value: Number(selectedPost.likes || 0),
-    },
-    {
-      label: 'Comments',
-      value: Number(selectedPost.comments || 0),
-    },
-    {
-      label: 'Shares',
-      value: Number(selectedPost.shares || 0),
-    },
-    {
-      label: 'Saves',
-      value: Number(selectedPost.saves || 0),
-    },
-    {
-      label: 'Clicks',
-      value: Number(selectedPost.clicks || 0),
-    },
-  ];
-
-  const totalPerformanceActions = performanceMetrics.reduce(
-    (total, metric) => total + metric.value,
-    0
-  );
-
-  const hasPerformanceData = totalPerformanceActions > 0;
-
-  const formatMetricValue = (value: number) => {
-    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}m`;
-    if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
-
-    return String(value);
-  };
 
   const handlePrimaryPublish = () => {
     if (canDirectPublishToFacebook(selectedPost)) {
@@ -305,101 +203,75 @@ export default function PostActionModal({
     onCopyPost(selectedPost);
   };
 
+  const primaryPublishLabel = isPublishing
+    ? 'Publishing...'
+    : posted
+      ? 'Already posted'
+      : canAutoPublish
+        ? `Publish to ${autoPublishPlatformName}`
+        : isTikTokPost
+          ? 'Copy for TikTok'
+          : `Copy for ${platformName}`;
+
+  const primaryPublishDisabled =
+    posted || isPublishing || needsMedia || instagramHasFlyerOnly || isRescanning;
+
+  const statusLabel = getPostStatus(selectedPost) === 'Reminder set' ? 'Planned' : getPostStatus(selectedPost);
+
   return (
-    <div className="fromone-modal-overlay" role="dialog" aria-modal="true">
-      <section className="fromone-modal-card fromone-post-action-modal">
-        <div className="fromone-flow-card-top">
+    <div className="fromone-modal-overlay fromone-simple-modal-overlay" role="dialog" aria-modal="true">
+      <section className="fromone-modal-card fromone-post-action-modal fromone-simple-post-modal">
+        <header className="fromone-simple-modal-header">
           <div>
-            <div className="page-eyebrow">Post editor</div>
-            <h2>{selectedPost.title || 'Social media post'}</h2>
-            <p>
-              {getPostPositionLabel(selectedPost)} · {platformName} · {getPostStatus(selectedPost)}
-            </p>
-          </div>
-
-          <div className="fromone-flow-inline-actions">
-            <button type="button" className="secondary-button" onClick={onClose}>
-              Close
-            </button>
-          </div>
-        </div>
-
-        <div className="selected-post-tags">
-          <span>{getPostPositionLabel(selectedPost)}</span>
-          <span>{platformName}</span>
-          <span>{getPostStatus(selectedPost)}</span>
-          {isPostScheduledToday(selectedPost) && !posted && <span>Today</span>}
-          {selectedPost.audience_target && <span>For {selectedPost.audience_target}</span>}
-          {isTikTokPost && <span>Manual posting</span>}
-          {isFlyerMedia && <span>PDF flyer</span>}
-          {isVideoMedia && <span>Video</span>}
-        </div>
-
-        <section ref={mediaRef} className="fromone-flow-tools-card fromone-media-step-card">
-          <div className="fromone-simple-step-header">
-            <div className="fromone-step-number">1</div>
-            <div>
-              <div className="page-eyebrow">Media</div>
-              <h3>Choose the photo, video or flyer</h3>
-              <p>
-                Upload the media you want this post to be about. FromOne can then rewrite this one
-                post around it.
-              </p>
+            <div className="page-eyebrow">{getPostPositionLabel(selectedPost)} · {platformName}</div>
+            <h2>{selectedPost.title || 'Review post'}</h2>
+            <div className="fromone-simple-modal-pills">
+              <span>{statusLabel}</span>
+              {isPostScheduledToday(selectedPost) && !posted && <span>Today</span>}
+              {hasMedia && <span>{isVideoMedia ? 'Video' : isFlyerMedia ? 'Flyer' : 'Image'}</span>}
+              {isTikTokPost && <span>TikTok manual</span>}
             </div>
           </div>
 
-          <div className={`fromone-media-workflow ${hasMedia ? 'has-media' : 'needs-media'}`}>
-            <div className="fromone-media-preview-shell">
+          <button type="button" className="secondary-button fromone-simple-close" onClick={onClose}>
+            Close
+          </button>
+        </header>
+
+        <section ref={mediaRef} className="fromone-simple-section fromone-simple-media-section">
+          <div className="fromone-simple-section-title">
+            <span>1</span>
+            <div>
+              <div className="page-eyebrow">Media</div>
+              <h3>Check the media</h3>
+            </div>
+          </div>
+
+          <div className="fromone-simple-media-grid">
+            <div className="fromone-simple-media-preview">
               {selectedPost.media_url ? (
-                <>
-                  {isVideoMedia ? (
-                    <video src={selectedPost.media_url} controls className="fromone-media-preview" />
-                  ) : isFlyerMedia ? (
-                    <div className="fromone-flyer-preview-card">
-                      <div className="fromone-file-icon">PDF</div>
-                      <div>
-                        <strong>Flyer attached</strong>
-                        <p>Open the flyer to check the details before rewriting or posting.</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <img
-                      src={selectedPost.media_url}
-                      alt="Uploaded post media"
-                      className="fromone-media-preview"
-                    />
-                  )}
-                </>
+                isVideoMedia ? (
+                  <video src={selectedPost.media_url} controls />
+                ) : isFlyerMedia ? (
+                  <div className="fromone-simple-file-card">
+                    <strong>PDF flyer</strong>
+                    <p>Open the flyer to check the details before posting.</p>
+                  </div>
+                ) : (
+                  <img src={selectedPost.media_url} alt="Uploaded post media" />
+                )
               ) : (
-                <div className="fromone-empty-media-card">
-                  <div className="fromone-empty-media-icon">+</div>
-                  <strong>No media added yet</strong>
-                  <p>
-                    Add a photo, short video or PDF flyer. This keeps the post specific and easy to
-                    review.
-                  </p>
+                <div className="fromone-simple-file-card">
+                  <strong>No media yet</strong>
+                  <p>Add a photo, video or flyer to make this post stronger.</p>
                 </div>
               )}
             </div>
 
-            <div className="fromone-media-side-panel">
-              <div className="fromone-media-status-card">
-                <span className={hasMedia ? 'is-ready' : 'is-needed'}>
-                  {hasMedia ? 'Media ready' : 'Add media first'}
-                </span>
-                <h4>
-                  {hasMedia
-                    ? isVideoMedia
-                      ? 'Video selected'
-                      : isFlyerMedia
-                        ? 'Flyer selected'
-                        : 'Image selected'
-                    : 'Upload media'}
-                </h4>
-                <p>{hasMedia ? getImageGuidance(selectedPost) : 'Choose the media this post should use.'}</p>
-              </div>
+            <aside className="fromone-simple-media-actions">
+              <p>{hasMedia ? getImageGuidance(selectedPost) : 'Choose the media this post should use.'}</p>
 
-              <label className="fromone-upload-button fromone-media-primary-upload">
+              <label className="fromone-simple-primary-action">
                 <input
                   type="file"
                   accept="image/*,video/*,application/pdf"
@@ -410,20 +282,15 @@ export default function PostActionModal({
                 <span>
                   {uploadingMediaPostId === selectedPost.id
                     ? 'Uploading...'
-                    : selectedPost.media_url
+                    : hasMedia
                       ? 'Replace media'
                       : 'Choose media'}
                 </span>
               </label>
 
               {hasMedia && (
-                <div className="fromone-media-small-actions">
-                  <a
-                    href={selectedPost.media_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="secondary-button"
-                  >
+                <div className="fromone-simple-two-actions">
+                  <a href={selectedPost.media_url} target="_blank" rel="noreferrer" className="secondary-button">
                     {isFlyerMedia ? 'Open flyer' : 'View media'}
                   </a>
 
@@ -437,61 +304,53 @@ export default function PostActionModal({
                   </button>
                 </div>
               )}
-            </div>
+            </aside>
           </div>
-
-          {onRescanPostMedia && (
-            <div className="fromone-rescan-step-card">
-              <div className="fromone-rescan-action-card fromone-rescan-action-card-simple">
-                <div>
-                  <div className="page-eyebrow">Rewrite using media</div>
-                  <h3>Rewrite using media</h3>
-                  <p>
-                    Create a fresh editable version of this post from the photo, video or flyer
-                    above.
-                  </p>
-
-                  {posted && (
-                    <p className="fromone-rescan-note">
-                      This will not change anything already posted on Facebook or Instagram.
-                    </p>
-                  )}
-
-                  {!hasMedia && (
-                    <p className="fromone-rescan-note">
-                      Upload media first, then FromOne can rewrite this post.
-                    </p>
-                  )}
-
-                  {rescanUsageLabel && <span className="fromone-rescan-usage">{rescanUsageLabel}</span>}
-                </div>
-
-                <button
-                  type="button"
-                  className="fromone-rescan-primary-button"
-                  onClick={() => onRescanPostMedia(selectedPost)}
-                  disabled={accessLocked || !hasMedia || isRescanning}
-                >
-                  {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
-                </button>
-              </div>
-            </div>
-          )}
         </section>
 
-        <section ref={postRef} className="fromone-flow-preview-card">
-          <div className="fromone-flow-card-top">
+        {onRescanPostMedia && (
+          <section className="fromone-simple-section fromone-simple-rewrite-section">
+            <div className="fromone-simple-section-title">
+              <span>2</span>
+              <div>
+                <div className="page-eyebrow">Rewrite using media</div>
+                <h3>Rewrite using media</h3>
+              </div>
+            </div>
+
+            <div className="fromone-simple-action-strip">
+              <div>
+                <p>Create a fresh editable version from the photo, video or flyer above.</p>
+                {posted && (
+                  <small>This will not change anything already posted on Facebook or Instagram.</small>
+                )}
+                {!hasMedia && <small>Upload media first, then rewrite this post.</small>}
+                {rescanUsageLabel && <small>{rescanUsageLabel}</small>}
+              </div>
+
+              <button
+                type="button"
+                className="fromone-simple-primary-action"
+                onClick={() => onRescanPostMedia(selectedPost)}
+                disabled={accessLocked || !hasMedia || isRescanning}
+              >
+                {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
+              </button>
+            </div>
+          </section>
+        )}
+
+        <section ref={postRef} className="fromone-simple-section">
+          <div className="fromone-simple-section-title">
+            <span>3</span>
             <div>
               <div className="page-eyebrow">Wording</div>
               <h3>Check the wording</h3>
-              <p>Read it once, make any changes, then publish or copy.</p>
             </div>
-
-            <span>{platformName}</span>
           </div>
 
           {editingPostId === selectedPost.id ? (
-            <div className="fromone-flow-edit-box">
+            <div className="fromone-simple-edit-form">
               <label>
                 <strong>Caption</strong>
                 <textarea
@@ -521,7 +380,7 @@ export default function PostActionModal({
                 />
               </label>
 
-              <div className="fromone-flow-inline-actions">
+              <div className="fromone-simple-two-actions">
                 <button type="button" onClick={onSaveEditedPost} disabled={savingEdit}>
                   {savingEdit ? 'Saving...' : 'Save wording'}
                 </button>
@@ -537,297 +396,196 @@ export default function PostActionModal({
               </div>
             </div>
           ) : (
-            <div className="fromone-post-preview-body">
-              <p>{selectedPost.caption || 'No caption saved.'}</p>
+            <>
+              <div className="fromone-simple-wording-card">
+                <p>{selectedPost.caption || 'No caption saved.'}</p>
 
-              {selectedPost.cta && (
-                <p>
-                  <strong>CTA:</strong> {selectedPost.cta}
-                </p>
+                {selectedPost.cta && (
+                  <p>
+                    <strong>CTA:</strong> {selectedPost.cta}
+                  </p>
+                )}
+
+                {Array.isArray(selectedPost.hashtags) && selectedPost.hashtags.length > 0 && (
+                  <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
+                )}
+              </div>
+
+              {activeImprovementNote && (
+                <div className="fromone-simple-note">
+                  <strong>{activeImprovementNote.label}</strong>
+                  <p>{activeImprovementNote.detail}</p>
+                </div>
               )}
 
-              {Array.isArray(selectedPost.hashtags) && selectedPost.hashtags.length > 0 && (
-                <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
-              )}
-            </div>
+              <div className="fromone-simple-two-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => onStartEditingPost(selectedPost)}
+                  disabled={accessLocked}
+                >
+                  Edit wording
+                </button>
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => {
+                    setShowAdvancedTools((current) => !current);
+                    if (!showImproveTools) onToggleImproveTools();
+                  }}
+                  disabled={accessLocked || rewritingPost || isRescanning}
+                >
+                  {showAdvancedTools ? 'Hide improve tools' : 'Improve wording'}
+                </button>
+              </div>
+            </>
           )}
 
-          {activeImprovementNote && (
-            <div className="fromone-improvement-note">
-              <strong>{activeImprovementNote.label}</strong>
-              <p>{activeImprovementNote.detail}</p>
-            </div>
-          )}
-
-          <div className="fromone-flow-publish-buttons">
-            {editingPostId !== selectedPost.id && (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onStartEditingPost(selectedPost)}
-                disabled={accessLocked}
-              >
-                Edit wording
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={onToggleImproveTools}
-              disabled={accessLocked || rewritingPost || isRescanning}
-            >
-              {showImproveTools ? 'Hide improve' : 'Improve wording'}
-            </button>
-          </div>
-
-          {showImproveTools && (
-            <div className="fromone-flow-tools-list" style={{ marginTop: 18 }}>
-              <section className="fromone-flow-tool-row fromone-improve-options-row">
-                <div className="fromone-flow-tool-copy">
-                  <strong>Quick improve</strong>
-                  <p>Choose a simple improvement.</p>
-                </div>
-
-                <div className="fromone-flow-tool-action">
-                  <div className="fromone-quick-improve-grid">
-                    {quickImproveActions.map((action) => (
-                      <button
-                        key={action.value}
-                        type="button"
-                        className="secondary-button fromone-quick-improve-button"
-                        onClick={() => onQuickImprovePost(selectedPost, action.value)}
-                        disabled={accessLocked || rewritingPost || isRescanning}
-                      >
-                        {rewritingPost && rewritingAction === action.value
-                          ? 'Improving...'
-                          : action.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </section>
-
-              <section className="fromone-flow-tool-row fromone-improve-options-row">
-                <div className="fromone-flow-tool-copy">
-                  <strong>Make it more specific</strong>
-                  <p>Choose who this post should speak to.</p>
-                </div>
-
-                <div className="fromone-flow-tool-action">
-                  <select
-                    className="input"
-                    value={audienceTarget}
-                    onChange={(event) => onSetAudienceTarget(event.target.value)}
-                  >
-                    {dynamicAudienceTargets.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-
-                  {audienceTarget === 'Custom audience' && (
-                    <input
-                      className="input"
-                      value={customAudienceTarget}
-                      onChange={(event) => onSetCustomAudienceTarget(event.target.value)}
-                      placeholder="Example: first-time homeowners"
-                    />
-                  )}
-
-                  <select
-                    className="input"
-                    value={toneTarget}
-                    onChange={(event) => onSetToneTarget(event.target.value)}
-                  >
-                    {toneOptions.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-
+          {showAdvancedTools && showImproveTools && (
+            <div className="fromone-simple-improve-panel">
+              <div className="fromone-simple-quick-grid">
+                {quickImproveActions.map((action) => (
                   <button
+                    key={action.value}
                     type="button"
-                    onClick={() => onRewriteForAudience(selectedPost)}
+                    className="secondary-button"
+                    onClick={() => onQuickImprovePost(selectedPost, action.value)}
                     disabled={accessLocked || rewritingPost || isRescanning}
                   >
-                    {rewritingPost && rewritingAction === 'audience'
-                      ? 'Improving...'
-                      : 'Improve for audience'}
+                    {rewritingPost && rewritingAction === action.value ? 'Improving...' : action.label}
                   </button>
-                </div>
-              </section>
+                ))}
+              </div>
+
+              <div className="fromone-simple-audience-grid">
+                <select
+                  className="input"
+                  value={audienceTarget}
+                  onChange={(event) => onSetAudienceTarget(event.target.value)}
+                >
+                  {dynamicAudienceTargets.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+
+                {audienceTarget === 'Custom audience' && (
+                  <input
+                    className="input"
+                    value={customAudienceTarget}
+                    onChange={(event) => onSetCustomAudienceTarget(event.target.value)}
+                    placeholder="Example: first-time homeowners"
+                  />
+                )}
+
+                <select
+                  className="input"
+                  value={toneTarget}
+                  onChange={(event) => onSetToneTarget(event.target.value)}
+                >
+                  {toneOptions.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => onRewriteForAudience(selectedPost)}
+                  disabled={accessLocked || rewritingPost || isRescanning}
+                >
+                  {rewritingPost && rewritingAction === 'audience' ? 'Improving...' : 'Improve for audience'}
+                </button>
+              </div>
             </div>
           )}
         </section>
 
-        <section ref={publishRef} className="fromone-flow-tools-card fromone-publish-control-section">
-          <div className="fromone-flow-tools-header">
+        <section ref={publishRef} className="fromone-simple-section">
+          <div className="fromone-simple-section-title">
+            <span>4</span>
             <div>
-              <div className="page-eyebrow">Next step</div>
-              <h3>Publish or copy</h3>
-              <p>
-                Facebook and Instagram can auto publish when connected. TikTok is copy/open manual
-                posting for now.
-              </p>
+              <div className="page-eyebrow">Publish</div>
+              <h3>{posted ? 'Posted' : canAutoPublish ? 'Publish now' : 'Copy and open'}</h3>
             </div>
           </div>
 
           {selectedPost.publish_error && (
-            <div className="fromone-improvement-note fromone-error-note">
+            <div className="fromone-simple-note is-error">
               <strong>Publishing failed</strong>
               <p>{selectedPost.publish_error}</p>
             </div>
           )}
 
           {instagramHasFlyerOnly && (
-            <div className="fromone-improvement-note">
-              <strong>Instagram direct publish needs image or video</strong>
-              <p>
-                This post has a PDF flyer. Replace it with an image or video to publish directly to
-                Instagram, or open the flyer and post manually.
-              </p>
+            <div className="fromone-simple-note">
+              <strong>Instagram needs an image or video</strong>
+              <p>PDF flyers cannot be direct-published to Instagram. Replace it with an image or video, or post manually.</p>
             </div>
           )}
 
-          {tiktokDemoAvailable && !posted && (
-            <div className="fromone-improvement-note">
-              <strong>TikTok sandbox demo</strong>
+          <div className="fromone-simple-publish-card">
+            <div>
+              <strong>{platformName}</strong>
               <p>
-                This demonstrates the TikTok connect and publish flow for app review. No live
-                TikTok post will be published.
+                {posted
+                  ? `${platformName} has been marked as posted.`
+                  : canAutoPublish
+                    ? `${platformName} can publish now when connected.`
+                    : 'Copy the post, open TikTok, then paste and publish manually.'}
               </p>
-            </div>
-          )}
 
-          <div className={`fromone-publish-control-card ${posted ? 'is-posted' : ''} ${needsMedia || instagramHasFlyerOnly ? 'needs-media' : ''}`}>
-            <div className="fromone-publish-control-main">
-              <div className="fromone-publish-status-icon">
-                {posted ? '✓' : needsMedia || instagramHasFlyerOnly ? '!' : hasSchedule ? '⏱' : '→'}
-              </div>
-
-              <div>
-                <div className="fromone-publish-card-kicker">{platformName}</div>
-                <h3>{publishCardTitle}</h3>
-                <p>{publishCardDetail}</p>
-
-                {hasSchedule && !posted && (
-                  <div className="fromone-publish-schedule-pill">
-                    Scheduled: {getReadableDateTime(selectedPost.scheduled_publish_at)}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="fromone-readiness-list">
-              {readinessItems.map((item) => (
-                <span key={item.label} className={item.ready ? 'is-ready' : 'is-not-ready'}>
-                  <strong>{item.ready ? '✓' : '•'}</strong> {item.label}
-                </span>
-              ))}
-            </div>
-
-            <div className="fromone-publish-card-actions">
-              {canAutoPublish || tiktokDemoAvailable ? (
-                <button
-                  type="button"
-                  onClick={handlePrimaryPublish}
-                  disabled={isPublishing || posted || needsMedia || instagramHasFlyerOnly || isRescanning}
-                >
-                  {isPublishing
-                    ? tiktokDemoAvailable
-                      ? 'Running demo...'
-                      : 'Publishing...'
-                    : posted
-                      ? `Posted to ${platformName}`
-                      : tiktokDemoAvailable
-                        ? 'Run TikTok demo publish'
-                        : `Publish to ${autoPublishPlatformName}`}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onCopyPost(selectedPost)}
-                  disabled={posted || isRescanning}
-                >
-                  {isTikTokPost ? 'Copy for TikTok' : `Copy for ${platformName}`}
-                </button>
-              )}
-
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onCopyPost(selectedPost)}
-                disabled={isRescanning}
-              >
-                Copy post
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
-                disabled={isRescanning}
-              >
-                Open {platformName}
-              </button>
-
-              {posted ? (
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => onMarkAsNotPosted(selectedPost.id)}
-                  disabled={isRescanning}
-                >
-                  Mark as not posted
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => onMarkAsPosted(selectedPost.id)}
-                  disabled={isRescanning}
-                >
-                  Mark as posted
-                </button>
+              {hasSchedule && !posted && (
+                <small>Planned: {getReadableDateTime(selectedPost.scheduled_publish_at)}</small>
               )}
             </div>
+
+            <button
+              type="button"
+              className="fromone-simple-primary-action"
+              onClick={handlePrimaryPublish}
+              disabled={primaryPublishDisabled}
+            >
+              {primaryPublishLabel}
+            </button>
           </div>
 
-          <div
-            className="fromone-image-guidance-note"
-            style={{
-              marginTop: 14,
-            }}
-          >
-            <strong>{hasSchedule ? 'Schedule saved' : 'Schedule for later'}</strong>
-            <p>
-              {canAutoPublish
-                ? `${autoPublishPlatformName} can publish automatically at the time you choose.`
-                : `This saves a reminder time for ${platformName}. You will still post manually.`}
-            </p>
+          <div className="fromone-simple-two-actions">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => onCopyPost(selectedPost)}
+              disabled={isRescanning}
+            >
+              Copy post
+            </button>
 
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
+              disabled={isRescanning}
+            >
+              Open {platformName}
+            </button>
+          </div>
+
+          <div className="fromone-simple-schedule">
             {!showScheduleControls ? (
-              <div className="button-row" style={{ marginTop: 12 }}>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => setShowScheduleControls(true)}
-                  disabled={posted || isRescanning}
-                >
-                  {hasSchedule ? 'Change schedule' : 'Schedule for later'}
-                </button>
-
-                {hasSchedule && !posted && (
-                  <span className="fromone-publish-schedule-pill">
-                    Scheduled: {getReadableDateTime(selectedPost.scheduled_publish_at)}
-                  </span>
-                )}
-              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setShowScheduleControls(true)}
+                disabled={posted || isRescanning}
+              >
+                {hasSchedule ? 'Change planned time' : 'Plan for later'}
+              </button>
             ) : (
-              <>
+              <div className="fromone-simple-schedule-grid">
                 <input
                   type="datetime-local"
                   className="input"
@@ -835,141 +593,69 @@ export default function PostActionModal({
                   onChange={(event) => onSetReminderValue(event.target.value)}
                 />
 
-                <div className="button-row" style={{ marginTop: 12 }}>
-                  <button
-                    type="button"
-                    onClick={() => onSaveReminder(selectedPost)}
-                    disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning}
-                  >
-                    {savingReminderPostId === selectedPost.id ? 'Saving...' : 'Save schedule'}
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => onSaveReminder(selectedPost)}
+                  disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning}
+                >
+                  {savingReminderPostId === selectedPost.id ? 'Saving...' : 'Save time'}
+                </button>
 
-                  {hasSchedule && (
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => onClearReminder(selectedPost)}
-                      disabled={savingReminderPostId === selectedPost.id || isRescanning}
-                    >
-                      Clear schedule
-                    </button>
-                  )}
-
+                {hasSchedule && (
                   <button
                     type="button"
                     className="secondary-button"
-                    onClick={() => setShowScheduleControls(false)}
+                    onClick={() => onClearReminder(selectedPost)}
                     disabled={savingReminderPostId === selectedPost.id || isRescanning}
                   >
-                    Hide schedule
+                    Clear
                   </button>
-                </div>
-              </>
-            )}
-          </div>
-
-          {(posted || hasPerformanceData) && (
-            <div className="fromone-schedule-box fromone-schedule-control-card">
-              <div className="fromone-schedule-card-header">
-                <div>
-                  <strong>Mini analytics</strong>
-                  <p>
-                    {posted
-                      ? hasPerformanceData
-                        ? 'Stats are available for this post.'
-                        : 'No stats recorded yet.'
-                      : 'Stats appear after publishing.'}
-                  </p>
-                </div>
+                )}
 
                 <button
                   type="button"
                   className="secondary-button"
-                  onClick={() => setShowMiniAnalytics((current: boolean) => !current)}
+                  onClick={() => setShowScheduleControls(false)}
+                  disabled={savingReminderPostId === selectedPost.id || isRescanning}
                 >
-                  {showMiniAnalytics ? 'Hide stats' : 'Show stats'}
+                  Hide
                 </button>
               </div>
+            )}
+          </div>
 
-              {showMiniAnalytics && (
-                <>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))',
-                      gap: 10,
-                    }}
-                  >
-                    {performanceMetrics.map((metric) => (
-                      <div
-                        key={metric.label}
-                        style={{
-                          padding: '12px',
-                          borderRadius: 16,
-                          background: 'rgba(255, 255, 255, 0.06)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 12,
-                            opacity: 0.68,
-                            fontWeight: 800,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.04em',
-                          }}
-                        >
-                          {metric.label}
-                        </div>
+          <div className="fromone-simple-admin-actions">
+            {posted ? (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onMarkAsNotPosted(selectedPost.id)}
+                disabled={isRescanning}
+              >
+                Undo posted
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onMarkAsPosted(selectedPost.id)}
+                disabled={isRescanning}
+              >
+                Mark posted manually
+              </button>
+            )}
 
-                        <strong
-                          style={{
-                            display: 'block',
-                            marginTop: 6,
-                            fontSize: 22,
-                            lineHeight: 1,
-                          }}
-                        >
-                          {formatMetricValue(metric.value)}
-                        </strong>
-                      </div>
-                    ))}
-                  </div>
-
-                  {!hasPerformanceData && (
-                    <p style={{ marginBottom: 0, opacity: 0.72 }}>
-                      Stats can be updated when platform analytics are connected.
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {onDeletePost && (
-            <div
-              style={{
-                marginTop: 14,
-                paddingTop: 14,
-                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              }}
-            >
+            {onDeletePost && (
               <button
                 type="button"
                 className="secondary-button danger-button"
                 onClick={() => onDeletePost(selectedPost)}
                 disabled={deletingPostId === selectedPost.id || isRescanning}
               >
-                {deletingPostId === selectedPost.id
-                  ? posted
-                    ? 'Archiving...'
-                    : 'Deleting...'
-                  : posted
-                    ? 'Archive post'
-                    : 'Delete post'}
+                {deletingPostId === selectedPost.id ? 'Deleting...' : posted ? 'Archive post' : 'Delete post'}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </section>
       </section>
     </div>
