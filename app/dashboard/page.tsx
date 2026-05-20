@@ -1867,25 +1867,6 @@ If uploads are supplied:
               {scanning ? "Creating your posts..." : "Create my posts"}
             </button>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 12,
-                flexWrap: "wrap",
-              }}
-            >
-              <Link href="/posts" className="secondary-button">
-                View post calendar
-              </Link>
-
-              {businessProfileReady && (
-                <Link href="/settings" className="secondary-button">
-                  Edit Business Profile
-                </Link>
-              )}
-            </div>
-
             {weeklyUploads.length > 0 && (
               <p style={{ textAlign: "center", margin: 0, color: "var(--muted)" }}>
                 {weeklyUploads.length} upload{weeklyUploads.length === 1 ? "" : "s"} ={" "}
