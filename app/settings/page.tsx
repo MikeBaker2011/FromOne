@@ -602,10 +602,6 @@ export default function SettingsPage() {
                   >
                     {showBusinessDetails ? 'Close Business Profile' : 'Edit Business Profile'}
                   </button>
-
-                  <a href="/dashboard" className="secondary-button">
-                    Create weekly posts
-                  </a>
                 </div>
               </div>
 
