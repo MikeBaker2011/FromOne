@@ -45,7 +45,7 @@ type WeeklyUpload = {
   previewUrl: string;
   mediaUrl?: string;
   mediaPath?: string;
-  mediaType?: "image" | "flyer";
+  mediaType?: "image" | "flyer" | "video";
 };
 
 type UploadedMediaItem = {
@@ -54,7 +54,7 @@ type UploadedMediaItem = {
   file_name: string;
   media_url: string;
   media_path: string;
-  media_type: "image" | "flyer";
+  media_type: "image" | "flyer" | "video";
   content_type: string;
   topic_hint: string;
 };
@@ -69,17 +69,17 @@ const availablePlatforms: PlatformOption[] = [
   {
     name: "Facebook",
     shortName: "Facebook",
-    description: "Auto posting when Meta is connected.",
+    description: "Auto-post when Meta is connected.",
   },
   {
     name: "Instagram",
     shortName: "Instagram",
-    description: "Auto posting when Meta is connected.",
+    description: "Auto-post when Meta is connected.",
   },
   {
     name: "TikTok",
     shortName: "TikTok",
-    description: "Manual posting for now. Copy/open manually.",
+    description: "Copy and open TikTok manually for now.",
   },
 ];
 
@@ -87,19 +87,17 @@ const marketReachOptions = [
   {
     value: "Local customers",
     title: "Local",
-    description:
-      "Best for trades, local services, venues, clinics, and businesses serving one area.",
+    description: "For customers near your business.",
   },
   {
     value: "Nationwide customers",
     title: "Nationwide",
-    description: "Best for businesses that work across the UK or want broader reach.",
+    description: "For customers across the UK.",
   },
   {
     value: "Online customers",
     title: "Online",
-    description:
-      "Best for ecommerce, digital services, remote offers, and online-first brands.",
+    description: "For online shops, digital services or remote work.",
   },
 ];
 
@@ -107,17 +105,17 @@ const postingFrequencyOptions = [
   {
     value: 3,
     title: "3 posts",
-    description: "A light weekly set for simple consistency.",
+    description: "Simple weekly set.",
   },
   {
     value: 5,
     title: "5 posts",
-    description: "A steady weekday set for regular visibility.",
+    description: "Steady weekday set.",
   },
   {
     value: 7,
     title: "7 posts",
-    description: "A full weekly set for maximum activity.",
+    description: "Full weekly set.",
   },
 ];
 
@@ -135,8 +133,14 @@ const platformFallback = [
 
 const DEMO_WEEKLY_SCAN_LIMIT = 1;
 const PAID_WEEKLY_SCAN_LIMIT = 2;
+
+const DEMO_WEEKLY_VIDEO_SCAN_LIMIT = 1;
+const PAID_WEEKLY_VIDEO_SCAN_LIMIT = 2;
+
 const MAX_SAVED_CAMPAIGNS = 4;
+
 const WEBSITE_SCAN_EVENT_TYPES = ["website_scan", "campaign_regenerate"];
+const VIDEO_SCAN_EVENT_TYPES = ["video_scan"];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -150,7 +154,9 @@ export default function DashboardPage() {
   const [savingManualProfile, setSavingManualProfile] = useState(false);
 
   const [weeklyScansUsed, setWeeklyScansUsed] = useState(0);
+  const [weeklyVideoScansUsed, setWeeklyVideoScansUsed] = useState(0);
   const [savedCampaignsCount, setSavedCampaignsCount] = useState(0);
+
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({
     total: 0,
     posted: 0,
@@ -166,8 +172,11 @@ export default function DashboardPage() {
   const [accessLocked, setAccessLocked] = useState(false);
   const [accessMessage, setAccessMessage] = useState("");
 
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultSelectedPlatforms);
-  const [selectedMarketReach, setSelectedMarketReach] = useState("Local customers");
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
+    defaultSelectedPlatforms
+  );
+  const [selectedMarketReach, setSelectedMarketReach] =
+    useState("Local customers");
   const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(3);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [weeklyUploads, setWeeklyUploads] = useState<WeeklyUpload[]>([]);
@@ -283,7 +292,9 @@ export default function DashboardPage() {
   };
 
   const isPaidSubscription = (status?: string | null) => {
-    return ["active", "paid", "trialing"].includes(String(status || "").toLowerCase());
+    return ["active", "paid", "trialing"].includes(
+      String(status || "").toLowerCase()
+    );
   };
 
   const calculateAccess = (access: AccessInfo | null) => {
@@ -302,11 +313,14 @@ export default function DashboardPage() {
     }
 
     if (isFutureDate(access.extension_ends_at)) {
-      const date = new Date(access.extension_ends_at as string).toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
+      const date = new Date(access.extension_ends_at as string).toLocaleDateString(
+        undefined,
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      );
 
       return {
         locked: false,
@@ -315,11 +329,14 @@ export default function DashboardPage() {
     }
 
     if (isFutureDate(access.trial_ends_at)) {
-      const date = new Date(access.trial_ends_at as string).toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
+      const date = new Date(access.trial_ends_at as string).toLocaleDateString(
+        undefined,
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      );
 
       return {
         locked: false,
@@ -375,6 +392,25 @@ export default function DashboardPage() {
 
     const used = count || 0;
     setWeeklyScansUsed(used);
+    return used;
+  };
+
+  const loadWeeklyVideoScanUsage = async (userId: string) => {
+    const { count, error } = await supabase
+      .from("usage_events")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .in("event_type", VIDEO_SCAN_EVENT_TYPES)
+      .gte("created_at", getSevenDaysAgoIso());
+
+    if (error) {
+      console.error("Error loading video scan usage:", error.message);
+      setWeeklyVideoScansUsed(0);
+      return 0;
+    }
+
+    const used = count || 0;
+    setWeeklyVideoScansUsed(used);
     return used;
   };
 
@@ -567,6 +603,7 @@ export default function DashboardPage() {
 
     await Promise.all([
       loadWeeklyScanUsage(userId),
+      loadWeeklyVideoScanUsage(userId),
       loadBillingPlan(userId),
       loadSavedCampaignCount(userId),
       loadOrCreateAccess(userId),
@@ -663,8 +700,37 @@ export default function DashboardPage() {
     if (used >= limit) {
       alert(
         plan === "starter"
-          ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create posts using the business details route.`
-          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Use the business details route or upgrade to FromOne Monthly.`
+          ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create posts using saved business details.`
+          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Use saved business details or upgrade to FromOne Monthly.`
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const checkWeeklyVideoScanLimit = async (userId: string) => {
+    const admin = await isAdminUser(userId);
+
+    if (admin) return true;
+
+    const videoUploadsThisRun = weeklyUploads.filter(
+      (upload) => getWeeklyUploadMediaType(upload.file) === "video"
+    ).length;
+
+    if (videoUploadsThisRun === 0) return true;
+
+    const plan = await loadBillingPlan(userId);
+    const limit =
+      plan === "starter" ? PAID_WEEKLY_VIDEO_SCAN_LIMIT : DEMO_WEEKLY_VIDEO_SCAN_LIMIT;
+    const used = await loadWeeklyVideoScanUsage(userId);
+    const remaining = Math.max(limit - used, 0);
+
+    if (videoUploadsThisRun > remaining) {
+      alert(
+        plan === "starter"
+          ? `You can scan ${PAID_WEEKLY_VIDEO_SCAN_LIMIT} videos per 7 days. You have ${remaining} video scan left.`
+          : `Your demo includes ${DEMO_WEEKLY_VIDEO_SCAN_LIMIT} video scan per 7 days. You have ${remaining} video scan left.`
       );
       return false;
     }
@@ -687,7 +753,7 @@ export default function DashboardPage() {
 
   const recordUsageEvent = async (
     userId: string,
-    eventType: "website_scan" | "campaign_regenerate",
+    eventType: "website_scan" | "campaign_regenerate" | "video_scan",
     metadata: Record<string, any> = {}
   ) => {
     const { error } = await supabase.from("usage_events").insert({
@@ -698,6 +764,11 @@ export default function DashboardPage() {
 
     if (error) {
       console.error("Error recording usage event:", error.message);
+      return;
+    }
+
+    if (eventType === "video_scan") {
+      await loadWeeklyVideoScanUsage(userId);
       return;
     }
 
@@ -768,7 +839,7 @@ ${marketReachContext}
 Core FromOne rule:
 - Uploaded media provides the topic.
 - The business profile provides the quality, local angle, industry relevance, tone, CTA and sales angle.
-- Do not only describe a photo or flyer.
+- Do not only describe a photo, flyer or video.
 - Turn each upload into a useful post that sounds like the business.
 `;
   };
@@ -1021,8 +1092,9 @@ Core FromOne rule:
     return cleanName || "media";
   };
 
-  const getWeeklyUploadMediaType = (file: File): "image" | "flyer" => {
+  const getWeeklyUploadMediaType = (file: File): "image" | "flyer" | "video" => {
     if (file.type === "application/pdf") return "flyer";
+    if (file.type.startsWith("video/")) return "video";
     return "image";
   };
 
@@ -1060,9 +1132,11 @@ Core FromOne rule:
         media_type: mediaType,
         content_type: upload.file.type,
         topic_hint:
-          mediaType === "flyer"
-            ? "Flyer, poster, offer graphic or PDF upload. Extract the offer/details where possible and rewrite it as a natural business post."
-            : "Business photo upload. Use the image as the topic, but write the post using the business profile.",
+          mediaType === "video"
+            ? "Short business video upload. Use the video as the topic. If this is an event, venue, product, job, result, food, beauty, fitness, club night, live atmosphere, or behind-the-scenes clip, create a promotional post based on what the clip appears to show."
+            : mediaType === "flyer"
+              ? "Flyer, poster, offer graphic or PDF upload. Extract the offer/details where possible and rewrite it as a natural business post."
+              : "Business photo upload. Use the image as the topic, but write the post using the business profile.",
       });
     }
 
@@ -1114,7 +1188,7 @@ Core FromOne rule:
         cta: activeClient.main_offer || "Contact us today to find out more.",
         hashtags: fallbackHashtags,
         image_prompt:
-          "Use a clear business photo, flyer, product image, finished work image, or short clip that supports this post.",
+          "Use the uploaded photo, flyer or video that supports this post.",
       };
     }
 
@@ -1134,7 +1208,7 @@ Core FromOne rule:
           : fallbackHashtags,
       image_prompt:
         post.image_prompt ||
-        "Use a clear business photo, flyer, product image, finished work image, or short clip that supports this post.",
+        "Use the uploaded photo, flyer or video that supports this post.",
     };
   };
 
@@ -1172,6 +1246,10 @@ Core FromOne rule:
       if (!allowed) return;
     }
 
+    const videoLimitAllowed = await checkWeeklyVideoScanLimit(userId);
+
+    if (!videoLimitAllowed) return;
+
     const uploadedMediaItems =
       weeklyUploads.length > 0 ? await uploadWeeklyMediaToStorage(userId) : [];
 
@@ -1186,7 +1264,7 @@ If uploads are supplied:
 - Post 1 must use Upload 1 as the topic.
 - Post 2 must use Upload 2 as the topic.
 - Continue one post per upload.
-- Do not only describe the image or flyer.
+- Do not only describe the image, flyer or video.
 - Use the business profile to add quality, local angle, industry relevance, tone, CTA and sales angle.`,
       provider: "gemini",
       platforms: selectedPlatforms,
@@ -1350,6 +1428,17 @@ If uploads are supplied:
       }
     }
 
+    const videoItems = uploadedMediaItems.filter((item) => item.media_type === "video");
+
+    for (const videoItem of videoItems) {
+      await recordUsageEvent(userId, "video_scan", {
+        campaign_id: campaign.id,
+        file_name: videoItem.file_name,
+        media_path: videoItem.media_path,
+        media_url: videoItem.media_url,
+      });
+    }
+
     localStorage.setItem("fromone_has_new_posts", "true");
     window.dispatchEvent(new Event("fromone-new-posts-updated"));
 
@@ -1385,13 +1474,13 @@ If uploads are supplied:
       }
 
       if (!activeClient) {
-        alert("Please enter a website URL, or add business details.");
+        alert("Please add a website or business details first.");
         setScanning(false);
         return;
       }
 
       if (!activeClient.website_url && !activeClient.business_name) {
-        alert("Please enter a website URL, or add business details.");
+        alert("Please add a website or business details first.");
         setScanning(false);
         return;
       }
@@ -1422,11 +1511,14 @@ If uploads are supplied:
     if (!files || files.length === 0) return;
 
     const acceptedFiles = Array.from(files).filter(
-      (file) => file.type.startsWith("image/") || file.type === "application/pdf"
+      (file) =>
+        file.type.startsWith("image/") ||
+        file.type.startsWith("video/") ||
+        file.type === "application/pdf"
     );
 
     if (acceptedFiles.length === 0) {
-      alert("Please upload photos, flyers, posters, or offer graphics.");
+      alert("Please upload photos, videos, flyers, posters or offer graphics.");
       return;
     }
 
@@ -1471,7 +1563,7 @@ If uploads are supplied:
     const savedClient = await saveWebsiteToProfile();
 
     if (savedClient) {
-      alert("Website saved. Now upload photos or flyers, then create weekly posts.");
+      alert("Website saved. Now upload photos, videos or flyers, then create posts.");
     }
   };
 
@@ -1519,103 +1611,169 @@ If uploads are supplied:
   const weeklyScanLimit = hasPaidPlan ? PAID_WEEKLY_SCAN_LIMIT : DEMO_WEEKLY_SCAN_LIMIT;
   const weeklyScansRemaining = Math.max(weeklyScanLimit - weeklyScansUsed, 0);
 
+  const weeklyVideoScanLimit = hasPaidPlan
+    ? PAID_WEEKLY_VIDEO_SCAN_LIMIT
+    : DEMO_WEEKLY_VIDEO_SCAN_LIMIT;
+  const weeklyVideoScansRemaining = Math.max(weeklyVideoScanLimit - weeklyVideoScansUsed, 0);
+
+  const businessProfileReady = hasWebsite || hasManualProfile;
+  const canCreatePosts = businessProfileReady && !accessLocked && !scanning;
+
   return (
     <>
       <div className="page-header dashboard-simple-header">
         <div className="page-eyebrow">FromOne Dashboard</div>
-        <h1 className="page-title">Upload. Review. Publish.</h1>
+        <h1 className="page-title">Create social posts in 3 simple steps.</h1>
         <p className="page-description">
-          Upload your business photos or flyers. FromOne turns them into Facebook, Instagram and
-          TikTok posts.
+          Add the business, upload photos or videos, then let FromOne create posts ready to review
+          and publish.
         </p>
 
-        <div className="dashboard-header-actions-row">
-          {!loading && (
-            <section
-              className={
-                accessLocked
-                  ? "access-status-card access-status-locked dashboard-access-pill"
-                  : "access-status-card dashboard-access-pill"
-              }
-            >
-              <div>
-                <div className="page-eyebrow">{accessLocked ? "Demo ended" : "Access active"}</div>
-                <h2>
-                  {accessLocked
-                    ? "Creating weekly posts is currently locked."
-                    : "Your access is active."}
-                </h2>
-                <p>{accessMessage}</p>
-              </div>
+        {!loading && (
+          <div
+            className="premium-card"
+            style={{
+              marginTop: 18,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: 12,
+              border: accessLocked
+                ? "1px solid rgba(255, 95, 109, 0.4)"
+                : "1px solid rgba(255, 212, 59, 0.24)",
+            }}
+          >
+            <div>
+              <div className="page-eyebrow">{accessLocked ? "Access locked" : "Access active"}</div>
+              <strong>{accessLocked ? "Demo ended" : "Ready to create"}</strong>
+              <p style={{ margin: "6px 0 0", color: "var(--muted)" }}>{accessMessage}</p>
+            </div>
 
-              {accessLocked && (
-                <Link href="/subscription" className="dashboard-profile-link">
-                  View subscription options
-                </Link>
-              )}
-            </section>
-          )}
-        </div>
+            <div>
+              <div className="page-eyebrow">Website scans</div>
+              <strong>
+                {weeklyScansRemaining}/{weeklyScanLimit} left
+              </strong>
+              <p style={{ margin: "6px 0 0", color: "var(--muted)" }}>
+                Manual business details do not use a website scan.
+              </p>
+            </div>
+
+            <div>
+              <div className="page-eyebrow">Video scans</div>
+              <strong>
+                {weeklyVideoScansRemaining}/{weeklyVideoScanLimit} left
+              </strong>
+              <p style={{ margin: "6px 0 0", color: "var(--muted)" }}>
+                Photos and flyers do not use this video limit.
+              </p>
+            </div>
+
+            {accessLocked && (
+              <Link href="/subscription" className="dashboard-profile-link">
+                View subscription options
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
       {loading ? (
         <div className="premium-card">
-          <p>Loading business profile...</p>
+          <p>Loading dashboard...</p>
         </div>
       ) : (
-        <>
-          <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
-            <div className="dashboard-create-card">
-              <div className="page-eyebrow">Business profile</div>
+        <section className="dashboard-simple-shell dashboard-simple-shell-stacked">
+          <section
+            className="hero-card"
+            style={{
+              display: "grid",
+              gap: 18,
+              border: "1px solid rgba(255, 212, 59, 0.28)",
+            }}
+          >
+            <div className="page-eyebrow">Simple workflow</div>
+            <h2 style={{ margin: 0 }}>Business profile → Upload media → Create posts.</h2>
+            <p style={{ margin: 0, maxWidth: 860 }}>
+              This page is designed so anyone can use it. Start at Step 1, then Step 2, then press
+              the big create button.
+            </p>
 
-              <h2>
-                {hasWebsite
-                  ? "Use this website to create posts."
-                  : hasManualProfile
-                    ? "Use the saved business details."
-                    : "Add a website or business details."}
-              </h2>
-
-              <p>
-                Add your business details once, then upload this week’s photos or flyers. FromOne
-                uses the business profile to write stronger posts.
-              </p>
-
-              <div className="button-row" style={{ marginBottom: 18 }}>
-                <Link href="/posts" className="dashboard-profile-link">
-                  View existing posts
-                </Link>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                gap: 12,
+              }}
+            >
+              <div className="card" style={{ padding: 16 }}>
+                <strong>1. Add business</strong>
+                <p style={{ marginBottom: 0, color: "var(--muted)" }}>
+                  Website or manual details.
+                </p>
               </div>
 
-              <div className="dashboard-tour-target-wrap">
-                <label>
-                  <strong>Business website</strong>
-                  <span>
-                    Add the website you want FromOne to understand. You can also use business
-                    details instead.
-                  </span>
-                </label>
-
-                <input
-                  className="input"
-                  value={websiteUrl}
-                  onChange={(event) => setWebsiteUrl(event.target.value)}
-                  placeholder="https://example.com"
-                />
+              <div className="card" style={{ padding: 16 }}>
+                <strong>2. Upload media</strong>
+                <p style={{ marginBottom: 0, color: "var(--muted)" }}>
+                  Photos, videos or flyers.
+                </p>
               </div>
 
-              <div className="dashboard-scan-usage-pill">
-                {weeklyScansRemaining} of {weeklyScanLimit} website scans left this week
+              <div className="card" style={{ padding: 16 }}>
+                <strong>3. Create posts</strong>
+                <p style={{ marginBottom: 0, color: "var(--muted)" }}>
+                  Review and publish in Posts.
+                </p>
               </div>
+            </div>
+          </section>
 
-              <div className="dashboard-create-action-row">
+          <section
+            className="premium-card"
+            style={{
+              marginTop: 22,
+              border: businessProfileReady
+                ? "1px solid rgba(61, 220, 151, 0.32)"
+                : "1px solid rgba(255, 212, 59, 0.24)",
+            }}
+          >
+            <div className="page-eyebrow">Step 1</div>
+            <h2 style={{ marginTop: 0 }}>Tell FromOne about the business.</h2>
+            <p>
+              Use a website if the business has one. No website? Add the business name and industry
+              manually.
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1fr)",
+                gap: 14,
+                marginTop: 18,
+              }}
+            >
+              <label>
+                <strong>Business website</strong>
+                <span>
+                  Paste the website address. Example: https://example.com
+                </span>
+              </label>
+
+              <input
+                className="input"
+                value={websiteUrl}
+                onChange={(event) => setWebsiteUrl(event.target.value)}
+                placeholder="https://example.com"
+              />
+
+              <div className="button-row">
                 <button
                   type="button"
                   className="dashboard-primary-scan-button"
                   onClick={handleSaveWebsiteOnly}
                   disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
                 >
-                  {savingWebsite ? "Saving website..." : "Use this website"}
+                  {savingWebsite ? "Saving website..." : "Save website"}
                 </button>
 
                 <button
@@ -1625,500 +1783,534 @@ If uploads are supplied:
                   disabled={scanning || savingWebsite || savingManualProfile}
                 >
                   {showManualProfile
-                    ? "Hide business details"
+                    ? "Hide manual details"
                     : hasManualProfile
-                      ? "Edit business details"
-                      : "No website? Add business details"}
+                      ? "Edit manual details"
+                      : "No website? Add details"}
                 </button>
-
-                <span className="dashboard-tour-link-target dashboard-view-posts-action">
-                  <Link href="/posts" className="dashboard-profile-link">
-                    View posts
-                  </Link>
-                </span>
               </div>
             </div>
 
-            {showManualProfile && (
-              <section className="dashboard-manual-profile-card dashboard-manual-profile-card-inline">
-                <div className="dashboard-manual-profile-header">
-                  <div>
-                    <div className="page-eyebrow">Business details</div>
-                    <h2>Add business details.</h2>
-                    <p>
-                      Use this when there is no website, or when you want to guide FromOne manually.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="dashboard-manual-profile-grid">
-                  <label>
-                    <strong>Business name</strong>
-                    <input
-                      className="input"
-                      value={manualBusinessName}
-                      onChange={(event) => setManualBusinessName(event.target.value)}
-                      placeholder="Example: Baker & Co Plumbing"
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Industry</strong>
-                    <input
-                      className="input"
-                      value={manualIndustry}
-                      onChange={(event) => setManualIndustry(event.target.value)}
-                      placeholder="Example: Plumbing, beauty, signage"
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Location</strong>
-                    <input
-                      className="input"
-                      value={manualLocation}
-                      onChange={(event) => setManualLocation(event.target.value)}
-                      placeholder="Example: Manchester"
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Tone of voice</strong>
-                    <select
-                      className="input"
-                      value={manualTone}
-                      onChange={(event) => setManualTone(event.target.value)}
-                    >
-                      <option>Professional</option>
-                      <option>Friendly</option>
-                      <option>Premium</option>
-                      <option>Fun</option>
-                      <option>Direct</option>
-                      <option>Luxury</option>
-                      <option>Trustworthy</option>
-                    </select>
-                  </label>
-
-                  <label>
-                    <strong>Services</strong>
-                    <span>Separate with commas.</span>
-                    <textarea
-                      className="input"
-                      value={manualServices}
-                      onChange={(event) => setManualServices(event.target.value)}
-                      placeholder="Emergency callouts, installations, repairs"
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Who are the customers?</strong>
-                    <span>Separate with commas.</span>
-                    <textarea
-                      className="input"
-                      value={manualAudience}
-                      onChange={(event) => setManualAudience(event.target.value)}
-                      placeholder="Homeowners, landlords, small business owners"
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Main offer or call to action</strong>
-                    <textarea
-                      className="input"
-                      value={manualMainOffer}
-                      onChange={(event) => setManualMainOffer(event.target.value)}
-                      placeholder="Book a free quote today"
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Business goals</strong>
-                    <span>Separate with commas.</span>
-                    <textarea
-                      className="input"
-                      value={manualGoals}
-                      onChange={(event) => setManualGoals(event.target.value)}
-                      placeholder="More enquiries, build trust, promote services"
-                    />
-                  </label>
-
-                  <label>
-                    <strong>What should the posts focus on?</strong>
-                    <span>Separate with commas.</span>
-                    <textarea
-                      className="input"
-                      value={manualContentPillars}
-                      onChange={(event) => setManualContentPillars(event.target.value)}
-                      placeholder="Helpful advice, customer trust, services, offers"
-                    />
-                  </label>
-                </div>
-
-                <div className="dashboard-manual-profile-actions dashboard-manual-profile-actions-clean">
-                  <div>
-                    <strong>Save the business details.</strong>
-                    <span>Then upload photos or flyers and create the weekly posts.</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={saveManualProfile}
-                    disabled={scanning || savingManualProfile}
-                  >
-                    {savingManualProfile ? "Saving details..." : "Save business details"}
-                  </button>
-                </div>
-              </section>
+            {businessProfileReady && (
+              <div className="dashboard-scan-usage-pill" style={{ marginTop: 16 }}>
+                Business profile ready ✓
+              </div>
             )}
+          </section>
 
-            <section
-              className="premium-card dashboard-weekly-uploads-card"
-              style={{ marginTop: 22 }}
-            >
-              <div className="page-eyebrow">Weekly uploads</div>
-              <h2 style={{ marginTop: 0 }}>Upload this week’s photos or flyers.</h2>
-              <p style={{ marginTop: 0 }}>
-                Add job photos, before/after images, offer graphics, flyers, product shots, food
-                photos, or salon results. The number of uploads decides the number of posts.
-              </p>
-
-              <label
-                className="dashboard-primary-scan-button"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  marginTop: 8,
-                }}
-              >
-                Upload photos or flyers
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  multiple
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                    handleWeeklyUploadFiles(event.target.files);
-                    event.target.value = "";
-                  }}
-                  style={{ display: "none" }}
-                />
-              </label>
-
-              {weeklyUploads.length > 0 ? (
-                <>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-                      gap: 12,
-                      marginTop: 18,
-                    }}
-                  >
-                    {weeklyUploads.map((upload, index) => (
-                      <div key={upload.id} className="card" style={{ padding: 10 }}>
-                        <div
-                          style={{
-                            minHeight: 110,
-                            borderRadius: 16,
-                            overflow: "hidden",
-                            background: "rgba(255, 255, 255, 0.06)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginBottom: 10,
-                          }}
-                        >
-                          {upload.file.type.startsWith("image/") ? (
-                            <img
-                              src={upload.previewUrl}
-                              alt={`Weekly upload ${index + 1}`}
-                              style={{
-                                width: "100%",
-                                height: 130,
-                                objectFit: "cover",
-                              }}
-                            />
-                          ) : (
-                            <strong>Flyer PDF</strong>
-                          )}
-                        </div>
-
-                        <strong>Post {index + 1}</strong>
-                        <p
-                          style={{
-                            margin: "6px 0",
-                            opacity: 0.76,
-                            fontSize: 13,
-                          }}
-                        >
-                          {upload.file.name}
-                        </p>
-
-                        <button
-                          type="button"
-                          className="secondary-button"
-                          onClick={() => removeWeeklyUpload(upload.id)}
-                          disabled={scanning}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="dashboard-scan-usage-pill" style={{ marginTop: 16 }}>
-                    {weeklyUploads.length} uploads = {weeklyUploads.length} posts
-                  </div>
-                </>
-              ) : (
-                <div className="dashboard-scan-usage-pill" style={{ marginTop: 16 }}>
-                  No photos yet? FromOne can still create posts from your website or business
-                  details.
-                </div>
-              )}
-            </section>
-
-            <section
-              className="premium-card dashboard-options-summary-card"
-              style={{ marginTop: 22 }}
-            >
-              <div className="page-eyebrow">Simple plan</div>
-              <h2 style={{ marginTop: 0 }}>Facebook, Instagram and TikTok.</h2>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: 12,
-                  marginTop: 14,
-                }}
-              >
-                <div className="card" style={{ padding: 14 }}>
-                  <strong>Reach</strong>
-                  <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
-                    {marketReachDisplayLabel}
-                  </p>
-                </div>
-
-                <div className="card" style={{ padding: 14 }}>
-                  <strong>Posts</strong>
-                  <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
-                    {uploadDrivenPostCount > 0
-                      ? `${uploadDrivenPostCount} uploads = ${uploadDrivenPostCount} posts`
-                      : `${selectedPostingFrequencyOption.title} backup`}
-                  </p>
-                </div>
-
-                <div className="card" style={{ padding: 14 }}>
-                  <strong>Platforms</strong>
-                  <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
-                    {selectedPlatformSummary || "Choose platforms"}
+          {showManualProfile && (
+            <section className="dashboard-manual-profile-card dashboard-manual-profile-card-inline">
+              <div className="dashboard-manual-profile-header">
+                <div>
+                  <div className="page-eyebrow">Manual business details</div>
+                  <h2>Add the basics.</h2>
+                  <p>
+                    Keep it simple. Business name and industry are enough to get started.
                   </p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="secondary-button"
-                style={{ marginTop: 16 }}
-                onClick={() => setShowAdvancedOptions((current) => !current)}
-              >
-                {showAdvancedOptions ? "Hide options" : "Change options"}
-              </button>
-            </section>
+              <div className="dashboard-manual-profile-grid">
+                <label>
+                  <strong>Business name</strong>
+                  <input
+                    className="input"
+                    value={manualBusinessName}
+                    onChange={(event) => setManualBusinessName(event.target.value)}
+                    placeholder="Example: Baker & Co Plumbing"
+                  />
+                </label>
 
-            {showAdvancedOptions && (
+                <label>
+                  <strong>Industry</strong>
+                  <input
+                    className="input"
+                    value={manualIndustry}
+                    onChange={(event) => setManualIndustry(event.target.value)}
+                    placeholder="Example: Plumbing, beauty, nightclub, cafe"
+                  />
+                </label>
+
+                <label>
+                  <strong>Location</strong>
+                  <input
+                    className="input"
+                    value={manualLocation}
+                    onChange={(event) => setManualLocation(event.target.value)}
+                    placeholder="Example: Manchester"
+                  />
+                </label>
+
+                <label>
+                  <strong>Tone</strong>
+                  <select
+                    className="input"
+                    value={manualTone}
+                    onChange={(event) => setManualTone(event.target.value)}
+                  >
+                    <option>Professional</option>
+                    <option>Friendly</option>
+                    <option>Premium</option>
+                    <option>Fun</option>
+                    <option>Direct</option>
+                    <option>Luxury</option>
+                    <option>Trustworthy</option>
+                  </select>
+                </label>
+
+                <label>
+                  <strong>Services or what you sell</strong>
+                  <span>Separate with commas.</span>
+                  <textarea
+                    className="input"
+                    value={manualServices}
+                    onChange={(event) => setManualServices(event.target.value)}
+                    placeholder="Example: Club nights, VIP tables, cocktails, live DJs"
+                  />
+                </label>
+
+                <label>
+                  <strong>Customers</strong>
+                  <span>Separate with commas.</span>
+                  <textarea
+                    className="input"
+                    value={manualAudience}
+                    onChange={(event) => setManualAudience(event.target.value)}
+                    placeholder="Example: Local students, groups, birthday parties"
+                  />
+                </label>
+
+                <label>
+                  <strong>Main offer or CTA</strong>
+                  <textarea
+                    className="input"
+                    value={manualMainOffer}
+                    onChange={(event) => setManualMainOffer(event.target.value)}
+                    placeholder="Example: Book tickets online today"
+                  />
+                </label>
+
+                <label>
+                  <strong>Goals</strong>
+                  <span>Separate with commas.</span>
+                  <textarea
+                    className="input"
+                    value={manualGoals}
+                    onChange={(event) => setManualGoals(event.target.value)}
+                    placeholder="Example: More bookings, more ticket sales, more enquiries"
+                  />
+                </label>
+
+                <label>
+                  <strong>Post themes</strong>
+                  <span>Separate with commas.</span>
+                  <textarea
+                    className="input"
+                    value={manualContentPillars}
+                    onChange={(event) => setManualContentPillars(event.target.value)}
+                    placeholder="Example: Events, offers, atmosphere, behind the scenes"
+                  />
+                </label>
+              </div>
+
+              <div className="dashboard-manual-profile-actions dashboard-manual-profile-actions-clean">
+                <div>
+                  <strong>Save these details.</strong>
+                  <span>Then upload photos or videos and create posts.</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={saveManualProfile}
+                  disabled={scanning || savingManualProfile}
+                >
+                  {savingManualProfile ? "Saving details..." : "Save business details"}
+                </button>
+              </div>
+            </section>
+          )}
+
+          <section
+            className="premium-card dashboard-weekly-uploads-card"
+            style={{
+              marginTop: 22,
+              border:
+                weeklyUploads.length > 0
+                  ? "1px solid rgba(61, 220, 151, 0.32)"
+                  : "1px solid rgba(255, 255, 255, 0.12)",
+            }}
+          >
+            <div className="page-eyebrow">Step 2</div>
+            <h2 style={{ marginTop: 0 }}>Upload this week’s photos or videos.</h2>
+            <p style={{ marginTop: 0 }}>
+              Add photos, videos, flyers, event posters, product shots, food photos, salon results
+              or job photos. One upload becomes one post.
+            </p>
+
+            <label
+              className="dashboard-primary-scan-button"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                marginTop: 8,
+              }}
+            >
+              Upload photos, videos or flyers
+              <input
+                type="file"
+                accept="image/*,video/*,application/pdf"
+                multiple
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                  handleWeeklyUploadFiles(event.target.files);
+                  event.target.value = "";
+                }}
+                style={{ display: "none" }}
+              />
+            </label>
+
+            <div
+              className="dashboard-scan-usage-pill"
+              style={{ marginTop: 16 }}
+            >
+              Video scans left this week: {weeklyVideoScansRemaining} of {weeklyVideoScanLimit}
+            </div>
+
+            {weeklyUploads.length > 0 ? (
               <>
-                <section className="dashboard-platform-selector dashboard-platform-selector-full">
-                  <div className="dashboard-platform-selector-header">
-                    <div>
-                      <div className="page-eyebrow">Choose your reach</div>
-                      <h3>Who are these posts aimed at?</h3>
-                      <p>
-                        This helps FromOne decide whether to write with local, nationwide, or
-                        online customer intent.
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                    gap: 12,
+                    marginTop: 18,
+                  }}
+                >
+                  {weeklyUploads.map((upload, index) => (
+                    <div key={upload.id} className="card" style={{ padding: 10 }}>
+                      <div
+                        style={{
+                          minHeight: 120,
+                          borderRadius: 16,
+                          overflow: "hidden",
+                          background: "rgba(255, 255, 255, 0.06)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginBottom: 10,
+                        }}
+                      >
+                        {upload.file.type.startsWith("image/") ? (
+                          <img
+                            src={upload.previewUrl}
+                            alt={`Weekly upload ${index + 1}`}
+                            style={{
+                              width: "100%",
+                              height: 140,
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : upload.file.type.startsWith("video/") ? (
+                          <video
+                            src={upload.previewUrl}
+                            muted
+                            playsInline
+                            style={{
+                              width: "100%",
+                              height: 140,
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <strong>Flyer PDF</strong>
+                        )}
+                      </div>
+
+                      <strong>Post {index + 1}</strong>
+                      <p
+                        style={{
+                          margin: "6px 0",
+                          opacity: 0.76,
+                          fontSize: 13,
+                        }}
+                      >
+                        {upload.file.name}
                       </p>
+
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => removeWeeklyUpload(upload.id)}
+                        disabled={scanning}
+                      >
+                        Remove
+                      </button>
                     </div>
+                  ))}
+                </div>
+
+                <div className="dashboard-scan-usage-pill" style={{ marginTop: 16 }}>
+                  {weeklyUploads.length} uploads = {weeklyUploads.length} posts
+                </div>
+              </>
+            ) : (
+              <div className="dashboard-scan-usage-pill" style={{ marginTop: 16 }}>
+                No uploads yet. FromOne can still create posts from your business profile.
+              </div>
+            )}
+          </section>
+
+          <section
+            className="premium-card dashboard-options-summary-card"
+            style={{ marginTop: 22 }}
+          >
+            <div className="page-eyebrow">Step 3</div>
+            <h2 style={{ marginTop: 0 }}>Create your posts.</h2>
+            <p>
+              These settings are already chosen for you. Only change them if needed.
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 12,
+                marginTop: 14,
+              }}
+            >
+              <div className="card" style={{ padding: 14 }}>
+                <strong>Reach</strong>
+                <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
+                  {marketReachDisplayLabel}
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: 14 }}>
+                <strong>Posts</strong>
+                <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
+                  {uploadDrivenPostCount > 0
+                    ? `${uploadDrivenPostCount} uploads = ${uploadDrivenPostCount} posts`
+                    : `${selectedPostingFrequencyOption.title} without uploads`}
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: 14 }}>
+                <strong>Platforms</strong>
+                <p style={{ margin: "6px 0 0", opacity: 0.78 }}>
+                  {selectedPlatformSummary || "Choose platforms"}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="secondary-button"
+              style={{ marginTop: 16 }}
+              onClick={() => setShowAdvancedOptions((current) => !current)}
+            >
+              {showAdvancedOptions ? "Hide extra options" : "Change extra options"}
+            </button>
+          </section>
+
+          {showAdvancedOptions && (
+            <>
+              <section className="dashboard-platform-selector dashboard-platform-selector-full">
+                <div className="dashboard-platform-selector-header">
+                  <div>
+                    <div className="page-eyebrow">Reach</div>
+                    <h3>Who are these posts for?</h3>
+                    <p>Choose the closest match.</p>
+                  </div>
+                </div>
+
+                <div className="dashboard-platform-carousel dashboard-market-reach-grid">
+                  {marketReachOptions.map((option) => {
+                    const isSelected = selectedMarketReach === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={
+                          isSelected
+                            ? "dashboard-platform-carousel-card dashboard-market-reach-card is-selected"
+                            : "dashboard-platform-carousel-card dashboard-market-reach-card"
+                        }
+                        onClick={() => setSelectedMarketReach(option.value)}
+                        aria-pressed={isSelected}
+                      >
+                        <span className="dashboard-platform-check">
+                          {isSelected ? "✓" : "+"}
+                        </span>
+
+                        <strong>{option.title}</strong>
+                        <small className="is-visible">{option.description}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section className="dashboard-platform-selector dashboard-platform-selector-full">
+                <div className="dashboard-platform-selector-header">
+                  <div>
+                    <div className="page-eyebrow">Backup post count</div>
+                    <h3>How many posts without uploads?</h3>
+                    <p>This is only used when no media is uploaded.</p>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                    gap: 20,
+                    marginTop: 24,
+                  }}
+                >
+                  {postingFrequencyOptions.map((option) => {
+                    const selected = selectedPostingFrequency === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setSelectedPostingFrequency(option.value)}
+                        className={
+                          selected
+                            ? "dashboard-platform-carousel-card is-selected"
+                            : "dashboard-platform-carousel-card"
+                        }
+                      >
+                        <span className="dashboard-platform-check">
+                          {selected ? "✓" : "+"}
+                        </span>
+                        <strong>{option.title}</strong>
+                        <small className="is-visible">{option.description}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section className="dashboard-platform-selector dashboard-platform-selector-full">
+                <div className="dashboard-platform-selector-header">
+                  <div>
+                    <div className="page-eyebrow">Platforms</div>
+                    <h3>Where should FromOne create posts?</h3>
+                    <p>Facebook, Instagram and TikTok are selected by default.</p>
                   </div>
 
-                  <div className="dashboard-platform-carousel dashboard-market-reach-grid">
-                    {marketReachOptions.map((option) => {
-                      const isSelected = selectedMarketReach === option.value;
+                  <div className="dashboard-platform-carousel-actions">
+                    <button
+                      type="button"
+                      className="secondary-button dashboard-platform-recommend-button"
+                      onClick={selectRecommendedPlatforms}
+                    >
+                      Use recommended
+                    </button>
+                  </div>
+                </div>
+
+                <div className="dashboard-platform-carousel-wrap">
+                  <div className="dashboard-platform-carousel" aria-label="Social platform selector">
+                    {availablePlatforms.map((platform) => {
+                      const isSelected = selectedPlatforms.includes(platform.name);
 
                       return (
                         <button
-                          key={option.value}
+                          key={platform.name}
                           type="button"
                           className={
                             isSelected
-                              ? "dashboard-platform-carousel-card dashboard-market-reach-card is-selected"
-                              : "dashboard-platform-carousel-card dashboard-market-reach-card"
+                              ? "dashboard-platform-carousel-card is-selected"
+                              : "dashboard-platform-carousel-card"
                           }
-                          onClick={() => setSelectedMarketReach(option.value)}
+                          onClick={() => togglePlatform(platform.name)}
                           aria-pressed={isSelected}
                         >
                           <span className="dashboard-platform-check">
                             {isSelected ? "✓" : "+"}
                           </span>
 
-                          <strong>{option.title}</strong>
-                          <small className="is-visible">{option.description}</small>
+                          <strong>{platform.shortName}</strong>
+                          <small className="is-visible">{platform.description}</small>
                         </button>
                       );
                     })}
                   </div>
+                </div>
 
-                  <div className="dashboard-selected-platforms-line">
-                    <strong>Reach</strong>
-                    <span>{marketReachDisplayLabel}</span>
-                  </div>
-                </section>
+                <div className="dashboard-selected-platforms-line">
+                  <strong>{selectedPlatforms.length}</strong>
+                  <span>selected: {selectedPlatforms.join(", ")}</span>
+                </div>
+              </section>
+            </>
+          )}
 
-                <section className="dashboard-platform-selector dashboard-platform-selector-full">
-                  <div className="dashboard-platform-selector-header">
-                    <div>
-                      <div className="page-eyebrow">Backup post count</div>
-                      <h3>How many posts without uploads?</h3>
-                      <p>
-                        Uploads control the post count. This backup is only used when there are no
-                        uploaded photos or flyers.
-                      </p>
-                    </div>
-                  </div>
+          <section
+            className="premium-card"
+            style={{
+              marginTop: 22,
+              display: "grid",
+              gap: 18,
+              border: canCreatePosts
+                ? "1px solid rgba(255, 212, 59, 0.36)"
+                : "1px solid rgba(255, 255, 255, 0.12)",
+              background:
+                "radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255, 255, 255, 0.04) 42%, rgba(15, 23, 42, 0.88))",
+            }}
+          >
+            <div>
+              <div className="page-eyebrow">Final step</div>
+              <h2 style={{ margin: "0 0 8px" }}>Create ready-to-review posts.</h2>
+              <p style={{ margin: 0 }}>
+                FromOne will create {effectivePostCount} posts for{" "}
+                {marketReachContext.toLowerCase()} using Facebook, Instagram and TikTok.
+              </p>
 
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                      gap: 20,
-                      marginTop: 24,
-                    }}
-                  >
-                    {postingFrequencyOptions.map((option) => {
-                      const selected = selectedPostingFrequency === option.value;
+              {!businessProfileReady && (
+                <p style={{ margin: "10px 0 0", color: "var(--gold)", fontWeight: 900 }}>
+                  Add a website or business details first.
+                </p>
+              )}
 
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setSelectedPostingFrequency(option.value)}
-                          className={
-                            selected
-                              ? "dashboard-platform-carousel-card is-selected"
-                              : "dashboard-platform-carousel-card"
-                          }
-                        >
-                          <span className="dashboard-platform-check">
-                            {selected ? "✓" : "+"}
-                          </span>
-                          <strong>{option.title}</strong>
-                          <small className="is-visible">{option.description}</small>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
+              {(hasFacebookConnection || hasInstagramConnection || hasScheduledPost) && (
+                <p style={{ margin: "10px 0 0", opacity: 0.76 }}>
+                  {hasFacebookConnection ? "Facebook connected. " : ""}
+                  {hasInstagramConnection ? "Instagram connected. " : ""}
+                  {hasScheduledPost ? "You already have scheduled posts." : ""}
+                </p>
+              )}
+            </div>
 
-                <section className="dashboard-platform-selector dashboard-platform-selector-full">
-                  <div className="dashboard-platform-selector-header">
-                    <div>
-                      <div className="page-eyebrow">Choose your platforms</div>
-                      <h3>Where should FromOne create posts?</h3>
-                      <p>FromOne currently focuses on Facebook, Instagram and TikTok.</p>
-                    </div>
-
-                    <div className="dashboard-platform-carousel-actions">
-                      <button
-                        type="button"
-                        className="secondary-button dashboard-platform-recommend-button"
-                        onClick={selectRecommendedPlatforms}
-                      >
-                        Use recommended
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="dashboard-platform-carousel-wrap">
-                    <div className="dashboard-platform-carousel" aria-label="Social platform selector">
-                      {availablePlatforms.map((platform) => {
-                        const isSelected = selectedPlatforms.includes(platform.name);
-
-                        return (
-                          <button
-                            key={platform.name}
-                            type="button"
-                            className={
-                              isSelected
-                                ? "dashboard-platform-carousel-card is-selected"
-                                : "dashboard-platform-carousel-card"
-                            }
-                            onClick={() => togglePlatform(platform.name)}
-                            aria-pressed={isSelected}
-                          >
-                            <span className="dashboard-platform-check">
-                              {isSelected ? "✓" : "+"}
-                            </span>
-
-                            <strong>{platform.shortName}</strong>
-                            <small className="is-visible">{platform.description}</small>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="dashboard-selected-platforms-line">
-                    <strong>{selectedPlatforms.length}</strong>
-                    <span>selected: {selectedPlatforms.join(", ")}</span>
-                  </div>
-                </section>
-              </>
-            )}
-
-            <section
-              className="premium-card"
+            <button
+              type="button"
+              className="dashboard-platform-create-button"
+              onClick={handleGeneratePosts}
+              disabled={!canCreatePosts || savingWebsite || savingManualProfile}
               style={{
-                marginTop: 22,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 16,
-                flexWrap: "wrap",
+                width: "100%",
+                minHeight: 64,
+                fontSize: "1.08rem",
               }}
             >
-              <div>
-                <div className="page-eyebrow">Ready</div>
-                <h2 style={{ margin: "0 0 8px" }}>Create weekly posts.</h2>
-                <p style={{ margin: 0 }}>
-                  FromOne will create {effectivePostCount} posts for{" "}
-                  {marketReachContext.toLowerCase()} using Facebook, Instagram and TikTok.
-                </p>
+              {scanning || savingWebsite
+                ? weeklyUploads.length > 0
+                  ? "Saving media and creating posts..."
+                  : hasWebsite
+                    ? "Scanning website and creating posts..."
+                    : "Creating posts..."
+                : "Create my posts"}
+            </button>
 
-                {(hasFacebookConnection || hasInstagramConnection || hasScheduledPost) && (
-                  <p style={{ margin: "8px 0 0", opacity: 0.76 }}>
-                    {hasFacebookConnection ? "Facebook connected. " : ""}
-                    {hasInstagramConnection ? "Instagram connected. " : ""}
-                    {hasScheduledPost ? "You already have scheduled posts." : ""}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="button"
-                className="dashboard-platform-create-button"
-                onClick={handleGeneratePosts}
-                disabled={accessLocked || scanning || savingWebsite || savingManualProfile}
-              >
-                {scanning || savingWebsite
-                  ? hasWebsite
-                    ? "Saving uploads and scanning..."
-                    : "Saving uploads and creating posts..."
-                  : "Create weekly posts"}
-              </button>
-            </section>
+            <Link href="/posts" className="dashboard-profile-link">
+              View existing posts
+            </Link>
           </section>
-        </>
+        </section>
       )}
 
       {scanning && (
@@ -2131,27 +2323,31 @@ If uploads are supplied:
             </div>
 
             <div className="page-eyebrow">
-              {weeklyUploads.length > 0 ? "Saving uploads" : hasWebsite ? "Website scan" : "Creating posts"}
+              {weeklyUploads.length > 0
+                ? "Creating posts from your media"
+                : hasWebsite
+                  ? "Scanning website"
+                  : "Creating posts"}
             </div>
 
             <h2>
               {weeklyUploads.length > 0
-                ? "Saving your photos and creating posts."
+                ? "Turning your uploads into posts."
                 : hasWebsite
-                  ? "Scanning your website."
-                  : "Creating your weekly posts."}
+                  ? "Reading the website and creating posts."
+                  : "Creating posts from the business profile."}
             </h2>
 
             <p>
-              FromOne is using the business profile, weekly uploads, local angle and selected
-              platforms to create ready-to-review posts.
+              FromOne is using the business profile, uploads, audience and platforms to create
+              posts ready for review.
             </p>
 
             <div className="fromone-loading-steps">
-              <span>Saving weekly uploads</span>
+              <span>Saving uploads</span>
               <span>Reading business details</span>
               <span>Creating one post per upload</span>
-              <span>Attaching media to posts</span>
+              <span>Sending posts to review</span>
             </div>
           </section>
         </div>
