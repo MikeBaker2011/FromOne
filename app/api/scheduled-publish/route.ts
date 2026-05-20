@@ -335,10 +335,6 @@ async function loadDuePosts() {
     )
     .lte('scheduled_publish_at', now)
     .is('deleted_at', null)
-    .neq('status', 'posted')
-    .neq('publish_status', 'posted')
-    .neq('publish_status', 'published')
-    .neq('publish_status', 'publishing')
     .order('scheduled_publish_at', { ascending: true })
     .limit(MAX_POSTS_PER_RUN);
 
@@ -351,7 +347,11 @@ async function loadDuePosts() {
   return duePosts.filter((post) => {
     const platform = normalisePlatform(post.platform);
 
-    return platform === 'facebook' || platform === 'instagram';
+    if (platform !== 'facebook' && platform !== 'instagram') return false;
+    if (isPostAlreadyPosted(post)) return false;
+    if (isCurrentlyPublishing(post)) return false;
+
+    return true;
   });
 }
 
