@@ -241,10 +241,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleManageMetaConnection = () => {
-    connectMetaAccount();
-  };
-
   const applyScannedProfile = (profile: ScannedBusinessProfile) => {
     if (profile.business_name) setBusinessName(profile.business_name);
     if (profile.industry) setIndustry(profile.industry);
@@ -268,7 +264,7 @@ export default function SettingsPage() {
     if (profile.brand_summary) setBrandSummary(profile.brand_summary);
 
     setShowBusinessDetails(true);
-    setShowBrandDetails(true);
+    setShowBrandDetails(false);
   };
 
   const handleScanWebsite = async () => {
@@ -377,22 +373,10 @@ export default function SettingsPage() {
       setBrandAccentColor(data.brand_accent_color || '#3ddc97');
       setBrandLogoUrl(data.brand_logo_url || '');
       setBrandSummary(data.brand_summary || '');
-
-      if (data.business_name || data.industry || data.location || data.services?.length) {
-        setShowBusinessDetails(true);
-      }
-
-      if (
-        data.brand_primary_color ||
-        data.brand_secondary_color ||
-        data.brand_accent_color ||
-        data.brand_logo_url ||
-        data.brand_summary
-      ) {
-        setShowBrandDetails(true);
-      }
     }
 
+    setShowBusinessDetails(false);
+    setShowBrandDetails(false);
     setLoading(false);
   };
 
@@ -541,8 +525,7 @@ export default function SettingsPage() {
         <div className="page-eyebrow">Settings</div>
         <h1 className="page-title">Business Profile.</h1>
         <p className="page-description">
-          This is the information FromOne uses every week to turn your photos, videos and flyers
-          into posts that sound like your business.
+          FromOne uses this to turn weekly photos, videos and flyers into posts that sound like the business.
         </p>
       </div>
 
@@ -556,34 +539,72 @@ export default function SettingsPage() {
             className="premium-card"
             style={{
               marginBottom: 24,
-              border: '1px solid rgba(255, 212, 59, 0.2)',
+              border: '1px solid rgba(255, 212, 59, 0.22)',
               background:
-                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255,255,255,0.045) 46%, rgba(15,23,42,0.92))',
+                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), rgba(255,255,255,0.045) 46%, rgba(15,23,42,0.94))',
             }}
           >
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1.2fr) minmax(260px, 0.8fr)',
+                gridTemplateColumns: 'minmax(0, 1.25fr) minmax(250px, 0.75fr)',
                 gap: 24,
                 alignItems: 'start',
               }}
             >
               <div>
-                <div className="page-eyebrow">Business brain</div>
-                <h2 style={{ marginTop: 0 }}>Set this up once. Use it every week.</h2>
+                <div className="page-eyebrow">Business Profile</div>
+                <h2 style={{ marginTop: 0 }}>
+                  {businessName || 'Set up the business once.'}
+                </h2>
                 <p style={{ maxWidth: 820 }}>
-                  Dashboard will stay simple: upload this week’s media and create posts. This
-                  Business Profile quietly gives FromOne the services, location, tone and offer it
-                  needs to write better posts.
+                  {businessName
+                    ? `${businessName}${industry ? ` is saved as a ${industry} business` : ''}${
+                        location ? ` serving ${location}` : ''
+                      }. Dashboard will use this profile when creating posts from uploads.`
+                    : 'Scan a website or add the business details. Dashboard will then use this profile every time posts are created from uploaded media.'}
                 </p>
 
-                <div className="button-row" style={{ marginTop: 18 }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                    gap: 12,
+                    marginTop: 18,
+                  }}
+                >
+                  <div className="card" style={{ padding: 14 }}>
+                    <strong>Industry</strong>
+                    <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
+                      {industry || 'Not added yet'}
+                    </p>
+                  </div>
+
+                  <div className="card" style={{ padding: 14 }}>
+                    <strong>Location</strong>
+                    <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
+                      {location || 'Not added yet'}
+                    </p>
+                  </div>
+
+                  <div className="card" style={{ padding: 14 }}>
+                    <strong>Tone</strong>
+                    <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
+                      {toneOfVoice || 'Professional'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="button-row" style={{ marginTop: 20 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowBusinessDetails((current) => !current)}
+                  >
+                    {showBusinessDetails ? 'Close Business Profile' : 'Edit Business Profile'}
+                  </button>
+
                   <a href="/dashboard" className="secondary-button">
-                    Go to weekly upload
-                  </a>
-                  <a href="/posts" className="secondary-button">
-                    View post calendar
+                    Create weekly posts
                   </a>
                 </div>
               </div>
@@ -642,282 +663,275 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section className="scan-feature-card settings-simple-scan">
-            <div className="scan-feature-content">
-              <div>
-                <div className="page-eyebrow">Website scan</div>
-                <h2>Scan the business website.</h2>
-                <p>
-                  FromOne can read the website to build the Business Profile. You can edit anything
-                  afterwards.
-                </p>
-              </div>
-            </div>
-
-            <div className="scan-feature-form">
-              <label>
-                <strong>Website URL</strong>
-                <span>Used to detect business details, services, tone and brand style.</span>
-              </label>
-
-              <input
-                className="input"
-                value={websiteUrl}
-                onChange={(event) => setWebsiteUrl(event.target.value)}
-                placeholder="https://example.com"
-              />
-
-              <button type="button" onClick={handleScanWebsite} disabled={scanningWebsite || saving}>
-                {scanningWebsite ? 'Scanning...' : 'Scan website'}
-              </button>
-
-              <button type="button" className="secondary-button" onClick={handleSaveProfile} disabled={saving}>
-                {saving ? 'Saving...' : 'Save profile'}
-              </button>
-
-              {scanMessage && (
-                <p style={{ margin: '4px 0 0', color: '#ffe58a', fontWeight: 850 }}>
-                  {scanMessage}
-                </p>
-              )}
-            </div>
-          </section>
-
-          <section className="manual-collapse-card manual-open-card">
-            <div className="manual-collapse-content manual-visible-content">
-              <div className="page-eyebrow">Business details</div>
-              <h2>What should FromOne know?</h2>
-              <p>
-                These details help FromOne write stronger posts from the photos, videos and flyers
-                uploaded on Dashboard.
-              </p>
-
-              <div className="button-row" style={{ marginBottom: 18 }}>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => setShowBusinessDetails(!showBusinessDetails)}
-                >
-                  {showBusinessDetails ? 'Hide details' : 'Edit details'}
-                </button>
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => setShowBrandDetails(!showBrandDetails)}
-                >
-                  {showBrandDetails ? 'Hide brand' : 'Edit brand'}
-                </button>
-              </div>
-
-              {showBusinessDetails && (
-                <div className="manual-backup-grid">
+          {showBusinessDetails && (
+            <>
+              <section className="scan-feature-card settings-simple-scan">
+                <div className="scan-feature-content">
                   <div>
-                    <label>
-                      <strong>Business name</strong>
-                      <span>Who are we creating posts for?</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={businessName}
-                      onChange={(event) => setBusinessName(event.target.value)}
-                      placeholder="Example: Baker Roofing"
-                    />
-
-                    <label>
-                      <strong>Industry</strong>
-                      <span>What type of business is it?</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={industry}
-                      onChange={(event) => setIndustry(event.target.value)}
-                      placeholder="Example: Roofing, Beauty, Fitness"
-                    />
-
-                    <label>
-                      <strong>Location or service area</strong>
-                      <span>Where does the business operate?</span>
-                    </label>
-                    <input
-                      className="input"
-                      value={location}
-                      onChange={(event) => setLocation(event.target.value)}
-                      placeholder="Example: Manchester, UK"
-                    />
-
-                    <label>
-                      <strong>Services</strong>
-                      <span>Separate each service with a comma.</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={services}
-                      onChange={(event) => setServices(event.target.value)}
-                      placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
-                      rows={5}
-                    />
-                  </div>
-
-                  <div>
-                    <label>
-                      <strong>Target customers</strong>
-                      <span>Who should the posts speak to?</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={targetAudience}
-                      onChange={(event) => setTargetAudience(event.target.value)}
-                      placeholder="Example: Homeowners, landlords, local businesses"
-                      rows={5}
-                    />
-
-                    <label>
-                      <strong>Tone of voice</strong>
-                      <span>How should the content sound?</span>
-                    </label>
-                    <select
-                      className="input"
-                      value={toneOfVoice}
-                      onChange={(event) => setToneOfVoice(event.target.value)}
-                    >
-                      {toneOptions.map((tone) => (
-                        <option key={tone} value={tone}>
-                          {tone}
-                        </option>
-                      ))}
-                    </select>
-
-                    <label>
-                      <strong>Main offer or CTA</strong>
-                      <span>Optional offer, service, or action to promote.</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={mainOffer}
-                      onChange={(event) => setMainOffer(event.target.value)}
-                      placeholder="Example: Book a free quote this month"
-                      rows={4}
-                    />
-
-                    <label>
-                      <strong>Content themes</strong>
-                      <span>Separate each theme with a comma.</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={contentPillars}
-                      onChange={(event) => setContentPillars(event.target.value)}
-                      placeholder="Example: Tips, reviews, offers, before and afters"
-                      rows={4}
-                    />
-
-                    <label>
-                      <strong>Business goals</strong>
-                      <span>Separate each goal with a comma.</span>
-                    </label>
-                    <textarea
-                      className="input"
-                      value={businessGoals}
-                      onChange={(event) => setBusinessGoals(event.target.value)}
-                      placeholder="Example: More calls, more bookings, more enquiries"
-                      rows={4}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {showBrandDetails && (
-                <div
-                  style={{
-                    display: 'grid',
-                    gap: 18,
-                    marginTop: 18,
-                    paddingTop: 18,
-                    borderTop: '1px solid rgba(255,255,255,0.1)',
-                  }}
-                >
-                  <div>
-                    <div className="page-eyebrow">Brand style</div>
-                    <h2 style={{ marginTop: 0 }}>Colours and logo.</h2>
+                    <div className="page-eyebrow">Website scan</div>
+                    <h2>Scan the business website.</h2>
                     <p>
-                      These can be detected from the website scan. They help FromOne make the app
-                      and post guidance feel more like the business.
+                      FromOne can read the website to fill the Business Profile. You can edit
+                      anything afterwards.
                     </p>
                   </div>
+                </div>
 
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                      gap: 14,
-                    }}
+                <div className="scan-feature-form">
+                  <label>
+                    <strong>Website URL</strong>
+                    <span>Used to detect business details, services, tone and brand style.</span>
+                  </label>
+
+                  <input
+                    className="input"
+                    value={websiteUrl}
+                    onChange={(event) => setWebsiteUrl(event.target.value)}
+                    placeholder="https://example.com"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleScanWebsite}
+                    disabled={scanningWebsite || saving}
                   >
-                    <label>
-                      <strong>Primary colour</strong>
-                      <input
-                        className="input"
-                        value={brandPrimaryColor}
-                        onChange={(event) => setBrandPrimaryColor(event.target.value)}
-                        placeholder="#ffd43b"
-                      />
-                    </label>
+                    {scanningWebsite ? 'Scanning...' : 'Scan website'}
+                  </button>
 
-                    <label>
-                      <strong>Secondary colour</strong>
-                      <input
-                        className="input"
-                        value={brandSecondaryColor}
-                        onChange={(event) => setBrandSecondaryColor(event.target.value)}
-                        placeholder="#101420"
-                      />
-                    </label>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={handleSaveProfile}
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving...' : 'Save profile'}
+                  </button>
 
-                    <label>
-                      <strong>Accent colour</strong>
+                  {scanMessage && (
+                    <p style={{ margin: '4px 0 0', color: '#ffe58a', fontWeight: 850 }}>
+                      {scanMessage}
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              <section className="manual-collapse-card manual-open-card">
+                <div className="manual-collapse-content manual-visible-content">
+                  <div className="page-eyebrow">Edit Business Profile</div>
+                  <h2>Business details.</h2>
+                  <p>
+                    These details help FromOne write stronger posts from the photos, videos and
+                    flyers uploaded on Dashboard.
+                  </p>
+
+                  <div className="manual-backup-grid">
+                    <div>
+                      <label>
+                        <strong>Business name</strong>
+                        <span>Who are we creating posts for?</span>
+                      </label>
                       <input
                         className="input"
-                        value={brandAccentColor}
-                        onChange={(event) => setBrandAccentColor(event.target.value)}
-                        placeholder="#3ddc97"
+                        value={businessName}
+                        onChange={(event) => setBusinessName(event.target.value)}
+                        placeholder="Example: Baker Roofing"
                       />
-                    </label>
+
+                      <label>
+                        <strong>Industry</strong>
+                        <span>What type of business is it?</span>
+                      </label>
+                      <input
+                        className="input"
+                        value={industry}
+                        onChange={(event) => setIndustry(event.target.value)}
+                        placeholder="Example: Roofing, Beauty, Fitness"
+                      />
+
+                      <label>
+                        <strong>Location or service area</strong>
+                        <span>Where does the business operate?</span>
+                      </label>
+                      <input
+                        className="input"
+                        value={location}
+                        onChange={(event) => setLocation(event.target.value)}
+                        placeholder="Example: Manchester, UK"
+                      />
+
+                      <label>
+                        <strong>Services</strong>
+                        <span>Separate each service with a comma.</span>
+                      </label>
+                      <textarea
+                        className="input"
+                        value={services}
+                        onChange={(event) => setServices(event.target.value)}
+                        placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
+                        rows={5}
+                      />
+                    </div>
+
+                    <div>
+                      <label>
+                        <strong>Target customers</strong>
+                        <span>Who should the posts speak to?</span>
+                      </label>
+                      <textarea
+                        className="input"
+                        value={targetAudience}
+                        onChange={(event) => setTargetAudience(event.target.value)}
+                        placeholder="Example: Homeowners, landlords, local businesses"
+                        rows={5}
+                      />
+
+                      <label>
+                        <strong>Tone of voice</strong>
+                        <span>How should the content sound?</span>
+                      </label>
+                      <select
+                        className="input"
+                        value={toneOfVoice}
+                        onChange={(event) => setToneOfVoice(event.target.value)}
+                      >
+                        {toneOptions.map((tone) => (
+                          <option key={tone} value={tone}>
+                            {tone}
+                          </option>
+                        ))}
+                      </select>
+
+                      <label>
+                        <strong>Main offer or CTA</strong>
+                        <span>Optional offer, service, or action to promote.</span>
+                      </label>
+                      <textarea
+                        className="input"
+                        value={mainOffer}
+                        onChange={(event) => setMainOffer(event.target.value)}
+                        placeholder="Example: Book a free quote this month"
+                        rows={4}
+                      />
+
+                      <label>
+                        <strong>Content themes</strong>
+                        <span>Separate each theme with a comma.</span>
+                      </label>
+                      <textarea
+                        className="input"
+                        value={contentPillars}
+                        onChange={(event) => setContentPillars(event.target.value)}
+                        placeholder="Example: Tips, reviews, offers, before and afters"
+                        rows={4}
+                      />
+
+                      <label>
+                        <strong>Business goals</strong>
+                        <span>Separate each goal with a comma.</span>
+                      </label>
+                      <textarea
+                        className="input"
+                        value={businessGoals}
+                        onChange={(event) => setBusinessGoals(event.target.value)}
+                        placeholder="Example: More calls, more bookings, more enquiries"
+                        rows={4}
+                      />
+                    </div>
                   </div>
 
-                  <label>
-                    <strong>Logo URL</strong>
-                    <input
-                      className="input"
-                      value={brandLogoUrl}
-                      onChange={(event) => setBrandLogoUrl(event.target.value)}
-                      placeholder="https://example.com/logo.png"
-                    />
-                  </label>
+                  <div className="button-row" style={{ marginTop: 20 }}>
+                    <button type="button" onClick={handleSaveProfile} disabled={saving}>
+                      {saving ? 'Saving...' : 'Save Business Profile'}
+                    </button>
 
-                  <label>
-                    <strong>Brand summary</strong>
-                    <textarea
-                      className="input"
-                      value={brandSummary}
-                      onChange={(event) => setBrandSummary(event.target.value)}
-                      placeholder="Example: Premium dark brand with yellow accent and practical local tone."
-                      rows={4}
-                    />
-                  </label>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => setShowBrandDetails((current) => !current)}
+                    >
+                      {showBrandDetails ? 'Hide brand details' : 'Edit brand details'}
+                    </button>
+                  </div>
+
+                  {showBrandDetails && (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 18,
+                        marginTop: 18,
+                        paddingTop: 18,
+                        borderTop: '1px solid rgba(255,255,255,0.1)',
+                      }}
+                    >
+                      <div>
+                        <div className="page-eyebrow">Brand style</div>
+                        <h2 style={{ marginTop: 0 }}>Colours and logo.</h2>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                          gap: 14,
+                        }}
+                      >
+                        <label>
+                          <strong>Primary colour</strong>
+                          <input
+                            className="input"
+                            value={brandPrimaryColor}
+                            onChange={(event) => setBrandPrimaryColor(event.target.value)}
+                            placeholder="#ffd43b"
+                          />
+                        </label>
+
+                        <label>
+                          <strong>Secondary colour</strong>
+                          <input
+                            className="input"
+                            value={brandSecondaryColor}
+                            onChange={(event) => setBrandSecondaryColor(event.target.value)}
+                            placeholder="#101420"
+                          />
+                        </label>
+
+                        <label>
+                          <strong>Accent colour</strong>
+                          <input
+                            className="input"
+                            value={brandAccentColor}
+                            onChange={(event) => setBrandAccentColor(event.target.value)}
+                            placeholder="#3ddc97"
+                          />
+                        </label>
+                      </div>
+
+                      <label>
+                        <strong>Logo URL</strong>
+                        <input
+                          className="input"
+                          value={brandLogoUrl}
+                          onChange={(event) => setBrandLogoUrl(event.target.value)}
+                          placeholder="https://example.com/logo.png"
+                        />
+                      </label>
+
+                      <label>
+                        <strong>Brand summary</strong>
+                        <textarea
+                          className="input"
+                          value={brandSummary}
+                          onChange={(event) => setBrandSummary(event.target.value)}
+                          placeholder="Example: Premium dark brand with yellow accent and practical local tone."
+                          rows={4}
+                        />
+                      </label>
+                    </div>
+                  )}
                 </div>
-              )}
-
-              <div className="button-row" style={{ marginTop: 22 }}>
-                <button type="button" onClick={handleSaveProfile} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Business Profile'}
-                </button>
-
-                <a href="/dashboard" className="secondary-button">
-                  Create weekly posts
-                </a>
-              </div>
-            </div>
-          </section>
+              </section>
+            </>
+          )}
 
           <section
             className="premium-card"
@@ -927,162 +941,96 @@ export default function SettingsPage() {
               border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
-            <div className="page-eyebrow">Connected accounts</div>
-            <h2 style={{ marginTop: 0 }}>Publishing.</h2>
+            <div className="page-eyebrow">Social accounts</div>
+            <h2 style={{ marginTop: 0 }}>Connect posting channels.</h2>
             <p style={{ maxWidth: 820 }}>
-              Facebook and Instagram can publish through Meta when connected. TikTok stays simple:
-              copy the post and open TikTok manually.
+              Facebook and Instagram connect through Meta. TikTok is copy/open manual posting for
+              now.
             </p>
 
             {loadingConnections ? (
               <p>Checking connected accounts...</p>
             ) : (
-              <div style={{ display: 'grid', gap: 18, marginTop: 20 }}>
-                <section
-                  className="card"
-                  style={{
-                    padding: 18,
-                    border: '1px solid rgba(255, 212, 59, 0.28)',
-                    background:
-                      'radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), rgba(255, 255, 255, 0.04) 45%, rgba(15, 23, 42, 0.84))',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      gap: 16,
-                      flexWrap: 'wrap',
-                    }}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 16,
+                  marginTop: 20,
+                }}
+              >
+                <section className="card" style={{ padding: 18 }}>
+                  <div className="page-eyebrow">Facebook</div>
+                  <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
+                    {hasFacebookConnection ? 'Connected' : 'Not connected'}
+                  </h3>
+                  <p style={{ color: 'var(--muted)', minHeight: 54 }}>
+                    {hasFacebookConnection
+                      ? `Ready to publish to ${primaryMetaConnection?.page_name || 'your Facebook Page'}.`
+                      : 'Connect Meta to enable Facebook Page publishing.'}
+                  </p>
+                  <button
+                    type="button"
+                    className={hasMetaConnection ? 'secondary-button' : undefined}
+                    onClick={connectMetaAccount}
+                    disabled={metaConnectionBusy}
+                    style={{ width: '100%' }}
                   >
-                    <div>
-                      <div className="page-eyebrow">Facebook & Instagram</div>
-                      <h3 style={{ margin: '6px 0 8px', fontSize: 28 }}>
-                        {hasMetaConnection ? 'Connected' : 'Connect Meta'}
-                      </h3>
-                      <p style={{ margin: 0, color: 'var(--muted)', maxWidth: 680 }}>
-                        {hasMetaConnection
-                          ? `Connected to ${
-                              primaryMetaConnection?.page_name || 'your Facebook Page'
-                            }. Instagram ${
-                              hasInstagramConnection
-                                ? `is connected as @${
-                                    primaryMetaConnection?.instagram_username || 'Instagram'
-                                  }.`
-                                : 'can be added when a professional Instagram account is linked in Meta.'
-                            }`
-                          : 'Connect Meta once to enable Facebook Page publishing and Instagram publishing where available.'}
-                      </p>
-                    </div>
-
-                    <span
-                      style={{
-                        borderRadius: 999,
-                        padding: '7px 12px',
-                        fontSize: 12,
-                        fontWeight: 950,
-                        background: hasMetaConnection
-                          ? 'rgba(255, 212, 59, 0.18)'
-                          : 'rgba(255, 255, 255, 0.08)',
-                        color: hasMetaConnection ? '#ffd43b' : 'rgba(255,255,255,0.72)',
-                        border: hasMetaConnection
-                          ? '1px solid rgba(255, 212, 59, 0.36)'
-                          : '1px solid rgba(255, 255, 255, 0.12)',
-                      }}
-                    >
-                      {hasMetaConnection ? 'Ready' : 'Not connected'}
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-                      gap: 12,
-                      marginTop: 18,
-                    }}
-                  >
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      <strong>Facebook</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                        {hasFacebookConnection ? 'Publishing ready' : 'Connect Meta to enable'}
-                      </p>
-                    </div>
-
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      <strong>Instagram</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                        {hasInstagramConnection
-                          ? 'Publishing ready'
-                          : hasMetaConnection
-                            ? 'Link a professional Instagram account in Meta'
-                            : 'Connect Meta to enable'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="button-row" style={{ marginTop: 18 }}>
-                    <button
-                      type="button"
-                      className={hasMetaConnection ? 'secondary-button' : undefined}
-                      onClick={hasMetaConnection ? handleManageMetaConnection : connectMetaAccount}
-                      disabled={metaConnectionBusy}
-                    >
-                      {hasMetaConnection ? 'Manage Meta' : 'Connect Meta'}
-                    </button>
-
-                    {hasMetaConnection && (
-                      <button
-                        type="button"
-                        className="secondary-button danger-button"
-                        onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
-                        disabled={metaConnectionBusy}
-                      >
-                        {metaConnectionBusy ? 'Disconnecting...' : 'Disconnect Meta'}
-                      </button>
-                    )}
-                  </div>
+                    {hasMetaConnection ? 'Manage Meta' : 'Connect'}
+                  </button>
                 </section>
 
-                <section
-                  className="card"
-                  style={{
-                    padding: 18,
-                    border: '1px solid rgba(56, 189, 248, 0.18)',
-                    background:
-                      'radial-gradient(circle at top right, rgba(56, 189, 248, 0.10), rgba(255, 255, 255, 0.035) 42%, rgba(15, 23, 42, 0.84))',
-                  }}
-                >
-                  <div>
-                    <div className="page-eyebrow">TikTok</div>
-                    <h3 style={{ margin: '6px 0 8px', fontSize: 28 }}>Manual posting</h3>
-                    <p style={{ margin: 0, color: 'var(--muted)', maxWidth: 760 }}>
-                      FromOne creates the TikTok wording, hook, CTA and hashtags. The user copies
-                      it and opens TikTok manually.
-                    </p>
-                  </div>
-
-                  <div className="button-row" style={{ marginTop: 18 }}>
-                    <button type="button" className="secondary-button" onClick={openTikTok}>
-                      Open TikTok
-                    </button>
-                  </div>
+                <section className="card" style={{ padding: 18 }}>
+                  <div className="page-eyebrow">Instagram</div>
+                  <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
+                    {hasInstagramConnection ? 'Connected' : 'Not connected'}
+                  </h3>
+                  <p style={{ color: 'var(--muted)', minHeight: 54 }}>
+                    {hasInstagramConnection
+                      ? `Ready as @${primaryMetaConnection?.instagram_username || 'Instagram'}.`
+                      : hasMetaConnection
+                        ? 'Link a professional Instagram account in Meta.'
+                        : 'Connect Meta to enable Instagram publishing.'}
+                  </p>
+                  <button
+                    type="button"
+                    className={hasMetaConnection ? 'secondary-button' : undefined}
+                    onClick={connectMetaAccount}
+                    disabled={metaConnectionBusy}
+                    style={{ width: '100%' }}
+                  >
+                    {hasInstagramConnection ? 'Manage Meta' : 'Connect'}
+                  </button>
                 </section>
+
+                <section className="card" style={{ padding: 18 }}>
+                  <div className="page-eyebrow">TikTok</div>
+                  <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>Manual</h3>
+                  <p style={{ color: 'var(--muted)', minHeight: 54 }}>
+                    FromOne creates the wording. The user copies it and opens TikTok manually.
+                  </p>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={openTikTok}
+                    style={{ width: '100%' }}
+                  >
+                    Open TikTok
+                  </button>
+                </section>
+              </div>
+            )}
+
+            {hasMetaConnection && (
+              <div className="button-row" style={{ marginTop: 18 }}>
+                <button
+                  type="button"
+                  className="secondary-button danger-button"
+                  onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
+                  disabled={metaConnectionBusy}
+                >
+                  {metaConnectionBusy ? 'Disconnecting...' : 'Disconnect Meta'}
+                </button>
               </div>
             )}
           </section>
