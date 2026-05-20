@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 
 type InstagramPublishBody = {
   postId?: string;
@@ -41,6 +42,7 @@ type PublishLogInput = {
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const MEDIA_BUCKET = 'campaign-assets';
 
 function getSupabaseAdmin() {
   if (!supabaseUrl || !supabaseServiceRoleKey) {
@@ -64,7 +66,7 @@ function getFriendlyInstagramError(message: string) {
   const lowerMessage = cleanMessage.toLowerCase();
 
   if (lowerMessage.includes('aspect ratio')) {
-    return 'Instagram needs a square, portrait, or supported video shape. Replace the media with an Instagram-friendly image/video, or post it manually.';
+    return 'Instagram needs a square, portrait, or supported video shape. FromOne tried to prepare the image, but Instagram still rejected it. Replace the media with a square or portrait image, or post it manually.';
   }
 
   if (lowerMessage.includes('media') && lowerMessage.includes('unsupported')) {
@@ -76,6 +78,111 @@ function getFriendlyInstagramError(message: string) {
   }
 
   return cleanMessage || 'Instagram publish failed.';
+}
+
+function getSafeStorageName(value: string) {
+  return cleanText(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9.-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'instagram-image';
+}
+
+function isAlreadyInstagramSafeImage(width?: number, height?: number) {
+  if (!width || !height) return false;
+
+  const ratio = width / height;
+
+  return ratio >= 0.8 && ratio <= 1.91;
+}
+
+async function downloadMediaBuffer(mediaUrl: string) {
+  const response = await fetch(mediaUrl);
+
+  if (!response.ok) {
+    throw new Error('Could not download the image for Instagram.');
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+
+  return Buffer.from(arrayBuffer);
+}
+
+async function createInstagramSafeImage({
+  mediaUrl,
+  postId,
+}: {
+  mediaUrl: string;
+  postId?: string | null;
+}) {
+  const supabase = getSupabaseAdmin();
+  const originalBuffer = await downloadMediaBuffer(mediaUrl);
+  const image = sharp(originalBuffer, { failOn: 'none' });
+  const metadata = await image.metadata();
+
+  if (isAlreadyInstagramSafeImage(metadata.width, metadata.height)) {
+    return {
+      mediaUrl,
+      resized: false,
+      width: metadata.width || null,
+      height: metadata.height || null,
+      storagePath: null,
+    };
+  }
+
+  const outputWidth = 1080;
+  const outputHeight = 1350;
+
+  const background = await sharp(originalBuffer, { failOn: 'none' })
+    .rotate()
+    .resize(outputWidth, outputHeight, {
+      fit: 'cover',
+      position: 'centre',
+    })
+    .blur(32)
+    .modulate({ brightness: 0.72, saturation: 0.82 })
+    .jpeg({ quality: 88 })
+    .toBuffer();
+
+  const foreground = await sharp(originalBuffer, { failOn: 'none' })
+    .rotate()
+    .resize(outputWidth, outputHeight, {
+      fit: 'contain',
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+      withoutEnlargement: false,
+    })
+    .png()
+    .toBuffer();
+
+  const outputBuffer = await sharp(background)
+    .composite([{ input: foreground, gravity: 'centre' }])
+    .jpeg({ quality: 92, mozjpeg: true })
+    .toBuffer();
+
+  const safePostId = getSafeStorageName(postId || String(Date.now()));
+  const storagePath = `instagram-safe/${safePostId}-${Date.now()}.jpg`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .upload(storagePath, outputBuffer, {
+      cacheControl: '3600',
+      contentType: 'image/jpeg',
+      upsert: true,
+    });
+
+  if (uploadError) {
+    throw new Error(uploadError.message || 'Could not save Instagram-safe image.');
+  }
+
+  const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(storagePath);
+
+  return {
+    mediaUrl: publicUrlData.publicUrl,
+    resized: true,
+    width: metadata.width || null,
+    height: metadata.height || null,
+    storagePath,
+  };
 }
 
 function isImageMedia(mediaType: string) {
@@ -460,8 +567,9 @@ export async function POST(req: NextRequest) {
     const postId = cleanText(body.postId || body.campaignPostId);
     const userId = await findUserIdForPost({ supabase: getSupabaseAdmin(), body });
     const caption = buildCaption(body);
-    const mediaUrl = cleanText(body.mediaUrl || body.media_url);
+    let mediaUrl = cleanText(body.mediaUrl || body.media_url);
     const mediaType = cleanText(body.mediaType || body.media_type);
+    let instagramSafeImage: Awaited<ReturnType<typeof createInstagramSafeImage>> | null = null;
 
     if (!caption) {
       await insertPublishLog({
@@ -536,6 +644,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (isImageMedia(mediaType)) {
+      instagramSafeImage = await createInstagramSafeImage({
+        mediaUrl,
+        postId,
+      });
+
+      mediaUrl = instagramSafeImage.mediaUrl;
+    }
+
     const credentials = await getInstagramCredentials(body);
 
     const creationId = await createInstagramMediaContainer({
@@ -543,7 +660,7 @@ export async function POST(req: NextRequest) {
       instagramAccessToken: credentials.instagramAccessToken,
       caption,
       mediaUrl,
-      mediaType,
+      mediaType: instagramSafeImage?.resized ? 'image/jpeg' : mediaType,
     });
 
     await waitForInstagramContainer({
@@ -606,7 +723,11 @@ export async function POST(req: NextRequest) {
       metadata: {
         creation_id: creationId,
         media_url: mediaUrl || null,
-        media_type: mediaType || null,
+        media_type: instagramSafeImage?.resized ? 'image/jpeg' : mediaType || null,
+        instagram_safe_image_created: Boolean(instagramSafeImage?.resized),
+        original_image_width: instagramSafeImage?.width || null,
+        original_image_height: instagramSafeImage?.height || null,
+        instagram_safe_storage_path: instagramSafeImage?.storagePath || null,
       },
     });
 
