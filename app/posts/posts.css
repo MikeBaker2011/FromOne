@@ -713,3 +713,68 @@
     justify-self: start !important;
   }
 }
+
+/* Media rescan card visibility */
+
+.fromone-post-action-modal .fromone-image-guidance-note {
+  color: #f8fafc !important;
+}
+
+.fromone-post-action-modal .fromone-image-guidance-note strong {
+  color: #ffffff !important;
+}
+
+.fromone-post-action-modal .fromone-image-guidance-note p {
+  color: rgba(248, 250, 252, 0.82) !important;
+}
+
+.fromone-post-action-modal .fromone-image-guidance-note button,
+.fromone-post-action-modal .fromone-image-guidance-note .secondary-button {
+  min-height: 52px !important;
+  border-radius: 16px !important;
+  font-size: 0.96rem !important;
+  font-weight: 950 !important;
+  color: #101420 !important;
+  background: #ffd43b !important;
+  border: 1px solid rgba(255, 212, 59, 0.36) !important;
+  box-shadow: 0 14px 30px rgba(255, 212, 59, 0.16) !important;
+}
+
+.fromone-post-action-modal .fromone-image-guidance-note button:hover:not(:disabled),
+.fromone-post-action-modal .fromone-image-guidance-note .secondary-button:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 18px 36px rgba(255, 212, 59, 0.22) !important;
+}
+
+.fromone-post-action-modal .fromone-image-guidance-note button:disabled,
+.fromone-post-action-modal .fromone-image-guidance-note .secondary-button:disabled {
+  opacity: 1 !important;
+  color: rgba(248, 250, 252, 0.78) !important;
+  background: rgba(255, 255, 255, 0.09) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.fromone-post-action-modal .fromone-image-guidance-note button:disabled::after,
+.fromone-post-action-modal .fromone-image-guidance-note .secondary-button:disabled::after {
+  content: "" !important;
+}
+
+.fromone-post-action-modal .fromone-image-guidance-note p:last-child {
+  color: rgba(248, 250, 252, 0.72) !important;
+}
+
+/* Keep rescan usage labels readable on dark modal cards */
+.fromone-post-action-modal .fromone-image-guidance-note p[style*="color: #ffe58a"],
+.fromone-post-action-modal .fromone-image-guidance-note p[style*="color:#ffe58a"] {
+  color: #ffe58a !important;
+}
+
+/* Posted-state rescan notice */
+.fromone-post-action-modal .fromone-image-guidance-note p:has(+ button:disabled),
+.fromone-post-action-modal .fromone-image-guidance-note button:disabled + p {
+  color: rgba(248, 250, 252, 0.76) !important;
+}
+
