@@ -37,51 +37,39 @@ type GeneratedPost = {
   image_prompt: string;
 };
 
+type UploadedMediaContext = {
+  id?: string;
+  name?: string;
+  type?: string;
+  url?: string;
+  description?: string;
+  extractedText?: string;
+  context?: string;
+};
+
 type GenerateResult = {
   posts: GeneratedPost[];
   businessProfile: BusinessProfileResult;
 };
 
-const defaultPlatformPlan = [
-  'Facebook',
-  'Instagram',
-  'Google Business',
-  'LinkedIn',
-  'Instagram',
-  'TikTok',
-  'Facebook',
-];
+const defaultPlatformPlan = ['Facebook', 'Instagram', 'TikTok'];
 
-const allowedPlatformOptions = [
-  'Facebook',
-  'Instagram',
-  'Google Business',
-  'LinkedIn',
-  'TikTok',
-  'YouTube Shorts',
-  'X / Twitter',
-  'Pinterest',
-];
+const allowedPlatformOptions = ['Facebook', 'Instagram', 'TikTok'];
 
 const weeklyAngles = [
-  'Trust and credibility',
-  'Service spotlight',
-  'Helpful tip or education',
-  'Customer pain point',
-  'Offer or enquiry driver',
-  'Behind-the-scenes or personality',
-  'Reminder, social proof, or local CTA',
+  'Uploaded photo or flyer spotlight',
+  'Service or offer explanation',
+  'Local trust and credibility',
+  'Customer problem solved',
+  'Clear enquiry driver',
+  'Behind-the-scenes or proof of work',
+  'Reminder, social proof, or CTA',
 ];
 
 const platformCaptionLimits: Record<string, number> = {
   Facebook: 700,
   Instagram: 1200,
-  'Google Business': 600,
-  LinkedIn: 900,
   TikTok: 300,
-  'YouTube Shorts': 350,
-  'X / Twitter': 260,
-  Pinterest: 500,
 };
 
 const fallbackColours: BrandColours = {
@@ -152,9 +140,9 @@ function getPlatformForDay(platforms: string[], index: number) {
   return platforms[index % platforms.length] || defaultPlatformPlan[index] || 'Facebook';
 }
 
-function buildSelectedPlatformPlan(platforms: string[]) {
-  return Array.from({ length: 7 }).map((_, index) => ({
-    day: `Day ${index + 1}`,
+function buildSelectedPlatformPlan(platforms: string[], postCount = 7) {
+  return Array.from({ length: postCount }).map((_, index) => ({
+    day: `Post ${index + 1}`,
     platform: getPlatformForDay(platforms, index),
     angle: weeklyAngles[index] || 'Helpful business post',
   }));
@@ -529,22 +517,23 @@ function fallbackBusinessProfile({
 function buildFallbackPosts(
   profile: BusinessProfileResult,
   selectedPlatforms = defaultPlatformPlan,
-  marketReach = 'Local customers'
+  marketReach = 'Local customers',
+  postCount = 7
 ): GeneratedPost[] {
-  return Array.from({ length: 7 }).map((_, index) => {
+  return Array.from({ length: postCount }).map((_, index) => {
     const platform = getPlatformForDay(selectedPlatforms, index);
 
     return {
-      day: `Day ${index + 1}`,
+      day: `Post ${index + 1}`,
       platform,
       title: weeklyAngles[index] || `${platform} Post`,
       caption: enforcePlatformCaptionLimit(
-        `A useful ${platform} post for ${profile.business_name}, focused on ${profile.industry} and designed to build trust with ${marketReach.toLowerCase()}.`,
+        `A useful ${platform} post for ${profile.business_name}, focused on ${profile.industry} and designed to turn this week's photo, flyer, offer, or business update into a clear reason for ${marketReach.toLowerCase()} to enquire.`,
         platform
       ),
       cta: profile.main_offer || 'Contact us today to find out more.',
       hashtags: getFallbackHashtags(marketReach),
-      image_prompt: `Create a professional image for ${profile.business_name} showing ${profile.industry} in a realistic, trustworthy way. Match the brand style.`,
+      image_prompt: `Use the uploaded photo or flyer where available. Otherwise use a realistic ${profile.industry} image for ${profile.business_name} that supports the post and matches the brand style.`,
     };
   });
 }
@@ -560,7 +549,7 @@ function normalisePost(
 
   if (typeof value === 'string') {
     return {
-      day: `Day ${index + 1}`,
+      day: `Post ${index + 1}`,
       platform: fallbackPlatform,
       title: weeklyAngles[index] || `${fallbackPlatform} Post`,
       caption: enforcePlatformCaptionLimit(value, fallbackPlatform),
@@ -579,7 +568,7 @@ function normalisePost(
   const safePlatform = selectedPlatforms.includes(aiPlatform) ? aiPlatform : fallbackPlatform;
 
   return {
-    day: value?.day || `Day ${index + 1}`,
+    day: value?.day || `Post ${index + 1}`,
     platform: safePlatform,
     title: cleanText(value?.title, weeklyAngles[index] || `${safePlatform} Post`),
     caption: enforcePlatformCaptionLimit(cleanText(value?.caption), safePlatform),
@@ -595,7 +584,8 @@ function normaliseResult(
   raw: any,
   fallback: BusinessProfileResult,
   selectedPlatforms = defaultPlatformPlan,
-  marketReach = 'Local customers'
+  marketReach = 'Local customers',
+  postCount = 7
 ): GenerateResult {
   const rawProfile = raw.businessProfile || raw.business_profile || raw.profile || raw.brief || raw;
 
@@ -635,7 +625,7 @@ function normaliseResult(
   const rawPosts = Array.isArray(raw.posts) ? raw.posts : [];
 
   const posts = rawPosts
-    .slice(0, 7)
+    .slice(0, postCount)
     .map((post: any, index: number) =>
       normalisePost(post, index, businessProfile, selectedPlatforms, marketReach)
     )
@@ -643,13 +633,18 @@ function normaliseResult(
 
   const completePosts = [...posts];
 
-  while (completePosts.length < 7) {
-    const fallbackPosts = buildFallbackPosts(businessProfile, selectedPlatforms, marketReach);
+  while (completePosts.length < postCount) {
+    const fallbackPosts = buildFallbackPosts(
+      businessProfile,
+      selectedPlatforms,
+      marketReach,
+      postCount
+    );
     completePosts.push(fallbackPosts[completePosts.length]);
   }
 
   return {
-    posts: completePosts.slice(0, 7),
+    posts: completePosts.slice(0, postCount),
     businessProfile,
   };
 }
@@ -680,6 +675,8 @@ function buildPrompt({
   colours,
   selectedPlatforms,
   marketReach,
+  postCount,
+  mediaItems,
 }: {
   clientName: string;
   industry: string;
@@ -690,17 +687,40 @@ function buildPrompt({
   colours: BrandColours;
   selectedPlatforms: string[];
   marketReach: string;
+  postCount: number;
+  mediaItems: UploadedMediaContext[];
 }) {
-  const selectedPlatformPlan = buildSelectedPlatformPlan(selectedPlatforms)
+  const selectedPlatformPlan = buildSelectedPlatformPlan(selectedPlatforms, postCount)
     .map((item) => `- ${item.day}: ${item.platform} — ${item.angle}`)
     .join('\n');
 
   const platformLimitGuide = buildPlatformLimitGuide(selectedPlatforms);
 
+  const mediaContext = mediaItems.length
+    ? mediaItems
+        .map((item, index) => {
+          const details = [
+            item.description || item.context || '',
+            item.extractedText ? `Extracted flyer/text details: ${item.extractedText}` : '',
+            item.name ? `Filename: ${item.name}` : '',
+            item.type ? `Media type: ${item.type}` : '',
+          ]
+            .filter(Boolean)
+            .join(' | ');
+
+          return `- Upload ${index + 1}: ${details || 'Uploaded photo or flyer'}`;
+        })
+        .join('\n')
+    : 'No uploaded media supplied. Create posts from the business profile and website details.';
+
+  const mediaModeRule = mediaItems.length
+    ? `There are ${mediaItems.length} uploaded item(s). Create exactly ${postCount} posts. Match Post 1 to Upload 1, Post 2 to Upload 2, and so on.`
+    : `No uploads were supplied. Create exactly ${postCount} posts from the website/business profile.`;
+
   return `
 You are FromOne's premium social media strategist, website analyst, brand interpreter, and local business copywriter.
 
-Your task is to create a 7-day content campaign that feels like it was written by a skilled social media manager who understands the client's industry.
+Your task is to create a simple weekly set of posts that feels like it was written by a skilled social media manager who understands the client's industry and can turn photos or flyers into strong business posts.
 
 The output must make a small business owner think:
 "That sounds like us. That is useful. I could post that today."
@@ -728,7 +748,7 @@ Required JSON shape:
   },
   "posts": [
     {
-      "day": "Day 1",
+      "day": "Post 1",
       "platform": "Facebook",
       "title": "Short clean title",
       "caption": "Ready-to-post caption.",
@@ -749,8 +769,7 @@ Important caption length rule:
 - Every caption must stay under the platform-safe character limit for its platform.
 - Do not use the absolute maximum allowed by social platforms.
 - Keep captions practical, readable, and easy for a small business owner to post.
-- X / Twitter must be especially short.
-- TikTok and YouTube Shorts should read like short video ideas/scripts, not long captions.
+- TikTok should read like a short hook plus simple manual posting caption/script, not a long caption.
 
 Market reach:
 ${marketReach}
@@ -760,17 +779,31 @@ Market reach rules:
 - If market reach is nationwide, avoid overly local wording and write for a wider UK audience.
 - If market reach is online, focus on online enquiries, digital buying intent, ecommerce, remote services, delivery, or online conversion where relevant.
 
-Seven-day platform and content strategy:
+Weekly platform and content strategy:
 ${selectedPlatformPlan}
+
+Uploaded media context:
+${mediaContext}
+
+Media matching rule:
+${mediaModeRule}
+
+Core media quality rule:
+- The uploaded image, flyer, poster, offer graphic, product photo, food image, salon result, job photo, or before/after image gives you the subject of the post.
+- The business profile and website scan give you the quality layer: business name, industry, services, location/service area, audience, tone, offer, CTA, business goals, content pillars, and sales angle.
+- Do not only describe the image.
+- Turn the upload into a professional business post.
+- For flyers, extract offer, date, price, service, location, contact details, and CTA where supplied, then rewrite them naturally as a social post.
+- For photos, infer the likely business topic and write a useful, local, industry-specific caption.
+- If no uploaded media is supplied, use the website/business profile exactly as before.
 
 Strict platform rule:
 - You must only use these selected platforms: ${selectedPlatforms.join(', ')}.
 - Do not create posts for platforms that are not selected.
-- Spread the 7 posts naturally across the selected platforms.
-- If only one platform is selected, all 7 posts should use that platform.
-- If YouTube Shorts is selected, create short video script style content.
-- If X / Twitter is selected, create short, punchy update-style content.
-- If Pinterest is selected, create visual discovery style content.
+- Spread the posts naturally across the selected platforms.
+- If only one platform is selected, all posts should use that platform.
+- Facebook and Instagram can be published/scheduled where Meta is connected.
+- TikTok is manual posting for now, so provide copy/open friendly wording with a hook/script where useful.
 
 Industry quality rules:
 - Write with industry knowledge, not generic marketing fluff.
@@ -785,12 +818,7 @@ Industry quality rules:
 Platform rules:
 - Facebook: community-friendly, clear, trustworthy, local.
 - Instagram: visual, benefit-led, aspirational but not cheesy.
-- Google Business: direct, local, search-friendly, clear service/update language.
-- LinkedIn: credible, professional, expertise-building.
-- TikTok: short hook plus simple video/script idea that a business owner could realistically film.
-- YouTube Shorts: short video script, strong first line, clear scene idea, simple spoken wording.
-- X / Twitter: short, punchy, clear, useful, and easy to post as a quick update.
-- Pinterest: visual, searchable, inspiration-led, and image-friendly.
+- TikTok: short hook plus simple video/script idea that a business owner could realistically film or post manually.
 - Do not make short-form video content sound like a long corporate advert.
 
 Caption style:
@@ -800,8 +828,7 @@ Caption style:
 - Do not use exaggerated hype.
 - Emojis are allowed only if the business tone suits them. Use none by default.
 - Captions should usually be 45 to 120 words only when the platform limit allows it.
-- Google Business may be shorter and more direct.
-- TikTok, YouTube Shorts, and X / Twitter must be shorter where appropriate.
+- TikTok must be shorter where appropriate and include a simple hook or script-style first line.
 - Every caption must be ready to copy and paste.
 
 CTA rules:
@@ -849,7 +876,7 @@ Accent: ${colours.accent}
 Website scan content:
 ${websiteContent || 'No website content was available. Use the supplied business profile instead.'}
 
-Return exactly 7 posts. Use only the selected platforms and follow the seven-day platform plan exactly.
+Return exactly ${postCount} posts. Use only Facebook, Instagram, and TikTok. Follow the weekly platform plan exactly.
 `;
 }
 
@@ -1025,6 +1052,47 @@ async function generateWithGemini(prompt: string) {
   }
 }
 
+
+function normalisePostCount(value: any, mediaItems: UploadedMediaContext[]) {
+  const requested = Number(value);
+
+  if (mediaItems.length > 0) {
+    return Math.max(1, Math.min(mediaItems.length, 10));
+  }
+
+  if (Number.isFinite(requested) && requested > 0) {
+    return Math.max(1, Math.min(Math.round(requested), 7));
+  }
+
+  return 7;
+}
+
+function normaliseMediaItems(value: any): UploadedMediaContext[] {
+  const rawItems = Array.isArray(value) ? value : [];
+
+  return rawItems
+    .map((item) => ({
+      id: cleanText(item?.id),
+      name: cleanText(item?.name || item?.fileName || item?.filename),
+      type: cleanText(item?.type || item?.media_type || item?.mimeType),
+      url: cleanText(item?.url || item?.media_url || item?.publicUrl),
+      description: cleanText(item?.description || item?.alt || item?.summary),
+      extractedText: cleanText(item?.extractedText || item?.extracted_text || item?.text),
+      context: cleanText(item?.context || item?.notes),
+    }))
+    .filter(
+      (item) =>
+        item.name ||
+        item.type ||
+        item.url ||
+        item.description ||
+        item.extractedText ||
+        item.context
+    )
+    .slice(0, 10);
+}
+
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -1036,6 +1104,13 @@ export async function POST(req: NextRequest) {
     const description = String(body.description || '').trim();
     const selectedPlatforms = normaliseSelectedPlatforms(body.platforms || body.selectedPlatforms);
     const marketReach = String(body.marketReach || 'Local customers').trim();
+    const mediaItems = normaliseMediaItems(
+      body.mediaItems || body.uploads || body.weeklyUploads || body.media || []
+    );
+    const postCount = normalisePostCount(
+      body.numberOfPosts || body.postingFrequency || body.postCount,
+      mediaItems
+    );
 
     const provider: Provider = body.provider === 'openai' ? 'openai' : 'gemini';
 
@@ -1075,6 +1150,8 @@ export async function POST(req: NextRequest) {
       colours,
       selectedPlatforms,
       marketReach,
+      postCount,
+      mediaItems,
     });
 
     const rawResult =
@@ -1082,7 +1159,7 @@ export async function POST(req: NextRequest) {
         ? await generateWithOpenAI(prompt)
         : await generateWithGemini(prompt);
 
-    const result = normaliseResult(rawResult, fallback, selectedPlatforms, marketReach);
+    const result = normaliseResult(rawResult, fallback, selectedPlatforms, marketReach, postCount);
 
     if (!result.posts.length) {
       return NextResponse.json(
@@ -1091,6 +1168,8 @@ export async function POST(req: NextRequest) {
           businessProfile: result.businessProfile,
           selectedPlatforms,
           marketReach,
+          postCount,
+          mediaItemsUsed: mediaItems.length,
           error: 'No posts were generated.',
         },
         { status: 500 }
@@ -1103,6 +1182,8 @@ export async function POST(req: NextRequest) {
       provider,
       selectedPlatforms,
       marketReach,
+      postCount,
+      mediaItemsUsed: mediaItems.length,
       usedWebsiteScan: Boolean(website && websiteContent),
       detectedBrandColours: colours,
       platformCaptionLimits,
