@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, RefObject, useState } from 'react';
 
 type PostStatus = 'Ready' | 'Reminder set' | 'Posted' | 'Failed';
 
@@ -37,9 +37,9 @@ type PostActionModalProps = {
   savingReminderPostId: string | null;
   reminderValue: string;
   deletingPostId?: string | null;
-  postRef?: React.RefObject<HTMLElement | null>;
-  mediaRef?: React.RefObject<HTMLElement | null>;
-  publishRef?: React.RefObject<HTMLElement | null>;
+  postRef?: RefObject<HTMLElement | null>;
+  mediaRef?: RefObject<HTMLElement | null>;
+  publishRef?: RefObject<HTMLElement | null>;
   getPostPositionLabel: (post: any) => string;
   getPlatformDisplayName: (post: any) => string;
   getPostStatus: (post: any) => PostStatus;
@@ -144,13 +144,14 @@ export default function PostActionModal({
   onClearReminder,
   onDeletePost,
 }: PostActionModalProps) {
-  if (!selectedPost) return null;
-
   const [showMiniAnalytics, setShowMiniAnalytics] = useState(false);
   const [showScheduleControls, setShowScheduleControls] = useState(false);
 
+  if (!selectedPost) return null;
+
   const platformName = getPlatformDisplayName(selectedPost);
   const platformKey = String(selectedPost.platform || '').toLowerCase();
+  const mediaType = String(selectedPost.media_type || '').toLowerCase();
 
   const isFacebookPost = platformKey.includes('facebook');
   const isInstagramPost = platformKey.includes('instagram');
@@ -158,37 +159,59 @@ export default function PostActionModal({
   const tiktokDemoAvailable = Boolean(canDemoPublishToTikTok?.(selectedPost));
   const canAutoPublish = isFacebookPost || isInstagramPost;
   const hasMedia = Boolean(selectedPost.media_url);
+  const isVideoMedia = mediaType === 'video';
+  const isFlyerMedia =
+    mediaType === 'flyer' ||
+    mediaType === 'pdf' ||
+    String(selectedPost.media_url || '').toLowerCase().includes('.pdf');
+  const isImageMedia = hasMedia && !isVideoMedia && !isFlyerMedia;
   const needsMedia = mediaRequiredForPlatform(selectedPost.platform) && !hasMedia;
   const hasSchedule = Boolean(selectedPost.scheduled_publish_at);
   const posted = isPostPosted(selectedPost);
   const isPublishing = publishingPostId === selectedPost.id;
 
   const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
-
+  const hasPublishableMediaForInstagram = hasMedia && !isFlyerMedia;
+  const instagramHasFlyerOnly = isInstagramPost && isFlyerMedia;
 
   const publishCardTitle = posted
     ? 'Posted'
     : needsMedia
       ? 'Needs media'
-      : hasSchedule && canAutoPublish
-        ? 'Scheduled'
-        : canAutoPublish
-          ? 'Ready to publish'
-          : tiktokDemoAvailable
-            ? 'TikTok sandbox demo'
-            : 'Copy/open';
+      : instagramHasFlyerOnly
+        ? 'Needs image or video'
+        : hasSchedule && canAutoPublish
+          ? 'Scheduled'
+          : canAutoPublish
+            ? 'Ready to publish'
+            : tiktokDemoAvailable
+              ? 'TikTok sandbox demo'
+              : isTikTokPost
+                ? 'Manual TikTok post'
+                : 'Copy/open';
 
   const publishCardDetail = posted
     ? `${platformName} has been marked as posted.`
     : needsMedia
-      ? `${platformName} needs an image or video before publishing.`
-      : hasSchedule && canAutoPublish
-        ? `${platformName} is scheduled to publish automatically.`
-        : canAutoPublish
-          ? `${platformName} can publish now or be scheduled for later.`
-          : tiktokDemoAvailable
-            ? 'Run a TikTok sandbox demo publish for app review. No live TikTok post will be published.'
-            : `Copy this post and open ${platformName}.`;
+      ? `${platformName} needs media before publishing.`
+      : instagramHasFlyerOnly
+        ? 'Instagram needs an image or video. PDF flyers can be viewed and copied from here, but cannot be direct-published to Instagram.'
+        : hasSchedule && canAutoPublish
+          ? `${platformName} is scheduled to publish automatically.`
+          : canAutoPublish
+            ? `${platformName} can publish now or be scheduled for later.`
+            : tiktokDemoAvailable
+              ? 'Run a TikTok sandbox demo publish for app review. No live TikTok post will be published.'
+              : isTikTokPost
+                ? 'Copy this post, open TikTok, then paste and publish manually.'
+                : `Copy this post and open ${platformName}.`;
+
+  const mediaReadyForPlatform =
+    mediaRequiredForPlatform(selectedPost.platform)
+      ? isInstagramPost
+        ? hasPublishableMediaForInstagram
+        : hasMedia
+      : true;
 
   const readinessItems = [
     {
@@ -196,16 +219,16 @@ export default function PostActionModal({
       ready: Boolean(selectedPost.caption || selectedPost.cta),
     },
     {
-      label: mediaRequiredForPlatform(selectedPost.platform) ? 'Media required' : 'Media optional',
-      ready: mediaRequiredForPlatform(selectedPost.platform) ? hasMedia : true,
+      label: mediaRequiredForPlatform(selectedPost.platform) ? 'Media ready' : 'Media optional',
+      ready: mediaReadyForPlatform,
     },
     {
       label: canAutoPublish
-        ? 'Scheduling available'
+        ? 'Auto posting available'
         : tiktokDemoAvailable
           ? 'Demo available'
-          : 'Copy/open',
-      ready: canAutoPublish || tiktokDemoAvailable,
+          : 'Manual posting',
+      ready: true,
     },
   ];
 
@@ -274,7 +297,7 @@ export default function PostActionModal({
       <section className="fromone-modal-card fromone-post-action-modal">
         <div className="fromone-flow-card-top">
           <div>
-            <div className="page-eyebrow">Post window</div>
+            <div className="page-eyebrow">Post editor</div>
             <h2>{selectedPost.title || 'Social media post'}</h2>
             <p>
               {getPostPositionLabel(selectedPost)} · {platformName} · {getPostStatus(selectedPost)}
@@ -282,103 +305,6 @@ export default function PostActionModal({
           </div>
 
           <div className="fromone-flow-inline-actions">
-
-                <div
-                  style={{
-                    width: '100%',
-                    marginTop: 12,
-                    paddingTop: 12,
-                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => setShowScheduleControls((current: boolean) => !current)}
-                    disabled={posted}
-                  >
-                    {showScheduleControls ? 'Hide schedule' : hasSchedule ? 'Change schedule' : 'Schedule for later'}
-                  </button>
-
-                  {hasSchedule && !posted && !showScheduleControls && (
-                    <span
-                      className="fromone-publish-schedule-pill"
-                      style={{ marginLeft: 10 }}
-                    >
-                      Scheduled: {getReadableDateTime(selectedPost.scheduled_publish_at)}
-                    </span>
-                  )}
-
-                  {showScheduleControls && !posted && (
-                    <div
-                      className="fromone-image-guidance-note"
-                      style={{
-                        marginTop: 12,
-                      }}
-                    >
-                      <strong>Pick a date and time</strong>
-                      <p>
-                        {canAutoPublish
-                          ? `${autoPublishPlatformName} can publish automatically at this time.`
-                          : `This saves a schedule time for ${platformName}.`}
-                      </p>
-
-                      <input
-                        type="datetime-local"
-                        className="input"
-                        value={reminderValue}
-                        onChange={(event) => onSetReminderValue(event.target.value)}
-                      />
-
-                      <div className="button-row" style={{ marginTop: 12 }}>
-                        <button
-                          type="button"
-                          onClick={() => onSaveReminder(selectedPost)}
-                          disabled={savingReminderPostId === selectedPost.id || !reminderValue}
-                        >
-                          {savingReminderPostId === selectedPost.id ? 'Saving...' : 'Save schedule'}
-                        </button>
-
-                        {hasSchedule && (
-                          <button
-                            type="button"
-                            className="secondary-button"
-                            onClick={() => onClearReminder(selectedPost)}
-                            disabled={savingReminderPostId === selectedPost.id}
-                          >
-                            Clear schedule
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {onDeletePost && (
-                  <div
-                    style={{
-                      marginTop: 14,
-                      paddingTop: 14,
-                      borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="secondary-button danger-button"
-                      onClick={() => onDeletePost(selectedPost)}
-                      disabled={deletingPostId === selectedPost.id}
-                    >
-                      {deletingPostId === selectedPost.id
-                        ? posted
-                          ? 'Archiving...'
-                          : 'Deleting...'
-                        : posted
-                          ? 'Archive post'
-                          : 'Delete post'}
-                    </button>
-                  </div>
-                )}
-
             <button type="button" className="secondary-button" onClick={onClose}>
               Close
             </button>
@@ -391,14 +317,107 @@ export default function PostActionModal({
           <span>{getPostStatus(selectedPost)}</span>
           {isPostScheduledToday(selectedPost) && !posted && <span>Today</span>}
           {selectedPost.audience_target && <span>For {selectedPost.audience_target}</span>}
+          {isTikTokPost && <span>Manual posting</span>}
+          {isFlyerMedia && <span>PDF flyer</span>}
         </div>
+
+        <section ref={mediaRef} className="fromone-flow-tools-card">
+          <div className="fromone-flow-tools-header">
+            <div>
+              <div className="page-eyebrow">Media</div>
+              <h3>Check the media</h3>
+              <p>{getImageGuidance(selectedPost)}</p>
+            </div>
+          </div>
+
+          {selectedPost.media_url ? (
+            <div className="fromone-media-preview-card">
+              {isVideoMedia ? (
+                <video src={selectedPost.media_url} controls className="fromone-media-preview" />
+              ) : isFlyerMedia ? (
+                <div className="fromone-image-guidance-note">
+                  <strong>PDF flyer attached</strong>
+                  <p>
+                    This post was created from a PDF flyer. Open the flyer in a new tab to review
+                    the original upload.
+                  </p>
+
+                  <a
+                    href={selectedPost.media_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="secondary-button"
+                    style={{
+                      display: 'inline-flex',
+                      marginTop: 12,
+                    }}
+                  >
+                    View flyer
+                  </a>
+                </div>
+              ) : (
+                <img
+                  src={selectedPost.media_url}
+                  alt="Uploaded post media"
+                  className="fromone-media-preview"
+                />
+              )}
+
+              <div className="fromone-flow-inline-actions">
+                <a
+                  href={selectedPost.media_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="secondary-button"
+                >
+                  {isFlyerMedia ? 'Open flyer' : 'View media'}
+                </a>
+
+                <button
+                  type="button"
+                  className="secondary-button danger-button"
+                  onClick={() => onRemoveMedia(selectedPost)}
+                  disabled={removingMediaPostId === selectedPost.id || accessLocked}
+                >
+                  {removingMediaPostId === selectedPost.id ? 'Removing...' : 'Remove media'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="fromone-image-guidance-note">
+              <strong>{mediaRequiredForPlatform(selectedPost.platform) ? 'Media needed' : 'Optional'}</strong>
+              <p>
+                {mediaRequiredForPlatform(selectedPost.platform)
+                  ? `${platformName} needs a photo, flyer, graphic, or short video before publishing.`
+                  : 'A clear photo, flyer, graphic, or short video can make this post stronger.'}
+              </p>
+            </div>
+          )}
+
+          <label className="fromone-upload-button">
+            <input
+              type="file"
+              accept="image/*,video/*,application/pdf"
+              onChange={(event) => onUploadMedia(selectedPost, event)}
+              disabled={uploadingMediaPostId === selectedPost.id || accessLocked}
+              style={{ display: 'none' }}
+            />
+            <span>
+              {uploadingMediaPostId === selectedPost.id
+                ? 'Uploading...'
+                : selectedPost.media_url
+                  ? 'Replace media'
+                  : 'Choose media'}
+            </span>
+          </label>
+        </section>
 
         <section ref={postRef} className="fromone-flow-preview-card">
           <div className="fromone-flow-card-top">
             <div>
-              <div className="page-eyebrow">Post</div>
-              <h3>Wording</h3>
-              <p>Review the post before it goes out.</p>
+              <div className="page-eyebrow">Wording</div>
+              <h3>Review the wording</h3>
+              <p>Check the caption, CTA and hashtags before publishing.</p>
             </div>
 
             <span>{platformName}</span>
@@ -491,7 +510,7 @@ export default function PostActionModal({
               onClick={onToggleImproveTools}
               disabled={accessLocked || rewritingPost}
             >
-              {showImproveTools ? 'Hide improve' : 'Improve'}
+              {showImproveTools ? 'Hide improve' : 'Improve wording'}
             </button>
           </div>
 
@@ -524,7 +543,7 @@ export default function PostActionModal({
 
               <section className="fromone-flow-tool-row fromone-improve-options-row">
                 <div className="fromone-flow-tool-copy">
-                  <strong>Make it specific</strong>
+                  <strong>Make it more specific</strong>
                   <p>Choose who this post should speak to.</p>
                 </div>
 
@@ -577,83 +596,13 @@ export default function PostActionModal({
           )}
         </section>
 
-        <section ref={mediaRef} className="fromone-flow-tools-card">
-          <div className="fromone-flow-tools-header">
-            <div>
-              <div className="page-eyebrow">Media</div>
-              <h3>Media</h3>
-              <p>{getImageGuidance(selectedPost)}</p>
-            </div>
-          </div>
-
-          {selectedPost.media_url ? (
-            <div className="fromone-media-preview-card">
-              {selectedPost.media_type === 'video' ? (
-                <video src={selectedPost.media_url} controls className="fromone-media-preview" />
-              ) : (
-                <img
-                  src={selectedPost.media_url}
-                  alt="Uploaded post media"
-                  className="fromone-media-preview"
-                />
-              )}
-
-              <div className="fromone-flow-inline-actions">
-                <a
-                  href={selectedPost.media_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="secondary-button"
-                >
-                  View media
-                </a>
-
-                <button
-                  type="button"
-                  className="secondary-button danger-button"
-                  onClick={() => onRemoveMedia(selectedPost)}
-                  disabled={removingMediaPostId === selectedPost.id || accessLocked}
-                >
-                  {removingMediaPostId === selectedPost.id ? 'Removing...' : 'Remove'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="fromone-image-guidance-note">
-              <strong>{mediaRequiredForPlatform(selectedPost.platform) ? 'Media needed' : 'Optional'}</strong>
-              <p>
-                {mediaRequiredForPlatform(selectedPost.platform)
-                  ? `${platformName} needs an image or video before publishing.`
-                  : 'A clear photo or short video can make this post stronger.'}
-              </p>
-            </div>
-          )}
-
-          <label className="fromone-upload-button">
-            <input
-              type="file"
-              accept="image/*,video/*"
-              onChange={(event) => onUploadMedia(selectedPost, event)}
-              disabled={uploadingMediaPostId === selectedPost.id || accessLocked}
-              style={{ display: 'none' }}
-            />
-            <span>
-              {uploadingMediaPostId === selectedPost.id
-                ? 'Uploading...'
-                : selectedPost.media_url
-                  ? 'Replace media'
-                  : 'Choose image or video'}
-            </span>
-          </label>
-        </section>
-
         <section ref={publishRef} className="fromone-flow-tools-card fromone-publish-control-section">
           <div className="fromone-flow-tools-header">
             <div>
               <div className="page-eyebrow">Next step</div>
-              <h3>Choose what happens next</h3>
+              <h3>Publish or copy</h3>
               <p>
-                Publish now, schedule for later, or copy it.
+                Facebook and Instagram can auto publish when connected. TikTok is copy/open manual posting for now.
               </p>
             </div>
           </div>
@@ -662,6 +611,16 @@ export default function PostActionModal({
             <div className="fromone-improvement-note fromone-error-note">
               <strong>Publishing failed</strong>
               <p>{selectedPost.publish_error}</p>
+            </div>
+          )}
+
+          {instagramHasFlyerOnly && (
+            <div className="fromone-improvement-note">
+              <strong>Instagram direct publish needs image or video</strong>
+              <p>
+                This post has a PDF flyer. Replace it with an image or video to publish directly to
+                Instagram, or open the flyer and post manually.
+              </p>
             </div>
           )}
 
@@ -675,9 +634,11 @@ export default function PostActionModal({
             </div>
           )}
 
-          <div className={`fromone-publish-control-card ${posted ? 'is-posted' : ''} ${needsMedia ? 'needs-media' : ''}`}>
+          <div className={`fromone-publish-control-card ${posted ? 'is-posted' : ''} ${needsMedia || instagramHasFlyerOnly ? 'needs-media' : ''}`}>
             <div className="fromone-publish-control-main">
-              <div className="fromone-publish-status-icon">{posted ? '✓' : needsMedia ? '!' : hasSchedule ? '⏱' : '→'}</div>
+              <div className="fromone-publish-status-icon">
+                {posted ? '✓' : needsMedia || instagramHasFlyerOnly ? '!' : hasSchedule ? '⏱' : '→'}
+              </div>
 
               <div>
                 <div className="fromone-publish-card-kicker">{platformName}</div>
@@ -705,7 +666,7 @@ export default function PostActionModal({
                 <button
                   type="button"
                   onClick={handlePrimaryPublish}
-                  disabled={isPublishing || posted || needsMedia}
+                  disabled={isPublishing || posted || needsMedia || instagramHasFlyerOnly}
                 >
                   {isPublishing
                     ? tiktokDemoAvailable
@@ -715,11 +676,11 @@ export default function PostActionModal({
                       ? `Posted to ${platformName}`
                       : tiktokDemoAvailable
                         ? 'Run TikTok demo publish'
-                        : 'Publish now'}
+                        : `Publish to ${autoPublishPlatformName}`}
                 </button>
               ) : (
-                <button type="button" onClick={() => onCopyPost(selectedPost)}>
-                  {platformKey.includes('tiktok') ? 'Copy for TikTok' : `Copy for ${platformName}`}
+                <button type="button" onClick={() => onCopyPost(selectedPost)} disabled={posted}>
+                  {isTikTokPost ? 'Copy for TikTok' : `Copy for ${platformName}`}
                 </button>
               )}
 
@@ -738,89 +699,201 @@ export default function PostActionModal({
               >
                 Open {platformName}
               </button>
+
+              {posted ? (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => onMarkAsNotPosted(selectedPost.id)}
+                >
+                  Mark as not posted
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => onMarkAsPosted(selectedPost.id)}
+                >
+                  Mark as posted
+                </button>
+              )}
             </div>
           </div>
 
-                    {(posted || hasPerformanceData) && (
-          <div className="fromone-schedule-box fromone-schedule-control-card">
-            <div className="fromone-schedule-card-header">
-              <div>
-                <strong>Mini analytics</strong>
-                <p>
-                  {posted
-                    ? hasPerformanceData
-                      ? 'Stats are available for this post.'
-                      : 'No stats recorded yet.'
-                    : 'Stats appear after publishing.'}
-                </p>
-              </div>
+          <div
+            className="fromone-image-guidance-note"
+            style={{
+              marginTop: 14,
+            }}
+          >
+            <strong>{hasSchedule ? 'Schedule saved' : 'Schedule for later'}</strong>
+            <p>
+              {canAutoPublish
+                ? `${autoPublishPlatformName} can publish automatically at the time you choose.`
+                : `This saves a reminder time for ${platformName}. You will still post manually.`}
+            </p>
 
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setShowMiniAnalytics((current: boolean) => !current)}
-              >
-                {showMiniAnalytics ? 'Hide stats' : 'Show stats'}
-              </button>
-            </div>
-
-            {showMiniAnalytics && (
-              <>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))',
-                    gap: 10,
-                  }}
+            {!showScheduleControls ? (
+              <div className="button-row" style={{ marginTop: 12 }}>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowScheduleControls(true)}
+                  disabled={posted}
                 >
-                  {performanceMetrics.map((metric) => (
-                    <div
-                      key={metric.label}
-                      style={{
-                        padding: '12px',
-                        borderRadius: 16,
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          opacity: 0.68,
-                          fontWeight: 800,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em',
-                        }}
-                      >
-                        {metric.label}
-                      </div>
+                  {hasSchedule ? 'Change schedule' : 'Schedule for later'}
+                </button>
 
-                      <strong
-                        style={{
-                          display: 'block',
-                          marginTop: 6,
-                          fontSize: 22,
-                          lineHeight: 1,
-                        }}
-                      >
-                        {formatMetricValue(metric.value)}
-                      </strong>
-                    </div>
-                  ))}
-                </div>
-
-                {!hasPerformanceData && (
-                  <p style={{ marginBottom: 0, opacity: 0.72 }}>
-                    Stats can be updated when platform analytics are connected.
-                  </p>
+                {hasSchedule && !posted && (
+                  <span className="fromone-publish-schedule-pill">
+                    Scheduled: {getReadableDateTime(selectedPost.scheduled_publish_at)}
+                  </span>
                 )}
+              </div>
+            ) : (
+              <>
+                <input
+                  type="datetime-local"
+                  className="input"
+                  value={reminderValue}
+                  onChange={(event) => onSetReminderValue(event.target.value)}
+                />
+
+                <div className="button-row" style={{ marginTop: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => onSaveReminder(selectedPost)}
+                    disabled={savingReminderPostId === selectedPost.id || !reminderValue}
+                  >
+                    {savingReminderPostId === selectedPost.id ? 'Saving...' : 'Save schedule'}
+                  </button>
+
+                  {hasSchedule && (
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => onClearReminder(selectedPost)}
+                      disabled={savingReminderPostId === selectedPost.id}
+                    >
+                      Clear schedule
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setShowScheduleControls(false)}
+                    disabled={savingReminderPostId === selectedPost.id}
+                  >
+                    Hide schedule
+                  </button>
+                </div>
               </>
             )}
           </div>
+
+          {(posted || hasPerformanceData) && (
+            <div className="fromone-schedule-box fromone-schedule-control-card">
+              <div className="fromone-schedule-card-header">
+                <div>
+                  <strong>Mini analytics</strong>
+                  <p>
+                    {posted
+                      ? hasPerformanceData
+                        ? 'Stats are available for this post.'
+                        : 'No stats recorded yet.'
+                      : 'Stats appear after publishing.'}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowMiniAnalytics((current: boolean) => !current)}
+                >
+                  {showMiniAnalytics ? 'Hide stats' : 'Show stats'}
+                </button>
+              </div>
+
+              {showMiniAnalytics && (
+                <>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))',
+                      gap: 10,
+                    }}
+                  >
+                    {performanceMetrics.map((metric) => (
+                      <div
+                        key={metric.label}
+                        style={{
+                          padding: '12px',
+                          borderRadius: 16,
+                          background: 'rgba(255, 255, 255, 0.06)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 12,
+                            opacity: 0.68,
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          {metric.label}
+                        </div>
+
+                        <strong
+                          style={{
+                            display: 'block',
+                            marginTop: 6,
+                            fontSize: 22,
+                            lineHeight: 1,
+                          }}
+                        >
+                          {formatMetricValue(metric.value)}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+
+                  {!hasPerformanceData && (
+                    <p style={{ marginBottom: 0, opacity: 0.72 }}>
+                      Stats can be updated when platform analytics are connected.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           )}
 
-
-
+          {onDeletePost && (
+            <div
+              style={{
+                marginTop: 14,
+                paddingTop: 14,
+                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
+              <button
+                type="button"
+                className="secondary-button danger-button"
+                onClick={() => onDeletePost(selectedPost)}
+                disabled={deletingPostId === selectedPost.id}
+              >
+                {deletingPostId === selectedPost.id
+                  ? posted
+                    ? 'Archiving...'
+                    : 'Deleting...'
+                  : posted
+                    ? 'Archive post'
+                    : 'Delete post'}
+              </button>
+            </div>
+          )}
         </section>
       </section>
     </div>
