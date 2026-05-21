@@ -6,14 +6,14 @@ import PublicFooter from '../components/PublicFooter';
 export const metadata: Metadata = {
   title: 'Help Guide | How FromOne Works',
   description:
-    'A simple guide to using FromOne to set up a business, create weekly social media posts, review posts, and publish them manually.',
+    'A simple guide to using FromOne to set up a Business Profile, upload media, create scheduled posts, review posts, and autopost to Facebook and Instagram.',
   alternates: {
     canonical: '/tutorial',
   },
   openGraph: {
     title: 'Help Guide | How FromOne Works',
     description:
-      'Set up your business, choose your platforms, create weekly posts, review them, publish manually, and track what is done.',
+      'Set up the business, upload photos, videos or flyers, create posts, review the weekly calendar, and autopost to Facebook and Instagram.',
     url: '/tutorial',
     type: 'website',
     images: [
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'How FromOne creates weekly social media content',
+        alt: 'How FromOne creates scheduled social media posts',
       },
     ],
   },
@@ -30,39 +30,57 @@ export const metadata: Metadata = {
 const steps = [
   {
     number: '1',
-    title: 'Set up the business',
+    title: 'Set up the Business Profile',
     text:
-      'Add the business website, or enter the business details manually if there is no website.',
+      'Add the business details once in Settings. FromOne uses this to understand the business, services, location, tone, customers and offers.',
   },
   {
     number: '2',
-    title: 'Choose your platforms',
+    title: 'Upload this week’s media',
     text:
-      'Select the social platforms you want content for. FromOne will only create posts for the platforms you choose.',
+      'Go to the Dashboard and upload photos, videos, flyers, menus, offers, product shots, event clips or behind-the-scenes content.',
   },
   {
     number: '3',
-    title: 'Create weekly posts',
+    title: 'Choose the platforms',
     text:
-      'Click the create button on the Dashboard. FromOne creates seven ready-to-use posts for the week.',
+      'Choose Facebook, Instagram and/or TikTok. Facebook and Instagram can autopost when connected. TikTok is copy/open manual for now.',
   },
   {
     number: '4',
-    title: 'Open Posts',
+    title: 'Create your posts',
     text:
-      'Go to Posts to see the weekly calendar. Choose a day to review the post for that day.',
+      'Click Create my posts. FromOne turns each upload into a ready-to-review post and chooses sensible posting times automatically.',
   },
   {
     number: '5',
-    title: 'Prepare the post',
+    title: 'Review the weekly calendar',
     text:
-      'Read the post, make it more specific if needed, edit the wording, and add an image.',
+      'Open Posts to check the week. Each card shows the platform, media, wording and planned posting time.',
   },
   {
     number: '6',
-    title: 'Publish and mark as done',
+    title: 'Edit, rewrite or publish',
     text:
-      'Copy the post, open the platform, publish it manually, then mark it as posted in FromOne.',
+      'Open a post to edit wording, replace media, rewrite using the upload, change the scheduled time, publish now or let FromOne autopost.',
+  },
+];
+
+const platformNotes = [
+  {
+    title: 'Facebook',
+    text:
+      'FromOne can publish now or autopost at the scheduled time when Facebook is connected.',
+  },
+  {
+    title: 'Instagram',
+    text:
+      'FromOne can publish image and video posts when Instagram is connected. If an image shape is not suitable, FromOne can create an Instagram-safe version.',
+  },
+  {
+    title: 'TikTok',
+    text:
+      'FromOne creates TikTok-ready wording, but TikTok posting stays manual. Copy the post, open TikTok and publish it yourself.',
   },
 ];
 
@@ -75,8 +93,8 @@ export default function TutorialPage() {
         <div className="page-eyebrow">FromOne Help Guide</div>
         <h1 className="page-title">How FromOne works</h1>
         <p className="page-description">
-          Set up the business, create the weekly posts, review each day, publish manually,
-          and keep track of what is done.
+          Set up the business once, upload this week’s media, create scheduled posts, review the
+          weekly calendar, then autopost Facebook and Instagram or copy/open TikTok.
         </p>
 
         <div className="tutorial-simple-actions">
@@ -108,18 +126,36 @@ export default function TutorialPage() {
         </div>
       </section>
 
+      <section className="premium-card tutorial-simple-card">
+        <div className="page-eyebrow">Publishing</div>
+        <h2>What happens on each platform?</h2>
+
+        <div className="tutorial-simple-step-list">
+          {platformNotes.map((item, index) => (
+            <article key={item.title} className="tutorial-simple-step">
+              <span>{index + 1}</span>
+
+              <div>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="premium-card tutorial-simple-note">
         <div>
           <div className="page-eyebrow">Ready to start?</div>
-          <h2>Create your first weekly plan.</h2>
+          <h2>Upload your media and create your posts.</h2>
           <p>
-            Start from the Dashboard. Add the website or business details, choose the
-            platforms, then create the week of posts.
+            Start from the Dashboard. FromOne will use your Business Profile and uploaded media to
+            create posts with planned times.
           </p>
         </div>
 
         <Link href="/dashboard" className="sales-primary-button">
-          Create weekly posts
+          Create my posts
         </Link>
       </section>
 
