@@ -1000,28 +1000,17 @@ export default function SettingsPage() {
             >
               <div className="page-eyebrow">Next step</div>
               <h2 style={{ marginTop: 0 }}>
-                {hasMetaConnection ? 'Your publishing channels are connected.' : 'Connect Facebook and Instagram for autoposting.'}
+                {hasMetaConnection ? 'Ready for the Dashboard.' : 'Ready for the Dashboard'}
               </h2>
               <p style={{ maxWidth: 820 }}>
                 {hasMetaConnection
-                  ? 'You can now continue to Dashboard, upload media, choose platforms and create your first scheduled posts.'
-                  : 'This is optional, but connecting now means FromOne can publish or autopost to Facebook and Instagram when your posts are ready.'}
+                  ? 'Your Business Profile is saved and your publishing channels are connected. Continue to Dashboard to upload media and create your first scheduled posts.'
+                  : 'Your Business Profile is saved. Connect Facebook and Instagram using the cards below for autoposting, or continue to Dashboard and connect later.'}
               </p>
 
               <div className="button-row" style={{ marginTop: 18 }}>
-                {!hasMetaConnection && (
-                  <button
-                    type="button"
-                    onClick={connectMetaAccount}
-                    disabled={metaConnectionBusy}
-                  >
-                    {metaConnectionBusy ? 'Connecting...' : 'Connect Facebook & Instagram'}
-                  </button>
-                )}
-
                 <button
                   type="button"
-                  className={hasMetaConnection ? undefined : 'secondary-button'}
                   onClick={() => {
                     window.location.href = '/dashboard';
                   }}
@@ -1032,7 +1021,7 @@ export default function SettingsPage() {
 
               {!hasMetaConnection && (
                 <p style={{ margin: '14px 0 0', color: 'var(--muted)', fontSize: 14 }}>
-                  You can skip this for now and connect later from Settings.
+                  The Facebook and Instagram connection cards are directly below this section.
                 </p>
               )}
             </section>
