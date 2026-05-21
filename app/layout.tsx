@@ -1,6 +1,7 @@
 import './globals.css';
 import AppShell from './components/AppShell';
 import CookieBanner from './components/CookieBanner';
+import ToastProvider from '@/app/components/ToastProvider';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
@@ -79,8 +80,10 @@ export default function RootLayout({
   return (
     <html lang="en-GB">
       <body>
-        <AppShell>{children}</AppShell>
-        <CookieBanner />
+        <ToastProvider>
+          <AppShell>{children}</AppShell>
+          <CookieBanner />
+        </ToastProvider>
       </body>
     </html>
   );
