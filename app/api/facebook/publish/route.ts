@@ -152,6 +152,56 @@ function getFacebookPostId(result: any) {
   );
 }
 
+function isInvalidMetaTokenError(message?: string | null) {
+  const lowerMessage = cleanText(message).toLowerCase();
+
+  return (
+    lowerMessage.includes('error validating access token') ||
+    lowerMessage.includes('session is invalid') ||
+    lowerMessage.includes('user logged out') ||
+    lowerMessage.includes('access token') && lowerMessage.includes('invalid') ||
+    lowerMessage.includes('oauth') && lowerMessage.includes('token')
+  );
+}
+
+function getFriendlyFacebookError(message?: string | null) {
+  if (isInvalidMetaTokenError(message)) {
+    return 'Facebook connection has expired. Please reconnect Facebook and Instagram in Settings, then try again.';
+  }
+
+  return cleanText(message) || 'Facebook publish failed.';
+}
+
+async function markMetaConnectionExpired(connectionId?: string | null, userId?: string | null) {
+  try {
+    const supabase = getSupabaseAdmin();
+
+    let query = supabase
+      .from('social_connections')
+      .update({
+        status: 'expired',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('provider', 'meta');
+
+    if (connectionId) {
+      query = query.eq('id', connectionId);
+    } else if (userId) {
+      query = query.eq('user_id', userId).eq('status', 'connected');
+    } else {
+      return;
+    }
+
+    const { error } = await query;
+
+    if (error) {
+      console.error('Could not mark Meta connection expired:', error.message);
+    }
+  } catch (markError: any) {
+    console.error('Meta connection expiry update failed:', markError?.message || markError);
+  }
+}
+
 function buildPublishedToValue(currentValue: any) {
   if (Array.isArray(currentValue)) {
     return Array.from(new Set([...currentValue, 'facebook']));
@@ -529,6 +579,11 @@ export async function POST(req: NextRequest) {
       } catch (mediaError: any) {
         const mediaErrorMessage = mediaError?.message || 'Facebook image post failed.';
 
+        if (isInvalidMetaTokenError(mediaErrorMessage)) {
+          await markMetaConnectionExpired(credentials.connectionId, userId);
+          throw new Error(getFriendlyFacebookError(mediaErrorMessage));
+        }
+
         console.error('Facebook image publish failed. Retrying as text-only post:', mediaErrorMessage);
 
         mediaFallbackReason = mediaErrorMessage;
@@ -627,6 +682,13 @@ export async function POST(req: NextRequest) {
       console.error('Failed to resolve user for Facebook publish log:', userLookupError?.message);
     }
 
+    const rawErrorMessage = error?.message || 'Something went wrong publishing to Facebook.';
+    const friendlyErrorMessage = getFriendlyFacebookError(rawErrorMessage);
+
+    if (isInvalidMetaTokenError(rawErrorMessage)) {
+      await markMetaConnectionExpired(null, userId);
+    }
+
     if (postId) {
       try {
         const supabase = getSupabaseAdmin();
@@ -635,7 +697,8 @@ export async function POST(req: NextRequest) {
           .from('campaign_posts')
           .update({
             publish_status: 'failed',
-            publish_error: error?.message || 'Facebook publish failed.',
+            publish_error: friendlyErrorMessage,
+            status: 'failed',
           })
           .eq('id', postId);
       } catch (databaseError: any) {
@@ -650,19 +713,21 @@ export async function POST(req: NextRequest) {
       action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
       status: 'failed',
       message: 'Facebook publish failed.',
-      error: error?.message || 'Something went wrong publishing to Facebook.',
+      error: friendlyErrorMessage,
       credentialSource: null,
       socialConnectionId: null,
       metadata: {
         route: '/api/facebook/publish',
+        raw_error: rawErrorMessage,
+        marked_meta_connection_expired: isInvalidMetaTokenError(rawErrorMessage),
       },
     });
 
     return NextResponse.json(
       {
-        error: error?.message || 'Something went wrong publishing to Facebook.',
+        error: friendlyErrorMessage,
       },
-      { status: 500 }
+      { status: isInvalidMetaTokenError(rawErrorMessage) ? 401 : 500 }
     );
   }
 }
