@@ -5,6 +5,7 @@ import "./posts.css";
 import { CSSProperties, ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
+import { useToast } from "@/app/components/ToastProvider";
 
 import WeeklyPlanControls from "@/components/posts/WeeklyPlanControls";
 import WeeklyQueue from "@/components/posts/WeeklyQueue";
@@ -304,6 +305,34 @@ const normaliseMainPlatform = (platform?: string | null) => {
 };
 
 export default function PostsPage() {
+  const { showToast } = useToast();
+
+  const notify = (
+    message: any,
+    type: "success" | "error" | "info" | "warning" = "info",
+    title?: string,
+  ) => {
+    const cleanMessage = String(message || "").trim();
+
+    if (!cleanMessage) return;
+
+    const defaultTitle =
+      title ||
+      (type === "success"
+        ? "Done"
+        : type === "error"
+          ? "Something went wrong"
+          : type === "warning"
+            ? "Please check"
+            : "FromOne");
+
+    showToast({
+      type,
+      title: defaultTitle,
+      message: cleanMessage,
+    });
+  };
+
   const [posts, setPosts] = useState<any[]>([]);
   const [deletedPosts, setDeletedPosts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -444,12 +473,12 @@ export default function PostsPage() {
     const metaError = params.get("meta_error");
 
     if (metaConnected === "true") {
-      alert("Facebook and Instagram connected.");
+      notify("Facebook and Instagram connected.", "success", "Accounts connected");
       window.history.replaceState({}, "", window.location.pathname);
     }
 
     if (metaConnected === "false") {
-      alert(metaError || "Meta connection failed.");
+      notify(metaError || "Meta connection failed.", "error", "Connection failed");
       window.history.replaceState({}, "", window.location.pathname);
     }
 
@@ -604,7 +633,7 @@ export default function PostsPage() {
 
   const ensureAccessAllowed = () => {
     if (!accessLocked) return true;
-    alert(accessMessage);
+    notify(accessMessage, "warning", "Access locked");
     return false;
   };
 
@@ -758,7 +787,7 @@ export default function PostsPage() {
     const used = isVideo ? usage.videoUsed : usage.mediaUsed;
 
     if (used >= limit) {
-      alert(
+      notify(
         isVideo
           ? `You have used your ${limit} video rescans for this 7-day period. You can still edit the wording manually or replace the video without rescanning.`
           : `You have used your ${limit} image/flyer rescans for this 7-day period. You can still edit the wording manually or replace the media without rescanning.`,
@@ -958,7 +987,7 @@ export default function PostsPage() {
 
   const loadSelectedPlan = async () => {
     if (!pendingCampaignId) {
-      alert("Please choose a weekly post set first.");
+      notify("Please choose a weekly post set first.", "warning", "Choose a weekly set");
       return;
     }
 
@@ -1003,7 +1032,7 @@ export default function PostsPage() {
 
   const renameSelectedCampaign = async () => {
     if (!campaign?.id) {
-      alert("No weekly post set selected.");
+      notify("No weekly post set selected.", "warning", "No weekly set selected");
       return;
     }
 
@@ -1015,7 +1044,7 @@ export default function PostsPage() {
     const cleanName = newName.trim();
 
     if (!cleanName) {
-      alert("Name cannot be empty.");
+      notify("Name cannot be empty.", "warning", "Name needed");
       return;
     }
 
@@ -1028,7 +1057,7 @@ export default function PostsPage() {
         .eq("id", campaign.id);
 
       if (error) {
-        alert(error.message);
+        notify(error.message, "error");
         return;
       }
 
@@ -1040,11 +1069,11 @@ export default function PostsPage() {
         ),
       );
 
-      alert("Weekly posts renamed.");
+      notify("Weekly posts renamed.", "success", "Weekly set renamed");
     } catch (error: any) {
       const message = getReadableError(error, "Error renaming weekly posts.");
       console.error("Rename weekly posts error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setRenamingCampaign(false);
     }
@@ -1052,7 +1081,7 @@ export default function PostsPage() {
 
   const deleteSelectedCampaign = async () => {
     if (!campaign?.id) {
-      alert("No weekly post set selected.");
+      notify("No weekly post set selected.", "warning", "No weekly set selected");
       return;
     }
 
@@ -1075,7 +1104,7 @@ export default function PostsPage() {
         .eq("campaign_id", campaignIdToDelete);
 
       if (postsLoadError) {
-        alert(postsLoadError.message);
+        notify(postsLoadError.message, "error");
         return;
       }
 
@@ -1101,7 +1130,7 @@ export default function PostsPage() {
         .eq("id", campaignIdToDelete);
 
       if (campaignDeleteError) {
-        alert(campaignDeleteError.message);
+        notify(campaignDeleteError.message, "error");
         return;
       }
 
@@ -1114,12 +1143,12 @@ export default function PostsPage() {
       setShowImproveTools(false);
       cancelEditingPost();
 
-      alert("Weekly posts deleted.");
+      notify("Weekly posts deleted.", "success", "Weekly set deleted");
       await loadPageData();
     } catch (error: any) {
       const message = getReadableError(error, "Error deleting weekly posts.");
       console.error("Delete weekly posts error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setDeletingCampaign(false);
     }
@@ -1204,12 +1233,12 @@ export default function PostsPage() {
     const textToCopy = buildPostText(post);
 
     if (!textToCopy) {
-      alert("There is no post text to copy yet.");
+      notify("There is no post text to copy yet.", "warning", "Nothing to copy");
       return;
     }
 
     await navigator.clipboard.writeText(textToCopy);
-    alert("Post copied.");
+    notify("Post copied.", "success", "Copied");
   };
 
   const getImageGuidance = (post: any) => {
@@ -1327,7 +1356,7 @@ export default function PostsPage() {
       !file.type.startsWith("video/") &&
       file.type !== "application/pdf"
     ) {
-      alert("Please upload an image, video, or PDF flyer.");
+      notify("Please upload an image, video, or PDF flyer.", "warning", "Unsupported file type");
       return;
     }
 
@@ -1370,7 +1399,7 @@ export default function PostsPage() {
 
       updatePostLocally(post.id, updates);
 
-      alert(
+      notify(
         mediaType === "video"
           ? "Video added."
           : mediaType === "flyer"
@@ -1380,7 +1409,7 @@ export default function PostsPage() {
     } catch (error: any) {
       const message = getReadableError(error, "Error uploading media.");
       console.error("Upload media error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setUploadingMediaPostId(null);
     }
@@ -1422,11 +1451,11 @@ export default function PostsPage() {
       if (error) throw error;
 
       updatePostLocally(post.id, updates);
-      alert("Media removed.");
+      notify("Media removed.", "success", "Media removed");
     } catch (error: any) {
       const message = getReadableError(error, "Error removing media.");
       console.error("Remove media error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setRemovingMediaPostId(null);
     }
@@ -1452,7 +1481,7 @@ export default function PostsPage() {
     if (!ensureAccessAllowed()) return;
 
     if (!editCaption.trim()) {
-      alert("Caption cannot be empty.");
+      notify("Caption cannot be empty.", "warning", "Caption needed");
       return;
     }
 
@@ -1471,7 +1500,7 @@ export default function PostsPage() {
         .eq("id", activePostForEditing.id);
 
       if (error) {
-        alert(error.message);
+        notify(error.message, "error");
         return;
       }
 
@@ -1484,11 +1513,11 @@ export default function PostsPage() {
       });
 
       cancelEditingPost();
-      alert("Post updated.");
+      notify("Post updated.", "success", "Post saved");
     } catch (error: any) {
       const message = getReadableError(error, "Error saving post changes.");
       console.error("Save edited post error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setSavingEdit(false);
     }
@@ -1523,7 +1552,7 @@ export default function PostsPage() {
       .eq("id", post.id);
 
     if (error) {
-      alert(error.message);
+      notify(error.message, "error");
       return false;
     }
 
@@ -1547,12 +1576,12 @@ export default function PostsPage() {
       audienceTarget === "Custom audience" ? customAudienceTarget.trim() : audienceTarget.trim();
 
     if (!finalAudience) {
-      alert("Please enter who this post is for.");
+      notify("Please enter who this post is for.", "warning", "Audience needed");
       return;
     }
 
     if (!post.caption?.trim()) {
-      alert("This post needs a caption before it can be improved.");
+      notify("This post needs a caption before it can be improved.", "warning", "Caption needed");
       return;
     }
 
@@ -1590,7 +1619,7 @@ export default function PostsPage() {
     } catch (error: any) {
       const message = getReadableError(error, "Error improving post.");
       console.error("Make more specific error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setRewritingAction("");
       setRewritingPost(false);
@@ -1603,7 +1632,7 @@ export default function PostsPage() {
     if (!ensureAccessAllowed()) return;
 
     if (!post.caption?.trim()) {
-      alert("This post needs a caption before it can be improved.");
+      notify("This post needs a caption before it can be improved.", "warning", "Caption needed");
       return;
     }
 
@@ -1643,7 +1672,7 @@ export default function PostsPage() {
     } catch (error: any) {
       const message = getReadableError(error, "Error improving post.");
       console.error("Improve post error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setRewritingAction("");
       setRewritingPost(false);
@@ -1656,14 +1685,14 @@ export default function PostsPage() {
     if (!ensureAccessAllowed()) return;
 
     if (!post.media_url) {
-      alert("Add media first, then rescan this post.");
+      notify("Add media first, then rescan this post.", "warning", "Media needed");
       return;
     }
 
     const userId = await getSignedInUserId();
 
     if (!userId) {
-      alert("Please sign in again.");
+      notify("Please sign in again.", "warning", "Sign in needed");
       return;
     }
 
@@ -1752,7 +1781,7 @@ Important:
       const rewrittenPost = response.data?.posts?.[0];
 
       if (!rewrittenPost?.caption) {
-        alert("The media rescan did not return a new post. Please try again.");
+        notify("The media rescan did not return a new post. Please try again.", "error", "Rescan failed");
         return;
       }
 
@@ -1801,11 +1830,11 @@ Important:
               : "The post wording has been rebuilt around the attached image.",
       });
 
-      alert("Post rescanned and rewritten.");
+      notify("Post rescanned and rewritten.", "success", "Post improved");
     } catch (error: any) {
       const message = getReadableError(error, "Error rescanning media.");
       console.error("Media rescan error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setRescanningMediaPostId(null);
       setRewritingAction("");
@@ -1859,7 +1888,7 @@ Important:
     const text = buildPostText(post);
 
     if (!text) {
-      alert("This post needs wording before it can be published.");
+      notify("This post needs wording before it can be published.", "warning", "Wording needed");
       return;
     }
 
@@ -1925,7 +1954,7 @@ Important:
       }
 
       console.error("Facebook publish error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setPublishingPostId(null);
     }
@@ -1942,12 +1971,12 @@ Important:
     const text = buildPostText(post);
 
     if (!text) {
-      alert("This post needs wording before it can be published.");
+      notify("This post needs wording before it can be published.", "warning", "Wording needed");
       return;
     }
 
     if (!post.media_url || !post.media_type || post.media_type === "flyer") {
-      alert("Instagram needs an image or video before publishing.");
+      notify("Instagram needs an image or video before publishing.", "warning", "Media needed");
       return;
     }
 
@@ -2016,14 +2045,14 @@ Important:
       }
 
       console.error("Instagram publish error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setPublishingPostId(null);
     }
   };
 
   const publishToTikTokDemo = async (_post: any) => {
-    alert("TikTok is manual for now. Copy the post and open TikTok to publish it.");
+    notify("TikTok is manual for now. Copy the post and open TikTok to publish it.", "info", "TikTok manual");
   };
 
   const markAsPosted = async (postId: string) => {
@@ -2038,7 +2067,7 @@ Important:
     const { error } = await supabase.from("campaign_posts").update(updates).eq("id", postId);
 
     if (error) {
-      alert(error.message);
+      notify(error.message, "error");
       return;
     }
 
@@ -2065,7 +2094,7 @@ Important:
     const { error } = await supabase.from("campaign_posts").update(updates).eq("id", postId);
 
     if (error) {
-      alert(error.message);
+      notify(error.message, "error");
       return;
     }
 
@@ -2076,7 +2105,7 @@ Important:
     if (!post?.id) return;
 
     if (!reminderValue) {
-      alert("Choose a date and time first.");
+      notify("Choose a date and time first.", "warning", "Schedule time needed");
       return;
     }
 
@@ -2101,11 +2130,11 @@ Important:
       if (error) throw error;
 
       updatePostLocally(post.id, updates);
-      alert("Schedule time saved.");
+      notify("Schedule time saved.", "success", "Autopost time saved");
     } catch (error: any) {
       const message = getReadableError(error, "Error saving schedule time.");
       console.error("Save reminder error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setSavingReminderPostId(null);
     }
@@ -2133,11 +2162,11 @@ Important:
 
       updatePostLocally(post.id, updates);
       setReminderValue("");
-      alert("Schedule cleared.");
+      notify("Schedule cleared.", "success", "Schedule cleared");
     } catch (error: any) {
       const message = getReadableError(error, "Error clearing schedule.");
       console.error("Clear reminder error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setSavingReminderPostId(null);
     }
@@ -2190,7 +2219,7 @@ Important:
       setShowImproveTools(false);
       cancelEditingPost();
 
-      alert("Post deleted. Use Undo delete at the top of the page, or restore it later from Deleted posts.");
+      notify("Use Undo delete at the top of the page, or restore it later from Deleted posts.", "success", "Post deleted");
 
       window.setTimeout(() => {
         setRecentlyDeletedPost((current: any | null) =>
@@ -2200,7 +2229,7 @@ Important:
     } catch (error: any) {
       const message = getReadableError(error, "Error deleting post.");
       console.error("Delete post error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setDeletingPostId(null);
     }
@@ -2245,7 +2274,7 @@ Important:
     } catch (error: any) {
       const message = getReadableError(error, "Error restoring post.");
       console.error("Undo delete post error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setDeletingPostId(null);
     }
@@ -2289,7 +2318,7 @@ Important:
     } catch (error: any) {
       const message = getReadableError(error, "Error restoring post.");
       console.error("Restore deleted post error:", error);
-      alert(message);
+      notify(message, "error");
     } finally {
       setDeletingPostId(null);
     }
@@ -2353,7 +2382,7 @@ Important:
 
   const submitReviewPrompt = async () => {
     if (!reviewText.trim()) {
-      alert("Please write a short review.");
+      notify("Please write a short review.", "warning", "Review needed");
       return;
     }
 
@@ -2364,7 +2393,7 @@ Important:
       const userId = authData.user?.id || null;
 
       if (!userId) {
-        alert("Please sign in before leaving a review.");
+        notify("Please sign in before leaving a review.");
         return;
       }
 
@@ -2385,9 +2414,9 @@ Important:
       setReviewHoverRating(0);
       setReviewText("");
 
-      alert("Thank you — your review has been sent.");
+      notify("Thank you — your review has been sent.");
     } catch (error: any) {
-      alert(error?.message || "Error submitting review.");
+      notify(error?.message || "Error submitting review.");
     } finally {
       setSavingReview(false);
     }
