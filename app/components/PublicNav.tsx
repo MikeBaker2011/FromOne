@@ -82,10 +82,6 @@ export default function PublicNav() {
           How it works
         </Link>
 
-        <Link href="/product-updates" onClick={closeMenu}>
-          Updates
-        </Link>
-
         <Link
           href={isSignedIn ? '/dashboard' : '/signin'}
           className="sales-nav-button"
