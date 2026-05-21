@@ -181,6 +181,8 @@ export default function DashboardPage() {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [weeklyUploads, setWeeklyUploads] = useState<WeeklyUpload[]>([]);
   const [weeklyPostNote, setWeeklyPostNote] = useState("");
+  const [appendToCampaignId, setAppendToCampaignId] = useState<string | null>(null);
+  const [appendCampaignName, setAppendCampaignName] = useState("");
 
   const [manualBusinessName, setManualBusinessName] = useState("");
   const [manualIndustry, setManualIndustry] = useState("");
@@ -193,6 +195,14 @@ export default function DashboardPage() {
   const [manualContentPillars, setManualContentPillars] = useState("");
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const addToCampaign = params.get("addToCampaign");
+
+    if (addToCampaign) {
+      setAppendToCampaignId(addToCampaign);
+      loadAppendCampaign(addToCampaign);
+    }
+
     fetchClient();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -683,6 +693,23 @@ export default function DashboardPage() {
     }
 
     setLoading(false);
+  };
+
+  const loadAppendCampaign = async (campaignId: string) => {
+    const { data, error } = await supabase
+      .from("campaigns")
+      .select("id, name, business_name, campaign_idea")
+      .eq("id", campaignId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error loading weekly set to add media to:", error.message);
+      return;
+    }
+
+    setAppendCampaignName(
+      data?.name || data?.business_name || data?.campaign_idea || "this weekly set"
+    );
   };
 
   const ensureAccessAllowed = () => {
@@ -1349,14 +1376,63 @@ Core FromOne rule:
 
     const marketReachContext = getMarketReachContext(activeClient);
     const marketReachDisplayLabel = getMarketReachDisplayLabel(activeClient);
-    const postCount =
+    const addToCampaignId = appendToCampaignId;
+    const requestedPostCount =
       weeklyUploads.length > 0
         ? Math.min(weeklyUploads.length, 7)
         : Math.max(1, Math.min(selectedPostingFrequency, 7));
 
-    const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
+    let targetCampaign: any = null;
+    let existingPostCount = 0;
+    let remainingSlots = 7;
 
-    if (!campaignLimitAllowed) return;
+    if (addToCampaignId) {
+      const { data: existingCampaign, error: existingCampaignError } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("id", addToCampaignId)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (existingCampaignError) throwSupabaseError(existingCampaignError);
+
+      if (!existingCampaign) {
+        alert("This weekly post set could not be found. Please go back to Posts and try again.");
+        return;
+      }
+
+      const { count, error: existingPostCountError } = await supabase
+        .from("campaign_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("campaign_id", addToCampaignId)
+        .is("deleted_at", null);
+
+      if (existingPostCountError) throwSupabaseError(existingPostCountError);
+
+      targetCampaign = existingCampaign;
+      existingPostCount = count || 0;
+      remainingSlots = Math.max(7 - existingPostCount, 0);
+
+      if (remainingSlots <= 0) {
+        alert("This weekly set already has 7 posts. Create a new weekly set from Dashboard instead.");
+        return;
+      }
+
+      if (requestedPostCount > remainingSlots) {
+        alert(
+          `This weekly set has ${existingPostCount} post${existingPostCount === 1 ? "" : "s"} already. You can add ${remainingSlots} more. Remove extra uploads and try again.`
+        );
+        return;
+      }
+    }
+
+    const postCount = Math.min(requestedPostCount, remainingSlots);
+
+    if (!addToCampaignId) {
+      const campaignLimitAllowed = await checkSavedCampaignLimit(userId);
+
+      if (!campaignLimitAllowed) return;
+    }
 
     if (source === "website_scan") {
       const allowed = await checkWeeklyScanLimit(userId);
@@ -1380,6 +1456,11 @@ Core FromOne rule:
 Weekly uploaded media count: ${uploadedMediaItems.length}.
 This week's note from the user:
 ${weeklyPostNote.trim() || "No extra note supplied."}
+
+${addToCampaignId ? `Existing weekly set mode:
+- These uploads are being added to an existing weekly set that already has ${existingPostCount} post${existingPostCount === 1 ? "" : "s"}.
+- Create ${postCount} extra post${postCount === 1 ? "" : "s"} only.
+- Continue the weekly set naturally and do not rewrite or replace the earlier posts.` : ""}
 
 If uploads are supplied:
 - Post 1 must use Upload 1 as the topic.
@@ -1455,49 +1536,55 @@ If uploads are supplied:
 
     const detectedTone = scanData?.tone_of_voice || activeClient.tone_of_voice || "Professional";
 
-    const { data: campaign, error: campaignError } = await supabase
-      .from("campaigns")
-      .insert({
-        user_id: userId,
-        name: buildCampaignName(detectedBusinessName),
-        business_type: detectedIndustry,
-        location: detectedLocation,
-        is_active: true,
-        keywords: [],
-        selected_keywords: [],
-        client_id: activeClient.id,
-        business_name: detectedBusinessName,
-        target_audience: detectedAudience,
-        campaign_idea: campaignIdea,
-        audience: detectedAudience,
-        drafts: posts.length,
-        scheduled: posts.length,
-        assets: uploadedMediaItems.length,
-        posted: 0,
-        launch_date: new Date().toISOString().split("T")[0],
-        campaign_area: detectedLocation,
-        tone: detectedTone,
-        posting_frequency: `${postCount} posts`,
-        platform_plan: `${buildPlatformPlanText(selectedPlatforms, postCount)}. Market reach: ${marketReachContext}`,
-      })
-      .select()
-      .single();
+    let campaign = targetCampaign;
 
-    if (campaignError) throwSupabaseError(campaignError);
+    if (!campaign) {
+      const { data: newCampaign, error: campaignError } = await supabase
+        .from("campaigns")
+        .insert({
+          user_id: userId,
+          name: buildCampaignName(detectedBusinessName),
+          business_type: detectedIndustry,
+          location: detectedLocation,
+          is_active: true,
+          keywords: [],
+          selected_keywords: [],
+          client_id: activeClient.id,
+          business_name: detectedBusinessName,
+          target_audience: detectedAudience,
+          campaign_idea: campaignIdea,
+          audience: detectedAudience,
+          drafts: posts.length,
+          scheduled: posts.length,
+          assets: uploadedMediaItems.length,
+          posted: 0,
+          launch_date: new Date().toISOString().split("T")[0],
+          campaign_area: detectedLocation,
+          tone: detectedTone,
+          posting_frequency: `${postCount} posts`,
+          platform_plan: `${buildPlatformPlanText(selectedPlatforms, postCount)}. Market reach: ${marketReachContext}`,
+        })
+        .select()
+        .single();
+
+      if (campaignError) throwSupabaseError(campaignError);
+      campaign = newCampaign;
+    }
 
     const suggestedScheduleSummary: string[] = [];
 
     for (let i = 0; i < posts.length; i++) {
+      const postIndex = existingPostCount + i;
       const post = normaliseGeneratedPost(
         posts[i],
-        i,
+        postIndex,
         activeClient,
         detectedIndustry,
         detectedLocation
       );
 
       const suggestedPublishTime = getSuggestedPostTime(
-        i,
+        postIndex,
         post.platform,
         activeClient,
         detectedIndustry
@@ -1519,7 +1606,7 @@ If uploads are supplied:
         hashtags: post.hashtags,
         platform: post.platform,
         type: source,
-        scheduled_day: post.day,
+        scheduled_day: post.day || `Post ${postIndex + 1}`,
         scheduled_at: suggestedPublishTime.toISOString(),
         scheduled_publish_at: suggestedPublishTime.toISOString(),
         publish_status: "scheduled",
@@ -1539,6 +1626,26 @@ If uploads are supplied:
       });
 
       if (postError) throwSupabaseError(postError);
+    }
+
+    if (addToCampaignId) {
+      const nextDrafts = Number(campaign.drafts || 0) + posts.length;
+      const nextScheduled = Number(campaign.scheduled || 0) + posts.length;
+      const nextAssets = Number(campaign.assets || 0) + uploadedMediaItems.length;
+
+      const { error: campaignUpdateError } = await supabase
+        .from("campaigns")
+        .update({
+          drafts: nextDrafts,
+          scheduled: nextScheduled,
+          assets: nextAssets,
+          posting_frequency: `${existingPostCount + posts.length} posts`,
+          platform_plan: `${campaign.platform_plan || ""}\nAdded ${posts.length} post${posts.length === 1 ? "" : "s"}: ${buildPlatformPlanText(selectedPlatforms, posts.length)}.`,
+        })
+        .eq("id", campaign.id)
+        .eq("user_id", userId);
+
+      if (campaignUpdateError) throwSupabaseError(campaignUpdateError);
     }
 
     if (source === "website_scan") {
@@ -1579,7 +1686,7 @@ If uploads are supplied:
       loadScheduledPostStatus(userId),
     ]);
 
-    router.push("/posts?created=true");
+    router.push(`/posts?created=true&campaign=${encodeURIComponent(campaign.id)}`);
   };
 
   const handleGeneratePosts = async () => {
@@ -1728,6 +1835,7 @@ If uploads are supplied:
   const weeklyVideoScansRemaining = Math.max(weeklyVideoScanLimit - weeklyVideoScansUsed, 0);
 
   const businessProfileReady = hasManualProfile;
+  const isAddingToWeeklySet = Boolean(appendToCampaignId);
   const canCreatePosts = businessProfileReady && weeklyUploads.length > 0 && selectedPlatforms.length > 0 && !accessLocked && !scanning;
 
   return (
@@ -1757,7 +1865,9 @@ If uploads are supplied:
           }}
         >
           <div style={{ textAlign: "center", maxWidth: 760, margin: "0 auto 24px" }}>
-            <div className="page-eyebrow">Create this week’s posts</div>
+            <div className="page-eyebrow">
+              {isAddingToWeeklySet ? "Add to this weekly set" : "Create this week’s posts"}
+            </div>
             <h1
               className="page-title"
               style={{
@@ -1767,13 +1877,14 @@ If uploads are supplied:
                 letterSpacing: "-0.06em",
               }}
             >
-              Upload media.
+              {isAddingToWeeklySet ? "Add media." : "Upload media."}
               <br />
-              Get scheduled posts.
+              {isAddingToWeeklySet ? "Keep the set together." : "Get scheduled posts."}
             </h1>
             <p className="page-description" style={{ margin: "0 auto", maxWidth: 660 }}>
-              Add this week’s photos, videos or flyers. FromOne creates the posts, chooses the
-              times, and opens the weekly calendar.
+              {isAddingToWeeklySet
+                ? `Add more photos, videos or flyers${appendCampaignName ? ` to ${appendCampaignName}` : " to this weekly set"}. FromOne will add the new posts without replacing the ones already there.`
+                : "Add this week’s photos, videos or flyers. FromOne creates the posts, chooses the times, and opens the weekly calendar."}
             </p>
           </div>
 
@@ -2115,7 +2226,13 @@ If uploads are supplied:
                 boxShadow: canCreatePosts ? "0 20px 48px rgba(255, 212, 59, 0.22)" : "none",
               }}
             >
-              {scanning ? "Creating your posts..." : weeklyUploads.length > 0 ? "Create my posts" : "Upload media to start"}
+              {scanning
+                ? "Creating your posts..."
+                : weeklyUploads.length > 0
+                  ? isAddingToWeeklySet
+                    ? "Add posts to this set"
+                    : "Create my posts"
+                  : "Upload media to start"}
             </button>
 
             {weeklyUploads.length > 0 && (

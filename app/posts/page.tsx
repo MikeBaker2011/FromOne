@@ -920,9 +920,12 @@ export default function PostsPage() {
     setLoading(true);
 
     const loadedCampaigns = await loadCampaigns();
+    const params = new URLSearchParams(window.location.search);
+    const requestedCampaignId = params.get("campaign");
+    const preferredCampaignId = selectedCampaignId || requestedCampaignId;
 
     const activeCampaign =
-      loadedCampaigns.find((item) => item.id === selectedCampaignId) ||
+      loadedCampaigns.find((item) => item.id === preferredCampaignId) ||
       loadedCampaigns[0] ||
       null;
 
@@ -2759,7 +2762,9 @@ Important:
                 <button
                   type="button"
                   onClick={() => {
-                    window.location.href = "/dashboard";
+                    window.location.href = campaign?.id
+                      ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
+                      : "/dashboard";
                   }}
                   className="fromone-simple-post-card"
                   style={{
