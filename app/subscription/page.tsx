@@ -414,10 +414,11 @@ export default function SubscriptionPage() {
     setCancelling(true);
 
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData.user?.id;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (!userId) {
+      if (!session?.access_token) {
         notify('Please sign in first.', 'warning', 'Sign in needed');
         setCancelling(false);
         return;
@@ -426,6 +427,7 @@ export default function SubscriptionPage() {
       const response = await fetch('/api/paypal/cancel-subscription', {
         method: 'POST',
         headers: {
+          Authorization: `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -443,30 +445,10 @@ export default function SubscriptionPage() {
         );
       }
 
-      const { error: billingError } = await supabase
-        .from('user_billing')
-        .update({
-          plan: 'starter',
-          status: 'cancelled',
-          cancelled_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
-
-      if (billingError) {
-        throw billingError;
-      }
-
-      await supabase
-        .from('user_access')
-        .update({
-          subscription_status: 'cancelled',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
+      const cancelledDate = new Date().toISOString();
 
       setStatus('cancelled');
-      setCancelledAt(new Date().toISOString());
+      setCancelledAt(cancelledDate);
       closeConfirmDialog();
 
       notify('Future renewals have been stopped.', 'success', 'Subscription cancelled');
