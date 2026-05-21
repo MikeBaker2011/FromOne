@@ -2753,6 +2753,46 @@ Important:
                 );
               })}
             </div>
+
+            {sortedPosts.length > 0 && sortedPosts.length < 7 && (
+              <div
+                className="premium-card"
+                style={{
+                  marginTop: 18,
+                  borderRadius: 28,
+                  border: "1px solid rgba(255, 212, 59, 0.22)",
+                  background:
+                    "radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.035))",
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) auto",
+                  gap: 18,
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <div className="page-eyebrow">Want more posts?</div>
+                  <h2 style={{ margin: "4px 0 8px" }}>Add more media to this week.</h2>
+                  <p style={{ margin: 0, color: "var(--muted)", maxWidth: 760 }}>
+                    Upload more photos, flyers or videos from Dashboard and FromOne will create more scheduled posts for the business.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="dashboard-platform-create-button"
+                  onClick={() => {
+                    window.location.href = "/dashboard";
+                  }}
+                  style={{
+                    minHeight: 48,
+                    borderRadius: 16,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Add more media
+                </button>
+              </div>
+            )}
           </section>
 
           {deletedPosts.length > 0 && (
