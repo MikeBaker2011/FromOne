@@ -2527,6 +2527,10 @@ Important:
     "--client-primary": brandPrimary,
     "--client-secondary": brandSecondary,
     "--client-accent": brandAccent,
+    minHeight: "auto",
+    height: "auto",
+    maxHeight: "none",
+    overflow: "visible",
   } as CSSProperties;
 
   const primaryMetaConnection = metaConnections[0] || null;
