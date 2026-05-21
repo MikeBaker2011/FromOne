@@ -1629,8 +1629,6 @@ If uploads are supplied:
           media_url: mediaItem?.media_url || null,
           media_path: mediaItem?.media_path || null,
           media_type: mediaItem?.media_type || null,
-          content_day: contentDayNumber,
-          source_upload_id: mediaItem?.upload_id || null,
           reach: 0,
           clicks: 0,
           likes: 0,
