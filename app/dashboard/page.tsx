@@ -1708,7 +1708,7 @@ If uploads are supplied:
         minHeight: "calc(100vh - 120px)",
         display: "grid",
         placeItems: "center",
-        padding: "32px 16px",
+        padding: "24px 16px 42px",
       }}
     >
       {loading ? (
@@ -1719,30 +1719,33 @@ If uploads are supplied:
         <section
           className="premium-card"
           style={{
-            width: "min(980px, 100%)",
-            padding: "clamp(24px, 4vw, 44px)",
-            borderRadius: 34,
-            border: "1px solid rgba(255, 212, 59, 0.32)",
+            width: "min(940px, 100%)",
+            padding: "clamp(22px, 3.5vw, 38px)",
+            borderRadius: 36,
+            border: "1px solid rgba(255, 212, 59, 0.28)",
             background:
-              "radial-gradient(circle at top right, rgba(255, 212, 59, 0.18), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
-            boxShadow: "0 28px 90px rgba(0, 0, 0, 0.34)",
+              "radial-gradient(circle at top, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032))",
+            boxShadow: "0 30px 96px rgba(0, 0, 0, 0.34)",
           }}
         >
-          <div style={{ textAlign: "center", maxWidth: 760, margin: "0 auto 28px" }}>
+          <div style={{ textAlign: "center", maxWidth: 760, margin: "0 auto 24px" }}>
             <div className="page-eyebrow">Create this week’s posts</div>
             <h1
               className="page-title"
               style={{
                 margin: "8px 0 12px",
-                fontSize: "clamp(2.1rem, 5vw, 4.4rem)",
-                lineHeight: 0.95,
+                fontSize: "clamp(2.25rem, 5.4vw, 4.8rem)",
+                lineHeight: 0.92,
+                letterSpacing: "-0.06em",
               }}
             >
-              Upload. Generate. Post.
+              Upload media.
+              <br />
+              Get scheduled posts.
             </h1>
-            <p className="page-description" style={{ margin: "0 auto", maxWidth: 680 }}>
-              Add this week’s photos, videos or flyers. FromOne creates the posts and suggests
-              the posting times for you.
+            <p className="page-description" style={{ margin: "0 auto", maxWidth: 660 }}>
+              Add this week’s photos, videos or flyers. FromOne creates the posts, chooses the
+              times, and opens the weekly calendar.
             </p>
           </div>
 
@@ -1754,8 +1757,8 @@ If uploads are supplied:
           >
             <label
               style={{
-                minHeight: 230,
-                borderRadius: 30,
+                minHeight: 250,
+                borderRadius: 32,
                 border: weeklyUploads.length > 0
                   ? "1px solid rgba(61, 220, 151, 0.34)"
                   : "1px dashed rgba(255, 212, 59, 0.5)",
@@ -1764,7 +1767,7 @@ If uploads are supplied:
                 display: "grid",
                 placeItems: "center",
                 textAlign: "center",
-                padding: 28,
+                padding: "clamp(24px, 4vw, 34px)",
                 cursor: "pointer",
               }}
             >
@@ -1792,7 +1795,7 @@ If uploads are supplied:
                     color: "#101420",
                     fontSize: 34,
                     fontWeight: 950,
-                    boxShadow: "0 18px 40px rgba(255, 212, 59, 0.22)",
+                    boxShadow: "0 20px 48px rgba(255, 212, 59, 0.24)",
                   }}
                 >
                   +
@@ -1813,7 +1816,7 @@ If uploads are supplied:
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
                   gap: 12,
                 }}
               >
@@ -1900,7 +1903,7 @@ If uploads are supplied:
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
                 gap: 14,
               }}
             >
@@ -1930,7 +1933,7 @@ If uploads are supplied:
                     onClick={() => togglePlatform(platform.name)}
                     aria-pressed={selected}
                     style={{
-                      minHeight: 148,
+                      minHeight: 136,
                       borderRadius: 24,
                       padding: 18,
                       textAlign: "left",
@@ -1990,6 +1993,39 @@ If uploads are supplied:
               })}
             </div>
 
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                gap: 10,
+                padding: 12,
+                borderRadius: 20,
+                background: "rgba(255,255,255,0.045)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <div className="card" style={{ padding: 14, textAlign: "center" }}>
+                <strong>{effectivePostCount}</strong>
+                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
+                  post{effectivePostCount === 1 ? "" : "s"} to create
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: 14, textAlign: "center" }}>
+                <strong>{selectedPlatformSummary || "Choose platform"}</strong>
+                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
+                  selected platforms
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: 14, textAlign: "center" }}>
+                <strong>{businessProfileReady ? "Ready" : "Profile needed"}</strong>
+                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
+                  Business Profile
+                </p>
+              </div>
+            </div>
+
             {!businessProfileReady && (
               <div
                 style={{
@@ -2044,19 +2080,20 @@ If uploads are supplied:
               disabled={!canCreatePosts || savingWebsite || savingManualProfile}
               style={{
                 width: "100%",
-                minHeight: 72,
-                borderRadius: 22,
-                fontSize: "1.15rem",
+                minHeight: 74,
+                borderRadius: 24,
+                fontSize: "1.18rem",
                 fontWeight: 950,
+                boxShadow: canCreatePosts ? "0 20px 48px rgba(255, 212, 59, 0.22)" : "none",
               }}
             >
-              {scanning ? "Creating your posts..." : "Create my posts"}
+              {scanning ? "Creating your posts..." : weeklyUploads.length > 0 ? "Create my posts" : "Upload media to start"}
             </button>
 
             {weeklyUploads.length > 0 && (
               <p style={{ textAlign: "center", margin: 0, color: "var(--muted)" }}>
-                {weeklyUploads.length} upload{weeklyUploads.length === 1 ? "" : "s"} ={" "}
-                {weeklyUploads.length} post{weeklyUploads.length === 1 ? "" : "s"}
+                {weeklyUploads.length} upload{weeklyUploads.length === 1 ? "" : "s"} will become{" "}
+                {weeklyUploads.length} scheduled post{weeklyUploads.length === 1 ? "" : "s"}
               </p>
             )}
           </div>
@@ -2075,8 +2112,8 @@ If uploads are supplied:
             <div className="page-eyebrow">Creating posts</div>
             <h2>Turning your uploads into posts.</h2>
             <p>
-              FromOne is using the Business Profile and uploaded media to create posts ready for
-              review.
+              FromOne is using the Business Profile and uploaded media to create posts, choose
+              times and prepare the weekly calendar.
             </p>
 
             <div className="fromone-loading-steps">
