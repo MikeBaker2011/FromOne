@@ -9,6 +9,7 @@ const MAX_POSTS_PER_RUN = 8;
 
 type ScheduledPost = {
   id: string;
+  user_id: string | null;
   campaign_id: string | null;
   platform: string | null;
   title: string | null;
@@ -117,6 +118,72 @@ function isCronAuthorised(req: NextRequest) {
   return bearerToken === cronSecret || querySecret === cronSecret;
 }
 
+function isFutureDate(value?: string | null) {
+  if (!value) return false;
+  return new Date(value).getTime() > Date.now();
+}
+
+function isPaidSubscription(status?: string | null) {
+  return ['active', 'paid', 'trialing'].includes(cleanText(status).toLowerCase());
+}
+
+async function userHasActiveAccess(userId?: string | null) {
+  if (!userId) {
+    return {
+      allowed: false,
+      message: 'Post has no user_id, so autopost was skipped.',
+    };
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from('user_access')
+    .select('subscription_status, trial_ends_at, extension_ends_at')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      allowed: false,
+      message: `Could not verify user access: ${error.message}`,
+    };
+  }
+
+  if (!data) {
+    return {
+      allowed: false,
+      message: 'No active user access record found.',
+    };
+  }
+
+  if (isPaidSubscription(data.subscription_status)) {
+    return {
+      allowed: true,
+      message: 'Subscription active.',
+    };
+  }
+
+  if (isFutureDate(data.extension_ends_at)) {
+    return {
+      allowed: true,
+      message: 'Manual extension active.',
+    };
+  }
+
+  if (isFutureDate(data.trial_ends_at)) {
+    return {
+      allowed: true,
+      message: 'Demo active.',
+    };
+  }
+
+  return {
+    allowed: false,
+    message: 'User access has expired or subscription is cancelled.',
+  };
+}
+
 async function markPostPublishing(postId: string) {
   const supabase = getSupabaseAdmin();
 
@@ -191,6 +258,19 @@ async function publishScheduledPost({
       platform: platform || 'unknown',
       status: 'skipped',
       message: 'Only Facebook and Instagram are autoposted. TikTok stays manual.',
+    };
+  }
+
+  const access = await userHasActiveAccess(post.user_id);
+
+  if (!access.allowed) {
+    await markPostFailed(post.id, access.message);
+
+    return {
+      post_id: post.id,
+      platform,
+      status: 'skipped',
+      message: access.message,
     };
   }
 
@@ -315,6 +395,7 @@ async function loadDuePosts() {
     .select(
       [
         'id',
+        'user_id',
         'campaign_id',
         'platform',
         'title',
