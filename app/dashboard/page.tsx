@@ -775,7 +775,7 @@ export default function DashboardPage() {
 
     if (total >= MAX_SAVED_CAMPAIGNS) {
       alert(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly post sets. Delete an old set from Posts before creating a new one.`
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly post sets. Delete an old or empty test set from Posts before creating a new one.`
       );
       return false;
     }
@@ -956,6 +956,35 @@ Core FromOne rule:
           ? Math.max(...dayNumbers)
           : new Set(existingPosts.map((item) => item.scheduled_day).filter(Boolean)).size,
     };
+  };
+
+  const deleteEmptyCampaignIfNeeded = async (campaignId?: string | null) => {
+    if (!campaignId) return;
+
+    try {
+      const { count, error: countError } = await supabase
+        .from("campaign_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("campaign_id", campaignId);
+
+      if (countError) {
+        console.error("Could not check empty weekly set:", countError.message);
+        return;
+      }
+
+      if ((count || 0) > 0) return;
+
+      const { error: deleteError } = await supabase
+        .from("campaigns")
+        .delete()
+        .eq("id", campaignId);
+
+      if (deleteError) {
+        console.error("Could not delete empty weekly set:", deleteError.message);
+      }
+    } catch (cleanupError: any) {
+      console.error("Empty weekly set cleanup failed:", cleanupError?.message || cleanupError);
+    }
   };
 
 
@@ -1518,6 +1547,7 @@ If uploads are supplied:
     const detectedTone = scanData?.tone_of_voice || activeClient.tone_of_voice || "Professional";
 
     let campaign: any = null;
+    let createdCampaignId: string | null = null;
 
     if (addToCampaignId) {
       const { data: existingCampaign, error: existingCampaignError } = await supabase
@@ -1567,78 +1597,85 @@ If uploads are supplied:
       if (campaignError) throwSupabaseError(campaignError);
 
       campaign = newCampaign;
+      createdCampaignId = newCampaign.id;
     }
 
     const suggestedScheduleSummary: string[] = [];
 
+    try {
     for (let i = 0; i < posts.length; i++) {
-      const contentDayIndex = existingCampaignStats.contentDays + i;
-      const contentDayNumber = contentDayIndex + 1;
-      const mediaItem = uploadedMediaItems[i] || null;
-      const baseGeneratedPost = posts[i];
-
-      for (const selectedPlatform of selectedPlatforms) {
-        const post = normaliseGeneratedPost(
-          {
-            ...(typeof baseGeneratedPost === "string"
-              ? { caption: baseGeneratedPost }
-              : baseGeneratedPost),
+        const contentDayIndex = existingCampaignStats.contentDays + i;
+        const contentDayNumber = contentDayIndex + 1;
+        const mediaItem = uploadedMediaItems[i] || null;
+        const baseGeneratedPost = posts[i];
+  
+        for (const selectedPlatform of selectedPlatforms) {
+          const post = normaliseGeneratedPost(
+            {
+              ...(typeof baseGeneratedPost === "string"
+                ? { caption: baseGeneratedPost }
+                : baseGeneratedPost),
+              platform: selectedPlatform,
+              day: `Post ${contentDayNumber}`,
+              title: `${selectedPlatform} Post ${contentDayNumber}`,
+            },
+            contentDayIndex,
+            activeClient,
+            detectedIndustry,
+            detectedLocation
+          );
+  
+          const suggestedPublishTime = getSuggestedPostTime(
+            contentDayIndex,
+            selectedPlatform,
+            activeClient,
+            detectedIndustry
+          );
+  
+          suggestedPublishTime.setMinutes(
+            suggestedPublishTime.getMinutes() + getPlatformScheduleOffsetMinutes(selectedPlatform)
+          );
+  
+          suggestedScheduleSummary.push(
+            `${selectedPlatform}: ${getReadableSuggestedTime(suggestedPublishTime)}`
+          );
+  
+          const { error: postError } = await supabase.from("campaign_posts").insert({
+            user_id: userId,
+            campaign_id: campaign.id,
+            keyword: detectedIndustry || "business",
+            title: post.title,
+            caption: post.caption,
+            cta: post.cta,
+            hashtags: post.hashtags,
             platform: selectedPlatform,
-            day: `Post ${contentDayNumber}`,
-            title: `${selectedPlatform} Post ${contentDayNumber}`,
-          },
-          contentDayIndex,
-          activeClient,
-          detectedIndustry,
-          detectedLocation
-        );
-
-        const suggestedPublishTime = getSuggestedPostTime(
-          contentDayIndex,
-          selectedPlatform,
-          activeClient,
-          detectedIndustry
-        );
-
-        suggestedPublishTime.setMinutes(
-          suggestedPublishTime.getMinutes() + getPlatformScheduleOffsetMinutes(selectedPlatform)
-        );
-
-        suggestedScheduleSummary.push(
-          `${selectedPlatform}: ${getReadableSuggestedTime(suggestedPublishTime)}`
-        );
-
-        const { error: postError } = await supabase.from("campaign_posts").insert({
-          user_id: userId,
-          campaign_id: campaign.id,
-          keyword: detectedIndustry || "business",
-          title: post.title,
-          caption: post.caption,
-          cta: post.cta,
-          hashtags: post.hashtags,
-          platform: selectedPlatform,
-          type: source,
-          scheduled_day: `Post ${contentDayNumber} ${selectedPlatform}`,
-          scheduled_at: suggestedPublishTime.toISOString(),
-          scheduled_publish_at: suggestedPublishTime.toISOString(),
-          publish_status: "scheduled",
-          status: "scheduled",
-          is_posted: false,
-          client_id: activeClient.id,
-          image_prompt: post.image_prompt,
-          media_url: mediaItem?.media_url || null,
-          media_path: mediaItem?.media_path || null,
-          media_type: mediaItem?.media_type || null,
-          reach: 0,
-          clicks: 0,
-          likes: 0,
-          comments: 0,
-          shares: 0,
-          saves: 0,
-        });
-
-        if (postError) throwSupabaseError(postError);
+            type: source,
+            scheduled_day: `Post ${contentDayNumber} ${selectedPlatform}`,
+            scheduled_at: suggestedPublishTime.toISOString(),
+            scheduled_publish_at: suggestedPublishTime.toISOString(),
+            publish_status: "scheduled",
+            status: "scheduled",
+            is_posted: false,
+            client_id: activeClient.id,
+            image_prompt: post.image_prompt,
+            media_url: mediaItem?.media_url || null,
+            media_path: mediaItem?.media_path || null,
+            media_type: mediaItem?.media_type || null,
+            reach: 0,
+            clicks: 0,
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            saves: 0,
+          });
+  
+          if (postError) throwSupabaseError(postError);
+        }
       }
+  
+      } catch (postInsertError) {
+      await deleteEmptyCampaignIfNeeded(createdCampaignId);
+      throw postInsertError;
     }
 
     if (addToCampaignId) {
@@ -1965,7 +2002,7 @@ If uploads are supplied:
                 </strong>
 
                 <span style={{ color: "var(--muted)", maxWidth: 520 }}>
-                  One upload can become Facebook, Instagram and TikTok versions for the same content day.
+                  One upload can become Facebook, Instagram and TikTok versions for the same content day, each with its own scheduled time.
                 </span>
               </span>
             </label>
