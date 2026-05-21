@@ -226,29 +226,57 @@ export default function DashboardPage() {
     return data.user || null;
   };
 
+  const getFriendlyAiBusyMessage = (message: string) => {
+    const lowerMessage = String(message || "").toLowerCase();
+
+    const providerBusy =
+      lowerMessage.includes("high demand") ||
+      lowerMessage.includes("try again later") ||
+      lowerMessage.includes("temporarily unavailable") ||
+      lowerMessage.includes("overloaded") ||
+      lowerMessage.includes("rate limit") ||
+      lowerMessage.includes("too many requests") ||
+      lowerMessage.includes("resource exhausted") ||
+      lowerMessage.includes("quota") ||
+      lowerMessage.includes("model is currently experiencing");
+
+    if (providerBusy) {
+      return "FromOne is busy right now. Please try again in a minute.";
+    }
+
+    return message;
+  };
+
   const getErrorMessage = (error: any) => {
     if (!error) return "Unknown error.";
-    if (typeof error === "string") return error;
+
+    if (typeof error === "string") {
+      return getFriendlyAiBusyMessage(error);
+    }
+
+    let message = "";
 
     if (axios.isAxiosError(error)) {
-      return (
+      message =
         error.response?.data?.error ||
         error.response?.data?.message ||
         error.response?.data?.details ||
         error.message ||
-        "Request failed."
-      );
+        "Request failed.";
+
+      return getFriendlyAiBusyMessage(message);
     }
 
-    return (
+    message =
       error?.response?.data?.error ||
       error?.response?.data?.message ||
       error?.message ||
       error?.error_description ||
       error?.details ||
       error?.hint ||
-      "Unknown error creating or saving posts."
-    );
+      "Unknown error creating or saving posts.";
+
+    return getFriendlyAiBusyMessage(message);
   };
 
   const throwSupabaseError = (error: any) => {
