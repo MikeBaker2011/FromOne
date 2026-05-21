@@ -86,10 +86,10 @@ const platformNotes = [
 
 export default function TutorialPage() {
   return (
-    <main className="tutorial-public-page tutorial-simple-page">
+    <main className="sales-page product-updates-page tutorial-public-page">
       <PublicNav />
 
-      <section className="page-header tutorial-public-header tutorial-simple-header">
+      <section className="page-header" style={{ marginTop: 86, marginBottom: 70 }}>
         <div className="page-eyebrow">FromOne Help Guide</div>
         <h1 className="page-title">How FromOne works</h1>
         <p className="page-description">
@@ -97,7 +97,7 @@ export default function TutorialPage() {
           weekly calendar, then autopost Facebook and Instagram or copy/open TikTok.
         </p>
 
-        <div className="tutorial-simple-actions">
+        <div className="button-row" style={{ marginTop: 26 }}>
           <Link href="/dashboard" className="sales-primary-button">
             Go to Dashboard
           </Link>
@@ -108,47 +108,156 @@ export default function TutorialPage() {
         </div>
       </section>
 
-      <section className="premium-card tutorial-simple-card">
+      <section
+        className="premium-card"
+        style={{
+          marginBottom: 34,
+          borderRadius: 34,
+          padding: 'clamp(24px, 3vw, 34px)',
+        }}
+      >
         <div className="page-eyebrow">Simple workflow</div>
-        <h2>Six clear steps</h2>
+        <h2
+          style={{
+            margin: '0 0 24px',
+            fontSize: 'clamp(2rem, 3.4vw, 3.3rem)',
+            lineHeight: 1,
+            letterSpacing: '-0.06em',
+          }}
+        >
+          Six clear steps
+        </h2>
 
-        <div className="tutorial-simple-step-list">
+        <div style={{ display: 'grid', gap: 14 }}>
           {steps.map((step) => (
-            <article key={step.number} className="tutorial-simple-step">
-              <span>{step.number}</span>
+            <article
+              key={step.number}
+              className="card"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '42px minmax(0, 1fr)',
+                gap: 18,
+                alignItems: 'start',
+                padding: 20,
+                borderRadius: 22,
+                background:
+                  'linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025))',
+              }}
+            >
+              <span
+                style={{
+                  width: 42,
+                  height: 42,
+                  display: 'grid',
+                  placeItems: 'center',
+                  borderRadius: 14,
+                  color: '#07100d',
+                  background: 'var(--gold)',
+                  fontWeight: 1000,
+                }}
+              >
+                {step.number}
+              </span>
 
               <div>
-                <h3>{step.title}</h3>
-                <p>{step.text}</p>
+                <h3 style={{ margin: '0 0 6px', fontSize: 18 }}>{step.title}</h3>
+                <p style={{ margin: 0, color: 'var(--muted-strong)', lineHeight: 1.58 }}>
+                  {step.text}
+                </p>
               </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="premium-card tutorial-simple-card">
+      <section
+        className="premium-card"
+        style={{
+          marginBottom: 34,
+          borderRadius: 34,
+          padding: 'clamp(24px, 3vw, 34px)',
+        }}
+      >
         <div className="page-eyebrow">Publishing</div>
-        <h2>What happens on each platform?</h2>
+        <h2
+          style={{
+            margin: '0 0 24px',
+            fontSize: 'clamp(2rem, 3.4vw, 3.3rem)',
+            lineHeight: 1,
+            letterSpacing: '-0.06em',
+          }}
+        >
+          What happens on each platform?
+        </h2>
 
-        <div className="tutorial-simple-step-list">
+        <div style={{ display: 'grid', gap: 14 }}>
           {platformNotes.map((item, index) => (
-            <article key={item.title} className="tutorial-simple-step">
-              <span>{index + 1}</span>
+            <article
+              key={item.title}
+              className="card"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '42px minmax(0, 1fr)',
+                gap: 18,
+                alignItems: 'start',
+                padding: 20,
+                borderRadius: 22,
+                background:
+                  'linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025))',
+              }}
+            >
+              <span
+                style={{
+                  width: 42,
+                  height: 42,
+                  display: 'grid',
+                  placeItems: 'center',
+                  borderRadius: 14,
+                  color: '#07100d',
+                  background: 'var(--gold)',
+                  fontWeight: 1000,
+                }}
+              >
+                {index + 1}
+              </span>
 
               <div>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
+                <h3 style={{ margin: '0 0 6px', fontSize: 18 }}>{item.title}</h3>
+                <p style={{ margin: 0, color: 'var(--muted-strong)', lineHeight: 1.58 }}>
+                  {item.text}
+                </p>
               </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="premium-card tutorial-simple-note">
+      <section
+        className="premium-card"
+        style={{
+          marginBottom: 58,
+          borderRadius: 34,
+          padding: 'clamp(24px, 3.5vw, 38px)',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) auto',
+          gap: 22,
+          alignItems: 'center',
+        }}
+      >
         <div>
           <div className="page-eyebrow">Ready to start?</div>
-          <h2>Upload your media and create your posts.</h2>
-          <p>
+          <h2
+            style={{
+              margin: '0 0 12px',
+              maxWidth: 680,
+              fontSize: 'clamp(2rem, 3.4vw, 3.4rem)',
+              lineHeight: 1,
+              letterSpacing: '-0.06em',
+            }}
+          >
+            Upload your media and create your posts.
+          </h2>
+          <p style={{ margin: 0, color: 'var(--muted-strong)', lineHeight: 1.65 }}>
             Start from the Dashboard. FromOne will use your Business Profile and uploaded media to
             create posts with planned times.
           </p>
