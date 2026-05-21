@@ -1247,12 +1247,38 @@ export default function PostsPage() {
     return normaliseMainPlatform(post?.platform);
   };
 
+  const hasConnectedFacebookPage = () => {
+    return metaConnections.some((connection) => {
+      return (
+        String(connection.provider || "").toLowerCase() === "meta" &&
+        String(connection.status || "").toLowerCase() === "connected" &&
+        Boolean(connection.page_id)
+      );
+    });
+  };
+
+  const hasConnectedInstagramAccount = () => {
+    return metaConnections.some((connection) => {
+      return (
+        String(connection.provider || "").toLowerCase() === "meta" &&
+        String(connection.status || "").toLowerCase() === "connected" &&
+        Boolean(connection.instagram_business_account_id)
+      );
+    });
+  };
+
   const canDirectPublishToFacebook = (post: any) => {
-    return String(post?.platform || "").toLowerCase().includes("facebook");
+    return (
+      String(post?.platform || "").toLowerCase().includes("facebook") &&
+      hasConnectedFacebookPage()
+    );
   };
 
   const canDirectPublishToInstagram = (post: any) => {
-    return String(post?.platform || "").toLowerCase().includes("instagram");
+    return (
+      String(post?.platform || "").toLowerCase().includes("instagram") &&
+      hasConnectedInstagramAccount()
+    );
   };
 
   const canDemoPublishToTikTok = (_post: any) => {
@@ -1823,7 +1849,7 @@ Important:
     if (!post?.id) return;
 
     if (!canDirectPublishToFacebook(post)) {
-      alert("Direct publishing is currently only available for Facebook.");
+      window.location.href = "/settings?setup=business";
       return;
     }
 
@@ -1887,6 +1913,14 @@ Important:
       await supabase.from("campaign_posts").update(updates).eq("id", post.id);
       updatePostLocally(post.id, updates);
 
+      if (
+        message.toLowerCase().includes("connection has expired") ||
+        message.toLowerCase().includes("reconnect facebook")
+      ) {
+        const userId = await getSignedInUserId();
+        if (userId) await loadMetaConnections(userId);
+      }
+
       console.error("Facebook publish error:", error);
       alert(message);
     } finally {
@@ -1898,7 +1932,7 @@ Important:
     if (!post?.id) return;
 
     if (!canDirectPublishToInstagram(post)) {
-      alert("Direct publishing is currently only available for Instagram posts here.");
+      window.location.href = "/settings?setup=business";
       return;
     }
 
@@ -1968,6 +2002,15 @@ Important:
 
       await supabase.from("campaign_posts").update(updates).eq("id", post.id);
       updatePostLocally(post.id, updates);
+
+      if (
+        message.toLowerCase().includes("connection has expired") ||
+        message.toLowerCase().includes("reconnect facebook") ||
+        message.toLowerCase().includes("reconnect instagram")
+      ) {
+        const userId = await getSignedInUserId();
+        if (userId) await loadMetaConnections(userId);
+      }
 
       console.error("Instagram publish error:", error);
       alert(message);
