@@ -2734,11 +2734,41 @@ Important:
                           flexWrap: "wrap",
                         }}
                       >
-                        <span className="selected-post-tags">
-                          <span>{platformName}</span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minHeight: 32,
+                            padding: "7px 12px",
+                            borderRadius: 999,
+                            background: "rgba(255,255,255,0.08)",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            color: "rgba(248,250,252,0.9)",
+                            fontSize: 13,
+                            fontWeight: 900,
+                            lineHeight: 1,
+                          }}
+                        >
+                          {platformName}
                         </span>
-                        <span className="selected-post-tags">
-                          <span>{hasMedia ? "Media ready" : "Needs media"}</span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minHeight: 32,
+                            padding: "7px 12px",
+                            borderRadius: 999,
+                            background: "rgba(255,255,255,0.08)",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            color: "rgba(248,250,252,0.9)",
+                            fontSize: 13,
+                            fontWeight: 900,
+                            lineHeight: 1,
+                          }}
+                        >
+                          {hasMedia ? "Media ready" : "Needs media"}
                         </span>
                       </div>
 
@@ -2830,11 +2860,39 @@ Important:
                           flexWrap: "wrap",
                         }}
                       >
-                        <span className="selected-post-tags">
-                          <span>Same weekly set</span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            minHeight: 30,
+                            padding: "7px 11px",
+                            borderRadius: 999,
+                            background: "rgba(255,255,255,0.08)",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            color: "rgba(248,250,252,0.82)",
+                            fontSize: 12,
+                            fontWeight: 900,
+                            lineHeight: 1,
+                          }}
+                        >
+                          Same weekly set
                         </span>
-                        <span className="selected-post-tags">
-                          <span>Staggered times</span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            minHeight: 30,
+                            padding: "7px 11px",
+                            borderRadius: 999,
+                            background: "rgba(255,255,255,0.08)",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            color: "rgba(248,250,252,0.82)",
+                            fontSize: 12,
+                            fontWeight: 900,
+                            lineHeight: 1,
+                          }}
+                        >
+                          Staggered times
                         </span>
                       </div>
                     </div>
