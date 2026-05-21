@@ -185,33 +185,20 @@ export default function Home() {
           </div>
 
           <div
+            className="homepage-benefit-grid"
             style={{
               margin: '26px auto 0',
               maxWidth: 760,
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-              gap: 10,
             }}
           >
             {['Uploads become posts', 'Times chosen for you', 'Facebook & Instagram autopost'].map(
               (item) => (
                 <div
                   key={item}
-                  style={{
-                    minHeight: 50,
-                    borderRadius: 999,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '10px 12px',
-                    background: 'rgba(255, 255, 255, 0.055)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(248,250,252,0.82)',
-                    fontWeight: 900,
-                    fontSize: 13,
-                  }}
+                  className="homepage-benefit-pill"
                 >
-                  ✓ {item}
+                  <span aria-hidden="true">✓</span>
+                  <strong>{item}</strong>
                 </div>
               ),
             )}
