@@ -2290,6 +2290,21 @@ Important:
     });
   };
 
+  const getCardScheduleLabel = (post: any) => {
+    const scheduledValue = post?.scheduled_publish_at || post?.scheduled_at;
+    const time = getShortScheduledTime(scheduledValue);
+
+    if (!time) return "";
+
+    if (isPostPosted(post)) {
+      return post?.published_at ? `Posted ${getReadableDateTime(post.published_at)}` : "Posted";
+    }
+
+    if (isPostFailed(post)) return `Needs attention · ${time}`;
+
+    return `Autopost · ${time}`;
+  };
+
   const submitReviewPrompt = async () => {
     if (!reviewText.trim()) {
       alert("Please write a short review.");
@@ -2507,6 +2522,7 @@ Important:
                 const platformName = getPlatformDisplayName(post);
                 const hasMedia = Boolean(post.media_url);
                 const captionPreview = String(post.caption || "").slice(0, 120);
+                const cardScheduleLabel = getCardScheduleLabel(post);
                 const scheduledTime = getShortScheduledTime(
                   post.scheduled_publish_at || post.scheduled_at,
                 );
