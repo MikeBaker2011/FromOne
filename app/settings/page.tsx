@@ -78,6 +78,10 @@ export default function SettingsPage() {
     });
   };
 
+  const closeConfirmDialog = () => {
+    setConfirmDialog(null);
+  };
+
   const [profileId, setProfileId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -111,6 +115,15 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [scanningWebsite, setScanningWebsite] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    type: 'disconnectMeta' | 'deleteProfile';
+    title: string;
+    message: string;
+    confirmLabel: string;
+    danger?: boolean;
+    connectionId?: string | null;
+  } | null>(null);
 
   const metaConnections = socialConnections.filter((connection) => connection.provider === 'meta');
   const primaryMetaConnection = metaConnections[0] || null;
@@ -272,11 +285,23 @@ export default function SettingsPage() {
       return;
     }
 
-    const confirmed = confirm(
-      'Disconnect Facebook and Instagram from FromOne? Existing posts will stay saved, but FromOne will not be able to publish through this connection until you reconnect.'
-    );
+    setConfirmDialog({
+      type: 'disconnectMeta',
+      title: 'Disconnect Facebook and Instagram?',
+      message:
+        'Existing posts will stay saved, but FromOne will not be able to publish through this connection until you reconnect.',
+      confirmLabel: 'Disconnect Meta',
+      danger: true,
+      connectionId: connectionId || null,
+    });
+  };
 
-    if (!confirmed) return;
+  const confirmDisconnectMetaAccount = async (connectionId?: string | null) => {
+    if (!userId) {
+      notify('Please sign in again before disconnecting.', 'warning', 'Sign in needed');
+      closeConfirmDialog();
+      return;
+    }
 
     setDisconnectingConnectionId(connectionId || 'all');
 
@@ -300,6 +325,7 @@ export default function SettingsPage() {
       }
 
       await loadSocialConnections(userId);
+      closeConfirmDialog();
       notify('Facebook and Instagram disconnected.', 'success', 'Accounts disconnected');
     } catch (error: any) {
       console.error('Disconnect Meta account error:', error?.message || error);
@@ -575,11 +601,28 @@ export default function SettingsPage() {
       return;
     }
 
-    const confirmed = confirm(
-      'Delete this Business Profile? Existing weekly posts will not be deleted.'
-    );
+    setConfirmDialog({
+      type: 'deleteProfile',
+      title: 'Delete Business Profile?',
+      message:
+        'This removes the saved Business Profile from Supabase. Existing weekly posts will not be deleted.',
+      confirmLabel: 'Delete Business Profile',
+      danger: true,
+    });
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteProfile = async () => {
+    if (!profileId) {
+      handleResetForm();
+      closeConfirmDialog();
+      return;
+    }
+
+    if (!userId) {
+      notify('Please sign in again before deleting this profile.', 'warning', 'Sign in needed');
+      closeConfirmDialog();
+      return;
+    }
 
     setSaving(true);
 
@@ -594,6 +637,7 @@ export default function SettingsPage() {
 
       setProfileId(null);
       handleResetForm();
+      closeConfirmDialog();
       notify('Business Profile deleted.', 'success', 'Profile deleted');
     } catch (error: any) {
       console.error('Error deleting business profile:', error?.message || error);
@@ -1201,6 +1245,78 @@ export default function SettingsPage() {
             </div>
           </section>
         </>
+      )}
+
+      {confirmDialog && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settings-confirm-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            display: 'grid',
+            placeItems: 'center',
+            padding: 18,
+            background: 'rgba(2, 6, 23, 0.72)',
+            backdropFilter: 'blur(14px)',
+          }}
+        >
+          <div
+            className="premium-card"
+            style={{
+              width: 'min(520px, 100%)',
+              borderRadius: 30,
+              border: confirmDialog.danger
+                ? '1px solid rgba(255, 95, 109, 0.34)'
+                : '1px solid rgba(255, 212, 59, 0.26)',
+              boxShadow: '0 34px 110px rgba(0,0,0,0.48)',
+            }}
+          >
+            <div className="page-eyebrow">
+              {confirmDialog.danger ? 'Please confirm' : 'Confirm action'}
+            </div>
+            <h2 id="settings-confirm-title" style={{ margin: '4px 0 10px' }}>
+              {confirmDialog.title}
+            </h2>
+            <p style={{ margin: '0 0 20px', color: 'var(--muted)', lineHeight: 1.55 }}>
+              {confirmDialog.message}
+            </p>
+
+            <div
+              className="button-row"
+              style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}
+            >
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={closeConfirmDialog}
+                disabled={saving || metaConnectionBusy}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className={confirmDialog.danger ? 'secondary-button danger-button' : undefined}
+                onClick={() => {
+                  if (confirmDialog.type === 'disconnectMeta') {
+                    confirmDisconnectMetaAccount(confirmDialog.connectionId);
+                    return;
+                  }
+
+                  if (confirmDialog.type === 'deleteProfile') {
+                    confirmDeleteProfile();
+                  }
+                }}
+                disabled={saving || metaConnectionBusy}
+              >
+                {saving || metaConnectionBusy ? 'Working...' : confirmDialog.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
