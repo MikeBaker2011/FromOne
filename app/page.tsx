@@ -29,28 +29,28 @@ export const metadata: Metadata = {
 
 const flowSteps = [
   {
-    eyebrow: 'Step 1',
+    eyebrow: '01',
     title: 'Business setup',
     description:
       'Set up the Business Profile once so FromOne understands the business, services, location, tone and customers.',
   },
   {
-    eyebrow: 'Step 2',
+    eyebrow: '02',
     title: 'Upload media',
     description:
-      'Add this week’s photos, videos, flyers, offers, menus, product shots, event clips or behind-the-scenes content.',
+      'Add this week’s photos, videos, flyers, offers, menus, product shots or event clips.',
   },
   {
-    eyebrow: 'Step 3',
+    eyebrow: '03',
     title: 'Create posts',
     description:
-      'FromOne turns each upload into a ready-to-review post and chooses sensible posting times automatically.',
+      'FromOne turns each upload into a ready-to-review post and chooses sensible posting times.',
   },
   {
-    eyebrow: 'Step 4',
-    title: 'Review and autopost',
+    eyebrow: '04',
+    title: 'Autopost',
     description:
-      'Edit anything before it goes live. Facebook and Instagram can autopost. TikTok stays copy/open manual.',
+      'Review and edit first. Facebook and Instagram can autopost. TikTok stays copy/open manual.',
   },
 ];
 
@@ -58,17 +58,17 @@ const businessBenefits = [
   {
     title: 'No blank screen',
     description:
-      'The business uploads what it already has. FromOne turns that real media into content ideas, captions and planned posts.',
+      'The business uploads what it already has. FromOne turns that real media into usable posts.',
   },
   {
-    title: 'Less social media stress',
+    title: 'Less weekly pressure',
     description:
-      'FromOne chooses posting times automatically, so users do not need to understand content scheduling.',
+      'Posts and suggested times are created automatically, so users do not need to plan from scratch.',
   },
   {
-    title: 'More consistent posting',
+    title: 'Consistent posting',
     description:
-      'A weekly upload flow makes it easier for small businesses to keep showing up online.',
+      'A simple weekly upload habit helps small businesses keep showing up online.',
   },
   {
     title: 'Built for real platforms',
@@ -81,7 +81,7 @@ const starterFeatures = [
   'Upload photos, videos and flyers',
   'Business Profile setup',
   'Posts written from uploaded media',
-  'Automatic suggested posting times',
+  'Suggested posting times',
   'Facebook and Instagram autoposting',
   'Instagram-safe image resizing',
   'TikTok copy/open workflow',
@@ -97,34 +97,22 @@ export default function Home() {
         style={{
           position: 'relative',
           overflow: 'hidden',
+          paddingBottom: 0,
         }}
       >
         <div
           aria-hidden="true"
           style={{
             position: 'absolute',
-            top: '10%',
-            right: '7%',
-            width: 420,
+            top: '12%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 720,
             height: 420,
             borderRadius: '999px',
-            background: 'radial-gradient(circle, rgba(255,212,59,0.22), transparent 62%)',
-            filter: 'blur(8px)',
-            pointerEvents: 'none',
-          }}
-        />
-
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: '8%',
-            bottom: '4%',
-            width: 320,
-            height: 320,
-            borderRadius: '999px',
-            background: 'radial-gradient(circle, rgba(61,220,151,0.13), transparent 64%)',
-            filter: 'blur(10px)',
+            background:
+              'radial-gradient(circle, rgba(255,212,59,0.17), rgba(61,220,151,0.06), transparent 70%)',
+            filter: 'blur(22px)',
             pointerEvents: 'none',
           }}
         />
@@ -133,9 +121,9 @@ export default function Home() {
 
         <div
           style={{
-            maxWidth: 1120,
+            maxWidth: 1060,
             margin: '0 auto',
-            padding: 'clamp(70px, 10vw, 132px) 18px clamp(64px, 9vw, 112px)',
+            padding: 'clamp(56px, 8vw, 104px) 18px clamp(44px, 6vw, 74px)',
             textAlign: 'center',
             position: 'relative',
             zIndex: 1,
@@ -158,9 +146,9 @@ export default function Home() {
 
           <h1
             style={{
-              margin: '22px auto 24px',
-              maxWidth: 1040,
-              fontSize: 'clamp(3.2rem, 8.1vw, 8.1rem)',
+              margin: '20px auto 20px',
+              maxWidth: 980,
+              fontSize: 'clamp(3.25rem, 8vw, 7.8rem)',
               lineHeight: 0.9,
               letterSpacing: '-0.078em',
               textAlign: 'center',
@@ -172,11 +160,11 @@ export default function Home() {
 
           <p
             style={{
-              maxWidth: 760,
+              maxWidth: 730,
               margin: '0 auto',
               color: 'var(--muted)',
-              fontSize: 'clamp(1.04rem, 1.55vw, 1.28rem)',
-              lineHeight: 1.72,
+              fontSize: 'clamp(1.02rem, 1.45vw, 1.22rem)',
+              lineHeight: 1.65,
             }}
           >
             FromOne turns photos, videos and flyers into ready-to-review posts, chooses sensible
@@ -187,7 +175,7 @@ export default function Home() {
             className="sales-hero-actions"
             style={{
               justifyContent: 'center',
-              marginTop: 34,
+              marginTop: 30,
             }}
           >
             <Link href="/signin" className="sales-primary-button">
@@ -201,11 +189,11 @@ export default function Home() {
 
           <div
             style={{
-              margin: '34px auto 0',
-              maxWidth: 820,
+              margin: '26px auto 0',
+              maxWidth: 760,
               display: 'grid',
               gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-              gap: 12,
+              gap: 10,
             }}
           >
             {['Uploads become posts', 'Times chosen for you', 'Facebook & Instagram autopost'].map(
@@ -213,17 +201,17 @@ export default function Home() {
                 <div
                   key={item}
                   style={{
-                    minHeight: 58,
-                    borderRadius: 18,
+                    minHeight: 50,
+                    borderRadius: 999,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '12px 14px',
+                    padding: '10px 12px',
                     background: 'rgba(255, 255, 255, 0.055)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     color: 'rgba(248,250,252,0.82)',
                     fontWeight: 900,
-                    fontSize: 14,
+                    fontSize: 13,
                   }}
                 >
                   ✓ {item}
@@ -234,29 +222,31 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="sales-section sales-steps-section">
+      <section className="sales-section sales-steps-section" style={{ paddingTop: 54, paddingBottom: 50 }}>
         <div
           className="sales-section-heading"
           style={{
             textAlign: 'center',
             marginLeft: 'auto',
             marginRight: 'auto',
-            maxWidth: 760,
+            maxWidth: 740,
+            marginBottom: 24,
           }}
         >
           <div className="page-eyebrow">How it works</div>
           <h2>From setup to scheduled posts.</h2>
           <p>
-            The app follows one simple path. Set up the business, upload the week’s media, create
-            posts, then review and publish.
+            One simple path: set up the business, upload the week’s media, create posts, then
+            review and publish.
           </p>
         </div>
 
         <div
           className="sales-steps-grid"
           style={{
-            maxWidth: 1180,
+            maxWidth: 1120,
             margin: '0 auto',
+            gap: 14,
           }}
         >
           {flowSteps.map((step, index) => (
@@ -264,13 +254,13 @@ export default function Home() {
               key={step.title}
               className="sales-step-card"
               style={{
-                minHeight: 260,
-                padding: 24,
-                borderRadius: 28,
+                minHeight: 225,
+                padding: 22,
+                borderRadius: 26,
                 background:
                   index === 0
-                    ? 'radial-gradient(circle at top left, rgba(255,212,59,0.14), transparent 38%), rgba(255,255,255,0.055)'
-                    : 'linear-gradient(145deg, rgba(255,255,255,0.072), rgba(255,255,255,0.038))',
+                    ? 'radial-gradient(circle at top left, rgba(255,212,59,0.15), transparent 40%), rgba(255,255,255,0.055)'
+                    : 'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.036))',
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
@@ -282,17 +272,17 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="sales-section">
+      <section className="sales-section" style={{ paddingTop: 38, paddingBottom: 50 }}>
         <div
           style={{
-            maxWidth: 1180,
+            maxWidth: 1120,
             margin: '0 auto',
-            padding: 'clamp(26px, 4vw, 44px)',
-            borderRadius: 36,
+            padding: 'clamp(24px, 3.5vw, 38px)',
+            borderRadius: 34,
             background:
-              'radial-gradient(circle at top right, rgba(255,212,59,0.14), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035))',
+              'radial-gradient(circle at top right, rgba(255,212,59,0.12), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.032))',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 26px 90px rgba(0,0,0,0.28)',
+            boxShadow: '0 22px 72px rgba(0,0,0,0.24)',
           }}
         >
           <div
@@ -301,14 +291,15 @@ export default function Home() {
               textAlign: 'center',
               marginLeft: 'auto',
               marginRight: 'auto',
-              maxWidth: 780,
+              maxWidth: 760,
+              marginBottom: 22,
             }}
           >
             <div className="page-eyebrow">Why this helps businesses</div>
             <h2>It removes the hardest part of social media.</h2>
             <p>
-              Small businesses usually have the raw material. They just do not have the time,
-              confidence or process to turn it into consistent posts.
+              Small businesses usually have the raw material. They just need a simple way to turn
+              it into consistent posts.
             </p>
           </div>
 
@@ -316,8 +307,7 @@ export default function Home() {
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: 14,
-              marginTop: 26,
+              gap: 12,
             }}
           >
             {businessBenefits.map((benefit) => (
@@ -325,15 +315,15 @@ export default function Home() {
                 key={benefit.title}
                 className="card"
                 style={{
-                  padding: 22,
-                  borderRadius: 24,
-                  minHeight: 170,
-                  background: 'rgba(5, 10, 24, 0.38)',
+                  padding: 20,
+                  borderRadius: 22,
+                  minHeight: 155,
+                  background: 'rgba(5, 10, 24, 0.34)',
                   border: '1px solid rgba(255,255,255,0.09)',
                 }}
               >
-                <h3 style={{ margin: '0 0 10px', color: '#fff' }}>{benefit.title}</h3>
-                <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.62 }}>
+                <h3 style={{ margin: '0 0 9px', color: '#fff' }}>{benefit.title}</h3>
+                <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.58 }}>
                   {benefit.description}
                 </p>
               </article>
@@ -342,14 +332,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="sales-section sales-pricing-section">
+      <section className="sales-section sales-pricing-section" style={{ paddingTop: 38, paddingBottom: 66 }}>
         <div
           className="sales-section-heading"
           style={{
             textAlign: 'center',
             marginLeft: 'auto',
             marginRight: 'auto',
-            maxWidth: 760,
+            maxWidth: 720,
+            marginBottom: 24,
           }}
         >
           <div className="page-eyebrow">Pricing</div>
@@ -363,57 +354,92 @@ export default function Home() {
         <div
           className="sales-pricing-card"
           style={{
-            maxWidth: 820,
+            maxWidth: 680,
             margin: '0 auto',
-            padding: 'clamp(28px, 4vw, 48px)',
-            borderRadius: 38,
+            padding: 'clamp(26px, 4vw, 44px)',
+            borderRadius: 34,
             textAlign: 'center',
             background:
-              'radial-gradient(circle at top, rgba(255, 212, 59, 0.22), transparent 38%), linear-gradient(145deg, rgba(255,255,255,0.095), rgba(255,255,255,0.04))',
-            border: '1px solid rgba(255, 212, 59, 0.32)',
-            boxShadow: '0 30px 100px rgba(0,0,0,0.32)',
+              'radial-gradient(circle at top, rgba(255, 212, 59, 0.18), transparent 38%), linear-gradient(145deg, rgba(255,255,255,0.088), rgba(255,255,255,0.038))',
+            border: '1px solid rgba(255, 212, 59, 0.28)',
+            boxShadow: '0 26px 82px rgba(0,0,0,0.3)',
           }}
         >
           <small
             style={{
               display: 'inline-flex',
-              padding: '9px 13px',
+              padding: '8px 13px',
               borderRadius: 999,
               background: 'rgba(255,212,59,0.13)',
               border: '1px solid rgba(255,212,59,0.24)',
+              marginBottom: 14,
             }}
           >
             FromOne Starter
           </small>
 
-          <h3
+          <div
             style={{
-              margin: '18px 0 8px',
-              fontSize: 'clamp(3.4rem, 7vw, 6.2rem)',
-              lineHeight: 0.88,
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              gap: 10,
+              flexWrap: 'wrap',
+              marginBottom: 12,
             }}
           >
-            £39.99 <span>/ month</span>
-          </h3>
+            <strong
+              style={{
+                fontSize: 'clamp(3.6rem, 8vw, 6.6rem)',
+                lineHeight: 0.9,
+                letterSpacing: '-0.06em',
+                color: '#fff',
+              }}
+            >
+              £39.99
+            </strong>
+            <span
+              style={{
+                color: 'var(--muted)',
+                fontWeight: 900,
+                fontSize: 18,
+                paddingBottom: 8,
+              }}
+            >
+              / month
+            </span>
+          </div>
 
-          <p style={{ maxWidth: 560, margin: '0 auto', color: 'var(--muted)', lineHeight: 1.65 }}>
+          <p style={{ maxWidth: 520, margin: '0 auto 24px', color: 'var(--muted)', lineHeight: 1.6 }}>
             For small businesses that want weekly media turned into scheduled social posts without
             agency costs.
           </p>
 
           <div
-            className="sales-pricing-features"
             style={{
-              textAlign: 'left',
-              maxWidth: 620,
-              margin: '28px auto',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(245px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: 10,
+              maxWidth: 560,
+              margin: '0 auto 26px',
+              textAlign: 'left',
             }}
           >
             {starterFeatures.map((feature) => (
-              <span key={feature}>✓ {feature}</span>
+              <div
+                key={feature}
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: 16,
+                  background: 'rgba(255,255,255,0.055)',
+                  border: '1px solid rgba(255,255,255,0.09)',
+                  color: 'rgba(248,250,252,0.88)',
+                  fontWeight: 850,
+                  fontSize: 14,
+                }}
+              >
+                ✓ {feature}
+              </div>
             ))}
           </div>
 
