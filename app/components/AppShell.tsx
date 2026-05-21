@@ -17,6 +17,11 @@ const publicMarketingRoutes = [
   '/reset-password',
   '/tutorial',
   '/product-updates',
+  '/pricing',
+  '/privacy',
+  '/terms',
+  '/cookies',
+  '/cookie-policy',
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -36,7 +41,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   const isPublicMarketingRoute = () => {
-    return publicMarketingRoutes.includes(pathname);
+    return publicMarketingRoutes.some((route) => {
+      if (route === '/') return pathname === '/';
+      return pathname === route || pathname.startsWith(`${route}/`);
+    });
   };
 
   const shouldShowAppShell = () => {
