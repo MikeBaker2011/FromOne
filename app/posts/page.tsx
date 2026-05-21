@@ -2559,7 +2559,7 @@ Important:
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 320px))",
-                justifyContent: "start",
+                justifyContent: "center",
                 alignItems: "stretch",
                 gap: 16,
               }}
@@ -2768,10 +2768,10 @@ Important:
                   }}
                   className="fromone-simple-post-card"
                   style={{
-                    minHeight: 360,
+                    minHeight: 560,
                     textAlign: "left",
                     borderRadius: 26,
-                    padding: 22,
+                    padding: 0,
                     overflow: "hidden",
                     background:
                       "radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 36%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
@@ -2780,50 +2780,78 @@ Important:
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    gap: 18,
                   }}
                 >
                   <div>
                     <div
                       style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 18,
+                        height: 180,
+                        background:
+                          "radial-gradient(circle at center, rgba(255, 212, 59, 0.18), rgba(15,23,42,0.72))",
                         display: "grid",
                         placeItems: "center",
-                        background: "rgba(255, 212, 59, 0.14)",
-                        border: "1px solid rgba(255, 212, 59, 0.22)",
-                        color: "#ffd43b",
-                        fontSize: 30,
-                        fontWeight: 900,
-                        marginBottom: 18,
+                        overflow: "hidden",
                       }}
                     >
-                      +
+                      <span
+                        style={{
+                          width: 66,
+                          height: 66,
+                          borderRadius: 22,
+                          display: "grid",
+                          placeItems: "center",
+                          background: "rgba(255, 212, 59, 0.16)",
+                          border: "1px solid rgba(255, 212, 59, 0.28)",
+                          color: "#ffd43b",
+                          fontSize: 36,
+                          fontWeight: 950,
+                        }}
+                      >
+                        +
+                      </span>
                     </div>
 
-                    <div className="page-eyebrow">Add more</div>
-                    <h3 style={{ margin: "6px 0 8px", fontSize: 24, color: "#fff" }}>
-                      Create more posts
-                    </h3>
-                    <p style={{ margin: 0, color: "rgba(248,250,252,0.76)", lineHeight: 1.45 }}>
-                      Upload more photos, flyers or videos and FromOne will turn them into more scheduled posts.
-                    </p>
+                    <div style={{ padding: 18, display: "grid", gap: 12 }}>
+                      <div className="page-eyebrow">Add more</div>
+                      <h3 style={{ margin: 0, fontSize: 24, color: "#fff" }}>
+                        Create more posts
+                      </h3>
+                      <p style={{ margin: 0, color: "rgba(248,250,252,0.76)", lineHeight: 1.45 }}>
+                        Upload more photos, flyers or videos. Each upload becomes another scheduled post in this same weekly set.
+                      </p>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span className="selected-post-tags">
+                          <span>1 upload = 1 post</span>
+                        </span>
+                        <span className="selected-post-tags">
+                          <span>{7 - sortedPosts.length} slots left</span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <span
-                    className="dashboard-platform-create-button"
-                    style={{
-                      minHeight: 46,
-                      borderRadius: 16,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "100%",
-                    }}
-                  >
-                    Add media
-                  </span>
+                  <div style={{ padding: "0 18px 18px" }}>
+                    <span
+                      className="dashboard-platform-create-button"
+                      style={{
+                        minHeight: 46,
+                        borderRadius: 16,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                      }}
+                    >
+                      Add media
+                    </span>
+                  </div>
                 </button>
               )}
             </div>
