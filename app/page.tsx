@@ -77,16 +77,13 @@ const businessBenefits = [
   },
 ];
 
-const starterFeatures = [
-  'Upload photos, videos and flyers',
-  'Business Profile setup',
-  'Posts written from uploaded media',
-  'Suggested posting times',
-  'Facebook and Instagram autoposting',
-  'Instagram-safe image resizing',
-  'TikTok copy/open workflow',
-  'Rewrite posts using media',
-  'Cancel anytime',
+const salesPoints = [
+  'Turn weekly photos, videos and flyers into ready-to-review posts',
+  'Create platform-specific wording for Facebook, Instagram and TikTok',
+  'Suggest posting times automatically so the week is planned',
+  'Autopost to Facebook and Instagram when connected',
+  'Resize images into Instagram-safe versions when needed',
+  'Keep TikTok simple with copy/open manual posting',
 ];
 
 export default function Home() {
@@ -147,15 +144,15 @@ export default function Home() {
           <h1
             style={{
               margin: '20px auto 20px',
-              maxWidth: 980,
-              fontSize: 'clamp(3.25rem, 8vw, 7.8rem)',
+              maxWidth: 1120,
+              fontSize: 'clamp(3rem, 7vw, 7rem)',
               lineHeight: 0.9,
               letterSpacing: '-0.078em',
               textAlign: 'center',
             }}
           >
-            <span style={{ display: 'block' }}>Upload media.</span>
-            <span style={{ display: 'block' }}>Get scheduled posts.</span>
+            <span style={{ display: 'block', whiteSpace: 'nowrap' }}>Upload media.</span>
+            <span style={{ display: 'block', whiteSpace: 'nowrap' }}>Get scheduled posts.</span>
           </h1>
 
           <p
@@ -332,125 +329,118 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="sales-section sales-pricing-section" style={{ paddingTop: 38, paddingBottom: 66 }}>
+      <section className="sales-section" style={{ paddingTop: 38, paddingBottom: 70 }}>
         <div
-          className="sales-section-heading"
           style={{
-            textAlign: 'center',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            maxWidth: 720,
-            marginBottom: 24,
-          }}
-        >
-          <div className="page-eyebrow">Pricing</div>
-          <h2>A simple monthly plan.</h2>
-          <p>
-            Start with the demo. If FromOne saves time and keeps the business posting, continue
-            with Starter.
-          </p>
-        </div>
-
-        <div
-          className="sales-pricing-card"
-          style={{
-            maxWidth: 680,
+            maxWidth: 1120,
             margin: '0 auto',
-            padding: 'clamp(26px, 4vw, 44px)',
-            borderRadius: 34,
-            textAlign: 'center',
+            borderRadius: 42,
+            padding: 'clamp(28px, 5vw, 62px)',
+            position: 'relative',
+            overflow: 'hidden',
             background:
-              'radial-gradient(circle at top, rgba(255, 212, 59, 0.18), transparent 38%), linear-gradient(145deg, rgba(255,255,255,0.088), rgba(255,255,255,0.038))',
+              'radial-gradient(circle at 20% 10%, rgba(255, 212, 59, 0.26), transparent 34%), radial-gradient(circle at 86% 22%, rgba(61, 220, 151, 0.13), transparent 32%), linear-gradient(145deg, rgba(255,255,255,0.105), rgba(255,255,255,0.035))',
             border: '1px solid rgba(255, 212, 59, 0.28)',
-            boxShadow: '0 26px 82px rgba(0,0,0,0.3)',
+            boxShadow: '0 34px 120px rgba(0,0,0,0.38)',
           }}
         >
-          <small
-            style={{
-              display: 'inline-flex',
-              padding: '8px 13px',
-              borderRadius: 999,
-              background: 'rgba(255,212,59,0.13)',
-              border: '1px solid rgba(255,212,59,0.24)',
-              marginBottom: 14,
-            }}
-          >
-            FromOne Starter
-          </small>
-
           <div
             style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'center',
-              gap: 10,
-              flexWrap: 'wrap',
-              marginBottom: 12,
+              maxWidth: 820,
+              margin: '0 auto',
+              textAlign: 'center',
+              position: 'relative',
+              zIndex: 1,
             }}
           >
-            <strong
+            <div
+              className="page-eyebrow"
               style={{
-                fontSize: 'clamp(3.6rem, 8vw, 6.6rem)',
-                lineHeight: 0.9,
-                letterSpacing: '-0.06em',
-                color: '#fff',
+                display: 'inline-flex',
+                padding: '10px 14px',
+                borderRadius: 999,
+                background: 'rgba(255, 212, 59, 0.13)',
+                border: '1px solid rgba(255, 212, 59, 0.26)',
               }}
             >
-              £39.99
-            </strong>
-            <span
-              style={{
-                color: 'var(--muted)',
-                fontWeight: 900,
-                fontSize: 18,
-                paddingBottom: 8,
-              }}
-            >
-              / month
-            </span>
-          </div>
+              Built for busy small businesses
+            </div>
 
-          <p style={{ maxWidth: 520, margin: '0 auto 24px', color: 'var(--muted)', lineHeight: 1.6 }}>
-            For small businesses that want weekly media turned into scheduled social posts without
-            agency costs.
-          </p>
+            <h2
+              style={{
+                margin: '18px auto 16px',
+                fontSize: 'clamp(2.4rem, 5vw, 5.5rem)',
+                lineHeight: 0.94,
+                letterSpacing: '-0.065em',
+                maxWidth: 860,
+              }}
+            >
+              Your weekly social media, created from the content you already have.
+            </h2>
+
+            <p
+              style={{
+                maxWidth: 700,
+                margin: '0 auto',
+                color: 'rgba(248,250,252,0.72)',
+                fontSize: 'clamp(1rem, 1.35vw, 1.18rem)',
+                lineHeight: 1.7,
+              }}
+            >
+              FromOne gives small businesses a simple weekly system: upload real media, get useful
+              posts, review the week, and let Facebook and Instagram publish automatically when
+              connected.
+            </p>
+          </div>
 
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: 10,
-              maxWidth: 560,
-              margin: '0 auto 26px',
-              textAlign: 'left',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: 12,
+              margin: '32px auto 0',
+              maxWidth: 900,
+              position: 'relative',
+              zIndex: 1,
             }}
           >
-            {starterFeatures.map((feature) => (
+            {salesPoints.map((point) => (
               <div
-                key={feature}
+                key={point}
                 style={{
-                  padding: '12px 14px',
-                  borderRadius: 16,
-                  background: 'rgba(255,255,255,0.055)',
-                  border: '1px solid rgba(255,255,255,0.09)',
+                  padding: '15px 16px',
+                  borderRadius: 18,
+                  background: 'rgba(5, 10, 24, 0.42)',
+                  border: '1px solid rgba(255,255,255,0.1)',
                   color: 'rgba(248,250,252,0.88)',
                   fontWeight: 850,
-                  fontSize: 14,
+                  lineHeight: 1.45,
                 }}
               >
-                ✓ {feature}
+                ✓ {point}
               </div>
             ))}
           </div>
 
-          <Link href="/signin" className="sales-primary-button">
-            Start 7-day demo
-          </Link>
+          <div
+            style={{
+              display: 'flex',
+              gap: 12,
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              marginTop: 34,
+              position: 'relative',
+              zIndex: 1,
+            }}
+          >
+            <Link href="/signin" className="sales-primary-button">
+              Start 7-day demo
+            </Link>
 
-          <p style={{ marginTop: 16, color: 'var(--muted)', fontSize: 14 }}>
-            Questions before starting? Email{' '}
-            <a href="mailto:info@fromone.co.uk">info@fromone.co.uk</a>
-          </p>
+            <a href="mailto:info@fromone.co.uk" className="sales-secondary-button">
+              Email info@fromone.co.uk
+            </a>
+          </div>
         </div>
       </section>
 
