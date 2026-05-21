@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { useToast } from '@/app/components/ToastProvider';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -10,6 +11,46 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 type Plan = 'demo' | 'starter';
 
 export default function SubscriptionPage() {
+  const { showToast } = useToast();
+
+  const notify = (
+    message: any,
+    type: 'success' | 'error' | 'info' | 'warning' = 'info',
+    title?: string,
+  ) => {
+    const cleanMessage = String(message || '').trim();
+
+    if (!cleanMessage) return;
+
+    const defaultTitle =
+      title ||
+      (type === 'success'
+        ? 'Done'
+        : type === 'error'
+          ? 'Something went wrong'
+          : type === 'warning'
+            ? 'Please check'
+            : 'FromOne');
+
+    showToast({
+      type,
+      title: defaultTitle,
+      message: cleanMessage,
+    });
+  };
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    type: 'cancelPendingPayment' | 'cancelSubscription';
+    title: string;
+    message: string;
+    confirmLabel: string;
+    danger?: boolean;
+  } | null>(null);
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog(null);
+  };
+
   const [selectedPlan, setSelectedPlan] = useState<Plan>('demo');
   const [currentPlan, setCurrentPlan] = useState<Plan>('demo');
   const [status, setStatus] = useState('trialing');
@@ -29,12 +70,20 @@ export default function SubscriptionPage() {
     const paypalStatus = params.get('paypal');
 
     if (paypalStatus === 'approved') {
-      alert('PayPal checkout approved. Your account will update once PayPal confirms the subscription.');
+      notify(
+        'Your account will update once PayPal confirms the subscription.',
+        'success',
+        'PayPal checkout approved',
+      );
       window.history.replaceState({}, '', window.location.pathname);
     }
 
     if (paypalStatus === 'cancelled') {
-      alert('PayPal checkout was cancelled. You can try again whenever you are ready.');
+      notify(
+        'You can try again whenever you are ready.',
+        'warning',
+        'PayPal checkout cancelled',
+      );
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -170,7 +219,7 @@ export default function SubscriptionPage() {
       } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        alert('Please sign in first.');
+        notify('Please sign in first.', 'warning', 'Sign in needed');
         return;
       }
 
@@ -199,7 +248,7 @@ export default function SubscriptionPage() {
 
       window.location.href = result.approve_url;
     } catch (error: any) {
-      alert(error?.message || 'Error starting PayPal checkout.');
+      notify(error?.message || 'Error starting PayPal checkout.', 'error', 'PayPal checkout failed');
     } finally {
       setSaving(false);
     }
@@ -218,13 +267,13 @@ export default function SubscriptionPage() {
       const userId = authData.user?.id;
 
       if (!userId) {
-        alert('Please sign in first.');
+        notify('Please sign in first.', 'warning', 'Sign in needed');
         setSaving(false);
         return;
       }
 
       if (selectedPlan === 'demo' && status === 'expired') {
-        alert('Your demo has ended. Please choose the monthly plan to continue.');
+        notify('Your demo has ended. Please choose the monthly plan to continue.', 'warning', 'Demo ended');
         setSaving(false);
         return;
       }
@@ -254,11 +303,11 @@ export default function SubscriptionPage() {
       setSelectedPlan('demo');
       setStatus('trialing');
 
-      alert('Demo access saved.');
+      notify('Demo access saved.', 'success', 'Demo saved');
 
       await loadSubscription();
     } catch (error: any) {
-      alert(error?.message || 'Error saving plan and billing preference.');
+      notify(error?.message || 'Error saving plan and billing preference.', 'error', 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -266,15 +315,26 @@ export default function SubscriptionPage() {
 
   const cancelPendingPayment = async () => {
     if (!isPendingPayment) {
-      alert('There is no pending PayPal checkout to cancel.');
+      notify('There is no pending PayPal checkout to cancel.', 'warning', 'No pending payment');
       return;
     }
 
-    const confirmed = confirm(
-      'Cancel this pending PayPal checkout?\n\nThis will return your account to the demo plan. No PayPal payment will be taken from this pending checkout.'
-    );
+    setConfirmDialog({
+      type: 'cancelPendingPayment',
+      title: 'Cancel pending PayPal checkout?',
+      message:
+        'This will return your account to the demo plan. No PayPal payment will be taken from this pending checkout.',
+      confirmLabel: 'Cancel pending payment',
+      danger: true,
+    });
+  };
 
-    if (!confirmed) return;
+  const confirmCancelPendingPayment = async () => {
+    if (!isPendingPayment) {
+      notify('There is no pending PayPal checkout to cancel.', 'warning', 'No pending payment');
+      closeConfirmDialog();
+      return;
+    }
 
     setCancelling(true);
 
@@ -283,7 +343,7 @@ export default function SubscriptionPage() {
       const userId = authData.user?.id;
 
       if (!userId) {
-        alert('Please sign in first.');
+        notify('Please sign in first.', 'warning', 'Sign in needed');
         return;
       }
 
@@ -317,11 +377,12 @@ export default function SubscriptionPage() {
       setSelectedPlan(nextStatus === 'expired' ? 'starter' : 'demo');
       setStatus(nextStatus);
       setPaypalSubscriptionId(null);
+      closeConfirmDialog();
 
-      alert('Pending PayPal checkout cancelled.');
+      notify('Pending PayPal checkout cancelled.', 'success', 'Pending payment cancelled');
       await loadSubscription();
     } catch (error: any) {
-      alert(error?.message || 'Error cancelling pending payment.');
+      notify(error?.message || 'Error cancelling pending payment.', 'error', 'Cancel failed');
     } finally {
       setCancelling(false);
     }
@@ -329,15 +390,26 @@ export default function SubscriptionPage() {
 
   const cancelSubscription = async () => {
     if (!canCancel) {
-      alert('There is no active PayPal subscription to cancel yet.');
+      notify('There is no active PayPal subscription to cancel yet.', 'warning', 'No active subscription');
       return;
     }
 
-    const confirmed = confirm(
-      'Cancel your FromOne Starter subscription?\n\nThis will stop future renewals. You may keep access until the end of the current billing period depending on how your Starter billing is configured.'
-    );
+    setConfirmDialog({
+      type: 'cancelSubscription',
+      title: 'Cancel Starter subscription?',
+      message:
+        'This will stop future renewals. You may keep access until the end of the current billing period depending on how your Starter billing is configured.',
+      confirmLabel: 'Cancel subscription',
+      danger: true,
+    });
+  };
 
-    if (!confirmed) return;
+  const confirmCancelSubscription = async () => {
+    if (!canCancel) {
+      notify('There is no active PayPal subscription to cancel yet.', 'warning', 'No active subscription');
+      closeConfirmDialog();
+      return;
+    }
 
     setCancelling(true);
 
@@ -346,7 +418,7 @@ export default function SubscriptionPage() {
       const userId = authData.user?.id;
 
       if (!userId) {
-        alert('Please sign in first.');
+        notify('Please sign in first.', 'warning', 'Sign in needed');
         setCancelling(false);
         return;
       }
@@ -395,11 +467,12 @@ export default function SubscriptionPage() {
 
       setStatus('cancelled');
       setCancelledAt(new Date().toISOString());
+      closeConfirmDialog();
 
-      alert('Subscription cancelled. Future renewals have been stopped.');
+      notify('Future renewals have been stopped.', 'success', 'Subscription cancelled');
       await loadSubscription();
     } catch (error: any) {
-      alert(error?.message || 'Error cancelling subscription.');
+      notify(error?.message || 'Error cancelling subscription.', 'error', 'Cancellation failed');
     } finally {
       setCancelling(false);
     }
@@ -809,6 +882,80 @@ export default function SubscriptionPage() {
             </div>
           </div>
         </>
+      )}
+
+      {confirmDialog && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="subscription-confirm-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            display: 'grid',
+            placeItems: 'center',
+            padding: 18,
+            background: 'rgba(2, 6, 23, 0.72)',
+            backdropFilter: 'blur(14px)',
+          }}
+        >
+          <div
+            className="premium-card"
+            style={{
+              width: 'min(520px, 100%)',
+              borderRadius: 30,
+              border: confirmDialog.danger
+                ? '1px solid rgba(255, 95, 109, 0.34)'
+                : '1px solid rgba(255, 212, 59, 0.26)',
+              boxShadow: '0 34px 110px rgba(0,0,0,0.48)',
+            }}
+          >
+            <div className="page-eyebrow">
+              {confirmDialog.danger ? 'Please confirm' : 'Confirm action'}
+            </div>
+
+            <h2 id="subscription-confirm-title" style={{ margin: '4px 0 10px' }}>
+              {confirmDialog.title}
+            </h2>
+
+            <p style={{ margin: '0 0 20px', color: 'var(--muted)', lineHeight: 1.55 }}>
+              {confirmDialog.message}
+            </p>
+
+            <div
+              className="button-row"
+              style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}
+            >
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={closeConfirmDialog}
+                disabled={cancelling || saving}
+              >
+                Keep as is
+              </button>
+
+              <button
+                type="button"
+                className={confirmDialog.danger ? 'secondary-button danger-button' : undefined}
+                onClick={() => {
+                  if (confirmDialog.type === 'cancelPendingPayment') {
+                    confirmCancelPendingPayment();
+                    return;
+                  }
+
+                  if (confirmDialog.type === 'cancelSubscription') {
+                    confirmCancelSubscription();
+                  }
+                }}
+                disabled={cancelling || saving}
+              >
+                {cancelling ? 'Working...' : confirmDialog.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

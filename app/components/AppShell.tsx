@@ -9,7 +9,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const protectedRoutes = ['/dashboard', '/posts', '/settings'];
+const protectedRoutes = ['/dashboard', '/posts', '/settings', '/subscription'];
 
 const publicMarketingRoutes = [
   '/',
@@ -177,16 +177,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     const hasAccess = hasActivePaidPlan || hasActiveTrial || hasManualOverride;
 
     if (!hasAccess) {
-      await supabase
-        .from('user_billing')
-        .update({
-          status: 'expired',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
+      const expiredUpdate: Record<string, any> = {
+        updated_at: new Date().toISOString(),
+      };
+
+      if (plan === 'demo' && status === 'trialing') {
+        expiredUpdate.status = 'expired';
+      }
+
+      if (Object.keys(expiredUpdate).length > 1) {
+        await supabase
+          .from('user_billing')
+          .update(expiredUpdate)
+          .eq('user_id', user.id);
+      }
 
       setCheckingAccess(false);
-      router.replace('/subscription');
+
+      if (!pathname.startsWith('/subscription')) {
+        router.replace('/subscription');
+      }
+
       return;
     }
 
