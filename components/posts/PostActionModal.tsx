@@ -210,7 +210,7 @@ export default function PostActionModal({
       : canAutoPublish
         ? `Publish to ${autoPublishPlatformName}`
         : isTikTokPost
-          ? 'Copy for TikTok'
+          ? 'Copy TikTok post'
           : `Copy for ${platformName}`;
 
   const primaryPublishDisabled =
@@ -219,14 +219,14 @@ export default function PostActionModal({
   const statusLabel = getPostStatus(selectedPost) === 'Reminder set' ? 'Scheduled' : getPostStatus(selectedPost);
   const scheduleActionLabel = canAutoPublish
     ? hasSchedule
-      ? 'Change autopost time'
-      : 'Schedule autopost'
+      ? 'Edit planned autopost time'
+      : 'Choose autopost time'
     : hasSchedule
-      ? 'Change reminder time'
+      ? 'Edit planned reminder time'
       : isTikTokPost
         ? 'Plan TikTok reminder'
         : 'Plan reminder';
-  const savedScheduleLabel = canAutoPublish ? 'Autopost scheduled' : 'Reminder planned';
+  const savedScheduleLabel = canAutoPublish ? 'Autopost planned' : 'Reminder planned';
   const saveScheduleButtonLabel = canAutoPublish ? 'Save autopost time' : 'Save reminder time';
 
   return (
@@ -238,6 +238,11 @@ export default function PostActionModal({
             <h2>{selectedPost.title || 'Review post'}</h2>
             <div className="fromone-simple-modal-pills">
               <span>{statusLabel}</span>
+              {hasSchedule && !posted && (
+                <span>
+                  {canAutoPublish ? 'Autopost' : 'Planned'} · {getReadableDateTime(selectedPost.scheduled_publish_at)}
+                </span>
+              )}
               {isPostScheduledToday(selectedPost) && !posted && <span>Today</span>}
               {hasMedia && <span>{isVideoMedia ? 'Video' : isFlyerMedia ? 'Flyer' : 'Image'}</span>}
               {isTikTokPost && <span>TikTok manual</span>}
@@ -245,16 +250,33 @@ export default function PostActionModal({
           </div>
 
           <button type="button" className="secondary-button fromone-simple-close" onClick={onClose}>
-            Close
+            Done
           </button>
         </header>
+
+        <div
+          className="fromone-simple-note"
+          style={{
+            marginTop: 14,
+            marginBottom: 14,
+          }}
+        >
+          <strong>
+            {canAutoPublish ? 'Review, edit, then publish now or let FromOne autopost.' : 'Review, copy, then publish manually.'}
+          </strong>
+          <p>
+            {canAutoPublish
+              ? 'Facebook and Instagram can use the planned time once the account is connected.'
+              : 'TikTok stays manual for now, so copy the post and open TikTok when ready.'}
+          </p>
+        </div>
 
         <section ref={mediaRef} className="fromone-simple-section fromone-simple-media-section">
           <div className="fromone-simple-section-title">
             <span>1</span>
             <div>
               <div className="page-eyebrow">Media</div>
-              <h3>Check the media</h3>
+              <h3>Media</h3>
             </div>
           </div>
 
@@ -274,13 +296,13 @@ export default function PostActionModal({
               ) : (
                 <div className="fromone-simple-file-card">
                   <strong>No media yet</strong>
-                  <p>Add a photo, video or flyer to make this post stronger.</p>
+                  <p>Add or replace the media this post should use.</p>
                 </div>
               )}
             </div>
 
             <aside className="fromone-simple-media-actions">
-              <p>{hasMedia ? getImageGuidance(selectedPost) : 'Choose the media this post should use.'}</p>
+              <p>{hasMedia ? getImageGuidance(selectedPost) : 'Choose a photo, video or flyer. This keeps the post specific to the business.'}</p>
 
               <label className="fromone-simple-primary-action">
                 <input
@@ -324,14 +346,14 @@ export default function PostActionModal({
             <div className="fromone-simple-section-title">
               <span>2</span>
               <div>
-                <div className="page-eyebrow">Rewrite using media</div>
-                <h3>Rewrite using media</h3>
+                <div className="page-eyebrow">Improve</div>
+                <h3>Rewrite from media</h3>
               </div>
             </div>
 
             <div className="fromone-simple-action-strip">
               <div>
-                <p>Create a fresh editable version from the photo, video or flyer above.</p>
+                <p>Create a fresh version using the attached media as the main topic.</p>
                 {posted && (
                   <small>This will not change anything already posted on Facebook or Instagram.</small>
                 )}
@@ -356,7 +378,7 @@ export default function PostActionModal({
             <span>3</span>
             <div>
               <div className="page-eyebrow">Wording</div>
-              <h3>Check the wording</h3>
+              <h3>Wording</h3>
             </div>
           </div>
 
@@ -448,7 +470,7 @@ export default function PostActionModal({
                   }}
                   disabled={accessLocked || rewritingPost || isRescanning}
                 >
-                  {showAdvancedTools ? 'Hide improve tools' : 'Improve wording'}
+                  {showAdvancedTools ? 'Hide rewrite options' : 'Rewrite options'}
                 </button>
               </div>
             </>
@@ -525,7 +547,7 @@ export default function PostActionModal({
             <span>4</span>
             <div>
               <div className="page-eyebrow">Publish</div>
-              <h3>{posted ? 'Posted' : canAutoPublish ? 'Publish now' : 'Copy and open'}</h3>
+              <h3>{posted ? 'Posted' : canAutoPublish ? 'Publish or autopost' : 'Copy and open'}</h3>
             </div>
           </div>
 
@@ -550,7 +572,7 @@ export default function PostActionModal({
                 {posted
                   ? `${platformName} has been marked as posted.`
                   : canAutoPublish
-                    ? `${platformName} can publish now or autopost at the time you choose.`
+                    ? `${platformName} can publish now, or FromOne can autopost at the planned time.`
                     : isTikTokPost
                       ? 'Copy the post, open TikTok, then paste and publish manually.'
                       : `Copy the post and open ${platformName}.`}
