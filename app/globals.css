@@ -12106,30 +12106,3 @@ main {
     font-size: 0.82rem !important;
   }
 }
-/* PUBLIC PAGE TOP SPACING */
-
-.product-updates-page > .sales-nav,
-.tutorial-public-page > .sales-nav,
-.legal-page > .sales-nav {
-  margin-top: 18px;
-}
-
-.product-updates-page > .page-header,
-.tutorial-public-page > .page-header,
-.legal-page > .page-header {
-  margin-top: 86px !important;
-}
-
-@media (max-width: 720px) {
-  .product-updates-page > .sales-nav,
-  .tutorial-public-page > .sales-nav,
-  .legal-page > .sales-nav {
-    margin-top: 10px;
-  }
-
-  .product-updates-page > .page-header,
-  .tutorial-public-page > .page-header,
-  .legal-page > .page-header {
-    margin-top: 52px !important;
-  }
-}
