@@ -334,7 +334,7 @@ export default function SubscriptionPage() {
     }
 
     const confirmed = confirm(
-      'Cancel your FromOne Monthly subscription?\n\nThis will stop future renewals. You may keep access until the end of the current billing period depending on how your PayPal billing is configured.'
+      'Cancel your FromOne Starter subscription?\n\nThis will stop future renewals. You may keep access until the end of the current billing period depending on how your Starter billing is configured.'
     );
 
     if (!confirmed) return;
@@ -443,21 +443,22 @@ export default function SubscriptionPage() {
 
   const demoFeatures = [
     '7-day access',
-    'Limited uploads and posts',
-    'Limited website scans',
-    'Create posts from business details',
-    'Review and copy posts manually',
+    'Try the upload-to-post workflow',
+    'Create posts from uploaded media',
+    'Suggested posting times',
+    'Review and edit posts',
     'Facebook and Instagram publishing where connected',
-    'TikTok manual posting',
+    'TikTok copy/open manual posting',
   ];
 
   const monthlyFeatures = [
-    'Full weekly photo and flyer post creation',
-    'More uploads and posts per week',
-    'Website scan or saved business profile',
-    'Facebook publishing where Meta is connected',
-    'Instagram publishing where Meta is connected',
-    'TikTok manual copy/open posting',
+    'Upload photos, videos and flyers',
+    'Posts written from uploaded media',
+    'Automatic suggested posting times',
+    'Facebook and Instagram autoposting',
+    'Instagram-safe image resizing',
+    'TikTok copy/open workflow',
+    'Rewrite posts using media',
     'PayPal monthly billing',
   ];
 
@@ -476,13 +477,13 @@ export default function SubscriptionPage() {
     },
     {
       id: 'starter' as Plan,
-      name: 'Monthly',
-      price: '£29.99',
+      name: 'Starter',
+      price: '£39.99',
       priceNote: '/ month',
-      valueNote: 'Weekly photo and flyer post creation for local businesses.',
+      valueNote: 'Weekly media-to-post creation for small businesses.',
       description:
-        'Full monthly access to turn your business photos and flyers into ready-to-use posts.',
-      buttonText: isCancelled ? 'Restart monthly plan' : 'Continue with PayPal',
+        'Full monthly access to turn your weekly photos, videos and flyers into scheduled social posts.',
+      buttonText: isCancelled ? 'Restart Starter' : 'Continue with PayPal',
       disabled: false,
       features: monthlyFeatures,
     },
@@ -494,7 +495,7 @@ export default function SubscriptionPage() {
     }
 
     if (isDemoExpired) return 'Demo expired';
-    if (hasPaidAccess) return 'Monthly plan active';
+    if (hasPaidAccess) return 'Starter plan active';
     if (isPendingPayment) return 'Payment pending';
     if (isCancelled) return 'Subscription cancelled';
 
@@ -506,12 +507,12 @@ export default function SubscriptionPage() {
       <div className="page-header">
         <div className="page-eyebrow">Subscription</div>
         <h1 className="page-title">
-          {isDemoExpired ? 'Your demo has ended.' : 'Simple pricing for local businesses.'}
+          {isDemoExpired ? 'Your demo has ended.' : 'Simple access for small businesses.'}
         </h1>
         <p className="page-description">
-          Start with a 7-day demo, then continue with FromOne Monthly for £29.99/month.
-          Upload your photos or flyers, review the posts, then publish Facebook and Instagram
-          where Meta is connected or copy/open TikTok manually.
+          Start with a 7-day demo, then continue with FromOne Starter for £39.99/month.
+          Upload photos, videos or flyers, create scheduled posts, autopost Facebook and
+          Instagram, or copy/open TikTok manually.
         </p>
       </div>
 
@@ -532,8 +533,8 @@ export default function SubscriptionPage() {
               <div className="page-eyebrow">Demo ended</div>
               <h2 style={{ marginTop: 0 }}>Your 7-day demo has expired.</h2>
               <p>
-                Choose the monthly plan to keep creating weekly posts from your business photos,
-                flyers, website or saved business details.
+                Choose Starter to keep creating scheduled posts from your photos, videos,
+                flyers and saved Business Profile.
               </p>
             </div>
           )}
@@ -547,9 +548,9 @@ export default function SubscriptionPage() {
               }}
             >
               <div className="page-eyebrow">Subscription cancelled</div>
-              <h2 style={{ marginTop: 0 }}>Your monthly plan has been cancelled.</h2>
+              <h2 style={{ marginTop: 0 }}>Your Starter plan has been cancelled.</h2>
               <p>
-                Future renewals have been stopped. You can restart the monthly plan anytime.
+                Future renewals have been stopped. You can restart Starter anytime.
               </p>
             </div>
           )}
@@ -563,7 +564,7 @@ export default function SubscriptionPage() {
               <p>
                 Plan:{' '}
                 <strong>
-                  {currentPlan === 'starter' ? 'Monthly' : 'Demo'}
+                  {currentPlan === 'starter' ? 'Starter' : 'Demo'}
                 </strong>
               </p>
 
@@ -697,13 +698,13 @@ export default function SubscriptionPage() {
                 'radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), rgba(255, 255, 255, 0.04) 42%, rgba(15, 23, 42, 0.88))',
             }}
           >
-            <div className="page-eyebrow">PayPal billing</div>
-            <h2 style={{ marginTop: 0 }}>Secure monthly billing.</h2>
+            <div className="page-eyebrow">Starter billing</div>
+            <h2 style={{ marginTop: 0 }}>Secure monthly billing with PayPal.</h2>
 
             <p>
-              FromOne Monthly is a recurring PayPal subscription at{' '}
-              <strong>£29.99/month</strong>. PayPal manages the payment securely, and FromOne
-              unlocks monthly access once PayPal confirms the subscription.
+              FromOne Starter is a recurring PayPal subscription at{' '}
+              <strong>£39.99/month</strong>. PayPal manages the payment securely, and FromOne
+              unlocks Starter access once PayPal confirms the subscription.
             </p>
 
             <div
@@ -724,7 +725,7 @@ export default function SubscriptionPage() {
               <div className="card" style={{ padding: '14px' }}>
                 <strong>Recurring payment</strong>
                 <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 800 }}>
-                  £29.99/month
+                  £39.99/month
                 </p>
               </div>
 
@@ -761,7 +762,7 @@ export default function SubscriptionPage() {
 
             {!hasPaidAccess && !isPendingPayment && (
               <p style={{ marginTop: '18px', color: 'var(--muted)', fontWeight: 800 }}>
-                Choose Monthly above, then continue to PayPal to start the subscription.
+                Choose Starter above, then continue to PayPal to start the subscription.
               </p>
             )}
 
