@@ -2590,10 +2590,13 @@ Important:
                     onClick={() => choosePost(post.id)}
                     className="fromone-simple-post-card"
                     style={{
+                      minHeight: 560,
                       textAlign: "left",
                       borderRadius: 26,
                       padding: 0,
                       overflow: "hidden",
+                      display: "flex",
+                      flexDirection: "column",
                       background:
                         "linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
                       border:
@@ -2648,7 +2651,7 @@ Important:
                       )}
                     </div>
 
-                    <div style={{ padding: 18, display: "grid", gap: 12 }}>
+                    <div style={{ padding: 18, display: "grid", gap: 12, flex: 1 }}>
                       <div
                         style={{
                           display: "flex",
@@ -2748,7 +2751,7 @@ Important:
                           alignItems: "center",
                           justifyContent: "center",
                           width: "100%",
-                          marginTop: 4,
+                          marginTop: "auto",
                         }}
                       >
                         Review post
@@ -2817,7 +2820,7 @@ Important:
                         Create more posts
                       </h3>
                       <p style={{ margin: 0, color: "rgba(248,250,252,0.76)", lineHeight: 1.45 }}>
-                        Upload more photos, flyers or videos. Each upload becomes another scheduled post in this same weekly set.
+                        Add another content day to this same weekly set. FromOne can create Facebook, Instagram and TikTok versions with staggered times.
                       </p>
 
                       <div
@@ -2828,16 +2831,16 @@ Important:
                         }}
                       >
                         <span className="selected-post-tags">
-                          <span>1 upload = 1 post</span>
+                          <span>Same weekly set</span>
                         </span>
                         <span className="selected-post-tags">
-                          <span>{7 - sortedPosts.length} slots left</span>
+                          <span>Staggered times</span>
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ padding: "0 18px 18px" }}>
+                  <div style={{ padding: "0 18px 18px", marginTop: "auto" }}>
                     <span
                       className="dashboard-platform-create-button"
                       style={{
