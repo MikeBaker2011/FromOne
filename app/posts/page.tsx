@@ -2511,6 +2511,119 @@ Important:
             </section>
           )}
 
+          {campaigns.length > 0 && (
+            <section
+              className="premium-card"
+              style={{
+                marginBottom: 22,
+                display: "grid",
+                gap: 14,
+                border: "1px solid rgba(255, 212, 59, 0.22)",
+                borderRadius: 28,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div className="page-eyebrow">Weekly set</div>
+                  <h2 style={{ margin: "0 0 6px" }}>Choose a saved week.</h2>
+                  <p style={{ margin: 0, color: "var(--muted)" }}>
+                    Switch between saved weekly sets, or delete old empty test sets.
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 11px",
+                    borderRadius: 999,
+                    background: "rgba(255,255,255,0.055)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "rgba(248,250,252,0.78)",
+                    fontSize: 13,
+                    fontWeight: 900,
+                  }}
+                >
+                  {campaigns.length} saved set{campaigns.length === 1 ? "" : "s"}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) auto auto auto",
+                  gap: 10,
+                  alignItems: "center",
+                }}
+              >
+                <select
+                  value={pendingCampaignId}
+                  onChange={(event) => setPendingCampaignId(event.target.value)}
+                  style={{
+                    minHeight: 50,
+                    borderRadius: 16,
+                    padding: "0 14px",
+                    background: "rgba(15, 23, 42, 0.76)",
+                    color: "#f8fafc",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    fontWeight: 850,
+                    minWidth: 0,
+                  }}
+                >
+                  {campaigns.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {getCampaignOptionLabel(item)}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={loadSelectedPlan}
+                  disabled={loadingSelectedPlan || !pendingCampaignId}
+                  style={{ minHeight: 50, borderRadius: 16 }}
+                >
+                  {loadingSelectedPlan ? "Loading..." : "Load"}
+                </button>
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={renameSelectedCampaign}
+                  disabled={!campaign?.id || renamingCampaign}
+                  style={{ minHeight: 50, borderRadius: 16 }}
+                >
+                  {renamingCampaign ? "Renaming..." : "Rename"}
+                </button>
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={deleteSelectedCampaign}
+                  disabled={!campaign?.id || deletingCampaign}
+                  style={{
+                    minHeight: 50,
+                    borderRadius: 16,
+                    borderColor: "rgba(255, 95, 109, 0.34)",
+                    color: "rgba(255, 215, 220, 0.95)",
+                  }}
+                >
+                  {deletingCampaign ? "Deleting..." : posts.length === 0 ? "Delete empty set" : "Delete set"}
+                </button>
+              </div>
+            </section>
+          )}
+
           <section
             className="premium-card"
             style={{
@@ -2555,16 +2668,73 @@ Important:
               </div>
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 320px))",
-                justifyContent: "center",
-                alignItems: "stretch",
-                gap: 16,
-              }}
-            >
-              {sortedPosts.map((post: any) => {
+            {sortedPosts.length === 0 && (
+              <div
+                style={{
+                  padding: 22,
+                  borderRadius: 24,
+                  background:
+                    "radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%), rgba(255,255,255,0.045)",
+                  border: "1px solid rgba(255, 212, 59, 0.18)",
+                  display: "grid",
+                  gap: 14,
+                }}
+              >
+                <div>
+                  <div className="page-eyebrow">Empty weekly set</div>
+                  <h3 style={{ margin: "4px 0 8px", fontSize: 26 }}>
+                    This saved week has no posts.
+                  </h3>
+                  <p style={{ margin: 0, color: "var(--muted)" }}>
+                    This can happen if a test run was interrupted. Delete this empty set, or create a new week from Dashboard.
+                  </p>
+                </div>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={deleteSelectedCampaign}
+                    disabled={!campaign?.id || deletingCampaign}
+                    style={{
+                      minHeight: 46,
+                      borderRadius: 15,
+                      borderColor: "rgba(255, 95, 109, 0.34)",
+                      color: "rgba(255, 215, 220, 0.95)",
+                    }}
+                  >
+                    {deletingCampaign ? "Deleting..." : "Delete empty set"}
+                  </button>
+
+                  <a
+                    href="/dashboard"
+                    className="dashboard-platform-create-button"
+                    style={{
+                      minHeight: 46,
+                      borderRadius: 15,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "0 18px",
+                    }}
+                  >
+                    Create posts
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {sortedPosts.length > 0 && (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 320px))",
+                  justifyContent: "center",
+                  alignItems: "stretch",
+                  gap: 16,
+                }}
+              >
+                {sortedPosts.map((post: any) => {
                 const dateParts = getPostDateParts(post);
                 const status = getPostStatus(post);
                 const platformName = getPlatformDisplayName(post);
@@ -2959,7 +3129,8 @@ Important:
                   </div>
                 </button>
               )}
-            </div>
+              </div>
+            )}
           </section>
 
           {deletedPosts.length > 0 && (
