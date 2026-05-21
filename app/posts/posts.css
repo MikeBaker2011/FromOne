@@ -1588,3 +1588,40 @@
   }
 }
 
+
+/* POSTS DOUBLE SCROLLBAR FIX */
+
+/*
+  The Posts page should use the main browser scrollbar only.
+  Modals can scroll internally, but their overlays should not add a second page scrollbar.
+*/
+
+.simplified-posts-page {
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.fromone-modal-overlay,
+.fromone-simple-modal-overlay {
+  overflow: hidden !important;
+}
+
+.fromone-post-action-modal,
+.fromone-simple-post-modal {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Keep page-level cards from becoming their own vertical scroll containers. */
+.simplified-control-card,
+.simplified-week-section,
+.campaign-brand-shell,
+.campaign-shell,
+.clean-selected-post,
+.selected-post-panel {
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
