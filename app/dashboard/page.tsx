@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import { useToast } from "@/app/components/ToastProvider";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -144,6 +145,33 @@ const VIDEO_SCAN_EVENT_TYPES = ["video_scan"];
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { showToast } = useToast();
+
+  const notify = (
+    message: any,
+    type: "success" | "error" | "info" | "warning" = "info",
+    title?: string,
+  ) => {
+    const cleanMessage = String(message || "").trim();
+
+    if (!cleanMessage) return;
+
+    const defaultTitle =
+      title ||
+      (type === "success"
+        ? "Done"
+        : type === "error"
+          ? "Something went wrong"
+          : type === "warning"
+            ? "Please check"
+            : "FromOne");
+
+    showToast({
+      type,
+      title: defaultTitle,
+      message: cleanMessage,
+    });
+  };
 
   const [addToCampaignId, setAddToCampaignId] = useState<string | null>(null);
   const [client, setClient] = useState<any>(null);
@@ -691,7 +719,7 @@ export default function DashboardPage() {
   const ensureAccessAllowed = () => {
     if (!accessLocked) return true;
 
-    alert(accessMessage);
+    notify(accessMessage, "warning", "Access locked");
     return false;
   };
 
@@ -730,7 +758,7 @@ export default function DashboardPage() {
     const used = await loadWeeklyScanUsage(userId);
 
     if (used >= limit) {
-      alert(
+      notify(
         plan === "starter"
           ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create posts using saved business details.`
           : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Use saved business details or upgrade to FromOne Monthly.`
@@ -759,7 +787,7 @@ export default function DashboardPage() {
     const remaining = Math.max(limit - used, 0);
 
     if (videoUploadsThisRun > remaining) {
-      alert(
+      notify(
         plan === "starter"
           ? `You can scan ${PAID_WEEKLY_VIDEO_SCAN_LIMIT} videos per 7 days. You have ${remaining} video scan left.`
           : `Your demo includes ${DEMO_WEEKLY_VIDEO_SCAN_LIMIT} video scan per 7 days. You have ${remaining} video scan left.`
@@ -774,7 +802,7 @@ export default function DashboardPage() {
     const total = await loadSavedCampaignCount(userId);
 
     if (total >= MAX_SAVED_CAMPAIGNS) {
-      alert(
+      notify(
         `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly post sets. Delete an old or empty test set from Posts before creating a new one.`
       );
       return false;
@@ -992,7 +1020,7 @@ Core FromOne rule:
     const cleanWebsiteUrl = normaliseWebsiteUrl(websiteUrl);
 
     if (!cleanWebsiteUrl) {
-      alert("Please enter a website URL, or use the business details option.");
+      notify("Please enter a website URL, or use the business details option.", "warning", "Website needed");
       return null;
     }
 
@@ -1003,7 +1031,7 @@ Core FromOne rule:
       const userId = user?.id || null;
 
       if (!userId) {
-        alert("Please sign in again.");
+        notify("Please sign in again.", "warning", "Sign in needed");
         return null;
       }
 
@@ -1053,7 +1081,7 @@ Core FromOne rule:
       const message = getErrorMessage(error);
 
       console.error("Error saving website profile:", error);
-      alert(message);
+      notify(message, "error");
       return null;
     } finally {
       setSavingWebsite(false);
@@ -1062,7 +1090,7 @@ Core FromOne rule:
 
   const saveManualProfile = async () => {
     if (!manualBusinessName.trim() || !manualIndustry.trim()) {
-      alert("Please add at least the business name and industry.");
+      notify("Please add at least the business name and industry.", "warning", "Business details needed");
       return null;
     }
 
@@ -1073,7 +1101,7 @@ Core FromOne rule:
       const userId = user?.id || null;
 
       if (!userId) {
-        alert("Please sign in again.");
+        notify("Please sign in again.", "warning", "Sign in needed");
         return null;
       }
 
@@ -1123,7 +1151,7 @@ Core FromOne rule:
       const message = getErrorMessage(error);
 
       console.error("Error saving business details:", error);
-      alert(message);
+      notify(message, "error");
       return null;
     } finally {
       setSavingManualProfile(false);
@@ -1413,12 +1441,12 @@ Core FromOne rule:
     const userId = user?.id;
 
     if (!userId) {
-      alert("You need to sign in before saving posts.");
+      notify("You need to sign in before saving posts.", "warning", "Sign in needed");
       return;
     }
 
     if (selectedPlatforms.length === 0) {
-      alert("Please choose at least one platform.");
+      notify("Please choose at least one platform.", "warning", "Choose a platform");
       return;
     }
 
@@ -1434,7 +1462,7 @@ Core FromOne rule:
       : { postRecords: 0, contentDays: 0 };
 
     if (addToCampaignId && existingCampaignStats.contentDays + contentDayCount > 7) {
-      alert(
+      notify(
         `This weekly set already has ${existingCampaignStats.contentDays} content day${existingCampaignStats.contentDays === 1 ? "" : "s"}. You can add ${Math.max(7 - existingCampaignStats.contentDays, 0)} more to keep it as a 7-day week.`
       );
       return;
@@ -1511,7 +1539,7 @@ If uploads are supplied:
     const posts: GeneratedPost[] = (response.data.posts || []).slice(0, postCount);
 
     if (!posts.length) {
-      alert(response.data.error || "No posts were created.");
+      notify(response.data.error || "No posts were created.", "error", "No posts created");
       return;
     }
 
@@ -1560,7 +1588,7 @@ If uploads are supplied:
       if (existingCampaignError) throwSupabaseError(existingCampaignError);
 
       if (!existingCampaign) {
-        alert("Could not find the weekly post set to add to.");
+        notify("Could not find the weekly post set to add to.", "error", "Weekly set not found");
         return;
       }
 
@@ -1745,7 +1773,7 @@ If uploads are supplied:
       const activeClient = client;
 
       if (!activeClient?.business_name || !activeClient?.industry) {
-        alert("Set up the Business Profile in Settings first. Then come back here to upload media and create posts.");
+        notify("Set up the Business Profile in Settings first. Then come back here to upload media and create posts.", "warning", "Business Profile needed");
         setScanning(false);
         return;
       }
@@ -1763,7 +1791,7 @@ If uploads are supplied:
         console.error("Non-Axios weekly posts error:", error);
       }
 
-      alert(message);
+      notify(message, "error");
     } finally {
       setScanning(false);
     }
@@ -1780,7 +1808,7 @@ If uploads are supplied:
     );
 
     if (acceptedFiles.length === 0) {
-      alert("Please upload photos, videos, flyers, posters or offer graphics.");
+      notify("Please upload photos, videos, flyers, posters or offer graphics.", "warning", "Unsupported file type");
       return;
     }
 
@@ -1818,14 +1846,14 @@ If uploads are supplied:
     if (!ensureAccessAllowed()) return;
 
     if (!websiteUrl.trim()) {
-      alert("Please enter a website URL first.");
+      notify("Please enter a website URL first.", "warning", "Website needed");
       return;
     }
 
     const savedClient = await saveWebsiteToProfile();
 
     if (savedClient) {
-      alert("Website saved. Now upload photos, videos or flyers, then create posts.");
+      notify("Website saved. Now upload photos, videos or flyers, then create posts.", "success", "Website saved");
     }
   };
 
@@ -1833,7 +1861,7 @@ If uploads are supplied:
     setSelectedPlatforms((currentPlatforms) => {
       if (currentPlatforms.includes(platformName)) {
         if (currentPlatforms.length === 1) {
-          alert("Please choose at least one platform.");
+          notify("Please choose at least one platform.", "warning", "Choose a platform");
           return currentPlatforms;
         }
 
