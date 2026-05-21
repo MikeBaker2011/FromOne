@@ -12085,3 +12085,36 @@ main {
     font-size: 0.82rem !important;
   }
 }
+
+
+/* POSTS PAGE DOUBLE SCROLL FIX */
+
+.campaign-brand-shell,
+.posts-page {
+  min-height: auto;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.campaign-shell,
+.website-brief-card,
+.publishing-channels-section,
+.clean-selected-post,
+.selected-post-panel {
+  max-height: none;
+  overflow: visible;
+}
+
+/* Keep horizontal carousels hidden/controlled without creating a second page scrollbar. */
+.weekly-post-strip,
+.day-carousel-track,
+.no-scroll-carousel {
+  overflow-y: visible;
+}
+
+/* The browser should be the only vertical scroller for the app content. */
+.main-content {
+  overflow: visible;
+}
+
