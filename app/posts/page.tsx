@@ -333,6 +333,14 @@ export default function PostsPage() {
     });
   };
 
+  const closeConfirmDialog = () => {
+    setConfirmDialog(null);
+  };
+
+  const getCampaignDisplayName = () => {
+    return campaign?.name || campaign?.campaign_idea || "Selected weekly posts";
+  };
+
   const [posts, setPosts] = useState<any[]>([]);
   const [deletedPosts, setDeletedPosts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -390,6 +398,17 @@ export default function PostsPage() {
   const [reviewHoverRating, setReviewHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [savingReview, setSavingReview] = useState(false);
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    type: "deleteCampaign" | "removeMedia" | "deletePost";
+    title: string;
+    message: string;
+    confirmLabel: string;
+    danger?: boolean;
+    post?: any;
+  } | null>(null);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameCampaignValue, setRenameCampaignValue] = useState("");
 
   const queueRef = useRef<HTMLDivElement | null>(null);
   const postRef = useRef<HTMLElement | null>(null);
@@ -1037,11 +1056,18 @@ export default function PostsPage() {
     }
 
     const currentName = campaign.name || campaign.campaign_idea || "Untitled weekly posts";
-    const newName = prompt("Rename weekly posts:", currentName);
+    setRenameCampaignValue(currentName);
+    setRenameDialogOpen(true);
+  };
 
-    if (newName === null) return;
+  const confirmRenameSelectedCampaign = async () => {
+    if (!campaign?.id) {
+      notify("No weekly post set selected.", "warning", "No weekly set selected");
+      setRenameDialogOpen(false);
+      return;
+    }
 
-    const cleanName = newName.trim();
+    const cleanName = renameCampaignValue.trim();
 
     if (!cleanName) {
       notify("Name cannot be empty.", "warning", "Name needed");
@@ -1069,6 +1095,7 @@ export default function PostsPage() {
         ),
       );
 
+      setRenameDialogOpen(false);
       notify("Weekly posts renamed.", "success", "Weekly set renamed");
     } catch (error: any) {
       const message = getReadableError(error, "Error renaming weekly posts.");
@@ -1085,13 +1112,23 @@ export default function PostsPage() {
       return;
     }
 
-    const campaignName = campaign.name || campaign.campaign_idea || "Selected weekly posts";
+    setConfirmDialog({
+      type: "deleteCampaign",
+      title: posts.length === 0 ? "Delete empty weekly set?" : "Delete this weekly set?",
+      message: posts.length === 0
+        ? `${getCampaignDisplayName()} has no posts. Deleting it will free up a saved weekly set slot.`
+        : `This will delete ${getCampaignDisplayName()} and all posts inside it. This cannot be undone.`,
+      confirmLabel: posts.length === 0 ? "Delete empty set" : "Delete weekly set",
+      danger: true,
+    });
+  };
 
-    const confirmed = confirm(
-      `Delete this weekly post set and all its posts?\n\n${campaignName}\n\nThis cannot be undone.`,
-    );
-
-    if (!confirmed) return;
+  const confirmDeleteSelectedCampaign = async () => {
+    if (!campaign?.id) {
+      notify("No weekly post set selected.", "warning", "No weekly set selected");
+      closeConfirmDialog();
+      return;
+    }
 
     setDeletingCampaign(true);
 
@@ -1142,6 +1179,7 @@ export default function PostsPage() {
       setImprovementNote(null);
       setShowImproveTools(false);
       cancelEditingPost();
+      closeConfirmDialog();
 
       notify("Weekly posts deleted.", "success", "Weekly set deleted");
       await loadPageData();
@@ -1420,9 +1458,18 @@ export default function PostsPage() {
 
     if (!ensureAccessAllowed()) return;
 
-    const confirmed = confirm("Remove this media from the post?");
+    setConfirmDialog({
+      type: "removeMedia",
+      title: "Remove this media?",
+      message: "The post wording will stay saved, but the image, video or flyer will be removed from this post.",
+      confirmLabel: "Remove media",
+      danger: true,
+      post,
+    });
+  };
 
-    if (!confirmed) return;
+  const confirmRemoveMedia = async (post: any) => {
+    if (!post?.id) return;
 
     setRemovingMediaPostId(post.id);
 
@@ -1451,6 +1498,7 @@ export default function PostsPage() {
       if (error) throw error;
 
       updatePostLocally(post.id, updates);
+      closeConfirmDialog();
       notify("Media removed.", "success", "Media removed");
     } catch (error: any) {
       const message = getReadableError(error, "Error removing media.");
@@ -2179,13 +2227,22 @@ Important:
 
     const posted = isPostPosted(post);
 
-    const confirmMessage = posted
-      ? "Archive this posted item from the weekly queue? Publish history will stay saved."
-      : "Delete this post from the weekly queue? You can undo this straight after deleting.";
+    setConfirmDialog({
+      type: "deletePost",
+      title: posted ? "Archive this posted item?" : "Delete this post?",
+      message: posted
+        ? "This removes it from the weekly queue, but the publish history will stay saved."
+        : "This removes it from the weekly queue. You can undo this straight after deleting.",
+      confirmLabel: posted ? "Archive item" : "Delete post",
+      danger: true,
+      post,
+    });
+  };
 
-    const confirmed = confirm(confirmMessage);
+  const confirmDeletePostWithUndo = async (post: any) => {
+    if (!post?.id) return;
 
-    if (!confirmed) return;
+    const posted = isPostPosted(post);
 
     setDeletingPostId(post.id);
 
@@ -2218,6 +2275,7 @@ Important:
       setImprovementNote(null);
       setShowImproveTools(false);
       cancelEditingPost();
+      closeConfirmDialog();
 
       notify("Use Undo delete at the top of the page, or restore it later from Deleted posts.", "success", "Post deleted");
 
@@ -3310,6 +3368,164 @@ Important:
           onDismissReview={dismissReviewPrompt}
         />
       )}
+
+      {renameDialogOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rename-weekly-set-title"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10000,
+            display: "grid",
+            placeItems: "center",
+            padding: 18,
+            background: "rgba(2, 6, 23, 0.72)",
+            backdropFilter: "blur(14px)",
+          }}
+        >
+          <div
+            className="premium-card"
+            style={{
+              width: "min(520px, 100%)",
+              borderRadius: 30,
+              border: "1px solid rgba(255, 212, 59, 0.26)",
+              boxShadow: "0 34px 110px rgba(0,0,0,0.48)",
+            }}
+          >
+            <div className="page-eyebrow">Rename weekly set</div>
+            <h2 id="rename-weekly-set-title" style={{ margin: "4px 0 10px" }}>
+              Give this week a clearer name.
+            </h2>
+            <p style={{ margin: "0 0 16px", color: "var(--muted)" }}>
+              This only changes the saved set name. Your posts and schedules stay the same.
+            </p>
+
+            <input
+              className="input"
+              value={renameCampaignValue}
+              onChange={(event) => setRenameCampaignValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  confirmRenameSelectedCampaign();
+                }
+
+                if (event.key === "Escape") {
+                  setRenameDialogOpen(false);
+                }
+              }}
+              autoFocus
+              style={{
+                width: "100%",
+                minHeight: 52,
+                borderRadius: 16,
+                marginBottom: 16,
+              }}
+            />
+
+            <div
+              className="button-row"
+              style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}
+            >
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setRenameDialogOpen(false)}
+                disabled={renamingCampaign}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmRenameSelectedCampaign}
+                disabled={renamingCampaign}
+              >
+                {renamingCampaign ? "Saving..." : "Save name"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDialog && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-action-title"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10000,
+            display: "grid",
+            placeItems: "center",
+            padding: 18,
+            background: "rgba(2, 6, 23, 0.72)",
+            backdropFilter: "blur(14px)",
+          }}
+        >
+          <div
+            className="premium-card"
+            style={{
+              width: "min(520px, 100%)",
+              borderRadius: 30,
+              border: confirmDialog.danger
+                ? "1px solid rgba(255, 95, 109, 0.34)"
+                : "1px solid rgba(255, 212, 59, 0.26)",
+              boxShadow: "0 34px 110px rgba(0,0,0,0.48)",
+            }}
+          >
+            <div className="page-eyebrow">
+              {confirmDialog.danger ? "Please confirm" : "Confirm action"}
+            </div>
+            <h2 id="confirm-action-title" style={{ margin: "4px 0 10px" }}>
+              {confirmDialog.title}
+            </h2>
+            <p style={{ margin: "0 0 20px", color: "var(--muted)", lineHeight: 1.55 }}>
+              {confirmDialog.message}
+            </p>
+
+            <div
+              className="button-row"
+              style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}
+            >
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={closeConfirmDialog}
+                disabled={deletingCampaign || deletingPostId === confirmDialog.post?.id || removingMediaPostId === confirmDialog.post?.id}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={confirmDialog.danger ? "secondary-button danger-button" : undefined}
+                onClick={() => {
+                  if (confirmDialog.type === "deleteCampaign") {
+                    confirmDeleteSelectedCampaign();
+                    return;
+                  }
+
+                  if (confirmDialog.type === "removeMedia") {
+                    confirmRemoveMedia(confirmDialog.post);
+                    return;
+                  }
+
+                  if (confirmDialog.type === "deletePost") {
+                    confirmDeletePostWithUndo(confirmDialog.post);
+                  }
+                }}
+                disabled={deletingCampaign || deletingPostId === confirmDialog.post?.id || removingMediaPostId === confirmDialog.post?.id}
+              >
+                {deletingCampaign || deletingPostId === confirmDialog.post?.id || removingMediaPostId === confirmDialog.post?.id
+                  ? "Working..."
+                  : confirmDialog.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
