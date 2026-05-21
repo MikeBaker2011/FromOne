@@ -42,6 +42,18 @@ function cleanText(value: unknown) {
   return String(value || '').trim();
 }
 
+function getIsoDateFromValue(value: unknown) {
+  const cleanValue = cleanText(value);
+
+  if (!cleanValue) return null;
+
+  const date = new Date(cleanValue);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toISOString();
+}
+
 function getHeader(request: NextRequest, name: string) {
   return cleanText(request.headers.get(name));
 }
@@ -172,16 +184,24 @@ function mapEventToBillingStatus(eventType: string, resourceStatus?: string | nu
     cleanEventType === 'BILLING.SUBSCRIPTION.ACTIVATED' ||
     cleanEventType === 'BILLING.SUBSCRIPTION.RE-ACTIVATED' ||
     cleanEventType === 'PAYMENT.SALE.COMPLETED' ||
-    cleanEventType === 'PAYMENT.CAPTURE.COMPLETED'
+    cleanEventType === 'PAYMENT.CAPTURE.COMPLETED' ||
+    cleanResourceStatus === 'ACTIVE'
   ) {
     return 'active';
   }
 
   if (
     cleanEventType === 'BILLING.SUBSCRIPTION.CANCELLED' ||
-    cleanEventType === 'BILLING.SUBSCRIPTION.EXPIRED'
+    cleanResourceStatus === 'CANCELLED'
   ) {
     return 'cancelled';
+  }
+
+  if (
+    cleanEventType === 'BILLING.SUBSCRIPTION.EXPIRED' ||
+    cleanResourceStatus === 'EXPIRED'
+  ) {
+    return 'expired';
   }
 
   if (
@@ -200,6 +220,39 @@ function mapEventToBillingStatus(eventType: string, resourceStatus?: string | nu
   }
 
   return null;
+}
+
+function getAccessStatusForBillingStatus(billingStatus: string) {
+  if (billingStatus === 'active') return 'active';
+
+  if (billingStatus === 'cancelled') {
+    // The subscription has been cancelled for renewal. Keep the user out of hard-lock
+    // unless a later expiry/payment event marks the account expired, suspended or past_due.
+    return 'cancelled';
+  }
+
+  return 'locked';
+}
+
+function getCancellationDate({
+  event,
+  billingStatus,
+  fallbackIso,
+}: {
+  event: PayPalWebhookEvent;
+  billingStatus: string;
+  fallbackIso: string;
+}) {
+  if (!['cancelled', 'expired', 'suspended'].includes(billingStatus)) return null;
+
+  const resource = event.resource || {};
+
+  return (
+    getIsoDateFromValue(resource.status_update_time) ||
+    getIsoDateFromValue(resource.update_time) ||
+    getIsoDateFromValue(resource.time) ||
+    fallbackIso
+  );
 }
 
 async function findUserIdForWebhook({
@@ -264,15 +317,26 @@ async function updateAccessForSubscription({
   }
 
   const nowIso = new Date().toISOString();
-  const cancelledAt = ['cancelled', 'suspended'].includes(billingStatus) ? nowIso : null;
+  const cancelledAt = getCancellationDate({
+    event,
+    billingStatus,
+    fallbackIso: nowIso,
+  });
 
   const billingUpdates: Record<string, any> = {
     user_id: userId,
     plan: 'starter',
     status: billingStatus,
-    paypal_subscription_id: subscriptionId || null,
     updated_at: nowIso,
   };
+
+  if (subscriptionId) {
+    billingUpdates.paypal_subscription_id = subscriptionId;
+  }
+
+  if (billingStatus === 'active') {
+    billingUpdates.cancelled_at = null;
+  }
 
   if (cancelledAt) {
     billingUpdates.cancelled_at = cancelledAt;
@@ -288,7 +352,7 @@ async function updateAccessForSubscription({
     throw billingError;
   }
 
-  const accessStatus = billingStatus === 'active' ? 'active' : 'locked';
+  const accessStatus = getAccessStatusForBillingStatus(billingStatus);
 
   const { error: accessError } = await supabase
     .from('user_access')
