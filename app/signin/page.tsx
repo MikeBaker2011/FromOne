@@ -33,10 +33,10 @@ export default function SignInPage() {
 
   const getEmailRedirectUrl = () => {
     if (typeof window === 'undefined') {
-      return 'https://fromone.co.uk/dashboard';
+      return 'https://fromone.co.uk/settings?setup=business';
     }
 
-    return `${window.location.origin}/dashboard`;
+    return `${window.location.origin}/settings?setup=business`;
   };
 
   const saveRememberedEmail = (cleanEmail: string) => {
@@ -45,6 +45,34 @@ export default function SignInPage() {
     } else {
       localStorage.removeItem(REMEMBER_EMAIL_KEY);
     }
+  };
+
+  const getPostLoginDestination = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id || null;
+
+    if (!userId) {
+      return '/dashboard';
+    }
+
+    const { data, error } = await supabase
+      .from('business_profiles')
+      .select('id, business_name, industry')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Business Profile check error:', error.message);
+      return '/dashboard';
+    }
+
+    if (!data?.id || !data?.business_name || !data?.industry) {
+      return '/settings?setup=business';
+    }
+
+    return '/dashboard';
   };
 
   const handleAuth = async () => {
@@ -76,7 +104,9 @@ export default function SignInPage() {
         }
 
         saveRememberedEmail(cleanEmail);
-        router.push('/dashboard');
+
+        const destination = await getPostLoginDestination();
+        router.push(destination);
       } else {
         const { error } = await supabase.auth.signUp({
           email: cleanEmail,
@@ -92,7 +122,7 @@ export default function SignInPage() {
 
         saveRememberedEmail(cleanEmail);
         setAuthMessage(
-          'Account created. Please check your email to verify your account before signing in.'
+          'Account created. Please check your email to verify your account. After verification, you will be sent to Business Profile setup.'
         );
         setMode('signin');
       }
@@ -182,8 +212,8 @@ export default function SignInPage() {
             </h1>
 
             <p className="signin-main-text">
-              Access your campaigns, business profiles, scheduled posts, and 7-day
-              demo trial from one simple workspace.
+              Sign in to manage your Business Profile, upload media, create scheduled posts,
+              and autopost to Facebook and Instagram.
             </p>
           </div>
 
@@ -196,14 +226,14 @@ export default function SignInPage() {
 
             <div className="signin-mini-card">
               <span>02</span>
-              <strong>Workspace</strong>
-              <p>Save business profiles, campaigns, and posts.</p>
+              <strong>Business setup</strong>
+              <p>New users start by setting up their Business Profile.</p>
             </div>
 
             <div className="signin-mini-card">
               <span>03</span>
-              <strong>Trial</strong>
-              <p>Use your 7-day demo or continue with a plan.</p>
+              <strong>Weekly posts</strong>
+              <p>Upload media and turn it into scheduled posts.</p>
             </div>
           </div>
         </section>
@@ -281,8 +311,8 @@ export default function SignInPage() {
             {loading
               ? 'Please wait...'
               : mode === 'signin'
-                ? 'Sign In'
-                : 'Create Account'}
+                ? 'Sign in'
+                : 'Create account'}
           </button>
 
           {mode === 'signin' && (
