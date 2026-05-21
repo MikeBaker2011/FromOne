@@ -1606,7 +1606,7 @@ If uploads are supplied:
         hashtags: post.hashtags,
         platform: post.platform,
         type: source,
-        scheduled_day: post.day || `Post ${postIndex + 1}`,
+        scheduled_day: addToCampaignId ? `Post ${postIndex + 1}` : post.day || `Post ${postIndex + 1}`,
         scheduled_at: suggestedPublishTime.toISOString(),
         scheduled_publish_at: suggestedPublishTime.toISOString(),
         publish_status: "scheduled",
