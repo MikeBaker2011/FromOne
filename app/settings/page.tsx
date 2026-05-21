@@ -92,22 +92,38 @@ export default function SettingsPage() {
     disconnectingConnectionId === primaryMetaConnection?.id ||
     disconnectingConnectionId === 'all';
 
+  const profileHasStarted = Boolean(
+    websiteUrl.trim() ||
+      businessName.trim() ||
+      industry.trim() ||
+      location.trim() ||
+      services.trim() ||
+      targetAudience.trim() ||
+      mainOffer.trim()
+  );
+
   const profileCompletionItems = useMemo(
     () => [
-      { label: 'Website', ready: Boolean(websiteUrl.trim()) },
+      {
+        label: 'Website or business details',
+        ready: Boolean(websiteUrl.trim() || businessName.trim()),
+      },
       { label: 'Business name', ready: Boolean(businessName.trim()) },
       { label: 'Industry', ready: Boolean(industry.trim()) },
       { label: 'Location', ready: Boolean(location.trim()) },
       { label: 'Services', ready: Boolean(services.trim()) },
-      { label: 'Tone', ready: Boolean(toneOfVoice.trim()) },
+      { label: 'Customers', ready: Boolean(targetAudience.trim()) },
     ],
-    [websiteUrl, businessName, industry, location, services, toneOfVoice]
+    [websiteUrl, businessName, industry, location, services, targetAudience]
   );
 
-  const completedProfileItems = profileCompletionItems.filter((item) => item.ready).length;
-  const profileCompletionPercent = Math.round(
-    (completedProfileItems / profileCompletionItems.length) * 100
-  );
+  const completedProfileItems = profileHasStarted
+    ? profileCompletionItems.filter((item) => item.ready).length
+    : 0;
+
+  const profileCompletionPercent = profileHasStarted
+    ? Math.round((completedProfileItems / profileCompletionItems.length) * 100)
+    : 0;
 
   useEffect(() => {
     loadBusinessProfile();
@@ -599,9 +615,9 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="card" style={{ padding: 14 }}>
-                    <strong>Tone</strong>
+                    <strong>Customers</strong>
                     <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                      {toneOfVoice || 'Professional'}
+                      {targetAudience || 'Not added yet'}
                     </p>
                   </div>
                 </div>
