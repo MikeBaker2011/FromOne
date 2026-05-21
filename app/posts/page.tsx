@@ -2555,7 +2555,9 @@ Important:
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 320px))",
+                justifyContent: "start",
+                alignItems: "stretch",
                 gap: 16,
               }}
             >
@@ -2752,47 +2754,74 @@ Important:
                   </button>
                 );
               })}
-            </div>
 
-            {sortedPosts.length > 0 && sortedPosts.length < 7 && (
-              <div
-                className="premium-card"
-                style={{
-                  marginTop: 18,
-                  borderRadius: 28,
-                  border: "1px solid rgba(255, 212, 59, 0.22)",
-                  background:
-                    "radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.035))",
-                  display: "grid",
-                  gridTemplateColumns: "minmax(0, 1fr) auto",
-                  gap: 18,
-                  alignItems: "center",
-                }}
-              >
-                <div>
-                  <div className="page-eyebrow">Want more posts?</div>
-                  <h2 style={{ margin: "4px 0 8px" }}>Add more media to this week.</h2>
-                  <p style={{ margin: 0, color: "var(--muted)", maxWidth: 760 }}>
-                    Upload more photos, flyers or videos from Dashboard and FromOne will create more scheduled posts for the business.
-                  </p>
-                </div>
-
+              {sortedPosts.length > 0 && sortedPosts.length < 7 && (
                 <button
                   type="button"
-                  className="dashboard-platform-create-button"
                   onClick={() => {
                     window.location.href = "/dashboard";
                   }}
+                  className="fromone-simple-post-card"
                   style={{
-                    minHeight: 48,
-                    borderRadius: 16,
-                    whiteSpace: "nowrap",
+                    minHeight: 360,
+                    textAlign: "left",
+                    borderRadius: 26,
+                    padding: 22,
+                    overflow: "hidden",
+                    background:
+                      "radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 36%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
+                    border: "1px solid rgba(255, 212, 59, 0.24)",
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    gap: 18,
                   }}
                 >
-                  Add more media
+                  <div>
+                    <div
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 18,
+                        display: "grid",
+                        placeItems: "center",
+                        background: "rgba(255, 212, 59, 0.14)",
+                        border: "1px solid rgba(255, 212, 59, 0.22)",
+                        color: "#ffd43b",
+                        fontSize: 30,
+                        fontWeight: 900,
+                        marginBottom: 18,
+                      }}
+                    >
+                      +
+                    </div>
+
+                    <div className="page-eyebrow">Add more</div>
+                    <h3 style={{ margin: "6px 0 8px", fontSize: 24, color: "#fff" }}>
+                      Create more posts
+                    </h3>
+                    <p style={{ margin: 0, color: "rgba(248,250,252,0.76)", lineHeight: 1.45 }}>
+                      Upload more photos, flyers or videos and FromOne will turn them into more scheduled posts.
+                    </p>
+                  </div>
+
+                  <span
+                    className="dashboard-platform-create-button"
+                    style={{
+                      minHeight: 46,
+                      borderRadius: 16,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                    }}
+                  >
+                    Add media
+                  </span>
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </section>
 
           {deletedPosts.length > 0 && (
