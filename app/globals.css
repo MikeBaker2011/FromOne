@@ -1856,6 +1856,22 @@ select.input {
 }
 
 
+/* PUBLIC NAV COMPACT WIDTH */
+
+.sales-nav.public-nav {
+  width: min(1180px, calc(100% - 32px));
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 720px) {
+  .sales-nav.public-nav {
+    width: min(100% - 24px, 1180px);
+  }
+}
+
+
 /* RESPONSIVE */
 
 @media (max-width: 1280px) {
