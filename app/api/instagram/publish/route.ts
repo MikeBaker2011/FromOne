@@ -57,6 +57,72 @@ function getSupabaseAdmin() {
   });
 }
 
+function isFutureDate(value?: string | null) {
+  if (!value) return false;
+  return new Date(value).getTime() > Date.now();
+}
+
+function isPaidSubscription(status?: string | null) {
+  return ['active', 'paid', 'trialing'].includes(cleanText(status).toLowerCase());
+}
+
+async function userHasActiveAccess(userId?: string | null) {
+  if (!userId) {
+    return {
+      allowed: false,
+      message: 'Could not verify account access for this Instagram publish.',
+    };
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from('user_access')
+    .select('subscription_status, trial_ends_at, extension_ends_at')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      allowed: false,
+      message: `Could not verify account access: ${error.message}`,
+    };
+  }
+
+  if (!data) {
+    return {
+      allowed: false,
+      message: 'No active account access record found.',
+    };
+  }
+
+  if (isPaidSubscription(data.subscription_status)) {
+    return {
+      allowed: true,
+      message: 'Subscription active.',
+    };
+  }
+
+  if (isFutureDate(data.extension_ends_at)) {
+    return {
+      allowed: true,
+      message: 'Manual extension active.',
+    };
+  }
+
+  if (isFutureDate(data.trial_ends_at)) {
+    return {
+      allowed: true,
+      message: 'Demo active.',
+    };
+  }
+
+  return {
+    allowed: false,
+    message: 'Your demo has ended or your subscription is not active. Instagram publishing is locked until access is active.',
+  };
+}
+
 function cleanText(value: unknown) {
   return String(value || '').trim();
 }
@@ -566,6 +632,44 @@ export async function POST(req: NextRequest) {
 
     const postId = cleanText(body.postId || body.campaignPostId);
     const userId = await findUserIdForPost({ supabase: getSupabaseAdmin(), body });
+
+    const access = await userHasActiveAccess(userId);
+
+    if (!access.allowed) {
+      if (postId) {
+        await getSupabaseAdmin()
+          .from('campaign_posts')
+          .update({
+            publish_status: 'failed',
+            publish_error: access.message,
+            status: 'failed',
+          })
+          .eq('id', postId);
+      }
+
+      await insertPublishLog({
+        userId,
+        postId,
+        platform: 'instagram',
+        action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
+        status: 'failed',
+        message: 'Instagram publish blocked.',
+        error: access.message,
+        credentialSource: null,
+        socialConnectionId: null,
+        metadata: {
+          reason: 'access_inactive',
+        },
+      });
+
+      return NextResponse.json(
+        {
+          error: access.message,
+        },
+        { status: 403 }
+      );
+    }
+
     const caption = buildCaption(body);
     let mediaUrl = cleanText(body.mediaUrl || body.media_url);
     const mediaType = cleanText(body.mediaType || body.media_type);
@@ -576,7 +680,7 @@ export async function POST(req: NextRequest) {
         userId,
         postId,
         platform: 'instagram',
-        action: 'manual_publish',
+        action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
         status: 'failed',
         message: 'Instagram publish failed.',
         error: 'Instagram post wording is required.',
@@ -600,7 +704,7 @@ export async function POST(req: NextRequest) {
         userId,
         postId,
         platform: 'instagram',
-        action: 'manual_publish',
+        action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
         status: 'failed',
         message: 'Instagram publish failed.',
         error: 'Instagram needs an image or video before publishing.',
@@ -624,7 +728,7 @@ export async function POST(req: NextRequest) {
         userId,
         postId,
         platform: 'instagram',
-        action: 'manual_publish',
+        action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
         status: 'failed',
         message: 'Instagram publish failed.',
         error: 'Instagram needs an image or video before publishing.',
@@ -681,7 +785,7 @@ export async function POST(req: NextRequest) {
         userId,
         postId,
         platform: 'instagram',
-        action: 'manual_publish',
+        action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
         status: 'failed',
         message: 'Instagram published but did not return a post ID.',
         error: 'Missing Instagram post ID.',
@@ -713,7 +817,7 @@ export async function POST(req: NextRequest) {
       userId,
       postId,
       platform: 'instagram',
-      action: 'manual_publish',
+      action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
       status: 'posted',
       message: 'Instagram posted successfully.',
       error: null,
@@ -783,7 +887,7 @@ export async function POST(req: NextRequest) {
       userId,
       postId,
       platform: 'instagram',
-      action: 'manual_publish',
+      action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
       status: 'failed',
       message: 'Instagram publish failed.',
       error: friendlyErrorMessage,
