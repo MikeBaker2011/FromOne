@@ -176,6 +176,10 @@ export default function PostActionModal({
   const hasSchedule = Boolean(selectedPost.scheduled_publish_at);
   const posted = isPostPosted(selectedPost);
   const isPublishing = publishingPostId === selectedPost.id;
+  const directFacebookReady = isFacebookPost && canDirectPublishToFacebook(selectedPost);
+  const directInstagramReady = isInstagramPost && canDirectPublishToInstagram(selectedPost);
+  const directAutoPublishReady = directFacebookReady || directInstagramReady;
+  const needsMetaConnection = canAutoPublish && !directAutoPublishReady;
   const isRescanning =
     rescanningMediaPostId === selectedPost.id ||
     (rewritingPost && rewritingAction === 'media_rescan');
@@ -185,12 +189,17 @@ export default function PostActionModal({
   const rescanUsageLabel = isVideoMedia ? videoRescanUsageLabel : mediaRescanUsageLabel;
 
   const handlePrimaryPublish = () => {
-    if (canDirectPublishToFacebook(selectedPost)) {
+    if (needsMetaConnection) {
+      window.location.href = '/settings?setup=business';
+      return;
+    }
+
+    if (directFacebookReady) {
       onPublishToFacebook(selectedPost);
       return;
     }
 
-    if (canDirectPublishToInstagram(selectedPost)) {
+    if (directInstagramReady) {
       onPublishToInstagram(selectedPost);
       return;
     }
@@ -207,14 +216,19 @@ export default function PostActionModal({
     ? 'Publishing...'
     : posted
       ? 'Already posted'
-      : canAutoPublish
-        ? `Publish to ${autoPublishPlatformName}`
-        : isTikTokPost
-          ? 'Copy TikTok post'
-          : `Copy for ${platformName}`;
+      : needsMetaConnection
+        ? 'Connect Facebook & Instagram'
+        : canAutoPublish
+          ? `Publish to ${autoPublishPlatformName}`
+          : isTikTokPost
+            ? 'Copy TikTok post'
+            : `Copy for ${platformName}`;
 
   const primaryPublishDisabled =
-    posted || isPublishing || needsMedia || instagramHasFlyerOnly || isRescanning;
+    posted ||
+    isPublishing ||
+    isRescanning ||
+    (!needsMetaConnection && (needsMedia || instagramHasFlyerOnly));
 
   const statusLabel = getPostStatus(selectedPost) === 'Reminder set' ? 'Scheduled' : getPostStatus(selectedPost);
   const scheduleActionLabel = canAutoPublish
@@ -262,12 +276,18 @@ export default function PostActionModal({
           }}
         >
           <strong>
-            {canAutoPublish ? 'Review, edit, then publish now or let FromOne autopost.' : 'Review, copy, then publish manually.'}
+            {needsMetaConnection
+              ? 'Connect Facebook and Instagram to enable publishing and autoposting.'
+              : canAutoPublish
+                ? 'Review, edit, then publish now or let FromOne autopost.'
+                : 'Review, copy, then publish manually.'}
           </strong>
           <p>
-            {canAutoPublish
-              ? 'Facebook and Instagram can use the planned time once the account is connected.'
-              : 'TikTok stays manual for now, so copy the post and open TikTok when ready.'}
+            {needsMetaConnection
+              ? 'You can still review and edit this post. Connect Meta in Settings when you are ready to publish or autopost.'
+              : canAutoPublish
+                ? 'Facebook and Instagram can use the planned time once the account is connected.'
+                : 'TikTok stays manual for now, so copy the post and open TikTok when ready.'}
           </p>
         </div>
 
@@ -565,15 +585,26 @@ export default function PostActionModal({
             </div>
           )}
 
+          {needsMetaConnection && (
+            <div className="fromone-simple-note">
+              <strong>Publishing is not connected yet</strong>
+              <p>
+                Connect Facebook and Instagram in Settings to enable publish now and scheduled autoposting.
+              </p>
+            </div>
+          )}
+
           <div className="fromone-simple-publish-card">
             <div>
               <strong>{platformName}</strong>
               <p>
                 {posted
                   ? `${platformName} has been marked as posted.`
-                  : canAutoPublish
-                    ? `${platformName} can publish now, or FromOne can autopost at the planned time.`
-                    : isTikTokPost
+                  : needsMetaConnection
+                    ? `${platformName} is not connected yet. Connect Facebook and Instagram in Settings to publish now or autopost at the planned time.`
+                    : canAutoPublish
+                      ? `${platformName} can publish now, or FromOne can autopost at the planned time.`
+                      : isTikTokPost
                       ? 'Copy the post, open TikTok, then paste and publish manually.'
                       : `Copy the post and open ${platformName}.`}
               </p>
