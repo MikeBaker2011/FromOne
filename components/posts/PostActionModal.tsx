@@ -585,15 +585,6 @@ export default function PostActionModal({
             </div>
           )}
 
-          {needsMetaConnection && (
-            <div className="fromone-simple-note">
-              <strong>Publishing is not connected yet</strong>
-              <p>
-                Connect Facebook and Instagram in Settings to enable publish now and scheduled autoposting.
-              </p>
-            </div>
-          )}
-
           <div className="fromone-simple-publish-card">
             <div>
               <strong>{platformName}</strong>
