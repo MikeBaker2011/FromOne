@@ -113,8 +113,13 @@ export default function SettingsPage() {
     loadBusinessProfile();
 
     const params = new URLSearchParams(window.location.search);
+    const setup = params.get('setup');
     const metaConnected = params.get('meta_connected');
     const metaError = params.get('meta_error');
+
+    if (setup === 'business') {
+      setShowBusinessDetails(true);
+    }
 
     if (metaConnected === 'true') {
       alert('Facebook and Instagram connected.');
@@ -375,7 +380,10 @@ export default function SettingsPage() {
       setBrandSummary(data.brand_summary || '');
     }
 
-    setShowBusinessDetails(false);
+    const params = new URLSearchParams(window.location.search);
+    const setup = params.get('setup');
+
+    setShowBusinessDetails(setup === 'business');
     setShowBrandDetails(false);
     setLoading(false);
   };
