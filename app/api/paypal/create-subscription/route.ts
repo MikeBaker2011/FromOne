@@ -60,6 +60,68 @@ function getSupabaseAdmin() {
   });
 }
 
+
+async function getExistingBilling(userId: string) {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from('user_billing')
+    .select('plan, status, paypal_subscription_id, trial_ends_at, manual_access_until')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+function hasActiveTrial(billing: any) {
+  if (!billing?.trial_ends_at) return false;
+
+  const trialEndsAt = new Date(billing.trial_ends_at);
+
+  return (
+    billing.plan === 'demo' &&
+    billing.status === 'trialing' &&
+    trialEndsAt.getTime() > Date.now()
+  );
+}
+
+function hasManualAccess(billing: any) {
+  if (!billing?.manual_access_until) return false;
+
+  const manualAccessUntil = new Date(billing.manual_access_until);
+
+  return billing.status === 'manual' && manualAccessUntil.getTime() > Date.now();
+}
+
+function validateCanCreateSubscription(billing: any) {
+  if (!billing) return;
+
+  const plan = String(billing.plan || 'demo');
+  const status = String(billing.status || 'trialing');
+  const hasPayPalSubscription = Boolean(cleanText(billing.paypal_subscription_id));
+
+  if ((plan === 'starter' || plan === 'pro') && status === 'active' && hasPayPalSubscription) {
+    throw new Error('You already have an active Starter subscription.');
+  }
+
+  if (status === 'pending_payment' && hasPayPalSubscription) {
+    throw new Error(
+      'You already have a pending PayPal checkout. Complete it or cancel the pending payment first.'
+    );
+  }
+
+  if (hasManualAccess(billing)) {
+    throw new Error('Manual account access is currently active. Contact support before changing billing.');
+  }
+
+  // Active trial users can start checkout. PayPal confirmation still controls paid access.
+  if (hasActiveTrial(billing)) return;
+}
+
 async function getSignedInUser(request: NextRequest) {
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing Supabase public environment variables.');
@@ -208,6 +270,7 @@ async function savePendingSubscription({
       plan: 'starter',
       status: 'pending_payment',
       paypal_subscription_id: subscriptionId,
+      cancelled_at: null,
       updated_at: nowIso,
     },
     {
@@ -243,6 +306,9 @@ export async function POST(request: NextRequest) {
     const userEmail = cleanText(user.email);
     const siteBaseUrl = getSiteBaseUrl(request);
 
+    const existingBilling = await getExistingBilling(userId);
+    validateCanCreateSubscription(existingBilling);
+
     const accessToken = await getPayPalAccessToken();
 
     const subscription = await createPayPalSubscription({
@@ -264,14 +330,23 @@ export async function POST(request: NextRequest) {
       approve_url: subscription.approveUrl,
     });
   } catch (error: any) {
-    console.error('Create PayPal subscription error:', error?.message || error);
+    const message = error?.message || 'Could not create PayPal subscription.';
+
+    console.error('Create PayPal subscription error:', message);
+
+    const status =
+      message.includes('sign in') || message.includes('auth token')
+        ? 401
+        : message.includes('already have')
+          ? 409
+          : 500;
 
     return NextResponse.json(
       {
         ok: false,
-        error: error?.message || 'Could not create PayPal subscription.',
+        error: message,
       },
-      { status: 500 }
+      { status }
     );
   }
 }
