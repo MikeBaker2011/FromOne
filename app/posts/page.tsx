@@ -2730,7 +2730,7 @@ Important:
                       <div
                         style={{
                           display: "flex",
-                          gap: 8,
+                          gap: 6,
                           flexWrap: "wrap",
                         }}
                       >
@@ -2738,36 +2738,62 @@ Important:
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            minHeight: 32,
-                            padding: "7px 12px",
-                            borderRadius: 999,
-                            background: "rgba(255,255,255,0.08)",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            color: "rgba(248,250,252,0.9)",
-                            fontSize: 13,
-                            fontWeight: 900,
+                            gap: 6,
+                            minHeight: 24,
+                            padding: "4px 9px",
+                            borderRadius: 10,
+                            background: "rgba(255,255,255,0.055)",
+                            border: "1px solid rgba(255,255,255,0.09)",
+                            color: "rgba(248,250,252,0.78)",
+                            fontSize: 11,
+                            fontWeight: 850,
                             lineHeight: 1,
+                            letterSpacing: "0.01em",
                           }}
                         >
+                          <span
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              background: "#ffd43b",
+                              boxShadow: "0 0 12px rgba(255, 212, 59, 0.34)",
+                            }}
+                          />
                           {platformName}
                         </span>
                         <span
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            minHeight: 32,
-                            padding: "7px 12px",
-                            borderRadius: 999,
-                            background: "rgba(255,255,255,0.08)",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            color: "rgba(248,250,252,0.9)",
-                            fontSize: 13,
-                            fontWeight: 900,
+                            gap: 6,
+                            minHeight: 24,
+                            padding: "4px 9px",
+                            borderRadius: 10,
+                            background: hasMedia
+                              ? "rgba(61, 220, 151, 0.08)"
+                              : "rgba(255, 212, 59, 0.075)",
+                            border: hasMedia
+                              ? "1px solid rgba(61, 220, 151, 0.14)"
+                              : "1px solid rgba(255, 212, 59, 0.14)",
+                            color: "rgba(248,250,252,0.78)",
+                            fontSize: 11,
+                            fontWeight: 850,
                             lineHeight: 1,
+                            letterSpacing: "0.01em",
                           }}
                         >
+                          <span
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              background: hasMedia ? "#3ddc97" : "#ffd43b",
+                              boxShadow: hasMedia
+                                ? "0 0 12px rgba(61, 220, 151, 0.28)"
+                                : "0 0 12px rgba(255, 212, 59, 0.28)",
+                            }}
+                          />
                           {hasMedia ? "Media ready" : "Needs media"}
                         </span>
                       </div>
@@ -2864,34 +2890,52 @@ Important:
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
-                            minHeight: 30,
-                            padding: "7px 11px",
-                            borderRadius: 999,
-                            background: "rgba(255,255,255,0.08)",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            color: "rgba(248,250,252,0.82)",
-                            fontSize: 12,
-                            fontWeight: 900,
+                            gap: 6,
+                            minHeight: 24,
+                            padding: "4px 9px",
+                            borderRadius: 10,
+                            background: "rgba(255,255,255,0.055)",
+                            border: "1px solid rgba(255,255,255,0.09)",
+                            color: "rgba(248,250,252,0.74)",
+                            fontSize: 11,
+                            fontWeight: 850,
                             lineHeight: 1,
                           }}
                         >
+                          <span
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              background: "#ffd43b",
+                            }}
+                          />
                           Same weekly set
                         </span>
                         <span
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
-                            minHeight: 30,
-                            padding: "7px 11px",
-                            borderRadius: 999,
-                            background: "rgba(255,255,255,0.08)",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            color: "rgba(248,250,252,0.82)",
-                            fontSize: 12,
-                            fontWeight: 900,
+                            gap: 6,
+                            minHeight: 24,
+                            padding: "4px 9px",
+                            borderRadius: 10,
+                            background: "rgba(255,255,255,0.055)",
+                            border: "1px solid rgba(255,255,255,0.09)",
+                            color: "rgba(248,250,252,0.74)",
+                            fontSize: 11,
+                            fontWeight: 850,
                             lineHeight: 1,
                           }}
                         >
+                          <span
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              background: "#ffd43b",
+                            }}
+                          />
                           Staggered times
                         </span>
                       </div>
