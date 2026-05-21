@@ -4609,7 +4609,6 @@ select.input {
 }
 
 
-
 /* PUBLIC PAGE WIDTH + NAV LOCK */
 
 .sales-hero,
@@ -12070,3 +12069,75 @@ main {
     font-size: 0.82rem !important;
   }
 }
+
+
+/* PUBLIC SITE WIDTH STANDARD - FINAL OVERRIDE
+   Product Updates is the source of truth for public page width. */
+
+:root {
+  --public-page-width: 1180px;
+  --public-page-gutter: 32px;
+}
+
+.sales-nav.public-nav {
+  width: min(var(--public-page-width), calc(100vw - var(--public-page-gutter))) !important;
+  max-width: var(--public-page-width) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Keep public page content aligned to the same width as Product Updates. */
+.legal-page > .page-header,
+.legal-page > .premium-card,
+.legal-page > .legal-header,
+.legal-page > .legal-card,
+.tutorial-hero,
+.tutorial-page > .page-header,
+.tutorial-page > .premium-card,
+.product-updates-page > .page-header,
+.product-updates-page > .premium-card,
+.product-updates-page > section,
+.sales-page > .page-header,
+.sales-page > .premium-card {
+  width: min(var(--public-page-width), calc(100vw - var(--public-page-gutter)));
+  max-width: var(--public-page-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Public footers should align with the same public page width too. */
+.legal-page > footer,
+.tutorial-page > footer,
+.product-updates-page > footer,
+.sales-page > footer,
+.public-footer {
+  width: min(var(--public-page-width), calc(100vw - var(--public-page-gutter)));
+  max-width: var(--public-page-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Undo any accidental outer-page width lock that makes nav/content shrink differently page by page. */
+.legal-page,
+.tutorial-page,
+.product-updates-page,
+.sales-page {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --public-page-gutter: 24px;
+  }
+
+  .sales-nav.public-nav {
+    min-height: 74px;
+  }
+}
+
