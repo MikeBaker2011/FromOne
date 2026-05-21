@@ -76,6 +76,7 @@ export default function SettingsPage() {
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
   const [showBrandDetails, setShowBrandDetails] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
+  const [isOnboardingSetup, setIsOnboardingSetup] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -91,6 +92,9 @@ export default function SettingsPage() {
   const metaConnectionBusy =
     disconnectingConnectionId === primaryMetaConnection?.id ||
     disconnectingConnectionId === 'all';
+
+  const businessProfileReady = Boolean(businessName.trim() && industry.trim());
+  const showOnboardingNextStep = isOnboardingSetup && businessProfileReady;
 
   const profileHasStarted = Boolean(
     websiteUrl.trim() ||
@@ -134,17 +138,31 @@ export default function SettingsPage() {
     const metaError = params.get('meta_error');
 
     if (setup === 'business') {
+      setIsOnboardingSetup(true);
       setShowBusinessDetails(true);
     }
 
     if (metaConnected === 'true') {
       alert('Facebook and Instagram connected.');
-      window.history.replaceState({}, '', window.location.pathname);
+
+      if (setup === 'business') {
+        setIsOnboardingSetup(true);
+        setShowBusinessDetails(false);
+        window.history.replaceState({}, '', '/settings?setup=business');
+      } else {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
     }
 
     if (metaConnected === 'false') {
       alert(metaError || 'Meta connection failed.');
-      window.history.replaceState({}, '', window.location.pathname);
+
+      if (setup === 'business') {
+        setIsOnboardingSetup(true);
+        window.history.replaceState({}, '', '/settings?setup=business');
+      } else {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -214,7 +232,7 @@ export default function SettingsPage() {
 
     const params = new URLSearchParams();
     params.set('user_id', authUserId);
-    params.set('return_to', '/settings');
+    params.set('return_to', isOnboardingSetup ? '/settings?setup=business' : '/settings');
 
     window.location.href = `/api/auth/meta/start?${params.toString()}`;
   };
@@ -398,8 +416,10 @@ export default function SettingsPage() {
 
     const params = new URLSearchParams(window.location.search);
     const setup = params.get('setup');
+    const setupActive = setup === 'business';
 
-    setShowBusinessDetails(setup === 'business');
+    setIsOnboardingSetup(setupActive);
+    setShowBusinessDetails(setupActive && !data);
     setShowBrandDetails(false);
     setLoading(false);
   };
@@ -473,6 +493,17 @@ export default function SettingsPage() {
 
     try {
       await saveProfile();
+
+      const params = new URLSearchParams(window.location.search);
+      const setup = params.get('setup');
+
+      if (setup === 'business') {
+        setShowBusinessDetails(false);
+        alert('Business Profile saved. You can now connect Facebook and Instagram, or continue to Dashboard.');
+        await loadBusinessProfile();
+        return;
+      }
+
       alert('Business Profile saved.');
       await loadBusinessProfile();
     } catch (error: any) {
@@ -953,6 +984,58 @@ export default function SettingsPage() {
                 </div>
               </section>
             </>
+          )}
+
+          {showOnboardingNextStep && (
+            <section
+              className="premium-card"
+              style={{
+                maxWidth: 1120,
+                margin: '0 auto 22px',
+                borderRadius: 34,
+                border: '1px solid rgba(255, 212, 59, 0.26)',
+                background:
+                  'radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.035))',
+              }}
+            >
+              <div className="page-eyebrow">Next step</div>
+              <h2 style={{ marginTop: 0 }}>
+                {hasMetaConnection ? 'Your publishing channels are connected.' : 'Connect Facebook and Instagram for autoposting.'}
+              </h2>
+              <p style={{ maxWidth: 820 }}>
+                {hasMetaConnection
+                  ? 'You can now continue to Dashboard, upload media, choose platforms and create your first scheduled posts.'
+                  : 'This is optional, but connecting now means FromOne can publish or autopost to Facebook and Instagram when your posts are ready.'}
+              </p>
+
+              <div className="button-row" style={{ marginTop: 18 }}>
+                {!hasMetaConnection && (
+                  <button
+                    type="button"
+                    onClick={connectMetaAccount}
+                    disabled={metaConnectionBusy}
+                  >
+                    {metaConnectionBusy ? 'Connecting...' : 'Connect Facebook & Instagram'}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className={hasMetaConnection ? undefined : 'secondary-button'}
+                  onClick={() => {
+                    window.location.href = '/dashboard';
+                  }}
+                >
+                  Continue to Dashboard
+                </button>
+              </div>
+
+              {!hasMetaConnection && (
+                <p style={{ margin: '14px 0 0', color: 'var(--muted)', fontSize: 14 }}>
+                  You can skip this for now and connect later from Settings.
+                </p>
+              )}
+            </section>
           )}
 
           <section
