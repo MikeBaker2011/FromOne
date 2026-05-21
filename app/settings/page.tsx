@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { useToast } from '@/app/components/ToastProvider';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -49,6 +50,34 @@ const toneOptions = [
 ];
 
 export default function SettingsPage() {
+  const { showToast } = useToast();
+
+  const notify = (
+    message: any,
+    type: 'success' | 'error' | 'info' | 'warning' = 'info',
+    title?: string,
+  ) => {
+    const cleanMessage = String(message || '').trim();
+
+    if (!cleanMessage) return;
+
+    const defaultTitle =
+      title ||
+      (type === 'success'
+        ? 'Done'
+        : type === 'error'
+          ? 'Something went wrong'
+          : type === 'warning'
+            ? 'Please check'
+            : 'FromOne');
+
+    showToast({
+      type,
+      title: defaultTitle,
+      message: cleanMessage,
+    });
+  };
+
   const [profileId, setProfileId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -143,7 +172,7 @@ export default function SettingsPage() {
     }
 
     if (metaConnected === 'true') {
-      alert('Facebook and Instagram connected.');
+      notify('Facebook and Instagram connected.', 'success', 'Accounts connected');
 
       if (setup === 'business') {
         setIsOnboardingSetup(true);
@@ -155,7 +184,7 @@ export default function SettingsPage() {
     }
 
     if (metaConnected === 'false') {
-      alert(metaError || 'Meta connection failed.');
+      notify(metaError || 'Meta connection failed.', 'error', 'Connection failed');
 
       if (setup === 'business') {
         setIsOnboardingSetup(true);
@@ -226,7 +255,7 @@ export default function SettingsPage() {
     }
 
     if (!authUserId) {
-      alert('Please sign in before connecting Facebook and Instagram.');
+      notify('Please sign in before connecting Facebook and Instagram.', 'warning', 'Sign in needed');
       return;
     }
 
@@ -239,7 +268,7 @@ export default function SettingsPage() {
 
   const disconnectMetaAccount = async (connectionId?: string | null) => {
     if (!userId) {
-      alert('Please sign in again before disconnecting.');
+      notify('Please sign in again before disconnecting.', 'warning', 'Sign in needed');
       return;
     }
 
@@ -271,10 +300,10 @@ export default function SettingsPage() {
       }
 
       await loadSocialConnections(userId);
-      alert('Facebook and Instagram disconnected.');
+      notify('Facebook and Instagram disconnected.', 'success', 'Accounts disconnected');
     } catch (error: any) {
       console.error('Disconnect Meta account error:', error?.message || error);
-      alert(error?.message || 'Could not disconnect account.');
+      notify(error?.message || 'Could not disconnect account.', 'error', 'Disconnect failed');
     } finally {
       setDisconnectingConnectionId(null);
     }
@@ -310,7 +339,7 @@ export default function SettingsPage() {
     const website = normaliseWebsiteUrl(websiteUrl);
 
     if (!website) {
-      alert('Add a website URL first.');
+      notify('Add a website URL first.', 'warning', 'Website needed');
       return;
     }
 
@@ -354,7 +383,7 @@ export default function SettingsPage() {
     } catch (error: any) {
       console.error('Website scan error:', error?.message || error);
       setScanMessage('');
-      alert(error?.message || 'Could not scan the website.');
+      notify(error?.message || 'Could not scan the website.', 'error', 'Website scan failed');
     } finally {
       setScanningWebsite(false);
     }
@@ -485,7 +514,7 @@ export default function SettingsPage() {
     const hasBusinessDetails = Boolean(businessName.trim() && industry.trim());
 
     if (!hasWebsite && !hasBusinessDetails) {
-      alert('Please add a website URL, or add at least a business name and industry.');
+      notify('Please add a website URL, or add at least a business name and industry.', 'warning', 'Profile details needed');
       return;
     }
 
@@ -499,16 +528,16 @@ export default function SettingsPage() {
 
       if (setup === 'business') {
         setShowBusinessDetails(false);
-        alert('Business Profile saved. You can now connect Facebook and Instagram, or continue to Dashboard.');
+        notify('You can now connect Facebook and Instagram, or continue to Dashboard.', 'success', 'Business Profile saved');
         await loadBusinessProfile();
         return;
       }
 
-      alert('Business Profile saved.');
+      notify('Business Profile saved.', 'success', 'Profile saved');
       await loadBusinessProfile();
     } catch (error: any) {
       console.error('Error saving business profile:', error?.message || error);
-      alert(error?.message || 'Error saving Business Profile.');
+      notify(error?.message || 'Error saving Business Profile.', 'error', 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -542,7 +571,7 @@ export default function SettingsPage() {
     }
 
     if (!userId) {
-      alert('Please sign in again before deleting this profile.');
+      notify('Please sign in again before deleting this profile.', 'warning', 'Sign in needed');
       return;
     }
 
@@ -565,10 +594,10 @@ export default function SettingsPage() {
 
       setProfileId(null);
       handleResetForm();
-      alert('Business Profile deleted.');
+      notify('Business Profile deleted.', 'success', 'Profile deleted');
     } catch (error: any) {
       console.error('Error deleting business profile:', error?.message || error);
-      alert(error?.message || 'Error deleting Business Profile.');
+      notify(error?.message || 'Error deleting Business Profile.', 'error', 'Delete failed');
     } finally {
       setSaving(false);
     }
