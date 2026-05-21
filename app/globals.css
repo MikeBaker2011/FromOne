@@ -32,8 +32,8 @@ body {
     sans-serif;
 }
 html {
-  overflow-y: scroll;
-  scrollbar-gutter: stable;
+  overflow-y: auto;
+  scrollbar-gutter: auto;
 }
 
 body {
@@ -12116,5 +12116,21 @@ main {
 /* The browser should be the only vertical scroller for the app content. */
 .main-content {
   overflow: visible;
+}
+
+
+/* FINAL POSTS SCROLLBAR SAFETY */
+
+body:has(.simplified-posts-page) {
+  overflow-y: auto;
+}
+
+body:has(.simplified-posts-page) .main-content,
+body:has(.simplified-posts-page) .campaign-brand-shell,
+body:has(.simplified-posts-page) .simplified-posts-page {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
