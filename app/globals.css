@@ -1802,56 +1802,51 @@ select.input {
 }
 
 
-/* HOMEPAGE HERO BENEFITS */
+/* PUBLIC NAV ALIGNMENT */
 
-.homepage-benefit-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+.public-nav {
+  width: 100%;
+  max-width: 1500px;
+  min-height: 76px;
+  margin: 0 auto;
+  padding: 18px clamp(18px, 3vw, 34px);
 }
 
-.homepage-benefit-pill {
-  min-height: 54px;
-  border-radius: 999px;
-  display: flex;
+.public-nav .sales-brand {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(248, 250, 252, 0.84);
-  font-size: 13px;
-  font-weight: 900;
-  line-height: 1.18;
-  text-align: center;
+  gap: 14px;
 }
 
-.homepage-benefit-pill span {
-  color: var(--gold);
-  font-weight: 1000;
+.public-nav .fromone-brand-logo {
+  width: 58px;
+  height: 58px;
   flex: 0 0 auto;
+  object-fit: contain;
+  border-radius: 16px;
 }
 
-.homepage-benefit-pill strong {
-  display: block;
-  font: inherit;
+.public-nav .sales-brand strong {
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 1000;
+  letter-spacing: -0.045em;
 }
 
-@media (max-width: 640px) {
-  .homepage-benefit-grid {
-    grid-template-columns: 1fr;
-    max-width: 360px !important;
-    gap: 9px;
+@media (max-width: 720px) {
+  .public-nav {
+    min-height: 74px;
+    padding: 12px 14px !important;
   }
 
-  .homepage-benefit-pill {
-    min-height: 50px;
-    border-radius: 18px;
-    justify-content: flex-start;
-    padding: 12px 16px;
-    text-align: left;
-    font-size: 14px;
+  .public-nav .fromone-brand-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+  }
+
+  .public-nav .sales-brand strong {
+    font-size: 19px;
   }
 }
 
