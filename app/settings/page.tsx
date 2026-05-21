@@ -521,11 +521,11 @@ export default function SettingsPage() {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ maxWidth: 920, margin: '0 auto 24px', textAlign: 'center' }}>
         <div className="page-eyebrow">Settings</div>
-        <h1 className="page-title">Business Profile.</h1>
+        <h1 className="page-title">Business Profile</h1>
         <p className="page-description">
-          FromOne uses this to turn weekly photos, videos and flyers into posts that sound like the business.
+          Set this up once. FromOne uses it with every upload to create posts that sound like the business.
         </p>
       </div>
 
@@ -538,31 +538,34 @@ export default function SettingsPage() {
           <section
             className="premium-card"
             style={{
-              marginBottom: 24,
-              border: '1px solid rgba(255, 212, 59, 0.22)',
+              maxWidth: 1120,
+              margin: '0 auto 22px',
+              borderRadius: 34,
+              border: '1px solid rgba(255, 212, 59, 0.24)',
               background:
-                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), rgba(255,255,255,0.045) 46%, rgba(15,23,42,0.94))',
+                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))',
+              boxShadow: '0 26px 84px rgba(0,0,0,0.28)',
             }}
           >
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1.25fr) minmax(250px, 0.75fr)',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
                 gap: 24,
                 alignItems: 'start',
               }}
             >
               <div>
                 <div className="page-eyebrow">Business Profile</div>
-                <h2 style={{ marginTop: 0 }}>
-                  {businessName || 'Set up the business once.'}
+                <h2 style={{ marginTop: 0, fontSize: 'clamp(2rem, 4vw, 3.4rem)', lineHeight: 0.95 }}>
+                  {businessName || 'Set up once. Create better posts every week.'}
                 </h2>
                 <p style={{ maxWidth: 820 }}>
                   {businessName
                     ? `${businessName}${industry ? ` is saved as a ${industry} business` : ''}${
                         location ? ` serving ${location}` : ''
                       }. Dashboard will use this profile when creating posts from uploads.`
-                    : 'Scan a website or add the business details. Dashboard will then use this profile every time posts are created from uploaded media.'}
+                    : 'Scan a website or add the business details manually. Dashboard then uses this profile every time posts are created from uploaded media.'}
                 </p>
 
                 <div
@@ -600,16 +603,16 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => setShowBusinessDetails((current) => !current)}
                   >
-                    {showBusinessDetails ? 'Close Business Profile' : 'Edit Business Profile'}
+                    {showBusinessDetails ? 'Close profile editor' : businessName ? 'Edit profile' : 'Set up profile'}
                   </button>
                 </div>
               </div>
 
               <div
                 style={{
-                  padding: 18,
-                  borderRadius: 22,
-                  background: 'rgba(255,255,255,0.055)',
+                  padding: 20,
+                  borderRadius: 26,
+                  background: 'rgba(5, 10, 24, 0.34)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
@@ -661,14 +664,14 @@ export default function SettingsPage() {
 
           {showBusinessDetails && (
             <>
-              <section className="scan-feature-card settings-simple-scan">
+              <section className="scan-feature-card settings-simple-scan" style={{ maxWidth: 1120, margin: '0 auto 22px' }}>
                 <div className="scan-feature-content">
                   <div>
                     <div className="page-eyebrow">Website scan</div>
-                    <h2>Scan the business website.</h2>
+                    <h2>Scan the website</h2>
                     <p>
-                      FromOne can read the website to fill the Business Profile. You can edit
-                      anything afterwards.
+                      FromOne can fill the Business Profile from a website. Review the details,
+                      edit anything, then save.
                     </p>
                   </div>
                 </div>
@@ -711,13 +714,12 @@ export default function SettingsPage() {
                 </div>
               </section>
 
-              <section className="manual-collapse-card manual-open-card">
+              <section className="manual-collapse-card manual-open-card" style={{ maxWidth: 1120, margin: '0 auto 22px' }}>
                 <div className="manual-collapse-content manual-visible-content">
                   <div className="page-eyebrow">Edit Business Profile</div>
-                  <h2>Business details.</h2>
+                  <h2>Business details</h2>
                   <p>
-                    These details help FromOne write stronger posts from the photos, videos and
-                    flyers uploaded on Dashboard.
+                    These details give every generated post the right tone, location, services and CTA.
                   </p>
 
                   <div className="manual-backup-grid">
@@ -932,16 +934,16 @@ export default function SettingsPage() {
           <section
             className="premium-card"
             style={{
-              marginTop: 24,
-              marginBottom: 24,
+              maxWidth: 1120,
+              margin: '0 auto 22px',
+              borderRadius: 34,
               border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
             <div className="page-eyebrow">Social accounts</div>
-            <h2 style={{ marginTop: 0 }}>Connect posting channels.</h2>
+            <h2 style={{ marginTop: 0 }}>Connect publishing channels</h2>
             <p style={{ maxWidth: 820 }}>
-              Facebook and Instagram connect through Meta. TikTok is copy/open manual posting for
-              now.
+              Connect Meta once for Facebook and Instagram autoposting. TikTok stays simple with copy/open manual posting.
             </p>
 
             {loadingConnections ? (
@@ -950,15 +952,15 @@ export default function SettingsPage() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
                   gap: 16,
                   marginTop: 20,
                 }}
               >
-                <section className="card" style={{ padding: 18 }}>
+                <section className="card" style={{ padding: 20, borderRadius: 24 }}>
                   <div className="page-eyebrow">Facebook</div>
                   <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
-                    {hasFacebookConnection ? 'Connected' : 'Not connected'}
+                    {hasFacebookConnection ? 'Connected ✓' : 'Not connected'}
                   </h3>
                   <p style={{ color: 'var(--muted)', minHeight: 54 }}>
                     {hasFacebookConnection
@@ -976,10 +978,10 @@ export default function SettingsPage() {
                   </button>
                 </section>
 
-                <section className="card" style={{ padding: 18 }}>
+                <section className="card" style={{ padding: 20, borderRadius: 24 }}>
                   <div className="page-eyebrow">Instagram</div>
                   <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
-                    {hasInstagramConnection ? 'Connected' : 'Not connected'}
+                    {hasInstagramConnection ? 'Connected ✓' : 'Not connected'}
                   </h3>
                   <p style={{ color: 'var(--muted)', minHeight: 54 }}>
                     {hasInstagramConnection
@@ -999,7 +1001,7 @@ export default function SettingsPage() {
                   </button>
                 </section>
 
-                <section className="card" style={{ padding: 18 }}>
+                <section className="card" style={{ padding: 20, borderRadius: 24 }}>
                   <div className="page-eyebrow">TikTok</div>
                   <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>Manual</h3>
                   <p style={{ color: 'var(--muted)', minHeight: 54 }}>
@@ -1031,19 +1033,19 @@ export default function SettingsPage() {
             )}
           </section>
 
-          <section className="manual-collapse-card manual-open-card" style={{ marginTop: '24px' }}>
+          <section className="manual-collapse-card manual-open-card" style={{ maxWidth: 1120, margin: '0 auto 22px', opacity: showDangerZone ? 1 : 0.72 }}>
             <div className="manual-collapse-content manual-visible-content">
               <button
                 type="button"
                 className="secondary-button"
                 onClick={() => setShowDangerZone(!showDangerZone)}
               >
-                {showDangerZone ? 'Hide danger zone' : 'Show danger zone'}
+                {showDangerZone ? 'Hide advanced options' : 'Advanced options'}
               </button>
 
               {showDangerZone && (
                 <div style={{ marginTop: '18px' }}>
-                  <div className="page-eyebrow">Danger zone</div>
+                  <div className="page-eyebrow">Advanced options</div>
                   <h2>Reset or delete profile data.</h2>
                   <p>
                     Reset clears the form on this page. Delete removes the saved Business Profile
