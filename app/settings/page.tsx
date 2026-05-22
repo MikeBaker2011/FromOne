@@ -697,6 +697,7 @@ export default function SettingsPage() {
                 </p>
 
                 <div
+                  className="settings-profile-preview-grid"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
@@ -704,21 +705,24 @@ export default function SettingsPage() {
                     marginTop: 18,
                   }}
                 >
-                  <div className="card" style={{ padding: 14 }}>
+                  <p className="settings-profile-preview-note">
+                    Preview only. Tap “Edit profile” below to change these details.
+                  </p>
+                  <div className="card settings-profile-preview-card" style={{ padding: 14 }}>
                     <strong>Industry</strong>
                     <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
                       {industry || 'Not added yet'}
                     </p>
                   </div>
 
-                  <div className="card" style={{ padding: 14 }}>
+                  <div className="card settings-profile-preview-card" style={{ padding: 14 }}>
                     <strong>Location</strong>
                     <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
                       {location || 'Not added yet'}
                     </p>
                   </div>
 
-                  <div className="card" style={{ padding: 14 }}>
+                  <div className="card settings-profile-preview-card" style={{ padding: 14 }}>
                     <strong>Customers</strong>
                     <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
                       {targetAudience || 'Not added yet'}
@@ -1327,6 +1331,58 @@ export default function SettingsPage() {
 
           .settings-profile-editor-content textarea {
             min-height: 120px !important;
+          }
+        }
+      `}</style>
+
+      <style jsx global>{`
+        .settings-profile-preview-note {
+          display: none;
+        }
+
+        .settings-profile-preview-card {
+          cursor: default;
+          user-select: none;
+        }
+
+        @media (max-width: 720px) {
+          .settings-profile-preview-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+
+          .settings-profile-preview-note {
+            display: block;
+            grid-column: 1 / -1;
+            margin: 0 0 2px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            color: var(--muted-strong);
+            background: rgba(255, 212, 59, 0.08);
+            border: 1px solid rgba(255, 212, 59, 0.18);
+            font-size: 14px;
+            line-height: 1.45;
+            font-weight: 850;
+          }
+
+          .settings-profile-preview-card {
+            box-shadow: none !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            border-style: dashed !important;
+          }
+
+          .settings-profile-preview-card::after {
+            content: "Preview";
+            display: inline-flex;
+            margin-top: 8px;
+            padding: 5px 8px;
+            border-radius: 999px;
+            color: var(--gold);
+            background: rgba(255, 212, 59, 0.1);
+            font-size: 11px;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
           }
         }
       `}</style>
