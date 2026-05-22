@@ -2296,7 +2296,8 @@ If uploads are supplied:
             {weeklyUploads.length > 0 && (
               <p style={{ textAlign: "center", margin: 0, color: "var(--muted)" }}>
                 {weeklyUploads.length} upload{weeklyUploads.length === 1 ? "" : "s"} will create{" "}
-                {weeklyUploads.length * selectedPlatforms.length} scheduled platform post{weeklyUploads.length * selectedPlatforms.length === 1 ? "" : "s"}
+                {weeklyUploads.length} scheduled post{weeklyUploads.length === 1 ? "" : "s"},{" "}
+                split across selected platforms
               </p>
             )}
           </div>
