@@ -678,9 +678,10 @@ export default function SettingsPage() {
     <>
       <div className="page-header" style={{ maxWidth: 920, margin: '0 auto 24px', textAlign: 'center' }}>
         <div className="page-eyebrow">Settings</div>
-        <h1 className="page-title">Business Profile</h1>
+        <h1 className="page-title">Business setup</h1>
         <p className="page-description">
-          Set this up once. FromOne uses it with every upload to create posts that sound like the business.
+          Follow the setup sequence below. Complete the Business Profile first, connect publishing
+          channels second, then create weekly posts from the Dashboard.
         </p>
       </div>
 
@@ -690,6 +691,93 @@ export default function SettingsPage() {
         </div>
       ) : (
         <>
+          <section
+            className="premium-card settings-setup-guide"
+            style={{
+              maxWidth: 1120,
+              margin: '0 auto 22px',
+              borderRadius: 34,
+              border: '1px solid rgba(255, 212, 59, 0.24)',
+              background:
+                'radial-gradient(circle at top left, rgba(255, 212, 59, 0.14), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))',
+              boxShadow: '0 26px 84px rgba(0,0,0,0.28)',
+            }}
+          >
+            <div className="page-eyebrow">Setup guide</div>
+            <h2
+              style={{
+                margin: '0 0 10px',
+                fontSize: 'clamp(2rem, 4vw, 3.2rem)',
+                lineHeight: 0.98,
+                letterSpacing: '-0.06em',
+              }}
+            >
+              Follow these steps in order.
+            </h2>
+            <p style={{ maxWidth: 850, margin: 0 }}>
+              Start with the Business Profile. Once that is saved, connect Facebook and Instagram
+              for autoposting, then go to the Dashboard to create posts from uploaded media.
+            </p>
+
+            <div
+              className="settings-setup-step-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 14,
+                marginTop: 22,
+              }}
+            >
+              <article
+                className="card settings-setup-step-card"
+                style={{
+                  padding: 18,
+                  borderRadius: 24,
+                  background:
+                    'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
+                }}
+              >
+                <span className="status-pill">Step 1</span>
+                <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Set up profile</h3>
+                <p style={{ margin: 0, color: 'var(--muted)' }}>
+                  Add the business name, industry, location, services and customers.
+                </p>
+              </article>
+
+              <article
+                className="card settings-setup-step-card"
+                style={{
+                  padding: 18,
+                  borderRadius: 24,
+                  background:
+                    'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
+                }}
+              >
+                <span className="status-pill">Step 2</span>
+                <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Connect channels</h3>
+                <p style={{ margin: 0, color: 'var(--muted)' }}>
+                  Connect Facebook and Instagram for autoposting. TikTok can stay manual.
+                </p>
+              </article>
+
+              <article
+                className="card settings-setup-step-card"
+                style={{
+                  padding: 18,
+                  borderRadius: 24,
+                  background:
+                    'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
+                }}
+              >
+                <span className="status-pill">Step 3</span>
+                <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Create posts</h3>
+                <p style={{ margin: 0, color: 'var(--muted)' }}>
+                  Go to Dashboard, upload photos, videos or flyers, and create the weekly post plan.
+                </p>
+              </article>
+            </div>
+          </section>
+
           <section
             className="premium-card"
             style={{
