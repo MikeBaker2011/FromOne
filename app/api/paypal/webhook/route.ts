@@ -143,15 +143,27 @@ async function verifyPayPalWebhook({
 
 function getSubscriptionId(event: PayPalWebhookEvent) {
   const resource = event.resource || {};
+  const eventType = cleanText(event.event_type).toUpperCase();
 
-  return cleanText(
-    resource.id ||
+  const relatedSubscriptionId = cleanText(
+    resource.subscription_id ||
       resource.billing_agreement_id ||
-      resource.subscription_id ||
-      resource.parent_payment ||
       resource.supplementary_data?.related_ids?.subscription_id ||
       resource.supplementary_data?.related_ids?.billing_agreement_id
   );
+
+  if (relatedSubscriptionId) {
+    return relatedSubscriptionId;
+  }
+
+  // For subscription lifecycle events, resource.id is the subscription ID.
+  // For payment events, resource.id is usually a sale/capture ID, so do not
+  // store it as paypal_subscription_id.
+  if (eventType.startsWith('BILLING.SUBSCRIPTION.')) {
+    return cleanText(resource.id);
+  }
+
+  return '';
 }
 
 function getCustomUserId(event: PayPalWebhookEvent) {

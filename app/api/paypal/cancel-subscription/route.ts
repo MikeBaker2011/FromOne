@@ -105,17 +105,42 @@ async function getPayPalAccessToken() {
 async function loadBillingForUser(userId: string) {
   const supabase = getSupabaseAdmin();
 
-  const { data, error } = await supabase
+  const { data: billing, error: billingError } = await supabase
     .from('user_billing')
     .select('plan, status, paypal_subscription_id')
     .eq('user_id', userId)
     .maybeSingle();
 
-  if (error) {
-    throw error;
+  if (billingError) {
+    throw billingError;
   }
 
-  return data;
+  const { data: access, error: accessError } = await supabase
+    .from('user_access')
+    .select('subscription_reference')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (accessError) {
+    throw accessError;
+  }
+
+  return {
+    ...billing,
+    access_subscription_reference: access?.subscription_reference || null,
+  };
+}
+
+function getValidPayPalSubscriptionId(...values: Array<unknown>) {
+  for (const value of values) {
+    const candidate = cleanText(value);
+
+    if (candidate.toUpperCase().startsWith('I-')) {
+      return candidate;
+    }
+  }
+
+  return '';
 }
 
 async function cancelPayPalSubscription({
@@ -188,6 +213,8 @@ async function markSubscriptionCancelled({
         user_id: userId,
         access_status: 'cancelled',
         subscription_status: 'cancelled',
+        subscription_provider: 'paypal',
+        subscription_reference: paypalSubscriptionId,
         updated_at: nowIso,
       },
       {
@@ -208,7 +235,12 @@ export async function POST(request: NextRequest) {
 
     const billing = await loadBillingForUser(user.id);
     const billingSubscriptionId = cleanText(billing?.paypal_subscription_id);
-    const paypalSubscriptionId = requestedSubscriptionId || billingSubscriptionId;
+    const accessSubscriptionId = cleanText(billing?.access_subscription_reference);
+    const paypalSubscriptionId = getValidPayPalSubscriptionId(
+      requestedSubscriptionId,
+      billingSubscriptionId,
+      accessSubscriptionId,
+    );
 
     if (!billing) {
       return NextResponse.json(
@@ -240,7 +272,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (requestedSubscriptionId && requestedSubscriptionId !== billingSubscriptionId) {
+    if (
+      requestedSubscriptionId &&
+      getValidPayPalSubscriptionId(requestedSubscriptionId) !== paypalSubscriptionId
+    ) {
       return NextResponse.json(
         {
           ok: false,
