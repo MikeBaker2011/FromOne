@@ -62,21 +62,19 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [confirmingPayPal, setConfirmingPayPal] = useState(false);
 
   useEffect(() => {
-    loadSubscription();
-
     const params = new URLSearchParams(window.location.search);
     const paypalStatus = params.get('paypal');
 
     if (paypalStatus === 'approved') {
-      notify(
-        'Your account will update once PayPal confirms the subscription.',
-        'success',
-        'PayPal checkout approved',
-      );
+      confirmApprovedPayPalCheckout();
       window.history.replaceState({}, '', window.location.pathname);
+      return;
     }
+
+    loadSubscription();
 
     if (paypalStatus === 'cancelled') {
       notify(
@@ -86,6 +84,7 @@ export default function SubscriptionPage() {
       );
       window.history.replaceState({}, '', window.location.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const calculateDaysRemaining = (endDate: string | null) => {
@@ -208,6 +207,61 @@ export default function SubscriptionPage() {
     setDaysRemaining(remaining);
 
     setLoading(false);
+  };
+
+  const confirmApprovedPayPalCheckout = async () => {
+    setConfirmingPayPal(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        notify('Please sign in first.', 'warning', 'Sign in needed');
+        await loadSubscription();
+        return;
+      }
+
+      const response = await fetch('/api/paypal/confirm-subscription', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          result?.error ||
+            result?.message ||
+            'PayPal approved the checkout, but FromOne could not confirm the subscription yet.'
+        );
+      }
+
+      if (result?.status === 'active') {
+        notify('Starter access is active.', 'success', 'PayPal subscription confirmed');
+      } else {
+        notify(
+          'PayPal approved the checkout. Confirmation is still pending, so please refresh in a moment.',
+          'info',
+          'PayPal confirmation pending',
+        );
+      }
+
+      await loadSubscription();
+    } catch (error: any) {
+      notify(
+        error?.message || 'PayPal approved the checkout, but confirmation failed.',
+        'error',
+        'PayPal confirmation failed',
+      );
+      await loadSubscription();
+    } finally {
+      setConfirmingPayPal(false);
+    }
   };
 
   const startPayPalCheckout = async () => {
@@ -570,6 +624,22 @@ export default function SubscriptionPage() {
           Instagram, or copy/open TikTok manually.
         </p>
       </div>
+
+      {confirmingPayPal && (
+        <div
+          className="premium-card"
+          style={{
+            marginBottom: '24px',
+            border: '1px solid rgba(255, 212, 59, 0.38)',
+          }}
+        >
+          <div className="page-eyebrow">PayPal confirmation</div>
+          <h2 style={{ marginTop: 0 }}>Checking your subscription...</h2>
+          <p>
+            FromOne is confirming the PayPal approval and updating your account access.
+          </p>
+        </div>
+      )}
 
       {loading ? (
         <div className="premium-card">
