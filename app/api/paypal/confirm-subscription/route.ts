@@ -151,6 +151,60 @@ async function getPayPalSubscription({
   return result;
 }
 
+async function upsertActiveAccess({
+  userId,
+  paypalSubscriptionId,
+}: {
+  userId: string;
+  paypalSubscriptionId: string;
+}) {
+  const supabase = getSupabaseAdmin();
+  const nowIso = new Date().toISOString();
+
+  const accessPayload = {
+    user_id: userId,
+    access_status: 'active',
+    subscription_status: 'active',
+    subscription_provider: 'paypal',
+    subscription_reference: paypalSubscriptionId,
+    updated_at: nowIso,
+  };
+
+  const { data: existingAccess, error: lookupError } = await supabase
+    .from('user_access')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (lookupError) {
+    throw lookupError;
+  }
+
+  if (existingAccess?.user_id) {
+    const { error: updateError } = await supabase
+      .from('user_access')
+      .update(accessPayload)
+      .eq('user_id', userId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return;
+  }
+
+  const { error: insertError } = await supabase
+    .from('user_access')
+    .insert({
+      ...accessPayload,
+      created_at: nowIso,
+    });
+
+  if (insertError) {
+    throw insertError;
+  }
+}
+
 async function markActiveSubscription({
   userId,
   paypalSubscriptionId,
@@ -181,23 +235,10 @@ async function markActiveSubscription({
     throw billingError;
   }
 
-  const { error: accessError } = await supabase
-    .from('user_access')
-    .upsert(
-      {
-        user_id: userId,
-        access_status: 'active',
-        subscription_status: 'active',
-        updated_at: nowIso,
-      },
-      {
-        onConflict: 'user_id',
-      },
-    );
-
-  if (accessError) {
-    throw accessError;
-  }
+  await upsertActiveAccess({
+    userId,
+    paypalSubscriptionId,
+  });
 }
 
 export async function POST(request: NextRequest) {
