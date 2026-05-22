@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/app/components/ToastProvider';
 
@@ -124,6 +124,19 @@ export default function SettingsPage() {
     danger?: boolean;
     connectionId?: string | null;
   } | null>(null);
+
+  const profileEditorRef = useRef<HTMLElement | null>(null);
+
+  const openProfileEditor = () => {
+    setShowBusinessDetails(true);
+
+    window.setTimeout(() => {
+      profileEditorRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 120);
+  };
 
   const metaConnections = socialConnections.filter((connection) => connection.provider === 'meta');
   const primaryMetaConnection = metaConnections[0] || null;
@@ -697,7 +710,14 @@ export default function SettingsPage() {
                 <div className="button-row" style={{ marginTop: 20 }}>
                   <button
                     type="button"
-                    onClick={() => setShowBusinessDetails((current) => !current)}
+                    onClick={() => {
+                      if (showBusinessDetails) {
+                        setShowBusinessDetails(false);
+                        return;
+                      }
+
+                      openProfileEditor();
+                    }}
                   >
                     {showBusinessDetails ? 'Close profile editor' : businessName ? 'Edit profile' : 'Set up profile'}
                   </button>
@@ -862,8 +882,11 @@ export default function SettingsPage() {
               </section>
 
               <section
+                ref={profileEditorRef}
+                id="business-profile-editor"
                 className="manual-collapse-card manual-open-card settings-profile-editor-card"
                 style={{
+                  scrollMarginTop: 96,
                   maxWidth: 1120,
                   margin: '0 auto 22px',
                   position: 'relative',
