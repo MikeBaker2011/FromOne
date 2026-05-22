@@ -5,7 +5,6 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
-import { useToast } from "@/app/components/ToastProvider";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -145,33 +144,6 @@ const VIDEO_SCAN_EVENT_TYPES = ["video_scan"];
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { showToast } = useToast();
-
-  const notify = (
-    message: any,
-    type: "success" | "error" | "info" | "warning" = "info",
-    title?: string,
-  ) => {
-    const cleanMessage = String(message || "").trim();
-
-    if (!cleanMessage) return;
-
-    const defaultTitle =
-      title ||
-      (type === "success"
-        ? "Done"
-        : type === "error"
-          ? "Something went wrong"
-          : type === "warning"
-            ? "Please check"
-            : "FromOne");
-
-    showToast({
-      type,
-      title: defaultTitle,
-      message: cleanMessage,
-    });
-  };
 
   const [addToCampaignId, setAddToCampaignId] = useState<string | null>(null);
   const [client, setClient] = useState<any>(null);
@@ -719,7 +691,7 @@ export default function DashboardPage() {
   const ensureAccessAllowed = () => {
     if (!accessLocked) return true;
 
-    notify(accessMessage, "warning", "Access locked");
+    alert(accessMessage);
     return false;
   };
 
@@ -758,7 +730,7 @@ export default function DashboardPage() {
     const used = await loadWeeklyScanUsage(userId);
 
     if (used >= limit) {
-      notify(
+      alert(
         plan === "starter"
           ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create posts using saved business details.`
           : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Use saved business details or upgrade to FromOne Monthly.`
@@ -787,7 +759,7 @@ export default function DashboardPage() {
     const remaining = Math.max(limit - used, 0);
 
     if (videoUploadsThisRun > remaining) {
-      notify(
+      alert(
         plan === "starter"
           ? `You can scan ${PAID_WEEKLY_VIDEO_SCAN_LIMIT} videos per 7 days. You have ${remaining} video scan left.`
           : `Your demo includes ${DEMO_WEEKLY_VIDEO_SCAN_LIMIT} video scan per 7 days. You have ${remaining} video scan left.`
@@ -802,7 +774,7 @@ export default function DashboardPage() {
     const total = await loadSavedCampaignCount(userId);
 
     if (total >= MAX_SAVED_CAMPAIGNS) {
-      notify(
+      alert(
         `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly post sets. Delete an old or empty test set from Posts before creating a new one.`
       );
       return false;
@@ -1020,7 +992,7 @@ Core FromOne rule:
     const cleanWebsiteUrl = normaliseWebsiteUrl(websiteUrl);
 
     if (!cleanWebsiteUrl) {
-      notify("Please enter a website URL, or use the business details option.", "warning", "Website needed");
+      alert("Please enter a website URL, or use the business details option.");
       return null;
     }
 
@@ -1031,7 +1003,7 @@ Core FromOne rule:
       const userId = user?.id || null;
 
       if (!userId) {
-        notify("Please sign in again.", "warning", "Sign in needed");
+        alert("Please sign in again.");
         return null;
       }
 
@@ -1081,7 +1053,7 @@ Core FromOne rule:
       const message = getErrorMessage(error);
 
       console.error("Error saving website profile:", error);
-      notify(message, "error");
+      alert(message);
       return null;
     } finally {
       setSavingWebsite(false);
@@ -1090,7 +1062,7 @@ Core FromOne rule:
 
   const saveManualProfile = async () => {
     if (!manualBusinessName.trim() || !manualIndustry.trim()) {
-      notify("Please add at least the business name and industry.", "warning", "Business details needed");
+      alert("Please add at least the business name and industry.");
       return null;
     }
 
@@ -1101,7 +1073,7 @@ Core FromOne rule:
       const userId = user?.id || null;
 
       if (!userId) {
-        notify("Please sign in again.", "warning", "Sign in needed");
+        alert("Please sign in again.");
         return null;
       }
 
@@ -1151,7 +1123,7 @@ Core FromOne rule:
       const message = getErrorMessage(error);
 
       console.error("Error saving business details:", error);
-      notify(message, "error");
+      alert(message);
       return null;
     } finally {
       setSavingManualProfile(false);
@@ -1441,12 +1413,12 @@ Core FromOne rule:
     const userId = user?.id;
 
     if (!userId) {
-      notify("You need to sign in before saving posts.", "warning", "Sign in needed");
+      alert("You need to sign in before saving posts.");
       return;
     }
 
     if (selectedPlatforms.length === 0) {
-      notify("Please choose at least one platform.", "warning", "Choose a platform");
+      alert("Please choose at least one platform.");
       return;
     }
 
@@ -1462,14 +1434,14 @@ Core FromOne rule:
       : { postRecords: 0, contentDays: 0 };
 
     if (addToCampaignId && existingCampaignStats.contentDays + contentDayCount > 7) {
-      notify(
+      alert(
         `This weekly set already has ${existingCampaignStats.contentDays} content day${existingCampaignStats.contentDays === 1 ? "" : "s"}. You can add ${Math.max(7 - existingCampaignStats.contentDays, 0)} more to keep it as a 7-day week.`
       );
       return;
     }
 
     const postCount = contentDayCount;
-    const totalPlatformPostsToCreate = contentDayCount * selectedPlatforms.length;
+    const totalPlatformPostsToCreate = contentDayCount;
 
     const campaignLimitAllowed = addToCampaignId
       ? true
@@ -1539,7 +1511,7 @@ If uploads are supplied:
     const posts: GeneratedPost[] = (response.data.posts || []).slice(0, postCount);
 
     if (!posts.length) {
-      notify(response.data.error || "No posts were created.", "error", "No posts created");
+      alert(response.data.error || "No posts were created.");
       return;
     }
 
@@ -1588,7 +1560,7 @@ If uploads are supplied:
       if (existingCampaignError) throwSupabaseError(existingCampaignError);
 
       if (!existingCampaign) {
-        notify("Could not find the weekly post set to add to.", "error", "Weekly set not found");
+        alert("Could not find the weekly post set to add to.");
         return;
       }
 
@@ -1631,77 +1603,79 @@ If uploads are supplied:
     const suggestedScheduleSummary: string[] = [];
 
     try {
-    for (let i = 0; i < posts.length; i++) {
+      for (let i = 0; i < posts.length; i++) {
         const contentDayIndex = existingCampaignStats.contentDays + i;
         const contentDayNumber = contentDayIndex + 1;
         const mediaItem = uploadedMediaItems[i] || null;
         const baseGeneratedPost = posts[i];
-  
-        for (const selectedPlatform of selectedPlatforms) {
-          const post = normaliseGeneratedPost(
-            {
-              ...(typeof baseGeneratedPost === "string"
-                ? { caption: baseGeneratedPost }
-                : baseGeneratedPost),
-              platform: selectedPlatform,
-              day: `Post ${contentDayNumber}`,
-              title: `${selectedPlatform} Post ${contentDayNumber}`,
-            },
-            contentDayIndex,
-            activeClient,
-            detectedIndustry,
-            detectedLocation
-          );
-  
-          const suggestedPublishTime = getSuggestedPostTime(
-            contentDayIndex,
-            selectedPlatform,
-            activeClient,
-            detectedIndustry
-          );
-  
-          suggestedPublishTime.setMinutes(
-            suggestedPublishTime.getMinutes() + getPlatformScheduleOffsetMinutes(selectedPlatform)
-          );
-  
-          suggestedScheduleSummary.push(
-            `${selectedPlatform}: ${getReadableSuggestedTime(suggestedPublishTime)}`
-          );
-  
-          const { error: postError } = await supabase.from("campaign_posts").insert({
-            user_id: userId,
-            campaign_id: campaign.id,
-            keyword: detectedIndustry || "business",
-            title: post.title,
-            caption: post.caption,
-            cta: post.cta,
-            hashtags: post.hashtags,
+
+        const selectedPlatform =
+          selectedPlatforms[contentDayIndex % selectedPlatforms.length] ||
+          platformFallback[contentDayIndex % platformFallback.length] ||
+          "Facebook";
+
+        const post = normaliseGeneratedPost(
+          {
+            ...(typeof baseGeneratedPost === "string"
+              ? { caption: baseGeneratedPost }
+              : baseGeneratedPost),
             platform: selectedPlatform,
-            type: source,
-            scheduled_day: `Post ${contentDayNumber} ${selectedPlatform}`,
-            scheduled_at: suggestedPublishTime.toISOString(),
-            scheduled_publish_at: suggestedPublishTime.toISOString(),
-            publish_status: "scheduled",
-            status: "scheduled",
-            is_posted: false,
-            client_id: activeClient.id,
-            image_prompt: post.image_prompt,
-            media_url: mediaItem?.media_url || null,
-            media_path: mediaItem?.media_path || null,
-            media_type: mediaItem?.media_type || null,
-            reach: 0,
-            clicks: 0,
-            likes: 0,
-            comments: 0,
-            shares: 0,
-            saves: 0,
-          });
-  
-          if (postError) throwSupabaseError(postError);
-        }
+            day: `Post ${contentDayNumber}`,
+            title: `${selectedPlatform} Post ${contentDayNumber}`,
+          },
+          contentDayIndex,
+          activeClient,
+          detectedIndustry,
+          detectedLocation
+        );
+
+        const suggestedPublishTime = getSuggestedPostTime(
+          contentDayIndex,
+          selectedPlatform,
+          activeClient,
+          detectedIndustry
+        );
+
+        suggestedPublishTime.setMinutes(
+          suggestedPublishTime.getMinutes() + getPlatformScheduleOffsetMinutes(selectedPlatform)
+        );
+
+        suggestedScheduleSummary.push(
+          `${selectedPlatform}: ${getReadableSuggestedTime(suggestedPublishTime)}`
+        );
+
+        const { error: postError } = await supabase.from("campaign_posts").insert({
+          user_id: userId,
+          campaign_id: campaign.id,
+          keyword: detectedIndustry || "business",
+          title: post.title,
+          caption: post.caption,
+          cta: post.cta,
+          hashtags: post.hashtags,
+          platform: selectedPlatform,
+          type: source,
+          scheduled_day: `Post ${contentDayNumber} ${selectedPlatform}`,
+          scheduled_at: suggestedPublishTime.toISOString(),
+          scheduled_publish_at: suggestedPublishTime.toISOString(),
+          publish_status: "scheduled",
+          status: "scheduled",
+          is_posted: false,
+          client_id: activeClient.id,
+          image_prompt: post.image_prompt,
+          media_url: mediaItem?.media_url || null,
+          media_path: mediaItem?.media_path || null,
+          media_type: mediaItem?.media_type || null,
+          reach: 0,
+          clicks: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          saves: 0,
+        });
+
+        if (postError) throwSupabaseError(postError);
       }
-  
-      } catch (postInsertError) {
+    } catch (postInsertError) {
       await deleteEmptyCampaignIfNeeded(createdCampaignId);
       throw postInsertError;
     }
@@ -1773,7 +1747,7 @@ If uploads are supplied:
       const activeClient = client;
 
       if (!activeClient?.business_name || !activeClient?.industry) {
-        notify("Set up the Business Profile in Settings first. Then come back here to upload media and create posts.", "warning", "Business Profile needed");
+        alert("Set up the Business Profile in Settings first. Then come back here to upload media and create posts.");
         setScanning(false);
         return;
       }
@@ -1791,7 +1765,7 @@ If uploads are supplied:
         console.error("Non-Axios weekly posts error:", error);
       }
 
-      notify(message, "error");
+      alert(message);
     } finally {
       setScanning(false);
     }
@@ -1808,7 +1782,7 @@ If uploads are supplied:
     );
 
     if (acceptedFiles.length === 0) {
-      notify("Please upload photos, videos, flyers, posters or offer graphics.", "warning", "Unsupported file type");
+      alert("Please upload photos, videos, flyers, posters or offer graphics.");
       return;
     }
 
@@ -1846,14 +1820,14 @@ If uploads are supplied:
     if (!ensureAccessAllowed()) return;
 
     if (!websiteUrl.trim()) {
-      notify("Please enter a website URL first.", "warning", "Website needed");
+      alert("Please enter a website URL first.");
       return;
     }
 
     const savedClient = await saveWebsiteToProfile();
 
     if (savedClient) {
-      notify("Website saved. Now upload photos, videos or flyers, then create posts.", "success", "Website saved");
+      alert("Website saved. Now upload photos, videos or flyers, then create posts.");
     }
   };
 
@@ -1861,7 +1835,7 @@ If uploads are supplied:
     setSelectedPlatforms((currentPlatforms) => {
       if (currentPlatforms.includes(platformName)) {
         if (currentPlatforms.length === 1) {
-          notify("Please choose at least one platform.", "warning", "Choose a platform");
+          alert("Please choose at least one platform.");
           return currentPlatforms;
         }
 
