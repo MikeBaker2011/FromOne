@@ -126,6 +126,7 @@ export default function SettingsPage() {
   } | null>(null);
 
   const profileEditorRef = useRef<HTMLElement | null>(null);
+  const socialConnectionsRef = useRef<HTMLElement | null>(null);
 
   const openProfileEditor = () => {
     setShowBusinessDetails(true);
@@ -136,6 +137,15 @@ export default function SettingsPage() {
         block: 'start',
       });
     }, 120);
+  };
+
+  const scrollToSocialConnections = () => {
+    window.setTimeout(() => {
+      socialConnectionsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 180);
   };
 
   const metaConnections = socialConnections.filter((connection) => connection.provider === 'meta');
@@ -565,15 +575,19 @@ export default function SettingsPage() {
       const params = new URLSearchParams(window.location.search);
       const setup = params.get('setup');
 
+      setShowBusinessDetails(false);
+      setShowBrandDetails(false);
+
       if (setup === 'business') {
-        setShowBusinessDetails(false);
         notify('You can now connect Facebook and Instagram, or continue to Dashboard.', 'success', 'Business Profile saved');
         await loadBusinessProfile();
+        scrollToSocialConnections();
         return;
       }
 
       notify('Business Profile saved.', 'success', 'Profile saved');
       await loadBusinessProfile();
+      scrollToSocialConnections();
     } catch (error: any) {
       console.error('Error saving business profile:', error?.message || error);
       notify(error?.message || 'Error saving Business Profile.', 'error', 'Save failed');
@@ -1183,8 +1197,11 @@ export default function SettingsPage() {
           )}
 
           <section
+            ref={socialConnectionsRef}
+            id="publishing-connections"
             className="premium-card"
             style={{
+              scrollMarginTop: 96,
               maxWidth: 1120,
               margin: '0 auto 22px',
               borderRadius: 34,
@@ -1284,6 +1301,79 @@ export default function SettingsPage() {
             )}
           </section>
 
+          <section
+            className="premium-card"
+            style={{
+              maxWidth: 1120,
+              margin: '0 auto 22px',
+              borderRadius: 34,
+              border: '1px solid rgba(255, 212, 59, 0.26)',
+              background:
+                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.035))',
+              boxShadow: '0 26px 84px rgba(0,0,0,0.28)',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1fr) minmax(240px, 320px)',
+                gap: 22,
+                alignItems: 'center',
+              }}
+            >
+              <div>
+                <div className="page-eyebrow">Ready to create posts</div>
+                <h2
+                  style={{
+                    margin: '0 0 10px',
+                    fontSize: 'clamp(2rem, 4vw, 3.4rem)',
+                    lineHeight: 0.96,
+                    letterSpacing: '-0.06em',
+                  }}
+                >
+                  Create your first weekly posts.
+                </h2>
+                <p style={{ maxWidth: 820, margin: 0 }}>
+                  Your Business Profile is saved. Upload photos, videos or flyers on the
+                  Dashboard and FromOne will turn them into ready-to-review social posts.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gap: 12,
+                  padding: 18,
+                  borderRadius: 24,
+                  background: 'rgba(5, 10, 24, 0.34)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = '/dashboard';
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  Create posts
+                </button>
+
+                <p
+                  style={{
+                    margin: 0,
+                    color: 'var(--muted)',
+                    fontSize: 14,
+                    lineHeight: 1.45,
+                    textAlign: 'center',
+                  }}
+                >
+                  You can connect or manage publishing channels later from this page.
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section className="manual-collapse-card manual-open-card" style={{ maxWidth: 1120, margin: '0 auto 22px', opacity: showDangerZone ? 1 : 0.72 }}>
             <div className="manual-collapse-content manual-visible-content">
               <button
@@ -1378,6 +1468,21 @@ export default function SettingsPage() {
           .settings-profile-strength-card {
             padding: 20px !important;
             border-radius: 24px !important;
+          }
+        }
+      `}</style>
+
+      <style jsx global>{`
+        @media (max-width: 720px) {
+          .settings-profile-strength-card {
+            padding: 20px !important;
+            border-radius: 24px !important;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .premium-card div[style*="minmax(240px, 320px)"] {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>
