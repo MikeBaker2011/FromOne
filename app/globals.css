@@ -12133,4 +12133,48 @@ body:has(.simplified-posts-page) .simplified-posts-page {
   max-height: none !important;
   overflow: visible !important;
 }
+/* MOBILE BUSINESS PROFILE INPUT FIX */
 
+@media (max-width: 720px) {
+  .scan-feature-card,
+  .scan-feature-form,
+  .manual-collapse-card,
+  .manual-collapse-content,
+  .premium-card,
+  .card {
+    overflow: visible !important;
+  }
+
+  .scan-feature-form label,
+  .manual-collapse-content label {
+    position: relative !important;
+    z-index: 3 !important;
+  }
+
+  .scan-feature-form .input,
+  .manual-collapse-content .input,
+  .settings-page .input,
+  input,
+  textarea,
+  select {
+    position: relative !important;
+    z-index: 5 !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+  }
+
+  .scan-feature-form select.input,
+  .manual-collapse-content select.input,
+  select.input {
+    min-height: 48px !important;
+    height: 48px !important;
+    appearance: auto !important;
+    -webkit-appearance: menulist !important;
+  }
+
+  .manual-collapse-content {
+    pointer-events: auto !important;
+  }
+}
