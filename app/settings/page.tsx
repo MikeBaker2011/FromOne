@@ -690,45 +690,9 @@ export default function SettingsPage() {
                 </h2>
                 <p style={{ maxWidth: 820 }}>
                   {businessName
-                    ? `${businessName}${industry ? ` is saved as a ${industry} business` : ''}${
-                        location ? ` serving ${location}` : ''
-                      }. Dashboard will use this profile when creating posts from uploads.`
-                    : 'Scan a website or add the business details manually. Dashboard then uses this profile every time posts are created from uploaded media.'}
+                    ? 'Your Business Profile is saved. FromOne will use these details whenever you upload media and create weekly posts.'
+                    : 'Scan a website or add the business details manually. FromOne will use this profile every time posts are created from uploaded media.'}
                 </p>
-
-                <div
-                  className="settings-profile-preview-grid"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                    gap: 12,
-                    marginTop: 18,
-                  }}
-                >
-                  <p className="settings-profile-preview-note">
-                    Preview only. Tap “Edit profile” below to change these details.
-                  </p>
-                  <div className="card settings-profile-preview-card" style={{ padding: 14 }}>
-                    <strong>Industry</strong>
-                    <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                      {industry || 'Not added yet'}
-                    </p>
-                  </div>
-
-                  <div className="card settings-profile-preview-card" style={{ padding: 14 }}>
-                    <strong>Location</strong>
-                    <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                      {location || 'Not added yet'}
-                    </p>
-                  </div>
-
-                  <div className="card settings-profile-preview-card" style={{ padding: 14 }}>
-                    <strong>Customers</strong>
-                    <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-                      {targetAudience || 'Not added yet'}
-                    </p>
-                  </div>
-                </div>
 
                 <div className="button-row" style={{ marginTop: 20 }}>
                   <button
@@ -741,23 +705,67 @@ export default function SettingsPage() {
               </div>
 
               <div
+                className="settings-profile-strength-card"
                 style={{
-                  padding: 20,
-                  borderRadius: 26,
-                  background: 'rgba(5, 10, 24, 0.34)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  padding: 24,
+                  borderRadius: 30,
+                  background:
+                    'radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%), rgba(5, 10, 24, 0.42)',
+                  border: '1px solid rgba(255, 212, 59, 0.18)',
+                  boxShadow: '0 24px 70px rgba(0,0,0,0.24)',
                 }}
               >
                 <div className="page-eyebrow">Profile strength</div>
-                <h3 style={{ margin: '6px 0 8px' }}>{profileCompletionPercent}% ready</h3>
 
                 <div
                   style={{
-                    height: 10,
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    justifyContent: 'space-between',
+                    gap: 16,
+                    marginBottom: 12,
+                  }}
+                >
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: 'clamp(2.4rem, 6vw, 4rem)',
+                      lineHeight: 0.9,
+                      letterSpacing: '-0.07em',
+                    }}
+                  >
+                    {profileCompletionPercent}%
+                  </h3>
+
+                  <span
+                    className="status-pill"
+                    style={{
+                      marginBottom: 4,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {profileCompletionPercent >= 80 ? 'Ready' : 'Needs details'}
+                  </span>
+                </div>
+
+                <p
+                  style={{
+                    margin: '0 0 16px',
+                    color: 'var(--muted-strong)',
+                    lineHeight: 1.55,
+                  }}
+                >
+                  Complete the essentials so FromOne can create better posts for this business.
+                </p>
+
+                <div
+                  style={{
+                    height: 12,
                     borderRadius: 999,
                     overflow: 'hidden',
                     background: 'rgba(255,255,255,0.1)',
-                    marginBottom: 14,
+                    marginBottom: 16,
+                    border: '1px solid rgba(255,255,255,0.08)',
                   }}
                 >
                   <span
@@ -765,7 +773,8 @@ export default function SettingsPage() {
                       display: 'block',
                       width: `${profileCompletionPercent}%`,
                       height: '100%',
-                      background: '#ffd43b',
+                      background: 'linear-gradient(135deg, #ffd43b, #f7b733)',
+                      boxShadow: '0 0 22px rgba(255, 212, 59, 0.28)',
                     }}
                   />
                 </div>
@@ -777,11 +786,17 @@ export default function SettingsPage() {
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
+                        alignItems: 'center',
                         gap: 12,
-                        padding: '8px 10px',
-                        borderRadius: 14,
-                        background: 'rgba(255,255,255,0.05)',
-                        color: item.ready ? '#a7f3d0' : 'rgba(255,255,255,0.68)',
+                        padding: '10px 12px',
+                        borderRadius: 16,
+                        background: item.ready
+                          ? 'rgba(61, 220, 151, 0.09)'
+                          : 'rgba(255,255,255,0.055)',
+                        border: item.ready
+                          ? '1px solid rgba(61, 220, 151, 0.18)'
+                          : '1px solid rgba(255,255,255,0.08)',
+                        color: item.ready ? '#a7f3d0' : 'rgba(255,255,255,0.7)',
                         fontWeight: 850,
                       }}
                     >
@@ -1336,53 +1351,10 @@ export default function SettingsPage() {
       `}</style>
 
       <style jsx global>{`
-        .settings-profile-preview-note {
-          display: none;
-        }
-
-        .settings-profile-preview-card {
-          cursor: default;
-          user-select: none;
-        }
-
         @media (max-width: 720px) {
-          .settings-profile-preview-grid {
-            grid-template-columns: 1fr !important;
-            gap: 10px !important;
-          }
-
-          .settings-profile-preview-note {
-            display: block;
-            grid-column: 1 / -1;
-            margin: 0 0 2px;
-            padding: 12px 14px;
-            border-radius: 16px;
-            color: var(--muted-strong);
-            background: rgba(255, 212, 59, 0.08);
-            border: 1px solid rgba(255, 212, 59, 0.18);
-            font-size: 14px;
-            line-height: 1.45;
-            font-weight: 850;
-          }
-
-          .settings-profile-preview-card {
-            box-shadow: none !important;
-            background: rgba(255, 255, 255, 0.04) !important;
-            border-style: dashed !important;
-          }
-
-          .settings-profile-preview-card::after {
-            content: "Preview";
-            display: inline-flex;
-            margin-top: 8px;
-            padding: 5px 8px;
-            border-radius: 999px;
-            color: var(--gold);
-            background: rgba(255, 212, 59, 0.1);
-            font-size: 11px;
-            font-weight: 950;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
+          .settings-profile-strength-card {
+            padding: 20px !important;
+            border-radius: 24px !important;
           }
         }
       `}</style>
