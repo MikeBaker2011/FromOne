@@ -1704,3 +1704,55 @@ body:has(.fromone-simple-modal-overlay) {
     min-height: 220px !important;
   }
 }
+/* POST REVIEW HEADER BREATHING ROOM */
+
+.fromone-simple-modal-header {
+  margin-bottom: 28px !important;
+}
+
+.fromone-simple-modal-header h2,
+.fromone-post-action-modal h2,
+.fromone-simple-post-modal h2 {
+  font-size: clamp(2.15rem, 5vw, 4.25rem) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.055em !important;
+  margin: 10px 0 18px !important;
+}
+
+.fromone-simple-modal-pills,
+.selected-post-tags {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.fromone-simple-modal-pills span,
+.selected-post-tags span {
+  min-height: 38px !important;
+  padding: 9px 14px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.fromone-simple-section:first-of-type,
+.fromone-flow-preview-card:first-of-type {
+  margin-top: 24px !important;
+}
+
+@media (max-width: 760px) {
+  .fromone-simple-modal-header h2,
+  .fromone-post-action-modal h2,
+  .fromone-simple-post-modal h2 {
+    font-size: clamp(2rem, 11vw, 3.2rem) !important;
+    line-height: 1.02 !important;
+    margin-bottom: 16px !important;
+  }
+
+  .fromone-simple-modal-pills span,
+  .selected-post-tags span {
+    min-height: 36px !important;
+    font-size: 0.82rem !important;
+  }
+}
