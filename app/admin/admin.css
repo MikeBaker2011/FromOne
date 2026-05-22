@@ -1,0 +1,139 @@
+.admin-page {
+  width: min(1180px, calc(100vw - 28px));
+  margin: 0 auto 56px;
+}
+
+.admin-header {
+  max-width: 920px;
+  margin: 0 auto 24px;
+  text-align: center;
+}
+
+.admin-search-card {
+  max-width: 980px;
+  margin: 0 auto 22px;
+  border-radius: 34px;
+  border: 1px solid rgba(255, 212, 59, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035));
+}
+
+.admin-search-card h2,
+.admin-customer-card h2 {
+  margin-top: 0;
+}
+
+.admin-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.admin-results {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-customer-card {
+  border-radius: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-customer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.admin-customer-top code {
+  color: #ffe58a;
+  overflow-wrap: anywhere;
+}
+
+.admin-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-mini-card {
+  padding: 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.admin-mini-card span {
+  display: block;
+  color: var(--gold);
+  font-size: 0.76rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  margin-bottom: 8px;
+}
+
+.admin-mini-card strong {
+  display: block;
+  color: #ffffff;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  text-transform: capitalize;
+}
+
+.admin-mini-card p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.admin-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.admin-actions button {
+  min-height: 46px;
+  border-radius: 16px;
+  font-size: 0.92rem;
+}
+
+.admin-working {
+  margin: 14px 0 0;
+  color: #ffe58a;
+  font-weight: 850;
+}
+
+@media (max-width: 900px) {
+  .admin-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-page {
+    width: min(100vw - 20px, 1180px);
+  }
+
+  .admin-search-row,
+  .admin-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-customer-top {
+    display: grid;
+  }
+
+  .admin-customer-top button {
+    width: 100%;
+  }
+}
