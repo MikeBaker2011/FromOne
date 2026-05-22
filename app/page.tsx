@@ -89,6 +89,95 @@ const salesPoints = [
 export default function Home() {
   return (
     <main className="sales-page">
+      <style>{`
+        @media (max-width: 720px) {
+          .sales-page,
+          .sales-page section,
+          .sales-section-heading,
+          .homepage-benefit-grid {
+            text-align: center;
+          }
+
+          .sales-hero-title-line {
+            white-space: normal !important;
+          }
+
+          .sales-hero h1 {
+            max-width: 100% !important;
+            font-size: clamp(3.25rem, 16vw, 5.1rem) !important;
+            line-height: 0.92 !important;
+            letter-spacing: -0.075em !important;
+          }
+
+          .sales-hero p,
+          .sales-section-heading p {
+            margin-left: auto !important;
+            margin-right: auto !important;
+            text-align: center !important;
+          }
+
+          .sales-hero-actions {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+            width: 100% !important;
+            max-width: 520px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+
+          .sales-hero-actions a {
+            width: 100% !important;
+            justify-content: center !important;
+            text-align: center !important;
+          }
+
+          .homepage-benefit-grid {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            gap: 12px !important;
+            width: 100% !important;
+            max-width: 520px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+
+          .homepage-benefit-pill {
+            width: min(450px, 100%) !important;
+            min-height: 64px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            text-align: center !important;
+            padding: 14px 18px !important;
+          }
+
+          .homepage-benefit-pill span,
+          .homepage-benefit-pill strong {
+            display: inline-flex !important;
+            align-items: center !important;
+            text-align: center !important;
+          }
+
+          .homepage-benefit-pill strong {
+            line-height: 1.2 !important;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .sales-hero h1 {
+            font-size: clamp(3rem, 15vw, 4.4rem) !important;
+          }
+
+          .homepage-benefit-pill {
+            min-height: 58px !important;
+            padding: 12px 14px !important;
+          }
+        }
+      `}</style>
+
       <section
         className="sales-hero"
         style={{
@@ -151,8 +240,12 @@ export default function Home() {
               textAlign: 'center',
             }}
           >
-            <span style={{ display: 'block', whiteSpace: 'nowrap' }}>Upload media.</span>
-            <span style={{ display: 'block', whiteSpace: 'nowrap' }}>Get scheduled posts.</span>
+            <span className="sales-hero-title-line" style={{ display: 'block', whiteSpace: 'nowrap' }}>
+              Upload media.
+            </span>
+            <span className="sales-hero-title-line" style={{ display: 'block', whiteSpace: 'nowrap' }}>
+              Get scheduled posts.
+            </span>
           </h1>
 
           <p
