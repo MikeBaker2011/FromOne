@@ -803,9 +803,8 @@ export default function SettingsPage() {
               <div>
                 <div className="settings-live-step-label">
                   <span>1</span>
-                  Business Profile
+                  <strong>Business Profile</strong>
                 </div>
-                <div className="page-eyebrow">Step 1</div>
                 <h2 style={{ marginTop: 0, fontSize: 'clamp(2rem, 4vw, 3.4rem)', lineHeight: 0.95 }}>
                   {businessName || 'Set up once. Create better posts every week.'}
                 </h2>
@@ -1304,9 +1303,8 @@ export default function SettingsPage() {
           >
             <div className="settings-live-step-label">
               <span>2</span>
-              Connect publishing channels
+              <strong>Connect publishing channels</strong>
             </div>
-            <div className="page-eyebrow">Step 2</div>
             <h2 style={{ marginTop: 0 }}>Connect publishing channels</h2>
             <p style={{ maxWidth: 820 }}>
               Connect Meta once for Facebook and Instagram autoposting. TikTok stays simple with copy/open manual posting.
@@ -1422,9 +1420,8 @@ export default function SettingsPage() {
               <div>
                 <div className="settings-live-step-label">
                   <span>3</span>
-                  Create posts
+                  <strong>Create posts</strong>
                 </div>
-                <div className="page-eyebrow">Step 3</div>
                 <h2
                   style={{
                     margin: '0 0 10px',
@@ -1594,26 +1591,37 @@ export default function SettingsPage() {
         .settings-live-step-label {
           display: inline-flex;
           align-items: center;
-          gap: 10px;
-          margin-bottom: 10px;
+          gap: 12px;
+          margin-bottom: 14px;
           color: var(--gold);
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 1000;
           text-transform: uppercase;
-          letter-spacing: 0.14em;
+          letter-spacing: 0.12em;
+          line-height: 1;
+          white-space: normal;
         }
 
         .settings-live-step-label span {
-          width: 34px;
-          height: 34px;
+          flex: 0 0 auto;
+          width: 38px;
+          height: 38px;
           display: inline-grid;
           place-items: center;
-          border-radius: 13px;
+          border-radius: 14px;
           color: #101420;
           background: linear-gradient(135deg, var(--gold), #f7b733);
           box-shadow: 0 14px 30px rgba(255, 212, 59, 0.18);
-          font-size: 15px;
+          font-size: 16px;
           letter-spacing: 0;
+          line-height: 1;
+        }
+
+        .settings-live-step-label strong {
+          display: inline-block;
+          color: var(--gold);
+          letter-spacing: 0.12em;
+          line-height: 1.15;
         }
 
         .settings-numbered-section {
@@ -1663,11 +1671,13 @@ export default function SettingsPage() {
         @media (max-width: 760px) {
           .settings-live-step-label {
             margin-bottom: 12px;
+            gap: 10px;
+            font-size: 12px;
           }
 
           .settings-live-step-label span {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 12px;
           }
 
