@@ -159,6 +159,8 @@ export default function SettingsPage() {
     disconnectingConnectionId === 'all';
 
   const businessProfileReady = Boolean(businessName.trim() && industry.trim());
+  const connectionsReady = businessProfileReady;
+  const createPostsReady = businessProfileReady;
   const showOnboardingNextStep = isOnboardingSetup && businessProfileReady;
 
   const profileHasStarted = Boolean(
@@ -779,7 +781,7 @@ export default function SettingsPage() {
           </section>
 
           <section
-            className="premium-card"
+            className="premium-card settings-numbered-section"
             style={{
               maxWidth: 1120,
               margin: '0 auto 22px',
@@ -799,7 +801,11 @@ export default function SettingsPage() {
               }}
             >
               <div>
-                <div className="page-eyebrow">Business Profile</div>
+                <div className="settings-live-step-label">
+                  <span>1</span>
+                  Business Profile
+                </div>
+                <div className="page-eyebrow">Step 1</div>
                 <h2 style={{ marginTop: 0, fontSize: 'clamp(2rem, 4vw, 3.4rem)', lineHeight: 0.95 }}>
                   {businessName || 'Set up once. Create better posts every week.'}
                 </h2>
@@ -1287,7 +1293,7 @@ export default function SettingsPage() {
           <section
             ref={socialConnectionsRef}
             id="publishing-connections"
-            className="premium-card"
+            className={`premium-card settings-numbered-section settings-connections-section ${connectionsReady ? "settings-step-ready-pulse" : ""}`}
             style={{
               scrollMarginTop: 96,
               maxWidth: 1120,
@@ -1296,7 +1302,11 @@ export default function SettingsPage() {
               border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
-            <div className="page-eyebrow">Social accounts</div>
+            <div className="settings-live-step-label">
+              <span>2</span>
+              Connect publishing channels
+            </div>
+            <div className="page-eyebrow">Step 2</div>
             <h2 style={{ marginTop: 0 }}>Connect publishing channels</h2>
             <p style={{ maxWidth: 820 }}>
               Connect Meta once for Facebook and Instagram autoposting. TikTok stays simple with copy/open manual posting.
@@ -1390,7 +1400,7 @@ export default function SettingsPage() {
           </section>
 
           <section
-            className="premium-card"
+            className={`premium-card settings-numbered-section settings-create-posts-section ${createPostsReady ? "settings-step-ready-pulse" : ""}`}
             style={{
               maxWidth: 1120,
               margin: '0 auto 22px',
@@ -1410,7 +1420,11 @@ export default function SettingsPage() {
               }}
             >
               <div>
-                <div className="page-eyebrow">Ready to create posts</div>
+                <div className="settings-live-step-label">
+                  <span>3</span>
+                  Create posts
+                </div>
+                <div className="page-eyebrow">Step 3</div>
                 <h2
                   style={{
                     margin: '0 0 10px',
@@ -1439,6 +1453,7 @@ export default function SettingsPage() {
               >
                 <button
                   type="button"
+                  className={createPostsReady ? 'settings-create-posts-button-pulse' : undefined}
                   onClick={() => {
                     window.location.href = '/dashboard';
                   }}
@@ -1569,6 +1584,113 @@ export default function SettingsPage() {
         }
 
         @media (max-width: 760px) {
+          .premium-card div[style*="minmax(240px, 320px)"] {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
+      <style jsx global>{`
+        .settings-live-step-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 10px;
+          color: var(--gold);
+          font-size: 12px;
+          font-weight: 1000;
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+        }
+
+        .settings-live-step-label span {
+          width: 34px;
+          height: 34px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 13px;
+          color: #101420;
+          background: linear-gradient(135deg, var(--gold), #f7b733);
+          box-shadow: 0 14px 30px rgba(255, 212, 59, 0.18);
+          font-size: 15px;
+          letter-spacing: 0;
+        }
+
+        .settings-numbered-section {
+          position: relative;
+        }
+
+        .settings-step-ready-pulse {
+          animation: settingsReadyGlow 2.4s ease-in-out infinite;
+        }
+
+        .settings-create-posts-button-pulse {
+          animation: settingsButtonPulse 1.65s ease-in-out infinite;
+        }
+
+        @keyframes settingsReadyGlow {
+          0%, 100% {
+            border-color: rgba(255, 212, 59, 0.24);
+            box-shadow: 0 26px 84px rgba(0,0,0,0.28);
+          }
+          50% {
+            border-color: rgba(255, 212, 59, 0.58);
+            box-shadow:
+              0 26px 84px rgba(0,0,0,0.28),
+              0 0 0 4px rgba(255, 212, 59, 0.08),
+              0 0 46px rgba(255, 212, 59, 0.12);
+          }
+        }
+
+        @keyframes settingsButtonPulse {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+            box-shadow: 0 14px 34px rgba(255, 212, 59, 0.18);
+          }
+          50% {
+            transform: translateY(-1px) scale(1.025);
+            box-shadow: 0 22px 54px rgba(255, 212, 59, 0.34);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .settings-step-ready-pulse,
+          .settings-create-posts-button-pulse {
+            animation: none !important;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .settings-live-step-label {
+            margin-bottom: 12px;
+          }
+
+          .settings-live-step-label span {
+            width: 32px;
+            height: 32px;
+            border-radius: 12px;
+          }
+
+          .settings-setup-guide {
+            padding: 20px !important;
+            border-radius: 24px !important;
+          }
+
+          .settings-setup-step-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+
+          .settings-setup-step-card {
+            padding: 16px !important;
+            border-radius: 20px !important;
+          }
+
+          .settings-profile-strength-card {
+            padding: 20px !important;
+            border-radius: 24px !important;
+          }
+
           .premium-card div[style*="minmax(240px, 320px)"] {
             grid-template-columns: 1fr !important;
           }
