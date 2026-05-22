@@ -160,6 +160,46 @@ function cleanText(value: any, fallback = '') {
     .trim();
 }
 
+function buildFallbackRewriteFromText({
+  text,
+  fallbackSummary,
+  platform,
+  originalCaption,
+  audienceTarget,
+  marketReach,
+}: {
+  text: string;
+  fallbackSummary: string;
+  platform: string;
+  originalCaption: string;
+  audienceTarget: string;
+  marketReach: string;
+}) {
+  const cleaned = cleanText(text || originalCaption);
+  const caption = cleaned
+    .replace(/^caption\s*[:\-]\s*/i, '')
+    .replace(/^improved caption\s*[:\-]\s*/i, '')
+    .trim();
+
+  const reachTag = String(marketReach || audienceTarget || '').toLowerCase();
+  const reachHashtags =
+    reachTag.includes('nationwide') || reachTag.includes('uk')
+      ? ['#UKBusiness', '#NationwideService']
+      : reachTag.includes('online')
+        ? ['#OnlineBusiness', '#ShopOnline']
+        : reachTag.includes('regional')
+          ? ['#RegionalBusiness', '#LocalService']
+          : ['#LocalBusiness', '#SmallBusiness'];
+
+  return {
+    caption: enforcePlatformCaptionLimit(caption || originalCaption, platform),
+    cta: 'Message us to find out more.',
+    hashtags: reachHashtags,
+    image_prompt: 'Use a clear image, flyer, product photo, result photo, or service image that matches this post.',
+    improvement_summary: fallbackSummary,
+  };
+}
+
 function normaliseRewrite(raw: any, fallbackSummary: string, platform: string): RewriteResult {
   const hashtags = ensureArray(raw.hashtags)
     .map(ensureHashtag)
@@ -364,11 +404,13 @@ function getMarketReachGuidance(audienceTarget: string, marketReach: string) {
 Market reach:
 Nationwide / UK-wide.
 
-Specific instructions:
-- Do not make the post sound limited to one local area.
-- Use wording such as "across the UK", "nationwide", "UK customers", or "available UK-wide" only when it fits naturally.
-- Focus on trust, convenience, delivery, remote service, online ordering, booking, or nationwide availability.
+MANDATORY wording direction:
+- The rewritten caption must clearly sound UK-wide or nationwide.
+- Include one natural phrase such as "across the UK", "UK-wide", "nationwide", "wherever you are in the UK", or "for customers across the country".
+- Do not use neighbourhood-only language such as "nearby", "local area", "pop in", or "around the corner" unless it still makes sense.
+- Focus on trust, convenience, delivery, remote service, online booking, online ordering, courier/postage, or nationwide availability.
 - Do not invent delivery promises, locations, prices, or coverage details that were not supplied.
+- The CTA should suit a nationwide customer, such as enquiring online, ordering online, booking online, or messaging for details.
 `;
   }
 
@@ -384,11 +426,12 @@ Specific instructions:
 Market reach:
 Online customers / ecommerce.
 
-Specific instructions:
-- Make the post suitable for customers who can buy, book, enquire, or order online.
-- Mention online ordering, online booking, website enquiries, delivery, or remote service only if it fits the supplied business context.
+MANDATORY wording direction:
+- The rewritten caption must clearly sound suitable for online customers.
+- Include one natural phrase such as "order online", "book online", "browse online", "shop from home", "visit the website", or "send an online enquiry" where appropriate.
 - Avoid location-heavy wording unless a location was supplied.
-- Make the CTA suitable for online action.
+- Focus on convenience, speed, browsing, ordering, booking, delivery, remote service, or online enquiries.
+- The CTA must be suitable for online action.
 `;
   }
 
@@ -402,10 +445,12 @@ Specific instructions:
 Market reach:
 Regional customers.
 
-Specific instructions:
-- Write for customers across a wider service area, not just one neighbourhood.
-- Use wording like "across the area", "nearby towns", "surrounding areas", or "regional customers" without inventing exact place names.
-- Keep it practical and service-led.
+MANDATORY wording direction:
+- The rewritten caption must sound suitable for a wider regional service area.
+- Include one natural phrase such as "across the region", "across the area", "surrounding areas", "nearby towns", or "throughout the county".
+- Do not invent exact place names.
+- Avoid making it sound limited to one street or neighbourhood.
+- The CTA should suit customers from a wider area.
 `;
   }
 
@@ -413,9 +458,9 @@ Specific instructions:
 Market reach:
 Local customers.
 
-Specific instructions:
-- Make the post useful for local customers and nearby enquiries.
-- If no exact location is supplied, use natural phrases like "local customers", "nearby homes", "in your area", or "the local community".
+MANDATORY wording direction:
+- The rewritten caption should sound useful for local customers and nearby enquiries.
+- Use natural phrases like "local customers", "nearby homes", "in your area", or "the local community" if no exact location is supplied.
 - Do not invent town names.
 `;
 }
@@ -427,54 +472,98 @@ async function rewriteWithGemini(prompt: string) {
     throw new Error('Missing GEMINI_API_KEY in .env.local');
   }
 
-  const response = await axios.post(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-    {
+  async function callGemini(promptText: string, strictJson = true) {
+    const payload: any = {
       contents: [
         {
           parts: [
             {
-              text: prompt,
+              text: promptText,
             },
           ],
         },
       ],
       generationConfig: {
-        temperature: 0.62,
+        temperature: strictJson ? 0.35 : 0.55,
         maxOutputTokens: 1800,
         responseMimeType: 'application/json',
-        responseSchema: {
-          type: 'OBJECT',
-          properties: {
-            caption: { type: 'STRING' },
-            cta: { type: 'STRING' },
-            hashtags: {
-              type: 'ARRAY',
-              items: { type: 'STRING' },
-            },
-            image_prompt: { type: 'STRING' },
-            improvement_summary: { type: 'STRING' },
+      },
+    };
+
+    if (strictJson) {
+      payload.generationConfig.responseSchema = {
+        type: 'OBJECT',
+        properties: {
+          caption: { type: 'STRING' },
+          cta: { type: 'STRING' },
+          hashtags: {
+            type: 'ARRAY',
+            items: { type: 'STRING' },
           },
-          required: ['caption', 'cta', 'hashtags', 'image_prompt', 'improvement_summary'],
+          image_prompt: { type: 'STRING' },
+          improvement_summary: { type: 'STRING' },
         },
-      },
-    },
-    {
-      headers: {
-        'x-goog-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
+        required: ['caption', 'cta', 'hashtags', 'image_prompt', 'improvement_summary'],
+      };
     }
-  );
 
-  const part = response.data.candidates?.[0]?.content?.parts?.[0];
-  const text = part?.text || '';
+    const response = await axios.post(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+      payload,
+      {
+        headers: {
+          'x-goog-api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-  if (!text) {
-    throw new Error('Gemini returned an empty response.');
+    const parts = response.data.candidates?.[0]?.content?.parts || [];
+    const text = parts
+      .map((part: any) => part?.text || '')
+      .filter(Boolean)
+      .join('\n')
+      .trim();
+
+    if (!text) {
+      throw new Error('Gemini returned an empty response.');
+    }
+
+    return text;
   }
 
-  return extractJsonFromText(text);
+  const firstText = await callGemini(prompt, true);
+
+  try {
+    return extractJsonFromText(firstText);
+  } catch {
+    const repairPrompt = `
+Convert this response into ONLY valid JSON.
+
+Required JSON shape:
+{
+  "caption": "string",
+  "cta": "string",
+  "hashtags": ["#Example"],
+  "image_prompt": "string",
+  "improvement_summary": "string"
+}
+
+Rules:
+- Return JSON only.
+- No markdown.
+- No explanation.
+- Hashtags must be an array of strings.
+- Keep the caption exactly as close as possible to the supplied response.
+
+Response to convert:
+${firstText}
+`;
+
+    const repairedText = await callGemini(repairPrompt, true);
+
+    return extractJsonFromText(repairedText);
+  }
 }
 
 async function rewriteWithOpenAI(prompt: string) {
@@ -646,6 +735,7 @@ Rewrite rules:
 - Use natural, human wording.
 - Use no emojis unless the brand clearly suits them.
 - Caption should usually be 45 to 120 words only if the platform limit allows it.
+- The market reach instruction is important. If Nationwide, Regional, or Online is selected, the caption must visibly reflect that.
 - If the selected improvement action asks for shorter copy, make it shorter.
 - TikTok, YouTube Shorts, and X / Twitter should be especially short.
 - CTA should be specific and natural.
@@ -655,10 +745,31 @@ Rewrite rules:
 - improvement_summary must be short, clear, and no more than 14 words.
 `;
 
-    const rawResult =
-      provider === 'openai'
-        ? await rewriteWithOpenAI(prompt)
-        : await rewriteWithGemini(prompt);
+    let rawResult: any;
+
+    try {
+      rawResult =
+        provider === 'openai'
+          ? await rewriteWithOpenAI(prompt)
+          : await rewriteWithGemini(prompt);
+    } catch (rewriteError: any) {
+      const jsonFailed =
+        rewriteError?.message === 'AI response did not contain valid JSON.' ||
+        rewriteError?.message === 'The AI returned an unexpected format. Please try again.';
+
+      if (!jsonFailed) {
+        throw rewriteError;
+      }
+
+      rawResult = buildFallbackRewriteFromText({
+        text: caption,
+        fallbackSummary,
+        platform,
+        originalCaption: caption,
+        audienceTarget,
+        marketReach,
+      });
+    }
 
     const result = normaliseRewrite(rawResult, fallbackSummary, platform);
 
