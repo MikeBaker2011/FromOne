@@ -1,4 +1,4 @@
-import { ChangeEvent, RefObject, useState } from 'react';
+import { ChangeEvent, CSSProperties, RefObject, useState } from 'react';
 
 type PostStatus = 'Ready' | 'Reminder set' | 'Posted' | 'Failed';
 
@@ -28,6 +28,7 @@ type PostActionModalProps = {
   dynamicAudienceTargets: string[];
   audienceTarget: string;
   customAudienceTarget: string;
+  marketReachTarget: string;
   toneTarget: string;
   toneOptions: string[];
   activeImprovementNote: ImprovementNote | null;
@@ -67,6 +68,7 @@ type PostActionModalProps = {
   onRescanPostMedia?: (post: any) => void;
   onSetAudienceTarget: (value: string) => void;
   onSetCustomAudienceTarget: (value: string) => void;
+  onSetMarketReachTarget: (value: string) => void;
   onSetToneTarget: (value: string) => void;
   onUploadMedia: (post: any, event: ChangeEvent<HTMLInputElement>) => void;
   onRemoveMedia: (post: any) => void;
@@ -83,6 +85,46 @@ type PostActionModalProps = {
   onDeletePost?: (post: any) => void;
 };
 
+const marketReachOptions = [
+  'Local customers',
+  'Regional customers',
+  'Nationwide UK customers',
+  'Online customers',
+];
+
+const platformCaptionLimits: Record<string, number> = {
+  Facebook: 700,
+  Instagram: 1200,
+  TikTok: 300,
+};
+
+function getCaptionLimitForPlatform(platform?: string | null) {
+  const cleanPlatform = String(platform || '').toLowerCase();
+
+  if (cleanPlatform.includes('instagram')) return platformCaptionLimits.Instagram;
+  if (cleanPlatform.includes('tiktok')) return platformCaptionLimits.TikTok;
+
+  return platformCaptionLimits.Facebook;
+}
+
+function getCaptionCountStatus(count: number, limit: number) {
+  if (count > limit) return 'over';
+  if (count > limit * 0.9) return 'near';
+  return 'safe';
+}
+
+function getCaptionCounterStyle(status: string): CSSProperties {
+  if (status === 'over') {
+    return { color: '#fecaca', fontWeight: 900 };
+  }
+
+  if (status === 'near') {
+    return { color: '#ffe58a', fontWeight: 900 };
+  }
+
+  return { color: 'rgba(248, 250, 252, 0.66)', fontWeight: 800 };
+}
+
 export default function PostActionModal({
   selectedPost,
   editingPostId,
@@ -98,6 +140,7 @@ export default function PostActionModal({
   dynamicAudienceTargets,
   audienceTarget,
   customAudienceTarget,
+  marketReachTarget,
   toneTarget,
   toneOptions,
   activeImprovementNote,
@@ -137,6 +180,7 @@ export default function PostActionModal({
   onRescanPostMedia,
   onSetAudienceTarget,
   onSetCustomAudienceTarget,
+  onSetMarketReachTarget,
   onSetToneTarget,
   onUploadMedia,
   onRemoveMedia,
@@ -158,6 +202,11 @@ export default function PostActionModal({
   if (!selectedPost) return null;
 
   const platformName = getPlatformDisplayName(selectedPost);
+  const captionLimit = getCaptionLimitForPlatform(platformName);
+  const savedCaptionLength = String(selectedPost.caption || '').length;
+  const editedCaptionLength = String(editCaption || '').length;
+  const savedCaptionStatus = getCaptionCountStatus(savedCaptionLength, captionLimit);
+  const editedCaptionStatus = getCaptionCountStatus(editedCaptionLength, captionLimit);
   const platformKey = String(selectedPost.platform || '').toLowerCase();
   const mediaType = String(selectedPost.media_type || '').toLowerCase();
 
@@ -412,6 +461,11 @@ export default function PostActionModal({
                   onChange={(event) => onSetEditCaption(event.target.value)}
                   rows={8}
                 />
+                <small style={getCaptionCounterStyle(editedCaptionStatus)}>
+                  {editedCaptionLength} / {captionLimit} characters for {platformName}
+                  {editedCaptionStatus === 'over' ? ' — shorten this before posting' : ''}
+                  {editedCaptionStatus === 'near' ? ' — close to the limit' : ''}
+                </small>
               </label>
 
               <label>
@@ -452,6 +506,12 @@ export default function PostActionModal({
             <>
               <div className="fromone-simple-wording-card">
                 <p>{selectedPost.caption || 'No caption saved.'}</p>
+
+                <small style={getCaptionCounterStyle(savedCaptionStatus)}>
+                  {savedCaptionLength} / {captionLimit} characters for {platformName}
+                  {savedCaptionStatus === 'over' ? ' — shorten this before posting' : ''}
+                  {savedCaptionStatus === 'near' ? ' — close to the limit' : ''}
+                </small>
 
                 {selectedPost.cta && (
                   <p>
@@ -537,6 +597,19 @@ export default function PostActionModal({
                     placeholder="Example: first-time homeowners"
                   />
                 )}
+
+                <select
+                  className="input"
+                  value={marketReachTarget}
+                  onChange={(event) => onSetMarketReachTarget(event.target.value)}
+                  aria-label="Market reach"
+                >
+                  {marketReachOptions.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
 
                 <select
                   className="input"

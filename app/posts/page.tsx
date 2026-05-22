@@ -369,6 +369,7 @@ export default function PostsPage() {
 
   const [audienceTarget, setAudienceTarget] = useState("Local customers");
   const [customAudienceTarget, setCustomAudienceTarget] = useState("");
+  const [marketReachTarget, setMarketReachTarget] = useState("Local customers");
   const [toneTarget, setToneTarget] = useState("Use current tone");
   const [rewritingPost, setRewritingPost] = useState(false);
   const [rewritingAction, setRewritingAction] = useState("");
@@ -1640,6 +1641,7 @@ export default function PostsPage() {
       const response = await axios.post("/api/rewritePost", {
         provider: "gemini",
         audienceTarget: finalAudience,
+        marketReach: marketReachTarget,
         tone: getToneForRewrite(),
         toneAdjustment: toneTarget,
         businessName: profile?.business_name || campaign?.business_name || "the business",
@@ -3284,6 +3286,7 @@ Important:
           dynamicAudienceTargets={dynamicAudienceTargets}
           audienceTarget={audienceTarget}
           customAudienceTarget={customAudienceTarget}
+          marketReachTarget={marketReachTarget}
           toneTarget={toneTarget}
           toneOptions={toneOptions}
           activeImprovementNote={activeImprovementNote}
@@ -3323,6 +3326,7 @@ Important:
           onRescanPostMedia={handleRescanPostMedia}
           onSetAudienceTarget={setAudienceTarget}
           onSetCustomAudienceTarget={setCustomAudienceTarget}
+          onSetMarketReachTarget={setMarketReachTarget}
           onSetToneTarget={setToneTarget}
           onUploadMedia={uploadMedia}
           onRemoveMedia={removeMedia}
