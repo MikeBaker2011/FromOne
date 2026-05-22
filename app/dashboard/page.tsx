@@ -176,6 +176,9 @@ export default function DashboardPage() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
     defaultSelectedPlatforms
   );
+  const [platformDistributionMode, setPlatformDistributionMode] = useState<
+    "split" | "every_platform"
+  >("split");
   const [selectedMarketReach, setSelectedMarketReach] =
     useState("Local customers");
   const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(3);
@@ -1441,7 +1444,10 @@ Core FromOne rule:
     }
 
     const postCount = contentDayCount;
-    const totalPlatformPostsToCreate = contentDayCount;
+    const totalPlatformPostsToCreate =
+      platformDistributionMode === "every_platform"
+        ? contentDayCount * selectedPlatforms.length
+        : contentDayCount;
 
     const campaignLimitAllowed = addToCampaignId
       ? true
@@ -1475,7 +1481,8 @@ ${weeklyPostNote.trim() || "No extra note supplied."}
 If uploads are supplied:
 - Post 1 must use Upload 1 as the topic.
 - Post 2 must use Upload 2 as the topic.
-- Continue one post per upload.
+- Continue one base post per upload.
+- Platform distribution mode: ${platformDistributionMode === "every_platform" ? "create each base post for every selected platform" : "split base posts across selected platforms"}.
 - Do not only describe the image, flyer or video.
 - Use the business profile to add quality, local angle, industry relevance, tone, CTA and sales angle.`,
       provider: "gemini",
@@ -1487,7 +1494,7 @@ If uploads are supplied:
       weeklyUploads: uploadedMediaItems,
       uploads: uploadedMediaItems,
       requestedOutput: {
-        posts: `array of ${postCount} post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only Facebook, Instagram and TikTok. If mediaItems are supplied, create one post per media item in the same order.`,
+        posts: `array of ${postCount} base post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only Facebook, Instagram and TikTok. If mediaItems are supplied, create one base post per media item in the same order. Platform distribution mode: ${platformDistributionMode}.`,
         selected_platforms: selectedPlatforms,
         market_reach: marketReachContext,
         uploaded_media: uploadedMediaItems,
@@ -1589,7 +1596,7 @@ If uploads are supplied:
           campaign_area: detectedLocation,
           tone: detectedTone,
           posting_frequency: `${totalPlatformPostsToCreate} posts`,
-          platform_plan: `${buildPlatformPlanText(selectedPlatforms, totalPlatformPostsToCreate)}. Market reach: ${marketReachContext}`,
+          platform_plan: `${buildPlatformPlanText(selectedPlatforms, totalPlatformPostsToCreate)}. Market reach: ${marketReachContext}. Platform mode: ${platformDistributionMode === "every_platform" ? "each post for every platform" : "split across platforms"}`,
         })
         .select()
         .single();
@@ -1603,77 +1610,92 @@ If uploads are supplied:
     const suggestedScheduleSummary: string[] = [];
 
     try {
+      let createdPostIndex = 0;
+
       for (let i = 0; i < posts.length; i++) {
-        const contentDayIndex = existingCampaignStats.contentDays + i;
-        const contentDayNumber = contentDayIndex + 1;
+        const baseContentDayIndex = existingCampaignStats.contentDays + i;
+        const contentDayNumber = baseContentDayIndex + 1;
         const mediaItem = uploadedMediaItems[i] || null;
         const baseGeneratedPost = posts[i];
 
-        const selectedPlatform =
-          selectedPlatforms[contentDayIndex % selectedPlatforms.length] ||
-          platformFallback[contentDayIndex % platformFallback.length] ||
-          "Facebook";
+        const platformsForThisPost =
+          platformDistributionMode === "every_platform"
+            ? selectedPlatforms
+            : [
+                selectedPlatforms[baseContentDayIndex % selectedPlatforms.length] ||
+                  platformFallback[baseContentDayIndex % platformFallback.length] ||
+                  "Facebook",
+              ];
 
-        const post = normaliseGeneratedPost(
-          {
-            ...(typeof baseGeneratedPost === "string"
-              ? { caption: baseGeneratedPost }
-              : baseGeneratedPost),
+        for (const selectedPlatform of platformsForThisPost) {
+          const scheduleIndex = existingCampaignStats.contentDays + createdPostIndex;
+
+          const post = normaliseGeneratedPost(
+            {
+              ...(typeof baseGeneratedPost === "string"
+                ? { caption: baseGeneratedPost }
+                : baseGeneratedPost),
+              platform: selectedPlatform,
+              day: `Post ${contentDayNumber}`,
+              title:
+                platformDistributionMode === "every_platform"
+                  ? `${selectedPlatform} Version ${contentDayNumber}`
+                  : `${selectedPlatform} Post ${contentDayNumber}`,
+            },
+            scheduleIndex,
+            activeClient,
+            detectedIndustry,
+            detectedLocation
+          );
+
+          const suggestedPublishTime = getSuggestedPostTime(
+            scheduleIndex,
+            selectedPlatform,
+            activeClient,
+            detectedIndustry
+          );
+
+          suggestedPublishTime.setMinutes(
+            suggestedPublishTime.getMinutes() + getPlatformScheduleOffsetMinutes(selectedPlatform)
+          );
+
+          suggestedScheduleSummary.push(
+            `${selectedPlatform}: ${getReadableSuggestedTime(suggestedPublishTime)}`
+          );
+
+          const { error: postError } = await supabase.from("campaign_posts").insert({
+            user_id: userId,
+            campaign_id: campaign.id,
+            keyword: detectedIndustry || "business",
+            title: post.title,
+            caption: post.caption,
+            cta: post.cta,
+            hashtags: post.hashtags,
             platform: selectedPlatform,
-            day: `Post ${contentDayNumber}`,
-            title: `${selectedPlatform} Post ${contentDayNumber}`,
-          },
-          contentDayIndex,
-          activeClient,
-          detectedIndustry,
-          detectedLocation
-        );
+            type: source,
+            scheduled_day: `Post ${contentDayNumber} ${selectedPlatform}`,
+            scheduled_at: suggestedPublishTime.toISOString(),
+            scheduled_publish_at: suggestedPublishTime.toISOString(),
+            publish_status: "scheduled",
+            status: "scheduled",
+            is_posted: false,
+            client_id: activeClient.id,
+            image_prompt: post.image_prompt,
+            media_url: mediaItem?.media_url || null,
+            media_path: mediaItem?.media_path || null,
+            media_type: mediaItem?.media_type || null,
+            reach: 0,
+            clicks: 0,
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            saves: 0,
+          });
 
-        const suggestedPublishTime = getSuggestedPostTime(
-          contentDayIndex,
-          selectedPlatform,
-          activeClient,
-          detectedIndustry
-        );
+          if (postError) throwSupabaseError(postError);
 
-        suggestedPublishTime.setMinutes(
-          suggestedPublishTime.getMinutes() + getPlatformScheduleOffsetMinutes(selectedPlatform)
-        );
-
-        suggestedScheduleSummary.push(
-          `${selectedPlatform}: ${getReadableSuggestedTime(suggestedPublishTime)}`
-        );
-
-        const { error: postError } = await supabase.from("campaign_posts").insert({
-          user_id: userId,
-          campaign_id: campaign.id,
-          keyword: detectedIndustry || "business",
-          title: post.title,
-          caption: post.caption,
-          cta: post.cta,
-          hashtags: post.hashtags,
-          platform: selectedPlatform,
-          type: source,
-          scheduled_day: `Post ${contentDayNumber} ${selectedPlatform}`,
-          scheduled_at: suggestedPublishTime.toISOString(),
-          scheduled_publish_at: suggestedPublishTime.toISOString(),
-          publish_status: "scheduled",
-          status: "scheduled",
-          is_posted: false,
-          client_id: activeClient.id,
-          image_prompt: post.image_prompt,
-          media_url: mediaItem?.media_url || null,
-          media_path: mediaItem?.media_path || null,
-          media_type: mediaItem?.media_type || null,
-          reach: 0,
-          clicks: 0,
-          likes: 0,
-          comments: 0,
-          shares: 0,
-          saves: 0,
-        });
-
-        if (postError) throwSupabaseError(postError);
+          createdPostIndex += 1;
+        }
       }
     } catch (postInsertError) {
       await deleteEmptyCampaignIfNeeded(createdCampaignId);
@@ -2293,11 +2315,80 @@ If uploads are supplied:
                   : "Upload media to start"}
             </button>
 
+            <div
+              style={{
+                display: "grid",
+                gap: "10px",
+                margin: "10px 0",
+                padding: "14px",
+                borderRadius: "18px",
+                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(255,255,255,0.045)",
+              }}
+            >
+              <label
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "22px minmax(0, 1fr)",
+                  gap: "10px",
+                  alignItems: "start",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="platformDistributionMode"
+                  checked={platformDistributionMode === "split"}
+                  onChange={() => setPlatformDistributionMode("split")}
+                />
+                <span>
+                  <strong>Split posts across selected platforms</strong>
+                  <small style={{ display: "block", color: "var(--muted)", marginTop: "4px" }}>
+                    Best for weekly calendars. Example: 5 posts split between Facebook,
+                    Instagram and TikTok.
+                  </small>
+                </span>
+              </label>
+
+              <label
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "22px minmax(0, 1fr)",
+                  gap: "10px",
+                  alignItems: "start",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="platformDistributionMode"
+                  checked={platformDistributionMode === "every_platform"}
+                  onChange={() => setPlatformDistributionMode("every_platform")}
+                />
+                <span>
+                  <strong>Create each post for every selected platform</strong>
+                  <small style={{ display: "block", color: "var(--muted)", marginTop: "4px" }}>
+                    Best when you want each idea adapted for Facebook, Instagram and TikTok.
+                  </small>
+                </span>
+              </label>
+            </div>
+
             {weeklyUploads.length > 0 && (
               <p style={{ textAlign: "center", margin: 0, color: "var(--muted)" }}>
                 {weeklyUploads.length} upload{weeklyUploads.length === 1 ? "" : "s"} will create{" "}
-                {weeklyUploads.length} scheduled post{weeklyUploads.length === 1 ? "" : "s"},{" "}
-                split across selected platforms
+                {platformDistributionMode === "every_platform"
+                  ? weeklyUploads.length * selectedPlatforms.length
+                  : weeklyUploads.length}{" "}
+                scheduled post
+                {(platformDistributionMode === "every_platform"
+                  ? weeklyUploads.length * selectedPlatforms.length
+                  : weeklyUploads.length) === 1
+                  ? ""
+                  : "s"}
+                {platformDistributionMode === "every_platform"
+                  ? " across every selected platform"
+                  : ", split across selected platforms"}
               </p>
             )}
           </div>
