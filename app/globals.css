@@ -12178,184 +12178,137 @@ body:has(.simplified-posts-page) .simplified-posts-page {
     pointer-events: auto !important;
   }
 }
-/* MOBILE PUBLIC NAV DROPDOWN FIX */
+/* MOBILE HOMEPAGE CENTER ALIGN POLISH */
 
 @media (max-width: 720px) {
-  .sales-nav.public-nav {
-    position: relative;
-    z-index: 100;
+  .hero,
+  .sales-hero,
+  .home-hero,
+  .landing-hero {
+    text-align: center !important;
   }
 
-  .public-nav-links {
-    position: absolute;
-    top: calc(100% + 10px);
-    left: 0;
-    right: 0;
-    z-index: 101;
-    display: none;
-    padding: 14px;
-    border-radius: 22px;
-    background: rgba(10, 13, 22, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
-    backdrop-filter: blur(18px);
+  .hero .page-eyebrow,
+  .sales-hero .page-eyebrow,
+  .home-hero .page-eyebrow,
+  .landing-hero .page-eyebrow {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
-  .public-nav-links.open {
-    display: grid;
-    gap: 8px;
+  .hero h1,
+  .sales-hero h1,
+  .home-hero h1,
+  .landing-hero h1,
+  .hero p,
+  .sales-hero p,
+  .home-hero p,
+  .landing-hero p {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
-  .public-nav-links a {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    padding: 10px 14px;
-    border-radius: 14px;
-    font-size: 15px;
-    font-weight: 900;
-    color: var(--muted-strong);
-    background: transparent;
+  .hero .button-row,
+  .sales-hero .button-row,
+  .home-hero .button-row,
+  .landing-hero .button-row {
+    justify-content: center !important;
   }
 
-  .public-nav-links a:hover,
-  .public-nav-links a:focus {
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.07);
+  .proof-row,
+  .trust-row,
+  .hero-proof-row,
+  .sales-proof-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    justify-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
-  .public-nav-links .sales-nav-button {
-    justify-content: center;
-    margin-top: 4px;
-    color: #101420;
-    background: linear-gradient(135deg, var(--gold), #f7b733);
-  }
-
-  .public-nav-toggle {
-    position: relative;
-    z-index: 102;
-  }
-}/* MOBILE PUBLIC NAV DROPDOWN FIX */
-
-@media (max-width: 720px) {
-  .sales-nav.public-nav {
-    position: relative;
-    z-index: 100;
-  }
-
-  .public-nav-links {
-    position: absolute;
-    top: calc(100% + 10px);
-    left: 0;
-    right: 0;
-    z-index: 101;
-    display: none;
-    padding: 14px;
-    border-radius: 22px;
-    background: rgba(10, 13, 22, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
-    backdrop-filter: blur(18px);
-  }
-
-  .public-nav-links.open {
-    display: grid;
-    gap: 8px;
-  }
-
-  .public-nav-links a {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    padding: 10px 14px;
-    border-radius: 14px;
-    font-size: 15px;
-    font-weight: 900;
-    color: var(--muted-strong);
-    background: transparent;
-  }
-
-  .public-nav-links a:hover,
-  .public-nav-links a:focus {
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.07);
-  }
-
-  .public-nav-links .sales-nav-button {
-    justify-content: center;
-    margin-top: 4px;
-    color: #101420;
-    background: linear-gradient(135deg, var(--gold), #f7b733);
-  }
-
-  .public-nav-toggle {
-    position: relative;
-    z-index: 102;
+  .proof-pill,
+  .trust-pill,
+  .hero-proof-pill,
+  .sales-proof-pill {
+    width: min(450px, 100%) !important;
+    justify-content: center !important;
+    text-align: center !important;
   }
 }
-/* MOBILE PUBLIC NAV CLEAN DROPDOWN */
+/* PUBLIC MOBILE NAV — DASHBOARD STYLE */
 
 @media (max-width: 720px) {
   .sales-nav.public-nav {
-    position: relative;
-    z-index: 200;
+    position: relative !important;
+    z-index: 300 !important;
+  }
+
+  .public-nav-toggle {
+    position: relative !important;
+    z-index: 302 !important;
   }
 
   .public-nav-links {
     position: absolute !important;
     top: calc(100% + 10px) !important;
+    left: 14px !important;
     right: 14px !important;
-    left: auto !important;
-    width: min(260px, calc(100vw - 28px)) !important;
-    z-index: 201 !important;
+    width: auto !important;
+    z-index: 301 !important;
+
     display: none !important;
-    padding: 10px !important;
-    border-radius: 22px !important;
-    background: rgba(13, 17, 28, 0.98) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.52) !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+
+    padding: 14px !important;
+    border-radius: 24px !important;
+    background:
+      radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+      rgba(13, 17, 28, 0.98) !important;
+    border: 1px solid rgba(255, 255, 255, 0.11) !important;
+    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55) !important;
     backdrop-filter: blur(18px) !important;
   }
 
   .public-nav-links.open {
     display: grid !important;
-    gap: 7px !important;
   }
 
   .public-nav-links a {
-    min-height: 42px !important;
     width: 100% !important;
-    padding: 0 14px !important;
-    border-radius: 14px !important;
-    font-size: 15px !important;
-    line-height: 1 !important;
+    min-height: 52px !important;
+    padding: 0 18px !important;
+    border-radius: 16px !important;
+
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    color: var(--muted-strong) !important;
-    background: transparent !important;
-    border: 0 !important;
+
+    color: rgba(248, 250, 252, 0.82) !important;
+    background: rgba(255, 255, 255, 0.045) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+
+    font-size: 1rem !important;
+    font-weight: 900 !important;
     text-align: left !important;
+    text-decoration: none !important;
   }
 
   .public-nav-links a:hover,
   .public-nav-links a:focus {
-    color: var(--text) !important;
-    background: rgba(255, 255, 255, 0.07) !important;
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.075) !important;
   }
 
   .public-nav-links .sales-nav-button {
-    min-height: 46px !important;
-    margin-top: 4px !important;
     justify-content: center !important;
     color: #101420 !important;
     background: linear-gradient(135deg, var(--gold), #f7b733) !important;
     border: 0 !important;
-    text-align: center !important;
-  }
-
-  .public-nav-toggle {
-    position: relative;
-    z-index: 202;
+    box-shadow: 0 16px 34px rgba(255, 212, 59, 0.16) !important;
   }
 }
