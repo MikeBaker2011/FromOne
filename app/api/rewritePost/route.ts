@@ -88,22 +88,43 @@ function enforcePlatformCaptionLimit(caption: string, platform: string) {
   return truncateTextToLimit(caption, getPlatformCaptionLimit(platform));
 }
 
-function extractJsonFromText(text: string) {
-  const cleaned = text
+function stripJsonFences(value: string) {
+  return String(value || '')
     .trim()
-    .replace(/^```json/i, '')
-    .replace(/^```/i, '')
-    .replace(/```$/i, '')
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/\s*```$/i, '')
     .trim();
+}
+
+function extractJsonFromText(text: string) {
+  const cleaned = stripJsonFences(text);
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    // Continue to recovery below.
+  }
 
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
 
-  if (firstBrace === -1 || lastBrace === -1) {
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
     throw new Error('AI response did not contain valid JSON.');
   }
 
-  return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+  const possibleJson = cleaned.slice(firstBrace, lastBrace + 1);
+
+  try {
+    return JSON.parse(possibleJson);
+  } catch {
+    const repaired = possibleJson
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
+      .replace(/,\s*([}\]])/g, '$1');
+
+    return JSON.parse(repaired);
+  }
 }
 
 function ensureArray(value: any) {
@@ -329,6 +350,76 @@ Specific instructions:
 `;
 }
 
+function getMarketReachGuidance(audienceTarget: string, marketReach: string) {
+  const combined = `${audienceTarget} ${marketReach}`.toLowerCase();
+
+  if (
+    combined.includes('nationwide') ||
+    combined.includes('national') ||
+    combined.includes('uk wide') ||
+    combined.includes('across the uk') ||
+    combined.includes('all over the uk')
+  ) {
+    return `
+Market reach:
+Nationwide / UK-wide.
+
+Specific instructions:
+- Do not make the post sound limited to one local area.
+- Use wording such as "across the UK", "nationwide", "UK customers", or "available UK-wide" only when it fits naturally.
+- Focus on trust, convenience, delivery, remote service, online ordering, booking, or nationwide availability.
+- Do not invent delivery promises, locations, prices, or coverage details that were not supplied.
+`;
+  }
+
+  if (
+    combined.includes('online') ||
+    combined.includes('ecommerce') ||
+    combined.includes('e-commerce') ||
+    combined.includes('webshop') ||
+    combined.includes('website') ||
+    combined.includes('delivery')
+  ) {
+    return `
+Market reach:
+Online customers / ecommerce.
+
+Specific instructions:
+- Make the post suitable for customers who can buy, book, enquire, or order online.
+- Mention online ordering, online booking, website enquiries, delivery, or remote service only if it fits the supplied business context.
+- Avoid location-heavy wording unless a location was supplied.
+- Make the CTA suitable for online action.
+`;
+  }
+
+  if (
+    combined.includes('regional') ||
+    combined.includes('county') ||
+    combined.includes('surrounding areas') ||
+    combined.includes('nearby towns')
+  ) {
+    return `
+Market reach:
+Regional customers.
+
+Specific instructions:
+- Write for customers across a wider service area, not just one neighbourhood.
+- Use wording like "across the area", "nearby towns", "surrounding areas", or "regional customers" without inventing exact place names.
+- Keep it practical and service-led.
+`;
+  }
+
+  return `
+Market reach:
+Local customers.
+
+Specific instructions:
+- Make the post useful for local customers and nearby enquiries.
+- If no exact location is supplied, use natural phrases like "local customers", "nearby homes", "in your area", or "the local community".
+- Do not invent town names.
+`;
+}
+
 async function rewriteWithGemini(prompt: string) {
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -376,17 +467,14 @@ async function rewriteWithGemini(prompt: string) {
     }
   );
 
-  const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const part = response.data.candidates?.[0]?.content?.parts?.[0];
+  const text = part?.text || '';
 
   if (!text) {
     throw new Error('Gemini returned an empty response.');
   }
 
-  try {
-    return JSON.parse(text);
-  } catch {
-    return extractJsonFromText(text);
-  }
+  return extractJsonFromText(text);
 }
 
 async function rewriteWithOpenAI(prompt: string) {
@@ -443,6 +531,7 @@ export async function POST(req: NextRequest) {
       improvementActionLabels[improvementAction] || improvementAction || 'Improve post';
 
     const audienceTarget = String(body.audienceTarget || '').trim();
+    const marketReach = String(body.marketReach || body.reach || '').trim();
 
     const fallbackSummary =
       improvementSummaries[improvementAction] ||
@@ -482,6 +571,7 @@ export async function POST(req: NextRequest) {
     const industryGuidance = getIndustryGuidance(industry);
     const platformGuidance = getPlatformGuidance(platform);
     const improvementGuidance = getImprovementGuidance(improvementAction, audienceTarget);
+    const marketReachGuidance = getMarketReachGuidance(audienceTarget, marketReach);
 
     const prompt = `
 You are improving a social media post for a small business.
@@ -506,6 +596,8 @@ ${improvementGuidance}
 
 Audience target:
 ${audienceTarget || 'No specific audience supplied'}
+
+${marketReachGuidance}
 
 Business:
 ${businessName}
@@ -586,6 +678,7 @@ Rewrite rules:
       image_prompt: result.image_prompt,
       improvement_summary: result.improvement_summary,
       audience_target: audienceTarget,
+      market_reach: marketReach,
       improvement_action: improvementAction,
       provider,
       platform_caption_limit: platformLimit,
@@ -596,11 +689,13 @@ Rewrite rules:
     return NextResponse.json(
       {
         error:
-          error?.response?.data?.error?.message ||
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          'Something went wrong rewriting the post.',
+          error?.message === 'AI response did not contain valid JSON.'
+            ? 'The AI returned an unexpected format. Please try again.'
+            : error?.response?.data?.error?.message ||
+              error?.response?.data?.error ||
+              error?.response?.data?.message ||
+              error?.message ||
+              'Something went wrong rewriting the post.',
       },
       { status: 500 }
     );
