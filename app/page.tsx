@@ -110,6 +110,10 @@ export default function Home() {
             display: block !important;
           }
 
+          .sales-hero-title-mobile span {
+            white-space: normal !important;
+          }
+
           .sales-hero p,
           .sales-section-heading p {
             max-width: min(92vw, 520px) !important;
@@ -170,7 +174,8 @@ export default function Home() {
 
         @media (max-width: 420px) {
           .sales-hero-title-mobile {
-            font-size: clamp(2.85rem, 12.6vw, 3.25rem) !important;
+            font-size: clamp(2.55rem, 10.4vw, 3.1rem) !important;
+            line-height: 0.96 !important;
             max-width: 360px !important;
           }
 
@@ -253,17 +258,16 @@ export default function Home() {
             aria-hidden="true"
             style={{
               margin: '18px auto 18px',
-              maxWidth: 390,
-              fontSize: 'clamp(3.05rem, 12.8vw, 3.85rem)',
-              lineHeight: 0.92,
-              letterSpacing: '-0.07em',
+              maxWidth: 430,
+              fontSize: 'clamp(2.85rem, 11vw, 3.65rem)',
+              lineHeight: 0.94,
+              letterSpacing: '-0.065em',
               textAlign: 'center',
               display: 'none',
             }}
           >
             <span style={{ display: 'block' }}>Upload media.</span>
-            <span style={{ display: 'block' }}>Get scheduled</span>
-            <span style={{ display: 'block' }}>posts.</span>
+            <span style={{ display: 'block' }}>Get scheduled posts.</span>
           </h1>
 
           <p
