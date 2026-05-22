@@ -12312,30 +12312,3 @@ body:has(.simplified-posts-page) .simplified-posts-page {
     box-shadow: 0 16px 34px rgba(255, 212, 59, 0.16) !important;
   }
 }
-/* REVIEW POSTS MODAL SCROLL FIX */
-
-.fromone-modal-overlay,
-.fromone-simple-modal-overlay {
-  align-items: flex-start !important;
-  overflow-y: auto !important;
-  padding: 18px !important;
-}
-
-.fromone-post-action-modal,
-.fromone-simple-post-modal,
-.review-post-modal,
-.review-posts-modal,
-.post-review-modal {
-  max-height: calc(100vh - 36px) !important;
-  overflow-y: auto !important;
-  overscroll-behavior: contain !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-
-.fromone-post-action-modal form,
-.fromone-simple-post-modal form,
-.review-post-modal form,
-.review-posts-modal form,
-.post-review-modal form {
-  max-height: none !important;
-}
