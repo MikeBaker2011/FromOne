@@ -1807,3 +1807,74 @@
     padding: 20px !important;
   }
 }
+/* REVIEW MODAL POSITION + SCROLL CLEAN FIX */
+
+.fromone-modal-overlay,
+.fromone-simple-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+  padding: 24px 14px !important;
+  background: rgba(2, 6, 23, 0.76) !important;
+  backdrop-filter: blur(14px) !important;
+}
+
+.fromone-post-action-modal,
+.fromone-simple-post-modal,
+.review-post-modal,
+.review-posts-modal,
+.post-review-modal {
+  position: relative !important;
+  width: min(760px, 100%) !important;
+  max-height: calc(100dvh - 48px) !important;
+  margin: 0 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  border-radius: 28px !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(148, 163, 184, 0.38) transparent !important;
+}
+
+.fromone-post-action-modal::-webkit-scrollbar,
+.fromone-simple-post-modal::-webkit-scrollbar,
+.review-post-modal::-webkit-scrollbar,
+.review-posts-modal::-webkit-scrollbar,
+.post-review-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fromone-post-action-modal::-webkit-scrollbar-track,
+.fromone-simple-post-modal::-webkit-scrollbar-track,
+.review-post-modal::-webkit-scrollbar-track,
+.review-posts-modal::-webkit-scrollbar-track,
+.post-review-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fromone-post-action-modal::-webkit-scrollbar-thumb,
+.fromone-simple-post-modal::-webkit-scrollbar-thumb,
+.review-post-modal::-webkit-scrollbar-thumb,
+.review-posts-modal::-webkit-scrollbar-thumb,
+.post-review-modal::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.38);
+  border-radius: 999px;
+}
+
+@media (max-width: 720px) {
+  .fromone-modal-overlay,
+  .fromone-simple-modal-overlay {
+    padding: 14px 10px !important;
+  }
+
+  .fromone-post-action-modal,
+  .fromone-simple-post-modal,
+  .review-post-modal,
+  .review-posts-modal,
+  .post-review-modal {
+    max-height: calc(100dvh - 28px) !important;
+    border-radius: 22px !important;
+  }
+}
