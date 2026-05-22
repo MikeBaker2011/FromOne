@@ -1651,3 +1651,159 @@
 .post-review-modal form {
   max-height: none !important;
 }
+/* PREMIUM REVIEW POSTS MODAL STYLE */
+
+.fromone-modal-overlay,
+.fromone-simple-modal-overlay {
+  background: rgba(2, 6, 23, 0.74) !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+.fromone-post-action-modal,
+.fromone-simple-post-modal,
+.review-post-modal,
+.review-posts-modal,
+.post-review-modal {
+  width: min(760px, 100%) !important;
+  margin: 18px auto !important;
+  padding: clamp(20px, 4vw, 34px) !important;
+  border-radius: 30px !important;
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.13), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.035)) !important;
+  border: 1px solid rgba(255, 212, 59, 0.24) !important;
+  box-shadow: 0 34px 120px rgba(0, 0, 0, 0.52) !important;
+  color: var(--text) !important;
+}
+
+.fromone-post-action-modal h2,
+.fromone-simple-post-modal h2,
+.review-post-modal h2,
+.review-posts-modal h2,
+.post-review-modal h2 {
+  margin-top: 0 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.04em !important;
+}
+
+.fromone-post-action-modal p,
+.fromone-simple-post-modal p,
+.review-post-modal p,
+.review-posts-modal p,
+.post-review-modal p {
+  color: var(--muted) !important;
+  line-height: 1.6 !important;
+}
+
+.fromone-post-action-modal label,
+.fromone-simple-post-modal label,
+.review-post-modal label,
+.review-posts-modal label,
+.post-review-modal label {
+  display: grid !important;
+  gap: 8px !important;
+  margin-bottom: 14px !important;
+  color: rgba(248, 250, 252, 0.9) !important;
+  font-weight: 900 !important;
+}
+
+.fromone-post-action-modal input,
+.fromone-post-action-modal textarea,
+.fromone-post-action-modal select,
+.fromone-simple-post-modal input,
+.fromone-simple-post-modal textarea,
+.fromone-simple-post-modal select,
+.review-post-modal input,
+.review-post-modal textarea,
+.review-post-modal select,
+.review-posts-modal input,
+.review-posts-modal textarea,
+.review-posts-modal select,
+.post-review-modal input,
+.post-review-modal textarea,
+.post-review-modal select {
+  width: 100% !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(5, 10, 24, 0.5) !important;
+  color: var(--text) !important;
+  padding: 13px 14px !important;
+  font-size: 16px !important;
+  outline: none !important;
+}
+
+.fromone-post-action-modal textarea,
+.fromone-simple-post-modal textarea,
+.review-post-modal textarea,
+.review-posts-modal textarea,
+.post-review-modal textarea {
+  min-height: 150px !important;
+  resize: vertical !important;
+}
+
+.fromone-post-action-modal input:focus,
+.fromone-post-action-modal textarea:focus,
+.fromone-post-action-modal select:focus,
+.fromone-simple-post-modal input:focus,
+.fromone-simple-post-modal textarea:focus,
+.fromone-simple-post-modal select:focus,
+.review-post-modal input:focus,
+.review-post-modal textarea:focus,
+.review-post-modal select:focus,
+.review-posts-modal input:focus,
+.review-posts-modal textarea:focus,
+.review-posts-modal select:focus,
+.post-review-modal input:focus,
+.post-review-modal textarea:focus,
+.post-review-modal select:focus {
+  border-color: rgba(255, 212, 59, 0.58) !important;
+  box-shadow: 0 0 0 4px rgba(255, 212, 59, 0.1) !important;
+}
+
+.fromone-post-action-modal button,
+.fromone-simple-post-modal button,
+.review-post-modal button,
+.review-posts-modal button,
+.post-review-modal button {
+  min-height: 46px !important;
+  border-radius: 999px !important;
+  font-weight: 950 !important;
+}
+
+.fromone-post-action-modal::-webkit-scrollbar,
+.fromone-simple-post-modal::-webkit-scrollbar,
+.review-post-modal::-webkit-scrollbar,
+.review-posts-modal::-webkit-scrollbar,
+.post-review-modal::-webkit-scrollbar {
+  width: 10px;
+}
+
+.fromone-post-action-modal::-webkit-scrollbar-track,
+.fromone-simple-post-modal::-webkit-scrollbar-track,
+.review-post-modal::-webkit-scrollbar-track,
+.review-posts-modal::-webkit-scrollbar-track,
+.post-review-modal::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+.fromone-post-action-modal::-webkit-scrollbar-thumb,
+.fromone-simple-post-modal::-webkit-scrollbar-thumb,
+.review-post-modal::-webkit-scrollbar-thumb,
+.review-posts-modal::-webkit-scrollbar-thumb,
+.post-review-modal::-webkit-scrollbar-thumb {
+  background: rgba(255, 212, 59, 0.38);
+  border-radius: 999px;
+}
+
+@media (max-width: 720px) {
+  .fromone-post-action-modal,
+  .fromone-simple-post-modal,
+  .review-post-modal,
+  .review-posts-modal,
+  .post-review-modal {
+    width: 100% !important;
+    border-radius: 24px !important;
+    padding: 20px !important;
+  }
+}
