@@ -842,8 +842,28 @@ export default function SettingsPage() {
                 </div>
               </section>
 
-              <section className="manual-collapse-card manual-open-card" style={{ maxWidth: 1120, margin: '0 auto 22px' }}>
-                <div className="manual-collapse-content manual-visible-content">
+              <section
+                className="manual-collapse-card manual-open-card settings-profile-editor-card"
+                style={{
+                  maxWidth: 1120,
+                  margin: '0 auto 22px',
+                  position: 'relative',
+                  zIndex: 5,
+                  overflow: 'visible',
+                  pointerEvents: 'auto',
+                  touchAction: 'manipulation',
+                }}
+              >
+                <div
+                  className="manual-collapse-content manual-visible-content settings-profile-editor-content"
+                  style={{
+                    position: 'relative',
+                    zIndex: 6,
+                    overflow: 'visible',
+                    pointerEvents: 'auto',
+                    touchAction: 'manipulation',
+                  }}
+                >
                   <div className="page-eyebrow">Edit Business Profile</div>
                   <h2>Business details</h2>
                   <p>
@@ -868,9 +888,19 @@ export default function SettingsPage() {
                         <span>What type of business is it?</span>
                       </label>
                       <input
-                        className="input"
+                        className="input settings-mobile-editable-input"
                         value={industry}
                         onChange={(event) => setIndustry(event.target.value)}
+                        autoComplete="organization-title"
+                        inputMode="text"
+                        style={{
+                          position: 'relative',
+                          zIndex: 20,
+                          pointerEvents: 'auto',
+                          touchAction: 'manipulation',
+                          WebkitUserSelect: 'text',
+                          userSelect: 'text',
+                        }}
                         placeholder="Example: Roofing, Beauty, Fitness"
                       />
 
@@ -879,9 +909,19 @@ export default function SettingsPage() {
                         <span>Where does the business operate?</span>
                       </label>
                       <input
-                        className="input"
+                        className="input settings-mobile-editable-input"
                         value={location}
                         onChange={(event) => setLocation(event.target.value)}
+                        autoComplete="address-level2"
+                        inputMode="text"
+                        style={{
+                          position: 'relative',
+                          zIndex: 20,
+                          pointerEvents: 'auto',
+                          touchAction: 'manipulation',
+                          WebkitUserSelect: 'text',
+                          userSelect: 'text',
+                        }}
                         placeholder="Example: Manchester, UK"
                       />
 
@@ -1246,6 +1286,50 @@ export default function SettingsPage() {
           </section>
         </>
       )}
+
+      <style jsx global>{`
+        @media (max-width: 720px) {
+          .settings-profile-editor-card,
+          .settings-profile-editor-content,
+          .settings-profile-editor-content .manual-backup-grid,
+          .settings-profile-editor-content label {
+            position: relative !important;
+            z-index: 10 !important;
+            overflow: visible !important;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+          }
+
+          .settings-profile-editor-content .manual-backup-grid {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+
+          .settings-profile-editor-content input,
+          .settings-profile-editor-content textarea,
+          .settings-profile-editor-content select,
+          .settings-mobile-editable-input {
+            position: relative !important;
+            z-index: 30 !important;
+            display: block !important;
+            width: 100% !important;
+            min-height: 50px !important;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-appearance: auto !important;
+            appearance: auto !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+
+          .settings-profile-editor-content textarea {
+            min-height: 120px !important;
+          }
+        }
+      `}</style>
 
       {confirmDialog && (
         <div
