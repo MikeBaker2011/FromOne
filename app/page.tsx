@@ -90,6 +90,10 @@ export default function Home() {
   return (
     <main className="sales-page">
       <style>{`
+        .sales-hero-title-mobile {
+          display: none;
+        }
+
         @media (max-width: 720px) {
           .sales-page,
           .sales-page section,
@@ -98,19 +102,17 @@ export default function Home() {
             text-align: center;
           }
 
-          .sales-hero-title-line {
-            white-space: normal !important;
+          .sales-hero-title-desktop {
+            display: none !important;
           }
 
-          .sales-hero h1 {
-            max-width: 100% !important;
-            font-size: clamp(3.25rem, 16vw, 5.1rem) !important;
-            line-height: 0.92 !important;
-            letter-spacing: -0.075em !important;
+          .sales-hero-title-mobile {
+            display: block !important;
           }
 
           .sales-hero p,
           .sales-section-heading p {
+            max-width: min(92vw, 520px) !important;
             margin-left: auto !important;
             margin-right: auto !important;
             text-align: center !important;
@@ -167,8 +169,9 @@ export default function Home() {
         }
 
         @media (max-width: 420px) {
-          .sales-hero h1 {
-            font-size: clamp(3rem, 15vw, 4.4rem) !important;
+          .sales-hero-title-mobile {
+            font-size: clamp(2.85rem, 12.6vw, 3.25rem) !important;
+            max-width: 360px !important;
           }
 
           .homepage-benefit-pill {
@@ -231,6 +234,7 @@ export default function Home() {
           </div>
 
           <h1
+            className="sales-hero-title sales-hero-title-desktop"
             style={{
               margin: '20px auto 20px',
               maxWidth: 1120,
@@ -240,12 +244,26 @@ export default function Home() {
               textAlign: 'center',
             }}
           >
-            <span className="sales-hero-title-line" style={{ display: 'block', whiteSpace: 'nowrap' }}>
-              Upload media.
-            </span>
-            <span className="sales-hero-title-line" style={{ display: 'block', whiteSpace: 'nowrap' }}>
-              Get scheduled posts.
-            </span>
+            <span style={{ display: 'block', whiteSpace: 'nowrap' }}>Upload media.</span>
+            <span style={{ display: 'block', whiteSpace: 'nowrap' }}>Get scheduled posts.</span>
+          </h1>
+
+          <h1
+            className="sales-hero-title sales-hero-title-mobile"
+            aria-hidden="true"
+            style={{
+              margin: '18px auto 18px',
+              maxWidth: 390,
+              fontSize: 'clamp(3.05rem, 12.8vw, 3.85rem)',
+              lineHeight: 0.92,
+              letterSpacing: '-0.07em',
+              textAlign: 'center',
+              display: 'none',
+            }}
+          >
+            <span style={{ display: 'block' }}>Upload media.</span>
+            <span style={{ display: 'block' }}>Get scheduled</span>
+            <span style={{ display: 'block' }}>posts.</span>
           </h1>
 
           <p
