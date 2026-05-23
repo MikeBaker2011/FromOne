@@ -2,14 +2,7 @@
 
 import "./posts.css";
 
-import {
-  CSSProperties,
-  ChangeEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { CSSProperties, ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
 import { useToast } from "@/app/components/ToastProvider";
@@ -38,11 +31,7 @@ const PAID_WEEKLY_MEDIA_RESCAN_LIMIT = 10;
 const DEMO_WEEKLY_VIDEO_RESCAN_LIMIT = 1;
 const PAID_WEEKLY_VIDEO_RESCAN_LIMIT = 2;
 
-const MEDIA_RESCAN_EVENT_TYPES = [
-  "post_media_rescan",
-  "post_image_rescan",
-  "post_flyer_rescan",
-];
+const MEDIA_RESCAN_EVENT_TYPES = ["post_media_rescan", "post_image_rescan", "post_flyer_rescan"];
 const VIDEO_RESCAN_EVENT_TYPES = ["post_video_rescan"];
 
 type AccessInfo = {
@@ -364,13 +353,9 @@ export default function PostsPage() {
   const [billingPlan, setBillingPlan] = useState<BillingPlan>("demo");
   const [weeklyMediaRescansUsed, setWeeklyMediaRescansUsed] = useState(0);
   const [weeklyVideoRescansUsed, setWeeklyVideoRescansUsed] = useState(0);
-  const [rescanningMediaPostId, setRescanningMediaPostId] = useState<
-    string | null
-  >(null);
+  const [rescanningMediaPostId, setRescanningMediaPostId] = useState<string | null>(null);
 
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
-    null,
-  );
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [pendingCampaignId, setPendingCampaignId] = useState("");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
@@ -388,8 +373,7 @@ export default function PostsPage() {
   const [toneTarget, setToneTarget] = useState("Use current tone");
   const [rewritingPost, setRewritingPost] = useState(false);
   const [rewritingAction, setRewritingAction] = useState("");
-  const [improvementNote, setImprovementNote] =
-    useState<ImprovementNote | null>(null);
+  const [improvementNote, setImprovementNote] = useState<ImprovementNote | null>(null);
   const [showImproveTools, setShowImproveTools] = useState(false);
 
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -398,32 +382,20 @@ export default function PostsPage() {
   const [editHashtags, setEditHashtags] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const [uploadingMediaPostId, setUploadingMediaPostId] = useState<
-    string | null
-  >(null);
-  const [removingMediaPostId, setRemovingMediaPostId] = useState<string | null>(
-    null,
-  );
+  const [uploadingMediaPostId, setUploadingMediaPostId] = useState<string | null>(null);
+  const [removingMediaPostId, setRemovingMediaPostId] = useState<string | null>(null);
   const [publishingPostId, setPublishingPostId] = useState<string | null>(null);
-  const [savingReminderPostId, setSavingReminderPostId] = useState<
-    string | null
-  >(null);
+  const [savingReminderPostId, setSavingReminderPostId] = useState<string | null>(null);
   const [reminderValue, setReminderValue] = useState("");
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
-  const [recentlyDeletedPost, setRecentlyDeletedPost] = useState<any | null>(
-    null,
-  );
+  const [recentlyDeletedPost, setRecentlyDeletedPost] = useState<any | null>(null);
 
   const [showTodayReminder, setShowTodayReminder] = useState(false);
-  const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(
-    null,
-  );
-  const [successMoment, setSuccessMoment] = useState<SuccessMoment | null>(
-    null,
-  );
+  const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(null);
+  const [successMoment, setSuccessMoment] = useState<SuccessMoment | null>(null);
+  const [showPostsGuide, setShowPostsGuide] = useState(false);
 
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
-  const [showPostsGuide, setShowPostsGuide] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewHoverRating, setReviewHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
@@ -447,12 +419,8 @@ export default function PostsPage() {
 
   const sortPostsByDate = (items: any[]) => {
     return [...items].sort((firstPost, secondPost) => {
-      const firstTime = firstPost.scheduled_at
-        ? new Date(firstPost.scheduled_at).getTime()
-        : 0;
-      const secondTime = secondPost.scheduled_at
-        ? new Date(secondPost.scheduled_at).getTime()
-        : 0;
+      const firstTime = firstPost.scheduled_at ? new Date(firstPost.scheduled_at).getTime() : 0;
+      const secondTime = secondPost.scheduled_at ? new Date(secondPost.scheduled_at).getTime() : 0;
       return firstTime - secondTime;
     });
   };
@@ -515,9 +483,7 @@ export default function PostsPage() {
       activeIndustry.includes(key),
     );
 
-    return matchedKey
-      ? industryAudienceTargets[matchedKey]
-      : defaultAudienceTargets;
+    return matchedKey ? industryAudienceTargets[matchedKey] : defaultAudienceTargets;
   }, [activeIndustry]);
 
   useEffect(() => {
@@ -528,20 +494,12 @@ export default function PostsPage() {
     const metaError = params.get("meta_error");
 
     if (metaConnected === "true") {
-      notify(
-        "Facebook and Instagram connected.",
-        "success",
-        "Accounts connected",
-      );
+      notify("Facebook and Instagram connected.", "success", "Accounts connected");
       window.history.replaceState({}, "", window.location.pathname);
     }
 
     if (metaConnected === "false") {
-      notify(
-        metaError || "Meta connection failed.",
-        "error",
-        "Connection failed",
-      );
+      notify(metaError || "Meta connection failed.", "error", "Connection failed");
       window.history.replaceState({}, "", window.location.pathname);
     }
 
@@ -578,9 +536,7 @@ export default function PostsPage() {
       return;
     }
 
-    setReminderValue(
-      toDateTimeInputValue(selectedPost.scheduled_publish_at || ""),
-    );
+    setReminderValue(toDateTimeInputValue(selectedPost.scheduled_publish_at || ""));
   }, [selectedPost]);
 
   const getTodayKey = () => {
@@ -621,9 +577,7 @@ export default function PostsPage() {
   };
 
   const isPaidSubscription = (status?: string | null) => {
-    return ["active", "paid", "trialing"].includes(
-      String(status || "").toLowerCase(),
-    );
+    return ["active", "paid", "trialing"].includes(String(status || "").toLowerCase());
   };
 
   const calculateAccess = (access: AccessInfo | null) => {
@@ -642,9 +596,7 @@ export default function PostsPage() {
     }
 
     if (isFutureDate(access.extension_ends_at)) {
-      const date = new Date(
-        access.extension_ends_at as string,
-      ).toLocaleDateString(undefined, {
+      const date = new Date(access.extension_ends_at as string).toLocaleDateString(undefined, {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -657,14 +609,11 @@ export default function PostsPage() {
     }
 
     if (isFutureDate(access.trial_ends_at)) {
-      const date = new Date(access.trial_ends_at as string).toLocaleDateString(
-        undefined,
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        },
-      );
+      const date = new Date(access.trial_ends_at as string).toLocaleDateString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
 
       return {
         locked: false,
@@ -754,10 +703,7 @@ export default function PostsPage() {
       return "demo" as BillingPlan;
     }
 
-    const plan =
-      data?.plan === "starter" && data?.status === "active"
-        ? "starter"
-        : "demo";
+    const plan = data?.plan === "starter" && data?.status === "active" ? "starter" : "demo";
 
     setBillingPlan(plan);
     return plan as BillingPlan;
@@ -766,23 +712,21 @@ export default function PostsPage() {
   const loadRescanUsage = async (userId: string) => {
     const since = getSevenDaysAgoIso();
 
-    const [
-      { count: mediaCount, error: mediaError },
-      { count: videoCount, error: videoError },
-    ] = await Promise.all([
-      supabase
-        .from("usage_events")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .in("event_type", MEDIA_RESCAN_EVENT_TYPES)
-        .gte("created_at", since),
-      supabase
-        .from("usage_events")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .in("event_type", VIDEO_RESCAN_EVENT_TYPES)
-        .gte("created_at", since),
-    ]);
+    const [{ count: mediaCount, error: mediaError }, { count: videoCount, error: videoError }] =
+      await Promise.all([
+        supabase
+          .from("usage_events")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .in("event_type", MEDIA_RESCAN_EVENT_TYPES)
+          .gte("created_at", since),
+        supabase
+          .from("usage_events")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .in("event_type", VIDEO_RESCAN_EVENT_TYPES)
+          .gte("created_at", since),
+      ]);
 
     if (mediaError) {
       console.error("Error loading media rescan usage:", mediaError.message);
@@ -824,15 +768,11 @@ export default function PostsPage() {
   };
 
   const getWeeklyMediaRescanLimit = () => {
-    return billingPlan === "starter"
-      ? PAID_WEEKLY_MEDIA_RESCAN_LIMIT
-      : DEMO_WEEKLY_MEDIA_RESCAN_LIMIT;
+    return billingPlan === "starter" ? PAID_WEEKLY_MEDIA_RESCAN_LIMIT : DEMO_WEEKLY_MEDIA_RESCAN_LIMIT;
   };
 
   const getWeeklyVideoRescanLimit = () => {
-    return billingPlan === "starter"
-      ? PAID_WEEKLY_VIDEO_RESCAN_LIMIT
-      : DEMO_WEEKLY_VIDEO_RESCAN_LIMIT;
+    return billingPlan === "starter" ? PAID_WEEKLY_VIDEO_RESCAN_LIMIT : DEMO_WEEKLY_VIDEO_RESCAN_LIMIT;
   };
 
   const getMediaRescanUsageLabel = () => {
@@ -1053,8 +993,7 @@ export default function PostsPage() {
   };
 
   const switchCampaign = async (campaignId: string) => {
-    const nextCampaign =
-      campaigns.find((item) => item.id === campaignId) || null;
+    const nextCampaign = campaigns.find((item) => item.id === campaignId) || null;
 
     setSelectedCampaignId(campaignId);
     setPendingCampaignId(campaignId);
@@ -1069,11 +1008,7 @@ export default function PostsPage() {
 
   const loadSelectedPlan = async () => {
     if (!pendingCampaignId) {
-      notify(
-        "Please choose a weekly post set first.",
-        "warning",
-        "Choose a weekly set",
-      );
+      notify("Please choose a weekly post set first.", "warning", "Choose a weekly set");
       return;
     }
 
@@ -1118,27 +1053,18 @@ export default function PostsPage() {
 
   const renameSelectedCampaign = async () => {
     if (!campaign?.id) {
-      notify(
-        "No weekly post set selected.",
-        "warning",
-        "No weekly set selected",
-      );
+      notify("No weekly post set selected.", "warning", "No weekly set selected");
       return;
     }
 
-    const currentName =
-      campaign.name || campaign.campaign_idea || "Untitled weekly posts";
+    const currentName = campaign.name || campaign.campaign_idea || "Untitled weekly posts";
     setRenameCampaignValue(currentName);
     setRenameDialogOpen(true);
   };
 
   const confirmRenameSelectedCampaign = async () => {
     if (!campaign?.id) {
-      notify(
-        "No weekly post set selected.",
-        "warning",
-        "No weekly set selected",
-      );
+      notify("No weekly post set selected.", "warning", "No weekly set selected");
       setRenameDialogOpen(false);
       return;
     }
@@ -1184,37 +1110,24 @@ export default function PostsPage() {
 
   const deleteSelectedCampaign = async () => {
     if (!campaign?.id) {
-      notify(
-        "No weekly post set selected.",
-        "warning",
-        "No weekly set selected",
-      );
+      notify("No weekly post set selected.", "warning", "No weekly set selected");
       return;
     }
 
     setConfirmDialog({
       type: "deleteCampaign",
-      title:
-        posts.length === 0
-          ? "Delete empty weekly set?"
-          : "Delete this weekly set?",
-      message:
-        posts.length === 0
-          ? `${getCampaignDisplayName()} has no posts. Deleting it will free up a saved weekly set slot.`
-          : `This will delete ${getCampaignDisplayName()} and all posts inside it. This cannot be undone.`,
-      confirmLabel:
-        posts.length === 0 ? "Delete empty set" : "Delete weekly set",
+      title: posts.length === 0 ? "Delete empty weekly set?" : "Delete this weekly set?",
+      message: posts.length === 0
+        ? `${getCampaignDisplayName()} has no posts. Deleting it will free up a saved weekly set slot.`
+        : `This will delete ${getCampaignDisplayName()} and all posts inside it. This cannot be undone.`,
+      confirmLabel: posts.length === 0 ? "Delete empty set" : "Delete weekly set",
       danger: true,
     });
   };
 
   const confirmDeleteSelectedCampaign = async () => {
     if (!campaign?.id) {
-      notify(
-        "No weekly post set selected.",
-        "warning",
-        "No weekly set selected",
-      );
+      notify("No weekly post set selected.", "warning", "No weekly set selected");
       closeConfirmDialog();
       return;
     }
@@ -1238,8 +1151,7 @@ export default function PostsPage() {
         campaignPosts
           ?.flatMap((post) => [post.image_path, post.media_path])
           .filter(Boolean)
-          .filter((value, index, array) => array.indexOf(value) === index) ||
-        [];
+          .filter((value, index, array) => array.indexOf(value) === index) || [];
 
       if (storagePaths.length > 0) {
         const { error: storageError } = await supabase.storage
@@ -1247,10 +1159,7 @@ export default function PostsPage() {
           .remove(storagePaths);
 
         if (storageError) {
-          console.error(
-            "Weekly posts media delete error:",
-            storageError.message,
-          );
+          console.error("Weekly posts media delete error:", storageError.message);
         }
       }
 
@@ -1287,9 +1196,7 @@ export default function PostsPage() {
 
   const updatePostLocally = (postId: string, updates: any) => {
     setPosts((currentPosts) =>
-      currentPosts.map((post) =>
-        post.id === postId ? { ...post, ...updates } : post,
-      ),
+      currentPosts.map((post) => (post.id === postId ? { ...post, ...updates } : post)),
     );
   };
 
@@ -1315,9 +1222,7 @@ export default function PostsPage() {
       return;
     }
 
-    const selectedIndex = sortedPosts.findIndex(
-      (post) => post.id === selectedPost.id,
-    );
+    const selectedIndex = sortedPosts.findIndex((post) => post.id === selectedPost.id);
     const safeIndex = selectedIndex >= 0 ? selectedIndex : 0;
     const nextIndex = (safeIndex + 1) % sortedPosts.length;
     const nextPost = sortedPosts[nextIndex];
@@ -1359,9 +1264,7 @@ export default function PostsPage() {
   const buildPostText = (post: any) => {
     const caption = post?.caption || "";
     const cta = post?.cta ? `CTA: ${post.cta}` : "";
-    const hashtags = Array.isArray(post?.hashtags)
-      ? post.hashtags.join(" ")
-      : "";
+    const hashtags = Array.isArray(post?.hashtags) ? post.hashtags.join(" ") : "";
 
     return [caption, cta, hashtags].filter(Boolean).join("\n\n").trim();
   };
@@ -1370,11 +1273,7 @@ export default function PostsPage() {
     const textToCopy = buildPostText(post);
 
     if (!textToCopy) {
-      notify(
-        "There is no post text to copy yet.",
-        "warning",
-        "Nothing to copy",
-      );
+      notify("There is no post text to copy yet.", "warning", "Nothing to copy");
       return;
     }
 
@@ -1399,9 +1298,7 @@ export default function PostsPage() {
   const mediaRequiredForPlatform = (platform?: string) => {
     const cleanPlatform = String(platform || "").toLowerCase();
 
-    return (
-      cleanPlatform.includes("instagram") || cleanPlatform.includes("tiktok")
-    );
+    return cleanPlatform.includes("instagram") || cleanPlatform.includes("tiktok");
   };
 
   const getPlatformUrl = (platform: string) => {
@@ -1409,8 +1306,7 @@ export default function PostsPage() {
 
     if (cleanPlatform.includes("facebook")) return "https://www.facebook.com";
     if (cleanPlatform.includes("instagram")) return "https://www.instagram.com";
-    if (cleanPlatform.includes("tiktok"))
-      return "https://www.tiktok.com/upload";
+    if (cleanPlatform.includes("tiktok")) return "https://www.tiktok.com/upload";
 
     return "https://www.facebook.com";
   };
@@ -1445,17 +1341,15 @@ export default function PostsPage() {
 
   const canDirectPublishToFacebook = (post: any) => {
     return (
-      String(post?.platform || "")
-        .toLowerCase()
-        .includes("facebook") && hasConnectedFacebookPage()
+      String(post?.platform || "").toLowerCase().includes("facebook") &&
+      hasConnectedFacebookPage()
     );
   };
 
   const canDirectPublishToInstagram = (post: any) => {
     return (
-      String(post?.platform || "")
-        .toLowerCase()
-        .includes("instagram") && hasConnectedInstagramAccount()
+      String(post?.platform || "").toLowerCase().includes("instagram") &&
+      hasConnectedInstagramAccount()
     );
   };
 
@@ -1473,14 +1367,8 @@ export default function PostsPage() {
     const mediaType = String(post?.media_type || "").toLowerCase();
     const mediaUrl = String(post?.media_url || "").toLowerCase();
 
-    if (mediaType === "video" || mediaUrl.match(/\.(mp4|mov|webm|m4v)(\?|$)/))
-      return "video";
-    if (
-      mediaType === "flyer" ||
-      mediaType === "pdf" ||
-      mediaUrl.includes(".pdf")
-    )
-      return "flyer";
+    if (mediaType === "video" || mediaUrl.match(/\.(mp4|mov|webm|m4v)(\?|$)/)) return "video";
+    if (mediaType === "flyer" || mediaType === "pdf" || mediaUrl.includes(".pdf")) return "flyer";
     return "image";
   };
 
@@ -1494,10 +1382,7 @@ export default function PostsPage() {
     return cleanName || "media";
   };
 
-  const uploadMedia = async (
-    post: any,
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
+  const uploadMedia = async (post: any, event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     event.target.value = "";
@@ -1511,19 +1396,14 @@ export default function PostsPage() {
       !file.type.startsWith("video/") &&
       file.type !== "application/pdf"
     ) {
-      notify(
-        "Please upload an image, video, or PDF flyer.",
-        "warning",
-        "Unsupported file type",
-      );
+      notify("Please upload an image, video, or PDF flyer.", "warning", "Unsupported file type");
       return;
     }
 
     setUploadingMediaPostId(post.id);
 
     try {
-      const { data: authData, error: authError } =
-        await supabase.auth.getUser();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
 
       if (authError) throw authError;
 
@@ -1542,9 +1422,7 @@ export default function PostsPage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage
-        .from(MEDIA_BUCKET)
-        .getPublicUrl(path);
+      const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
 
       const updates = {
         media_url: publicUrlData.publicUrl,
@@ -1585,8 +1463,7 @@ export default function PostsPage() {
     setConfirmDialog({
       type: "removeMedia",
       title: "Remove this media?",
-      message:
-        "The post wording will stay saved, but the image, video or flyer will be removed from this post.",
+      message: "The post wording will stay saved, but the image, video or flyer will be removed from this post.",
       confirmLabel: "Remove media",
       danger: true,
       post,
@@ -1682,8 +1559,7 @@ export default function PostsPage() {
       setImprovementNote({
         postId: activePostForEditing.id,
         label: "Wording saved",
-        detail:
-          "Review the updated post, then add media or publish when ready.",
+        detail: "Review the updated post, then add media or publish when ready.",
       });
 
       cancelEditingPost();
@@ -1698,8 +1574,7 @@ export default function PostsPage() {
   };
 
   const getToneForRewrite = () => {
-    const currentTone =
-      profile?.tone_of_voice || campaign?.tone || "Professional";
+    const currentTone = profile?.tone_of_voice || campaign?.tone || "Professional";
 
     if (toneTarget === "Use current tone") {
       return currentTone;
@@ -1748,25 +1623,15 @@ export default function PostsPage() {
     if (!ensureAccessAllowed()) return;
 
     const finalAudience =
-      audienceTarget === "Custom audience"
-        ? customAudienceTarget.trim()
-        : audienceTarget.trim();
+      audienceTarget === "Custom audience" ? customAudienceTarget.trim() : audienceTarget.trim();
 
     if (!finalAudience) {
-      notify(
-        "Please enter who this post is for.",
-        "warning",
-        "Audience needed",
-      );
+      notify("Please enter who this post is for.", "warning", "Audience needed");
       return;
     }
 
     if (!post.caption?.trim()) {
-      notify(
-        "This post needs a caption before it can be improved.",
-        "warning",
-        "Caption needed",
-      );
+      notify("This post needs a caption before it can be improved.", "warning", "Caption needed");
       return;
     }
 
@@ -1780,10 +1645,8 @@ export default function PostsPage() {
         marketReach: marketReachTarget,
         tone: getToneForRewrite(),
         toneAdjustment: toneTarget,
-        businessName:
-          profile?.business_name || campaign?.business_name || "the business",
-        industry:
-          profile?.industry || campaign?.business_type || "general business",
+        businessName: profile?.business_name || campaign?.business_name || "the business",
+        industry: profile?.industry || campaign?.business_type || "general business",
         platform: post.platform || "Facebook",
         caption: post.caption || "",
         cta: post.cta || "",
@@ -1814,26 +1677,17 @@ export default function PostsPage() {
     }
   };
 
-  const handleQuickImprovePost = async (
-    post: any,
-    improvementAction: string,
-  ) => {
+  const handleQuickImprovePost = async (post: any, improvementAction: string) => {
     if (!post?.id) return;
 
     if (!ensureAccessAllowed()) return;
 
     if (!post.caption?.trim()) {
-      notify(
-        "This post needs a caption before it can be improved.",
-        "warning",
-        "Caption needed",
-      );
+      notify("This post needs a caption before it can be improved.", "warning", "Caption needed");
       return;
     }
 
-    const selectedAction = quickImproveActions.find(
-      (item) => item.value === improvementAction,
-    );
+    const selectedAction = quickImproveActions.find((item) => item.value === improvementAction);
     const actionLabel = selectedAction?.label || "Improve post";
 
     setRewritingAction(improvementAction);
@@ -1844,10 +1698,8 @@ export default function PostsPage() {
         provider: "gemini",
         improvementAction,
         tone: getToneForRewrite(),
-        businessName:
-          profile?.business_name || campaign?.business_name || "the business",
-        industry:
-          profile?.industry || campaign?.business_type || "general business",
+        businessName: profile?.business_name || campaign?.business_name || "the business",
+        industry: profile?.industry || campaign?.business_type || "general business",
         platform: post.platform || "Facebook",
         caption: post.caption || "",
         cta: post.cta || "",
@@ -1884,11 +1736,7 @@ export default function PostsPage() {
     if (!ensureAccessAllowed()) return;
 
     if (!post.media_url) {
-      notify(
-        "Add media first, then rescan this post.",
-        "warning",
-        "Media needed",
-      );
+      notify("Add media first, then rescan this post.", "warning", "Media needed");
       return;
     }
 
@@ -1912,10 +1760,8 @@ export default function PostsPage() {
       const response = await axios.post("/api/generatePosts", {
         provider: "gemini",
         website: "",
-        clientName:
-          profile?.business_name || campaign?.business_name || "the business",
-        industry:
-          profile?.industry || campaign?.business_type || "general business",
+        clientName: profile?.business_name || campaign?.business_name || "the business",
+        industry: profile?.industry || campaign?.business_type || "general business",
         description: `
 Rewrite this single existing post after rescanning its attached media.
 
@@ -1926,9 +1772,7 @@ Tone: ${profile?.tone_of_voice || campaign?.tone || "Professional"}
 Main offer: ${profile?.main_offer || ""}
 Services: ${Array.isArray(profile?.services) ? profile.services.join(", ") : ""}
 Target audience: ${
-          Array.isArray(profile?.target_audience)
-            ? profile.target_audience.join(", ")
-            : ""
+          Array.isArray(profile?.target_audience) ? profile.target_audience.join(", ") : ""
         }
 
 Current post:
@@ -1952,9 +1796,7 @@ Important:
         postingFrequency: 1,
         numberOfPosts: 1,
         postCount: 1,
-        marketReach: profile?.location
-          ? `Local customers in and around ${profile.location}`
-          : "Local customers",
+        marketReach: profile?.location ? `Local customers in and around ${profile.location}` : "Local customers",
         mediaItems: [
           {
             id: post.id,
@@ -1990,11 +1832,7 @@ Important:
       const rewrittenPost = response.data?.posts?.[0];
 
       if (!rewrittenPost?.caption) {
-        notify(
-          "The media rescan did not return a new post. Please try again.",
-          "error",
-          "Rescan failed",
-        );
+        notify("The media rescan did not return a new post. Please try again.", "error", "Rescan failed");
         return;
       }
 
@@ -2058,16 +1896,12 @@ Important:
   const maybeShowReviewPrompt = () => {
     if (typeof window === "undefined") return;
 
-    const hasSubmitted =
-      localStorage.getItem(REVIEW_PROMPT_SUBMITTED_KEY) === "true";
-    const hasDismissed =
-      localStorage.getItem(REVIEW_PROMPT_DISMISSED_KEY) === "true";
+    const hasSubmitted = localStorage.getItem(REVIEW_PROMPT_SUBMITTED_KEY) === "true";
+    const hasDismissed = localStorage.getItem(REVIEW_PROMPT_DISMISSED_KEY) === "true";
 
     if (hasSubmitted || hasDismissed) return;
 
-    const currentCount = Number(
-      localStorage.getItem(REVIEW_PROMPT_POSTED_COUNT_KEY) || "0",
-    );
+    const currentCount = Number(localStorage.getItem(REVIEW_PROMPT_POSTED_COUNT_KEY) || "0");
     const nextCount = currentCount + 1;
 
     localStorage.setItem(REVIEW_PROMPT_POSTED_COUNT_KEY, String(nextCount));
@@ -2082,9 +1916,7 @@ Important:
     const updatedPosts = sortedPosts.map((item) =>
       item.id === postId ? { ...item, ...updates } : item,
     );
-    const postsLeftAfterPublishing = updatedPosts.filter(
-      (item) => !isPostPosted(item),
-    ).length;
+    const postsLeftAfterPublishing = updatedPosts.filter((item) => !isPostPosted(item)).length;
     const nextPost =
       updatedPosts.slice(postIndex + 1).find((item) => !isPostPosted(item)) ||
       updatedPosts.find((item) => !isPostPosted(item)) ||
@@ -2107,11 +1939,7 @@ Important:
     const text = buildPostText(post);
 
     if (!text) {
-      notify(
-        "This post needs wording before it can be published.",
-        "warning",
-        "Wording needed",
-      );
+      notify("This post needs wording before it can be published.", "warning", "Wording needed");
       return;
     }
 
@@ -2194,20 +2022,12 @@ Important:
     const text = buildPostText(post);
 
     if (!text) {
-      notify(
-        "This post needs wording before it can be published.",
-        "warning",
-        "Wording needed",
-      );
+      notify("This post needs wording before it can be published.", "warning", "Wording needed");
       return;
     }
 
     if (!post.media_url || !post.media_type || post.media_type === "flyer") {
-      notify(
-        "Instagram needs an image or video before publishing. PDF flyers cannot be posted directly to Instagram.",
-        "warning",
-        "Media needed",
-      );
+      notify("Instagram needs an image or video before publishing.", "warning", "Media needed");
       return;
     }
 
@@ -2283,11 +2103,7 @@ Important:
   };
 
   const publishToTikTokDemo = async (_post: any) => {
-    notify(
-      "TikTok is manual for now. Copy the post and open TikTok to publish it.",
-      "info",
-      "TikTok manual",
-    );
+    notify("TikTok is manual for now. Copy the post and open TikTok to publish it.", "info", "TikTok manual");
   };
 
   const markAsPosted = async (postId: string) => {
@@ -2299,10 +2115,7 @@ Important:
       published_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase
-      .from("campaign_posts")
-      .update(updates)
-      .eq("id", postId);
+    const { error } = await supabase.from("campaign_posts").update(updates).eq("id", postId);
 
     if (error) {
       notify(error.message, "error");
@@ -2329,10 +2142,7 @@ Important:
       publish_source: null,
     };
 
-    const { error } = await supabase
-      .from("campaign_posts")
-      .update(updates)
-      .eq("id", postId);
+    const { error } = await supabase.from("campaign_posts").update(updates).eq("id", postId);
 
     if (error) {
       notify(error.message, "error");
@@ -2346,11 +2156,7 @@ Important:
     if (!post?.id) return;
 
     if (!reminderValue) {
-      notify(
-        "Choose a date and time first.",
-        "warning",
-        "Schedule time needed",
-      );
+      notify("Choose a date and time first.", "warning", "Schedule time needed");
       return;
     }
 
@@ -2450,18 +2256,13 @@ Important:
       const updates = {
         deleted_at: new Date().toISOString(),
         deleted_by: authUserId,
-        delete_reason: posted
-          ? "archived_from_posts_page"
-          : "deleted_from_posts_page",
+        delete_reason: posted ? "archived_from_posts_page" : "deleted_from_posts_page",
         scheduled_publish_at: posted ? post.scheduled_publish_at || null : null,
         publish_status: posted ? post.publish_status || "posted" : null,
         status: posted ? post.status || "posted" : "deleted",
       };
 
-      const { error } = await supabase
-        .from("campaign_posts")
-        .update(updates)
-        .eq("id", post.id);
+      const { error } = await supabase.from("campaign_posts").update(updates).eq("id", post.id);
 
       if (error) throw error;
 
@@ -2472,20 +2273,14 @@ Important:
         deletedPost,
         ...currentDeletedPosts.filter((item) => item.id !== post.id),
       ]);
-      setPosts((currentPosts) =>
-        currentPosts.filter((item) => item.id !== post.id),
-      );
+      setPosts((currentPosts) => currentPosts.filter((item) => item.id !== post.id));
       setSelectedPostId(null);
       setImprovementNote(null);
       setShowImproveTools(false);
       cancelEditingPost();
       closeConfirmDialog();
 
-      notify(
-        "Use Undo delete at the top of the page, or restore it later from Deleted posts.",
-        "success",
-        "Post deleted",
-      );
+      notify("Use Undo delete at the top of the page, or restore it later from Deleted posts.", "success", "Post deleted");
 
       window.setTimeout(() => {
         setRecentlyDeletedPost((current: any | null) =>
@@ -2535,9 +2330,7 @@ Important:
       if (error) throw error;
 
       setRecentlyDeletedPost(null);
-      await loadPosts(
-        selectedCampaignId || campaign?.id || postToRestore.campaign_id || null,
-      );
+      await loadPosts(selectedCampaignId || campaign?.id || postToRestore.campaign_id || null);
       setSelectedPostId(postToRestore.id);
     } catch (error: any) {
       const message = getReadableError(error, "Error restoring post.");
@@ -2572,10 +2365,7 @@ Important:
               : null,
       };
 
-      const { error } = await supabase
-        .from("campaign_posts")
-        .update(updates)
-        .eq("id", post.id);
+      const { error } = await supabase.from("campaign_posts").update(updates).eq("id", post.id);
 
       if (error) throw error;
 
@@ -2584,9 +2374,7 @@ Important:
         currentDeletedPosts.filter((item) => item.id !== post.id),
       );
 
-      await loadPosts(
-        selectedCampaignId || campaign?.id || post.campaign_id || null,
-      );
+      await loadPosts(selectedCampaignId || campaign?.id || post.campaign_id || null);
       setSelectedPostId(post.id);
     } catch (error: any) {
       const message = getReadableError(error, "Error restoring post.");
@@ -2645,9 +2433,7 @@ Important:
     if (!time) return "";
 
     if (isPostPosted(post)) {
-      return post?.published_at
-        ? `Posted ${getReadableDateTime(post.published_at)}`
-        : "Posted";
+      return post?.published_at ? `Posted ${getReadableDateTime(post.published_at)}` : "Posted";
     }
 
     if (isPostFailed(post)) return `Needs attention · ${time}`;
@@ -2731,13 +2517,10 @@ Important:
   const weeklyProgressPercent =
     posts.length > 0 ? Math.round((postedCount / posts.length) * 100) : 0;
 
-  const todayReminderPost =
-    posts.find((post) => post.id === todayReminderPostId) || null;
+  const todayReminderPost = posts.find((post) => post.id === todayReminderPostId) || null;
 
   const activeImprovementNote =
-    selectedPost && improvementNote?.postId === selectedPost.id
-      ? improvementNote
-      : null;
+    selectedPost && improvementNote?.postId === selectedPost.id ? improvementNote : null;
 
   const brandPrimary = profile?.brand_primary_color || "#ffd43b";
   const brandSecondary = profile?.brand_secondary_color || "#101420";
@@ -2758,15 +2541,10 @@ Important:
 
   const primaryMetaConnection = metaConnections[0] || null;
   const facebookConnected = Boolean(primaryMetaConnection?.page_id);
-  const instagramConnected = Boolean(
-    primaryMetaConnection?.instagram_business_account_id,
-  );
+  const instagramConnected = Boolean(primaryMetaConnection?.instagram_business_account_id);
 
   return (
-    <div
-      className="campaign-brand-shell simplified-posts-page"
-      style={brandStyle}
-    >
+    <div className="campaign-brand-shell simplified-posts-page" style={brandStyle}>
       {loading ? (
         <section
           className="premium-card"
@@ -2784,12 +2562,8 @@ Important:
           <h1 className="page-title" style={{ margin: "8px 0 12px" }}>
             This week’s posts.
           </h1>
-          <p
-            className="page-description"
-            style={{ margin: "0 auto 22px", maxWidth: 760 }}
-          >
-            Review each post, then publish Facebook and Instagram or copy/open
-            TikTok.
+          <p className="page-description" style={{ margin: "0 auto 22px", maxWidth: 760 }}>
+            Review each post, then publish Facebook and Instagram or copy/open TikTok.
           </p>
           <p>Loading posts...</p>
         </section>
@@ -2808,79 +2582,18 @@ Important:
         >
           <div className="page-eyebrow">Posts</div>
           <h1 className="page-title" style={{ margin: "8px 0 12px" }}>
-            Review posts here.
+            This week’s posts.
           </h1>
-          <p
-            className="page-description"
-            style={{ margin: "0 auto 28px", maxWidth: 760 }}
-          >
-            Your weekly posts will appear here after you create them from
-            Dashboard. Nothing posts automatically until you review it.
+          <p className="page-description" style={{ margin: "0 auto 28px", maxWidth: 760 }}>
+            Review each post, then publish Facebook and Instagram or copy/open TikTok.
           </p>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-              gap: 14,
-              margin: "0 auto 26px",
-              maxWidth: 880,
-              textAlign: "left",
-            }}
-          >
-            {[
-              {
-                step: "1",
-                title: "Create posts",
-                text: "Go to Dashboard and upload this week’s photos, videos or flyers.",
-              },
-              {
-                step: "2",
-                title: "Review first",
-                text: "Open each post here to check wording, media, date and platform.",
-              },
-              {
-                step: "3",
-                title: "Publish or copy",
-                text: "Facebook and Instagram can autopost when ready. TikTok is copy/open manually.",
-              },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="card"
-                style={{
-                  padding: 18,
-                  borderRadius: 22,
-                  background: "rgba(255,255,255,0.055)",
-                  border: "1px solid rgba(255, 212, 59, 0.14)",
-                }}
-              >
-                <span
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 14,
-                    display: "inline-grid",
-                    placeItems: "center",
-                    marginBottom: 12,
-                    background: "#ffd43b",
-                    color: "#101420",
-                    fontWeight: 950,
-                  }}
-                >
-                  {item.step}
-                </span>
-                <h3 style={{ margin: "0 0 7px", fontSize: 21 }}>
-                  {item.title}
-                </h3>
-                <p
-                  style={{ margin: 0, color: "var(--muted)", lineHeight: 1.5 }}
-                >
-                  {item.text}
-                </p>
-              </div>
-            ))}
-          </div>
+          <div className="page-eyebrow">No posts yet</div>
+          <h2 style={{ marginTop: 0 }}>Create this week’s posts first.</h2>
+          <p style={{ maxWidth: 680, margin: "0 auto 22px" }}>
+            Go to Dashboard, upload photos, videos or flyers, then FromOne will create posts ready
+            to review here.
+          </p>
 
           <a href="/dashboard" className="dashboard-platform-create-button">
             Upload and create posts
@@ -2935,18 +2648,11 @@ Important:
                 >
                   This week’s posts.
                 </h1>
-                <p
-                  className="page-description"
-                  style={{ margin: "0 auto", maxWidth: 760 }}
-                >
-                  Review each post, then publish Facebook and Instagram or
-                  copy/open TikTok.
+                <p className="page-description" style={{ margin: "0 auto", maxWidth: 760 }}>
+                  Review each post, then publish Facebook and Instagram or copy/open TikTok.
                 </p>
 
-                <div
-                  className="simplified-posts-meta"
-                  style={{ justifyContent: "center", marginTop: 18 }}
-                >
+                <div className="simplified-posts-meta" style={{ justifyContent: "center", marginTop: 18 }}>
                   <span>{businessName}</span>
                   <span>
                     {postedCount}/{posts.length || 0} posted
@@ -2966,11 +2672,13 @@ Important:
 
               <section
                 style={{
-                  borderRadius: 26,
-                  border: "1px solid rgba(255, 212, 59, 0.18)",
-                  background:
-                    "radial-gradient(circle at top right, rgba(255, 212, 59, 0.11), transparent 34%), rgba(5, 10, 24, 0.28)",
+                  width: "100%",
+                  borderRadius: 28,
                   overflow: "hidden",
+                  border: "1px solid rgba(255, 212, 59, 0.22)",
+                  background:
+                    "radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%), rgba(15, 23, 42, 0.42)",
+                  boxShadow: "0 22px 64px rgba(0,0,0,0.22)",
                 }}
               >
                 <button
@@ -2979,46 +2687,46 @@ Important:
                   aria-expanded={showPostsGuide}
                   style={{
                     width: "100%",
-                    padding: "18px 20px",
+                    minHeight: 86,
+                    padding: "20px clamp(18px, 3vw, 26px)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 16,
                     textAlign: "left",
+                    cursor: "pointer",
                     background: "transparent",
                     border: 0,
                     color: "#f8fafc",
-                    cursor: "pointer",
                   }}
                 >
                   <span>
-                    <span
-                      className="page-eyebrow"
-                      style={{ display: "block", marginBottom: 7 }}
-                    >
-                      New here?
-                    </span>
+                    <span className="page-eyebrow">New here?</span>
                     <strong
                       style={{
                         display: "block",
-                        fontSize: "clamp(1.15rem, 2.6vw, 1.55rem)",
+                        marginTop: 8,
+                        fontSize: "clamp(1.25rem, 2.6vw, 1.85rem)",
+                        letterSpacing: "-0.035em",
                       }}
                     >
-                      Review, publish, copy or schedule.
+                      Review, edit, then publish.
                     </strong>
                   </span>
 
                   <span
+                    aria-hidden="true"
                     style={{
-                      width: 42,
-                      height: 42,
+                      flex: "0 0 auto",
+                      width: 44,
+                      height: 44,
                       borderRadius: 16,
                       display: "inline-grid",
                       placeItems: "center",
-                      background: "rgba(255, 212, 59, 0.14)",
+                      background: "rgba(255, 212, 59, 0.16)",
                       color: "#ffd43b",
+                      fontSize: 22,
                       fontWeight: 950,
-                      flex: "0 0 auto",
                     }}
                   >
                     {showPostsGuide ? "−" : "+"}
@@ -3028,50 +2736,82 @@ Important:
                 {showPostsGuide && (
                   <div
                     style={{
-                      padding: "0 20px 20px",
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fit, minmax(210px, 1fr))",
-                      gap: 12,
+                      padding: "22px clamp(18px, 3vw, 26px) 26px",
+                      borderTop: "1px solid rgba(255, 212, 59, 0.14)",
                     }}
                   >
-                    {[
-                      {
-                        title: "Check the post",
-                        text: "Open each card and review the wording, media and suggested time before anything goes out.",
-                      },
-                      {
-                        title: "Facebook and Instagram",
-                        text: "Facebook can autopost when connected. Instagram can autopost image or video posts, but not PDF flyers.",
-                      },
-                      {
-                        title: "TikTok",
-                        text: "TikTok is manual for now. Copy the caption and open TikTok when you are ready.",
-                      },
-                    ].map((item) => (
-                      <div
-                        key={item.title}
-                        style={{
-                          padding: 16,
-                          borderRadius: 20,
-                          background: "rgba(255,255,255,0.055)",
-                          border: "1px solid rgba(255,255,255,0.09)",
-                        }}
-                      >
-                        <strong style={{ display: "block", marginBottom: 7 }}>
-                          {item.title}
-                        </strong>
-                        <p
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: 16,
+                        alignItems: "stretch",
+                      }}
+                    >
+                      {[
+                        {
+                          step: "1",
+                          title: "Review the wording",
+                          text: "Open each post, check the caption, CTA and hashtags, then edit anything you want.",
+                        },
+                        {
+                          step: "2",
+                          title: "Check the media",
+                          text: "Facebook can publish text or media. Instagram needs an image or video. PDF flyers are not Instagram autopost media.",
+                        },
+                        {
+                          step: "3",
+                          title: "Publish or copy",
+                          text: "Facebook and Instagram can autopost when connected. TikTok is copy/open manually for now.",
+                        },
+                      ].map((item) => (
+                        <article
+                          key={item.step}
+                          className="card"
                           style={{
-                            margin: 0,
-                            color: "var(--muted)",
-                            lineHeight: 1.5,
+                            minHeight: 178,
+                            padding: 20,
+                            borderRadius: 24,
+                            background:
+                              "linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035))",
+                            border: "1px solid rgba(255, 212, 59, 0.13)",
+                            boxShadow: "0 18px 46px rgba(0,0,0,0.18)",
                           }}
                         >
-                          {item.text}
-                        </p>
-                      </div>
-                    ))}
+                          <span
+                            style={{
+                              width: 38,
+                              height: 38,
+                              borderRadius: 14,
+                              display: "inline-grid",
+                              placeItems: "center",
+                              background: "linear-gradient(135deg, #ffd43b, #f7b733)",
+                              color: "#101420",
+                              fontWeight: 1000,
+                              marginBottom: 14,
+                            }}
+                          >
+                            {item.step}
+                          </span>
+
+                          <h3 style={{ margin: "0 0 8px", fontSize: 22 }}>{item.title}</h3>
+                          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>
+                            {item.text}
+                          </p>
+                        </article>
+                      ))}
+                    </div>
+
+                    <p
+                      style={{
+                        margin: "18px 0 0",
+                        color: "#ffe58a",
+                        fontWeight: 900,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Nothing goes live until you choose to publish, copy or schedule it.
+                    </p>
                   </div>
                 )}
               </section>
@@ -3091,8 +2831,7 @@ Important:
                   <div className="page-eyebrow">Weekly set</div>
                   <h2 style={{ margin: "0 0 6px" }}>Choose a saved week.</h2>
                   <p style={{ margin: 0, color: "var(--muted)" }}>
-                    Switch between saved weekly sets, or delete old empty test
-                    sets.
+                    Switch between saved weekly sets, or delete old empty test sets.
                   </p>
                 </div>
 
@@ -3110,8 +2849,7 @@ Important:
                     fontWeight: 900,
                   }}
                 >
-                  {campaigns.length} saved set
-                  {campaigns.length === 1 ? "" : "s"}
+                  {campaigns.length} saved set{campaigns.length === 1 ? "" : "s"}
                 </div>
               </div>
 
@@ -3176,11 +2914,7 @@ Important:
                     color: "rgba(255, 215, 220, 0.95)",
                   }}
                 >
-                  {deletingCampaign
-                    ? "Deleting..."
-                    : posts.length === 0
-                      ? "Delete empty set"
-                      : "Delete set"}
+                  {deletingCampaign ? "Deleting..." : posts.length === 0 ? "Delete empty set" : "Delete set"}
                 </button>
               </div>
             </section>
@@ -3207,10 +2941,8 @@ Important:
               <div>
                 <div className="page-eyebrow">Weekly calendar</div>
                 <h2 style={{ margin: "0 0 8px" }}>Review your posts.</h2>
-                <p style={{ margin: 0, color: "var(--muted)", maxWidth: 680 }}>
-                  Open a card, check the media and wording, then publish, copy
-                  or adjust the schedule. You stay in control before anything
-                  goes live.
+                <p style={{ margin: 0, color: "var(--muted)" }}>
+                  Open a card, check the media and wording, then publish or copy.
                 </p>
               </div>
 
@@ -3226,10 +2958,7 @@ Important:
                 <strong>
                   {postedCount} of {posts.length || 0} done
                 </strong>
-                <div
-                  className="weekly-progress-bar"
-                  aria-label="Weekly post progress"
-                >
+                <div className="weekly-progress-bar" aria-label="Weekly post progress">
                   <span style={{ width: `${weeklyProgressPercent}%` }} />
                 </div>
               </div>
@@ -3253,8 +2982,7 @@ Important:
                     This saved week has no posts.
                   </h3>
                   <p style={{ margin: 0, color: "var(--muted)" }}>
-                    This can happen if a test run was interrupted. Delete this
-                    empty set, or create a new week from Dashboard.
+                    This can happen if a test run was interrupted. Delete this empty set, or create a new week from Dashboard.
                   </p>
                 </div>
 
@@ -3296,293 +3024,36 @@ Important:
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fill, minmax(min(100%, 260px), 320px))",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 320px))",
                   justifyContent: "center",
                   alignItems: "stretch",
                   gap: 16,
                 }}
               >
                 {sortedPosts.map((post: any) => {
-                  const dateParts = getPostDateParts(post);
-                  const status = getPostStatus(post);
-                  const platformName = getPlatformDisplayName(post);
-                  const hasMedia = Boolean(post.media_url);
-                  const captionPreview = String(post.caption || "").slice(
-                    0,
-                    120,
-                  );
-                  const cardScheduleLabel = getCardScheduleLabel(post);
-                  const scheduledTime = getShortScheduledTime(
-                    post.scheduled_publish_at || post.scheduled_at,
-                  );
-                  const statusDisplay =
-                    status === "Reminder set"
-                      ? scheduledTime
-                        ? `Planned · ${scheduledTime}`
-                        : "Planned"
-                      : status === "Ready" && scheduledTime
-                        ? `Ready · ${scheduledTime}`
-                        : status;
+                const dateParts = getPostDateParts(post);
+                const status = getPostStatus(post);
+                const platformName = getPlatformDisplayName(post);
+                const hasMedia = Boolean(post.media_url);
+                const captionPreview = String(post.caption || "").slice(0, 120);
+                const cardScheduleLabel = getCardScheduleLabel(post);
+                const scheduledTime = getShortScheduledTime(
+                  post.scheduled_publish_at || post.scheduled_at,
+                );
+                const statusDisplay =
+                  status === "Reminder set"
+                    ? scheduledTime
+                      ? `Planned · ${scheduledTime}`
+                      : "Planned"
+                    : status === "Ready" && scheduledTime
+                      ? `Ready · ${scheduledTime}`
+                      : status;
 
-                  return (
-                    <button
-                      key={post.id}
-                      type="button"
-                      onClick={() => choosePost(post.id)}
-                      className="fromone-simple-post-card"
-                      style={{
-                        minHeight: 560,
-                        textAlign: "left",
-                        borderRadius: 26,
-                        padding: 0,
-                        overflow: "hidden",
-                        display: "flex",
-                        flexDirection: "column",
-                        background:
-                          "linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
-                        border:
-                          status === "Posted"
-                            ? "1px solid rgba(61, 220, 151, 0.28)"
-                            : "1px solid rgba(255,255,255,0.1)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <div
-                        style={{
-                          minHeight: 158,
-                          background: "rgba(15,23,42,0.72)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {post.media_url ? (
-                          String(post.media_type || "").toLowerCase() ===
-                          "video" ? (
-                            <video
-                              src={post.media_url}
-                              muted
-                              playsInline
-                              style={{
-                                width: "100%",
-                                height: 180,
-                                objectFit: "cover",
-                              }}
-                            />
-                          ) : String(post.media_type || "").toLowerCase() ===
-                            "flyer" ? (
-                            <strong>PDF flyer</strong>
-                          ) : (
-                            <img
-                              src={post.media_url}
-                              alt={post.title || "Post media"}
-                              style={{
-                                width: "100%",
-                                height: 180,
-                                objectFit: "cover",
-                              }}
-                            />
-                          )
-                        ) : (
-                          <div style={{ textAlign: "center", padding: 20 }}>
-                            <strong>No media yet</strong>
-                            <p
-                              style={{
-                                margin: "6px 0 0",
-                                color: "var(--muted)",
-                              }}
-                            >
-                              Add media in review.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div
-                        style={{
-                          padding: 18,
-                          display: "grid",
-                          gap: 12,
-                          flex: 1,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: 10,
-                            alignItems: "center",
-                          }}
-                        >
-                          <div style={{ minWidth: 0 }}>
-                            <div
-                              className="page-eyebrow"
-                              style={{
-                                display: "block",
-                                marginBottom: 8,
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {dateParts.weekday} {dateParts.day}{" "}
-                              {dateParts.month}
-                            </div>
-
-                            <strong
-                              style={{
-                                display: "block",
-                                fontSize: "1.05rem",
-                                color: "#fff",
-                                lineHeight: 1.18,
-                                wordBreak: "normal",
-                              }}
-                            >
-                              {post.title || `${platformName} post`}
-                            </strong>
-                          </div>
-
-                          <div
-                            style={{
-                              display: "grid",
-                              gap: 6,
-                              justifyItems: "end",
-                              flex: "0 0 auto",
-                            }}
-                          >
-                            <span
-                              className={`premium-calendar-status ${getStatusClass(status)}`}
-                              style={{ flex: "0 0 auto" }}
-                            >
-                              {status === "Reminder set" ? "Planned" : status}
-                            </span>
-
-                            {scheduledTime && status !== "Posted" && (
-                              <small
-                                style={{
-                                  color: "rgba(248, 250, 252, 0.72)",
-                                  fontWeight: 900,
-                                  fontSize: 12,
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {scheduledTime}
-                              </small>
-                            )}
-                          </div>
-                        </div>
-
-                        <p
-                          style={{
-                            margin: 0,
-                            color: "rgba(248,250,252,0.76)",
-                            lineHeight: 1.45,
-                            minHeight: 52,
-                          }}
-                        >
-                          {captionPreview ||
-                            "Open to add or review the wording."}
-                          {captionPreview.length >= 120 ? "..." : ""}
-                        </p>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 6,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 6,
-                              minHeight: 24,
-                              padding: "4px 9px",
-                              borderRadius: 10,
-                              background: "rgba(255,255,255,0.055)",
-                              border: "1px solid rgba(255,255,255,0.09)",
-                              color: "rgba(248,250,252,0.78)",
-                              fontSize: 11,
-                              fontWeight: 850,
-                              lineHeight: 1,
-                              letterSpacing: "0.01em",
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: 5,
-                                height: 5,
-                                borderRadius: 999,
-                                background: "#ffd43b",
-                                boxShadow: "0 0 12px rgba(255, 212, 59, 0.34)",
-                              }}
-                            />
-                            {platformName}
-                          </span>
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 6,
-                              minHeight: 24,
-                              padding: "4px 9px",
-                              borderRadius: 10,
-                              background: hasMedia
-                                ? "rgba(61, 220, 151, 0.08)"
-                                : "rgba(255, 212, 59, 0.075)",
-                              border: hasMedia
-                                ? "1px solid rgba(61, 220, 151, 0.14)"
-                                : "1px solid rgba(255, 212, 59, 0.14)",
-                              color: "rgba(248,250,252,0.78)",
-                              fontSize: 11,
-                              fontWeight: 850,
-                              lineHeight: 1,
-                              letterSpacing: "0.01em",
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: 5,
-                                height: 5,
-                                borderRadius: 999,
-                                background: hasMedia ? "#3ddc97" : "#ffd43b",
-                                boxShadow: hasMedia
-                                  ? "0 0 12px rgba(61, 220, 151, 0.28)"
-                                  : "0 0 12px rgba(255, 212, 59, 0.28)",
-                              }}
-                            />
-                            {hasMedia ? "Media ready" : "Needs media"}
-                          </span>
-                        </div>
-
-                        <span
-                          className="dashboard-platform-create-button"
-                          style={{
-                            minHeight: 46,
-                            borderRadius: 16,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: "100%",
-                            marginTop: "auto",
-                          }}
-                        >
-                          Review post
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-
-                {sortedPosts.length > 0 && sortedPosts.length < 7 && (
+                return (
                   <button
+                    key={post.id}
                     type="button"
-                    onClick={() => {
-                      window.location.href = campaign?.id
-                        ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
-                        : "/dashboard";
-                    }}
+                    onClick={() => choosePost(post.id)}
                     className="fromone-simple-post-card"
                     style={{
                       minHeight: 560,
@@ -3590,125 +3061,209 @@ Important:
                       borderRadius: 26,
                       padding: 0,
                       overflow: "hidden",
-                      background:
-                        "radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 36%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
-                      border: "1px solid rgba(255, 212, 59, 0.24)",
-                      cursor: "pointer",
                       display: "flex",
                       flexDirection: "column",
-                      justifyContent: "space-between",
+                      background:
+                        "linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
+                      border:
+                        status === "Posted"
+                          ? "1px solid rgba(61, 220, 151, 0.28)"
+                          : "1px solid rgba(255,255,255,0.1)",
+                      cursor: "pointer",
                     }}
                   >
-                    <div>
+                    <div
+                      style={{
+                        minHeight: 158,
+                        background: "rgba(15,23,42,0.72)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {post.media_url ? (
+                        String(post.media_type || "").toLowerCase() === "video" ? (
+                          <video
+                            src={post.media_url}
+                            muted
+                            playsInline
+                            style={{
+                              width: "100%",
+                              height: 180,
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : String(post.media_type || "").toLowerCase() === "flyer" ? (
+                          <strong>PDF flyer</strong>
+                        ) : (
+                          <img
+                            src={post.media_url}
+                            alt={post.title || "Post media"}
+                            style={{
+                              width: "100%",
+                              height: 180,
+                              objectFit: "cover",
+                            }}
+                          />
+                        )
+                      ) : (
+                        <div style={{ textAlign: "center", padding: 20 }}>
+                          <strong>No media yet</strong>
+                          <p style={{ margin: "6px 0 0", color: "var(--muted)" }}>
+                            Add media in review.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ padding: 18, display: "grid", gap: 12, flex: 1 }}>
                       <div
                         style={{
-                          height: 180,
-                          background:
-                            "radial-gradient(circle at center, rgba(255, 212, 59, 0.18), rgba(15,23,42,0.72))",
-                          display: "grid",
-                          placeItems: "center",
-                          overflow: "hidden",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 10,
+                          alignItems: "center",
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <div
+                            className="page-eyebrow"
+                            style={{
+                              display: "block",
+                              marginBottom: 8,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {dateParts.weekday} {dateParts.day} {dateParts.month}
+                          </div>
+
+                          <strong
+                            style={{
+                              display: "block",
+                              fontSize: "1.05rem",
+                              color: "#fff",
+                              lineHeight: 1.18,
+                              wordBreak: "normal",
+                            }}
+                          >
+                            {post.title || `${platformName} post`}
+                          </strong>
+                        </div>
+
+                        <div
+                          style={{
+                            display: "grid",
+                            gap: 6,
+                            justifyItems: "end",
+                            flex: "0 0 auto",
+                          }}
+                        >
+                          <span
+                            className={`premium-calendar-status ${getStatusClass(status)}`}
+                            style={{ flex: "0 0 auto" }}
+                          >
+                            {status === "Reminder set" ? "Planned" : status}
+                          </span>
+
+                          {scheduledTime && status !== "Posted" && (
+                            <small
+                              style={{
+                                color: "rgba(248, 250, 252, 0.72)",
+                                fontWeight: 900,
+                                fontSize: 12,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {scheduledTime}
+                            </small>
+                          )}
+                        </div>
+                      </div>
+
+                      <p
+                        style={{
+                          margin: 0,
+                          color: "rgba(248,250,252,0.76)",
+                          lineHeight: 1.45,
+                          minHeight: 52,
+                        }}
+                      >
+                        {captionPreview || "Open to add or review the wording."}
+                        {captionPreview.length >= 120 ? "..." : ""}
+                      </p>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 6,
+                          flexWrap: "wrap",
                         }}
                       >
                         <span
                           style={{
-                            width: 66,
-                            height: 66,
-                            borderRadius: 22,
-                            display: "grid",
-                            placeItems: "center",
-                            background: "rgba(255, 212, 59, 0.16)",
-                            border: "1px solid rgba(255, 212, 59, 0.28)",
-                            color: "#ffd43b",
-                            fontSize: 36,
-                            fontWeight: 950,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            minHeight: 24,
+                            padding: "4px 9px",
+                            borderRadius: 10,
+                            background: "rgba(255,255,255,0.055)",
+                            border: "1px solid rgba(255,255,255,0.09)",
+                            color: "rgba(248,250,252,0.78)",
+                            fontSize: 11,
+                            fontWeight: 850,
+                            lineHeight: 1,
+                            letterSpacing: "0.01em",
                           }}
                         >
-                          +
+                          <span
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              background: "#ffd43b",
+                              boxShadow: "0 0 12px rgba(255, 212, 59, 0.34)",
+                            }}
+                          />
+                          {platformName}
+                        </span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            minHeight: 24,
+                            padding: "4px 9px",
+                            borderRadius: 10,
+                            background: hasMedia
+                              ? "rgba(61, 220, 151, 0.08)"
+                              : "rgba(255, 212, 59, 0.075)",
+                            border: hasMedia
+                              ? "1px solid rgba(61, 220, 151, 0.14)"
+                              : "1px solid rgba(255, 212, 59, 0.14)",
+                            color: "rgba(248,250,252,0.78)",
+                            fontSize: 11,
+                            fontWeight: 850,
+                            lineHeight: 1,
+                            letterSpacing: "0.01em",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              background: hasMedia ? "#3ddc97" : "#ffd43b",
+                              boxShadow: hasMedia
+                                ? "0 0 12px rgba(61, 220, 151, 0.28)"
+                                : "0 0 12px rgba(255, 212, 59, 0.28)",
+                            }}
+                          />
+                          {hasMedia ? "Media ready" : "Needs media"}
                         </span>
                       </div>
 
-                      <div style={{ padding: 18, display: "grid", gap: 12 }}>
-                        <div className="page-eyebrow">Add more</div>
-                        <h3 style={{ margin: 0, fontSize: 24, color: "#fff" }}>
-                          Create more posts
-                        </h3>
-                        <p
-                          style={{
-                            margin: 0,
-                            color: "rgba(248,250,252,0.76)",
-                            lineHeight: 1.45,
-                          }}
-                        >
-                          Add another content day to this same weekly set.
-                          FromOne can create Facebook, Instagram and TikTok
-                          versions with staggered times.
-                        </p>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 8,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 6,
-                              minHeight: 24,
-                              padding: "4px 9px",
-                              borderRadius: 10,
-                              background: "rgba(255,255,255,0.055)",
-                              border: "1px solid rgba(255,255,255,0.09)",
-                              color: "rgba(248,250,252,0.74)",
-                              fontSize: 11,
-                              fontWeight: 850,
-                              lineHeight: 1,
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: 5,
-                                height: 5,
-                                borderRadius: 999,
-                                background: "#ffd43b",
-                              }}
-                            />
-                            Same weekly set
-                          </span>
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 6,
-                              minHeight: 24,
-                              padding: "4px 9px",
-                              borderRadius: 10,
-                              background: "rgba(255,255,255,0.055)",
-                              border: "1px solid rgba(255,255,255,0.09)",
-                              color: "rgba(248,250,252,0.74)",
-                              fontSize: 11,
-                              fontWeight: 850,
-                              lineHeight: 1,
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: 5,
-                                height: 5,
-                                borderRadius: 999,
-                                background: "#ffd43b",
-                              }}
-                            />
-                            Staggered times
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ padding: "0 18px 18px", marginTop: "auto" }}>
                       <span
                         className="dashboard-platform-create-button"
                         style={{
@@ -3718,13 +3273,158 @@ Important:
                           alignItems: "center",
                           justifyContent: "center",
                           width: "100%",
+                          marginTop: "auto",
                         }}
                       >
-                        Add media
+                        Review post
                       </span>
                     </div>
                   </button>
-                )}
+                );
+              })}
+
+              {sortedPosts.length > 0 && sortedPosts.length < 7 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = campaign?.id
+                      ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
+                      : "/dashboard";
+                  }}
+                  className="fromone-simple-post-card"
+                  style={{
+                    minHeight: 560,
+                    textAlign: "left",
+                    borderRadius: 26,
+                    padding: 0,
+                    overflow: "hidden",
+                    background:
+                      "radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 36%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
+                    border: "1px solid rgba(255, 212, 59, 0.24)",
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        height: 180,
+                        background:
+                          "radial-gradient(circle at center, rgba(255, 212, 59, 0.18), rgba(15,23,42,0.72))",
+                        display: "grid",
+                        placeItems: "center",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 66,
+                          height: 66,
+                          borderRadius: 22,
+                          display: "grid",
+                          placeItems: "center",
+                          background: "rgba(255, 212, 59, 0.16)",
+                          border: "1px solid rgba(255, 212, 59, 0.28)",
+                          color: "#ffd43b",
+                          fontSize: 36,
+                          fontWeight: 950,
+                        }}
+                      >
+                        +
+                      </span>
+                    </div>
+
+                    <div style={{ padding: 18, display: "grid", gap: 12 }}>
+                      <div className="page-eyebrow">Add more</div>
+                      <h3 style={{ margin: 0, fontSize: 24, color: "#fff" }}>
+                        Create more posts
+                      </h3>
+                      <p style={{ margin: 0, color: "rgba(248,250,252,0.76)", lineHeight: 1.45 }}>
+                        Add another content day to this same weekly set. FromOne can create Facebook, Instagram and TikTok versions with staggered times.
+                      </p>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            minHeight: 24,
+                            padding: "4px 9px",
+                            borderRadius: 10,
+                            background: "rgba(255,255,255,0.055)",
+                            border: "1px solid rgba(255,255,255,0.09)",
+                            color: "rgba(248,250,252,0.74)",
+                            fontSize: 11,
+                            fontWeight: 850,
+                            lineHeight: 1,
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              background: "#ffd43b",
+                            }}
+                          />
+                          Same weekly set
+                        </span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            minHeight: 24,
+                            padding: "4px 9px",
+                            borderRadius: 10,
+                            background: "rgba(255,255,255,0.055)",
+                            border: "1px solid rgba(255,255,255,0.09)",
+                            color: "rgba(248,250,252,0.74)",
+                            fontSize: 11,
+                            fontWeight: 850,
+                            lineHeight: 1,
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              background: "#ffd43b",
+                            }}
+                          />
+                          Staggered times
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: "0 18px 18px", marginTop: "auto" }}>
+                    <span
+                      className="dashboard-platform-create-button"
+                      style={{
+                        minHeight: 46,
+                        borderRadius: 16,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                      }}
+                    >
+                      Add media
+                    </span>
+                  </div>
+                </button>
+              )}
               </div>
             )}
           </section>
@@ -3751,14 +3451,10 @@ Important:
                     }}
                   >
                     <div>
-                      <strong>
-                        {post.title || post.platform || "Deleted post"}
-                      </strong>
+                      <strong>{post.title || post.platform || "Deleted post"}</strong>
                       <p style={{ margin: "4px 0 0", opacity: 0.78 }}>
                         {post.platform || "Post"} · deleted{" "}
-                        {post.deleted_at
-                          ? getReadableDateTime(post.deleted_at)
-                          : "recently"}
+                        {post.deleted_at ? getReadableDateTime(post.deleted_at) : "recently"}
                       </p>
                     </div>
 
@@ -3914,8 +3610,7 @@ Important:
               Give this week a clearer name.
             </h2>
             <p style={{ margin: "0 0 16px", color: "var(--muted)" }}>
-              This only changes the saved set name. Your posts and schedules
-              stay the same.
+              This only changes the saved set name. Your posts and schedules stay the same.
             </p>
 
             <input
@@ -3997,13 +3692,7 @@ Important:
             <h2 id="confirm-action-title" style={{ margin: "4px 0 10px" }}>
               {confirmDialog.title}
             </h2>
-            <p
-              style={{
-                margin: "0 0 20px",
-                color: "var(--muted)",
-                lineHeight: 1.55,
-              }}
-            >
+            <p style={{ margin: "0 0 20px", color: "var(--muted)", lineHeight: 1.55 }}>
               {confirmDialog.message}
             </p>
 
@@ -4015,21 +3704,13 @@ Important:
                 type="button"
                 className="secondary-button"
                 onClick={closeConfirmDialog}
-                disabled={
-                  deletingCampaign ||
-                  deletingPostId === confirmDialog.post?.id ||
-                  removingMediaPostId === confirmDialog.post?.id
-                }
+                disabled={deletingCampaign || deletingPostId === confirmDialog.post?.id || removingMediaPostId === confirmDialog.post?.id}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className={
-                  confirmDialog.danger
-                    ? "secondary-button danger-button"
-                    : undefined
-                }
+                className={confirmDialog.danger ? "secondary-button danger-button" : undefined}
                 onClick={() => {
                   if (confirmDialog.type === "deleteCampaign") {
                     confirmDeleteSelectedCampaign();
@@ -4045,15 +3726,9 @@ Important:
                     confirmDeletePostWithUndo(confirmDialog.post);
                   }
                 }}
-                disabled={
-                  deletingCampaign ||
-                  deletingPostId === confirmDialog.post?.id ||
-                  removingMediaPostId === confirmDialog.post?.id
-                }
+                disabled={deletingCampaign || deletingPostId === confirmDialog.post?.id || removingMediaPostId === confirmDialog.post?.id}
               >
-                {deletingCampaign ||
-                deletingPostId === confirmDialog.post?.id ||
-                removingMediaPostId === confirmDialog.post?.id
+                {deletingCampaign || deletingPostId === confirmDialog.post?.id || removingMediaPostId === confirmDialog.post?.id
                   ? "Working..."
                   : confirmDialog.confirmLabel}
               </button>
@@ -4061,6 +3736,7 @@ Important:
           </div>
         </div>
       )}
+
     </div>
   );
 }
