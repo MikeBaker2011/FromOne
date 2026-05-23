@@ -572,7 +572,7 @@ export default function Home() {
 
         @media (min-width: 921px) {
           .fromone-hero-grid {
-            padding-top: clamp(34px, 4.8vw, 68px);
+            padding-top: clamp(28px, 3.4vw, 46px);
           }
         }
 
@@ -586,8 +586,8 @@ export default function Home() {
           }
 
           .fromone-hero-grid {
-            padding-top: 28px;
-            gap: 28px;
+            padding-top: 58px;
+            gap: 30px;
           }
 
           .fromone-section {
@@ -604,17 +604,21 @@ export default function Home() {
           }
 
           .fromone-hero-title {
-            font-size: clamp(2.85rem, 13.6vw, 4rem);
-            line-height: 0.92;
-            letter-spacing: -0.075em;
-            margin-top: 22px;
-            margin-bottom: 20px;
+            font-size: clamp(2.75rem, 13vw, 3.85rem);
+            line-height: 0.94;
+            letter-spacing: -0.073em;
+            margin-top: 0;
+            margin-bottom: 22px;
           }
 
 
           .fromone-hero-text {
             font-size: 1rem;
             line-height: 1.62;
+          }
+
+          .fromone-hero-actions {
+            margin-top: 30px;
           }
 
           .fromone-hero-actions,
