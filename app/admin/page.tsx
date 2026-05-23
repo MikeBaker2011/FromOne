@@ -35,6 +35,22 @@ const cleanLabel = (value?: string | null) => {
   return value ? String(value).replace(/_/g, ' ') : 'not set';
 };
 
+async function readJsonResponse(response: Response) {
+  const responseText = await response.text();
+
+  if (!responseText) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(responseText);
+  } catch {
+    return {
+      error: responseText || 'Server returned an empty response.',
+    };
+  }
+}
+
 export default function AdminPage() {
   const { showToast } = useToast();
 
@@ -92,7 +108,7 @@ export default function AdminPage() {
         },
       });
 
-      const result = await response.json();
+      const result = await readJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(result?.error || 'Could not search customers.');
@@ -131,7 +147,7 @@ export default function AdminPage() {
         }),
       });
 
-      const result = await response.json();
+      const result = await readJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(result?.error || 'Admin action failed.');
