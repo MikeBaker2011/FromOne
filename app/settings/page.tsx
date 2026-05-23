@@ -1478,6 +1478,7 @@ export default function SettingsPage() {
               <p>Checking connected accounts...</p>
             ) : (
               <div
+                className="settings-channel-grid"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
@@ -2137,6 +2138,99 @@ export default function SettingsPage() {
 
           .settings-create-posts-section div[style*="minmax(240px, 320px)"] {
             grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
+
+      <style jsx global>{`
+        /* SETTINGS CHANNEL CARD FINAL RESPONSIVE FIX */
+        .settings-channel-grid {
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 16px !important;
+          align-items: stretch !important;
+        }
+
+        .settings-channel-card {
+          min-width: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .settings-channel-card h3 {
+          word-break: normal !important;
+          overflow-wrap: normal !important;
+        }
+
+        .settings-channel-card p {
+          overflow-wrap: normal !important;
+          word-break: normal !important;
+        }
+
+        @media (max-width: 980px) {
+          .settings-channel-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+
+          .settings-channel-card {
+            min-height: 0 !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(128px, 168px) !important;
+            gap: 16px !important;
+            align-items: center !important;
+            padding: 18px !important;
+            border-radius: 22px !important;
+          }
+
+          .settings-channel-card > div {
+            min-width: 0 !important;
+          }
+
+          .settings-channel-card h3 {
+            min-height: 0 !important;
+            margin: 4px 0 8px !important;
+            font-size: clamp(1.45rem, 5.2vw, 2.05rem) !important;
+            line-height: 1.02 !important;
+          }
+
+          .settings-channel-card p {
+            min-height: 0 !important;
+            margin: 0 !important;
+            max-width: 560px !important;
+            font-size: 0.98rem !important;
+            line-height: 1.45 !important;
+          }
+
+          .settings-channel-card button {
+            width: 100% !important;
+            min-height: 48px !important;
+            margin-top: 0 !important;
+            align-self: center !important;
+          }
+        }
+
+        @media (max-width: 560px) {
+          .settings-channel-grid {
+            gap: 12px !important;
+          }
+
+          .settings-channel-card {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+            padding: 18px !important;
+          }
+
+          .settings-channel-card h3 {
+            font-size: 1.7rem !important;
+          }
+
+          .settings-channel-card p {
+            font-size: 0.96rem !important;
+          }
+
+          .settings-channel-card button {
+            width: 100% !important;
           }
         }
       `}</style>
