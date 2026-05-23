@@ -15,8 +15,24 @@ type MetaPage = {
   };
 };
 
+type MetaPermission = {
+  permission?: string;
+  status?: string;
+};
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+const REQUIRED_FACEBOOK_PUBLISH_PERMISSIONS = [
+  'pages_show_list',
+  'pages_read_engagement',
+  'pages_manage_posts',
+];
+
+const REQUIRED_INSTAGRAM_PUBLISH_PERMISSIONS = [
+  'instagram_basic',
+  'instagram_content_publish',
+];
 
 function getSupabaseAdmin() {
   if (!supabaseUrl || !supabaseServiceRoleKey) {
@@ -176,6 +192,49 @@ async function getMetaPages(accessToken: string) {
   return Array.isArray(result?.data) ? result.data : [];
 }
 
+async function getMetaPermissions(accessToken: string) {
+  const params = new URLSearchParams();
+
+  params.set('access_token', accessToken);
+
+  const response = await fetch(
+    `https://graph.facebook.com/v20.0/me/permissions?${params.toString()}`
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result?.error?.message || 'Could not check Meta permissions.');
+  }
+
+  const permissions = Array.isArray(result?.data) ? result.data : [];
+
+  const granted = permissions
+    .filter((item: MetaPermission) => cleanText(item.status).toLowerCase() === 'granted')
+    .map((item: MetaPermission) => cleanText(item.permission))
+    .filter(Boolean);
+
+  const declined = permissions
+    .filter((item: MetaPermission) => cleanText(item.status).toLowerCase() !== 'granted')
+    .map((item: MetaPermission) => ({
+      permission: cleanText(item.permission),
+      status: cleanText(item.status),
+    }))
+    .filter((item: { permission: string }) => Boolean(item.permission));
+
+  return {
+    permissions,
+    granted,
+    declined,
+  };
+}
+
+function getMissingPermissions(grantedPermissions: string[], requiredPermissions: string[]) {
+  const grantedSet = new Set(grantedPermissions);
+
+  return requiredPermissions.filter((permission) => !grantedSet.has(permission));
+}
+
 export async function GET(request: NextRequest) {
   try {
     const error = cleanText(request.nextUrl.searchParams.get('error'));
@@ -197,6 +256,30 @@ export async function GET(request: NextRequest) {
     const longLived = await exchangeForLongLivedToken(shortLivedToken);
     const metaUser = await getMetaUser(longLived.accessToken);
     const pages = await getMetaPages(longLived.accessToken);
+    const permissionCheck = await getMetaPermissions(longLived.accessToken);
+
+    const missingFacebookPermissions = getMissingPermissions(
+      permissionCheck.granted,
+      REQUIRED_FACEBOOK_PUBLISH_PERMISSIONS
+    );
+
+    const missingInstagramPermissions = getMissingPermissions(
+      permissionCheck.granted,
+      REQUIRED_INSTAGRAM_PUBLISH_PERMISSIONS
+    );
+
+    console.log('Meta connection permission check:', {
+      userId: verifiedState.userId,
+      metaUserId: cleanText(metaUser?.id),
+      grantedPermissions: permissionCheck.granted,
+      declinedPermissions: permissionCheck.declined,
+      missingFacebookPermissions,
+      missingInstagramPermissions,
+      pageCount: pages.length,
+      hasInstagramBusinessAccount: pages.some((page: MetaPage) =>
+        Boolean(cleanText(page.instagram_business_account?.id))
+      ),
+    });
 
     if (pages.length === 0) {
       throw new Error('No Facebook Pages were returned for this Meta account.');
@@ -228,14 +311,10 @@ export async function GET(request: NextRequest) {
         token_type: longLived.tokenType,
         expires_at: longLived.expiresAt,
 
-        scopes: [
-          'pages_show_list',
-          'pages_read_engagement',
-          'pages_manage_posts',
-          'instagram_basic',
-          'instagram_content_publish',
-          'business_management',
-        ],
+        // Store the real granted permissions from Meta, not a hardcoded list.
+        // This lets Settings / support checks tell the difference between
+        // "connected" and "publish permission missing".
+        scopes: permissionCheck.granted,
         status: 'connected',
         updated_at: new Date().toISOString(),
       };
@@ -253,6 +332,14 @@ export async function GET(request: NextRequest) {
 
     const redirectUrl = new URL(verifiedState.returnTo, getAppUrl());
     redirectUrl.searchParams.set('meta_connected', 'true');
+
+    if (missingFacebookPermissions.length > 0 || missingInstagramPermissions.length > 0) {
+      redirectUrl.searchParams.set('meta_permission_warning', 'true');
+      redirectUrl.searchParams.set(
+        'meta_missing_permissions',
+        [...missingFacebookPermissions, ...missingInstagramPermissions].join(',')
+      );
+    }
 
     return NextResponse.redirect(redirectUrl);
   } catch (error: any) {
