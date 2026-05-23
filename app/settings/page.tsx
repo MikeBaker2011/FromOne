@@ -711,8 +711,7 @@ export default function SettingsPage() {
                 Business setup
               </h1>
               <p className="page-description" style={{ margin: '0 auto', maxWidth: 760 }}>
-                Follow the setup sequence below. Complete the Business Profile first, connect publishing
-                channels second, then create weekly posts from the Dashboard.
+                Set up the business profile, connect publishing channels, then create weekly posts from uploaded media.
               </p>
             </div>
 
@@ -725,11 +724,10 @@ export default function SettingsPage() {
                 letterSpacing: '-0.06em',
               }}
             >
-              Follow these steps in order.
+              Set up FromOne in three steps.
             </h2>
             <p style={{ maxWidth: 850, margin: 0 }}>
-              Start with the Business Profile. Once that is saved, connect Facebook and Instagram
-              for autoposting, then go to the Dashboard to create posts from uploaded media.
+              Complete the profile once, connect Meta when you want autoposting, then create posts from Dashboard.
             </p>
 
             <div
@@ -1303,7 +1301,7 @@ export default function SettingsPage() {
           <section
             ref={socialConnectionsRef}
             id="publishing-connections"
-            className={`premium-card settings-numbered-section settings-connections-section ${connectionsReady ? "settings-step-ready-pulse" : ""}`}
+            className={`premium-card settings-numbered-section settings-connections-section`}
             style={{
               scrollMarginTop: 96,
               maxWidth: 1120,
@@ -1571,7 +1569,7 @@ export default function SettingsPage() {
           </section>
 
           <section
-            className={`premium-card settings-numbered-section settings-create-posts-section ${createPostsReady ? "settings-step-ready-pulse" : ""}`}
+            className={`premium-card settings-numbered-section settings-create-posts-section`}
             style={{
               maxWidth: 1120,
               margin: '0 auto 22px',
@@ -1603,7 +1601,7 @@ export default function SettingsPage() {
                     letterSpacing: '-0.06em',
                   }}
                 >
-                  Create your first weekly posts.
+                  Create weekly posts.
                 </h2>
                 <p style={{ maxWidth: 820, margin: 0 }}>
                   Your Business Profile is saved. Upload photos, videos or flyers on the
@@ -1625,7 +1623,7 @@ export default function SettingsPage() {
               >
                 <button
                   type="button"
-                  className={createPostsReady ? 'settings-create-posts-button-pulse' : undefined}
+                  className={undefined}
                   onClick={() => {
                     window.location.href = '/dashboard';
                   }}
@@ -1913,6 +1911,236 @@ export default function SettingsPage() {
         }
       `}</style>
 
+
+      <style jsx global>{`
+        /* SETTINGS FINAL RELEASE POLISH */
+        .settings-setup-guide,
+        .settings-numbered-section,
+        .settings-connections-section,
+        .settings-create-posts-section {
+          overflow: hidden;
+        }
+
+        .settings-setup-guide {
+          padding: clamp(22px, 3vw, 34px) !important;
+        }
+
+        .settings-setup-guide > div:first-child {
+          margin-bottom: 22px !important;
+        }
+
+        .settings-setup-guide .page-title {
+          font-size: clamp(2.2rem, 4.8vw, 4.35rem) !important;
+        }
+
+        .settings-setup-guide h2 {
+          font-size: clamp(1.65rem, 3vw, 2.45rem) !important;
+          letter-spacing: -0.045em !important;
+        }
+
+        .settings-setup-guide > p,
+        .settings-numbered-section > p,
+        .settings-connections-section > p {
+          color: rgba(248, 250, 252, 0.74) !important;
+          line-height: 1.55 !important;
+        }
+
+        .settings-setup-step-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 12px !important;
+        }
+
+        .settings-setup-step-card {
+          min-height: 172px !important;
+          border: 1px solid rgba(255, 255, 255, 0.09) !important;
+        }
+
+        .settings-setup-step-card h3 {
+          line-height: 1.08 !important;
+        }
+
+        .settings-profile-strength-card {
+          align-self: stretch !important;
+        }
+
+        .settings-numbered-section {
+          padding: clamp(22px, 3vw, 34px) !important;
+        }
+
+        .settings-channel-card {
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.08), transparent 30%),
+            linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.032)) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          box-shadow: 0 20px 58px rgba(0,0,0,0.18) !important;
+        }
+
+        .settings-channel-card .page-eyebrow {
+          margin-bottom: 4px !important;
+        }
+
+        .settings-channel-card button {
+          min-height: 50px !important;
+          border-radius: 16px !important;
+        }
+
+        .settings-publishing-rules-compact {
+          box-shadow: none !important;
+        }
+
+        .settings-publishing-rules-compact button[aria-controls="publishing-rules-panel"] {
+          min-height: 74px !important;
+        }
+
+        .settings-profile-editor-card,
+        .settings-simple-scan {
+          border-radius: 30px !important;
+          border: 1px solid rgba(255, 255, 255, 0.11) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 32%),
+            linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.032)) !important;
+        }
+
+        .settings-profile-editor-content label strong,
+        .settings-simple-scan label strong {
+          color: #ffffff !important;
+        }
+
+        .settings-profile-editor-content label span,
+        .settings-simple-scan label span {
+          color: rgba(248, 250, 252, 0.64) !important;
+          line-height: 1.4 !important;
+        }
+
+        .settings-profile-editor-content .input,
+        .settings-simple-scan .input {
+          min-height: 52px !important;
+          border-radius: 16px !important;
+        }
+
+        .settings-profile-editor-content textarea.input {
+          min-height: 132px !important;
+        }
+
+        .settings-step-ready-pulse,
+        .settings-create-posts-button-pulse {
+          animation: none !important;
+        }
+
+        .settings-create-posts-section button {
+          min-height: 54px !important;
+          border-radius: 18px !important;
+        }
+
+        @media (max-width: 900px) {
+          .settings-setup-step-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-setup-step-card {
+            min-height: 0 !important;
+            display: grid !important;
+            grid-template-columns: auto minmax(0, 1fr) !important;
+            gap: 12px !important;
+            align-items: start !important;
+          }
+
+          .settings-setup-step-card .status-pill {
+            grid-row: span 2 !important;
+            align-self: start !important;
+            margin-top: 1px !important;
+          }
+
+          .settings-setup-step-card h3 {
+            margin: 0 0 5px !important;
+            font-size: 1.15rem !important;
+          }
+
+          .settings-setup-step-card p {
+            margin: 0 !important;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .settings-setup-guide,
+          .settings-numbered-section,
+          .settings-connections-section,
+          .settings-create-posts-section,
+          .settings-profile-editor-card,
+          .settings-simple-scan {
+            width: min(100%, calc(100vw - 24px)) !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            border-radius: 26px !important;
+          }
+
+          .settings-setup-guide {
+            padding: 20px !important;
+          }
+
+          .settings-setup-guide .page-title {
+            font-size: clamp(2rem, 12vw, 3.2rem) !important;
+            line-height: 0.96 !important;
+          }
+
+          .settings-setup-guide .page-description {
+            font-size: 0.95rem !important;
+            line-height: 1.5 !important;
+          }
+
+          .settings-setup-guide h2 {
+            font-size: 1.55rem !important;
+            line-height: 1.02 !important;
+          }
+
+          .settings-numbered-section {
+            padding: 20px !important;
+          }
+
+          .settings-numbered-section h2,
+          .settings-connections-section h2,
+          .settings-create-posts-section h2 {
+            font-size: clamp(1.85rem, 8vw, 2.6rem) !important;
+            line-height: 1 !important;
+          }
+
+          .settings-profile-strength-card h3 {
+            font-size: clamp(2.2rem, 15vw, 3.4rem) !important;
+          }
+
+          .settings-channel-card {
+            padding: 18px !important;
+            border-radius: 22px !important;
+          }
+
+          .settings-publishing-rules-compact button[aria-controls="publishing-rules-panel"] {
+            padding: 14px !important;
+            align-items: center !important;
+          }
+
+          .settings-publishing-rules-compact button[aria-controls="publishing-rules-panel"] strong {
+            font-size: 1rem !important;
+            line-height: 1.2 !important;
+          }
+
+          .settings-profile-editor-content .manual-backup-grid {
+            gap: 18px !important;
+          }
+
+          .settings-profile-editor-content label {
+            margin-bottom: 12px !important;
+          }
+
+          .settings-profile-editor-content textarea.input {
+            min-height: 112px !important;
+          }
+
+          .settings-create-posts-section div[style*="minmax(240px, 320px)"] {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
       {confirmDialog && (
         <div
           role="dialog"
@@ -1987,3 +2215,8 @@ export default function SettingsPage() {
     </>
   );
 }
+
+/*
+  NOTE: Final-release polish marker.
+  The active style overrides are injected above in the component global CSS blocks.
+*/
