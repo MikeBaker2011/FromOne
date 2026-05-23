@@ -1972,8 +1972,8 @@ If uploads are supplied:
 
           <section
             style={{
-              margin: "0 auto 22px",
-              maxWidth: 900,
+              width: "100%",
+              margin: "0 0 22px",
               borderRadius: 26,
               border: "1px solid rgba(255, 212, 59, 0.18)",
               background:
