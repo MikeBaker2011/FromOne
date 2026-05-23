@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyboardEvent, useEffect, useMemo, useState } from 'react';
+import { KeyboardEvent, useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/app/components/ToastProvider';
@@ -9,9 +9,30 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export default function ResetPasswordPage() {
+const REMEMBER_EMAIL_KEY = 'fromone_remember_email';
+
+export default function SignInPage() {
   const router = useRouter();
   const { showToast } = useToast();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [loading, setLoading] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
+  const [authMessage, setAuthMessage] = useState('');
+  const [authError, setAuthError] = useState('');
+
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const notify = (
     message: any,
@@ -39,147 +60,220 @@ export default function ResetPasswordPage() {
     });
   };
 
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [checkingLink, setCheckingLink] = useState(true);
-  const [linkReady, setLinkReady] = useState(false);
-  const [pageMessage, setPageMessage] = useState('');
-  const [pageError, setPageError] = useState('');
+  const getEmailRedirectUrl = () => {
+    if (typeof window === 'undefined') {
+      return 'https://fromone.co.uk/settings?setup=business';
+    }
 
-  useEffect(() => {
-    prepareRecoverySession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return `${window.location.origin}/settings?setup=business`;
+  };
+
+  const saveRememberedEmail = (cleanEmail: string) => {
+    if (rememberMe) {
+      localStorage.setItem(REMEMBER_EMAIL_KEY, cleanEmail);
+    } else {
+      localStorage.removeItem(REMEMBER_EMAIL_KEY);
+    }
+  };
 
   const getFriendlyAuthError = (message: string) => {
     const cleanMessage = String(message || '').trim();
     const lowerMessage = cleanMessage.toLowerCase();
 
-    if (
-      lowerMessage.includes('expired') ||
-      lowerMessage.includes('invalid') ||
-      lowerMessage.includes('already been used') ||
-      lowerMessage.includes('otp') ||
-      lowerMessage.includes('token')
-    ) {
-      return 'This password reset link has expired or has already been used. Please request a new password reset email from the sign-in page.';
+    if (lowerMessage.includes('invalid login credentials')) {
+      return 'Those sign-in details do not match an account. Please check your email and password.';
+    }
+
+    if (lowerMessage.includes('email not confirmed')) {
+      return 'Please verify your email before signing in. You can resend the verification email below.';
+    }
+
+    if (lowerMessage.includes('already registered')) {
+      return 'An account already exists for this email. Please sign in instead.';
+    }
+
+    if (lowerMessage.includes('password')) {
+      return cleanMessage || 'Please check your password and try again.';
     }
 
     if (lowerMessage.includes('network') || lowerMessage.includes('failed to fetch')) {
       return 'FromOne could not reach the sign-in service. Please check your connection and try again.';
     }
 
-    return cleanMessage || 'Could not complete the password reset. Please try again.';
+    return cleanMessage || 'Authentication failed. Please try again.';
   };
 
-  const prepareRecoverySession = async () => {
-    setCheckingLink(true);
-    setPageError('');
-    setPageMessage('');
+  const getPostLoginDestination = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id || null;
 
-    try {
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get('code');
-
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-        if (error) {
-          const friendlyMessage = getFriendlyAuthError(error.message);
-          setPageError(friendlyMessage);
-          setLinkReady(false);
-          return;
-        }
-
-        setLinkReady(true);
-        setPageMessage('Reset link verified. Choose a new password below.');
-        window.history.replaceState({}, '', window.location.pathname);
-        return;
-      }
-
-      const { data } = await supabase.auth.getSession();
-
-      if (data.session) {
-        setLinkReady(true);
-        setPageMessage('Choose a new password below.');
-        return;
-      }
-
-      setPageError('This password reset link is missing, expired, or has already been used. Please request a new reset email from the sign-in page.');
-      setLinkReady(false);
-    } catch (error: any) {
-      setPageError(getFriendlyAuthError(error?.message));
-      setLinkReady(false);
-    } finally {
-      setCheckingLink(false);
+    if (!userId) {
+      return '/dashboard';
     }
+
+    const { data, error } = await supabase
+      .from('business_profiles')
+      .select('id, business_name, industry')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Business Profile check error:', error.message);
+      return '/dashboard';
+    }
+
+    if (!data?.id || !data?.business_name || !data?.industry) {
+      return '/settings?setup=business';
+    }
+
+    return '/dashboard';
   };
 
-  const passwordChecks = useMemo(
-    () => [
-      {
-        label: 'At least 6 characters',
-        ready: password.length >= 6,
-      },
-      {
-        label: 'Passwords match',
-        ready: Boolean(password) && password === confirmPassword,
-      },
-    ],
-    [password, confirmPassword],
-  );
+  const handleAuth = async () => {
+    const cleanEmail = email.trim();
 
-  const canSubmit = passwordChecks.every((item) => item.ready) && !saving;
+    setAuthMessage('');
+    setAuthError('');
 
-  const updatePassword = async () => {
-    setPageError('');
-    setPageMessage('');
+    if (!cleanEmail) {
+      notify('Please enter your email address.', 'warning', 'Email needed');
+      return;
+    }
 
     if (!password.trim()) {
-      notify('Please enter a new password.', 'warning', 'Password needed');
+      notify('Please enter your password.', 'warning', 'Password needed');
       return;
     }
 
-    if (password.length < 6) {
-      notify('Password must be at least 6 characters.', 'warning', 'Password too short');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      notify('The two passwords do not match.', 'warning', 'Passwords do not match');
-      return;
-    }
-
-    setSaving(true);
+    setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password,
+      if (mode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        saveRememberedEmail(cleanEmail);
+
+        const destination = await getPostLoginDestination();
+        router.push(destination);
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: {
+            emailRedirectTo: getEmailRedirectUrl(),
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        saveRememberedEmail(cleanEmail);
+        setAuthMessage(
+          'Account created. Please check your email to verify your account. After verification, you will be sent to Business Profile setup.'
+        );
+        notify('Check your email to verify your account.', 'success', 'Account created');
+        setMode('signin');
+        setPassword('');
+      }
+    } catch (error: any) {
+      const friendlyMessage = getFriendlyAuthError(error?.message);
+      setAuthError(friendlyMessage);
+      notify(friendlyMessage, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    const cleanEmail = email.trim();
+
+    setAuthMessage('');
+    setAuthError('');
+
+    if (!cleanEmail) {
+      notify('Enter your email address first, then resend the verification email.', 'warning', 'Email needed');
+      return;
+    }
+
+    setResendingConfirmation(true);
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: cleanEmail,
+        options: {
+          emailRedirectTo: getEmailRedirectUrl(),
+        },
       });
 
       if (error) {
         throw error;
       }
 
-      setPageMessage('Password updated. Redirecting you to sign in...');
-      notify('Please sign in with your new password.', 'success', 'Password updated');
-
-      window.setTimeout(() => {
-        router.push('/signin');
-      }, 700);
+      saveRememberedEmail(cleanEmail);
+      setAuthMessage('Verification email sent. Please check your inbox and spam folder.');
+      notify('Verification email sent.', 'success', 'Check your email');
     } catch (error: any) {
-      const friendlyMessage = getFriendlyAuthError(error?.message || 'Could not update password.');
-      setPageError(friendlyMessage);
-      notify(friendlyMessage, 'error', 'Password update failed');
+      const friendlyMessage = getFriendlyAuthError(error?.message || 'Could not resend verification email.');
+      setAuthError(friendlyMessage);
+      notify(friendlyMessage, 'error', 'Verification failed');
     } finally {
-      setSaving(false);
+      setResendingConfirmation(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const cleanEmail = email.trim();
+
+    setAuthMessage('');
+    setAuthError('');
+
+    if (!cleanEmail) {
+      notify('Enter your email address first, then request a password reset.', 'warning', 'Email needed');
+      return;
+    }
+
+    setResettingPassword(true);
+
+    try {
+      const redirectTo =
+        typeof window === 'undefined'
+          ? 'https://fromone.co.uk/reset-password'
+          : `${window.location.origin}/reset-password`;
+
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      saveRememberedEmail(cleanEmail);
+      setAuthMessage('Password reset email sent. Please check your inbox.');
+      notify('Password reset email sent.', 'success', 'Check your email');
+    } catch (error: any) {
+      const friendlyMessage = getFriendlyAuthError(error?.message || 'Could not send password reset email.');
+      setAuthError(friendlyMessage);
+      notify(friendlyMessage, 'error', 'Reset failed');
+    } finally {
+      setResettingPassword(false);
     }
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && linkReady && !saving) {
-      updatePassword();
+    if (event.key === 'Enter' && !loading && !resettingPassword && !resendingConfirmation) {
+      handleAuth();
     }
   };
 
@@ -188,36 +282,38 @@ export default function ResetPasswordPage() {
       <div className="signin-background-glow signin-glow-one"></div>
       <div className="signin-background-glow signin-glow-two"></div>
 
-      <div className="signin-wrap signin-reset-wrap">
+      <div className="signin-wrap">
         <section className="signin-intro">
           <div>
-            <div className="page-eyebrow">FromOne Password Reset</div>
+            <div className="page-eyebrow">FromOne Access</div>
 
-            <h1 className="signin-main-title">Create a new password.</h1>
+            <h1 className="signin-main-title">
+              Sign in to your FromOne workspace.
+            </h1>
 
             <p className="signin-main-text">
-              Choose a new password for your FromOne account. Once saved, you can sign in
-              and continue creating, reviewing and publishing your weekly posts.
+              Manage your Business Profile, upload media, create scheduled posts, and publish
+              to Facebook and Instagram after review.
             </p>
           </div>
 
           <div className="signin-mini-grid">
             <div className="signin-mini-card">
               <span>01</span>
-              <strong>Verify link</strong>
-              <p>FromOne checks that your reset link is valid.</p>
+              <strong>Account</strong>
+              <p>Create or access your FromOne account.</p>
             </div>
 
             <div className="signin-mini-card">
               <span>02</span>
-              <strong>Set password</strong>
-              <p>Create a new password for your account.</p>
+              <strong>Business setup</strong>
+              <p>New users start by setting up their Business Profile.</p>
             </div>
 
             <div className="signin-mini-card">
               <span>03</span>
-              <strong>Sign back in</strong>
-              <p>Use your new password to access your workspace.</p>
+              <strong>Weekly posts</strong>
+              <p>Upload media and turn it into scheduled posts.</p>
             </div>
           </div>
         </section>
@@ -229,111 +325,121 @@ export default function ResetPasswordPage() {
             className="signin-logo-img"
           />
 
-          <h2>Reset password</h2>
+          <h2>{mode === 'signin' ? 'Welcome back' : 'Create account'}</h2>
 
-          {checkingLink ? (
-            <>
-              <p className="signin-card-text">Checking your password reset link...</p>
-              <div className="signin-auth-message">This usually takes a few seconds.</div>
-            </>
-          ) : !linkReady ? (
-            <>
-              <p className="signin-card-text">
-                This reset link is no longer ready to use.
-              </p>
+          <p className="signin-card-text">
+            {mode === 'signin'
+              ? 'Sign in to continue to your FromOne workspace.'
+              : 'Create your account to start your FromOne demo.'}
+          </p>
 
-              {pageError && <div className="signin-auth-message is-error">{pageError}</div>}
-
-              <button
-                type="button"
-                className="signin-primary-button"
-                onClick={() => router.push('/signin')}
-              >
-                Back to sign in
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="signin-card-text">
-                Choose a secure new password for your account.
-              </p>
-
-              {pageMessage && <div className="signin-auth-message">{pageMessage}</div>}
-              {pageError && <div className="signin-auth-message is-error">{pageError}</div>}
-
-              <label htmlFor="new-password">
-                <strong>New password</strong>
-              </label>
-              <input
-                id="new-password"
-                className="input"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Enter new password"
-                autoComplete="new-password"
-              />
-
-              <label htmlFor="confirm-password">
-                <strong>Confirm password</strong>
-              </label>
-              <input
-                id="confirm-password"
-                className="input"
-                type="password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Confirm new password"
-                autoComplete="new-password"
-              />
-
-              <div
-                className="signin-auth-message"
-                style={{
-                  display: 'grid',
-                  gap: 8,
-                  marginTop: 4,
-                }}
-              >
-                {passwordChecks.map((check) => (
-                  <span
-                    key={check.label}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      color: check.ready ? '#a7f3d0' : 'rgba(248, 250, 252, 0.74)',
-                      fontWeight: 850,
-                    }}
-                  >
-                    {check.label}
-                    <strong>{check.ready ? '✓' : '•'}</strong>
-                  </span>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                className="signin-primary-button"
-                onClick={updatePassword}
-                disabled={!canSubmit}
-              >
-                {saving ? 'Saving password...' : 'Update password'}
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => router.push('/signin')}
-                disabled={saving}
-                style={{ width: '100%' }}
-              >
-                Back to sign in
-              </button>
-            </>
+          {authMessage && (
+            <div className="signin-auth-message">
+              {authMessage}
+            </div>
           )}
+
+          {authError && (
+            <div className="signin-auth-message is-error">
+              {authError}
+            </div>
+          )}
+
+          <label htmlFor="email">
+            <strong>Email address</strong>
+          </label>
+          <input
+            id="email"
+            className="input"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="you@example.com"
+            autoComplete="email"
+          />
+
+          <label htmlFor="password">
+            <strong>Password</strong>
+          </label>
+          <input
+            id="password"
+            className="input"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter your password"
+            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+          />
+
+          {mode === 'signin' && (
+            <div className="signin-options-row">
+              <label className="signin-remember-label">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(event) => setRememberMe(event.target.checked)}
+                />
+                <span>Remember email</span>
+              </label>
+
+              <button
+                type="button"
+                className="signin-forgot-button"
+                onClick={handleForgotPassword}
+                disabled={resettingPassword || loading || resendingConfirmation}
+              >
+                {resettingPassword ? 'Sending reset email...' : 'Forgot password?'}
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="signin-primary-button"
+            onClick={handleAuth}
+            disabled={loading || resettingPassword || resendingConfirmation}
+          >
+            {loading
+              ? 'Please wait...'
+              : mode === 'signin'
+                ? 'Sign in'
+                : 'Create account'}
+          </button>
+
+          {mode === 'signin' && (
+            <div className="signin-verification-help">
+              <span>Waiting for your verification email?</span>
+
+              <button
+                type="button"
+                className="signin-resend-button"
+                onClick={handleResendConfirmation}
+                disabled={loading || resettingPassword || resendingConfirmation}
+              >
+                {resendingConfirmation ? 'Sending...' : 'Resend verification email'}
+              </button>
+            </div>
+          )}
+
+          <div className="signin-switch">
+            <span>
+              {mode === 'signin' ? 'Need an account?' : 'Already have an account?'}
+            </span>
+
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                setAuthMessage('');
+                setAuthError('');
+                setMode(mode === 'signin' ? 'signup' : 'signin');
+              }}
+            >
+              {mode === 'signin' ? 'Create one' : 'Sign in'}
+            </button>
+          </div>
         </section>
       </div>
     </div>
