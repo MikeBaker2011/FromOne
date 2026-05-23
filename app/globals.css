@@ -12737,3 +12737,35 @@ body:has(.simplified-posts-page) .simplified-posts-page {
     color: #a7f3d0 !important;
   }
 }
+/* FINAL PUBLIC NAV CONSISTENCY */
+
+.sales-nav.public-nav {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.tutorial-public-page .sales-nav.public-nav,
+.product-updates-page .sales-nav.public-nav {
+  width: min(1180px, calc(100vw - 36px)) !important;
+  margin: 0 auto !important;
+  padding: 18px 0 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.tutorial-public-page .public-nav-inner,
+.product-updates-page .public-nav-inner {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 720px) {
+  .tutorial-public-page .sales-nav.public-nav,
+  .product-updates-page .sales-nav.public-nav {
+    width: calc(100vw - 32px) !important;
+    padding: 16px 0 0 !important;
+  }
+}
