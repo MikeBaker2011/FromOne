@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyboardEvent, useEffect, useState } from 'react';
+import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/app/components/ToastProvider';
@@ -17,6 +17,7 @@ export default function SignInPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [loading, setLoading] = useState(false);
@@ -24,6 +25,8 @@ export default function SignInPage() {
   const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const [authMessage, setAuthMessage] = useState('');
   const [authError, setAuthError] = useState('');
+  const [resetCooldown, setResetCooldown] = useState(0);
+  const messageRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
@@ -33,6 +36,16 @@ export default function SignInPage() {
       setRememberMe(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (resetCooldown <= 0) return;
+
+    const timer = window.setInterval(() => {
+      setResetCooldown((current) => Math.max(current - 1, 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [resetCooldown]);
 
   const notify = (
     message: any,
@@ -58,6 +71,23 @@ export default function SignInPage() {
       title: defaultTitle,
       message: cleanMessage,
     });
+  };
+
+  const showInlineMessage = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    if (type === 'error') {
+      setAuthError(message);
+      setAuthMessage('');
+    } else {
+      setAuthMessage(message);
+      setAuthError('');
+    }
+
+    window.setTimeout(() => {
+      messageRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }, 80);
   };
 
   const getEmailRedirectUrl = () => {
@@ -238,8 +268,15 @@ export default function SignInPage() {
     setAuthMessage('');
     setAuthError('');
 
+    if (resetCooldown > 0) {
+      const message = `A password reset email was just sent. Please wait ${resetCooldown} second${resetCooldown === 1 ? '' : 's'} before requesting another one. Use the newest email only.`;
+      showInlineMessage(message, 'warning');
+      notify(message, 'warning', 'Reset already sent');
+      return;
+    }
+
     if (!cleanEmail) {
-      notify('Enter your email address first, then request a password reset.', 'warning', 'Email needed');
+      notify('Enter your email address first, then tap Send reset email.', 'warning', 'Email needed');
       return;
     }
 
@@ -260,11 +297,15 @@ export default function SignInPage() {
       }
 
       saveRememberedEmail(cleanEmail);
-      setAuthMessage('Password reset email sent. Please check your inbox.');
+      setResetCooldown(60);
+      showInlineMessage(
+        'Password reset email sent. Please use the newest email only, check spam/junk, and allow up to 1 minute for the link to arrive.',
+        'success',
+      );
       notify('Password reset email sent.', 'success', 'Check your email');
     } catch (error: any) {
       const friendlyMessage = getFriendlyAuthError(error?.message || 'Could not send password reset email.');
-      setAuthError(friendlyMessage);
+      showInlineMessage(friendlyMessage, 'error');
       notify(friendlyMessage, 'error', 'Reset failed');
     } finally {
       setResettingPassword(false);
@@ -333,15 +374,12 @@ export default function SignInPage() {
               : 'Create your account to start your FromOne demo.'}
           </p>
 
-          {authMessage && (
-            <div className="signin-auth-message">
-              {authMessage}
-            </div>
-          )}
-
-          {authError && (
-            <div className="signin-auth-message is-error">
-              {authError}
+          {(authMessage || authError) && (
+            <div
+              ref={messageRef}
+              className={authError ? 'signin-auth-message is-error' : 'signin-auth-message'}
+            >
+              {authError || authMessage}
             </div>
           )}
 
@@ -362,37 +400,98 @@ export default function SignInPage() {
           <label htmlFor="password">
             <strong>Password</strong>
           </label>
-          <input
-            id="password"
-            className="input"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Enter your password"
-            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              id="password"
+              className="input"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Enter your password"
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              style={{ paddingRight: 92 }}
+            />
+
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              style={{
+                position: 'absolute',
+                right: 10,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                minHeight: 38,
+                padding: '0 12px',
+                borderRadius: 999,
+                fontSize: 13,
+                fontWeight: 900,
+              }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
 
           {mode === 'signin' && (
-            <div className="signin-options-row">
-              <label className="signin-remember-label">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(event) => setRememberMe(event.target.checked)}
-                />
-                <span>Remember email</span>
-              </label>
+            <>
+              <div className="signin-options-row">
+                <label className="signin-remember-label">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(event) => setRememberMe(event.target.checked)}
+                  />
+                  <span>Remember email</span>
+                </label>
+              </div>
 
-              <button
-                type="button"
-                className="signin-forgot-button"
-                onClick={handleForgotPassword}
-                disabled={resettingPassword || loading || resendingConfirmation}
+              <div
+                style={{
+                  display: 'grid',
+                  gap: 10,
+                  margin: '14px 0 0',
+                  padding: 14,
+                  borderRadius: 18,
+                  background: 'rgba(255, 212, 59, 0.08)',
+                  border: '1px solid rgba(255, 212, 59, 0.18)',
+                }}
               >
-                {resettingPassword ? 'Sending reset email...' : 'Forgot password?'}
-              </button>
-            </div>
+                <div>
+                  <strong style={{ color: '#fff' }}>Can’t sign in?</strong>
+                  <p
+                    style={{
+                      margin: '5px 0 0',
+                      color: 'rgba(248, 250, 252, 0.72)',
+                      fontSize: '0.92rem',
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    Enter your email above, then send one reset link. Use the newest email only.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="signin-forgot-button"
+                  onClick={handleForgotPassword}
+                  disabled={resettingPassword || loading || resendingConfirmation || resetCooldown > 0}
+                  style={{
+                    width: '100%',
+                    minHeight: 48,
+                    justifyContent: 'center',
+                    borderRadius: 14,
+                  }}
+                >
+                  {resettingPassword
+                    ? 'Sending reset email...'
+                    : resetCooldown > 0
+                      ? `Reset sent · wait ${resetCooldown}s`
+                      : 'Send reset email'}
+                </button>
+              </div>
+            </>
           )}
 
           <button

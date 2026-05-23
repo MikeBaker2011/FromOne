@@ -41,6 +41,8 @@ export default function ResetPasswordPage() {
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [checkingLink, setCheckingLink] = useState(true);
   const [linkReady, setLinkReady] = useState(false);
@@ -264,30 +266,76 @@ export default function ResetPasswordPage() {
               <label htmlFor="new-password">
                 <strong>New password</strong>
               </label>
-              <input
-                id="new-password"
-                className="input"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Enter new password"
-                autoComplete="new-password"
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="new-password"
+                  className="input"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Enter new password"
+                  autoComplete="new-password"
+                  style={{ paddingRight: 92 }}
+                />
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? 'Hide new password' : 'Show new password'}
+                  style={{
+                    position: 'absolute',
+                    right: 10,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    minHeight: 38,
+                    padding: '0 12px',
+                    borderRadius: 999,
+                    fontSize: 13,
+                    fontWeight: 900,
+                  }}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
 
               <label htmlFor="confirm-password">
                 <strong>Confirm password</strong>
               </label>
-              <input
-                id="confirm-password"
-                className="input"
-                type="password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Confirm new password"
-                autoComplete="new-password"
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="confirm-password"
+                  className="input"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Confirm new password"
+                  autoComplete="new-password"
+                  style={{ paddingRight: 92 }}
+                />
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowConfirmPassword((current) => !current)}
+                  aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                  style={{
+                    position: 'absolute',
+                    right: 10,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    minHeight: 38,
+                    padding: '0 12px',
+                    borderRadius: 999,
+                    fontSize: 13,
+                    fontWeight: 900,
+                  }}
+                >
+                  {showConfirmPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
 
               <div
                 className="signin-auth-message"
