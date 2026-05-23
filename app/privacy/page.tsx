@@ -5,23 +5,54 @@ import PublicFooter from '../components/PublicFooter';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | FromOne',
-  description:
-    'Read how FromOne collects, uses, stores, and protects personal data.',
+  description: 'How FromOne collects, uses, stores and protects data when you use the service.',
   alternates: {
     canonical: '/privacy',
   },
+  openGraph: {
+    title: 'Privacy Policy | FromOne',
+    description: 'How FromOne handles account data, business profiles, uploaded media and connected publishing data.',
+    url: '/privacy',
+    type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'FromOne privacy policy',
+      },
+    ],
+  },
 };
+
+const privacySummary = [
+  {
+    label: 'Account',
+    title: 'Your workspace data',
+    text: 'We use your account, Business Profile and saved posts to run FromOne and keep your workspace available.',
+  },
+  {
+    label: 'Media',
+    title: 'Photos, videos and flyers',
+    text: 'Uploaded media is used to create, improve, schedule and publish posts for the connected business.',
+  },
+  {
+    label: 'Publishing',
+    title: 'Connected platforms',
+    text: 'Meta, Facebook and Instagram connection details are used only for the publishing features you choose to use.',
+  },
+];
 
 const privacySections = [
   {
-    title: 'Who we are',
+    title: '1. Who we are',
     body: [
       'FromOne is a social media content workflow platform for small businesses. It helps users create weekly social media posts from a Business Profile, uploaded media, website information, and user-provided business details.',
       'For privacy questions, contact us at info@fromone.co.uk.',
     ],
   },
   {
-    title: 'What information we collect',
+    title: '2. What information we collect',
     body: [
       'We may collect and store account information, such as your email address and user ID.',
       'We may collect business profile information, such as business name, website URL, industry, location, services, audience, tone of voice, offers, brand colours, and logo URL.',
@@ -32,7 +63,7 @@ const privacySections = [
     ],
   },
   {
-    title: 'How we use your information',
+    title: '3. How we use your information',
     body: [
       'We use your information to create and manage your FromOne account.',
       'We use your Business Profile and uploaded media to generate weekly social media posts.',
@@ -42,27 +73,27 @@ const privacySections = [
     ],
   },
   {
-    title: 'Website scans and uploaded media',
+    title: '4. Website scans and uploaded media',
     body: [
       'If you enter a website URL, FromOne may scan publicly available content from that website to understand the business, services, audience, tone, offers, and brand details.',
       'If you upload photos, videos, flyers, or other files, FromOne may use that media to create, rewrite, improve, schedule, or publish social media posts for the connected business.',
     ],
   },
   {
-    title: 'Social account connections',
+    title: '5. Social account connections',
     body: [
       'If you connect Meta, Facebook, or Instagram, FromOne stores the connection details needed to publish posts on your behalf.',
       'These details are used only to provide the publishing features you choose to use.',
     ],
   },
   {
-    title: 'Legal basis for processing',
+    title: '6. Legal basis for processing',
     body: [
       'We process personal data where it is necessary to provide the service, manage your account, respond to support requests, comply with legal obligations, or where we have a legitimate interest in improving and securing FromOne.',
     ],
   },
   {
-    title: 'Who we share data with',
+    title: '7. Who we share data with',
     body: [
       'We only share data with service providers needed to operate FromOne. This may include Supabase for authentication, database storage and file storage.',
       'It may also include AI/content generation providers used to create, improve, or rewrite posts; Meta, Facebook and Instagram when you connect accounts and publish posts; payment providers once subscription billing is connected; and hosting, analytics, security or support tools if added to the service.',
@@ -70,150 +101,148 @@ const privacySections = [
     ],
   },
   {
-    title: 'How long we keep data',
+    title: '8. How long we keep data',
     body: [
       'We keep account, business profile, campaign, uploaded media, and post data while your account is active or while it is needed to provide the service.',
       'Support requests and billing records may be kept for longer where needed for business, legal, tax, or security reasons.',
     ],
   },
   {
-    title: 'Your rights',
+    title: '9. Your rights',
     body: [
       'Depending on your location and applicable law, you may have rights to access, correct, delete, restrict, object to, or request a copy of your personal data.',
       'To make a request, contact info@fromone.co.uk.',
     ],
   },
   {
-    title: 'Security',
+    title: '10. Security',
     body: [
       'We take reasonable steps to protect your data, including using trusted service providers, authentication, access controls, and secure storage.',
       'No online service can guarantee complete security.',
     ],
   },
   {
-    title: 'International transfers',
+    title: '11. International transfers',
     body: [
       'Some service providers may process data outside the UK or European Economic Area. If this happens, we rely on appropriate safeguards provided by those service providers.',
     ],
   },
   {
-    title: 'Children',
+    title: '12. Children',
     body: [
       'FromOne is not intended for children. You should not use FromOne if you are under 18.',
     ],
   },
   {
-    title: 'Changes to this policy',
+    title: '13. Changes to this policy',
     body: [
       'We may update this Privacy Policy as FromOne changes. The latest version will always be available on this page.',
     ],
   },
 ];
 
-const summaryCards = [
-  {
-    title: 'We use data to run the workspace',
-    text: 'Business details, uploaded media and post history help FromOne create, save and publish the content you ask it to prepare.',
-  },
-  {
-    title: 'You stay in control',
-    text: 'Connected Facebook and Instagram accounts are used only for the publishing features you choose to use.',
-  },
-  {
-    title: 'We do not sell personal data',
-    text: 'FromOne uses trusted service providers to operate the app, store content and process subscriptions.',
-  },
-];
+const renderParagraph = (paragraph: string) => {
+  const email = 'info@fromone.co.uk';
 
-const dataHighlights = [
-  'Account and sign-in information',
-  'Business Profile and brand details',
-  'Uploaded photos, videos and flyers',
-  'Generated posts, schedules and publish history',
-  'Meta, Facebook and Instagram connection references',
-  'Support, billing, usage and product activity records',
-];
+  if (!paragraph.includes(email)) return paragraph;
+
+  const [before, after] = paragraph.split(email);
+
+  return (
+    <>
+      {before}
+      <a href={`mailto:${email}`} className="fromone-privacy-link">
+        {email}
+      </a>
+      {after}
+    </>
+  );
+};
 
 export default function PrivacyPage() {
   return (
-    <main className="sales-page fromone-legal-page">
+    <main className="sales-page fromone-public-home fromone-privacy-page">
       <style>{`
-        .fromone-legal-page {
+        .fromone-privacy-page {
           overflow: hidden;
         }
 
-        .fromone-legal-shell {
+        .fromone-privacy-shell {
           width: min(1160px, calc(100vw - 32px));
           margin: 0 auto;
         }
 
-        .fromone-legal-hero {
+        .fromone-privacy-hero {
           position: relative;
           overflow: hidden;
-          padding-bottom: clamp(32px, 5vw, 58px);
+          padding-bottom: clamp(34px, 5vw, 62px);
         }
 
-        .fromone-legal-hero::before {
+        .fromone-privacy-hero::before {
           content: '';
           position: absolute;
-          inset: -240px -120px auto;
-          height: 680px;
+          inset: -220px -140px auto;
+          height: 700px;
           background:
-            radial-gradient(circle at 50% 18%, rgba(255, 212, 59, 0.2), transparent 32%),
-            radial-gradient(circle at 72% 28%, rgba(61, 220, 151, 0.11), transparent 28%),
+            radial-gradient(circle at 50% 18%, rgba(255, 212, 59, 0.18), transparent 32%),
+            radial-gradient(circle at 72% 28%, rgba(61, 220, 151, 0.1), transparent 28%),
             radial-gradient(circle at 24% 24%, rgba(255, 255, 255, 0.075), transparent 30%);
+          filter: blur(4px);
           pointer-events: none;
         }
 
-        .fromone-legal-hero-grid {
+        .fromone-privacy-hero-grid {
           position: relative;
           z-index: 1;
           display: grid;
-          grid-template-columns: minmax(0, 1.04fr) minmax(330px, 0.96fr);
-          gap: clamp(24px, 5vw, 54px);
+          grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+          gap: clamp(26px, 5vw, 56px);
           align-items: center;
-          padding: clamp(42px, 6vw, 82px) 0 clamp(10px, 2vw, 24px);
+          padding: clamp(44px, 6vw, 78px) 0 clamp(18px, 3vw, 30px);
         }
 
-        .fromone-legal-title {
-          margin: 0 0 18px;
+        .fromone-privacy-copy {
+          max-width: 720px;
+        }
+
+        .fromone-privacy-title {
+          margin: 0 0 20px;
           max-width: 760px;
           color: #ffffff;
           font-size: clamp(3.2rem, 7vw, 7.2rem);
           line-height: 0.86;
-          letter-spacing: -0.082em;
+          letter-spacing: -0.085em;
         }
 
-        .fromone-legal-title span {
+        .fromone-privacy-title span {
           color: #ffd43b;
         }
 
-        .fromone-legal-copy p {
-          max-width: 650px;
+        .fromone-privacy-text {
+          max-width: 640px;
           margin: 0;
-          color: rgba(248, 250, 252, 0.74);
-          font-size: clamp(1.03rem, 1.3vw, 1.16rem);
+          color: rgba(248, 250, 252, 0.76);
+          font-size: clamp(1.04rem, 1.35vw, 1.2rem);
           line-height: 1.72;
         }
 
-        .fromone-legal-actions {
+        .fromone-privacy-actions {
           display: flex;
           flex-wrap: wrap;
           gap: 12px;
           margin-top: 28px;
         }
 
-        .fromone-legal-proof {
+        .fromone-privacy-proof-row {
           display: flex;
           flex-wrap: wrap;
           gap: 10px;
           margin-top: 24px;
         }
 
-        .fromone-legal-pill {
+        .fromone-privacy-proof-pill {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
           gap: 8px;
           padding: 10px 12px;
           border-radius: 999px;
@@ -224,89 +253,157 @@ export default function PrivacyPage() {
           font-weight: 900;
         }
 
-        .fromone-legal-pill span {
+        .fromone-privacy-proof-pill span {
           color: #ffd43b;
         }
 
-        .fromone-legal-summary {
+        .fromone-privacy-card {
           position: relative;
-          z-index: 1;
-          padding: clamp(22px, 3vw, 32px);
+          padding: clamp(22px, 3vw, 34px);
           border-radius: 42px;
           background:
-            radial-gradient(circle at 22% 8%, rgba(255, 212, 59, 0.22), transparent 28%),
+            radial-gradient(circle at 22% 8%, rgba(255, 212, 59, 0.2), transparent 28%),
             radial-gradient(circle at 82% 18%, rgba(61, 220, 151, 0.12), transparent 30%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.115), rgba(255, 255, 255, 0.038));
+            linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.038));
           border: 1px solid rgba(255, 212, 59, 0.24);
-          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.38);
+          box-shadow: 0 38px 130px rgba(0, 0, 0, 0.42);
+          overflow: hidden;
         }
 
-        .fromone-legal-summary-grid {
+        .fromone-privacy-card::before {
+          content: '';
+          position: absolute;
+          inset: 18px;
+          border-radius: 34px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          pointer-events: none;
+        }
+
+        .fromone-privacy-card-inner {
+          position: relative;
+          z-index: 1;
           display: grid;
-          gap: 12px;
+          gap: 14px;
         }
 
-        .fromone-legal-summary-card {
-          padding: 18px;
+        .fromone-privacy-mini-toolbar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+          padding: 14px 16px;
           border-radius: 24px;
           background: rgba(2, 6, 23, 0.58);
           border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .fromone-legal-summary-card strong {
-          display: block;
+        .fromone-privacy-mini-toolbar strong {
           color: #ffffff;
-          font-size: 1.04rem;
-          line-height: 1.25;
         }
 
-        .fromone-legal-summary-card p {
-          margin: 8px 0 0;
-          color: rgba(248, 250, 252, 0.68);
-          line-height: 1.58;
+        .fromone-privacy-mini-toolbar span {
+          color: #a7f3d0;
+          font-size: 0.82rem;
+          font-weight: 950;
         }
 
-        .fromone-legal-section {
-          padding: clamp(30px, 4.8vw, 58px) 0;
+        .fromone-privacy-summary-grid {
+          display: grid;
+          gap: 12px;
         }
 
-        .fromone-legal-panel {
-          padding: clamp(24px, 4.2vw, 46px);
-          border-radius: 42px;
-          background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.12), transparent 32%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.086), rgba(255, 255, 255, 0.032));
+        .fromone-privacy-summary-card {
+          padding: 18px;
+          border-radius: 26px;
+          background: rgba(2, 6, 23, 0.62);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 28px 92px rgba(0, 0, 0, 0.28);
         }
 
-        .fromone-legal-panel-header {
+        .fromone-privacy-summary-card small {
+          color: #ffe58a;
+          font-size: 0.78rem;
+          font-weight: 950;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .fromone-privacy-summary-card strong {
+          display: block;
+          margin: 8px 0 8px;
+          color: #ffffff;
+          font-size: 1.08rem;
+        }
+
+        .fromone-privacy-summary-card p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.55;
+        }
+
+        .fromone-privacy-section {
+          padding: clamp(34px, 5vw, 62px) 0;
+        }
+
+        .fromone-privacy-section-heading {
           max-width: 760px;
-          margin-bottom: 24px;
+          margin: 0 auto 24px;
+          text-align: center;
         }
 
-        .fromone-legal-panel-header h2 {
+        .fromone-privacy-section-heading h2 {
           margin: 10px 0 12px;
           color: #ffffff;
-          font-size: clamp(2.25rem, 4.7vw, 4.6rem);
+          font-size: clamp(2.25rem, 4.6vw, 4.7rem);
           line-height: 0.92;
           letter-spacing: -0.068em;
         }
 
-        .fromone-legal-panel-header p {
+        .fromone-privacy-section-heading p {
+          margin: 0 auto;
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.7;
+          font-size: clamp(1rem, 1.2vw, 1.12rem);
+        }
+
+        .fromone-privacy-overview-panel {
+          display: grid;
+          grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+          gap: clamp(20px, 4vw, 40px);
+          align-items: center;
+          padding: clamp(28px, 5vw, 54px);
+          border-radius: 42px;
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.14), transparent 32%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.088), rgba(255, 255, 255, 0.032));
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 30px 96px rgba(0, 0, 0, 0.3);
+        }
+
+        .fromone-privacy-overview-panel h2 {
+          margin: 10px 0 14px;
+          color: #ffffff;
+          font-size: clamp(2.35rem, 4.8vw, 5.1rem);
+          line-height: 0.92;
+          letter-spacing: -0.072em;
+        }
+
+        .fromone-privacy-overview-panel p {
           margin: 0;
           color: rgba(248, 250, 252, 0.72);
           line-height: 1.7;
         }
 
-        .fromone-data-grid {
+        .fromone-privacy-overview-list {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 12px;
         }
 
-        .fromone-data-item {
-          padding: 16px;
+        .fromone-privacy-overview-list div {
+          display: grid;
+          grid-template-columns: 34px minmax(0, 1fr);
+          gap: 12px;
+          align-items: center;
+          padding: 15px 16px;
           border-radius: 20px;
           background: rgba(5, 10, 24, 0.42);
           border: 1px solid rgba(255, 255, 255, 0.09);
@@ -315,79 +412,93 @@ export default function PrivacyPage() {
           line-height: 1.42;
         }
 
-        .fromone-policy-list {
+        .fromone-privacy-overview-list span {
+          width: 34px;
+          height: 34px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 13px;
+          background: rgba(255, 212, 59, 0.14);
+          color: #ffd43b;
+          font-weight: 1000;
+        }
+
+        .fromone-policy-card {
+          border-radius: 38px;
+          padding: clamp(20px, 3vw, 30px);
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 28%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.032));
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
+        }
+
+        .fromone-policy-grid {
           display: grid;
           gap: 12px;
         }
 
-        .fromone-policy-card {
-          display: grid;
-          grid-template-columns: 44px minmax(0, 1fr);
-          gap: 16px;
+        .fromone-policy-section {
           padding: clamp(18px, 2.3vw, 24px);
-          border-radius: 26px;
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.072), rgba(255, 255, 255, 0.03));
-          border: 1px solid rgba(255, 255, 255, 0.095);
+          border-radius: 24px;
+          background: rgba(5, 10, 24, 0.42);
+          border: 1px solid rgba(255, 255, 255, 0.09);
         }
 
-        .fromone-policy-number {
-          width: 44px;
-          height: 44px;
-          display: inline-grid;
-          place-items: center;
-          border-radius: 16px;
-          background: #ffd43b;
-          color: #101420;
-          font-weight: 1000;
-          box-shadow: 0 16px 36px rgba(255, 212, 59, 0.18);
-        }
-
-        .fromone-policy-card h3 {
-          margin: 2px 0 10px;
+        .fromone-policy-section h3 {
+          margin: 0 0 10px;
           color: #ffffff;
-          font-size: clamp(1.16rem, 1.8vw, 1.42rem);
-          line-height: 1.18;
+          font-size: clamp(1.18rem, 2vw, 1.45rem);
+          letter-spacing: -0.04em;
         }
 
-        .fromone-policy-card p {
-          margin: 0 0 9px;
+        .fromone-policy-section p {
+          margin: 0 0 10px;
           color: rgba(248, 250, 252, 0.72);
           line-height: 1.68;
+          font-size: 0.96rem;
         }
 
-        .fromone-policy-card p:last-child {
+        .fromone-policy-section p:last-child {
           margin-bottom: 0;
         }
 
-        .fromone-legal-cta {
-          padding: clamp(28px, 5vw, 56px);
-          border-radius: 46px;
+        .fromone-privacy-link {
+          color: #ffd43b;
+          font-weight: 950;
+        }
+
+        .fromone-privacy-final-cta {
+          position: relative;
+          overflow: hidden;
+          padding: clamp(30px, 5vw, 56px);
+          border-radius: 42px;
           background:
-            radial-gradient(circle at 18% 12%, rgba(255, 212, 59, 0.25), transparent 34%),
-            radial-gradient(circle at 86% 20%, rgba(61, 220, 151, 0.12), transparent 30%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.115), rgba(255, 255, 255, 0.038));
-          border: 1px solid rgba(255, 212, 59, 0.27);
-          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.38);
+            radial-gradient(circle at 18% 12%, rgba(255, 212, 59, 0.22), transparent 34%),
+            radial-gradient(circle at 86% 20%, rgba(61, 220, 151, 0.11), transparent 30%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.038));
+          border: 1px solid rgba(255, 212, 59, 0.24);
+          box-shadow: 0 34px 118px rgba(0, 0, 0, 0.36);
           text-align: center;
         }
 
-        .fromone-legal-cta h2 {
+        .fromone-privacy-final-cta h2 {
           max-width: 760px;
-          margin: 12px auto 14px;
+          margin: 12px auto 16px;
           color: #ffffff;
-          font-size: clamp(2.35rem, 5.2vw, 5.2rem);
+          font-size: clamp(2.35rem, 5vw, 5.2rem);
           line-height: 0.92;
-          letter-spacing: -0.072em;
+          letter-spacing: -0.074em;
         }
 
-        .fromone-legal-cta p {
-          max-width: 640px;
+        .fromone-privacy-final-cta p {
+          max-width: 650px;
           margin: 0 auto;
           color: rgba(248, 250, 252, 0.72);
           line-height: 1.7;
         }
 
-        .fromone-legal-cta-actions {
+        .fromone-privacy-final-actions {
           display: flex;
           flex-wrap: wrap;
           justify-content: center;
@@ -396,198 +507,222 @@ export default function PrivacyPage() {
         }
 
         @media (max-width: 920px) {
-          .fromone-legal-hero-grid {
+          .fromone-privacy-hero-grid,
+          .fromone-privacy-overview-panel {
             grid-template-columns: 1fr;
           }
 
-          .fromone-legal-copy {
+          .fromone-privacy-copy {
             max-width: 760px;
             margin: 0 auto;
             text-align: center;
           }
 
-          .fromone-legal-copy p,
-          .fromone-legal-actions,
-          .fromone-legal-proof {
+          .fromone-privacy-text,
+          .fromone-privacy-proof-row,
+          .fromone-privacy-actions {
+            justify-content: center;
             margin-left: auto;
             margin-right: auto;
-            justify-content: center;
-          }
-
-          .fromone-data-grid {
-            grid-template-columns: 1fr 1fr;
           }
         }
 
         @media (max-width: 640px) {
-          .fromone-legal-shell {
+          .fromone-privacy-shell {
             width: min(100% - 24px, 520px);
           }
 
-          .fromone-legal-hero-grid {
-            padding-top: 42px;
-            gap: 24px;
+          .fromone-privacy-hero-grid {
+            padding-top: 54px;
+            gap: 28px;
           }
 
-          .fromone-legal-title {
-            font-size: clamp(3rem, 14vw, 4.15rem);
-            line-height: 0.9;
+          .fromone-privacy-title {
+            font-size: clamp(3rem, 14vw, 4.1rem);
+            line-height: 0.91;
+            letter-spacing: -0.078em;
           }
 
-          .fromone-legal-actions,
-          .fromone-legal-cta-actions {
+          .fromone-privacy-actions,
+          .fromone-privacy-final-actions {
             display: grid;
             grid-template-columns: 1fr;
             width: 100%;
           }
 
-          .fromone-legal-actions a,
-          .fromone-legal-cta-actions a {
+          .fromone-privacy-actions a,
+          .fromone-privacy-final-actions a {
             width: 100%;
             justify-content: center;
             text-align: center;
           }
 
-          .fromone-legal-proof,
-          .fromone-data-grid {
+          .fromone-privacy-proof-row {
             display: grid;
             grid-template-columns: 1fr;
           }
 
-          .fromone-legal-pill,
-          .fromone-data-item {
+          .fromone-privacy-proof-pill {
             justify-content: center;
-            text-align: center;
           }
 
-          .fromone-legal-summary,
-          .fromone-legal-panel,
-          .fromone-legal-cta {
+          .fromone-privacy-card,
+          .fromone-privacy-overview-panel,
+          .fromone-policy-card,
+          .fromone-privacy-final-cta {
             border-radius: 30px;
           }
 
-          .fromone-legal-panel-header,
-          .fromone-policy-card,
-          .fromone-legal-cta {
-            text-align: center;
+          .fromone-privacy-page,
+          .fromone-privacy-page section,
+          .fromone-privacy-shell,
+          .fromone-privacy-card,
+          .fromone-privacy-card-inner,
+          .fromone-privacy-section-heading,
+          .fromone-privacy-overview-panel,
+          .fromone-policy-section,
+          .fromone-privacy-final-cta {
+            text-align: center !important;
           }
 
-          .fromone-policy-card {
-            grid-template-columns: 1fr;
-            justify-items: center;
+          .fromone-privacy-mini-toolbar {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            gap: 8px !important;
+            padding: 20px 16px !important;
           }
 
-          .fromone-policy-number {
-            margin: 0 auto;
+          .fromone-privacy-summary-card {
+            text-align: center !important;
+          }
+
+          .fromone-privacy-overview-list div {
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            text-align: center !important;
+            padding: 16px !important;
+          }
+
+          .fromone-privacy-overview-list span {
+            margin: 0 auto !important;
           }
         }
       `}</style>
 
-      <section className="fromone-legal-hero">
+      <section className="fromone-privacy-hero">
         <PublicNav />
 
-        <div className="fromone-legal-shell fromone-legal-hero-grid">
-          <div className="fromone-legal-copy">
-            <h1 className="fromone-legal-title">
-              Privacy, written for <span>real use.</span>
+        <div className="fromone-privacy-shell fromone-privacy-hero-grid">
+          <div className="fromone-privacy-copy">
+            <h1 className="fromone-privacy-title">
+              Privacy, explained <span>clearly.</span>
             </h1>
 
-            <p>
-              This policy explains how FromOne collects, uses, stores and protects personal data when
-              you use the app to create, schedule and publish social media content.
+            <p className="fromone-privacy-text">
+              This policy explains how FromOne uses account data, Business Profiles, uploaded media and connected publishing details to run the service.
             </p>
 
-            <div className="fromone-legal-actions">
+            <div className="fromone-privacy-actions">
               <Link href="/signin" className="sales-primary-button">
                 Back to FromOne
               </Link>
 
-              <Link href="/terms" className="sales-secondary-button">
-                View terms
-              </Link>
+              <a href="mailto:info@fromone.co.uk" className="sales-secondary-button">
+                Email privacy questions
+              </a>
             </div>
 
-            <div className="fromone-legal-proof" aria-label="Privacy policy highlights">
-              <div className="fromone-legal-pill"><span>✓</span> Updated 13 May 2026</div>
-              <div className="fromone-legal-pill"><span>✓</span> Uploads and publishing</div>
-              <div className="fromone-legal-pill"><span>✓</span> Meta / Facebook / Instagram</div>
+            <div className="fromone-privacy-proof-row" aria-label="Privacy highlights">
+              <div className="fromone-privacy-proof-pill">
+                <span aria-hidden="true">✓</span>
+                We do not sell your data
+              </div>
+              <div className="fromone-privacy-proof-pill">
+                <span aria-hidden="true">✓</span>
+                Used to run your workspace
+              </div>
+              <div className="fromone-privacy-proof-pill">
+                <span aria-hidden="true">✓</span>
+                Contact: info@fromone.co.uk
+              </div>
             </div>
           </div>
 
-          <aside className="fromone-legal-summary" aria-label="Privacy summary">
-            <div className="fromone-legal-summary-grid">
-              {summaryCards.map((item) => (
-                <div key={item.title} className="fromone-legal-summary-card">
-                  <strong>{item.title}</strong>
-                  <p>{item.text}</p>
-                </div>
-              ))}
+          <div className="fromone-privacy-card" aria-label="Privacy summary">
+            <div className="fromone-privacy-card-inner">
+              <div className="fromone-privacy-mini-toolbar">
+                <strong>Privacy Policy</strong>
+                <span>Last updated · 13 May 2026</span>
+              </div>
+
+              <div className="fromone-privacy-summary-grid">
+                {privacySummary.map((item) => (
+                  <article key={item.title} className="fromone-privacy-summary-card">
+                    <small>{item.label}</small>
+                    <strong>{item.title}</strong>
+                    <p>{item.text}</p>
+                  </article>
+                ))}
+              </div>
             </div>
-          </aside>
+          </div>
         </div>
       </section>
 
-      <section className="fromone-legal-section">
-        <div className="fromone-legal-shell">
-          <div className="fromone-legal-panel">
-            <div className="fromone-legal-panel-header">
+      <section className="fromone-privacy-section">
+        <div className="fromone-privacy-shell">
+          <div className="fromone-privacy-overview-panel">
+            <div>
               <div className="page-eyebrow">Overview</div>
-              <h2>Your data powers your workspace.</h2>
+              <h2>Your data powers your FromOne workspace.</h2>
               <p>
-                FromOne uses account details, your Business Profile, uploaded media and connected
-                publishing information to provide the app and prepare the posts you ask it to create.
+                FromOne uses your information to create posts, manage weekly sets, store uploaded media and publish to connected channels when you choose to use those features.
               </p>
             </div>
 
-            <div className="fromone-data-grid">
-              {dataHighlights.map((item) => (
-                <div key={item} className="fromone-data-item">
-                  {item}
-                </div>
-              ))}
+            <div className="fromone-privacy-overview-list">
+              <div>
+                <span aria-hidden="true">✓</span>
+                <strong>Business details help FromOne write more relevant posts.</strong>
+              </div>
+              <div>
+                <span aria-hidden="true">✓</span>
+                <strong>Uploaded media is used to create, rewrite and schedule content.</strong>
+              </div>
+              <div>
+                <span aria-hidden="true">✓</span>
+                <strong>Connected publishing data is used only for publishing features.</strong>
+              </div>
+              <div>
+                <span aria-hidden="true">✓</span>
+                <strong>You can contact us to ask about access, correction or deletion.</strong>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="fromone-legal-section">
-        <div className="fromone-legal-shell">
-          <div className="fromone-legal-panel">
-            <div className="fromone-legal-panel-header">
-              <div className="page-eyebrow">Full policy</div>
-              <h2>The detail.</h2>
-              <p>
-                The sections below explain what FromOne collects, why it is used, who it may be
-                shared with and how to contact us.
-              </p>
-            </div>
+      <section className="fromone-privacy-section">
+        <div className="fromone-privacy-shell">
+          <div className="fromone-privacy-section-heading">
+            <div className="page-eyebrow">Full policy</div>
+            <h2>The details.</h2>
+            <p>
+              The full Privacy Policy is below, keeping the legal wording intact while making it easier to read.
+            </p>
+          </div>
 
-            <div className="fromone-policy-list">
-              {privacySections.map((section, index) => (
-                <article key={section.title} className="fromone-policy-card">
-                  <span className="fromone-policy-number">{String(index + 1).padStart(2, '0')}</span>
-
-                  <div>
-                    <h3>{section.title}</h3>
-
-                    {section.body.map((paragraph) => (
-                      <p key={paragraph}>
-                        {paragraph.includes('info@fromone.co.uk') ? (
-                          <>
-                            {paragraph.replace('info@fromone.co.uk', '')}
-                            <a
-                              href="mailto:info@fromone.co.uk"
-                              style={{ color: '#ffd43b', fontWeight: 950 }}
-                            >
-                              info@fromone.co.uk
-                            </a>
-                          </>
-                        ) : (
-                          paragraph
-                        )}
-                      </p>
-                    ))}
-                  </div>
+          <div className="fromone-policy-card">
+            <div className="fromone-policy-grid">
+              {privacySections.map((section) => (
+                <article key={section.title} className="fromone-policy-section">
+                  <h3>{section.title}</h3>
+                  {section.body.map((paragraph) => (
+                    <p key={paragraph}>{renderParagraph(paragraph)}</p>
+                  ))}
                 </article>
               ))}
             </div>
@@ -595,26 +730,24 @@ export default function PrivacyPage() {
         </div>
       </section>
 
-      <section className="fromone-legal-section" style={{ paddingBottom: 82 }}>
-        <div className="fromone-legal-shell">
-          <div className="fromone-legal-cta">
-            <div className="page-eyebrow">Questions</div>
-            <h2>Need help with your data?</h2>
+      <section className="fromone-privacy-section" style={{ paddingBottom: 82 }}>
+        <div className="fromone-privacy-shell">
+          <div className="fromone-privacy-final-cta">
+            <div className="page-eyebrow">Related pages</div>
+            <h2>Privacy, cookies and terms in one place.</h2>
             <p>
-              Contact us about privacy questions, personal data requests or anything that feels unclear.
+              Review the supporting policies below, or return to FromOne when you are ready.
             </p>
 
-            <div className="fromone-legal-cta-actions">
-              <a href="mailto:info@fromone.co.uk" className="sales-primary-button">
-                Email info@fromone.co.uk
-              </a>
-
+            <div className="fromone-privacy-final-actions">
               <Link href="/cookies" className="sales-secondary-button">
                 Cookie Policy
               </Link>
-
               <Link href="/terms" className="sales-secondary-button">
                 Terms of Service
+              </Link>
+              <Link href="/signin" className="sales-primary-button">
+                Back to FromOne
               </Link>
             </div>
           </div>
