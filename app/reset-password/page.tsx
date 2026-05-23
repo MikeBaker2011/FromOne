@@ -9,157 +9,23 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-function EyeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        d="M2.25 12s3.75-6.25 9.75-6.25S21.75 12 21.75 12 18 18.25 12 18.25 2.25 12 2.25 12Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle
-        cx="12"
-        cy="12"
-        r="2.75"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
-}
-
-function EyeOffIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        d="M3 3l18 18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M10.6 5.92A10.4 10.4 0 0 1 12 5.75C18 5.75 21.75 12 21.75 12a17.7 17.7 0 0 1-3.1 3.8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6.7 6.95C3.9 8.75 2.25 12 2.25 12S6 18.25 12 18.25c1.55 0 2.95-.42 4.17-1.06"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9.75 10.15A2.75 2.75 0 0 0 13.85 14.25"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function PasswordField({
-  id,
-  label,
-  value,
-  visible,
-  placeholder,
-  autoComplete,
-  onChange,
-  onToggle,
-  onKeyDown,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  visible: boolean;
-  placeholder: string;
-  autoComplete: string;
-  onChange: (value: string) => void;
-  onToggle: () => void;
-  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
-}) {
-  return (
-    <>
-      <label htmlFor={id}>
-        <strong>{label}</strong>
-      </label>
-
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-        }}
-      >
-        <input
-          id={id}
-          className="input"
-          type={visible ? 'text' : 'password'}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          style={{
-            width: '100%',
-            paddingRight: 56,
-          }}
-        />
-
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-label={visible ? 'Hide password' : 'Show password'}
-          title={visible ? 'Hide password' : 'Show password'}
-          style={{
-            position: 'absolute',
-            right: 14,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 34,
-            height: 34,
-            minHeight: 34,
-            padding: 0,
-            borderRadius: 999,
-            border: 0,
-            background: 'transparent',
-            color: 'rgba(248, 250, 252, 0.66)',
-            display: 'inline-grid',
-            placeItems: 'center',
-            boxShadow: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          <span
-            style={{
-              width: 20,
-              height: 20,
-              display: 'grid',
-              placeItems: 'center',
-            }}
-          >
-            {visible ? <EyeOffIcon /> : <EyeIcon />}
-          </span>
-        </button>
-      </div>
-    </>
-  );
-}
-
 export default function ResetPasswordPage() {
   const router = useRouter();
   const { showToast } = useToast();
+
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [checkingLink, setCheckingLink] = useState(true);
+  const [linkReady, setLinkReady] = useState(false);
+  const [pageMessage, setPageMessage] = useState('');
+  const [pageError, setPageError] = useState('');
+
+  useEffect(() => {
+    prepareRecoverySession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const notify = (
     message: any,
@@ -187,24 +53,37 @@ export default function ResetPasswordPage() {
     });
   };
 
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [checkingLink, setCheckingLink] = useState(true);
-  const [linkReady, setLinkReady] = useState(false);
-  const [pageMessage, setPageMessage] = useState('');
-  const [pageError, setPageError] = useState('');
+  const isRefreshTokenError = (message: string) => {
+    const lower = String(message || '').toLowerCase();
 
-  useEffect(() => {
-    prepareRecoverySession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return (
+      lower.includes('invalid refresh token') ||
+      lower.includes('refresh token not found') ||
+      lower.includes('refresh_token_not_found')
+    );
+  };
+
+  const clearStaleAuthSession = async () => {
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // Ignore errors caused by an already-invalid local session.
+    }
+
+    if (typeof window !== 'undefined') {
+      Object.keys(window.localStorage)
+        .filter((key) => key.startsWith('sb-') || key.includes('supabase'))
+        .forEach((key) => window.localStorage.removeItem(key));
+    }
+  };
 
   const getFriendlyAuthError = (message: string) => {
     const cleanMessage = String(message || '').trim();
     const lowerMessage = cleanMessage.toLowerCase();
+
+    if (isRefreshTokenError(cleanMessage)) {
+      return 'Your previous sign-in session expired. Please go back to sign in, request a new reset email, and use the newest link.';
+    }
 
     if (
       lowerMessage.includes('expired') ||
@@ -213,7 +92,7 @@ export default function ResetPasswordPage() {
       lowerMessage.includes('otp') ||
       lowerMessage.includes('token')
     ) {
-      return 'This password reset link has expired or has already been used. Please request a new password reset email from the sign-in page and open the newest email only.';
+      return 'This password reset link has expired or has already been used. Please request a new password reset email from the sign-in page.';
     }
 
     if (lowerMessage.includes('network') || lowerMessage.includes('failed to fetch')) {
@@ -221,6 +100,16 @@ export default function ResetPasswordPage() {
     }
 
     return cleanMessage || 'Could not complete the password reset. Please try again.';
+  };
+
+  const readHashParams = () => {
+    if (typeof window === 'undefined') return new URLSearchParams();
+
+    const hash = window.location.hash.startsWith('#')
+      ? window.location.hash.slice(1)
+      : window.location.hash;
+
+    return new URLSearchParams(hash);
   };
 
   const prepareRecoverySession = async () => {
@@ -231,14 +120,16 @@ export default function ResetPasswordPage() {
     try {
       const url = new URL(window.location.href);
       const code = url.searchParams.get('code');
-      const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
+      const hashParams = readHashParams();
 
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (error) {
+          if (isRefreshTokenError(error.message)) {
+            await clearStaleAuthSession();
+          }
+
           const friendlyMessage = getFriendlyAuthError(error.message);
           setPageError(friendlyMessage);
           setLinkReady(false);
@@ -251,13 +142,21 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      if (accessToken && refreshToken) {
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      const type = hashParams.get('type');
+
+      if (accessToken && refreshToken && type === 'recovery') {
         const { error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         });
 
         if (error) {
+          if (isRefreshTokenError(error.message)) {
+            await clearStaleAuthSession();
+          }
+
           const friendlyMessage = getFriendlyAuthError(error.message);
           setPageError(friendlyMessage);
           setLinkReady(false);
@@ -270,7 +169,17 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        if (isRefreshTokenError(error.message)) {
+          await clearStaleAuthSession();
+        }
+
+        setPageError(getFriendlyAuthError(error.message));
+        setLinkReady(false);
+        return;
+      }
 
       if (data.session) {
         setLinkReady(true);
@@ -278,12 +187,14 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      setPageError(
-        'This password reset link is missing, expired, or has already been used. Please request a new reset email from the sign-in page and open the newest email only.'
-      );
+      setPageError('This password reset link is missing, expired, or has already been used. Please request a new reset email from the sign-in page.');
       setLinkReady(false);
     } catch (error: any) {
-      setPageError(getFriendlyAuthError(error?.message));
+      if (isRefreshTokenError(error?.message || error?.code)) {
+        await clearStaleAuthSession();
+      }
+
+      setPageError(getFriendlyAuthError(error?.message || error?.code));
       setLinkReady(false);
     } finally {
       setCheckingLink(false);
@@ -339,11 +250,16 @@ export default function ResetPasswordPage() {
       setPageMessage('Password updated. Redirecting you to sign in...');
       notify('Please sign in with your new password.', 'success', 'Password updated');
 
-      window.setTimeout(() => {
+      window.setTimeout(async () => {
+        await clearStaleAuthSession();
         router.push('/signin');
       }, 700);
     } catch (error: any) {
-      const friendlyMessage = getFriendlyAuthError(error?.message || 'Could not update password.');
+      if (isRefreshTokenError(error?.message || error?.code)) {
+        await clearStaleAuthSession();
+      }
+
+      const friendlyMessage = getFriendlyAuthError(error?.message || error?.code || 'Could not update password.');
       setPageError(friendlyMessage);
       notify(friendlyMessage, 'error', 'Password update failed');
     } finally {
@@ -435,29 +351,42 @@ export default function ResetPasswordPage() {
               {pageMessage && <div className="signin-auth-message">{pageMessage}</div>}
               {pageError && <div className="signin-auth-message is-error">{pageError}</div>}
 
-              <PasswordField
+              <label htmlFor="new-password">
+                <strong>New password</strong>
+              </label>
+              <input
                 id="new-password"
-                label="New password"
+                className="input"
+                type={showPasswords ? 'text' : 'password'}
                 value={password}
-                visible={showPassword}
-                onChange={setPassword}
-                onToggle={() => setShowPassword((current) => !current)}
+                onChange={(event) => setPassword(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Enter new password"
                 autoComplete="new-password"
               />
 
-              <PasswordField
+              <label htmlFor="confirm-password">
+                <strong>Confirm password</strong>
+              </label>
+              <input
                 id="confirm-password"
-                label="Confirm password"
+                className="input"
+                type={showPasswords ? 'text' : 'password'}
                 value={confirmPassword}
-                visible={showConfirmPassword}
-                onChange={setConfirmPassword}
-                onToggle={() => setShowConfirmPassword((current) => !current)}
+                onChange={(event) => setConfirmPassword(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Confirm new password"
                 autoComplete="new-password"
               />
+
+              <label className="show-password-row">
+                <input
+                  type="checkbox"
+                  checked={showPasswords}
+                  onChange={(event) => setShowPasswords(event.target.checked)}
+                />
+                <span>Show passwords</span>
+              </label>
 
               <div
                 className="signin-auth-message"

@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyboardEvent, useEffect, useState } from 'react';
+import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/app/components/ToastProvider';
@@ -10,154 +10,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const REMEMBER_EMAIL_KEY = 'fromone_remember_email';
-
-function EyeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        d="M2.25 12s3.75-6.25 9.75-6.25S21.75 12 21.75 12 18 18.25 12 18.25 2.25 12 2.25 12Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle
-        cx="12"
-        cy="12"
-        r="2.75"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
-}
-
-function EyeOffIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        d="M3 3l18 18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M10.6 5.92A10.4 10.4 0 0 1 12 5.75C18 5.75 21.75 12 21.75 12a17.7 17.7 0 0 1-3.1 3.8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6.7 6.95C3.9 8.75 2.25 12 2.25 12S6 18.25 12 18.25c1.55 0 2.95-.42 4.17-1.06"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9.75 10.15A2.75 2.75 0 0 0 13.85 14.25"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function PasswordField({
-  id,
-  label,
-  value,
-  visible,
-  placeholder,
-  autoComplete,
-  onChange,
-  onToggle,
-  onKeyDown,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  visible: boolean;
-  placeholder: string;
-  autoComplete: string;
-  onChange: (value: string) => void;
-  onToggle: () => void;
-  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
-}) {
-  return (
-    <>
-      <label htmlFor={id}>
-        <strong>{label}</strong>
-      </label>
-
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-        }}
-      >
-        <input
-          id={id}
-          className="input"
-          type={visible ? 'text' : 'password'}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          style={{
-            width: '100%',
-            paddingRight: 56,
-          }}
-        />
-
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-label={visible ? 'Hide password' : 'Show password'}
-          title={visible ? 'Hide password' : 'Show password'}
-          style={{
-            position: 'absolute',
-            right: 14,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 34,
-            height: 34,
-            minHeight: 34,
-            padding: 0,
-            borderRadius: 999,
-            border: 0,
-            background: 'transparent',
-            color: 'rgba(248, 250, 252, 0.66)',
-            display: 'inline-grid',
-            placeItems: 'center',
-            boxShadow: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          <span
-            style={{
-              width: 20,
-              height: 20,
-              display: 'grid',
-              placeItems: 'center',
-            }}
-          >
-            {visible ? <EyeOffIcon /> : <EyeIcon />}
-          </span>
-        </button>
-      </div>
-    </>
-  );
-}
+const RESET_COOLDOWN_SECONDS = 60;
 
 export default function SignInPage() {
   const router = useRouter();
@@ -165,6 +18,7 @@ export default function SignInPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [loading, setLoading] = useState(false);
@@ -172,8 +26,9 @@ export default function SignInPage() {
   const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const [authMessage, setAuthMessage] = useState('');
   const [authError, setAuthError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [resetCooldown, setResetCooldown] = useState(0);
+
+  const messageRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
@@ -193,6 +48,17 @@ export default function SignInPage() {
 
     return () => window.clearTimeout(timer);
   }, [resetCooldown]);
+
+  useEffect(() => {
+    if (!authMessage && !authError) return;
+
+    window.setTimeout(() => {
+      messageRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 80);
+  }, [authMessage, authError]);
 
   const notify = (
     message: any,
@@ -228,7 +94,7 @@ export default function SignInPage() {
     return `${window.location.origin}/settings?setup=business`;
   };
 
-  const getPasswordResetRedirectUrl = () => {
+  const getResetRedirectUrl = () => {
     if (typeof window === 'undefined') {
       return 'https://fromone.co.uk/reset-password';
     }
@@ -244,9 +110,37 @@ export default function SignInPage() {
     }
   };
 
+  const isRefreshTokenError = (message: string) => {
+    const lower = String(message || '').toLowerCase();
+
+    return (
+      lower.includes('invalid refresh token') ||
+      lower.includes('refresh token not found') ||
+      lower.includes('refresh_token_not_found')
+    );
+  };
+
+  const clearStaleAuthSession = async () => {
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // Ignore errors caused by an already-invalid local session.
+    }
+
+    if (typeof window !== 'undefined') {
+      Object.keys(window.localStorage)
+        .filter((key) => key.startsWith('sb-') || key.includes('supabase'))
+        .forEach((key) => window.localStorage.removeItem(key));
+    }
+  };
+
   const getFriendlyAuthError = (message: string) => {
     const cleanMessage = String(message || '').trim();
     const lowerMessage = cleanMessage.toLowerCase();
+
+    if (isRefreshTokenError(cleanMessage)) {
+      return 'Your previous sign-in session expired. Please request a new password reset email and use the newest link.';
+    }
 
     if (lowerMessage.includes('invalid login credentials')) {
       return 'Those sign-in details do not match an account. Please check your email and password.';
@@ -258,10 +152,6 @@ export default function SignInPage() {
 
     if (lowerMessage.includes('already registered')) {
       return 'An account already exists for this email. Please sign in instead.';
-    }
-
-    if (lowerMessage.includes('rate limit') || lowerMessage.includes('too many')) {
-      return 'Please wait a moment before requesting another email.';
     }
 
     if (lowerMessage.includes('password')) {
@@ -359,7 +249,11 @@ export default function SignInPage() {
         setShowPassword(false);
       }
     } catch (error: any) {
-      const friendlyMessage = getFriendlyAuthError(error?.message);
+      if (isRefreshTokenError(error?.message || error?.code)) {
+        await clearStaleAuthSession();
+      }
+
+      const friendlyMessage = getFriendlyAuthError(error?.message || error?.code);
       setAuthError(friendlyMessage);
       notify(friendlyMessage, 'error');
     } finally {
@@ -397,6 +291,10 @@ export default function SignInPage() {
       setAuthMessage('Verification email sent. Please check your inbox and spam folder.');
       notify('Verification email sent.', 'success', 'Check your email');
     } catch (error: any) {
+      if (isRefreshTokenError(error?.message || error?.code)) {
+        await clearStaleAuthSession();
+      }
+
       const friendlyMessage = getFriendlyAuthError(error?.message || 'Could not resend verification email.');
       setAuthError(friendlyMessage);
       notify(friendlyMessage, 'error', 'Verification failed');
@@ -417,15 +315,17 @@ export default function SignInPage() {
     }
 
     if (resetCooldown > 0) {
-      notify(`Please wait ${resetCooldown} seconds before requesting another reset email.`, 'info', 'Email already sent');
+      notify(`Please wait ${resetCooldown} seconds before requesting another reset email.`, 'info', 'Reset already sent');
       return;
     }
 
     setResettingPassword(true);
 
     try {
+      await clearStaleAuthSession();
+
       const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: getPasswordResetRedirectUrl(),
+        redirectTo: getResetRedirectUrl(),
       });
 
       if (error) {
@@ -433,12 +333,16 @@ export default function SignInPage() {
       }
 
       saveRememberedEmail(cleanEmail);
-      setResetCooldown(60);
+      setResetCooldown(RESET_COOLDOWN_SECONDS);
       setAuthMessage(
-        'Password reset email sent. Open the newest email only. If you request another reset, older links may stop working.'
+        'Password reset email sent. Please use the newest email only. It can take up to a minute to arrive, and older reset emails may stop working.'
       );
       notify('Password reset email sent.', 'success', 'Check your email');
     } catch (error: any) {
+      if (isRefreshTokenError(error?.message || error?.code)) {
+        await clearStaleAuthSession();
+      }
+
       const friendlyMessage = getFriendlyAuthError(error?.message || 'Could not send password reset email.');
       setAuthError(friendlyMessage);
       notify(friendlyMessage, 'error', 'Reset failed');
@@ -509,17 +413,19 @@ export default function SignInPage() {
               : 'Create your account to start your FromOne demo.'}
           </p>
 
-          {authMessage && (
-            <div className="signin-auth-message">
-              {authMessage}
-            </div>
-          )}
+          <div ref={messageRef}>
+            {authMessage && (
+              <div className="signin-auth-message">
+                {authMessage}
+              </div>
+            )}
 
-          {authError && (
-            <div className="signin-auth-message is-error">
-              {authError}
-            </div>
-          )}
+            {authError && (
+              <div className="signin-auth-message is-error">
+                {authError}
+              </div>
+            )}
+          </div>
 
           <label htmlFor="email">
             <strong>Email address</strong>
@@ -535,76 +441,60 @@ export default function SignInPage() {
             autoComplete="email"
           />
 
-          <PasswordField
+          <label htmlFor="password">
+            <strong>Password</strong>
+          </label>
+          <input
             id="password"
-            label="Password"
+            className="input"
+            type={showPassword ? 'text' : 'password'}
             value={password}
-            visible={showPassword}
-            onChange={setPassword}
-            onToggle={() => setShowPassword((current) => !current)}
+            onChange={(event) => setPassword(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Enter your password"
+            placeholder={mode === 'signin' ? 'Enter your password' : 'Create a password'}
             autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
           />
 
+          <label className="show-password-row">
+            <input
+              type="checkbox"
+              checked={showPassword}
+              onChange={(event) => setShowPassword(event.target.checked)}
+            />
+            <span>Show password</span>
+          </label>
+
           {mode === 'signin' && (
-            <div
-              style={{
-                display: 'grid',
-                gap: 12,
-                margin: '14px 0 18px',
-                padding: 16,
-                borderRadius: 22,
-                background: 'rgba(255,255,255,0.045)',
-                border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                }}
+            <label className="signin-remember-label signin-remember-standalone">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(event) => setRememberMe(event.target.checked)}
+              />
+              <span>Remember email</span>
+            </label>
+          )}
+
+          {mode === 'signin' && (
+            <div className="signin-reset-panel">
+              <strong>Can’t sign in?</strong>
+              <p>
+                Enter your email above and we’ll send a fresh password reset link. Use the newest
+                email only.
+              </p>
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleForgotPassword}
+                disabled={resettingPassword || loading || resendingConfirmation || resetCooldown > 0}
               >
-                <label className="signin-remember-label" style={{ margin: 0 }}>
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(event) => setRememberMe(event.target.checked)}
-                  />
-                  <span>Remember email</span>
-                </label>
-              </div>
-
-              <div>
-                <strong style={{ display: 'block', marginBottom: 4 }}>Can&apos;t sign in?</strong>
-                <p
-                  style={{
-                    margin: '0 0 12px',
-                    color: 'var(--muted)',
-                    fontSize: 14,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Enter your email above, then send a reset link. Use the newest email only.
-                </p>
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={handleForgotPassword}
-                  disabled={resettingPassword || loading || resendingConfirmation || resetCooldown > 0}
-                  style={{ width: '100%' }}
-                >
-                  {resettingPassword
-                    ? 'Sending reset email...'
-                    : resetCooldown > 0
-                      ? `Reset email sent · ${resetCooldown}s`
-                      : 'Send reset email'}
-                </button>
-              </div>
+                {resettingPassword
+                  ? 'Sending reset email...'
+                  : resetCooldown > 0
+                    ? `Reset sent · ${resetCooldown}s`
+                    : 'Send reset email'}
+              </button>
             </div>
           )}
 
