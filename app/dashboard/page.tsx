@@ -185,6 +185,7 @@ export default function DashboardPage() {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [weeklyUploads, setWeeklyUploads] = useState<WeeklyUpload[]>([]);
   const [weeklyPostNote, setWeeklyPostNote] = useState("");
+  const [showDashboardGuide, setShowDashboardGuide] = useState(false);
 
   const [manualBusinessName, setManualBusinessName] = useState("");
   const [manualIndustry, setManualIndustry] = useState("");
@@ -1946,9 +1947,9 @@ If uploads are supplied:
               <br />
               Get scheduled posts.
             </h1>
-            <p className="page-description" style={{ margin: "0 auto", maxWidth: 660 }}>
-              Add this week’s photos, videos or flyers. FromOne creates the posts, chooses the
-              times, and opens the weekly calendar.
+            <p className="page-description" style={{ margin: "0 auto", maxWidth: 680 }}>
+              Add this week’s photos, videos or flyers. FromOne creates the posts and suggested
+              times, then sends you to review everything before anything is published.
             </p>
 
             {addToCampaignId && (
@@ -1968,6 +1969,121 @@ If uploads are supplied:
               </div>
             )}
           </div>
+
+          <section
+            style={{
+              margin: "0 auto 22px",
+              maxWidth: 900,
+              borderRadius: 26,
+              border: "1px solid rgba(255, 212, 59, 0.18)",
+              background:
+                "linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))",
+              overflow: "hidden",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowDashboardGuide((current) => !current)}
+              aria-expanded={showDashboardGuide}
+              style={{
+                width: "100%",
+                border: 0,
+                background: "transparent",
+                color: "#f8fafc",
+                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 16,
+                padding: "18px 20px",
+                textAlign: "left",
+              }}
+            >
+              <span>
+                <span className="page-eyebrow">First time here?</span>
+                <strong style={{ display: "block", marginTop: 5, fontSize: "1.15rem" }}>
+                  What happens next
+                </strong>
+              </span>
+
+              <span
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 13,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(255, 212, 59, 0.14)",
+                  color: "#ffd43b",
+                  fontWeight: 950,
+                  flex: "0 0 auto",
+                }}
+              >
+                {showDashboardGuide ? "−" : "+"}
+              </span>
+            </button>
+
+            {showDashboardGuide && (
+              <div
+                style={{
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                  padding: "0 20px 20px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                {[
+                  {
+                    step: "1",
+                    title: "Upload media",
+                    copy: "Use this week’s photos, videos or flyers. Each upload becomes a post idea.",
+                  },
+                  {
+                    step: "2",
+                    title: "Choose platforms",
+                    copy: "Split posts across platforms, or create a version for every selected platform.",
+                  },
+                  {
+                    step: "3",
+                    title: "Review first",
+                    copy: "FromOne opens the Posts page so you can edit, publish, copy or schedule.",
+                  },
+                ].map((item) => (
+                  <article
+                    key={item.step}
+                    className="card"
+                    style={{
+                      padding: 16,
+                      borderRadius: 20,
+                      background: "rgba(5, 10, 24, 0.32)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 11,
+                        display: "inline-grid",
+                        placeItems: "center",
+                        background: "#ffd43b",
+                        color: "#101420",
+                        fontWeight: 950,
+                        marginBottom: 10,
+                      }}
+                    >
+                      {item.step}
+                    </span>
+                    <strong style={{ display: "block", marginBottom: 6 }}>{item.title}</strong>
+                    <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>
+                      {item.copy}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
 
           <div
             style={{
@@ -2025,8 +2141,9 @@ If uploads are supplied:
                   Upload photos, videos or flyers
                 </strong>
 
-                <span style={{ color: "var(--muted)", maxWidth: 520 }}>
-                  One upload can become Facebook, Instagram and TikTok versions for the same content day, each with its own scheduled time.
+                <span style={{ color: "var(--muted)", maxWidth: 560 }}>
+                  Upload up to 7 items. Photos and videos can be used for Facebook and Instagram.
+                  PDF flyers are turned into post wording, but Instagram needs image or video media.
                 </span>
               </span>
             </label>
@@ -2130,17 +2247,21 @@ If uploads are supplied:
                 {
                   name: "Facebook",
                   title: "Facebook",
-                  description: "FromOne can autopost at the suggested time.",
+                  description: hasFacebookConnection
+                    ? "Autopost ready. You still review before publishing."
+                    : "Connect Meta in Settings for Facebook autoposting.",
                 },
                 {
                   name: "Instagram",
                   title: "Instagram",
-                  description: "FromOne can autopost image or video posts.",
+                  description: hasInstagramConnection
+                    ? "Autopost ready for image or video posts."
+                    : "Connect Meta in Settings. Instagram needs image or video.",
                 },
                 {
                   name: "TikTok",
                   title: "TikTok",
-                  description: "FromOne plans the reminder. You copy/open TikTok.",
+                  description: "Manual for now. FromOne writes it; you copy/open TikTok.",
                 },
               ].map((platform) => {
                 const selected = selectedPlatforms.includes(platform.name);
@@ -2311,9 +2432,23 @@ If uploads are supplied:
                 : weeklyUploads.length > 0
                   ? addToCampaignId
                     ? "Add posts to this set"
-                    : "Create my posts"
+                    : "Create posts and review"
                   : "Upload media to start"}
             </button>
+
+            {weeklyUploads.length > 0 && (
+              <p
+                style={{
+                  margin: "-4px 0 0",
+                  textAlign: "center",
+                  color: "var(--muted)",
+                  lineHeight: 1.5,
+                }}
+              >
+                Nothing is published from this screen. You will review and edit posts on the Posts
+                page before publishing, copying or scheduling.
+              </p>
+            )}
 
             <div
               style={{
