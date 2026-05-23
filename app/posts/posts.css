@@ -1756,3 +1756,117 @@ body:has(.fromone-simple-modal-overlay) {
     font-size: 0.82rem !important;
   }
 }
+
+/* FINAL RELEASE MOBILE POST CARD WIDTH FIX
+   Makes post cards use the available mobile width and improves badge/content spacing. */
+
+@media (max-width: 760px) {
+  .simplified-week-section,
+  .fromone-weekly-queue,
+  .fromone-queue-card,
+  .fromone-simple-post-card,
+  .premium-calendar-day-card {
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+  }
+
+  .fromone-weekly-queue {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .fromone-simple-post-card,
+  .fromone-queue-card,
+  .premium-calendar-day-card {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    border-radius: 26px !important;
+    overflow: hidden !important;
+  }
+
+  .fromone-simple-post-card {
+    padding: 0 !important;
+  }
+
+  .fromone-simple-post-card > div,
+  .fromone-queue-card > div,
+  .premium-calendar-day-card > div {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .fromone-simple-post-card img,
+  .fromone-simple-post-card video,
+  .fromone-queue-media-preview,
+  .fromone-queue-media-preview img,
+  .fromone-queue-media-preview video,
+  .premium-calendar-day-card img,
+  .premium-calendar-day-card video {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+  }
+
+  .fromone-simple-post-card .premium-calendar-post-info,
+  .fromone-queue-card .premium-calendar-post-info {
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .fromone-simple-post-card .premium-calendar-post-info p,
+  .fromone-queue-card .premium-calendar-post-info p {
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .fromone-simple-post-card .selected-post-tags,
+  .fromone-queue-card .selected-post-tags,
+  .fromone-simple-post-card [class*="tag"],
+  .fromone-queue-card [class*="tag"] {
+    max-width: 100% !important;
+  }
+
+  .fromone-simple-post-card .selected-post-tags {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .fromone-simple-post-card .selected-post-tags span {
+    justify-content: center !important;
+    min-height: 46px !important;
+    width: 100% !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .premium-calendar-status {
+    min-height: 46px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .fromone-weekly-queue {
+    gap: 16px !important;
+  }
+
+  .fromone-simple-post-card,
+  .fromone-queue-card,
+  .premium-calendar-day-card {
+    border-radius: 24px !important;
+  }
+
+  .fromone-simple-post-card .selected-post-tags {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
