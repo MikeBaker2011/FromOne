@@ -12711,3 +12711,29 @@ body:has(.simplified-posts-page) .simplified-posts-page {
     justify-content: center !important;
   }
 }
+/* FINAL HOMEPAGE PRODUCT PREVIEW MOBILE CENTERING */
+
+@media (max-width: 720px) {
+  .fromone-product-card .fromone-mini-toolbar {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 8px !important;
+    padding: 20px 16px !important;
+  }
+
+  .fromone-product-card .fromone-mini-toolbar strong,
+  .fromone-product-card .fromone-mini-toolbar span {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .fromone-product-card .fromone-mini-toolbar span {
+    color: #a7f3d0 !important;
+  }
+}
