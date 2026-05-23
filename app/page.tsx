@@ -317,7 +317,9 @@ export default function Home() {
 
             <div className="fromone-hero-actions">
               <Link href="/signin" className="sales-primary-button">Start 7-day demo</Link>
-              <Link href="/tutorial" className="sales-secondary-button">Watch the walkthrough</Link>
+              <a href="/download/FromOne-beta-v1.apk" download className="sales-secondary-button">
+                Download Android APK
+              </a>
             </div>
 
             <div className="fromone-proof-row" aria-label="FromOne highlights">
