@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import { useToast } from "@/app/components/ToastProvider";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -144,6 +145,31 @@ const VIDEO_SCAN_EVENT_TYPES = ["video_scan"];
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { showToast } = useToast();
+
+  const notify = (
+    message: any,
+    type: "success" | "error" | "info" | "warning" = "info",
+    title?: string
+  ) => {
+    const cleanMessage = String(message || "").trim();
+
+    if (!cleanMessage) return;
+
+    showToast({
+      type,
+      title:
+        title ||
+        (type === "success"
+          ? "Done"
+          : type === "error"
+            ? "Something went wrong"
+            : type === "warning"
+              ? "Please check"
+              : "FromOne"),
+      message: cleanMessage,
+    });
+  };
 
   const [addToCampaignId, setAddToCampaignId] = useState<string | null>(null);
   const [client, setClient] = useState<any>(null);
@@ -185,7 +211,6 @@ export default function DashboardPage() {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [weeklyUploads, setWeeklyUploads] = useState<WeeklyUpload[]>([]);
   const [weeklyPostNote, setWeeklyPostNote] = useState("");
-  const [showDashboardGuide, setShowDashboardGuide] = useState(false);
 
   const [manualBusinessName, setManualBusinessName] = useState("");
   const [manualIndustry, setManualIndustry] = useState("");
@@ -695,7 +720,7 @@ export default function DashboardPage() {
   const ensureAccessAllowed = () => {
     if (!accessLocked) return true;
 
-    alert(accessMessage);
+    notify(accessMessage, "warning", "Access locked");
     return false;
   };
 
@@ -734,10 +759,12 @@ export default function DashboardPage() {
     const used = await loadWeeklyScanUsage(userId);
 
     if (used >= limit) {
-      alert(
+      notify(
         plan === "starter"
           ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create posts using saved business details.`
-          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Use saved business details or upgrade to FromOne Monthly.`
+          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Use saved business details or upgrade to FromOne Monthly.`,
+        "warning",
+        "Weekly limit reached"
       );
       return false;
     }
@@ -763,10 +790,12 @@ export default function DashboardPage() {
     const remaining = Math.max(limit - used, 0);
 
     if (videoUploadsThisRun > remaining) {
-      alert(
+      notify(
         plan === "starter"
           ? `You can scan ${PAID_WEEKLY_VIDEO_SCAN_LIMIT} videos per 7 days. You have ${remaining} video scan left.`
-          : `Your demo includes ${DEMO_WEEKLY_VIDEO_SCAN_LIMIT} video scan per 7 days. You have ${remaining} video scan left.`
+          : `Your demo includes ${DEMO_WEEKLY_VIDEO_SCAN_LIMIT} video scan per 7 days. You have ${remaining} video scan left.`,
+        "warning",
+        "Video limit reached"
       );
       return false;
     }
@@ -778,8 +807,10 @@ export default function DashboardPage() {
     const total = await loadSavedCampaignCount(userId);
 
     if (total >= MAX_SAVED_CAMPAIGNS) {
-      alert(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly post sets. Delete an old or empty test set from Posts before creating a new one.`
+      notify(
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly post sets. Delete an old or empty test set from Posts before creating a new one.`,
+        "warning",
+        "Saved set limit reached"
       );
       return false;
     }
@@ -996,7 +1027,7 @@ Core FromOne rule:
     const cleanWebsiteUrl = normaliseWebsiteUrl(websiteUrl);
 
     if (!cleanWebsiteUrl) {
-      alert("Please enter a website URL, or use the business details option.");
+      notify("Please enter a website URL, or use the business details option.", "warning", "Website needed");
       return null;
     }
 
@@ -1007,7 +1038,7 @@ Core FromOne rule:
       const userId = user?.id || null;
 
       if (!userId) {
-        alert("Please sign in again.");
+        notify("Please sign in again.", "warning", "Sign in needed");
         return null;
       }
 
@@ -1057,7 +1088,7 @@ Core FromOne rule:
       const message = getErrorMessage(error);
 
       console.error("Error saving website profile:", error);
-      alert(message);
+      notify(message, "error");
       return null;
     } finally {
       setSavingWebsite(false);
@@ -1066,7 +1097,7 @@ Core FromOne rule:
 
   const saveManualProfile = async () => {
     if (!manualBusinessName.trim() || !manualIndustry.trim()) {
-      alert("Please add at least the business name and industry.");
+      notify("Please add at least the business name and industry.", "warning", "Business details needed");
       return null;
     }
 
@@ -1077,7 +1108,7 @@ Core FromOne rule:
       const userId = user?.id || null;
 
       if (!userId) {
-        alert("Please sign in again.");
+        notify("Please sign in again.", "warning", "Sign in needed");
         return null;
       }
 
@@ -1127,7 +1158,7 @@ Core FromOne rule:
       const message = getErrorMessage(error);
 
       console.error("Error saving business details:", error);
-      alert(message);
+      notify(message, "error");
       return null;
     } finally {
       setSavingManualProfile(false);
@@ -1417,12 +1448,12 @@ Core FromOne rule:
     const userId = user?.id;
 
     if (!userId) {
-      alert("You need to sign in before saving posts.");
+      notify("You need to sign in before saving posts.", "warning", "Sign in needed");
       return;
     }
 
     if (selectedPlatforms.length === 0) {
-      alert("Please choose at least one platform.");
+      notify("Please choose at least one platform.", "warning", "Platform needed");
       return;
     }
 
@@ -1438,8 +1469,10 @@ Core FromOne rule:
       : { postRecords: 0, contentDays: 0 };
 
     if (addToCampaignId && existingCampaignStats.contentDays + contentDayCount > 7) {
-      alert(
-        `This weekly set already has ${existingCampaignStats.contentDays} content day${existingCampaignStats.contentDays === 1 ? "" : "s"}. You can add ${Math.max(7 - existingCampaignStats.contentDays, 0)} more to keep it as a 7-day week.`
+      notify(
+        `This weekly set already has ${existingCampaignStats.contentDays} content day${existingCampaignStats.contentDays === 1 ? "" : "s"}. You can add ${Math.max(7 - existingCampaignStats.contentDays, 0)} more to keep it as a 7-day week.`,
+        "warning",
+        "Weekly set full"
       );
       return;
     }
@@ -1519,7 +1552,7 @@ If uploads are supplied:
     const posts: GeneratedPost[] = (response.data.posts || []).slice(0, postCount);
 
     if (!posts.length) {
-      alert(response.data.error || "No posts were created.");
+      notify(response.data.error || "No posts were created.", "error", "No posts created");
       return;
     }
 
@@ -1568,7 +1601,7 @@ If uploads are supplied:
       if (existingCampaignError) throwSupabaseError(existingCampaignError);
 
       if (!existingCampaign) {
-        alert("Could not find the weekly post set to add to.");
+        notify("Could not find the weekly post set to add to.", "error", "Weekly set not found");
         return;
       }
 
@@ -1770,7 +1803,7 @@ If uploads are supplied:
       const activeClient = client;
 
       if (!activeClient?.business_name || !activeClient?.industry) {
-        alert("Set up the Business Profile in Settings first. Then come back here to upload media and create posts.");
+        notify("Set up the Business Profile in Settings first. Then come back here to upload media and create posts.", "warning", "Business Profile needed");
         setScanning(false);
         return;
       }
@@ -1788,7 +1821,7 @@ If uploads are supplied:
         console.error("Non-Axios weekly posts error:", error);
       }
 
-      alert(message);
+      notify(message, "error");
     } finally {
       setScanning(false);
     }
@@ -1805,7 +1838,7 @@ If uploads are supplied:
     );
 
     if (acceptedFiles.length === 0) {
-      alert("Please upload photos, videos, flyers, posters or offer graphics.");
+      notify("Please upload photos, videos, flyers, posters or offer graphics.", "warning", "Media needed");
       return;
     }
 
@@ -1843,14 +1876,14 @@ If uploads are supplied:
     if (!ensureAccessAllowed()) return;
 
     if (!websiteUrl.trim()) {
-      alert("Please enter a website URL first.");
+      notify("Please enter a website URL first.", "warning", "Website needed");
       return;
     }
 
     const savedClient = await saveWebsiteToProfile();
 
     if (savedClient) {
-      alert("Website saved. Now upload photos, videos or flyers, then create posts.");
+      notify("Website saved. Now upload photos, videos or flyers, then create posts.", "success", "Website saved");
     }
   };
 
@@ -1858,7 +1891,7 @@ If uploads are supplied:
     setSelectedPlatforms((currentPlatforms) => {
       if (currentPlatforms.includes(platformName)) {
         if (currentPlatforms.length === 1) {
-          alert("Please choose at least one platform.");
+          notify("Please choose at least one platform.", "warning", "Platform needed");
           return currentPlatforms;
         }
 
@@ -1962,24 +1995,6 @@ If uploads are supplied:
             margin-top: 14px !important;
             padding: 9px 13px !important;
             font-size: 0.9rem !important;
-          }
-
-          .dashboard-guide-strip {
-            margin-bottom: 16px !important;
-            border-radius: 22px !important;
-          }
-
-          .dashboard-guide-strip > button {
-            padding: 14px 16px !important;
-          }
-
-          .dashboard-guide-strip strong {
-            font-size: 1rem !important;
-          }
-
-          .dashboard-guide-strip span span {
-            font-size: 0.9rem !important;
-            line-height: 1.35 !important;
           }
 
           .dashboard-upload-dropzone {
@@ -2130,140 +2145,6 @@ If uploads are supplied:
               </div>
             )}
           </div>
-
-          <section
-            className="dashboard-guide-strip"
-            style={{
-              width: "100%",
-              margin: "0 0 18px",
-              borderRadius: 24,
-              border: "1px solid rgba(255, 212, 59, 0.16)",
-              background:
-                "linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))",
-              overflow: "hidden",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setShowDashboardGuide((current) => !current)}
-              aria-expanded={showDashboardGuide}
-              style={{
-                width: "100%",
-                border: 0,
-                background: "transparent",
-                color: "#f8fafc",
-                cursor: "pointer",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 16,
-                padding: "16px 18px",
-                textAlign: "left",
-              }}
-            >
-              <span>
-                <strong style={{ display: "block", fontSize: "1.08rem", lineHeight: 1.15 }}>
-                  Create, then review
-                </strong>
-                <span
-                  style={{
-                    display: "block",
-                    marginTop: 5,
-                    color: "var(--muted)",
-                    fontWeight: 800,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Upload media, choose platforms, then check everything on Posts before publishing.
-                </span>
-              </span>
-
-              <span
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 12,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(255, 212, 59, 0.13)",
-                  color: "#ffd43b",
-                  fontWeight: 950,
-                  flex: "0 0 auto",
-                }}
-              >
-                {showDashboardGuide ? "−" : "+"}
-              </span>
-            </button>
-
-            {showDashboardGuide && (
-              <div
-                style={{
-                  borderTop: "1px solid rgba(255, 212, 59, 0.12)",
-                  padding: "18px",
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-                  gap: 12,
-                  alignItems: "stretch",
-                }}
-              >
-                {[
-                  {
-                    step: "1",
-                    title: "Upload media",
-                    copy: "Use this week’s photos, videos or flyers. Each upload becomes a post idea.",
-                  },
-                  {
-                    step: "2",
-                    title: "Choose platforms",
-                    copy: "Choose where the posts should appear. The weekly spread is already selected for you.",
-                  },
-                  {
-                    step: "3",
-                    title: "Review first",
-                    copy: "Nothing goes live from Dashboard. Review, edit, publish or copy on Posts.",
-                  },
-                ].map((item) => (
-                  <article
-                    key={item.step}
-                    className="card"
-                    style={{
-                      padding: 16,
-                      borderRadius: 20,
-                      background:
-                        "linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.028))",
-                      border: "1px solid rgba(255, 212, 59, 0.12)",
-                      minHeight: 142,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "flex-start",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 10,
-                        display: "inline-grid",
-                        placeItems: "center",
-                        background: "#ffd43b",
-                        color: "#101420",
-                        fontWeight: 950,
-                        marginBottom: 12,
-                      }}
-                    >
-                      {item.step}
-                    </span>
-                    <strong style={{ display: "block", marginBottom: 7, fontSize: "1rem" }}>{item.title}</strong>
-                    <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>
-                      {item.copy}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
           <div
             style={{
               display: "grid",
@@ -2717,25 +2598,6 @@ If uploads are supplied:
                         );
                       })}
                     </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 10,
-                    }}
-                  >
-                    <label style={{ color: "#fff", fontWeight: 900 }}>
-                      Extra note for this week
-                    </label>
-                    <textarea
-                      className="input"
-                      value={weeklyPostNote}
-                      onChange={(event) => setWeeklyPostNote(event.target.value)}
-                      placeholder="Optional: mention an offer, event, launch, availability, or anything FromOne should include."
-                      rows={4}
-                      disabled={scanning}
-                    />
                   </div>
 
                   <div>
