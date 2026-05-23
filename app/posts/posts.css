@@ -2034,3 +2034,25 @@ body:has(.fromone-simple-modal-overlay) {
     padding-right: 14px !important;
   }
 }
+/* FINAL MOBILE POSTS STATUS PILL */
+
+@media (max-width: 720px) {
+  .premium-calendar-status {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 0 12px !important;
+    border-radius: 10px !important;
+    font-size: 0.74rem !important;
+    line-height: 28px !important;
+    font-weight: 950 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  .premium-calendar-status.is-scheduled {
+    background: #ffd43b !important;
+    color: #101420 !important;
+  }
+}
