@@ -2673,12 +2673,12 @@ Important:
               <section
                 style={{
                   width: "100%",
-                  borderRadius: 22,
-                  overflow: "hidden",
+                  margin: "0 0 22px",
+                  borderRadius: 24,
                   border: "1px solid rgba(255, 212, 59, 0.16)",
                   background:
                     "linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))",
-                  boxShadow: "0 16px 44px rgba(0,0,0,0.16)",
+                  overflow: "hidden",
                 }}
               >
                 <button
@@ -2687,57 +2687,47 @@ Important:
                   aria-expanded={showPostsGuide}
                   style={{
                     width: "100%",
-                    minHeight: 58,
-                    padding: "12px clamp(16px, 2.4vw, 22px)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 14,
-                    textAlign: "left",
-                    cursor: "pointer",
-                    background: "transparent",
                     border: 0,
+                    background: "transparent",
                     color: "#f8fafc",
+                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 16,
+                    padding: "16px 18px",
+                    textAlign: "left",
                   }}
                 >
-                  <span style={{ minWidth: 0 }}>
-                    <strong
-                      style={{
-                        display: "block",
-                        fontSize: "clamp(1rem, 2vw, 1.2rem)",
-                        letterSpacing: "-0.025em",
-                        lineHeight: 1.18,
-                      }}
-                    >
-                      Review first
+                  <span>
+                    <strong style={{ display: "block", fontSize: "1.08rem", lineHeight: 1.15 }}>
+                      Review, then publish
                     </strong>
                     <span
                       style={{
                         display: "block",
-                        marginTop: 4,
+                        marginTop: 5,
                         color: "var(--muted)",
-                        fontSize: 14,
-                        lineHeight: 1.35,
-                        fontWeight: 750,
+                        fontWeight: 800,
+                        lineHeight: 1.45,
                       }}
                     >
-                      Open a post, check the wording and media, then publish Facebook/Instagram or copy/open TikTok.
+                      Check each post, adjust wording or media, then publish Facebook/Instagram or copy/open TikTok.
                     </span>
                   </span>
 
                   <span
-                    aria-hidden="true"
                     style={{
-                      flex: "0 0 auto",
-                      width: 34,
-                      height: 34,
-                      borderRadius: 13,
-                      display: "inline-grid",
-                      placeItems: "center",
+                      width: 32,
+                      height: 32,
+                      borderRadius: 12,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       background: "rgba(255, 212, 59, 0.13)",
                       color: "#ffd43b",
-                      fontSize: 18,
                       fontWeight: 950,
+                      flex: "0 0 auto",
                     }}
                   >
                     {showPostsGuide ? "−" : "+"}
@@ -2747,34 +2737,74 @@ Important:
                 {showPostsGuide && (
                   <div
                     style={{
-                      padding: "12px clamp(16px, 2.4vw, 22px) 16px",
-                      borderTop: "1px solid rgba(255, 212, 59, 0.11)",
+                      borderTop: "1px solid rgba(255, 212, 59, 0.12)",
+                      padding: "18px",
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+                      gap: 12,
+                      alignItems: "stretch",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: 8,
-                        color: "var(--muted)",
-                        fontSize: 14,
-                        lineHeight: 1.45,
-                        fontWeight: 750,
-                      }}
-                    >
-                      <p style={{ margin: 0 }}>
-                        <strong style={{ color: "#f8fafc" }}>Facebook:</strong> autopost when Meta is connected.
-                      </p>
-                      <p style={{ margin: 0 }}>
-                        <strong style={{ color: "#f8fafc" }}>Instagram:</strong> autopost with image or video media.
-                      </p>
-                      <p style={{ margin: 0 }}>
-                        <strong style={{ color: "#f8fafc" }}>TikTok:</strong> manual for now — copy the caption and open TikTok.
-                      </p>
-                    </div>
+                    {[
+                      {
+                        step: "1",
+                        title: "Choose a week",
+                        copy: "Open the saved weekly set you want to review, edit or publish.",
+                      },
+                      {
+                        step: "2",
+                        title: "Review first",
+                        copy: "Check the wording, media and scheduled time before anything goes live.",
+                      },
+                      {
+                        step: "3",
+                        title: "Publish or copy",
+                        copy: "Facebook and Instagram can autopost when connected. TikTok stays copy/open for now.",
+                      },
+                    ].map((item) => (
+                      <article
+                        key={item.step}
+                        className="card"
+                        style={{
+                          padding: 16,
+                          borderRadius: 20,
+                          background:
+                            "linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.028))",
+                          border: "1px solid rgba(255, 212, 59, 0.12)",
+                          minHeight: 142,
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "flex-start",
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 10,
+                            display: "inline-grid",
+                            placeItems: "center",
+                            background: "#ffd43b",
+                            color: "#101420",
+                            fontWeight: 950,
+                            marginBottom: 12,
+                          }}
+                        >
+                          {item.step}
+                        </span>
+                        <strong style={{ display: "block", marginBottom: 7, fontSize: "1rem" }}>
+                          {item.title}
+                        </strong>
+                        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>
+                          {item.copy}
+                        </p>
+                      </article>
+                    ))}
 
                     <p
                       style={{
-                        margin: "12px 0 0",
+                        gridColumn: "1 / -1",
+                        margin: "2px 0 0",
                         color: "#ffe58a",
                         fontWeight: 900,
                         lineHeight: 1.45,
