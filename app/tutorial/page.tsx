@@ -4,16 +4,14 @@ import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
 
 export const metadata: Metadata = {
-  title: 'How FromOne Works | Help Guide',
+  title: 'How FromOne Works | FromOne Help Guide',
   description:
-    'Learn how FromOne turns photos, videos and flyers into ready-to-review weekly social posts with Facebook and Instagram autoposting.',
-  alternates: {
-    canonical: '/tutorial',
-  },
+    'Learn how FromOne helps small businesses set up a Business Profile, upload media, review posts and publish to Facebook, Instagram and TikTok.',
+  alternates: { canonical: '/tutorial' },
   openGraph: {
-    title: 'How FromOne Works | Help Guide',
+    title: 'How FromOne Works | FromOne Help Guide',
     description:
-      'Set up the business, upload media, review the weekly posts, then publish Facebook and Instagram or copy/open TikTok.',
+      'A simple walkthrough for turning photos, videos and flyers into ready-to-review social posts.',
     url: '/tutorial',
     type: 'website',
     images: [
@@ -27,243 +25,152 @@ export const metadata: Metadata = {
   },
 };
 
-const workflow = [
+const guideSteps = [
   {
     number: '01',
-    title: 'Set the business profile',
-    text:
-      'Add the business name, services, location, tone and audience once. FromOne uses this profile every time posts are created.',
+    title: 'Set up the business',
+    text: 'Save the business name, services, location, customers and tone once in Settings.',
   },
   {
     number: '02',
-    title: 'Upload the week’s media',
-    text:
-      'Add photos, videos or flyers from recent work, offers, products, events, menus or behind-the-scenes content.',
+    title: 'Upload the week',
+    text: 'Add photos, videos or flyers on the Dashboard. Each upload becomes a post idea.',
   },
   {
     number: '03',
-    title: 'Review before publishing',
-    text:
-      'Open the weekly posts, check the wording and media, edit anything you want, then publish when ready.',
+    title: 'Review and publish',
+    text: 'Check the wording, media and time on Posts before publishing or copying anything.',
   },
 ];
 
-const publishing = [
+const platformNotes = [
   {
-    name: 'Facebook',
-    status: 'Autopost',
-    detail: 'Publishes to a connected Facebook Page after review.',
+    title: 'Facebook',
+    label: 'Autopost ready',
+    text: 'FromOne can publish to a connected Facebook Page after review.',
   },
   {
-    name: 'Instagram',
-    status: 'Image/video',
-    detail: 'Publishes supported image and video posts when connected.',
+    title: 'Instagram',
+    label: 'Image/video needed',
+    text: 'Instagram publishing needs supported image or video media. PDF flyers are not direct Instagram media.',
   },
   {
-    name: 'TikTok',
-    status: 'Manual',
-    detail: 'FromOne creates the wording; you copy it and open TikTok.',
+    title: 'TikTok',
+    label: 'Manual for now',
+    text: 'FromOne prepares the wording. You copy it and open TikTok yourself.',
   },
-];
-
-const checkpoints = [
-  'Business Profile saved',
-  'Media uploaded',
-  'Posts reviewed',
-  'Publishing method chosen',
 ];
 
 export default function TutorialPage() {
   return (
-    <main className="sales-page tutorial-public-page">
+    <main className="sales-page fromone-marketing-page fromone-tutorial-page">
       <style>{`
-        .tutorial-public-page {
+        .fromone-marketing-page {
           overflow: hidden;
+          background:
+            radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.09), transparent 34%),
+            #050811;
         }
 
-        .tutorial-shell {
-          width: min(1120px, calc(100vw - 32px));
+        .fromone-marketing-page .public-nav {
+          width: min(1180px, calc(100vw - 40px)) !important;
+          max-width: none !important;
+          margin: 0 auto !important;
+          padding: clamp(24px, 3vw, 34px) 0 0 !important;
+          background: transparent !important;
+          border: 0 !important;
+          box-shadow: none !important;
+        }
+
+        .fromone-marketing-page .public-nav-inner {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        .fromone-shell {
+          width: min(1180px, calc(100vw - 40px));
           margin: 0 auto;
         }
 
-        .tutorial-hero {
+        .fromone-guide-hero {
           position: relative;
           overflow: hidden;
-          padding-bottom: clamp(34px, 5vw, 58px);
-        }
-
-        .tutorial-hero::before {
-          content: '';
-          position: absolute;
-          inset: -230px -120px auto;
-          height: 660px;
           background:
-            radial-gradient(circle at 50% 18%, rgba(255, 212, 59, 0.2), transparent 32%),
-            radial-gradient(circle at 76% 22%, rgba(61, 220, 151, 0.12), transparent 30%),
-            radial-gradient(circle at 20% 22%, rgba(255, 255, 255, 0.08), transparent 30%);
-          pointer-events: none;
+            radial-gradient(circle at 18% 4%, rgba(255, 212, 59, 0.16), transparent 28%),
+            radial-gradient(circle at 86% 7%, rgba(61, 220, 151, 0.11), transparent 30%),
+            linear-gradient(180deg, rgba(255,255,255,0.025), transparent 50%);
         }
 
-        .tutorial-hero-grid {
-          position: relative;
-          z-index: 1;
+        .fromone-guide-grid {
           display: grid;
-          grid-template-columns: minmax(0, 0.98fr) minmax(340px, 0.82fr);
-          gap: clamp(26px, 5vw, 54px);
+          grid-template-columns: minmax(0, 0.96fr) minmax(360px, 1.04fr);
+          gap: clamp(30px, 5vw, 62px);
           align-items: center;
-          padding: clamp(42px, 6vw, 76px) 0 clamp(8px, 2vw, 22px);
+          padding: clamp(58px, 6vw, 82px) 0 clamp(50px, 6vw, 78px);
         }
 
-        .tutorial-hero-copy {
-          max-width: 720px;
-        }
-
-        .tutorial-title {
-          margin: 0 0 18px;
+        .fromone-guide-title {
+          margin: 0 0 20px;
           color: #ffffff;
-          font-size: clamp(3.3rem, 7vw, 7.2rem);
-          line-height: 0.88;
-          letter-spacing: -0.082em;
+          font-size: clamp(3.4rem, 7vw, 7rem);
+          line-height: 0.9;
+          letter-spacing: -0.08em;
         }
 
-        .tutorial-title span {
-          color: #ffd43b;
-        }
+        .fromone-guide-title span { color: #ffd43b; }
 
-        .tutorial-lede {
-          max-width: 620px;
+        .fromone-guide-text {
+          max-width: 610px;
           margin: 0;
           color: rgba(248, 250, 252, 0.76);
-          font-size: clamp(1.04rem, 1.35vw, 1.2rem);
-          line-height: 1.72;
+          font-size: clamp(1.05rem, 1.35vw, 1.2rem);
+          line-height: 1.7;
         }
 
-        .tutorial-actions {
+        .fromone-guide-actions,
+        .fromone-final-actions {
           display: flex;
           flex-wrap: wrap;
           gap: 12px;
-          margin-top: 28px;
+          margin-top: 30px;
         }
 
-        .tutorial-preview {
-          position: relative;
+        .fromone-guide-panel {
           padding: clamp(22px, 3vw, 32px);
-          border-radius: 40px;
+          border-radius: 42px;
           background:
-            radial-gradient(circle at 20% 8%, rgba(255, 212, 59, 0.24), transparent 30%),
-            radial-gradient(circle at 86% 18%, rgba(61, 220, 151, 0.13), transparent 30%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.038));
-          border: 1px solid rgba(255, 212, 59, 0.24);
-          box-shadow: 0 34px 120px rgba(0, 0, 0, 0.38);
+            radial-gradient(circle at 18% 10%, rgba(255, 212, 59, 0.2), transparent 30%),
+            radial-gradient(circle at 86% 16%, rgba(61, 220, 151, 0.14), transparent 32%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+          border: 1px solid rgba(255, 212, 59, 0.23);
+          box-shadow: 0 38px 120px rgba(0, 0, 0, 0.4);
         }
 
-        .tutorial-preview-card {
+        .fromone-guide-card-list {
           display: grid;
           gap: 14px;
+        }
+
+        .fromone-guide-mini-card {
+          display: grid;
+          grid-template-columns: 54px minmax(0, 1fr);
+          gap: 16px;
+          align-items: start;
           padding: 18px;
-          border-radius: 30px;
-          background: rgba(2, 6, 23, 0.58);
+          border-radius: 26px;
+          background: rgba(2, 6, 23, 0.62);
           border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .tutorial-preview-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 12px;
-          padding-bottom: 12px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .tutorial-preview-top strong {
-          color: #ffffff;
-          font-size: 1.1rem;
-        }
-
-        .tutorial-preview-top span {
-          color: #a7f3d0;
-          font-size: 0.82rem;
-          font-weight: 950;
-        }
-
-        .tutorial-checklist {
-          display: grid;
-          gap: 10px;
-        }
-
-        .tutorial-checklist div {
-          display: grid;
-          grid-template-columns: 34px minmax(0, 1fr);
-          gap: 10px;
-          align-items: center;
-          padding: 12px;
-          border-radius: 18px;
-          background: rgba(255, 255, 255, 0.065);
-          border: 1px solid rgba(255, 255, 255, 0.09);
-          color: rgba(248, 250, 252, 0.84);
-          font-weight: 850;
-        }
-
-        .tutorial-checklist span {
-          width: 34px;
-          height: 34px;
-          display: grid;
-          place-items: center;
-          border-radius: 13px;
-          background: rgba(255, 212, 59, 0.15);
-          color: #ffd43b;
-          font-weight: 1000;
-        }
-
-        .tutorial-section {
-          padding: clamp(34px, 5vw, 56px) 0;
-        }
-
-        .tutorial-section-heading {
-          max-width: 760px;
-          margin: 0 auto 24px;
-          text-align: center;
-        }
-
-        .tutorial-section-heading h2 {
-          margin: 10px 0 12px;
-          color: #ffffff;
-          font-size: clamp(2.35rem, 5vw, 4.9rem);
-          line-height: 0.92;
-          letter-spacing: -0.068em;
-        }
-
-        .tutorial-section-heading p {
-          margin: 0 auto;
-          color: rgba(248, 250, 252, 0.72);
-          line-height: 1.7;
-          font-size: clamp(1rem, 1.2vw, 1.12rem);
-        }
-
-        .tutorial-workflow-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 14px;
-        }
-
-        .tutorial-workflow-card,
-        .tutorial-platform-card {
-          border-radius: 30px;
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.035));
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
-        }
-
-        .tutorial-workflow-card {
-          min-height: 250px;
-          padding: 24px;
-        }
-
-        .tutorial-step-number {
-          display: inline-grid;
+        .fromone-guide-mini-card span,
+        .fromone-step-number {
           width: 44px;
           height: 44px;
-          place-items: center;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           border-radius: 16px;
           background: #ffd43b;
           color: #101420;
@@ -271,41 +178,71 @@ export default function TutorialPage() {
           box-shadow: 0 16px 36px rgba(255, 212, 59, 0.18);
         }
 
-        .tutorial-workflow-card h3 {
-          margin: 22px 0 10px;
+        .fromone-guide-mini-card h3 {
+          margin: 0 0 8px;
           color: #ffffff;
-          font-size: 1.45rem;
+          font-size: 1.18rem;
         }
 
-        .tutorial-workflow-card p,
-        .tutorial-platform-card p {
+        .fromone-guide-mini-card p {
           margin: 0;
-          color: rgba(248, 250, 252, 0.7);
-          line-height: 1.62;
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.55;
         }
 
-        .tutorial-platform-panel {
-          padding: clamp(26px, 4vw, 44px);
-          border-radius: 42px;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.088), rgba(255, 255, 255, 0.032));
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 30px 96px rgba(0, 0, 0, 0.3);
+        .fromone-section {
+          padding: clamp(44px, 5vw, 64px) 0;
         }
 
-        .tutorial-platform-grid {
+        .fromone-section-heading {
+          max-width: 760px;
+          margin: 0 auto 24px;
+          text-align: center;
+        }
+
+        .fromone-section-heading h2 {
+          margin: 10px 0 12px;
+          color: #ffffff;
+          font-size: clamp(2.35rem, 4.7vw, 4.8rem);
+          line-height: 0.94;
+          letter-spacing: -0.068em;
+        }
+
+        .fromone-section-heading p {
+          margin: 0 auto;
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.7;
+          font-size: clamp(1rem, 1.2vw, 1.12rem);
+        }
+
+        .fromone-card-grid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 14px;
         }
 
-        .tutorial-platform-card {
-          min-height: 210px;
+        .fromone-info-card {
+          min-height: 230px;
           padding: 24px;
+          border-radius: 30px;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.035));
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
         }
 
-        .tutorial-platform-card .status {
+        .fromone-info-card h3 {
+          margin: 20px 0 10px;
+          color: #ffffff;
+          font-size: 1.45rem;
+        }
+
+        .fromone-info-card p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.7);
+          line-height: 1.62;
+        }
+
+        .fromone-platform-label {
           display: inline-flex;
           padding: 8px 10px;
           border-radius: 999px;
@@ -316,251 +253,287 @@ export default function TutorialPage() {
           font-weight: 950;
         }
 
-        .tutorial-platform-card h3 {
-          margin: 16px 0 9px;
-          color: #ffffff;
-          font-size: 1.7rem;
+        .fromone-wide-panel {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+          gap: clamp(20px, 4vw, 42px);
+          align-items: center;
+          padding: clamp(28px, 5vw, 54px);
+          border-radius: 42px;
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.14), transparent 32%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.088), rgba(255, 255, 255, 0.032));
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 30px 96px rgba(0, 0, 0, 0.3);
         }
 
-        .tutorial-final {
-          margin-bottom: clamp(48px, 6vw, 70px);
-          padding: clamp(30px, 5vw, 58px);
-          border-radius: 44px;
+        .fromone-wide-panel h2 {
+          margin: 10px 0 14px;
+          color: #ffffff;
+          font-size: clamp(2.4rem, 4.7vw, 4.9rem);
+          line-height: 0.94;
+          letter-spacing: -0.072em;
+        }
+
+        .fromone-wide-panel p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.7;
+        }
+
+        .fromone-checklist {
+          display: grid;
+          gap: 12px;
+        }
+
+        .fromone-checklist div {
+          display: grid;
+          grid-template-columns: 34px minmax(0, 1fr);
+          gap: 12px;
+          align-items: center;
+          padding: 15px 16px;
+          border-radius: 20px;
+          background: rgba(5, 10, 24, 0.42);
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          color: rgba(248, 250, 252, 0.86);
+          font-weight: 850;
+          line-height: 1.42;
+        }
+
+        .fromone-checklist span {
+          width: 34px;
+          height: 34px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 13px;
+          background: rgba(255, 212, 59, 0.14);
+          color: #ffd43b;
+          font-weight: 1000;
+        }
+
+        .fromone-final-cta {
+          padding: clamp(34px, 5vw, 60px);
+          border-radius: 46px;
           background:
-            radial-gradient(circle at 18% 12%, rgba(255, 212, 59, 0.26), transparent 34%),
-            radial-gradient(circle at 84% 20%, rgba(61, 220, 151, 0.12), transparent 30%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.038));
-          border: 1px solid rgba(255, 212, 59, 0.28);
-          box-shadow: 0 34px 120px rgba(0, 0, 0, 0.38);
+            radial-gradient(circle at 18% 12%, rgba(255, 212, 59, 0.22), transparent 34%),
+            radial-gradient(circle at 86% 20%, rgba(61, 220, 151, 0.11), transparent 30%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.038));
+          border: 1px solid rgba(255, 212, 59, 0.26);
+          box-shadow: 0 34px 110px rgba(0, 0, 0, 0.38);
           text-align: center;
         }
 
-        .tutorial-final h2 {
-          max-width: 760px;
+        .fromone-final-cta h2 {
+          max-width: 820px;
           margin: 12px auto 16px;
           color: #ffffff;
-          font-size: clamp(2.45rem, 5.6vw, 5.6rem);
-          line-height: 0.9;
-          letter-spacing: -0.074em;
+          font-size: clamp(2.55rem, 5.4vw, 5.5rem);
+          line-height: 0.92;
+          letter-spacing: -0.076em;
         }
 
-        .tutorial-final p {
-          max-width: 640px;
+        .fromone-final-cta p {
+          max-width: 660px;
           margin: 0 auto;
           color: rgba(248, 250, 252, 0.72);
           line-height: 1.7;
         }
 
-        .tutorial-final-actions {
-          display: flex;
-          flex-wrap: wrap;
+        .fromone-final-actions {
           justify-content: center;
-          gap: 12px;
-          margin-top: 30px;
         }
 
         @media (max-width: 920px) {
-          .tutorial-hero-grid {
+          .fromone-guide-grid,
+          .fromone-card-grid,
+          .fromone-wide-panel {
             grid-template-columns: 1fr;
           }
 
-          .tutorial-hero-copy {
-            margin: 0 auto;
+          .fromone-guide-copy,
+          .fromone-info-card,
+          .fromone-wide-panel {
             text-align: center;
           }
 
-          .tutorial-lede,
-          .tutorial-actions {
+          .fromone-guide-text,
+          .fromone-guide-actions {
             margin-left: auto;
             margin-right: auto;
           }
 
-          .tutorial-actions {
+          .fromone-guide-actions {
             justify-content: center;
           }
 
-          .tutorial-workflow-grid,
-          .tutorial-platform-grid {
+          .fromone-checklist div {
             grid-template-columns: 1fr;
+            justify-items: center;
+            text-align: center;
           }
         }
 
         @media (max-width: 640px) {
-          .tutorial-shell {
+          .fromone-marketing-page .public-nav {
+            width: calc(100vw - 32px) !important;
+            padding-top: 18px !important;
+          }
+
+          .fromone-shell {
             width: min(100% - 24px, 520px);
           }
 
-          .tutorial-hero-grid {
-            padding-top: 50px;
-            gap: 28px;
+          .fromone-guide-grid {
+            padding-top: 54px;
+            padding-bottom: 42px;
+            gap: 32px;
           }
 
-          .tutorial-title {
-            font-size: clamp(3rem, 14vw, 4.1rem);
-            line-height: 0.91;
+          .fromone-guide-title {
+            font-size: clamp(2.85rem, 13.4vw, 3.82rem);
+            line-height: 0.94;
+            letter-spacing: -0.074em;
           }
 
-          .tutorial-actions,
-          .tutorial-final-actions {
+          .fromone-guide-actions,
+          .fromone-final-actions {
             display: grid;
             grid-template-columns: 1fr;
             width: 100%;
           }
 
-          .tutorial-actions a,
-          .tutorial-final-actions a {
+          .fromone-guide-actions a,
+          .fromone-final-actions a {
             width: 100%;
             justify-content: center;
             text-align: center;
           }
 
-          .tutorial-preview,
-          .tutorial-platform-panel,
-          .tutorial-final {
+          .fromone-guide-panel,
+          .fromone-wide-panel,
+          .fromone-final-cta {
             border-radius: 30px;
           }
 
-          .tutorial-preview-top {
-            display: grid;
-            justify-items: center;
-            text-align: center;
-          }
-
-          .tutorial-workflow-card,
-          .tutorial-platform-card {
-            min-height: auto;
-            padding: 20px;
-            display: grid;
-            justify-items: center;
-            text-align: center;
-          }
-
-          .tutorial-checklist div {
+          .fromone-guide-mini-card {
             grid-template-columns: 1fr;
             justify-items: center;
             text-align: center;
           }
 
-          .tutorial-workflow-card h3,
-          .tutorial-workflow-card p,
-          .tutorial-platform-card h3,
-          .tutorial-platform-card p,
-          .tutorial-section-heading,
-          .tutorial-final {
-            text-align: center;
+          .fromone-section {
+            padding: 42px 0;
+          }
+
+          .fromone-info-card {
+            min-height: auto;
+            padding: 20px;
           }
         }
       `}</style>
 
-      <section className="tutorial-hero">
+      <section className="fromone-guide-hero">
         <PublicNav />
 
-        <div className="tutorial-shell tutorial-hero-grid">
-          <div className="tutorial-hero-copy">
-            <h1 className="tutorial-title">
-              From upload to <span>ready posts.</span>
+        <div className="fromone-shell fromone-guide-grid">
+          <div className="fromone-guide-copy">
+            <h1 className="fromone-guide-title">
+              How FromOne turns media into <span>weekly posts.</span>
             </h1>
-
-            <p className="tutorial-lede">
-              A quick guide to the FromOne workflow: set up the business, upload weekly media,
-              review the posts, then publish with control.
+            <p className="fromone-guide-text">
+              A focused walkthrough for setting up the business, creating posts from real media and publishing with control.
             </p>
-
-            <div className="tutorial-actions">
-              <Link href="/dashboard" className="sales-primary-button">
-                Go to Dashboard
-              </Link>
-
-              <Link href="/posts" className="sales-secondary-button">
-                View Posts
-              </Link>
+            <div className="fromone-guide-actions">
+              <Link href="/signin" className="sales-primary-button">Start 7-day demo</Link>
+              <Link href="/dashboard" className="sales-secondary-button">Go to Dashboard</Link>
             </div>
           </div>
 
-          <aside className="tutorial-preview" aria-label="FromOne setup checklist">
-            <div className="tutorial-preview-card">
-              <div className="tutorial-preview-top">
-                <strong>Setup checklist</strong>
-                <span>4 steps</span>
-              </div>
-
-              <div className="tutorial-checklist">
-                {checkpoints.map((item) => (
-                  <div key={item}>
-                    <span aria-hidden="true">✓</span>
-                    <strong>{item}</strong>
+          <div className="fromone-guide-panel" aria-label="FromOne workflow preview">
+            <div className="fromone-guide-card-list">
+              {guideSteps.map((step) => (
+                <article key={step.number} className="fromone-guide-mini-card">
+                  <span>{step.number}</span>
+                  <div>
+                    <h3>{step.title}</h3>
+                    <p>{step.text}</p>
                   </div>
-                ))}
-              </div>
+                </article>
+              ))}
             </div>
-          </aside>
+          </div>
         </div>
       </section>
 
-      <section className="tutorial-section">
-        <div className="tutorial-shell">
-          <div className="tutorial-section-heading">
-            <div className="page-eyebrow">How it works</div>
-            <h2>Three steps, no guesswork.</h2>
-            <p>
-              FromOne is designed around the weekly habit small businesses already understand:
-              collect the week’s media, turn it into posts, and review before anything goes live.
-            </p>
+      <section className="fromone-section">
+        <div className="fromone-shell">
+          <div className="fromone-section-heading">
+            <div className="page-eyebrow">The workflow</div>
+            <h2>Simple enough to use every week.</h2>
+            <p>FromOne keeps the process practical: media in, posts reviewed, publishing controlled.</p>
           </div>
 
-          <div className="tutorial-workflow-grid">
-            {workflow.map((item) => (
-              <article key={item.title} className="tutorial-workflow-card">
-                <span className="tutorial-step-number">{item.number}</span>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
+          <div className="fromone-card-grid">
+            {guideSteps.map((step) => (
+              <article key={step.title} className="fromone-info-card">
+                <span className="fromone-step-number">{step.number}</span>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="tutorial-section">
-        <div className="tutorial-shell tutorial-platform-panel">
-          <div className="tutorial-section-heading">
+      <section className="fromone-section">
+        <div className="fromone-shell">
+          <div className="fromone-wide-panel">
+            <div>
+              <div className="page-eyebrow">Review before publishing</div>
+              <h2>Nothing has to go live unseen.</h2>
+              <p>
+                Posts are created for review first. You can edit wording, change media, adjust time and choose whether to publish, schedule or copy manually.
+              </p>
+            </div>
+
+            <div className="fromone-checklist">
+              {['Check the caption and CTA', 'Confirm the media is right', 'Publish Facebook/Instagram or copy TikTok'].map((item) => (
+                <div key={item}><span aria-hidden="true">✓</span><strong>{item}</strong></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="fromone-section">
+        <div className="fromone-shell">
+          <div className="fromone-section-heading">
             <div className="page-eyebrow">Publishing rules</div>
-            <h2>Each platform stays clear.</h2>
-            <p>
-              FromOne keeps publishing honest: Facebook and Instagram can autopost when connected,
-              and TikTok remains a simple manual copy/open flow.
-            </p>
+            <h2>Each platform is handled honestly.</h2>
+            <p>No confusing promises. FromOne follows the real limits of each social platform.</p>
           </div>
 
-          <div className="tutorial-platform-grid">
-            {publishing.map((item) => (
-              <article key={item.name} className="tutorial-platform-card">
-                <span className="status">{item.status}</span>
-                <h3>{item.name}</h3>
-                <p>{item.detail}</p>
+          <div className="fromone-card-grid">
+            {platformNotes.map((platform) => (
+              <article key={platform.title} className="fromone-info-card">
+                <span className="fromone-platform-label">{platform.label}</span>
+                <h3>{platform.title}</h3>
+                <p>{platform.text}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="tutorial-section" style={{ paddingTop: 28 }}>
-        <div className="tutorial-shell">
-          <div className="tutorial-final">
-            <div className="page-eyebrow">Ready to start?</div>
-            <h2>Create the week from real media.</h2>
-            <p>
-              Start on the Dashboard. Upload the content, choose the platforms and review the
-              posts before publishing.
-            </p>
-
-            <div className="tutorial-final-actions">
-              <Link href="/dashboard" className="sales-primary-button">
-                Create posts
-              </Link>
-
-              <Link href="/settings" className="sales-secondary-button">
-                Check setup
-              </Link>
+      <section className="fromone-section" style={{ paddingBottom: 72 }}>
+        <div className="fromone-shell">
+          <div className="fromone-final-cta">
+            <div className="page-eyebrow">Ready to try it?</div>
+            <h2>Create the first weekly set.</h2>
+            <p>Start with the demo, set up the Business Profile and upload the week’s media.</p>
+            <div className="fromone-final-actions">
+              <Link href="/signin" className="sales-primary-button">Start 7-day demo</Link>
+              <Link href="/" className="sales-secondary-button">Back to homepage</Link>
             </div>
           </div>
         </div>

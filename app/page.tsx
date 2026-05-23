@@ -7,9 +7,7 @@ export const metadata: Metadata = {
   title: 'FromOne | Weekly Social Posts From Your Media',
   description:
     'FromOne turns small business photos, videos and flyers into ready-to-review weekly social posts with Facebook and Instagram autoposting.',
-  alternates: {
-    canonical: '/',
-  },
+  alternates: { canonical: '/' },
   openGraph: {
     title: 'FromOne | Weekly Social Posts From Your Media',
     description:
@@ -27,753 +25,287 @@ export const metadata: Metadata = {
   },
 };
 
-const heroProof = ['Photos, videos & flyers', 'Facebook + Instagram autopost', 'TikTok copy/open'];
+const proofPoints = ['Photos, videos & flyers', 'Review before publishing', 'Facebook + Instagram autopost'];
 
 const workflow = [
   {
     step: '01',
-    title: 'Upload the week',
-    description: 'Add the media the business already has: jobs, offers, menus, events, products or short clips.',
+    title: 'Upload real media',
+    text: 'Add this week’s photos, videos or flyers from the work already happening in the business.',
   },
   {
     step: '02',
-    title: 'Review the posts',
-    description: 'FromOne writes platform-ready captions, CTAs and hashtags using the saved Business Profile.',
+    title: 'Review ready posts',
+    text: 'FromOne writes platform-ready posts, suggests times and keeps everything editable before anything goes live.',
   },
   {
     step: '03',
     title: 'Publish with control',
-    description: 'Facebook and Instagram can autopost when connected. TikTok stays simple with copy/open.',
+    text: 'Facebook and Instagram can autopost when connected. TikTok stays copy/open manual.',
   },
-];
-
-const premiumFeatures = [
-  'Posts created from real media, not generic prompts',
-  'Suggested posting times for the week',
-  'Instagram-safe image handling',
-  'Edit, improve, rescan and review before publishing',
 ];
 
 const platformCards = [
-  {
-    name: 'Facebook',
-    label: 'Autopost ready',
-    detail: 'Publish to a connected Facebook Page after review.',
-  },
-  {
-    name: 'Instagram',
-    label: 'Image/video ready',
-    detail: 'Publish to a connected professional account with supported media.',
-  },
-  {
-    name: 'TikTok',
-    label: 'Manual by design',
-    detail: 'Copy the caption and open TikTok when it is time to post.',
-  },
+  { name: 'Facebook', label: 'Autopost ready', text: 'Publish to a connected Facebook Page after review.' },
+  { name: 'Instagram', label: 'Image/video ready', text: 'Publish to a connected professional account with supported media.' },
+  { name: 'TikTok', label: 'Manual by design', text: 'Copy the caption and open TikTok when it is time to post.' },
 ];
 
 export default function Home() {
   return (
-    <main className="sales-page fromone-public-home">
+    <main className="sales-page fromone-marketing-page fromone-home-page">
       <style>{`
-        .fromone-public-home {
+        .fromone-marketing-page {
           overflow: hidden;
+          background:
+            radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.09), transparent 34%),
+            #050811;
         }
 
-        .fromone-public-shell {
-          width: min(1160px, calc(100vw - 32px));
+        .fromone-marketing-page .public-nav {
+          width: min(1180px, calc(100vw - 40px)) !important;
+          max-width: none !important;
+          margin: 0 auto !important;
+          padding: clamp(24px, 3vw, 34px) 0 0 !important;
+          background: transparent !important;
+          border: 0 !important;
+          box-shadow: none !important;
+        }
+
+        .fromone-marketing-page .public-nav-inner {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        .fromone-shell {
+          width: min(1180px, calc(100vw - 40px));
           margin: 0 auto;
         }
 
-        .fromone-hero-stage {
+        .fromone-hero {
           position: relative;
           overflow: hidden;
-          padding-bottom: clamp(42px, 4.8vw, 58px);
-        }
-
-        .fromone-hero-stage::before {
-          content: '';
-          position: absolute;
-          inset: -220px -140px auto;
-          height: 720px;
           background:
-            radial-gradient(circle at 50% 18%, rgba(255, 212, 59, 0.22), transparent 32%),
-            radial-gradient(circle at 72% 28%, rgba(61, 220, 151, 0.12), transparent 28%),
-            radial-gradient(circle at 24% 24%, rgba(255, 255, 255, 0.09), transparent 30%);
-          filter: blur(4px);
-          pointer-events: none;
+            radial-gradient(circle at 20% 4%, rgba(255, 212, 59, 0.17), transparent 28%),
+            radial-gradient(circle at 88% 8%, rgba(61, 220, 151, 0.11), transparent 30%),
+            linear-gradient(180deg, rgba(255,255,255,0.025), transparent 48%);
         }
 
         .fromone-hero-grid {
           position: relative;
           z-index: 1;
           display: grid;
-          grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
-          gap: clamp(26px, 4.4vw, 50px);
+          grid-template-columns: minmax(0, 1.02fr) minmax(380px, 0.98fr);
+          gap: clamp(32px, 5vw, 64px);
           align-items: center;
-          padding: clamp(28px, 4vw, 54px) 0 0;
-        }
-
-        .fromone-hero-copy {
-          max-width: 680px;
-        }
-
-        .fromone-hero-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 9px;
-          padding: 10px 14px;
-          border-radius: 999px;
-          background: rgba(255, 212, 59, 0.105);
-          border: 1px solid rgba(255, 212, 59, 0.26);
-          color: #ffe58a;
-          font-size: 0.78rem;
-          font-weight: 1000;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
+          padding: clamp(58px, 6vw, 82px) 0 clamp(50px, 6vw, 78px);
         }
 
         .fromone-hero-title {
-          margin: 0 0 20px;
-          max-width: 760px;
+          margin: 0 0 22px;
           color: #ffffff;
-          font-size: clamp(3.4rem, 7.4vw, 7.65rem);
-          line-height: 0.86;
+          font-size: clamp(3.8rem, 7.3vw, 7.55rem);
+          line-height: 0.88;
           letter-spacing: -0.085em;
         }
 
-        .fromone-hero-title span {
-          color: #ffd43b;
-        }
+        .fromone-hero-title span { color: #ffd43b; }
 
         .fromone-hero-text {
           max-width: 620px;
           margin: 0;
-          color: rgba(248, 250, 252, 0.76);
-          font-size: clamp(1.04rem, 1.35vw, 1.2rem);
-          line-height: 1.72;
+          color: rgba(248, 250, 252, 0.78);
+          font-size: clamp(1.06rem, 1.35vw, 1.22rem);
+          line-height: 1.7;
         }
 
-        .fromone-hero-actions {
+        .fromone-hero-actions,
+        .fromone-proof-row,
+        .fromone-final-actions {
           display: flex;
           flex-wrap: wrap;
           gap: 12px;
-          margin-top: 28px;
         }
 
-        .fromone-proof-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-top: 24px;
-        }
+        .fromone-hero-actions { margin-top: 30px; }
+        .fromone-proof-row { margin-top: 24px; gap: 10px; }
 
         .fromone-proof-pill {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 8px;
-          padding: 10px 12px;
+          padding: 10px 13px;
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.075);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          color: rgba(248, 250, 252, 0.86);
+          color: rgba(248, 250, 252, 0.88);
           font-size: 0.88rem;
           font-weight: 900;
         }
 
-        .fromone-proof-pill span {
-          color: #ffd43b;
-        }
+        .fromone-proof-pill span { color: #ffd43b; }
 
-        .fromone-product-card {
-          position: relative;
-          min-height: 540px;
-          padding: clamp(22px, 3vw, 34px);
+        .fromone-product-preview {
+          padding: clamp(22px, 3vw, 32px);
           border-radius: 42px;
           background:
-            radial-gradient(circle at 22% 8%, rgba(255, 212, 59, 0.24), transparent 28%),
-            radial-gradient(circle at 82% 18%, rgba(61, 220, 151, 0.14), transparent 30%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.038));
-          border: 1px solid rgba(255, 212, 59, 0.24);
-          box-shadow: 0 38px 130px rgba(0, 0, 0, 0.42);
-          overflow: hidden;
+            radial-gradient(circle at 18% 10%, rgba(255, 212, 59, 0.22), transparent 30%),
+            radial-gradient(circle at 84% 16%, rgba(61, 220, 151, 0.15), transparent 32%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+          border: 1px solid rgba(255, 212, 59, 0.23);
+          box-shadow: 0 38px 120px rgba(0, 0, 0, 0.4);
         }
 
-        .fromone-product-card::before {
-          content: '';
-          position: absolute;
-          inset: 18px;
-          border-radius: 34px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          pointer-events: none;
+        .fromone-product-inner { display: grid; gap: 14px; }
+
+        .fromone-preview-toolbar,
+        .fromone-media-tile,
+        .fromone-sample-post,
+        .fromone-schedule-chip {
+          text-align: center;
         }
 
-        .fromone-phone-card {
-          position: relative;
-          z-index: 1;
+        .fromone-preview-toolbar {
           display: grid;
-          gap: 14px;
-        }
-
-        .fromone-mini-toolbar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 12px;
-          padding: 14px 16px;
-          border-radius: 24px;
-          background: rgba(2, 6, 23, 0.58);
+          justify-items: center;
+          gap: 8px;
+          padding: 20px 18px;
+          border-radius: 26px;
+          background: rgba(2, 6, 23, 0.62);
           border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .fromone-mini-toolbar strong {
-          color: #ffffff;
-        }
+        .fromone-preview-toolbar strong { color: #ffffff; font-size: 1.08rem; }
+        .fromone-preview-toolbar span { color: #a7f3d0; font-size: 0.9rem; font-weight: 950; }
 
-        .fromone-mini-toolbar span {
-          color: #a7f3d0;
-          font-size: 0.82rem;
-          font-weight: 950;
-        }
-
-        .fromone-media-preview {
+        .fromone-media-grid {
           display: grid;
-          grid-template-columns: 1.1fr 0.9fr;
+          grid-template-columns: 1fr 1fr;
           gap: 12px;
         }
 
         .fromone-media-tile {
-          min-height: 172px;
+          min-height: 176px;
           border-radius: 28px;
           background:
-            radial-gradient(circle at 30% 20%, rgba(255, 212, 59, 0.28), transparent 34%),
-            linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.82));
+            radial-gradient(circle at 30% 20%, rgba(255, 212, 59, 0.22), transparent 34%),
+            linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.82));
           border: 1px solid rgba(255, 255, 255, 0.1);
           padding: 18px;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+          display: grid;
+          align-content: center;
+          justify-items: center;
         }
 
         .fromone-media-tile.secondary {
           background:
-            radial-gradient(circle at 70% 18%, rgba(61, 220, 151, 0.22), transparent 34%),
-            linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.72));
+            radial-gradient(circle at 70% 18%, rgba(61, 220, 151, 0.2), transparent 34%),
+            linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.74));
         }
 
-        .fromone-media-tile small {
-          display: block;
-          color: rgba(248, 250, 252, 0.62);
-          font-weight: 850;
-          line-height: 1.2;
-        }
+        .fromone-media-tile small { color: rgba(248, 250, 252, 0.68); font-weight: 900; }
+        .fromone-media-tile strong { margin-top: 8px; color: #ffffff; font-size: 1.12rem; line-height: 1.18; }
 
-        .fromone-media-tile strong {
-          display: block;
-          margin-top: 8px;
-          color: #ffffff;
-          font-size: 1.1rem;
-          line-height: 1.15;
-          min-height: 2.55em;
-        }
-
-        .fromone-sample-post {
-          padding: 18px;
-          border-radius: 28px;
+        .fromone-sample-post,
+        .fromone-schedule-chip {
           background: rgba(2, 6, 23, 0.64);
           border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .fromone-sample-post .meta {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          margin-bottom: 12px;
-          color: #ffe58a;
-          font-size: 0.8rem;
-          font-weight: 950;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
+        .fromone-sample-post { padding: 18px; border-radius: 28px; }
+        .fromone-sample-post .meta { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; color: #ffe58a; font-size: 0.8rem; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
+        .fromone-sample-post p { margin: 0 auto; max-width: 520px; color: rgba(248, 250, 252, 0.84); line-height: 1.58; }
 
-        .fromone-sample-post p {
-          margin: 0;
-          color: rgba(248, 250, 252, 0.84);
-          line-height: 1.58;
-        }
+        .fromone-schedule-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .fromone-schedule-chip { padding: 12px; border-radius: 18px; }
+        .fromone-schedule-chip strong, .fromone-schedule-chip span { display: block; }
+        .fromone-schedule-chip strong { color: #ffffff; font-size: 0.9rem; }
+        .fromone-schedule-chip span { margin-top: 4px; color: rgba(248, 250, 252, 0.62); font-size: 0.78rem; font-weight: 800; }
 
-        .fromone-schedule-row {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 10px;
-        }
+        .fromone-section { padding: clamp(44px, 5vw, 64px) 0; }
+        .fromone-section-heading { max-width: 760px; margin: 0 auto 24px; text-align: center; }
+        .fromone-section-heading h2 { margin: 10px 0 12px; color: #ffffff; font-size: clamp(2.35rem, 4.7vw, 4.8rem); line-height: 0.94; letter-spacing: -0.068em; }
+        .fromone-section-heading p { margin: 0 auto; color: rgba(248, 250, 252, 0.72); line-height: 1.7; font-size: clamp(1rem, 1.2vw, 1.12rem); }
 
-        .fromone-schedule-chip {
-          padding: 12px;
-          border-radius: 18px;
-          background: rgba(255, 255, 255, 0.07);
-          border: 1px solid rgba(255, 255, 255, 0.09);
-          text-align: center;
-        }
+        .fromone-workflow-grid,
+        .fromone-platform-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 
-        .fromone-schedule-chip strong {
-          display: block;
-          color: #ffffff;
-          font-size: 0.9rem;
-        }
-
-        .fromone-schedule-chip span {
-          display: block;
-          margin-top: 4px;
-          color: rgba(248, 250, 252, 0.62);
-          font-size: 0.78rem;
-          font-weight: 800;
-        }
-
-        .fromone-section {
-          padding: clamp(46px, 4.8vw, 58px) 0;
-        }
-
-        .fromone-hero-stage + .fromone-section {
-          padding-top: clamp(46px, 4.8vw, 58px);
-        }
-
-        .fromone-section + .fromone-section {
-          padding-top: clamp(46px, 4.8vw, 58px);
-        }
-
-        .fromone-final-section {
-          padding-bottom: clamp(46px, 4.8vw, 58px);
-        }
-
-        .fromone-section-heading {
-          max-width: 760px;
-          margin: 0 auto 24px;
-          text-align: center;
-        }
-
-        .fromone-section-heading h2 {
-          margin: 10px 0 12px;
-          color: #ffffff;
-          font-size: clamp(2.3rem, 5vw, 5rem);
-          line-height: 0.92;
-          letter-spacing: -0.068em;
-        }
-
-        .fromone-section-heading p {
-          margin: 0 auto;
-          color: rgba(248, 250, 252, 0.72);
-          line-height: 1.7;
-          font-size: clamp(1rem, 1.2vw, 1.12rem);
-        }
-
-        .fromone-workflow-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 14px;
-        }
-
-        .fromone-workflow-card,
-        .fromone-platform-card {
+        .fromone-card {
           border-radius: 30px;
           background: linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.035));
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
         }
 
-        .fromone-workflow-card {
-          min-height: 245px;
-          padding: 24px;
-        }
-
-        .fromone-workflow-card span {
-          display: inline-flex;
-          width: 42px;
-          height: 42px;
-          align-items: center;
-          justify-content: center;
-          border-radius: 16px;
-          background: #ffd43b;
-          color: #101420;
-          font-weight: 1000;
-          box-shadow: 0 16px 36px rgba(255, 212, 59, 0.18);
-        }
-
-        .fromone-workflow-card h3,
-        .fromone-platform-card h3 {
-          color: #ffffff;
-        }
-
-        .fromone-workflow-card h3 {
-          margin: 22px 0 10px;
-          font-size: 1.45rem;
-        }
-
-        .fromone-workflow-card p,
-        .fromone-platform-card p {
-          margin: 0;
-          color: rgba(248, 250, 252, 0.7);
-          line-height: 1.62;
-        }
+        .fromone-workflow-card,
+        .fromone-platform-card { padding: 24px; min-height: 220px; }
+        .fromone-step-number { display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 16px; background: #ffd43b; color: #101420; font-weight: 1000; box-shadow: 0 16px 36px rgba(255, 212, 59, 0.18); }
+        .fromone-workflow-card h3, .fromone-platform-card h3 { margin: 20px 0 10px; color: #ffffff; font-size: 1.45rem; }
+        .fromone-workflow-card p, .fromone-platform-card p { margin: 0; color: rgba(248, 250, 252, 0.7); line-height: 1.62; }
 
         .fromone-feature-panel {
           display: grid;
-          grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+          grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
           gap: clamp(20px, 4vw, 40px);
           align-items: center;
           padding: clamp(28px, 5vw, 54px);
           border-radius: 42px;
-          background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.14), transparent 32%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.088), rgba(255, 255, 255, 0.032));
+          background: radial-gradient(circle at top left, rgba(255, 212, 59, 0.14), transparent 32%), linear-gradient(145deg, rgba(255, 255, 255, 0.088), rgba(255, 255, 255, 0.032));
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 30px 96px rgba(0, 0, 0, 0.3);
         }
 
-        .fromone-feature-panel h2 {
-          margin: 10px 0 14px;
-          color: #ffffff;
-          font-size: clamp(2.4rem, 5vw, 5.4rem);
-          line-height: 0.92;
-          letter-spacing: -0.072em;
-        }
+        .fromone-feature-panel h2 { margin: 10px 0 14px; color: #ffffff; font-size: clamp(2.4rem, 4.7vw, 4.9rem); line-height: 0.94; letter-spacing: -0.072em; }
+        .fromone-feature-panel p { margin: 0; color: rgba(248, 250, 252, 0.72); line-height: 1.7; }
+        .fromone-feature-list { display: grid; gap: 12px; }
+        .fromone-feature-list div { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: center; padding: 15px 16px; border-radius: 20px; background: rgba(5, 10, 24, 0.42); border: 1px solid rgba(255, 255, 255, 0.09); color: rgba(248, 250, 252, 0.86); font-weight: 850; line-height: 1.42; }
+        .fromone-feature-list span { width: 34px; height: 34px; display: inline-grid; place-items: center; border-radius: 13px; background: rgba(255, 212, 59, 0.14); color: #ffd43b; font-weight: 1000; }
 
-        .fromone-feature-panel p {
-          margin: 0;
-          color: rgba(248, 250, 252, 0.72);
-          line-height: 1.7;
-        }
-
-        .fromone-feature-list {
-          display: grid;
-          gap: 12px;
-        }
-
-        .fromone-feature-list div {
-          display: grid;
-          grid-template-columns: 34px minmax(0, 1fr);
-          gap: 12px;
-          align-items: center;
-          padding: 15px 16px;
-          border-radius: 20px;
-          background: rgba(5, 10, 24, 0.42);
-          border: 1px solid rgba(255, 255, 255, 0.09);
-          color: rgba(248, 250, 252, 0.86);
-          font-weight: 850;
-          line-height: 1.42;
-        }
-
-        .fromone-feature-list span {
-          width: 34px;
-          height: 34px;
-          display: inline-grid;
-          place-items: center;
-          border-radius: 13px;
-          background: rgba(255, 212, 59, 0.14);
-          color: #ffd43b;
-          font-weight: 1000;
-        }
-
-        .fromone-platform-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 14px;
-        }
-
-        .fromone-platform-card {
-          padding: 24px;
-          min-height: 210px;
-        }
-
-        .fromone-platform-card .label {
-          display: inline-flex;
-          padding: 8px 10px;
-          border-radius: 999px;
-          background: rgba(255, 212, 59, 0.1);
-          border: 1px solid rgba(255, 212, 59, 0.2);
-          color: #ffe58a;
-          font-size: 0.78rem;
-          font-weight: 950;
-        }
-
-        .fromone-platform-card h3 {
-          margin: 16px 0 9px;
-          font-size: 1.7rem;
-        }
+        .fromone-platform-card .label { display: inline-flex; padding: 8px 10px; border-radius: 999px; background: rgba(255, 212, 59, 0.1); border: 1px solid rgba(255, 212, 59, 0.2); color: #ffe58a; font-size: 0.78rem; font-weight: 950; }
 
         .fromone-final-cta {
-          position: relative;
-          overflow: hidden;
-          padding: clamp(34px, 4.8vw, 56px);
+          padding: clamp(34px, 5vw, 60px);
           border-radius: 46px;
-          background:
-            radial-gradient(circle at 18% 12%, rgba(255, 212, 59, 0.27), transparent 34%),
-            radial-gradient(circle at 86% 20%, rgba(61, 220, 151, 0.13), transparent 30%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.038));
-          border: 1px solid rgba(255, 212, 59, 0.28);
-          box-shadow: 0 38px 130px rgba(0, 0, 0, 0.42);
+          background: radial-gradient(circle at 18% 12%, rgba(255, 212, 59, 0.22), transparent 34%), radial-gradient(circle at 86% 20%, rgba(61, 220, 151, 0.11), transparent 30%), linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.038));
+          border: 1px solid rgba(255, 212, 59, 0.26);
+          box-shadow: 0 34px 110px rgba(0, 0, 0, 0.38);
           text-align: center;
         }
-
-        .fromone-final-cta h2 {
-          max-width: 820px;
-          margin: 12px auto 16px;
-          color: #ffffff;
-          font-size: clamp(2.55rem, 5.8vw, 6rem);
-          line-height: 0.9;
-          letter-spacing: -0.076em;
-        }
-
-        .fromone-final-cta p {
-          max-width: 660px;
-          margin: 0 auto;
-          color: rgba(248, 250, 252, 0.72);
-          line-height: 1.7;
-        }
-
-        .fromone-final-actions {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 12px;
-          margin-top: 30px;
-        }
+        .fromone-final-cta h2 { max-width: 820px; margin: 12px auto 16px; color: #ffffff; font-size: clamp(2.55rem, 5.4vw, 5.5rem); line-height: 0.92; letter-spacing: -0.076em; }
+        .fromone-final-cta p { max-width: 660px; margin: 0 auto; color: rgba(248, 250, 252, 0.72); line-height: 1.7; }
+        .fromone-final-actions { justify-content: center; margin-top: 30px; }
 
         @media (max-width: 920px) {
-          .fromone-hero-grid,
-          .fromone-feature-panel {
-            grid-template-columns: 1fr;
-          }
-
-          .fromone-hero-copy {
-            max-width: 760px;
-            margin: 0 auto;
-            text-align: center;
-          }
-
-          .fromone-hero-text,
-          .fromone-proof-row,
-          .fromone-hero-actions {
-            justify-content: center;
-            margin-left: auto;
-            margin-right: auto;
-          }
-
-          .fromone-product-card {
-            min-height: auto;
-          }
-
-          .fromone-workflow-grid,
-          .fromone-platform-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        @media (min-width: 921px) {
-          .fromone-hero-grid {
-            padding-top: clamp(28px, 3.4vw, 46px);
-          }
+          .fromone-hero-grid, .fromone-feature-panel, .fromone-workflow-grid, .fromone-platform-grid { grid-template-columns: 1fr; }
+          .fromone-hero-copy, .fromone-feature-panel, .fromone-workflow-card, .fromone-platform-card { text-align: center; }
+          .fromone-hero-copy, .fromone-hero-text { margin-left: auto; margin-right: auto; }
+          .fromone-hero-actions, .fromone-proof-row { justify-content: center; }
+          .fromone-feature-list div { grid-template-columns: 1fr; justify-items: center; text-align: center; }
         }
 
         @media (max-width: 640px) {
-          .fromone-public-shell {
-            width: min(100% - 24px, 520px);
-          }
-
-          .fromone-hero-stage {
-            padding-bottom: 34px;
-          }
-
-          .fromone-hero-grid {
-            padding-top: 58px;
-            gap: 30px;
-          }
-
-          .fromone-section {
-            padding: 34px 0 !important;
-          }
-
-          .fromone-hero-stage + .fromone-section,
-          .fromone-section + .fromone-section {
-            padding-top: 34px !important;
-          }
-
-          .fromone-final-section {
-            padding-bottom: 34px !important;
-          }
-
-          .fromone-hero-title {
-            font-size: clamp(2.75rem, 13vw, 3.85rem);
-            line-height: 0.94;
-            letter-spacing: -0.073em;
-            margin-top: 0;
-            margin-bottom: 22px;
-          }
-
-
-          .fromone-hero-text {
-            font-size: 1rem;
-            line-height: 1.62;
-          }
-
-          .fromone-hero-actions {
-            margin-top: 30px;
-          }
-
-          .fromone-hero-actions,
-          .fromone-final-actions {
-            display: grid;
-            grid-template-columns: 1fr;
-            width: 100%;
-          }
-
-          .fromone-hero-actions a,
-          .fromone-final-actions a {
-            width: 100%;
-            justify-content: center;
-            text-align: center;
-          }
-
-          .fromone-proof-row {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-
-          .fromone-proof-pill {
-            justify-content: center;
-          }
-
-          .fromone-product-card,
-          .fromone-feature-panel,
-          .fromone-final-cta {
-            border-radius: 30px;
-          }
-
-          .fromone-media-preview,
-          .fromone-schedule-row {
-            grid-template-columns: 1fr;
-          }
-
-          .fromone-media-tile {
-            min-height: 144px;
-          }
-
-          .fromone-workflow-card,
-          .fromone-platform-card {
-            min-height: auto;
-            padding: 20px;
-          }
-
-          .fromone-public-home,
-          .fromone-public-home section,
-          .fromone-public-shell,
-          .fromone-hero-copy,
-          .fromone-product-card,
-          .fromone-phone-card,
-          .fromone-section-heading,
-          .fromone-workflow-card,
-          .fromone-feature-panel,
-          .fromone-platform-card,
-          .fromone-final-cta {
-            text-align: center !important;
-          }
-
-          .fromone-hero-copy,
-          .fromone-hero-text,
-          .fromone-section-heading,
-          .fromone-section-heading p,
-          .fromone-feature-panel p,
-          .fromone-final-cta p {
-            margin-left: auto !important;
-            margin-right: auto !important;
-          }
-
-          .fromone-proof-pill,
-          .fromone-workflow-card span,
-          .fromone-platform-card .label {
-            margin-left: auto !important;
-            margin-right: auto !important;
-            justify-content: center !important;
-          }
-
-          .fromone-media-preview {
-            justify-items: center !important;
-          }
-
-          .fromone-media-tile {
-            width: 100% !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center !important;
-          }
-
-          .fromone-media-tile small,
-          .fromone-media-tile strong {
-            text-align: center !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-          }
-
-          .fromone-media-tile strong {
-            min-height: auto !important;
-            max-width: 260px !important;
-          }
-
-          .fromone-mini-toolbar {
-            display: grid !important;
-            justify-items: center !important;
-            text-align: center !important;
-          }
-
-          .fromone-sample-post .meta {
-            justify-content: center !important;
-            flex-wrap: wrap !important;
-            text-align: center !important;
-          }
-
-          .fromone-sample-post p {
-            text-align: center !important;
-          }
-
-          .fromone-schedule-chip {
-            text-align: center !important;
-          }
-
-          .fromone-workflow-card {
-            display: grid !important;
-            justify-items: center !important;
-          }
-
-          .fromone-workflow-card h3,
-          .fromone-workflow-card p,
-          .fromone-platform-card h3,
-          .fromone-platform-card p {
-            text-align: center !important;
-          }
-
-          .fromone-feature-list div {
-            grid-template-columns: 1fr !important;
-            justify-items: center !important;
-            text-align: center !important;
-            padding: 16px !important;
-          }
-
-          .fromone-feature-list span {
-            margin: 0 auto !important;
-          }
-
-          .fromone-platform-card {
-            display: grid !important;
-            justify-items: center !important;
-          }
+          .fromone-marketing-page .public-nav { width: calc(100vw - 32px) !important; padding-top: 18px !important; }
+          .fromone-shell { width: min(100% - 24px, 520px); }
+          .fromone-hero-grid { padding-top: 54px; padding-bottom: 42px; gap: 32px; }
+          .fromone-hero-title { font-size: clamp(2.85rem, 13.4vw, 3.82rem); line-height: 0.94; letter-spacing: -0.074em; }
+          .fromone-hero-actions, .fromone-final-actions { display: grid; grid-template-columns: 1fr; width: 100%; }
+          .fromone-hero-actions a, .fromone-final-actions a { width: 100%; justify-content: center; text-align: center; }
+          .fromone-proof-row { display: grid; grid-template-columns: 1fr; }
+          .fromone-product-preview, .fromone-feature-panel, .fromone-final-cta { border-radius: 30px; }
+          .fromone-media-grid, .fromone-schedule-grid { grid-template-columns: 1fr; }
+          .fromone-media-tile { min-height: 144px; }
+          .fromone-section { padding: 42px 0; }
+          .fromone-workflow-card, .fromone-platform-card { min-height: auto; padding: 20px; }
         }
       `}</style>
 
-      <section className="fromone-hero-stage">
+      <section className="fromone-hero">
         <PublicNav />
 
-        <div className="fromone-public-shell fromone-hero-grid">
+        <div className="fromone-shell fromone-hero-grid">
           <div className="fromone-hero-copy">
             <h1 className="fromone-hero-title">
               Turn this week’s media into <span>ready posts.</span>
@@ -784,67 +316,29 @@ export default function Home() {
             </p>
 
             <div className="fromone-hero-actions">
-              <Link href="/signin" className="sales-primary-button">
-                Start 7-day demo
-              </Link>
-
-              <Link href="/tutorial" className="sales-secondary-button">
-                Watch the walkthrough
-              </Link>
+              <Link href="/signin" className="sales-primary-button">Start 7-day demo</Link>
+              <Link href="/tutorial" className="sales-secondary-button">Watch the walkthrough</Link>
             </div>
 
             <div className="fromone-proof-row" aria-label="FromOne highlights">
-              {heroProof.map((item) => (
-                <div key={item} className="fromone-proof-pill">
-                  <span aria-hidden="true">✓</span>
-                  {item}
-                </div>
+              {proofPoints.map((item) => (
+                <div key={item} className="fromone-proof-pill"><span aria-hidden="true">✓</span>{item}</div>
               ))}
             </div>
           </div>
 
-          <div className="fromone-product-card" aria-label="FromOne product preview">
-            <div className="fromone-phone-card">
-              <div className="fromone-mini-toolbar">
-                <strong>This week</strong>
-                <span>3 posts ready</span>
+          <div className="fromone-product-preview" aria-label="FromOne product preview">
+            <div className="fromone-product-inner">
+              <div className="fromone-preview-toolbar"><strong>This week</strong><span>3 posts ready</span></div>
+              <div className="fromone-media-grid">
+                <div className="fromone-media-tile"><small>Upload 01</small><strong>New offer flyer</strong></div>
+                <div className="fromone-media-tile secondary"><small>Upload 02</small><strong>Behind-the-scenes clip</strong></div>
               </div>
-
-              <div className="fromone-media-preview">
-                <div className="fromone-media-tile">
-                  <small>Upload 01</small>
-                  <strong>New offer flyer</strong>
-                </div>
-
-                <div className="fromone-media-tile secondary">
-                  <small>Upload 02</small>
-                  <strong>Behind-the-scenes clip</strong>
-                </div>
-              </div>
-
-              <div className="fromone-sample-post">
-                <div className="meta">
-                  <span>Instagram</span>
-                  <span>Thu · 18:45</span>
-                </div>
-                <p>
-                  Fresh content built from the media you already have, with wording shaped around your business, offer and audience.
-                </p>
-              </div>
-
-              <div className="fromone-schedule-row">
-                <div className="fromone-schedule-chip">
-                  <strong>Facebook</strong>
-                  <span>Autopost</span>
-                </div>
-                <div className="fromone-schedule-chip">
-                  <strong>Instagram</strong>
-                  <span>Autopost</span>
-                </div>
-                <div className="fromone-schedule-chip">
-                  <strong>TikTok</strong>
-                  <span>Copy/open</span>
-                </div>
+              <div className="fromone-sample-post"><div className="meta"><span>Instagram</span><span>Thu · 18:45</span></div><p>Fresh content built from the media you already have, with wording shaped around your business, offer and audience.</p></div>
+              <div className="fromone-schedule-grid">
+                <div className="fromone-schedule-chip"><strong>Facebook</strong><span>Autopost</span></div>
+                <div className="fromone-schedule-chip"><strong>Instagram</strong><span>Autopost</span></div>
+                <div className="fromone-schedule-chip"><strong>TikTok</strong><span>Copy/open</span></div>
               </div>
             </div>
           </div>
@@ -852,90 +346,45 @@ export default function Home() {
       </section>
 
       <section className="fromone-section">
-        <div className="fromone-public-shell">
+        <div className="fromone-shell">
           <div className="fromone-section-heading">
             <div className="page-eyebrow">How it works</div>
             <h2>A simple weekly rhythm.</h2>
-            <p>
-              FromOne keeps the workflow focused: upload real media, review the posts, then publish when they are ready.
-            </p>
+            <p>FromOne keeps the workflow focused: upload real media, review the posts, then publish when they are ready.</p>
           </div>
-
           <div className="fromone-workflow-grid">
             {workflow.map((item) => (
-              <article key={item.title} className="fromone-workflow-card">
-                <span>{item.step}</span>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-              </article>
+              <article key={item.title} className="fromone-card fromone-workflow-card"><span className="fromone-step-number">{item.step}</span><h3>{item.title}</h3><p>{item.text}</p></article>
             ))}
           </div>
         </div>
       </section>
 
       <section className="fromone-section">
-        <div className="fromone-public-shell">
+        <div className="fromone-shell">
           <div className="fromone-feature-panel">
-            <div>
-              <div className="page-eyebrow">Why it feels different</div>
-              <h2>No blank page. No content guesswork.</h2>
-              <p>
-                FromOne starts with the business’s own media and profile. That means each post has a real topic, a clear audience and a practical next step.
-              </p>
-            </div>
-
+            <div><div className="page-eyebrow">Why it feels different</div><h2>No blank page. No content guesswork.</h2><p>FromOne starts with the business’s own media and profile. That means each post has a real topic, a clear audience and a practical next step.</p></div>
             <div className="fromone-feature-list">
-              {premiumFeatures.map((feature) => (
-                <div key={feature}>
-                  <span aria-hidden="true">✓</span>
-                  <strong>{feature}</strong>
-                </div>
-              ))}
+              {['Posts created from real media, not generic prompts','Suggested posting times for the week','Instagram-safe image handling','Edit, improve, rescan and review before publishing'].map((feature) => (<div key={feature}><span aria-hidden="true">✓</span><strong>{feature}</strong></div>))}
             </div>
           </div>
         </div>
       </section>
 
       <section className="fromone-section">
-        <div className="fromone-public-shell">
-          <div className="fromone-section-heading">
-            <div className="page-eyebrow">Publishing</div>
-            <h2>Built around real platform rules.</h2>
-            <p>
-              Clear publishing options without pretending every platform works the same way.
-            </p>
-          </div>
-
+        <div className="fromone-shell">
+          <div className="fromone-section-heading"><div className="page-eyebrow">Publishing</div><h2>Built around real platform rules.</h2><p>Clear publishing options without pretending every platform works the same way.</p></div>
           <div className="fromone-platform-grid">
-            {platformCards.map((platform) => (
-              <article key={platform.name} className="fromone-platform-card">
-                <span className="label">{platform.label}</span>
-                <h3>{platform.name}</h3>
-                <p>{platform.detail}</p>
-              </article>
-            ))}
+            {platformCards.map((platform) => (<article key={platform.name} className="fromone-card fromone-platform-card"><span className="label">{platform.label}</span><h3>{platform.name}</h3><p>{platform.text}</p></article>))}
           </div>
         </div>
       </section>
 
-      <section className="fromone-section fromone-final-section">
-        <div className="fromone-public-shell">
+      <section className="fromone-section" style={{ paddingBottom: 72 }}>
+        <div className="fromone-shell">
           <div className="fromone-final-cta">
-            <div className="page-eyebrow">FromOne Starter</div>
-            <h2>Make posting weekly feel manageable.</h2>
-            <p>
-              Start with the demo, set up the business profile and see how quickly real media becomes a usable weekly posting plan.
-            </p>
-
-            <div className="fromone-final-actions">
-              <Link href="/signin" className="sales-primary-button">
-                Start 7-day demo
-              </Link>
-
-              <a href="mailto:info@fromone.co.uk" className="sales-secondary-button">
-                Email info@fromone.co.uk
-              </a>
-            </div>
+            <div className="page-eyebrow">FromOne Starter</div><h2>Make posting weekly feel manageable.</h2><p>Start with the demo, set up the Business Profile and see how quickly real media becomes a usable weekly posting plan.</p>
+            <div className="fromone-final-actions"><Link href="/signin" className="sales-primary-button">Start 7-day demo</Link><a href="mailto:info@fromone.co.uk" className="sales-secondary-button">Email info@fromone.co.uk</a></div>
           </div>
         </div>
       </section>
