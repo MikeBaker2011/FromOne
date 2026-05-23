@@ -9,6 +9,23 @@
   text-align: center;
 }
 
+.admin-signed-in {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin: 12px 0 0;
+  padding: 9px 13px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  font-size: 0.9rem;
+}
+
+.admin-signed-in strong {
+  color: #ffffff;
+}
+
 .admin-search-card,
 .admin-customer-card {
   width: 100%;
@@ -97,6 +114,39 @@
   overflow-wrap: anywhere;
 }
 
+.admin-notes-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.admin-notes-card label {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-notes-card label strong {
+  color: #ffffff;
+}
+
+.admin-notes-card label span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.admin-notes-card textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.admin-notes-card button {
+  justify-self: start;
+}
+
 .admin-actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -112,10 +162,46 @@
   font-size: 0.92rem;
 }
 
+.admin-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+  filter: grayscale(0.35);
+}
+
 .admin-working {
   margin: 14px 0 0;
   color: #ffe58a;
   font-weight: 850;
+}
+
+.admin-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.admin-confirm-card {
+  width: min(540px, 100%);
+  border-radius: 30px;
+  border: 1px solid rgba(255, 95, 109, 0.34);
+  box-shadow: 0 34px 110px rgba(0, 0, 0, 0.48);
+}
+
+.admin-confirm-card p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.admin-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 @media (max-width: 900px) {
@@ -138,7 +224,12 @@
     display: grid;
   }
 
-  .admin-customer-top button {
+  .admin-customer-top button,
+  .admin-notes-card button {
     width: 100%;
+  }
+
+  .admin-confirm-actions {
+    display: grid;
   }
 }

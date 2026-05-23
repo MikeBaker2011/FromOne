@@ -62,7 +62,7 @@ async function upsertAccess(userId: string, values: Record<string, any>) {
         updated_at: new Date().toISOString(),
         ...values,
       },
-      { onConflict: 'user_id' }
+      { onConflict: 'user_id' },
     );
 
   if (error) throw error;
@@ -79,7 +79,7 @@ async function upsertBilling(userId: string, values: Record<string, any>) {
         updated_at: new Date().toISOString(),
         ...values,
       },
-      { onConflict: 'user_id' }
+      { onConflict: 'user_id' },
     );
 
   if (error) throw error;
@@ -100,6 +100,17 @@ export async function POST(request: NextRequest) {
 
     if (!action) {
       return NextResponse.json({ error: 'action is required.' }, { status: 400 });
+    }
+
+    if (action === 'save_notes') {
+      await upsertAccess(userId, {
+        admin_notes: cleanText(body?.adminNotes),
+      });
+
+      return NextResponse.json({
+        ok: true,
+        message: 'Admin notes saved.',
+      });
     }
 
     if (action === 'extend_7' || action === 'extend_14' || action === 'extend_30') {
