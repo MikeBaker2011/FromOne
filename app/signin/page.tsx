@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { KeyboardEvent, useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -21,6 +21,7 @@ export default function SignInPage() {
   const [resettingPassword, setResettingPassword] = useState(false);
   const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const [authMessage, setAuthMessage] = useState('');
+  const [authMessageType, setAuthMessageType] = useState<'info' | 'success' | 'error'>('info');
 
   useEffect(() => {
     const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
@@ -39,12 +40,55 @@ export default function SignInPage() {
     return `${window.location.origin}/settings?setup=business`;
   };
 
+  const getPasswordResetRedirectUrl = () => {
+    if (typeof window === 'undefined') {
+      return 'https://fromone.co.uk/reset-password';
+    }
+
+    return `${window.location.origin}/reset-password`;
+  };
+
   const saveRememberedEmail = (cleanEmail: string) => {
     if (rememberMe) {
       localStorage.setItem(REMEMBER_EMAIL_KEY, cleanEmail);
     } else {
       localStorage.removeItem(REMEMBER_EMAIL_KEY);
     }
+  };
+
+  const showMessage = (
+    message: string,
+    type: 'info' | 'success' | 'error' = 'info',
+  ) => {
+    setAuthMessage(message);
+    setAuthMessageType(type);
+  };
+
+  const getFriendlyAuthError = (error: any) => {
+    const message = String(error?.message || error || '').trim();
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes('invalid login credentials')) {
+      return 'The email or password is not recognised. Check the details and try again.';
+    }
+
+    if (lowerMessage.includes('email not confirmed')) {
+      return 'Please verify your email address first. You can resend the verification email below.';
+    }
+
+    if (lowerMessage.includes('user already registered') || lowerMessage.includes('already registered')) {
+      return 'An account already exists for this email. Switch to Sign in and continue.';
+    }
+
+    if (lowerMessage.includes('password should be at least')) {
+      return 'Please use a stronger password. It should be at least 6 characters.';
+    }
+
+    if (lowerMessage.includes('rate limit') || lowerMessage.includes('too many')) {
+      return 'Too many attempts. Please wait a moment, then try again.';
+    }
+
+    return message || 'Something went wrong. Please try again.';
   };
 
   const getPostLoginDestination = async () => {
@@ -76,17 +120,22 @@ export default function SignInPage() {
   };
 
   const handleAuth = async () => {
-    const cleanEmail = email.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
     setAuthMessage('');
 
     if (!cleanEmail) {
-      alert('Please enter your email.');
+      showMessage('Please enter your email address.', 'error');
       return;
     }
 
     if (!password.trim()) {
-      alert('Please enter your password.');
+      showMessage('Please enter your password.', 'error');
+      return;
+    }
+
+    if (mode === 'signup' && password.trim().length < 6) {
+      showMessage('Please use a password with at least 6 characters.', 'error');
       return;
     }
 
@@ -104,6 +153,7 @@ export default function SignInPage() {
         }
 
         saveRememberedEmail(cleanEmail);
+        showMessage('Signed in. Opening your workspace...', 'success');
 
         const destination = await getPostLoginDestination();
         router.push(destination);
@@ -121,25 +171,27 @@ export default function SignInPage() {
         }
 
         saveRememberedEmail(cleanEmail);
-        setAuthMessage(
-          'Account created. Please check your email to verify your account. After verification, you will be sent to Business Profile setup.'
+        showMessage(
+          'Account created. Please check your email to verify your account. After verification, you will be sent to Business Profile setup.',
+          'success',
         );
         setMode('signin');
+        setPassword('');
       }
     } catch (error: any) {
-      alert(error?.message || 'Authentication error.');
+      showMessage(getFriendlyAuthError(error), 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleResendConfirmation = async () => {
-    const cleanEmail = email.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
     setAuthMessage('');
 
     if (!cleanEmail) {
-      alert('Enter your email address first, then click resend verification email.');
+      showMessage('Enter your email address first, then resend the verification email.', 'error');
       return;
     }
 
@@ -159,21 +211,21 @@ export default function SignInPage() {
       }
 
       saveRememberedEmail(cleanEmail);
-      setAuthMessage('Verification email sent. Please check your inbox and spam folder.');
+      showMessage('Verification email sent. Please check your inbox and spam folder.', 'success');
     } catch (error: any) {
-      alert(error?.message || 'Could not resend verification email.');
+      showMessage(getFriendlyAuthError(error), 'error');
     } finally {
       setResendingConfirmation(false);
     }
   };
 
   const handleForgotPassword = async () => {
-    const cleanEmail = email.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
     setAuthMessage('');
 
     if (!cleanEmail) {
-      alert('Enter your email address first, then click forgot password.');
+      showMessage('Enter your email address first, then request a password reset.', 'error');
       return;
     }
 
@@ -181,7 +233,7 @@ export default function SignInPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: 'https://fromone.co.uk/reset-password',
+        redirectTo: getPasswordResetRedirectUrl(),
       });
 
       if (error) {
@@ -189,13 +241,23 @@ export default function SignInPage() {
       }
 
       saveRememberedEmail(cleanEmail);
-      setAuthMessage('Password reset email sent. Please check your inbox.');
+      showMessage('Password reset email sent. Please check your inbox.', 'success');
     } catch (error: any) {
-      alert(error?.message || 'Could not send password reset email.');
+      showMessage(getFriendlyAuthError(error), 'error');
     } finally {
       setResettingPassword(false);
     }
   };
+
+  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') return;
+
+    event.preventDefault();
+    handleAuth();
+  };
+
+  const isBusy = loading || resettingPassword || resendingConfirmation;
+  const isSignIn = mode === 'signin';
 
   return (
     <div className="signin-page">
@@ -205,35 +267,35 @@ export default function SignInPage() {
       <div className="signin-wrap">
         <section className="signin-intro">
           <div>
-            <div className="page-eyebrow">FromOne Access</div>
+            <div className="page-eyebrow">FromOne workspace</div>
 
             <h1 className="signin-main-title">
-              Sign in to your FromOne workspace.
+              {isSignIn ? 'Welcome back to FromOne.' : 'Start your FromOne demo.'}
             </h1>
 
             <p className="signin-main-text">
-              Sign in to manage your Business Profile, upload media, create scheduled posts,
-              and autopost to Facebook and Instagram.
+              Upload photos, videos or flyers and turn them into weekly social posts. Review
+              everything first, then autopost Facebook and Instagram or copy/open TikTok manually.
             </p>
           </div>
 
           <div className="signin-mini-grid">
             <div className="signin-mini-card">
               <span>01</span>
-              <strong>Account</strong>
-              <p>Create or access your FromOne account.</p>
+              <strong>Set up once</strong>
+              <p>Add your Business Profile so posts match your services, customers and tone.</p>
             </div>
 
             <div className="signin-mini-card">
               <span>02</span>
-              <strong>Business setup</strong>
-              <p>New users start by setting up their Business Profile.</p>
+              <strong>Create weekly posts</strong>
+              <p>Upload this week’s media and FromOne creates posts with suggested times.</p>
             </div>
 
             <div className="signin-mini-card">
               <span>03</span>
-              <strong>Weekly posts</strong>
-              <p>Upload media and turn it into scheduled posts.</p>
+              <strong>Review before live</strong>
+              <p>Nothing goes out until you review, edit, publish, copy or schedule it.</p>
             </div>
           </div>
         </section>
@@ -245,43 +307,71 @@ export default function SignInPage() {
             className="signin-logo-img"
           />
 
-          <h2>{mode === 'signin' ? 'Welcome back' : 'Create account'}</h2>
+          <div className="page-eyebrow" style={{ marginTop: 8 }}>
+            {isSignIn ? 'Sign in' : 'Create account'}
+          </div>
+
+          <h2>{isSignIn ? 'Continue to workspace' : 'Create your account'}</h2>
 
           <p className="signin-card-text">
-            {mode === 'signin'
-              ? 'Sign in to continue to your FromOne workspace.'
-              : 'Create your account to start your FromOne demo.'}
+            {isSignIn
+              ? 'Access your Business Profile, saved posts and publishing tools.'
+              : 'Create an account, verify your email, then set up your Business Profile.'}
           </p>
 
           {authMessage && (
-            <div className="signin-auth-message">
+            <div
+              className="signin-auth-message"
+              role={authMessageType === 'error' ? 'alert' : 'status'}
+              style={{
+                border:
+                  authMessageType === 'error'
+                    ? '1px solid rgba(255, 95, 109, 0.32)'
+                    : authMessageType === 'success'
+                      ? '1px solid rgba(61, 220, 151, 0.28)'
+                      : undefined,
+                background:
+                  authMessageType === 'error'
+                    ? 'rgba(255, 95, 109, 0.1)'
+                    : authMessageType === 'success'
+                      ? 'rgba(61, 220, 151, 0.1)'
+                      : undefined,
+              }}
+            >
               {authMessage}
             </div>
           )}
 
-          <label>
+          <label htmlFor="fromone-email">
             <strong>Email address</strong>
           </label>
           <input
+            id="fromone-email"
             className="input"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
+            onKeyDown={handleInputKeyDown}
+            autoComplete="email"
+            inputMode="email"
             placeholder="you@example.com"
           />
 
-          <label>
+          <label htmlFor="fromone-password">
             <strong>Password</strong>
           </label>
           <input
+            id="fromone-password"
             className="input"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="Enter your password"
+            onKeyDown={handleInputKeyDown}
+            autoComplete={isSignIn ? 'current-password' : 'new-password'}
+            placeholder={isSignIn ? 'Enter your password' : 'Create a password'}
           />
 
-          {mode === 'signin' && (
+          {isSignIn && (
             <div className="signin-options-row">
               <label className="signin-remember-label">
                 <input
@@ -289,16 +379,16 @@ export default function SignInPage() {
                   checked={rememberMe}
                   onChange={(event) => setRememberMe(event.target.checked)}
                 />
-                <span>Remember me</span>
+                <span>Remember email</span>
               </label>
 
               <button
                 type="button"
                 className="signin-forgot-button"
                 onClick={handleForgotPassword}
-                disabled={resettingPassword || loading || resendingConfirmation}
+                disabled={isBusy}
               >
-                {resettingPassword ? 'Sending reset email...' : 'Forgot password?'}
+                {resettingPassword ? 'Sending...' : 'Forgot password?'}
               </button>
             </div>
           )}
@@ -306,33 +396,35 @@ export default function SignInPage() {
           <button
             className="signin-primary-button"
             onClick={handleAuth}
-            disabled={loading || resettingPassword || resendingConfirmation}
+            disabled={isBusy}
           >
             {loading
-              ? 'Please wait...'
-              : mode === 'signin'
+              ? isSignIn
+                ? 'Signing in...'
+                : 'Creating account...'
+              : isSignIn
                 ? 'Sign in'
                 : 'Create account'}
           </button>
 
-          {mode === 'signin' && (
+          {isSignIn && (
             <div className="signin-verification-help">
-              <span>Waiting for your verification email?</span>
+              <span>Need the verification email?</span>
 
               <button
                 type="button"
                 className="signin-resend-button"
                 onClick={handleResendConfirmation}
-                disabled={loading || resettingPassword || resendingConfirmation}
+                disabled={isBusy}
               >
-                {resendingConfirmation ? 'Sending...' : 'Resend verification email'}
+                {resendingConfirmation ? 'Sending...' : 'Resend verification'}
               </button>
             </div>
           )}
 
           <div className="signin-switch">
             <span>
-              {mode === 'signin' ? 'Need an account?' : 'Already have an account?'}
+              {isSignIn ? 'New to FromOne?' : 'Already have an account?'}
             </span>
 
             <button
@@ -340,12 +432,29 @@ export default function SignInPage() {
               className="secondary-button"
               onClick={() => {
                 setAuthMessage('');
-                setMode(mode === 'signin' ? 'signup' : 'signin');
+                setPassword('');
+                setMode(isSignIn ? 'signup' : 'signin');
               }}
+              disabled={isBusy}
             >
-              {mode === 'signin' ? 'Create one' : 'Sign in'}
+              {isSignIn ? 'Start demo' : 'Sign in'}
             </button>
           </div>
+
+          {!isSignIn && (
+            <p
+              style={{
+                margin: '16px 0 0',
+                color: 'var(--muted)',
+                fontSize: 13,
+                lineHeight: 1.5,
+                textAlign: 'center',
+              }}
+            >
+              By creating an account, you’ll receive a verification email before entering the
+              Business Profile setup.
+            </p>
+          )}
         </section>
       </div>
     </div>
