@@ -9,8 +9,13 @@
   text-align: center;
 }
 
+.admin-search-card,
+.admin-customer-card {
+  width: 100%;
+  max-width: none;
+}
+
 .admin-search-card {
-  max-width: 980px;
   margin: 0 auto 22px;
   border-radius: 34px;
   border: 1px solid rgba(255, 212, 59, 0.24);
