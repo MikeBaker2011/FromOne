@@ -628,6 +628,114 @@ export default function Home() {
           .fromone-feature-list div {
             text-align: left;
           }
+
+
+        @media (max-width: 640px) {
+          .fromone-public-home,
+          .fromone-public-home section,
+          .fromone-public-shell,
+          .fromone-hero-copy,
+          .fromone-product-card,
+          .fromone-phone-card,
+          .fromone-section-heading,
+          .fromone-workflow-card,
+          .fromone-feature-panel,
+          .fromone-platform-card,
+          .fromone-final-cta {
+            text-align: center !important;
+          }
+
+          .fromone-hero-copy,
+          .fromone-hero-text,
+          .fromone-section-heading,
+          .fromone-section-heading p,
+          .fromone-feature-panel p,
+          .fromone-final-cta p {
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+
+          .fromone-hero-kicker,
+          .fromone-proof-pill,
+          .fromone-workflow-card span,
+          .fromone-platform-card .label {
+            margin-left: auto !important;
+            margin-right: auto !important;
+            justify-content: center !important;
+          }
+
+          .fromone-media-preview {
+            justify-items: center !important;
+          }
+
+          .fromone-media-tile {
+            width: 100% !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            min-height: 144px !important;
+          }
+
+          .fromone-media-tile small,
+          .fromone-media-tile strong {
+            text-align: center !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+
+          .fromone-media-tile strong {
+            min-height: auto !important;
+            max-width: 260px !important;
+          }
+
+          .fromone-mini-toolbar {
+            display: grid !important;
+            justify-items: center !important;
+            text-align: center !important;
+          }
+
+          .fromone-sample-post .meta {
+            justify-content: center !important;
+            flex-wrap: wrap !important;
+            text-align: center !important;
+          }
+
+          .fromone-sample-post p {
+            text-align: center !important;
+          }
+
+          .fromone-schedule-chip {
+            text-align: center !important;
+          }
+
+          .fromone-workflow-card {
+            display: grid !important;
+            justify-items: center !important;
+          }
+
+          .fromone-workflow-card h3,
+          .fromone-workflow-card p,
+          .fromone-platform-card h3,
+          .fromone-platform-card p {
+            text-align: center !important;
+          }
+
+          .fromone-feature-list div {
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            text-align: center !important;
+            padding: 16px !important;
+          }
+
+          .fromone-feature-list span {
+            margin: 0 auto !important;
+          }
+
+          .fromone-platform-card {
+            display: grid !important;
+            justify-items: center !important;
+          }
+        }
         }
       `}</style>
 
