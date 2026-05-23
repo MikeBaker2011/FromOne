@@ -179,6 +179,66 @@ export default function ResetPasswordPage() {
     }
   };
 
+
+  const renderPasswordEyeIcon = (isVisible: boolean) => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {isVisible ? (
+        <>
+          <path
+            d="M3 3l18 18"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M10.58 10.58a2 2 0 0 0 2.84 2.84"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M9.88 5.08A9.5 9.5 0 0 1 12 4.84c5.52 0 9 5.16 9 7.16a5.5 5.5 0 0 1-1.34 2.77"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M6.11 6.88C4.11 8.2 3 10.43 3 12c0 2 3.48 7.16 9 7.16a9.2 9.2 0 0 0 5.02-1.48"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </>
+      ) : (
+        <>
+          <path
+            d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle
+            cx="12"
+            cy="12"
+            r="3"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+        </>
+      )}
+    </svg>
+  );
+
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && linkReady && !saving) {
       updatePassword();
@@ -276,27 +336,35 @@ export default function ResetPasswordPage() {
                   onKeyDown={handleKeyDown}
                   placeholder="Enter new password"
                   autoComplete="new-password"
-                  style={{ paddingRight: 92 }}
+                  style={{ paddingRight: 68 }}
                 />
 
                 <button
                   type="button"
-                  className="secondary-button"
                   onClick={() => setShowPassword((current) => !current)}
                   aria-label={showPassword ? 'Hide new password' : 'Show new password'}
                   style={{
                     position: 'absolute',
-                    right: 10,
+                    right: 12,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    minHeight: 38,
-                    padding: '0 12px',
-                    borderRadius: 999,
-                    fontSize: 13,
-                    fontWeight: 900,
+                    width: 42,
+                    height: 42,
+                    minWidth: 42,
+                    minHeight: 42,
+                    padding: 0,
+                    borderRadius: 14,
+                    display: 'inline-grid',
+                    placeItems: 'center',
+                    border: '1px solid rgba(255, 212, 59, 0.22)',
+                    background: showPassword
+                      ? 'rgba(255, 212, 59, 0.16)'
+                      : 'rgba(255,255,255,0.065)',
+                    color: showPassword ? '#ffe58a' : 'rgba(248,250,252,0.78)',
+                    boxShadow: '0 10px 26px rgba(0,0,0,0.18)',
                   }}
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  {renderPasswordEyeIcon(showPassword)}
                 </button>
               </div>
 
@@ -313,27 +381,35 @@ export default function ResetPasswordPage() {
                   onKeyDown={handleKeyDown}
                   placeholder="Confirm new password"
                   autoComplete="new-password"
-                  style={{ paddingRight: 92 }}
+                  style={{ paddingRight: 68 }}
                 />
 
                 <button
                   type="button"
-                  className="secondary-button"
                   onClick={() => setShowConfirmPassword((current) => !current)}
                   aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                   style={{
                     position: 'absolute',
-                    right: 10,
+                    right: 12,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    minHeight: 38,
-                    padding: '0 12px',
-                    borderRadius: 999,
-                    fontSize: 13,
-                    fontWeight: 900,
+                    width: 42,
+                    height: 42,
+                    minWidth: 42,
+                    minHeight: 42,
+                    padding: 0,
+                    borderRadius: 14,
+                    display: 'inline-grid',
+                    placeItems: 'center',
+                    border: '1px solid rgba(255, 212, 59, 0.22)',
+                    background: showConfirmPassword
+                      ? 'rgba(255, 212, 59, 0.16)'
+                      : 'rgba(255,255,255,0.065)',
+                    color: showConfirmPassword ? '#ffe58a' : 'rgba(248,250,252,0.78)',
+                    boxShadow: '0 10px 26px rgba(0,0,0,0.18)',
                   }}
                 >
-                  {showConfirmPassword ? 'Hide' : 'Show'}
+                  {renderPasswordEyeIcon(showConfirmPassword)}
                 </button>
               </div>
 
