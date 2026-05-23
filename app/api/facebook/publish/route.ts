@@ -392,10 +392,8 @@ async function updatePostAfterPublish({
     updates.publish_source = credentialSource;
   }
 
-  if (connectionId) {
-    updates.social_connection_id = connectionId;
-  }
-
+  // Keep the connection ID in publish_logs and the API response.
+  // Do not write social_connection_id to campaign_posts unless that column exists in Supabase.
   const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
 
   if (error) {
