@@ -15,7 +15,11 @@ function cleanText(value: unknown) {
 
 function getBearerToken(request: NextRequest) {
   const authHeader = request.headers.get('authorization') || '';
-  if (!authHeader.toLowerCase().startsWith('bearer ')) return '';
+
+  if (!authHeader.toLowerCase().startsWith('bearer ')) {
+    return '';
+  }
+
   return authHeader.slice('bearer '.length).trim();
 }
 
@@ -25,22 +29,36 @@ function getSupabaseAdmin() {
   }
 
   return createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
   });
 }
 
 async function requireAdmin(request: NextRequest) {
-  if (!supabaseUrl || !supabaseAnonKey) throw new Error('Missing Supabase public environment variables.');
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase public environment variables.');
+  }
 
   const token = getBearerToken(request);
-  if (!token) throw new Error('Please sign in as admin.');
+
+  if (!token) {
+    throw new Error('Please sign in as admin.');
+  }
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
   });
 
   const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data.user?.email) throw new Error('Please sign in as admin.');
+
+  if (error || !data.user?.email) {
+    throw new Error(error?.message || 'Please sign in as admin.');
+  }
 
   if (data.user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
     throw new Error('Admin access only.');
@@ -49,138 +67,117 @@ async function requireAdmin(request: NextRequest) {
   return data.user;
 }
 
-async function upsertAccess(userId: string, values: Record<string, any>) {
+async function findUsersByEmail(emailQuery: string) {
   const supabase = getSupabaseAdmin();
-  const { error } = await supabase
-    .from('user_access')
-    .upsert({ user_id: userId, updated_at: new Date().toISOString(), ...values }, { onConflict: 'user_id' });
-  if (error) throw error;
+  const cleanQuery = emailQuery.toLowerCase();
+
+  const matches: any[] = [];
+  let page = 1;
+  const perPage = 200;
+
+  while (page <= 10 && matches.length < 20) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const users = data?.users || [];
+
+    matches.push(
+      ...users.filter((user) =>
+        String(user.email || '').toLowerCase().includes(cleanQuery),
+      ),
+    );
+
+    if (users.length < perPage) break;
+
+    page += 1;
+  }
+
+  return matches.slice(0, 20);
 }
 
-async function upsertBilling(userId: string, values: Record<string, any>) {
-  const supabase = getSupabaseAdmin();
-  const { error } = await supabase
-    .from('user_billing')
-    .upsert({ user_id: userId, updated_at: new Date().toISOString(), ...values }, { onConflict: 'user_id' });
-  if (error) throw error;
-}
-
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     await requireAdmin(request);
 
-    const body = await request.json();
-    const userId = cleanText(body?.userId);
-    const action = cleanText(body?.action);
-    const nowIso = new Date().toISOString();
+    const url = new URL(request.url);
+    const emailQuery = cleanText(url.searchParams.get('email'));
 
-    if (!userId) return NextResponse.json({ error: 'userId is required.' }, { status: 400 });
-    if (!action) return NextResponse.json({ error: 'action is required.' }, { status: 400 });
-
-    if (action === 'extend_7' || action === 'extend_14' || action === 'extend_30') {
-      const days = action === 'extend_7' ? 7 : action === 'extend_14' ? 14 : 30;
-      const extensionEndsAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
-
-      await upsertAccess(userId, {
-        access_status: 'trial',
-        subscription_status: 'none',
-        subscription_provider: null,
-        subscription_reference: null,
-        extension_ends_at: extensionEndsAt,
-      });
-
-      await upsertBilling(userId, {
-        plan: 'demo',
-        status: 'trial',
-        payment_status: 'none',
-      });
-
-      return NextResponse.json({ ok: true, message: `Demo extended for ${days} days.` });
+    if (!emailQuery) {
+      return NextResponse.json(
+        {
+          error: 'Email search query is required.',
+        },
+        { status: 400 },
+      );
     }
 
-    if (action === 'remove_extension') {
-      await upsertAccess(userId, { extension_ends_at: null });
-      return NextResponse.json({ ok: true, message: 'Extension removed.' });
-    }
+    const users = await findUsersByEmail(emailQuery);
+    const userIds = users.map((user) => user.id);
 
-    if (action === 'manual_active') {
-      await upsertAccess(userId, {
-        access_status: 'active',
-        subscription_status: 'active',
-        subscription_provider: 'manual',
-        subscription_reference: 'manual-support',
-        extension_ends_at: null,
-      });
+    const supabase = getSupabaseAdmin();
 
-      await upsertBilling(userId, {
-        plan: 'starter',
-        status: 'active',
-        payment_status: 'none',
-        paypal_subscription_id: 'manual-support',
-        cancelled_at: null,
-      });
+    const accessPromise = userIds.length
+      ? supabase.from('user_access').select('*').in('user_id', userIds)
+      : Promise.resolve({ data: [], error: null });
 
-      return NextResponse.json({ ok: true, message: 'Customer manually activated.' });
-    }
+    const billingPromise = userIds.length
+      ? supabase.from('user_billing').select('*').in('user_id', userIds)
+      : Promise.resolve({ data: [], error: null });
 
-    if (action === 'owner_unlimited') {
-      await upsertAccess(userId, {
-        access_status: 'active',
-        subscription_status: 'active',
-        subscription_provider: 'manual',
-        subscription_reference: 'owner-unlimited-access',
-        extension_ends_at: '2099-12-31T23:59:59.000Z',
-      });
+    const [{ data: accessRows, error: accessError }, { data: billingRows, error: billingError }] =
+      await Promise.all([accessPromise, billingPromise]);
 
-      await upsertBilling(userId, {
-        plan: 'starter',
-        status: 'active',
-        payment_status: 'none',
-        paypal_subscription_id: 'owner-unlimited-access',
-        cancelled_at: null,
-      });
+    if (accessError) throw accessError;
+    if (billingError) throw billingError;
 
-      return NextResponse.json({ ok: true, message: 'Owner unlimited access granted.' });
-    }
+    const accessByUserId = new Map((accessRows || []).map((row: any) => [row.user_id, row]));
+    const billingByUserId = new Map((billingRows || []).map((row: any) => [row.user_id, row]));
 
-    if (action === 'clear_pending') {
-      await upsertAccess(userId, {
-        access_status: 'cancelled',
-        subscription_status: 'cancelled',
-      });
-
-      await upsertBilling(userId, {
-        status: 'cancelled',
-        payment_status: 'none',
-      });
-
-      return NextResponse.json({ ok: true, message: 'Pending payment cleared.' });
-    }
-
-    if (action === 'expire') {
-      await upsertAccess(userId, {
-        access_status: 'expired',
-        subscription_status: 'none',
-        subscription_provider: null,
-        subscription_reference: null,
-        extension_ends_at: null,
-      });
-
-      await upsertBilling(userId, {
-        plan: 'demo',
-        status: 'expired',
-        payment_status: 'none',
-        paypal_subscription_id: null,
-        cancelled_at: nowIso,
-      });
-
-      return NextResponse.json({ ok: true, message: 'Customer access expired.' });
-    }
-
-    return NextResponse.json({ error: 'Unknown admin action.' }, { status: 400 });
+    return NextResponse.json({
+      ok: true,
+      customers: users.map((user) => ({
+        id: user.id,
+        email: user.email,
+        created_at: user.created_at || null,
+        last_sign_in_at: user.last_sign_in_at || null,
+        access: accessByUserId.get(user.id) || null,
+        billing: billingByUserId.get(user.id) || null,
+      })),
+    });
   } catch (error: any) {
-    const message = error?.message || 'Admin action failed.';
+    console.error('Admin customer search error:', {
+      message: error?.message,
+      name: error?.name,
+      status: error?.status,
+      details: error?.details,
+      hint: error?.hint,
+      code: error?.code,
+    });
+
+    const message = error?.message || 'Could not search customer.';
     const status = message.includes('Admin access') || message.includes('sign in') ? 401 : 500;
-    return NextResponse.json({ error: message }, { status });
+
+    return NextResponse.json(
+      {
+        error: message,
+        debug: {
+          name: error?.name || null,
+          status: error?.status || null,
+          code: error?.code || null,
+          details: error?.details || null,
+          hint: error?.hint || null,
+          hasSupabaseUrl: Boolean(supabaseUrl),
+          hasAnonKey: Boolean(supabaseAnonKey),
+          hasServiceRoleKey: Boolean(supabaseServiceRoleKey),
+        },
+      },
+      { status },
+    );
   }
 }
