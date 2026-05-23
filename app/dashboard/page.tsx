@@ -1915,13 +1915,143 @@ If uploads are supplied:
         padding: "0 0 42px",
       }}
     >
+      <style jsx global>{`
+        @media (max-width: 760px) {
+          .dashboard-final-card {
+            padding: 22px 24px 26px !important;
+            border-radius: 30px !important;
+          }
+
+          .dashboard-final-hero {
+            margin-bottom: 16px !important;
+          }
+
+          .dashboard-final-hero .page-eyebrow {
+            font-size: 0.72rem !important;
+            letter-spacing: 0.13em !important;
+          }
+
+          .dashboard-final-hero h1 {
+            font-size: clamp(2.1rem, 11vw, 3.1rem) !important;
+            line-height: 0.92 !important;
+            margin: 7px 0 10px !important;
+          }
+
+          .dashboard-final-hero p {
+            font-size: 0.98rem !important;
+            line-height: 1.55 !important;
+          }
+
+          .dashboard-add-to-set-pill {
+            margin-top: 14px !important;
+            padding: 9px 13px !important;
+            font-size: 0.9rem !important;
+          }
+
+          .dashboard-guide-strip {
+            margin-bottom: 16px !important;
+            border-radius: 22px !important;
+          }
+
+          .dashboard-guide-strip > button {
+            padding: 14px 16px !important;
+          }
+
+          .dashboard-guide-strip strong {
+            font-size: 1rem !important;
+          }
+
+          .dashboard-guide-strip span span {
+            font-size: 0.9rem !important;
+            line-height: 1.35 !important;
+          }
+
+          .dashboard-upload-dropzone {
+            min-height: 210px !important;
+            padding: 22px 18px !important;
+            border-radius: 28px !important;
+          }
+
+          .dashboard-upload-icon {
+            width: 62px !important;
+            height: 62px !important;
+            border-radius: 22px !important;
+            font-size: 30px !important;
+          }
+
+          .dashboard-upload-dropzone strong {
+            font-size: 1.35rem !important;
+            line-height: 1.05 !important;
+          }
+
+          .dashboard-upload-dropzone span span:last-child {
+            font-size: 0.92rem !important;
+            line-height: 1.42 !important;
+          }
+
+          .dashboard-platform-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+
+          .dashboard-platform-card {
+            min-height: 0 !important;
+            padding: 14px 16px !important;
+            border-radius: 22px !important;
+            display: grid !important;
+            grid-template-columns: 42px minmax(0, 1fr) !important;
+            column-gap: 12px !important;
+            align-items: center !important;
+          }
+
+          .dashboard-platform-card > span:first-child {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 14px !important;
+            margin: 0 !important;
+            grid-row: span 2 !important;
+          }
+
+          .dashboard-platform-card strong {
+            margin: 0 0 4px !important;
+            font-size: 1.02rem !important;
+          }
+
+          .dashboard-platform-card small {
+            font-size: 0.82rem !important;
+            line-height: 1.35 !important;
+          }
+
+          .dashboard-summary-grid {
+            grid-template-columns: 1fr !important;
+            padding: 10px !important;
+            gap: 8px !important;
+          }
+
+          .dashboard-summary-grid .card {
+            padding: 11px 12px !important;
+            border-radius: 16px !important;
+          }
+
+          .dashboard-platform-create-button {
+            min-height: 64px !important;
+            border-radius: 22px !important;
+            font-size: 1.08rem !important;
+          }
+
+          .dashboard-advanced-options-card {
+            padding: 12px !important;
+            border-radius: 18px !important;
+          }
+        }
+      `}</style>
       {loading ? (
         <section className="premium-card" style={{ width: "100%" }}>
           <p>Loading...</p>
         </section>
       ) : (
         <section
-          className="premium-card"
+          className="premium-card dashboard-final-card"
           style={{
             width: "100%",
             padding: "clamp(22px, 3.5vw, 38px)",
@@ -1932,7 +2062,7 @@ If uploads are supplied:
             boxShadow: "0 30px 96px rgba(0, 0, 0, 0.34)",
           }}
         >
-          <div style={{ textAlign: "center", maxWidth: 760, margin: "0 auto 24px" }}>
+          <div className="dashboard-final-hero" style={{ textAlign: "center", maxWidth: 760, margin: "0 auto 22px" }}>
             <div className="page-eyebrow">Create this week’s posts</div>
             <h1
               className="page-title"
@@ -1954,6 +2084,7 @@ If uploads are supplied:
 
             {addToCampaignId && (
               <div
+                className="dashboard-add-to-set-pill"
                 style={{
                   margin: "18px auto 0",
                   padding: "10px 14px",
@@ -1971,9 +2102,10 @@ If uploads are supplied:
           </div>
 
           <section
+            className="dashboard-guide-strip"
             style={{
               width: "100%",
-              margin: "0 0 22px",
+              margin: "0 0 18px",
               borderRadius: 24,
               border: "1px solid rgba(255, 212, 59, 0.16)",
               background:
@@ -2109,8 +2241,9 @@ If uploads are supplied:
             }}
           >
             <label
+              className="dashboard-upload-dropzone"
               style={{
-                minHeight: 250,
+                minHeight: 230,
                 borderRadius: 32,
                 border: weeklyUploads.length > 0
                   ? "1px solid rgba(61, 220, 151, 0.34)"
@@ -2137,6 +2270,7 @@ If uploads are supplied:
 
               <span style={{ display: "grid", gap: 10, justifyItems: "center" }}>
                 <span
+                  className="dashboard-upload-icon"
                   style={{
                     width: 74,
                     height: 74,
@@ -2254,6 +2388,7 @@ If uploads are supplied:
             )}
 
             <div
+              className="dashboard-platform-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
@@ -2287,6 +2422,7 @@ If uploads are supplied:
                   <button
                     key={platform.name}
                     type="button"
+                    className="dashboard-platform-card"
                     onClick={() => togglePlatform(platform.name)}
                     aria-pressed={selected}
                     style={{
@@ -2351,6 +2487,7 @@ If uploads are supplied:
             </div>
 
             <div
+              className="dashboard-summary-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
@@ -2467,64 +2604,99 @@ If uploads are supplied:
               </p>
             )}
 
-            <div
+            <section
+              className="dashboard-advanced-options-card"
               style={{
                 display: "grid",
                 gap: "10px",
-                margin: "10px 0",
-                padding: "14px",
+                margin: "6px 0",
+                padding: "12px",
                 borderRadius: "18px",
                 border: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(255,255,255,0.045)",
+                background: "rgba(255,255,255,0.04)",
               }}
             >
-              <label
+              <button
+                type="button"
+                onClick={() => setShowAdvancedOptions((current) => !current)}
+                aria-expanded={showAdvancedOptions}
+                className="secondary-button"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "22px minmax(0, 1fr)",
-                  gap: "10px",
-                  alignItems: "start",
-                  cursor: "pointer",
+                  minHeight: 48,
+                  borderRadius: 14,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                  width: "100%",
+                  padding: "0 16px",
+                  textAlign: "left",
                 }}
               >
-                <input
-                  type="radio"
-                  name="platformDistributionMode"
-                  checked={platformDistributionMode === "split"}
-                  onChange={() => setPlatformDistributionMode("split")}
-                />
                 <span>
-                  <strong>Split posts across selected platforms</strong>
-                  <small style={{ display: "block", color: "var(--muted)", marginTop: "4px" }}>
-                    Best for weekly calendars. Example: 5 posts split between Facebook,
-                    Instagram and TikTok.
+                  <strong>Advanced platform options</strong>
+                  <small style={{ display: "block", color: "var(--muted)", marginTop: 3 }}>
+                    {platformDistributionMode === "every_platform"
+                      ? "Every upload gets a version for each selected platform."
+                      : "Posts are split across the selected platforms."}
                   </small>
                 </span>
-              </label>
+                <span style={{ color: "#ffd43b", fontWeight: 950 }}>
+                  {showAdvancedOptions ? "−" : "+"}
+                </span>
+              </button>
 
-              <label
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "22px minmax(0, 1fr)",
-                  gap: "10px",
-                  alignItems: "start",
-                  cursor: "pointer",
-                }}
-              >
-                <input
-                  type="radio"
-                  name="platformDistributionMode"
-                  checked={platformDistributionMode === "every_platform"}
-                  onChange={() => setPlatformDistributionMode("every_platform")}
-                />
-                <span>
-                  <strong>Create each post for every selected platform</strong>
-                  <small style={{ display: "block", color: "var(--muted)", marginTop: "4px" }}>
-                    Best when you want each idea adapted for Facebook, Instagram and TikTok.
-                  </small>
-                </span>
-              </label>
-            </div>
+              {showAdvancedOptions && (
+                <div style={{ display: "grid", gap: "10px", padding: "4px 2px 2px" }}>
+                  <label
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "22px minmax(0, 1fr)",
+                      gap: "10px",
+                      alignItems: "start",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="platformDistributionMode"
+                      checked={platformDistributionMode === "split"}
+                      onChange={() => setPlatformDistributionMode("split")}
+                    />
+                    <span>
+                      <strong>Split posts across selected platforms</strong>
+                      <small style={{ display: "block", color: "var(--muted)", marginTop: "4px" }}>
+                        Best for weekly calendars. Example: 5 posts split between Facebook,
+                        Instagram and TikTok.
+                      </small>
+                    </span>
+                  </label>
+
+                  <label
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "22px minmax(0, 1fr)",
+                      gap: "10px",
+                      alignItems: "start",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="platformDistributionMode"
+                      checked={platformDistributionMode === "every_platform"}
+                      onChange={() => setPlatformDistributionMode("every_platform")}
+                    />
+                    <span>
+                      <strong>Create each post for every selected platform</strong>
+                      <small style={{ display: "block", color: "var(--muted)", marginTop: "4px" }}>
+                        Best when you want each idea adapted for Facebook, Instagram and TikTok.
+                      </small>
+                    </span>
+                  </label>
+                </div>
+              )}
+            </section>
 
             {weeklyUploads.length > 0 && (
               <p style={{ textAlign: "center", margin: 0, color: "var(--muted)" }}>
