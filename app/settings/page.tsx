@@ -1482,66 +1482,73 @@ export default function SettingsPage() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
                   gap: 16,
                   marginTop: 20,
+                  alignItems: 'stretch',
                 }}
               >
-                <section className="card" style={{ padding: 20, borderRadius: 24 }}>
-                  <div className="page-eyebrow">Facebook</div>
+                <section className="card settings-channel-card" style={{ padding: 20, borderRadius: 24 }}>
+                  <div>
+                    <div className="page-eyebrow">Facebook</div>
                   <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
                     {hasFacebookConnection ? 'Connected ✓' : 'Not connected'}
                   </h3>
-                  <p style={{ color: 'var(--muted)', minHeight: 54 }}>
+                  <p style={{ color: 'var(--muted)', minHeight: 96 }}>
                     {hasFacebookConnection
                       ? `Ready to publish to ${primaryMetaConnection?.page_name || 'your Facebook Page'}.`
                       : 'Connect Meta to enable Facebook Page publishing.'}
                   </p>
+                  </div>
                   <button
                     type="button"
                     className={hasMetaConnection ? 'secondary-button' : undefined}
                     onClick={connectMetaAccount}
                     disabled={metaConnectionBusy}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', marginTop: 'auto' }}
                   >
                     {hasMetaConnection ? 'Manage Meta' : 'Connect'}
                   </button>
                 </section>
 
-                <section className="card" style={{ padding: 20, borderRadius: 24 }}>
-                  <div className="page-eyebrow">Instagram</div>
+                <section className="card settings-channel-card" style={{ padding: 20, borderRadius: 24 }}>
+                  <div>
+                    <div className="page-eyebrow">Instagram</div>
                   <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
                     {hasInstagramConnection ? 'Connected ✓' : 'Not connected'}
                   </h3>
-                  <p style={{ color: 'var(--muted)', minHeight: 54 }}>
+                  <p style={{ color: 'var(--muted)', minHeight: 96 }}>
                     {hasInstagramConnection
                       ? `Ready as @${primaryMetaConnection?.instagram_username || 'Instagram'}. Instagram posts need an image or video.`
                       : hasMetaConnection
                         ? 'Link a professional Instagram account in Meta.'
                         : 'Connect Meta to enable Instagram publishing. Instagram needs an image or video, not a PDF flyer.'}
                   </p>
+                  </div>
                   <button
                     type="button"
                     className={hasMetaConnection ? 'secondary-button' : undefined}
                     onClick={connectMetaAccount}
                     disabled={metaConnectionBusy}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', marginTop: 'auto' }}
                   >
                     {hasInstagramConnection ? 'Manage Meta' : 'Connect'}
                   </button>
                 </section>
 
-                <section className="card" style={{ padding: 20, borderRadius: 24 }}>
-                  <div className="page-eyebrow">TikTok</div>
+                <section className="card settings-channel-card" style={{ padding: 20, borderRadius: 24 }}>
+                  <div>
+                    <div className="page-eyebrow">TikTok</div>
                   <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>Manual</h3>
-                  <p style={{ color: 'var(--muted)', minHeight: 54 }}>
+                  <p style={{ color: 'var(--muted)', minHeight: 96 }}>
                     FromOne creates the wording. The user copies it and opens TikTok manually.
                   </p>
+                  </div>
                   <button
                     type="button"
                     className="secondary-button"
                     onClick={openTikTok}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', marginTop: 'auto' }}
                   >
                     Open TikTok
                   </button>
@@ -1833,6 +1840,37 @@ export default function SettingsPage() {
           .settings-step-ready-pulse,
           .settings-create-posts-button-pulse {
             animation: none !important;
+          }
+        }
+
+        .settings-channel-card {
+          display: flex !important;
+          flex-direction: column !important;
+          min-height: 276px !important;
+        }
+
+        .settings-channel-card h3 {
+          min-height: 58px !important;
+          display: flex !important;
+          align-items: flex-start !important;
+        }
+
+        .settings-channel-card p {
+          min-height: 104px !important;
+        }
+
+        @media (max-width: 900px) {
+          .settings-connections-section div[style*="repeat(3, minmax(0, 1fr))"] {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-channel-card {
+            min-height: auto !important;
+          }
+
+          .settings-channel-card h3,
+          .settings-channel-card p {
+            min-height: 0 !important;
           }
         }
 
