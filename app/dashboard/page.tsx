@@ -1910,19 +1910,20 @@ If uploads are supplied:
       style={{
         minHeight: "calc(100vh - 120px)",
         display: "grid",
-        placeItems: "center",
-        padding: "24px 16px 42px",
+        justifyItems: "center",
+        alignItems: "start",
+        padding: "24px 14px 42px",
       }}
     >
       {loading ? (
-        <section className="premium-card" style={{ width: "min(980px, 100%)" }}>
+        <section className="premium-card" style={{ width: "min(1180px, 100%)" }}>
           <p>Loading...</p>
         </section>
       ) : (
         <section
           className="premium-card"
           style={{
-            width: "min(940px, 100%)",
+            width: "min(1180px, 100%)",
             padding: "clamp(22px, 3.5vw, 38px)",
             borderRadius: 36,
             border: "1px solid rgba(255, 212, 59, 0.28)",
