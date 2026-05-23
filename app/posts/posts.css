@@ -1870,3 +1870,167 @@ body:has(.fromone-simple-modal-overlay) {
     grid-template-columns: 1fr 1fr !important;
   }
 }
+
+/* FINAL RELEASE MOBILE POSTS REFINEMENT
+   Keeps the desktop layout intact, but makes the Posts page feel more native on phones. */
+
+@media (max-width: 760px) {
+  /* Compact the hero status chips so they don't become four tall stacked pills. */
+  .simplified-posts-meta {
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 14px auto 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    justify-content: stretch !important;
+  }
+
+  .simplified-posts-meta span {
+    width: 100% !important;
+    min-height: 32px !important;
+    padding: 7px 9px !important;
+    border-radius: 999px !important;
+    font-size: 0.72rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .refresh-button {
+    width: 100% !important;
+    max-width: 360px !important;
+    min-height: 44px !important;
+    margin-top: 12px !important;
+  }
+
+  /* Make the review guidance strip feel like a light support note, not another main section. */
+  section[style*="overflow: hidden"] > button[aria-expanded] {
+    padding: 14px 14px !important;
+  }
+
+  section[style*="overflow: hidden"] > button[aria-expanded] strong {
+    font-size: 1rem !important;
+  }
+
+  section[style*="overflow: hidden"] > button[aria-expanded] span span {
+    font-size: 0.86rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Saved week controls: dropdown full-width, actions in a tidy 3-button row. */
+  .premium-card > div:has(> select) {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .premium-card > div:has(> select) > select {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-height: 50px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .premium-card > div:has(> select) > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 46px !important;
+    padding: 0 8px !important;
+    border-radius: 15px !important;
+    font-size: 0.82rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Let the weekly post cards use the real mobile width instead of a narrow centred column. */
+  .premium-card div:has(> .fromone-simple-post-card) {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    justify-content: stretch !important;
+    justify-items: stretch !important;
+    gap: 16px !important;
+  }
+
+  .fromone-simple-post-card {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    border-radius: 24px !important;
+  }
+
+  .fromone-simple-post-card > div:first-child {
+    min-height: 0 !important;
+  }
+
+  .fromone-simple-post-card img,
+  .fromone-simple-post-card video {
+    width: 100% !important;
+    height: clamp(168px, 44vw, 210px) !important;
+    object-fit: cover !important;
+  }
+
+  .fromone-simple-post-card > div:nth-child(2) {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .fromone-simple-post-card .dashboard-platform-create-button {
+    min-height: 48px !important;
+    border-radius: 16px !important;
+  }
+
+  .fromone-simple-post-card .selected-post-tags {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .fromone-simple-post-card .selected-post-tags span {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 30px !important;
+    padding: 6px 8px !important;
+    font-size: 0.72rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* Slightly reduce heavy body text on cards for readability. */
+  .fromone-simple-post-card p,
+  .fromone-simple-post-card small {
+    font-weight: 750 !important;
+    line-height: 1.42 !important;
+  }
+
+  /* Make the Add more card feel aligned with the post cards. */
+  .fromone-simple-post-card:last-child {
+    margin-top: 2px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .simplified-posts-meta {
+    max-width: 320px !important;
+  }
+
+  .premium-card > div:has(> select) {
+    gap: 8px !important;
+  }
+
+  .premium-card > div:has(> select) > button {
+    font-size: 0.78rem !important;
+  }
+
+  .fromone-simple-post-card > div:nth-child(2) {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+}
