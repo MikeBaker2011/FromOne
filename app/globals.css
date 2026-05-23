@@ -12489,3 +12489,73 @@ body:has(.simplified-posts-page) .simplified-posts-page {
     text-align: center !important;
   }
 }
+/* FINAL OVERRIDE — PUBLIC NAV MOBILE SPACING */
+
+@media (max-width: 720px) {
+  .sales-nav.public-nav {
+    width: 100% !important;
+    padding: 22px 18px 14px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+  }
+
+  .sales-nav.public-nav .public-nav-inner {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 64px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+  }
+
+  .sales-nav.public-nav .sales-brand,
+  .sales-nav.public-nav .public-nav-brand {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  .sales-nav.public-nav .fromone-brand-logo {
+    width: 64px !important;
+    height: 64px !important;
+    max-width: 64px !important;
+    max-height: 64px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .sales-nav.public-nav .sales-brand strong,
+  .sales-nav.public-nav .public-nav-brand strong {
+    font-size: 1.28rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .sales-nav.public-nav .public-nav-toggle {
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    flex: 0 0 58px !important;
+    border-radius: 18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    position: relative !important;
+    right: auto !important;
+    top: auto !important;
+  }
+
+  .sales-nav.public-nav .public-nav-links.open {
+    top: 104px !important;
+    left: 18px !important;
+    right: 18px !important;
+  }
+}
