@@ -89,6 +89,26 @@ async function getPayPalAccessToken() {
   return accessToken;
 }
 
+function getPayPalWebhookHeaders(request: NextRequest) {
+  const headers = {
+    auth_algo: getHeader(request, 'paypal-auth-algo'),
+    cert_url: getHeader(request, 'paypal-cert-url'),
+    transmission_id: getHeader(request, 'paypal-transmission-id'),
+    transmission_sig: getHeader(request, 'paypal-transmission-sig'),
+    transmission_time: getHeader(request, 'paypal-transmission-time'),
+  };
+
+  const missingHeaders = Object.entries(headers)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  if (missingHeaders.length > 0) {
+    throw new Error(`Missing PayPal webhook headers: ${missingHeaders.join(', ')}.`);
+  }
+
+  return headers;
+}
+
 async function verifyPayPalWebhook({
   request,
   event,
@@ -101,13 +121,10 @@ async function verifyPayPalWebhook({
   }
 
   const accessToken = await getPayPalAccessToken();
+  const webhookHeaders = getPayPalWebhookHeaders(request);
 
   const payload = {
-    auth_algo: getHeader(request, 'paypal-auth-algo'),
-    cert_url: getHeader(request, 'paypal-cert-url'),
-    transmission_id: getHeader(request, 'paypal-transmission-id'),
-    transmission_sig: getHeader(request, 'paypal-transmission-sig'),
-    transmission_time: getHeader(request, 'paypal-transmission-time'),
+    ...webhookHeaders,
     webhook_id: paypalWebhookId,
     webhook_event: event,
   };
@@ -125,16 +142,34 @@ async function verifyPayPalWebhook({
   );
 
   const result = await response.json().catch(() => null);
+  const verificationStatus = cleanText(result?.verification_status).toUpperCase();
 
   if (!response.ok) {
+    console.error('PayPal webhook verification request failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      result,
+      environment: paypalEnvironment,
+      webhookId: paypalWebhookId,
+      transmissionId: webhookHeaders.transmission_id,
+    });
+
     throw new Error(
       result?.message || result?.name || 'PayPal webhook signature verification failed.'
     );
   }
 
-  const verificationStatus = cleanText(result?.verification_status).toUpperCase();
-
   if (verificationStatus !== 'SUCCESS') {
+    console.error('PayPal webhook verification returned non-success:', {
+      verificationStatus,
+      result,
+      environment: paypalEnvironment,
+      webhookId: paypalWebhookId,
+      transmissionId: webhookHeaders.transmission_id,
+      eventId: event.id,
+      eventType: event.event_type,
+    });
+
     throw new Error(`Invalid PayPal webhook signature: ${verificationStatus || 'unknown'}.`);
   }
 
@@ -394,7 +429,29 @@ export async function POST(request: NextRequest) {
   let event: PayPalWebhookEvent | null = null;
 
   try {
-    event = (await request.json()) as PayPalWebhookEvent;
+    const rawBody = await request.text();
+
+    if (!rawBody) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Missing PayPal webhook body.',
+        },
+        { status: 400 }
+      );
+    }
+
+    try {
+      event = JSON.parse(rawBody) as PayPalWebhookEvent;
+    } catch {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Invalid PayPal webhook JSON.',
+        },
+        { status: 400 }
+      );
+    }
 
     if (!event?.event_type) {
       return NextResponse.json(
@@ -443,6 +500,8 @@ export async function POST(request: NextRequest) {
     console.error('PayPal webhook error:', error?.message || error, {
       eventId: event?.id,
       eventType: event?.event_type,
+      paypalEnvironment,
+      paypalWebhookId: paypalWebhookId ? `${paypalWebhookId.slice(0, 4)}...${paypalWebhookId.slice(-4)}` : 'missing',
     });
 
     return NextResponse.json(
