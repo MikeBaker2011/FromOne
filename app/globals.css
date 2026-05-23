@@ -13032,3 +13032,27 @@ body:has(.simplified-posts-page) .simplified-posts-page {
   display: block !important;
   line-height: 1.2 !important;
 }
+/* FINAL MOBILE POST STATUS PILL */
+
+@media (max-width: 720px) {
+  .post-status-pill,
+  .status-pill,
+  .planned-pill,
+  .post-card-status {
+    min-height: 30px !important;
+    height: auto !important;
+    padding: 7px 12px !important;
+    border-radius: 12px !important;
+    font-size: 0.78rem !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+    white-space: nowrap !important;
+  }
+
+  .post-status-pill.is-planned,
+  .status-pill.is-planned,
+  .planned-pill {
+    background: #ffd43b !important;
+    color: #101420 !important;
+  }
+}
