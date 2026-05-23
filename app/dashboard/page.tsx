@@ -1881,6 +1881,22 @@ If uploads are supplied:
   const uploadDrivenPostCount = weeklyUploads.length;
   const effectivePostCount =
     uploadDrivenPostCount > 0 ? uploadDrivenPostCount : selectedPostingFrequency;
+  const createdPostTotal =
+    platformDistributionMode === "every_platform"
+      ? effectivePostCount * selectedPlatforms.length
+      : effectivePostCount;
+  const uploadLabel =
+    weeklyUploads.length > 0
+      ? `${weeklyUploads.length} upload${weeklyUploads.length === 1 ? "" : "s"}`
+      : `${effectivePostCount} planned post${effectivePostCount === 1 ? "" : "s"}`;
+  const creationModeTitle =
+    platformDistributionMode === "every_platform"
+      ? "Every selected platform"
+      : "Spread across the week";
+  const creationModeSummary =
+    platformDistributionMode === "every_platform"
+      ? `${uploadLabel} × ${selectedPlatforms.length} platform${selectedPlatforms.length === 1 ? "" : "s"} = ${createdPostTotal} scheduled post${createdPostTotal === 1 ? "" : "s"}.`
+      : `${uploadLabel} → ${createdPostTotal} scheduled post${createdPostTotal === 1 ? "" : "s"} spread across different days/platforms.`;
 
   const selectedPlatformSummary =
     selectedPlatforms.length > 3
@@ -2042,6 +2058,20 @@ If uploads are supplied:
           .dashboard-advanced-options-card {
             padding: 12px !important;
             border-radius: 18px !important;
+          }
+
+          .dashboard-creation-mode-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .dashboard-creation-mode-card {
+            padding: 16px !important;
+            border-radius: 22px !important;
+          }
+
+          .dashboard-creation-summary-card {
+            padding: 16px !important;
+            border-radius: 22px !important;
           }
         }
       `}</style>
@@ -2486,6 +2516,192 @@ If uploads are supplied:
               })}
             </div>
 
+            <section
+              className="dashboard-creation-mode-card"
+              style={{
+                display: "grid",
+                gap: 14,
+                padding: 18,
+                borderRadius: 26,
+                background:
+                  "linear-gradient(145deg, rgba(255,255,255,0.065), rgba(255,255,255,0.028))",
+                border: "1px solid rgba(255, 212, 59, 0.18)",
+              }}
+            >
+              <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto" }}>
+                <div className="page-eyebrow">Posting plan</div>
+                <h2
+                  style={{
+                    margin: "6px 0 8px",
+                    fontSize: "clamp(1.45rem, 3vw, 2.2rem)",
+                    lineHeight: 1,
+                    letterSpacing: "-0.045em",
+                  }}
+                >
+                  How should FromOne create this week?
+                </h2>
+                <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>
+                  Choose whether uploads become one weekly sequence, or whether every upload gets
+                  a version for each selected platform.
+                </p>
+              </div>
+
+              <div
+                className="dashboard-creation-mode-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: 12,
+                }}
+              >
+                {[
+                  {
+                    value: "split",
+                    title: "Spread uploads across the week",
+                    badge: "Best for weekly calendars",
+                    copy:
+                      "Creates one post per upload and schedules them across different days. Platforms are rotated across the posts you selected.",
+                    example:
+                      weeklyUploads.length > 0
+                        ? `${weeklyUploads.length} upload${weeklyUploads.length === 1 ? "" : "s"} = ${weeklyUploads.length} post${weeklyUploads.length === 1 ? "" : "s"}`
+                        : `${effectivePostCount} planned post${effectivePostCount === 1 ? "" : "s"}`,
+                  },
+                  {
+                    value: "every_platform",
+                    title: "Create every platform version",
+                    badge: "Best for maximum coverage",
+                    copy:
+                      "Creates a Facebook, Instagram and TikTok version for each upload you add, based on the platforms selected above.",
+                    example: `${effectivePostCount} × ${selectedPlatforms.length} = ${
+                      effectivePostCount * selectedPlatforms.length
+                    } posts`,
+                  },
+                ].map((option) => {
+                  const selected = platformDistributionMode === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() =>
+                        setPlatformDistributionMode(option.value as "split" | "every_platform")
+                      }
+                      aria-pressed={selected}
+                      style={{
+                        width: "100%",
+                        minHeight: 190,
+                        padding: 18,
+                        borderRadius: 24,
+                        textAlign: "left",
+                        cursor: "pointer",
+                        color: "#f8fafc",
+                        background: selected
+                          ? "radial-gradient(circle at top right, rgba(255, 212, 59, 0.2), rgba(255,255,255,0.075))"
+                          : "rgba(255,255,255,0.045)",
+                        border: selected
+                          ? "1px solid rgba(255, 212, 59, 0.48)"
+                          : "1px solid rgba(255,255,255,0.1)",
+                        boxShadow: selected
+                          ? "0 18px 42px rgba(255, 212, 59, 0.11)"
+                          : "none",
+                        display: "grid",
+                        gap: 10,
+                        alignContent: "start",
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 12,
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            padding: "7px 10px",
+                            borderRadius: 999,
+                            background: selected
+                              ? "rgba(255, 212, 59, 0.16)"
+                              : "rgba(255,255,255,0.07)",
+                            color: selected ? "#ffe58a" : "rgba(248,250,252,0.76)",
+                            fontSize: 12,
+                            fontWeight: 950,
+                          }}
+                        >
+                          {option.badge}
+                        </span>
+
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 999,
+                            display: "inline-grid",
+                            placeItems: "center",
+                            background: selected ? "#ffd43b" : "rgba(255,255,255,0.09)",
+                            color: selected ? "#101420" : "rgba(248,250,252,0.7)",
+                            fontWeight: 1000,
+                            flex: "0 0 auto",
+                          }}
+                        >
+                          {selected ? "✓" : ""}
+                        </span>
+                      </span>
+
+                      <strong style={{ display: "block", fontSize: "1.18rem", color: "#fff" }}>
+                        {option.title}
+                      </strong>
+                      <span style={{ color: "var(--muted)", lineHeight: 1.48, fontWeight: 750 }}>
+                        {option.copy}
+                      </span>
+                      <span
+                        style={{
+                          marginTop: 2,
+                          padding: "10px 12px",
+                          borderRadius: 16,
+                          background: "rgba(5, 10, 24, 0.34)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color: "#ffe58a",
+                          fontWeight: 950,
+                          textAlign: "center",
+                        }}
+                      >
+                        {option.example}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div
+                className="dashboard-creation-summary-card"
+                style={{
+                  padding: 18,
+                  borderRadius: 24,
+                  background: "rgba(255, 212, 59, 0.1)",
+                  border: "1px solid rgba(255, 212, 59, 0.24)",
+                  textAlign: "center",
+                }}
+              >
+                <strong
+                  style={{
+                    display: "block",
+                    color: "#fff",
+                    fontSize: "1.08rem",
+                    marginBottom: 6,
+                  }}
+                >
+                  You are creating: {creationModeTitle}
+                </strong>
+                <p style={{ margin: 0, color: "#ffe58a", fontWeight: 900, lineHeight: 1.5 }}>
+                  {creationModeSummary}
+                </p>
+              </div>
+            </section>
+
             <div
               className="dashboard-summary-grid"
               style={{
@@ -2499,9 +2715,9 @@ If uploads are supplied:
               }}
             >
               <div className="card" style={{ padding: 14, textAlign: "center" }}>
-                <strong>{effectivePostCount}</strong>
+                <strong>{createdPostTotal}</strong>
                 <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
-                  post{effectivePostCount === 1 ? "" : "s"} to create
+                  scheduled post{createdPostTotal === 1 ? "" : "s"}
                 </p>
               </div>
 
@@ -2604,117 +2820,6 @@ If uploads are supplied:
               </p>
             )}
 
-            <section
-              className="dashboard-advanced-options-card"
-              style={{
-                display: "grid",
-                gap: "10px",
-                margin: "6px 0",
-                padding: "12px",
-                borderRadius: "18px",
-                border: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(255,255,255,0.04)",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setShowAdvancedOptions((current) => !current)}
-                aria-expanded={showAdvancedOptions}
-                className="secondary-button"
-                style={{
-                  minHeight: 48,
-                  borderRadius: 14,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 12,
-                  width: "100%",
-                  padding: "0 16px",
-                  textAlign: "left",
-                }}
-              >
-                <span>
-                  <strong>Advanced platform options</strong>
-                  <small style={{ display: "block", color: "var(--muted)", marginTop: 3 }}>
-                    {platformDistributionMode === "every_platform"
-                      ? "Every upload gets a version for each selected platform."
-                      : "Posts are split across the selected platforms."}
-                  </small>
-                </span>
-                <span style={{ color: "#ffd43b", fontWeight: 950 }}>
-                  {showAdvancedOptions ? "−" : "+"}
-                </span>
-              </button>
-
-              {showAdvancedOptions && (
-                <div style={{ display: "grid", gap: "10px", padding: "4px 2px 2px" }}>
-                  <label
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "22px minmax(0, 1fr)",
-                      gap: "10px",
-                      alignItems: "start",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="platformDistributionMode"
-                      checked={platformDistributionMode === "split"}
-                      onChange={() => setPlatformDistributionMode("split")}
-                    />
-                    <span>
-                      <strong>Split posts across selected platforms</strong>
-                      <small style={{ display: "block", color: "var(--muted)", marginTop: "4px" }}>
-                        Best for weekly calendars. Example: 5 posts split between Facebook,
-                        Instagram and TikTok.
-                      </small>
-                    </span>
-                  </label>
-
-                  <label
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "22px minmax(0, 1fr)",
-                      gap: "10px",
-                      alignItems: "start",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="platformDistributionMode"
-                      checked={platformDistributionMode === "every_platform"}
-                      onChange={() => setPlatformDistributionMode("every_platform")}
-                    />
-                    <span>
-                      <strong>Create each post for every selected platform</strong>
-                      <small style={{ display: "block", color: "var(--muted)", marginTop: "4px" }}>
-                        Best when you want each idea adapted for Facebook, Instagram and TikTok.
-                      </small>
-                    </span>
-                  </label>
-                </div>
-              )}
-            </section>
-
-            {weeklyUploads.length > 0 && (
-              <p style={{ textAlign: "center", margin: 0, color: "var(--muted)" }}>
-                {weeklyUploads.length} upload{weeklyUploads.length === 1 ? "" : "s"} will create{" "}
-                {platformDistributionMode === "every_platform"
-                  ? weeklyUploads.length * selectedPlatforms.length
-                  : weeklyUploads.length}{" "}
-                scheduled post
-                {(platformDistributionMode === "every_platform"
-                  ? weeklyUploads.length * selectedPlatforms.length
-                  : weeklyUploads.length) === 1
-                  ? ""
-                  : "s"}
-                {platformDistributionMode === "every_platform"
-                  ? " across every selected platform"
-                  : ", split across selected platforms"}
-              </p>
-            )}
           </div>
         </section>
       )}
