@@ -2131,390 +2131,267 @@ If uploads are supplied:
             )}
           </div>
 
-          <section
-            className="dashboard-guide-strip"
-            style={{
-              width: "100%",
-              margin: "0 0 18px",
-              borderRadius: 24,
-              border: "1px solid rgba(255, 212, 59, 0.16)",
-              background:
-                "linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))",
-              overflow: "hidden",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setShowDashboardGuide((current) => !current)}
-              aria-expanded={showDashboardGuide}
-              style={{
-                width: "100%",
-                border: 0,
-                background: "transparent",
-                color: "#f8fafc",
-                cursor: "pointer",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 16,
-                padding: "16px 18px",
-                textAlign: "left",
-              }}
-            >
-              <span>
-                <strong style={{ display: "block", fontSize: "1.08rem", lineHeight: 1.15 }}>
-                  Create, then review
-                </strong>
-                <span
-                  style={{
-                    display: "block",
-                    marginTop: 5,
-                    color: "var(--muted)",
-                    fontWeight: 800,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Upload media, choose platforms, then check everything on Posts before publishing.
-                </span>
-              </span>
-
-              <span
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 12,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(255, 212, 59, 0.13)",
-                  color: "#ffd43b",
-                  fontWeight: 950,
-                  flex: "0 0 auto",
-                }}
-              >
-                {showDashboardGuide ? "−" : "+"}
-              </span>
-            </button>
-
-            {showDashboardGuide && (
-              <div
-                style={{
-                  borderTop: "1px solid rgba(255, 212, 59, 0.12)",
-                  padding: "18px",
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-                  gap: 12,
-                  alignItems: "stretch",
-                }}
-              >
-                {[
-                  {
-                    step: "1",
-                    title: "Upload media",
-                    copy: "Use this week’s photos, videos or flyers. Each upload becomes a post idea.",
-                  },
-                  {
-                    step: "2",
-                    title: "Choose platforms",
-                    copy: "Split posts across platforms, or make every upload for every selected platform.",
-                  },
-                  {
-                    step: "3",
-                    title: "Review first",
-                    copy: "Nothing goes live from Dashboard. Review, edit, publish or copy on Posts.",
-                  },
-                ].map((item) => (
-                  <article
-                    key={item.step}
-                    className="card"
-                    style={{
-                      padding: 16,
-                      borderRadius: 20,
-                      background:
-                        "linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.028))",
-                      border: "1px solid rgba(255, 212, 59, 0.12)",
-                      minHeight: 142,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "flex-start",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 10,
-                        display: "inline-grid",
-                        placeItems: "center",
-                        background: "#ffd43b",
-                        color: "#101420",
-                        fontWeight: 950,
-                        marginBottom: 12,
-                      }}
-                    >
-                      {item.step}
-                    </span>
-                    <strong style={{ display: "block", marginBottom: 7, fontSize: "1rem" }}>{item.title}</strong>
-                    <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>
-                      {item.copy}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
           <div
             style={{
               display: "grid",
               gap: 18,
             }}
           >
-            <label
-              className="dashboard-upload-dropzone"
-              style={{
-                minHeight: 230,
-                borderRadius: 32,
-                border: weeklyUploads.length > 0
-                  ? "1px solid rgba(61, 220, 151, 0.34)"
-                  : "1px dashed rgba(255, 212, 59, 0.5)",
-                background:
-                  "radial-gradient(circle at top, rgba(255, 212, 59, 0.12), transparent 36%), rgba(15, 23, 42, 0.56)",
-                display: "grid",
-                placeItems: "center",
-                textAlign: "center",
-                padding: "clamp(24px, 4vw, 34px)",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="file"
-                accept="image/*,video/*,application/pdf"
-                multiple
-                onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                  handleWeeklyUploadFiles(event.target.files);
-                  event.target.value = "";
-                }}
-                style={{ display: "none" }}
-              />
-
-              <span style={{ display: "grid", gap: 10, justifyItems: "center" }}>
-                <span
-                  className="dashboard-upload-icon"
-                  style={{
-                    width: 74,
-                    height: 74,
-                    borderRadius: 26,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#ffd43b",
-                    color: "#101420",
-                    fontSize: 34,
-                    fontWeight: 950,
-                    boxShadow: "0 20px 48px rgba(255, 212, 59, 0.24)",
-                  }}
-                >
-                  +
-                </span>
-
-                <strong style={{ fontSize: "clamp(1.35rem, 3vw, 2rem)" }}>
-                  Upload photos, videos or flyers
-                </strong>
-
-                <span style={{ color: "var(--muted)", maxWidth: 560 }}>
-                  Upload up to 7 items. Photos and videos can be used for Facebook and Instagram.
-                  PDF flyers are turned into post wording, but Instagram needs image or video media.
-                </span>
-              </span>
-            </label>
-
-            {weeklyUploads.length > 0 && (
-              <div
+            {hasScheduledPost && weeklyProgress.remaining > 0 && (
+              <section
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-                  gap: 12,
+                  padding: 18,
+                  borderRadius: 24,
+                  background: "rgba(61, 220, 151, 0.1)",
+                  border: "1px solid rgba(61, 220, 151, 0.22)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 14,
+                  flexWrap: "wrap",
                 }}
               >
-                {weeklyUploads.map((upload, index) => (
-                  <div
-                    key={upload.id}
-                    className="card"
-                    style={{
-                      padding: 10,
-                      borderRadius: 20,
-                      background: "rgba(255,255,255,0.055)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: 118,
-                        borderRadius: 16,
-                        overflow: "hidden",
-                        background: "rgba(255, 255, 255, 0.06)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginBottom: 10,
-                      }}
-                    >
-                      {upload.file.type.startsWith("image/") ? (
-                        <img
-                          src={upload.previewUrl}
-                          alt={`Upload ${index + 1}`}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : upload.file.type.startsWith("video/") ? (
-                        <video
-                          src={upload.previewUrl}
-                          muted
-                          playsInline
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <strong>PDF flyer</strong>
-                      )}
-                    </div>
+                <div>
+                  <strong style={{ display: "block", color: "#ffffff", fontSize: "1.05rem" }}>
+                    You already have posts waiting to review
+                  </strong>
+                  <p style={{ margin: "5px 0 0", color: "var(--muted)", lineHeight: 1.45 }}>
+                    {weeklyProgress.remaining} post{weeklyProgress.remaining === 1 ? "" : "s"} still need checking this week.
+                  </p>
+                </div>
 
-                    <strong>Post {index + 1}</strong>
-                    <p
-                      style={{
-                        margin: "5px 0 10px",
-                        color: "var(--muted)",
-                        fontSize: 12,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {upload.file.name}
-                    </p>
-
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => removeWeeklyUpload(upload.id)}
-                      disabled={scanning}
-                      style={{
-                        width: "100%",
-                        minHeight: 38,
-                        borderRadius: 12,
-                      }}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
+                <Link href="/posts" className="secondary-button">
+                  Review posts
+                </Link>
+              </section>
             )}
 
-            <div
-              className="dashboard-platform-grid"
+            {!businessProfileReady && (
+              <section
+                style={{
+                  padding: 18,
+                  borderRadius: 24,
+                  background: "rgba(255, 212, 59, 0.1)",
+                  border: "1px solid rgba(255, 212, 59, 0.24)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 14,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <strong style={{ display: "block", color: "#ffffff", fontSize: "1.05rem" }}>
+                    First, set up the Business Profile
+                  </strong>
+                  <p style={{ margin: "5px 0 0", color: "var(--muted)", lineHeight: 1.45 }}>
+                    FromOne needs the business name and industry before it can write good posts.
+                  </p>
+                </div>
+
+                <Link href="/settings?setup=business" className="secondary-button">
+                  Set up profile
+                </Link>
+              </section>
+            )}
+
+            <section
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
                 gap: 14,
               }}
             >
-              {[
-                {
-                  name: "Facebook",
-                  title: "Facebook",
-                  description: hasFacebookConnection
-                    ? "Autopost ready. You still review before publishing."
-                    : "Connect Meta in Settings for Facebook autoposting.",
-                },
-                {
-                  name: "Instagram",
-                  title: "Instagram",
-                  description: hasInstagramConnection
-                    ? "Autopost ready for image or video posts."
-                    : "Connect Meta in Settings. Instagram needs image or video.",
-                },
-                {
-                  name: "TikTok",
-                  title: "TikTok",
-                  description: "Manual for now. FromOne writes it; you copy/open TikTok.",
-                },
-              ].map((platform) => {
-                const selected = selectedPlatforms.includes(platform.name);
-
-                return (
-                  <button
-                    key={platform.name}
-                    type="button"
-                    className="dashboard-platform-card"
-                    onClick={() => togglePlatform(platform.name)}
-                    aria-pressed={selected}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 14,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div className="page-eyebrow">Step 1</div>
+                  <h2
                     style={{
-                      minHeight: 136,
-                      borderRadius: 24,
-                      padding: 18,
-                      textAlign: "left",
-                      cursor: "pointer",
-                      background: selected
-                        ? "radial-gradient(circle at top right, rgba(255, 212, 59, 0.2), rgba(255,255,255,0.075))"
-                        : "rgba(255,255,255,0.045)",
-                      border: selected
-                        ? "1px solid rgba(255, 212, 59, 0.46)"
-                        : "1px solid rgba(255,255,255,0.1)",
-                      color: "#f8fafc",
-                      boxShadow: selected
-                        ? "0 18px 42px rgba(255, 212, 59, 0.11)"
-                        : "none",
+                      margin: "6px 0 4px",
+                      fontSize: "clamp(1.45rem, 3vw, 2.25rem)",
+                      lineHeight: 1,
+                      letterSpacing: "-0.045em",
                     }}
                   >
-                    <span
-                      style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 13,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginBottom: 14,
-                        background: selected ? "#ffd43b" : "rgba(255,255,255,0.09)",
-                        color: selected ? "#101420" : "rgba(248,250,252,0.78)",
-                        fontWeight: 950,
-                      }}
-                    >
-                      {selected ? "✓" : "+"}
-                    </span>
+                    Upload this week’s media
+                  </h2>
+                  <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.5 }}>
+                    Add photos, videos, flyers or offers. Each upload becomes a post idea.
+                  </p>
+                </div>
 
-                    <strong
-                      style={{
-                        display: "block",
-                        fontSize: "1.12rem",
-                        marginBottom: 8,
-                        color: "#ffffff",
-                      }}
-                    >
-                      {platform.title}
-                    </strong>
+                {weeklyUploads.length > 0 && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "10px 13px",
+                      borderRadius: 999,
+                      background: "rgba(61, 220, 151, 0.12)",
+                      border: "1px solid rgba(61, 220, 151, 0.24)",
+                      color: "#a7f3d0",
+                      fontWeight: 950,
+                    }}
+                  >
+                    {weeklyUploads.length} upload{weeklyUploads.length === 1 ? "" : "s"} added
+                  </span>
+                )}
+              </div>
 
-                    <small
+              <label
+                className="dashboard-upload-dropzone"
+                style={{
+                  minHeight: weeklyUploads.length > 0 ? 190 : 250,
+                  borderRadius: 32,
+                  border: weeklyUploads.length > 0
+                    ? "1px solid rgba(61, 220, 151, 0.34)"
+                    : "1px dashed rgba(255, 212, 59, 0.5)",
+                  background:
+                    "radial-gradient(circle at top, rgba(255, 212, 59, 0.12), transparent 36%), rgba(15, 23, 42, 0.56)",
+                  display: "grid",
+                  placeItems: "center",
+                  textAlign: "center",
+                  padding: "clamp(24px, 4vw, 34px)",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="file"
+                  accept="image/*,video/*,application/pdf"
+                  multiple
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    handleWeeklyUploadFiles(event.target.files);
+                    event.target.value = "";
+                  }}
+                  style={{ display: "none" }}
+                />
+
+                <span style={{ display: "grid", gap: 10, justifyItems: "center" }}>
+                  <span
+                    className="dashboard-upload-icon"
+                    style={{
+                      width: 74,
+                      height: 74,
+                      borderRadius: 26,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "#ffd43b",
+                      color: "#101420",
+                      fontSize: 34,
+                      fontWeight: 950,
+                      boxShadow: "0 20px 48px rgba(255, 212, 59, 0.24)",
+                    }}
+                  >
+                    +
+                  </span>
+
+                  <strong style={{ fontSize: "clamp(1.35rem, 3vw, 2rem)" }}>
+                    {weeklyUploads.length > 0 ? "Add more media" : "Tap to upload media"}
+                  </strong>
+
+                  <span style={{ color: "var(--muted)", maxWidth: 560, lineHeight: 1.5 }}>
+                    Upload up to 7 items. You will review every post before anything is published.
+                  </span>
+                </span>
+              </label>
+
+              {weeklyUploads.length > 0 && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                    gap: 12,
+                  }}
+                >
+                  {weeklyUploads.map((upload, index) => (
+                    <div
+                      key={upload.id}
+                      className="card"
                       style={{
-                        display: "block",
-                        color: "rgba(248,250,252,0.68)",
-                        lineHeight: 1.45,
-                        fontWeight: 700,
+                        padding: 10,
+                        borderRadius: 20,
+                        background: "rgba(255,255,255,0.055)",
                       }}
                     >
-                      {platform.description}
-                    </small>
-                  </button>
-                );
-              })}
-            </div>
+                      <div
+                        style={{
+                          height: 118,
+                          borderRadius: 16,
+                          overflow: "hidden",
+                          background: "rgba(255, 255, 255, 0.06)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginBottom: 10,
+                        }}
+                      >
+                        {upload.file.type.startsWith("image/") ? (
+                          <img
+                            src={upload.previewUrl}
+                            alt={`Upload ${index + 1}`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : upload.file.type.startsWith("video/") ? (
+                          <video
+                            src={upload.previewUrl}
+                            muted
+                            playsInline
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <strong>PDF flyer</strong>
+                        )}
+                      </div>
+
+                      <strong>Upload {index + 1}</strong>
+                      <p
+                        style={{
+                          margin: "5px 0 10px",
+                          color: "var(--muted)",
+                          fontSize: 12,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {upload.file.name}
+                      </p>
+
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => removeWeeklyUpload(upload.id)}
+                        disabled={scanning}
+                        style={{
+                          width: "100%",
+                          minHeight: 38,
+                          borderRadius: 12,
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
 
             <section
               className="dashboard-creation-mode-card"
@@ -2529,7 +2406,7 @@ If uploads are supplied:
               }}
             >
               <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto" }}>
-                <div className="page-eyebrow">Posting plan</div>
+                <div className="page-eyebrow">Step 2</div>
                 <h2
                   style={{
                     margin: "6px 0 8px",
@@ -2538,11 +2415,10 @@ If uploads are supplied:
                     letterSpacing: "-0.045em",
                   }}
                 >
-                  How should FromOne create this week?
+                  Choose the posting plan
                 </h2>
                 <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>
-                  Choose whether uploads become one weekly sequence, or whether every upload gets
-                  a version for each selected platform.
+                  Most businesses should use the recommended weekly option.
                 </p>
               </div>
 
@@ -2558,9 +2434,9 @@ If uploads are supplied:
                   {
                     value: "split",
                     title: "Spread uploads across the week",
-                    badge: "Best for weekly calendars",
+                    badge: "Recommended",
                     copy:
-                      "Creates one post per upload and schedules them across different days. Platforms are rotated across the posts you selected.",
+                      "Best for most businesses. Creates one post per upload and schedules them across different days.",
                     example:
                       weeklyUploads.length > 0
                         ? `${weeklyUploads.length} upload${weeklyUploads.length === 1 ? "" : "s"} = ${weeklyUploads.length} post${weeklyUploads.length === 1 ? "" : "s"}`
@@ -2569,9 +2445,9 @@ If uploads are supplied:
                   {
                     value: "every_platform",
                     title: "Create every platform version",
-                    badge: "Best for maximum coverage",
+                    badge: "More coverage",
                     copy:
-                      "Creates a Facebook, Instagram and TikTok version for each upload you add, based on the platforms selected above.",
+                      "Creates a Facebook, Instagram and TikTok version for each upload you add, based on the platforms selected below.",
                     example: `${effectivePostCount} × ${selectedPlatforms.length} = ${
                       effectivePostCount * selectedPlatforms.length
                     } posts`,
@@ -2589,7 +2465,7 @@ If uploads are supplied:
                       aria-pressed={selected}
                       style={{
                         width: "100%",
-                        minHeight: 190,
+                        minHeight: 166,
                         padding: 18,
                         borderRadius: 24,
                         textAlign: "left",
@@ -2675,153 +2551,401 @@ If uploads are supplied:
                   );
                 })}
               </div>
+            </section>
+
+            <section
+              style={{
+                display: "grid",
+                gap: 14,
+              }}
+            >
+              <div>
+                <div className="page-eyebrow">Step 3</div>
+                <h2
+                  style={{
+                    margin: "6px 0 4px",
+                    fontSize: "clamp(1.35rem, 2.6vw, 2rem)",
+                    lineHeight: 1,
+                    letterSpacing: "-0.04em",
+                  }}
+                >
+                  Choose platforms
+                </h2>
+                <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.5 }}>
+                  Keep all three selected unless you only want posts for specific channels.
+                </p>
+              </div>
 
               <div
-                className="dashboard-creation-summary-card"
+                className="dashboard-platform-grid"
                 style={{
-                  padding: 18,
-                  borderRadius: 24,
-                  background: "rgba(255, 212, 59, 0.1)",
-                  border: "1px solid rgba(255, 212, 59, 0.24)",
-                  textAlign: "center",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                  gap: 14,
                 }}
               >
+                {[
+                  {
+                    name: "Facebook",
+                    title: "Facebook",
+                    description: hasFacebookConnection ? "Autopost ready." : "Connect Meta for autopost.",
+                  },
+                  {
+                    name: "Instagram",
+                    title: "Instagram",
+                    description: hasInstagramConnection ? "Autopost ready." : "Connect Meta for autopost.",
+                  },
+                  {
+                    name: "TikTok",
+                    title: "TikTok",
+                    description: "Copy/open manual for now.",
+                  },
+                ].map((platform) => {
+                  const selected = selectedPlatforms.includes(platform.name);
+
+                  return (
+                    <button
+                      key={platform.name}
+                      type="button"
+                      className="dashboard-platform-card"
+                      onClick={() => togglePlatform(platform.name)}
+                      aria-pressed={selected}
+                      style={{
+                        minHeight: 118,
+                        borderRadius: 24,
+                        padding: 18,
+                        textAlign: "left",
+                        cursor: "pointer",
+                        background: selected
+                          ? "radial-gradient(circle at top right, rgba(255, 212, 59, 0.2), rgba(255,255,255,0.075))"
+                          : "rgba(255,255,255,0.045)",
+                        border: selected
+                          ? "1px solid rgba(255, 212, 59, 0.46)"
+                          : "1px solid rgba(255,255,255,0.1)",
+                        color: "#f8fafc",
+                        boxShadow: selected
+                          ? "0 18px 42px rgba(255, 212, 59, 0.11)"
+                          : "none",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 13,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginBottom: 14,
+                          background: selected ? "#ffd43b" : "rgba(255,255,255,0.09)",
+                          color: selected ? "#101420" : "rgba(248,250,252,0.78)",
+                          fontWeight: 950,
+                        }}
+                      >
+                        {selected ? "✓" : "+"}
+                      </span>
+
+                      <strong
+                        style={{
+                          display: "block",
+                          fontSize: "1.12rem",
+                          marginBottom: 8,
+                          color: "#ffffff",
+                        }}
+                      >
+                        {platform.title}
+                      </strong>
+
+                      <small
+                        style={{
+                          display: "block",
+                          color: "rgba(248,250,252,0.68)",
+                          lineHeight: 1.45,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {platform.description}
+                      </small>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section
+              className="dashboard-creation-summary-card"
+              style={{
+                padding: 20,
+                borderRadius: 26,
+                background:
+                  "radial-gradient(circle at top, rgba(255, 212, 59, 0.14), transparent 36%), rgba(255, 212, 59, 0.08)",
+                border: "1px solid rgba(255, 212, 59, 0.26)",
+                textAlign: "center",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div className="page-eyebrow">Step 4</div>
+
+              <div>
                 <strong
                   style={{
                     display: "block",
                     color: "#fff",
-                    fontSize: "1.08rem",
-                    marginBottom: 6,
+                    fontSize: "clamp(1.18rem, 2.6vw, 1.55rem)",
+                    marginBottom: 7,
                   }}
                 >
-                  You are creating: {creationModeTitle}
+                  You are creating: {createdPostTotal} scheduled post{createdPostTotal === 1 ? "" : "s"}
                 </strong>
                 <p style={{ margin: 0, color: "#ffe58a", fontWeight: 900, lineHeight: 1.5 }}>
                   {creationModeSummary}
                 </p>
               </div>
-            </section>
 
-            <div
-              className="dashboard-summary-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-                gap: 10,
-                padding: 12,
-                borderRadius: 20,
-                background: "rgba(255,255,255,0.045)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              <div className="card" style={{ padding: 14, textAlign: "center" }}>
-                <strong>{createdPostTotal}</strong>
-                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
-                  scheduled post{createdPostTotal === 1 ? "" : "s"}
-                </p>
-              </div>
-
-              <div className="card" style={{ padding: 14, textAlign: "center" }}>
-                <strong>{selectedPlatformSummary || "Choose platform"}</strong>
-                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
-                  selected platforms
-                </p>
-              </div>
-
-              <div className="card" style={{ padding: 14, textAlign: "center" }}>
-                <strong>{businessProfileReady ? "Ready" : "Profile needed"}</strong>
-                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
-                  Business Profile
-                </p>
-              </div>
-            </div>
-
-            {!businessProfileReady && (
               <div
+                className="dashboard-summary-grid"
                 style={{
-                  padding: 16,
-                  borderRadius: 20,
-                  background: "rgba(255, 212, 59, 0.1)",
-                  border: "1px solid rgba(255, 212, 59, 0.24)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 14,
-                  alignItems: "center",
-                  flexWrap: "wrap",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                  gap: 10,
                 }}
               >
-                <div>
-                  <strong>Business Profile needed</strong>
-                  <p style={{ margin: "5px 0 0", color: "var(--muted)" }}>
-                    Set this up once so FromOne knows the business.
+                <div className="card" style={{ padding: 14, textAlign: "center" }}>
+                  <strong>{weeklyUploads.length || 0}</strong>
+                  <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
+                    upload{weeklyUploads.length === 1 ? "" : "s"}
                   </p>
                 </div>
 
-                <Link href="/settings" className="secondary-button">
-                  Set up profile
-                </Link>
-              </div>
-            )}
+                <div className="card" style={{ padding: 14, textAlign: "center" }}>
+                  <strong>{selectedPlatformSummary || "Choose platform"}</strong>
+                  <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
+                    platforms
+                  </p>
+                </div>
 
-            {accessLocked && (
-              <div
+                <div className="card" style={{ padding: 14, textAlign: "center" }}>
+                  <strong>{businessProfileReady ? "Ready" : "Needed"}</strong>
+                  <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
+                    profile
+                  </p>
+                </div>
+              </div>
+
+              {accessLocked && (
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 20,
+                    background: "rgba(255, 95, 109, 0.1)",
+                    border: "1px solid rgba(255, 95, 109, 0.26)",
+                  }}
+                >
+                  <strong>Access locked</strong>
+                  <p style={{ margin: "5px 0 0", color: "var(--muted)" }}>{accessMessage}</p>
+                </div>
+              )}
+
+              {selectedPlatforms.length === 0 && (
+                <p style={{ textAlign: "center", margin: 0, color: "var(--gold)", fontWeight: 900 }}>
+                  Choose at least one platform.
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="dashboard-platform-create-button"
+                onClick={handleGeneratePosts}
+                disabled={!canCreatePosts || savingWebsite || savingManualProfile}
                 style={{
-                  padding: 16,
-                  borderRadius: 20,
-                  background: "rgba(255, 95, 109, 0.1)",
-                  border: "1px solid rgba(255, 95, 109, 0.26)",
+                  width: "100%",
+                  minHeight: 74,
+                  borderRadius: 24,
+                  fontSize: "1.18rem",
+                  fontWeight: 950,
+                  boxShadow: canCreatePosts ? "0 20px 48px rgba(255, 212, 59, 0.22)" : "none",
                 }}
               >
-                <strong>Access locked</strong>
-                <p style={{ margin: "5px 0 0", color: "var(--muted)" }}>{accessMessage}</p>
-              </div>
-            )}
+                {scanning
+                  ? "Creating your posts..."
+                  : weeklyUploads.length > 0
+                    ? addToCampaignId
+                      ? "Add posts to this set"
+                      : "Create posts and review"
+                    : "Upload media to start"}
+              </button>
 
-            {selectedPlatforms.length === 0 && (
-              <p style={{ textAlign: "center", margin: 0, color: "var(--gold)", fontWeight: 900 }}>
-                Choose at least one platform.
-              </p>
-            )}
-
-            <button
-              type="button"
-              className="dashboard-platform-create-button"
-              onClick={handleGeneratePosts}
-              disabled={!canCreatePosts || savingWebsite || savingManualProfile}
-              style={{
-                width: "100%",
-                minHeight: 74,
-                borderRadius: 24,
-                fontSize: "1.18rem",
-                fontWeight: 950,
-                boxShadow: canCreatePosts ? "0 20px 48px rgba(255, 212, 59, 0.22)" : "none",
-              }}
-            >
-              {scanning
-                ? "Creating your posts..."
-                : weeklyUploads.length > 0
-                  ? addToCampaignId
-                    ? "Add posts to this set"
-                    : "Create posts and review"
-                  : "Upload media to start"}
-            </button>
-
-            {weeklyUploads.length > 0 && (
               <p
                 style={{
-                  margin: "-4px 0 0",
+                  margin: 0,
                   textAlign: "center",
                   color: "var(--muted)",
                   lineHeight: 1.5,
                 }}
               >
-                Nothing is published from this screen. You will review and edit posts on the Posts
-                page before publishing, copying or scheduling.
+                Nothing is published from Dashboard. You will review and edit everything on the Posts page first.
               </p>
-            )}
+            </section>
 
-          </div>
-        </section>
+            <section
+              className="dashboard-guide-strip"
+              style={{
+                width: "100%",
+                borderRadius: 24,
+                border: "1px solid rgba(255, 212, 59, 0.12)",
+                background:
+                  "linear-gradient(145deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))",
+                overflow: "hidden",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowAdvancedOptions((current) => !current)}
+                aria-expanded={showAdvancedOptions}
+                style={{
+                  width: "100%",
+                  border: 0,
+                  background: "transparent",
+                  color: "#f8fafc",
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 16,
+                  padding: "15px 18px",
+                  textAlign: "left",
+                }}
+              >
+                <span>
+                  <strong style={{ display: "block", fontSize: "1.02rem", lineHeight: 1.15 }}>
+                    More options
+                  </strong>
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: 5,
+                      color: "var(--muted)",
+                      fontWeight: 800,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    Add a note, adjust reach, or check usage limits.
+                  </span>
+                </span>
+
+                <span
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 12,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "rgba(255, 212, 59, 0.13)",
+                    color: "#ffd43b",
+                    fontWeight: 950,
+                    flex: "0 0 auto",
+                  }}
+                >
+                  {showAdvancedOptions ? "−" : "+"}
+                </span>
+              </button>
+
+              {showAdvancedOptions && (
+                <div
+                  className="dashboard-advanced-options-card"
+                  style={{
+                    borderTop: "1px solid rgba(255, 212, 59, 0.12)",
+                    padding: 18,
+                    display: "grid",
+                    gap: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                      gap: 10,
+                    }}
+                  >
+                    {marketReachOptions.map((option) => {
+                      const selected = selectedMarketReach === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setSelectedMarketReach(option.value)}
+                          style={{
+                            borderRadius: 18,
+                            padding: 14,
+                            textAlign: "left",
+                            cursor: "pointer",
+                            background: selected
+                              ? "rgba(255, 212, 59, 0.14)"
+                              : "rgba(255,255,255,0.045)",
+                            border: selected
+                              ? "1px solid rgba(255, 212, 59, 0.36)"
+                              : "1px solid rgba(255,255,255,0.09)",
+                            color: "#f8fafc",
+                          }}
+                        >
+                          <strong style={{ display: "block", color: "#fff" }}>
+                            {option.title}
+                          </strong>
+                          <span style={{ display: "block", marginTop: 5, color: "var(--muted)", lineHeight: 1.4 }}>
+                            {option.description}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <label style={{ display: "grid", gap: 7 }}>
+                    <strong>Extra note for this week</strong>
+                    <textarea
+                      className="input"
+                      value={weeklyPostNote}
+                      onChange={(event) => setWeeklyPostNote(event.target.value)}
+                      placeholder="Example: Push the weekend offer, new menu, event, appointment slots or latest work."
+                      rows={4}
+                    />
+                  </label>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                      gap: 10,
+                    }}
+                  >
+                    <div className="card" style={{ padding: 14 }}>
+                      <strong>{marketReachDisplayLabel}</strong>
+                      <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
+                        market reach
+                      </p>
+                    </div>
+
+                    <div className="card" style={{ padding: 14 }}>
+                      <strong>{weeklyScansRemaining} of {weeklyScanLimit}</strong>
+                      <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
+                        website scans left
+                      </p>
+                    </div>
+
+                    <div className="card" style={{ padding: 14 }}>
+                      <strong>{weeklyVideoScansRemaining} of {weeklyVideoScanLimit}</strong>
+                      <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
+                        video scans left
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+          </div>        </section>
       )}
 
       {scanning && (
