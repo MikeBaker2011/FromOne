@@ -12769,3 +12769,38 @@ body:has(.simplified-posts-page) .simplified-posts-page {
     padding: 16px 0 0 !important;
   }
 }
+/* FINAL LEGAL PAGE NAV ALIGNMENT */
+
+.fromone-legal-page .fromone-hero-stage {
+  padding-top: 0 !important;
+}
+
+.fromone-legal-page .sales-nav.public-nav {
+  width: min(1180px, calc(100vw - 36px)) !important;
+  margin: 0 auto !important;
+  padding: 22px 0 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.fromone-legal-page .public-nav-inner {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+.fromone-legal-page .fromone-legal-hero {
+  padding-top: clamp(44px, 6vw, 76px) !important;
+}
+
+@media (max-width: 720px) {
+  .fromone-legal-page .sales-nav.public-nav {
+    width: calc(100vw - 32px) !important;
+    padding-top: 18px !important;
+  }
+
+  .fromone-legal-page .fromone-legal-hero {
+    padding-top: 46px !important;
+  }
+}
