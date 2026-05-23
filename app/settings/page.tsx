@@ -1320,6 +1320,94 @@ export default function SettingsPage() {
               Connect Meta once for Facebook and Instagram autoposting. TikTok stays simple with copy/open manual posting.
             </p>
 
+            <div
+              className="card"
+              style={{
+                padding: 20,
+                borderRadius: 24,
+                marginTop: 18,
+                background:
+                  'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
+                border: '1px solid rgba(255, 212, 59, 0.18)',
+              }}
+            >
+              <div className="page-eyebrow">Publishing rules</div>
+              <h3 style={{ margin: '6px 0 10px', fontSize: 24 }}>
+                What FromOne can publish
+              </h3>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: 12,
+                  marginTop: 14,
+                }}
+              >
+                <div>
+                  <strong>Facebook</strong>
+                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
+                    Facebook autoposting is available after Meta is connected. FromOne can publish
+                    to your connected Facebook Page, or you can copy posts manually.
+                  </p>
+                </div>
+
+                <div>
+                  <strong>Instagram</strong>
+                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
+                    Instagram autoposting is available after Meta is connected, but Instagram needs
+                    an image or video. PDF flyers cannot be autoposted directly to Instagram.
+                    FromOne will help create Instagram-safe image sizing where possible.
+                  </p>
+                </div>
+
+                <div>
+                  <strong>TikTok</strong>
+                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
+                    TikTok is manual for now. FromOne creates TikTok-ready wording, then you copy
+                    the caption and open TikTok yourself. Future TikTok autoposting will only happen
+                    after the user reviews and approves the post.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: 12,
+                  marginTop: 16,
+                  paddingTop: 16,
+                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <div>
+                  <strong>Split platforms</strong>
+                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
+                    Posts are divided across the platforms you choose.
+                  </p>
+                </div>
+
+                <div>
+                  <strong>Every platform</strong>
+                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
+                    Each upload or post gets versions for every selected platform.
+                  </p>
+                </div>
+              </div>
+
+              <p
+                style={{
+                  margin: '16px 0 0',
+                  color: '#ffe58a',
+                  fontWeight: 850,
+                  lineHeight: 1.5,
+                }}
+              >
+                You always review posts before publishing, copying or scheduling.
+              </p>
+            </div>
+
             {loadingConnections ? (
               <p>Checking connected accounts...</p>
             ) : (
@@ -1359,10 +1447,10 @@ export default function SettingsPage() {
                   </h3>
                   <p style={{ color: 'var(--muted)', minHeight: 54 }}>
                     {hasInstagramConnection
-                      ? `Ready as @${primaryMetaConnection?.instagram_username || 'Instagram'}.`
+                      ? `Ready as @${primaryMetaConnection?.instagram_username || 'Instagram'}. Instagram posts need an image or video.`
                       : hasMetaConnection
                         ? 'Link a professional Instagram account in Meta.'
-                        : 'Connect Meta to enable Instagram publishing.'}
+                        : 'Connect Meta to enable Instagram publishing. Instagram needs an image or video, not a PDF flyer.'}
                   </p>
                   <button
                     type="button"
@@ -1445,6 +1533,8 @@ export default function SettingsPage() {
                 <p style={{ maxWidth: 820, margin: 0 }}>
                   Your Business Profile is saved. Upload photos, videos or flyers on the
                   Dashboard and FromOne will turn them into ready-to-review social posts.
+                  Facebook can use connected autoposting, Instagram needs image or video media,
+                  and TikTok is copy/open manually for now.
                 </p>
               </div>
 
