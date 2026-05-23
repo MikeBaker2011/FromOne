@@ -1974,10 +1974,10 @@ If uploads are supplied:
             style={{
               width: "100%",
               margin: "0 0 22px",
-              borderRadius: 26,
-              border: "1px solid rgba(255, 212, 59, 0.18)",
+              borderRadius: 24,
+              border: "1px solid rgba(255, 212, 59, 0.16)",
               background:
-                "linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))",
+                "linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))",
               overflow: "hidden",
             }}
           >
@@ -1995,26 +1995,36 @@ If uploads are supplied:
                 justifyContent: "space-between",
                 alignItems: "center",
                 gap: 16,
-                padding: "18px 20px",
+                padding: "16px 18px",
                 textAlign: "left",
               }}
             >
               <span>
-                <span className="page-eyebrow">First time here?</span>
-                <strong style={{ display: "block", marginTop: 5, fontSize: "1.15rem" }}>
-                  What happens next
+                <strong style={{ display: "block", fontSize: "1.08rem", lineHeight: 1.15 }}>
+                  Create, then review
                 </strong>
+                <span
+                  style={{
+                    display: "block",
+                    marginTop: 5,
+                    color: "var(--muted)",
+                    fontWeight: 800,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  Upload media, choose platforms, then check everything on Posts before publishing.
+                </span>
               </span>
 
               <span
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 13,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 12,
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "rgba(255, 212, 59, 0.14)",
+                  background: "rgba(255, 212, 59, 0.13)",
                   color: "#ffd43b",
                   fontWeight: 950,
                   flex: "0 0 auto",
@@ -2027,11 +2037,11 @@ If uploads are supplied:
             {showDashboardGuide && (
               <div
                 style={{
-                  borderTop: "1px solid rgba(255, 212, 59, 0.14)",
-                  padding: "22px 22px 24px",
+                  borderTop: "1px solid rgba(255, 212, 59, 0.12)",
+                  padding: "18px",
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 16,
+                  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+                  gap: 12,
                   alignItems: "stretch",
                 }}
               >
@@ -2044,24 +2054,24 @@ If uploads are supplied:
                   {
                     step: "2",
                     title: "Choose platforms",
-                    copy: "Split posts across platforms, or create a version for every selected platform.",
+                    copy: "Split posts across platforms, or make every upload for every selected platform.",
                   },
                   {
                     step: "3",
                     title: "Review first",
-                    copy: "FromOne opens the Posts page so you can edit, publish, copy or schedule.",
+                    copy: "Nothing goes live from Dashboard. Review, edit, publish or copy on Posts.",
                   },
                 ].map((item) => (
                   <article
                     key={item.step}
                     className="card"
                     style={{
-                      padding: 20,
-                      borderRadius: 24,
+                      padding: 16,
+                      borderRadius: 20,
                       background:
-                        "linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.035))",
-                      border: "1px solid rgba(255, 212, 59, 0.14)",
-                      minHeight: 190,
+                        "linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.028))",
+                      border: "1px solid rgba(255, 212, 59, 0.12)",
+                      minHeight: 142,
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "flex-start",
@@ -2069,20 +2079,20 @@ If uploads are supplied:
                   >
                     <span
                       style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 11,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 10,
                         display: "inline-grid",
                         placeItems: "center",
                         background: "#ffd43b",
                         color: "#101420",
                         fontWeight: 950,
-                        marginBottom: 14,
+                        marginBottom: 12,
                       }}
                     >
                       {item.step}
                     </span>
-                    <strong style={{ display: "block", marginBottom: 8, fontSize: "1.05rem" }}>{item.title}</strong>
+                    <strong style={{ display: "block", marginBottom: 7, fontSize: "1rem" }}>{item.title}</strong>
                     <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>
                       {item.copy}
                     </p>
