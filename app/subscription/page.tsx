@@ -678,7 +678,7 @@ export default function SubscriptionPage() {
 
           <div style={{ width: '100%', marginBottom: '24px' }}>
             <section
-              className="hero-card"
+              className="hero-card subscription-hero-card"
               style={{
                 width: '100%',
                 border: '1px solid rgba(255, 212, 59, 0.28)',
@@ -702,20 +702,21 @@ export default function SubscriptionPage() {
                     'Your demo has ended.'
                   ) : (
                     <>
-                      Social media content 
+                      Start free.
                       <br />
-                      made simple!
+                      Keep posting.
                     </>
                   )}
                 </h1>
                 <p className="page-description" style={{ margin: '0 auto', maxWidth: 760 }}>
-                  Start with a 7-day demo, then continue with FromOne Starter for £39.99/month.
-                  Upload photos, videos or flyers, create scheduled posts, autopost Facebook and
-                  Instagram, or copy/open TikTok manually.
+                  Try FromOne with a 7-day demo, then continue with Starter for £39.99/month.
+                  Upload photos, videos or flyers, review every post, then autopost Facebook and
+                  Instagram or copy/open TikTok manually.
                 </p>
               </div>
 
               <div
+                className="subscription-status-grid"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -777,14 +778,14 @@ export default function SubscriptionPage() {
             </section>
           </div>
 
-          <div className="grid grid-two">
+          <div className="grid grid-two subscription-plan-grid">
             {plans.map((plan) => {
               const isSelected = selectedPlan === plan.id;
 
               return (
                 <section
                   key={plan.id}
-                  className="premium-card"
+                  className={`premium-card subscription-plan-card ${isSelected ? 'is-selected' : ''} ${plan.id === 'starter' ? 'is-starter' : ''}`}
                   style={{
                     opacity: plan.disabled ? 0.55 : 1,
                     border: isSelected ? '1px solid rgba(255, 212, 59, 0.65)' : undefined,
@@ -795,7 +796,10 @@ export default function SubscriptionPage() {
                   }}
                 >
                   <div style={{ minHeight: '190px' }}>
-                    <div className="page-eyebrow">{plan.name}</div>
+                    <div className="subscription-plan-header-row">
+                      <div className="page-eyebrow">{plan.name}</div>
+                      {plan.id === 'starter' && <span className="subscription-recommended-pill">Recommended</span>}
+                    </div>
 
                     <h2
                       style={{
@@ -837,7 +841,7 @@ export default function SubscriptionPage() {
                     {plan.features.map((feature) => (
                       <div
                         key={feature}
-                        className="card"
+                        className="card subscription-feature-row"
                         style={{
                           padding: '12px',
                           minHeight: '46px',
@@ -875,7 +879,7 @@ export default function SubscriptionPage() {
           </div>
 
           <div
-            className="premium-card"
+            className="premium-card subscription-billing-card"
             style={{
               width: '100%',
               marginTop: '24px',
@@ -997,6 +1001,175 @@ export default function SubscriptionPage() {
         </>
       )}
       </main>
+
+
+      <style jsx global>{`
+        .subscription-hero-card {
+          border-radius: 36px !important;
+          padding: clamp(24px, 4vw, 42px) !important;
+        }
+
+        .subscription-status-grid .card {
+          border-radius: 20px !important;
+          background: rgba(255, 255, 255, 0.055) !important;
+          border: 1px solid rgba(255, 255, 255, 0.09) !important;
+        }
+
+        .subscription-plan-grid {
+          align-items: stretch !important;
+        }
+
+        .subscription-plan-card {
+          position: relative !important;
+          overflow: hidden !important;
+          border-radius: 34px !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          background:
+            linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.032)) !important;
+        }
+
+        .subscription-plan-card.is-selected {
+          border-color: rgba(255, 212, 59, 0.62) !important;
+          box-shadow:
+            0 28px 86px rgba(0, 0, 0, 0.34),
+            0 0 0 1px rgba(255, 212, 59, 0.12) inset !important;
+        }
+
+        .subscription-plan-card.is-starter {
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 34%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035)) !important;
+        }
+
+        .subscription-plan-header-row {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          gap: 12px !important;
+          margin-bottom: 10px !important;
+        }
+
+        .subscription-recommended-pill {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-height: 34px !important;
+          padding: 0 12px !important;
+          border-radius: 999px !important;
+          background: rgba(255, 212, 59, 0.14) !important;
+          border: 1px solid rgba(255, 212, 59, 0.28) !important;
+          color: #ffe58a !important;
+          font-size: 0.75rem !important;
+          font-weight: 950 !important;
+          letter-spacing: 0.04em !important;
+          text-transform: uppercase !important;
+          white-space: nowrap !important;
+        }
+
+        .subscription-feature-row {
+          background: rgba(255, 255, 255, 0.055) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          border-radius: 16px !important;
+          color: rgba(248, 250, 252, 0.86) !important;
+          line-height: 1.35 !important;
+        }
+
+        .subscription-billing-card {
+          border-radius: 34px !important;
+        }
+
+        .subscription-billing-card .button-row {
+          align-items: stretch !important;
+        }
+
+        .subscription-billing-card .button-row button {
+          min-height: 52px !important;
+        }
+
+        @media (max-width: 860px) {
+          .subscription-plan-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .subscription-plan-card {
+            min-height: auto !important;
+          }
+        }
+
+        @media (max-width: 720px) {
+          main {
+            width: min(100%, calc(100vw - 24px)) !important;
+            margin-bottom: 36px !important;
+          }
+
+          .subscription-hero-card {
+            padding: 20px !important;
+            border-radius: 26px !important;
+          }
+
+          .subscription-hero-card .page-title {
+            font-size: clamp(2.35rem, 13vw, 3.6rem) !important;
+            line-height: 0.94 !important;
+          }
+
+          .subscription-hero-card .page-description {
+            font-size: 0.96rem !important;
+            line-height: 1.55 !important;
+          }
+
+          .subscription-status-grid {
+            grid-template-columns: 1fr 1fr !important;
+            padding: 12px !important;
+            gap: 10px !important;
+          }
+
+          .subscription-status-grid .card {
+            padding: 13px !important;
+          }
+
+          .subscription-status-grid .card:first-child {
+            grid-column: 1 / -1 !important;
+          }
+
+          .subscription-status-grid h2 {
+            font-size: 1.7rem !important;
+          }
+
+          .subscription-plan-card {
+            padding: 20px !important;
+            border-radius: 26px !important;
+          }
+
+          .subscription-plan-card h2 {
+            font-size: 2.4rem !important;
+          }
+
+          .subscription-plan-card > div:first-child {
+            min-height: auto !important;
+          }
+
+          .subscription-feature-row {
+            min-height: 42px !important;
+            padding: 10px 12px !important;
+            font-size: 0.9rem !important;
+          }
+
+          .subscription-billing-card {
+            padding: 20px !important;
+            border-radius: 26px !important;
+          }
+
+          .subscription-billing-card .button-row {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+
+          .subscription-billing-card .button-row button {
+            width: 100% !important;
+          }
+        }
+      `}</style>
 
       {confirmDialog && (
         <div
