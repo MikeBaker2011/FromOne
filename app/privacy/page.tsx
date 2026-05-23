@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
 
 export const metadata: Metadata = {
@@ -175,6 +174,51 @@ export default function PrivacyPage() {
         .fromone-legal-shell {
           width: min(1160px, calc(100vw - 32px));
           margin: 0 auto;
+        }
+
+
+        .fromone-legal-simple-nav {
+          width: min(1160px, calc(100vw - 32px));
+          margin: 0 auto;
+          padding: 24px 0 0;
+          position: relative;
+          z-index: 2;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+        }
+
+        .fromone-legal-home-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 48px;
+          padding: 0 18px;
+          border-radius: 999px;
+          color: #101420;
+          background: #ffd43b;
+          border: 1px solid rgba(255, 212, 59, 0.34);
+          font-weight: 1000;
+          text-decoration: none;
+          box-shadow: 0 16px 36px rgba(255, 212, 59, 0.18);
+        }
+
+        .fromone-legal-mini-brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          color: #ffffff;
+          font-weight: 1000;
+          letter-spacing: -0.045em;
+          text-decoration: none;
+        }
+
+        .fromone-legal-mini-brand img {
+          width: 56px;
+          height: 56px;
+          object-fit: contain;
+          border-radius: 18px;
         }
 
         .fromone-legal-page .sales-nav.public-nav {
@@ -462,9 +506,19 @@ export default function PrivacyPage() {
             width: min(100% - 24px, 520px);
           }
 
-          .fromone-legal-page .sales-nav.public-nav {
-            width: min(100% - 32px, 520px) !important;
-            padding-top: 20px !important;
+          .fromone-legal-simple-nav {
+            width: min(100% - 32px, 520px);
+            padding-top: 18px;
+          }
+
+          .fromone-legal-mini-brand img {
+            width: 52px;
+            height: 52px;
+          }
+
+          .fromone-legal-home-link {
+            min-height: 46px;
+            padding: 0 16px;
           }
 
           .fromone-legal-hero {
@@ -516,7 +570,16 @@ export default function PrivacyPage() {
       `}</style>
 
       <section className="fromone-legal-stage">
-        <PublicNav />
+        <div className="fromone-legal-simple-nav" aria-label="Privacy page navigation">
+          <Link href="/" className="fromone-legal-mini-brand" aria-label="FromOne homepage">
+            <img src="/fromone-logo.png" alt="FromOne logo" />
+            <span>FromOne</span>
+          </Link>
+
+          <Link href="/" className="fromone-legal-home-link">
+            Home
+          </Link>
+        </div>
 
         <div className="fromone-legal-shell fromone-legal-hero">
           <div className="fromone-legal-hero-copy">
