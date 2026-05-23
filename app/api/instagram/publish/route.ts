@@ -387,7 +387,7 @@ async function getInstagramCredentials(body: InstagramPublishBody): Promise<Inst
       (connection as any)?.instagram_business_account_id
     );
     const connectedAccessToken = cleanText(
-      (connection as any)?.page_access_token || (connection as any)?.access_token
+      (connection as any)?.access_token || (connection as any)?.page_access_token
     );
 
     if (connectedInstagramBusinessAccountId && connectedAccessToken) {
@@ -633,9 +633,6 @@ async function updatePostAfterPublish({
     updates.publish_source = credentialSource;
   }
 
-  if (connectionId) {
-    updates.social_connection_id = connectionId;
-  }
 
   const { error } = await supabase.from('campaign_posts').update(updates).eq('id', postId);
 
