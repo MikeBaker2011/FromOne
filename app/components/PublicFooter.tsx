@@ -6,7 +6,7 @@ export default function PublicFooter() {
   return (
     <footer className="public-footer">
       <div className="public-footer-inner">
-        <div>
+        <div className="public-footer-brand">
           <strong>FromOne</strong>
           <p>Weekly social media content for small businesses.</p>
         </div>
@@ -19,7 +19,9 @@ export default function PublicFooter() {
           <Link href="/bugreport">Support</Link>
         </nav>
 
-        <small>© {year} FromOne. All rights reserved.</small>
+        <small className="public-footer-copyright">
+          © {year} FromOne. All rights reserved.
+        </small>
       </div>
     </footer>
   );

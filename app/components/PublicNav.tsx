@@ -49,46 +49,49 @@ export default function PublicNav() {
 
   return (
     <nav className="sales-nav public-nav">
-      <Link href="/" className="sales-brand" onClick={closeMenu}>
-        <img
-          src="/fromone-logo.png"
-          alt="FromOne logo"
-          className="fromone-brand-logo"
-        />
-        <strong>FromOne</strong>
-      </Link>
-
-      <button
-        type="button"
-        className="public-nav-toggle"
-        onClick={() => setOpen(!open)}
-        aria-label="Toggle navigation menu"
-      >
-        {open ? '×' : '☰'}
-      </button>
-
-      <div
-        className={
-          open
-            ? 'sales-nav-links public-nav-links open'
-            : 'sales-nav-links public-nav-links'
-        }
-      >
-        <Link href="/" onClick={closeMenu}>
-          Home
+      <div className="public-nav-inner">
+        <Link href="/" className="sales-brand public-nav-brand" onClick={closeMenu}>
+          <img
+            src="/fromone-logo.png"
+            alt="FromOne logo"
+            className="fromone-brand-logo"
+          />
+          <strong>FromOne</strong>
         </Link>
 
-        <Link href="/tutorial" onClick={closeMenu}>
-          How it works
-        </Link>
-
-        <Link
-          href={isSignedIn ? '/dashboard' : '/signin'}
-          className="sales-nav-button"
-          onClick={closeMenu}
+        <button
+          type="button"
+          className="public-nav-toggle"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={open}
         >
-          {checkingAuth ? 'Checking...' : isSignedIn ? 'Dashboard' : 'Start free demo'}
-        </Link>
+          {open ? '×' : '☰'}
+        </button>
+
+        <div
+          className={
+            open
+              ? 'sales-nav-links public-nav-links open'
+              : 'sales-nav-links public-nav-links'
+          }
+        >
+          <Link href="/" onClick={closeMenu}>
+            Home
+          </Link>
+
+          <Link href="/tutorial" onClick={closeMenu}>
+            How it works
+          </Link>
+
+          <Link
+            href={isSignedIn ? '/dashboard' : '/signin'}
+            className="sales-nav-button"
+            onClick={closeMenu}
+          >
+            {checkingAuth ? 'Checking...' : isSignedIn ? 'Dashboard' : 'Start free demo'}
+          </Link>
+        </div>
       </div>
     </nav>
   );
