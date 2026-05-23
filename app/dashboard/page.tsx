@@ -2642,46 +2642,19 @@ If uploads are supplied:
               )}
             </section>
 
-            <div
-              className="dashboard-summary-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-                gap: 10,
-                padding: 12,
-                borderRadius: 20,
-                background: "rgba(255,255,255,0.045)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              <div className="card" style={{ padding: 14, textAlign: "center" }}>
-                <strong>{createdPostTotal}</strong>
-                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
-                  scheduled post{createdPostTotal === 1 ? "" : "s"}
-                </p>
-              </div>
-
-              <div className="card" style={{ padding: 14, textAlign: "center" }}>
-                <strong>{creationModeTitle}</strong>
-                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
-                  posting plan
-                </p>
-              </div>
-
-              <div className="card" style={{ padding: 14, textAlign: "center" }}>
-                <strong>{selectedPlatformSummary || "Choose platform"}</strong>
-                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
-                  selected platforms
-                </p>
-              </div>
-
-              <div className="card" style={{ padding: 14, textAlign: "center" }}>
-                <strong>{businessProfileReady ? "Ready" : "Profile needed"}</strong>
-                <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
-                  Business Profile
-                </p>
-              </div>
-            </div>
+            {weeklyUploads.length > 0 && (
+              <p
+                style={{
+                  margin: 0,
+                  textAlign: "center",
+                  color: "rgba(248, 250, 252, 0.72)",
+                  fontWeight: 850,
+                  lineHeight: 1.5,
+                }}
+              >
+                You’ll review every post before anything is published.
+              </p>
+            )}
 
             {!businessProfileReady && (
               <div
