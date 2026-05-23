@@ -88,7 +88,7 @@ export default function Home() {
         .fromone-hero-stage {
           position: relative;
           overflow: hidden;
-          padding-bottom: clamp(34px, 5vw, 70px);
+          padding-bottom: clamp(42px, 4.8vw, 58px);
         }
 
         .fromone-hero-stage::before {
@@ -109,9 +109,9 @@ export default function Home() {
           z-index: 1;
           display: grid;
           grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
-          gap: clamp(26px, 5vw, 56px);
+          gap: clamp(26px, 4.4vw, 50px);
           align-items: center;
-          padding: clamp(38px, 5.4vw, 78px) 0 clamp(18px, 3vw, 34px);
+          padding: clamp(28px, 4vw, 54px) 0 0;
         }
 
         .fromone-hero-copy {
@@ -134,7 +134,7 @@ export default function Home() {
         }
 
         .fromone-hero-title {
-          margin: 20px 0 20px;
+          margin: 0 0 20px;
           max-width: 760px;
           color: #ffffff;
           font-size: clamp(3.4rem, 7.4vw, 7.65rem);
@@ -332,7 +332,19 @@ export default function Home() {
         }
 
         .fromone-section {
-          padding: clamp(42px, 6vw, 76px) 0;
+          padding: clamp(46px, 4.8vw, 58px) 0;
+        }
+
+        .fromone-hero-stage + .fromone-section {
+          padding-top: clamp(46px, 4.8vw, 58px);
+        }
+
+        .fromone-section + .fromone-section {
+          padding-top: clamp(46px, 4.8vw, 58px);
+        }
+
+        .fromone-final-section {
+          padding-bottom: clamp(46px, 4.8vw, 58px);
         }
 
         .fromone-section-heading {
@@ -493,7 +505,7 @@ export default function Home() {
         .fromone-final-cta {
           position: relative;
           overflow: hidden;
-          padding: clamp(34px, 6vw, 70px);
+          padding: clamp(34px, 4.8vw, 56px);
           border-radius: 46px;
           background:
             radial-gradient(circle at 18% 12%, rgba(255, 212, 59, 0.27), transparent 34%),
@@ -570,12 +582,25 @@ export default function Home() {
           }
 
           .fromone-hero-stage {
-            padding-bottom: 44px;
+            padding-bottom: 34px;
           }
 
           .fromone-hero-grid {
-            padding-top: 34px;
-            gap: 30px;
+            padding-top: 28px;
+            gap: 28px;
+          }
+
+          .fromone-section {
+            padding: 34px 0 !important;
+          }
+
+          .fromone-hero-stage + .fromone-section,
+          .fromone-section + .fromone-section {
+            padding-top: 34px !important;
+          }
+
+          .fromone-final-section {
+            padding-bottom: 34px !important;
           }
 
           .fromone-hero-title {
@@ -586,9 +611,6 @@ export default function Home() {
             margin-bottom: 20px;
           }
 
-          .fromone-hero-kicker {
-            margin-top: 4px;
-          }
 
           .fromone-hero-text {
             font-size: 1rem;
@@ -663,7 +685,6 @@ export default function Home() {
             margin-right: auto !important;
           }
 
-          .fromone-hero-kicker,
           .fromone-proof-pill,
           .fromone-workflow-card span,
           .fromone-platform-card .label {
@@ -750,8 +771,6 @@ export default function Home() {
 
         <div className="fromone-public-shell fromone-hero-grid">
           <div className="fromone-hero-copy">
-            <div className="fromone-hero-kicker">For busy small businesses</div>
-
             <h1 className="fromone-hero-title">
               Turn this week’s media into <span>ready posts.</span>
             </h1>
@@ -895,7 +914,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="fromone-section" style={{ paddingBottom: 82 }}>
+      <section className="fromone-section fromone-final-section">
         <div className="fromone-public-shell">
           <div className="fromone-final-cta">
             <div className="page-eyebrow">FromOne Starter</div>
