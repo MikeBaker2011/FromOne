@@ -2027,11 +2027,12 @@ If uploads are supplied:
             {showDashboardGuide && (
               <div
                 style={{
-                  borderTop: "1px solid rgba(255,255,255,0.08)",
-                  padding: "0 20px 20px",
+                  borderTop: "1px solid rgba(255, 212, 59, 0.14)",
+                  padding: "22px 22px 24px",
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-                  gap: 12,
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 16,
+                  alignItems: "stretch",
                 }}
               >
                 {[
@@ -2055,9 +2056,15 @@ If uploads are supplied:
                     key={item.step}
                     className="card"
                     style={{
-                      padding: 16,
-                      borderRadius: 20,
-                      background: "rgba(5, 10, 24, 0.32)",
+                      padding: 20,
+                      borderRadius: 24,
+                      background:
+                        "linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.035))",
+                      border: "1px solid rgba(255, 212, 59, 0.14)",
+                      minHeight: 190,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-start",
                     }}
                   >
                     <span
@@ -2070,12 +2077,12 @@ If uploads are supplied:
                         background: "#ffd43b",
                         color: "#101420",
                         fontWeight: 950,
-                        marginBottom: 10,
+                        marginBottom: 14,
                       }}
                     >
                       {item.step}
                     </span>
-                    <strong style={{ display: "block", marginBottom: 6 }}>{item.title}</strong>
+                    <strong style={{ display: "block", marginBottom: 8, fontSize: "1.05rem" }}>{item.title}</strong>
                     <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>
                       {item.copy}
                     </p>
