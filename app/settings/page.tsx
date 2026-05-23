@@ -678,15 +678,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      <div className="page-header" style={{ maxWidth: 920, margin: '0 auto 24px', textAlign: 'center' }}>
-        <div className="page-eyebrow">Settings</div>
-        <h1 className="page-title">Business setup</h1>
-        <p className="page-description">
-          Follow the setup sequence below. Complete the Business Profile first, connect publishing
-          channels second, then create weekly posts from the Dashboard.
-        </p>
-      </div>
-
       {loading ? (
         <div className="premium-card">
           <p>Loading Business Profile...</p>
@@ -701,10 +692,29 @@ export default function SettingsPage() {
               borderRadius: 34,
               border: '1px solid rgba(255, 212, 59, 0.24)',
               background:
-                'radial-gradient(circle at top left, rgba(255, 212, 59, 0.14), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))',
-              boxShadow: '0 26px 84px rgba(0,0,0,0.28)',
+                'radial-gradient(circle at top, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032))',
+              boxShadow: '0 30px 96px rgba(0,0,0,0.34)',
             }}
           >
+            <div style={{ textAlign: 'center', maxWidth: 860, margin: '0 auto 28px' }}>
+              <div className="page-eyebrow">Settings</div>
+              <h1
+                className="page-title"
+                style={{
+                  margin: '8px 0 12px',
+                  fontSize: 'clamp(2.4rem, 5.2vw, 4.8rem)',
+                  lineHeight: 0.92,
+                  letterSpacing: '-0.06em',
+                }}
+              >
+                Business setup
+              </h1>
+              <p className="page-description" style={{ margin: '0 auto', maxWidth: 760 }}>
+                Follow the setup sequence below. Complete the Business Profile first, connect publishing
+                channels second, then create weekly posts from the Dashboard.
+              </p>
+            </div>
+
             <div className="page-eyebrow">Setup guide</div>
             <h2
               style={{

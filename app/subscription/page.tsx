@@ -613,18 +613,12 @@ export default function SubscriptionPage() {
 
   return (
     <>
-      <div className="page-header">
-        <div className="page-eyebrow">Subscription</div>
-        <h1 className="page-title">
-          {isDemoExpired ? 'Your demo has ended.' : 'Simple access for small businesses.'}
-        </h1>
-        <p className="page-description">
-          Start with a 7-day demo, then continue with FromOne Starter for £39.99/month.
-          Upload photos, videos or flyers, create scheduled posts, autopost Facebook and
-          Instagram, or copy/open TikTok manually.
-        </p>
-      </div>
-
+      <main
+        style={{
+          width: 'min(1120px, calc(100vw - 28px))',
+          margin: '0 auto 56px',
+        }}
+      >
       {confirmingPayPal && (
         <div
           className="premium-card"
@@ -642,7 +636,7 @@ export default function SubscriptionPage() {
       )}
 
       {loading ? (
-        <div className="premium-card">
+        <div className="premium-card" style={{ width: '100%' }}>
           <p>Loading subscription...</p>
         </div>
       ) : (
@@ -651,6 +645,7 @@ export default function SubscriptionPage() {
             <div
               className="premium-card"
               style={{
+                width: '100%',
                 marginBottom: '24px',
                 border: '1px solid rgba(255, 95, 109, 0.45)',
               }}
@@ -668,6 +663,7 @@ export default function SubscriptionPage() {
             <div
               className="premium-card"
               style={{
+                width: '100%',
                 marginBottom: '24px',
                 border: '1px solid rgba(255, 95, 109, 0.45)',
               }}
@@ -680,40 +676,104 @@ export default function SubscriptionPage() {
             </div>
           )}
 
-          <div style={{ marginBottom: '24px' }}>
-            <section className="hero-card">
-              <div className="page-eyebrow">Current access</div>
-
-              <h2 style={{ marginTop: 0, fontSize: '38px' }}>{getAccessTitle()}</h2>
-
-              <p>
-                Plan:{' '}
-                <strong>
-                  {currentPlan === 'starter' ? 'Starter' : 'Demo'}
-                </strong>
-              </p>
-
-              <p>
-                Status: <strong>{status}</strong>
-              </p>
-
-              {currentPlan === 'demo' && (
-                <>
-                  <p>
-                    Demo started: <strong>{formatDate(trialStartedAt)}</strong>
-                  </p>
-
-                  <p>
-                    Demo ends: <strong>{formatDate(trialEndsAt)}</strong>
-                  </p>
-                </>
-              )}
-
-              {cancelledAt && (
-                <p>
-                  Cancelled: <strong>{formatDate(cancelledAt)}</strong>
+          <div style={{ width: '100%', marginBottom: '24px' }}>
+            <section
+              className="hero-card"
+              style={{
+                width: '100%',
+                border: '1px solid rgba(255, 212, 59, 0.28)',
+                background:
+                  'radial-gradient(circle at top, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032))',
+                boxShadow: '0 30px 96px rgba(0,0,0,0.34)',
+              }}
+            >
+              <div style={{ textAlign: 'center', maxWidth: 860, margin: '0 auto 28px' }}>
+                <div className="page-eyebrow">Subscription</div>
+                <h1
+                  className="page-title"
+                  style={{
+                    margin: '8px 0 12px',
+                    fontSize: 'clamp(2.4rem, 5.2vw, 4.8rem)',
+                    lineHeight: 0.92,
+                    letterSpacing: '-0.06em',
+                  }}
+                >
+                  {isDemoExpired ? (
+                    'Your demo has ended.'
+                  ) : (
+                    <>
+                      Social media content 
+                      <br />
+                      made simple!
+                    </>
+                  )}
+                </h1>
+                <p className="page-description" style={{ margin: '0 auto', maxWidth: 760 }}>
+                  Start with a 7-day demo, then continue with FromOne Starter for £39.99/month.
+                  Upload photos, videos or flyers, create scheduled posts, autopost Facebook and
+                  Instagram, or copy/open TikTok manually.
                 </p>
-              )}
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: '12px',
+                  padding: '16px',
+                  borderRadius: 24,
+                  background: 'rgba(5, 10, 24, 0.34)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <div className="card" style={{ padding: '16px' }}>
+                  <div className="page-eyebrow">Current access</div>
+                  <h2 style={{ margin: '6px 0 0', fontSize: 'clamp(1.8rem, 4vw, 2.6rem)' }}>
+                    {getAccessTitle()}
+                  </h2>
+                </div>
+
+                <div className="card" style={{ padding: '16px' }}>
+                  <strong>Plan</strong>
+                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
+                    {currentPlan === 'starter' ? 'Starter' : 'Demo'}
+                  </p>
+                </div>
+
+                <div className="card" style={{ padding: '16px' }}>
+                  <strong>Status</strong>
+                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
+                    {status}
+                  </p>
+                </div>
+
+                {currentPlan === 'demo' && (
+                  <>
+                    <div className="card" style={{ padding: '16px' }}>
+                      <strong>Demo started</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
+                        {formatDate(trialStartedAt)}
+                      </p>
+                    </div>
+
+                    <div className="card" style={{ padding: '16px' }}>
+                      <strong>Demo ends</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
+                        {formatDate(trialEndsAt)}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {cancelledAt && (
+                  <div className="card" style={{ padding: '16px' }}>
+                    <strong>Cancelled</strong>
+                    <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
+                      {formatDate(cancelledAt)}
+                    </p>
+                  </div>
+                )}
+              </div>
             </section>
           </div>
 
@@ -817,6 +877,7 @@ export default function SubscriptionPage() {
           <div
             className="premium-card"
             style={{
+              width: '100%',
               marginTop: '24px',
               border: '1px solid rgba(255, 212, 59, 0.28)',
               background:
@@ -935,6 +996,7 @@ export default function SubscriptionPage() {
           </div>
         </>
       )}
+      </main>
 
       {confirmDialog && (
         <div
