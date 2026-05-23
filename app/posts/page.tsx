@@ -2687,8 +2687,8 @@ Important:
                   aria-expanded={showPostsGuide}
                   style={{
                     width: "100%",
-                    minHeight: 68,
-                    padding: "14px clamp(16px, 2.4vw, 22px)",
+                    minHeight: 58,
+                    padding: "12px clamp(16px, 2.4vw, 22px)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -2701,26 +2701,15 @@ Important:
                   }}
                 >
                   <span style={{ minWidth: 0 }}>
-                    <span
-                      className="page-eyebrow"
-                      style={{
-                        display: "block",
-                        marginBottom: 5,
-                        fontSize: 11,
-                        letterSpacing: "0.15em",
-                      }}
-                    >
-                      New here?
-                    </span>
                     <strong
                       style={{
                         display: "block",
-                        fontSize: "clamp(1rem, 2vw, 1.25rem)",
+                        fontSize: "clamp(1rem, 2vw, 1.2rem)",
                         letterSpacing: "-0.025em",
                         lineHeight: 1.18,
                       }}
                     >
-                      How this page works
+                      Review first
                     </strong>
                     <span
                       style={{
@@ -2732,7 +2721,7 @@ Important:
                         fontWeight: 750,
                       }}
                     >
-                      Review first. Publish Facebook or Instagram, or copy/open TikTok.
+                      Open a post, check the wording and media, then publish Facebook/Instagram or copy/open TikTok.
                     </span>
                   </span>
 
@@ -2740,14 +2729,14 @@ Important:
                     aria-hidden="true"
                     style={{
                       flex: "0 0 auto",
-                      width: 38,
-                      height: 38,
-                      borderRadius: 14,
+                      width: 34,
+                      height: 34,
+                      borderRadius: 13,
                       display: "inline-grid",
                       placeItems: "center",
-                      background: "rgba(255, 212, 59, 0.14)",
+                      background: "rgba(255, 212, 59, 0.13)",
                       color: "#ffd43b",
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: 950,
                     }}
                   >
@@ -2758,28 +2747,28 @@ Important:
                 {showPostsGuide && (
                   <div
                     style={{
-                      padding: "14px clamp(16px, 2.4vw, 22px) 18px",
+                      padding: "12px clamp(16px, 2.4vw, 22px) 16px",
                       borderTop: "1px solid rgba(255, 212, 59, 0.11)",
                     }}
                   >
                     <div
                       style={{
                         display: "grid",
-                        gap: 9,
+                        gap: 8,
                         color: "var(--muted)",
-                        fontSize: 15,
+                        fontSize: 14,
                         lineHeight: 1.45,
                         fontWeight: 750,
                       }}
                     >
                       <p style={{ margin: 0 }}>
-                        <strong style={{ color: "#f8fafc" }}>1.</strong> Choose a saved week and open a post.
+                        <strong style={{ color: "#f8fafc" }}>Facebook:</strong> autopost when Meta is connected.
                       </p>
                       <p style={{ margin: 0 }}>
-                        <strong style={{ color: "#f8fafc" }}>2.</strong> Review the wording, media and schedule before anything goes live.
+                        <strong style={{ color: "#f8fafc" }}>Instagram:</strong> autopost with image or video media.
                       </p>
                       <p style={{ margin: 0 }}>
-                        <strong style={{ color: "#f8fafc" }}>3.</strong> Facebook and Instagram can autopost when connected. TikTok is manual copy/open for now.
+                        <strong style={{ color: "#f8fafc" }}>TikTok:</strong> manual for now — copy the caption and open TikTok.
                       </p>
                     </div>
 
