@@ -127,9 +127,48 @@ function cleanText(value: unknown) {
   return String(value || '').trim();
 }
 
+function isInstagramAuthorizationError(message: string) {
+  const lowerMessage = cleanText(message).toLowerCase();
+
+  return (
+    lowerMessage.includes('authorization') ||
+    lowerMessage.includes('oauth') ||
+    lowerMessage.includes('access token') ||
+    lowerMessage.includes('permission') ||
+    lowerMessage.includes('permissions') ||
+    lowerMessage.includes('session has expired') ||
+    lowerMessage.includes('token has expired') ||
+    lowerMessage.includes('invalid token') ||
+    lowerMessage.includes('not authorized') ||
+    lowerMessage.includes('does not have permission')
+  );
+}
+
+function getInstagramErrorStatus(message: string) {
+  const lowerMessage = cleanText(message).toLowerCase();
+
+  if (isInstagramAuthorizationError(message)) return 401;
+
+  if (
+    lowerMessage.includes('image or video') ||
+    lowerMessage.includes('media') ||
+    lowerMessage.includes('caption') ||
+    lowerMessage.includes('aspect ratio') ||
+    lowerMessage.includes('unsupported')
+  ) {
+    return 400;
+  }
+
+  return 500;
+}
+
 function getFriendlyInstagramError(message: string) {
   const cleanMessage = cleanText(message);
   const lowerMessage = cleanMessage.toLowerCase();
+
+  if (isInstagramAuthorizationError(cleanMessage)) {
+    return 'Instagram could not publish because Meta authorization failed. Please reconnect Facebook and Instagram in Settings, then try again. Also check that the Instagram account is professional and linked to the connected Facebook Page.';
+  }
 
   if (lowerMessage.includes('aspect ratio')) {
     return 'Instagram needs a square, portrait, or supported video shape. FromOne tried to prepare the image, but Instagram still rejected it. Replace the media with a square or portrait image, or post it manually.';
@@ -707,7 +746,7 @@ export async function POST(req: NextRequest) {
         action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
         status: 'failed',
         message: 'Instagram publish failed.',
-        error: 'Instagram needs an image or video before publishing.',
+        error: 'Instagram needs an image or video before publishing. PDF flyers cannot be posted directly to Instagram.',
         credentialSource: null,
         socialConnectionId: null,
         metadata: {
@@ -717,7 +756,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         {
-          error: 'Instagram needs an image or video before publishing.',
+          error: 'Instagram needs an image or video before publishing. PDF flyers cannot be posted directly to Instagram.',
         },
         { status: 400 }
       );
@@ -731,7 +770,7 @@ export async function POST(req: NextRequest) {
         action: req.headers.get('x-fromone-scheduled-publish') === 'true' ? 'scheduled_publish' : 'manual_publish',
         status: 'failed',
         message: 'Instagram publish failed.',
-        error: 'Instagram needs an image or video before publishing.',
+        error: 'Instagram needs an image or video before publishing. PDF flyers cannot be posted directly to Instagram.',
         credentialSource: null,
         socialConnectionId: null,
         metadata: {
@@ -742,7 +781,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         {
-          error: 'Instagram needs an image or video before publishing.',
+          error: 'Instagram needs an image or video before publishing. PDF flyers cannot be posted directly to Instagram.',
         },
         { status: 400 }
       );
@@ -849,6 +888,8 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     const rawErrorMessage = error?.message || 'Something went wrong publishing to Instagram.';
     const friendlyErrorMessage = getFriendlyInstagramError(rawErrorMessage);
+    const responseStatus = getInstagramErrorStatus(rawErrorMessage);
+    const isAuthorizationFailure = isInstagramAuthorizationError(rawErrorMessage);
 
     console.error('Instagram publish API error:', rawErrorMessage);
 
@@ -896,14 +937,17 @@ export async function POST(req: NextRequest) {
       metadata: {
         route: '/api/instagram/publish',
         raw_error: rawErrorMessage,
+        response_status: responseStatus,
+        authorization_failure: isAuthorizationFailure,
       },
     });
 
     return NextResponse.json(
       {
         error: friendlyErrorMessage,
+        reconnectMeta: isAuthorizationFailure,
       },
-      { status: 500 }
+      { status: responseStatus }
     );
   }
 }
