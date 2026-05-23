@@ -108,6 +108,7 @@ export default function SettingsPage() {
 
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
   const [showBrandDetails, setShowBrandDetails] = useState(false);
+  const [showPublishingRules, setShowPublishingRules] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
   const [isOnboardingSetup, setIsOnboardingSetup] = useState(false);
 
@@ -1321,91 +1322,158 @@ export default function SettingsPage() {
             </p>
 
             <div
-              className="card"
+              className="card settings-publishing-rules-compact"
               style={{
-                padding: 20,
+                padding: 18,
                 borderRadius: 24,
                 marginTop: 18,
                 background:
-                  'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
-                border: '1px solid rgba(255, 212, 59, 0.18)',
+                  'linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))',
+                border: '1px solid rgba(255, 212, 59, 0.14)',
               }}
             >
-              <div className="page-eyebrow">Publishing rules</div>
-              <h3 style={{ margin: '6px 0 10px', fontSize: 24 }}>
-                What FromOne can publish
-              </h3>
-
-              <div
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setShowPublishingRules((current) => !current)}
+                aria-expanded={showPublishingRules}
+                aria-controls="publishing-rules-panel"
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: 12,
-                  marginTop: 14,
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 14,
+                  padding: '16px 18px',
+                  borderRadius: 20,
+                  textAlign: 'left',
+                  background: 'rgba(255,255,255,0.045)',
                 }}
               >
-                <div>
-                  <strong>Facebook</strong>
-                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
-                    Facebook autoposting is available after Meta is connected. FromOne can publish
-                    to your connected Facebook Page, or you can copy posts manually.
+                <span style={{ display: 'grid', gap: 4 }}>
+                  <span className="page-eyebrow" style={{ margin: 0 }}>Publishing rules</span>
+                  <strong style={{ color: '#fff', fontSize: 18 }}>
+                    What can autopost, what needs media, and what is manual
+                  </strong>
+                </span>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    flex: '0 0 auto',
+                    width: 34,
+                    height: 34,
+                    display: 'grid',
+                    placeItems: 'center',
+                    borderRadius: 999,
+                    background: 'rgba(255, 212, 59, 0.12)',
+                    color: '#ffe58a',
+                    fontSize: 22,
+                    lineHeight: 1,
+                  }}
+                >
+                  {showPublishingRules ? '−' : '+'}
+                </span>
+              </button>
+
+              {showPublishingRules && (
+                <div
+                  id="publishing-rules-panel"
+                  style={{
+                    display: 'grid',
+                    gap: 14,
+                    marginTop: 16,
+                    padding: '2px 2px 0',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+                      gap: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <strong>Facebook</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
+                        Can autopost to a connected Facebook Page after Meta is connected. You can also copy posts manually.
+                      </p>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <strong>Instagram</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
+                        Can autopost after Meta is connected, but needs an image or video. PDF flyers are not direct Instagram autopost media.
+                      </p>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <strong>TikTok</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
+                        Manual for now. FromOne creates the caption, then you copy it and open TikTok yourself.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+                      gap: 12,
+                      paddingTop: 2,
+                    }}
+                  >
+                    <div>
+                      <strong>Split platforms</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
+                        Posts are divided across the platforms you choose.
+                      </p>
+                    </div>
+
+                    <div>
+                      <strong>Every platform</strong>
+                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
+                        Each upload gets versions for every selected platform.
+                      </p>
+                    </div>
+                  </div>
+
+                  <p
+                    style={{
+                      margin: 0,
+                      padding: '12px 14px',
+                      borderRadius: 18,
+                      background: 'rgba(255, 212, 59, 0.09)',
+                      border: '1px solid rgba(255, 212, 59, 0.14)',
+                      color: '#ffe58a',
+                      fontWeight: 850,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    You always review posts before publishing, copying or scheduling.
                   </p>
                 </div>
-
-                <div>
-                  <strong>Instagram</strong>
-                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
-                    Instagram autoposting is available after Meta is connected, but Instagram needs
-                    an image or video. PDF flyers cannot be autoposted directly to Instagram.
-                    FromOne will help create Instagram-safe image sizing where possible.
-                  </p>
-                </div>
-
-                <div>
-                  <strong>TikTok</strong>
-                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
-                    TikTok is manual for now. FromOne creates TikTok-ready wording, then you copy
-                    the caption and open TikTok yourself. Future TikTok autoposting will only happen
-                    after the user reviews and approves the post.
-                  </p>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: 12,
-                  marginTop: 16,
-                  paddingTop: 16,
-                  borderTop: '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
-                <div>
-                  <strong>Split platforms</strong>
-                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
-                    Posts are divided across the platforms you choose.
-                  </p>
-                </div>
-
-                <div>
-                  <strong>Every platform</strong>
-                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.5 }}>
-                    Each upload or post gets versions for every selected platform.
-                  </p>
-                </div>
-              </div>
-
-              <p
-                style={{
-                  margin: '16px 0 0',
-                  color: '#ffe58a',
-                  fontWeight: 850,
-                  lineHeight: 1.5,
-                }}
-              >
-                You always review posts before publishing, copying or scheduling.
-              </p>
+              )}
             </div>
 
             {loadingConnections ? (
