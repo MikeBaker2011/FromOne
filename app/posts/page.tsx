@@ -2673,12 +2673,12 @@ Important:
               <section
                 style={{
                   width: "100%",
-                  borderRadius: 28,
+                  borderRadius: 22,
                   overflow: "hidden",
-                  border: "1px solid rgba(255, 212, 59, 0.22)",
+                  border: "1px solid rgba(255, 212, 59, 0.16)",
                   background:
-                    "radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%), rgba(15, 23, 42, 0.42)",
-                  boxShadow: "0 22px 64px rgba(0,0,0,0.22)",
+                    "linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))",
+                  boxShadow: "0 16px 44px rgba(0,0,0,0.16)",
                 }}
               >
                 <button
@@ -2687,12 +2687,12 @@ Important:
                   aria-expanded={showPostsGuide}
                   style={{
                     width: "100%",
-                    minHeight: 86,
-                    padding: "20px clamp(18px, 3vw, 26px)",
+                    minHeight: 68,
+                    padding: "14px clamp(16px, 2.4vw, 22px)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    gap: 16,
+                    gap: 14,
                     textAlign: "left",
                     cursor: "pointer",
                     background: "transparent",
@@ -2700,32 +2700,54 @@ Important:
                     color: "#f8fafc",
                   }}
                 >
-                  <span>
-                    <span className="page-eyebrow">New here?</span>
+                  <span style={{ minWidth: 0 }}>
+                    <span
+                      className="page-eyebrow"
+                      style={{
+                        display: "block",
+                        marginBottom: 5,
+                        fontSize: 11,
+                        letterSpacing: "0.15em",
+                      }}
+                    >
+                      New here?
+                    </span>
                     <strong
                       style={{
                         display: "block",
-                        marginTop: 8,
-                        fontSize: "clamp(1.25rem, 2.6vw, 1.85rem)",
-                        letterSpacing: "-0.035em",
+                        fontSize: "clamp(1rem, 2vw, 1.25rem)",
+                        letterSpacing: "-0.025em",
+                        lineHeight: 1.18,
                       }}
                     >
-                      Review, edit, then publish.
+                      How this page works
                     </strong>
+                    <span
+                      style={{
+                        display: "block",
+                        marginTop: 4,
+                        color: "var(--muted)",
+                        fontSize: 14,
+                        lineHeight: 1.35,
+                        fontWeight: 750,
+                      }}
+                    >
+                      Review first. Publish Facebook or Instagram, or copy/open TikTok.
+                    </span>
                   </span>
 
                   <span
                     aria-hidden="true"
                     style={{
                       flex: "0 0 auto",
-                      width: 44,
-                      height: 44,
-                      borderRadius: 16,
+                      width: 38,
+                      height: 38,
+                      borderRadius: 14,
                       display: "inline-grid",
                       placeItems: "center",
-                      background: "rgba(255, 212, 59, 0.16)",
+                      background: "rgba(255, 212, 59, 0.14)",
                       color: "#ffd43b",
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: 950,
                     }}
                   >
@@ -2736,81 +2758,41 @@ Important:
                 {showPostsGuide && (
                   <div
                     style={{
-                      padding: "22px clamp(18px, 3vw, 26px) 26px",
-                      borderTop: "1px solid rgba(255, 212, 59, 0.14)",
+                      padding: "14px clamp(16px, 2.4vw, 22px) 18px",
+                      borderTop: "1px solid rgba(255, 212, 59, 0.11)",
                     }}
                   >
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                        gap: 16,
-                        alignItems: "stretch",
+                        gap: 9,
+                        color: "var(--muted)",
+                        fontSize: 15,
+                        lineHeight: 1.45,
+                        fontWeight: 750,
                       }}
                     >
-                      {[
-                        {
-                          step: "1",
-                          title: "Review the wording",
-                          text: "Open each post, check the caption, CTA and hashtags, then edit anything you want.",
-                        },
-                        {
-                          step: "2",
-                          title: "Check the media",
-                          text: "Facebook can publish text or media. Instagram needs an image or video. PDF flyers are not Instagram autopost media.",
-                        },
-                        {
-                          step: "3",
-                          title: "Publish or copy",
-                          text: "Facebook and Instagram can autopost when connected. TikTok is copy/open manually for now.",
-                        },
-                      ].map((item) => (
-                        <article
-                          key={item.step}
-                          className="card"
-                          style={{
-                            minHeight: 178,
-                            padding: 20,
-                            borderRadius: 24,
-                            background:
-                              "linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035))",
-                            border: "1px solid rgba(255, 212, 59, 0.13)",
-                            boxShadow: "0 18px 46px rgba(0,0,0,0.18)",
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 38,
-                              height: 38,
-                              borderRadius: 14,
-                              display: "inline-grid",
-                              placeItems: "center",
-                              background: "linear-gradient(135deg, #ffd43b, #f7b733)",
-                              color: "#101420",
-                              fontWeight: 1000,
-                              marginBottom: 14,
-                            }}
-                          >
-                            {item.step}
-                          </span>
-
-                          <h3 style={{ margin: "0 0 8px", fontSize: 22 }}>{item.title}</h3>
-                          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>
-                            {item.text}
-                          </p>
-                        </article>
-                      ))}
+                      <p style={{ margin: 0 }}>
+                        <strong style={{ color: "#f8fafc" }}>1.</strong> Choose a saved week and open a post.
+                      </p>
+                      <p style={{ margin: 0 }}>
+                        <strong style={{ color: "#f8fafc" }}>2.</strong> Review the wording, media and schedule before anything goes live.
+                      </p>
+                      <p style={{ margin: 0 }}>
+                        <strong style={{ color: "#f8fafc" }}>3.</strong> Facebook and Instagram can autopost when connected. TikTok is manual copy/open for now.
+                      </p>
                     </div>
 
                     <p
                       style={{
-                        margin: "18px 0 0",
+                        margin: "12px 0 0",
                         color: "#ffe58a",
                         fontWeight: 900,
-                        lineHeight: 1.5,
+                        lineHeight: 1.45,
+                        fontSize: 14,
                       }}
                     >
-                      Nothing goes live until you choose to publish, copy or schedule it.
+                      Instagram needs an image or video. PDF flyers cannot be posted directly to Instagram.
                     </p>
                   </div>
                 )}
