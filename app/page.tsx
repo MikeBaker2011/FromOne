@@ -263,15 +263,19 @@ export default function Home() {
         }
 
         .fromone-media-tile small {
+          display: block;
           color: rgba(248, 250, 252, 0.62);
           font-weight: 850;
+          line-height: 1.2;
         }
 
         .fromone-media-tile strong {
+          display: block;
           margin-top: 8px;
           color: #ffffff;
           font-size: 1.1rem;
           line-height: 1.15;
+          min-height: 2.55em;
         }
 
         .fromone-sample-post {
