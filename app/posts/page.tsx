@@ -3001,20 +3001,31 @@ Important:
                         </span>
                       </div>
 
-                      <span
-                        className="dashboard-platform-create-button"
+                      <div
+                        className="fromone-review-button-row"
                         style={{
-                          minHeight: 46,
-                          borderRadius: 16,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
                           width: "100%",
+                          display: "flex",
+                          justifyContent: "center",
                           marginTop: "auto",
                         }}
                       >
-                        Review post
-                      </span>
+                        <span
+                          className="dashboard-platform-create-button fromone-review-post-button"
+                          style={{
+                            minHeight: 46,
+                            borderRadius: 16,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "min(100%, 360px)",
+                            maxWidth: 360,
+                            margin: "0 auto",
+                          }}
+                        >
+                          Review post
+                        </span>
+                      </div>
                     </div>
                   </button>
                 );
