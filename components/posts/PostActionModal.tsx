@@ -1212,6 +1212,11 @@ export default function PostActionModal({
           </button>
         </header>
 
+        <div className="f1-post-review-hint" aria-label="Review navigation hint">
+          <span>Review tip</span>
+          <strong>Use ↑ / ↓ keys or your mouse wheel to move through this post review.</strong>
+        </div>
+
         <div className="f1-post-modal-body">
           <aside ref={mediaRef} className={`f1-post-media-panel ${showPrepareMediaModal ? 'is-preparing-media' : ''}`}>
             {!showPrepareMediaModal && (
