@@ -29,12 +29,6 @@ type CropBox = {
   height?: number;
 };
 
-type TransformSettings = {
-  zoom?: number;
-  offsetX?: number;
-  offsetY?: number;
-};
-
 const resizePresets: Record<ResizePresetKey, ResizePreset> = {
   'instagram-square': {
     value: 'instagram-square',
@@ -103,20 +97,6 @@ function normaliseCropBox(value: unknown): CropBox | null {
   };
 }
 
-function normaliseTransform(value: unknown) {
-  if (!value || typeof value !== 'object') {
-    return { zoom: 1, offsetX: 0, offsetY: 0 };
-  }
-
-  const transform = value as TransformSettings;
-
-  return {
-    zoom: clampNumber(Number(transform.zoom) || 1, 1, 3),
-    offsetX: clampNumber(Number(transform.offsetX) || 0, -80, 80),
-    offsetY: clampNumber(Number(transform.offsetY) || 0, -80, 80),
-  };
-}
-
 function getSafeFileName(value: string) {
   return cleanText(value)
     .toLowerCase()
@@ -161,8 +141,6 @@ export async function POST(request: NextRequest) {
     const preset = getPreset(body?.preset);
     const cropBox = normaliseCropBox(body?.crop);
     const mode = cleanText(body?.mode).toLowerCase() || 'crop';
-    const fitMode = cleanText(body?.fitMode || body?.fit_mode).toLowerCase() === 'fit' ? 'fit' : 'fill';
-    const transform = normaliseTransform(body?.transform);
     const supabase = getSupabaseAdmin();
 
     let mediaUrl = requestedMediaUrl;
@@ -205,90 +183,40 @@ export async function POST(request: NextRequest) {
       throw new Error('Could not read the image dimensions.');
     }
 
-    let resizedBuffer: Buffer;
+    let imagePipeline = sharp(normalisedBuffer, { failOn: 'none' });
 
-    if (mode === 'transform') {
-      if (fitMode === 'fit') {
-        resizedBuffer = await sharp(normalisedBuffer, { failOn: 'none' })
-          .resize({
-            width: preset.width,
-            height: preset.height,
-            fit: 'contain',
-            background: '#0f172a',
-            withoutEnlargement: false,
-          })
-          .jpeg({
-            quality: 92,
-            mozjpeg: true,
-          })
-          .toBuffer();
-      } else {
-        const baseScale = Math.max(preset.width / metadata.width, preset.height / metadata.height);
-        const scale = baseScale * transform.zoom;
-        const scaledWidth = Math.max(Math.ceil(metadata.width * scale), preset.width);
-        const scaledHeight = Math.max(Math.ceil(metadata.height * scale), preset.height);
-        const offsetXPixels = (transform.offsetX / 100) * preset.width;
-        const offsetYPixels = (transform.offsetY / 100) * preset.height;
-        const cropLeft = Math.round((scaledWidth - preset.width) / 2 - offsetXPixels);
-        const cropTop = Math.round((scaledHeight - preset.height) / 2 - offsetYPixels);
-        const safeLeft = clampNumber(cropLeft, 0, Math.max(scaledWidth - preset.width, 0));
-        const safeTop = clampNumber(cropTop, 0, Math.max(scaledHeight - preset.height, 0));
+    if (cropBox && mode === 'crop') {
+      const cropLeft = Math.round((metadata.width * clampNumber(cropBox.x || 0, 0, 99)) / 100);
+      const cropTop = Math.round((metadata.height * clampNumber(cropBox.y || 0, 0, 99)) / 100);
+      const cropWidth = Math.round((metadata.width * clampNumber(cropBox.width || 100, 1, 100)) / 100);
+      const cropHeight = Math.round((metadata.height * clampNumber(cropBox.height || 100, 1, 100)) / 100);
 
-        resizedBuffer = await sharp(normalisedBuffer, { failOn: 'none' })
-          .resize({
-            width: scaledWidth,
-            height: scaledHeight,
-            fit: 'fill',
-            withoutEnlargement: false,
-          })
-          .extract({
-            left: safeLeft,
-            top: safeTop,
-            width: preset.width,
-            height: preset.height,
-          })
-          .jpeg({
-            quality: 92,
-            mozjpeg: true,
-          })
-          .toBuffer();
-      }
-    } else {
-      let imagePipeline = sharp(normalisedBuffer, { failOn: 'none' });
+      const safeLeft = clampNumber(cropLeft, 0, Math.max(metadata.width - 1, 0));
+      const safeTop = clampNumber(cropTop, 0, Math.max(metadata.height - 1, 0));
+      const safeWidth = clampNumber(cropWidth, 1, metadata.width - safeLeft);
+      const safeHeight = clampNumber(cropHeight, 1, metadata.height - safeTop);
 
-      if (cropBox && mode === 'crop') {
-        const cropLeft = Math.round((metadata.width * clampNumber(cropBox.x || 0, 0, 99)) / 100);
-        const cropTop = Math.round((metadata.height * clampNumber(cropBox.y || 0, 0, 99)) / 100);
-        const cropWidth = Math.round((metadata.width * clampNumber(cropBox.width || 100, 1, 100)) / 100);
-        const cropHeight = Math.round((metadata.height * clampNumber(cropBox.height || 100, 1, 100)) / 100);
-
-        const safeLeft = clampNumber(cropLeft, 0, Math.max(metadata.width - 1, 0));
-        const safeTop = clampNumber(cropTop, 0, Math.max(metadata.height - 1, 0));
-        const safeWidth = clampNumber(cropWidth, 1, metadata.width - safeLeft);
-        const safeHeight = clampNumber(cropHeight, 1, metadata.height - safeTop);
-
-        imagePipeline = imagePipeline.extract({
-          left: safeLeft,
-          top: safeTop,
-          width: safeWidth,
-          height: safeHeight,
-        });
-      }
-
-      resizedBuffer = await imagePipeline
-        .resize({
-          width: preset.width,
-          height: preset.height,
-          fit: mode === 'fit' ? 'contain' : 'cover',
-          background: '#0f172a',
-          withoutEnlargement: false,
-        })
-        .jpeg({
-          quality: 92,
-          mozjpeg: true,
-        })
-        .toBuffer();
+      imagePipeline = imagePipeline.extract({
+        left: safeLeft,
+        top: safeTop,
+        width: safeWidth,
+        height: safeHeight,
+      });
     }
+
+    const resizedBuffer = await imagePipeline
+      .resize({
+        width: preset.width,
+        height: preset.height,
+        fit: mode === 'fit' ? 'contain' : 'cover',
+        background: '#0f172a',
+        withoutEnlargement: false,
+      })
+      .jpeg({
+        quality: 92,
+        mozjpeg: true,
+      })
+      .toBuffer();
 
     const fileBase = getSafeFileName(`${preset.value}-${postId || Date.now()}`);
     const path = `${userId}/posts/${postId || 'manual'}/resized/${Date.now()}-${fileBase}.jpg`;
@@ -321,9 +249,7 @@ export async function POST(request: NextRequest) {
       original_width: metadata.width,
       original_height: metadata.height,
       mode,
-      fit_mode: fitMode,
       crop: cropBox,
-      transform,
     });
   } catch (error: any) {
     console.error('Media resize API error:', error?.message || error);
