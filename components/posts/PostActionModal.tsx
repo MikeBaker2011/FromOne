@@ -208,90 +208,6 @@ function triggerDownload(url: string, filename: string) {
   document.body.removeChild(link);
 }
 
-function loadImageFromBlob(blob: Blob) {
-  return new Promise<{ image: HTMLImageElement; objectUrl: string }>((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(blob);
-    const image = new Image();
-
-    image.onload = () => resolve({ image, objectUrl });
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('Could not prepare this image for resizing.'));
-    };
-
-    image.src = objectUrl;
-  });
-}
-
-async function createResizedImageUrl({
-  sourceUrl,
-  preset,
-}: {
-  sourceUrl: string;
-  preset: ResizePreset;
-}) {
-  const response = await fetch(sourceUrl);
-
-  if (!response.ok) {
-    throw new Error('Could not load the media for resizing.');
-  }
-
-  const blob = await response.blob();
-  const { image, objectUrl } = await loadImageFromBlob(blob);
-
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = preset.width;
-    canvas.height = preset.height;
-
-    const context = canvas.getContext('2d');
-
-    if (!context) {
-      throw new Error('Image resizing is not available in this browser.');
-    }
-
-    context.fillStyle = '#0f172a';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    const imageRatio = image.naturalWidth / image.naturalHeight;
-    const canvasRatio = canvas.width / canvas.height;
-
-    let drawWidth = canvas.width;
-    let drawHeight = canvas.height;
-
-    if (imageRatio > canvasRatio) {
-      drawWidth = canvas.width;
-      drawHeight = canvas.width / imageRatio;
-    } else {
-      drawHeight = canvas.height;
-      drawWidth = canvas.height * imageRatio;
-    }
-
-    const drawX = (canvas.width - drawWidth) / 2;
-    const drawY = (canvas.height - drawHeight) / 2;
-
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = 'high';
-    context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
-
-    const resizedBlob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (result) => {
-          if (result) resolve(result);
-          else reject(new Error('Could not create resized image.'));
-        },
-        'image/jpeg',
-        0.92,
-      );
-    });
-
-    return URL.createObjectURL(resizedBlob);
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
-}
-
-
 function isMetaReconnectError(value?: string | null) {
   const message = String(value || '').toLowerCase();
 
@@ -558,20 +474,37 @@ export default function PostActionModal({
     setResizingMedia(true);
 
     try {
-      if (resizedMedia?.url?.startsWith('blob:')) {
-        URL.revokeObjectURL(resizedMedia.url);
+      const response = await fetch('/api/media/resize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          postId: selectedPost.id,
+          mediaUrl: selectedPost.media_url,
+          preset: selectedResizePreset.value,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          result?.error || result?.message || 'Could not resize this image.',
+        );
       }
 
-      const resizedUrl = await createResizedImageUrl({
-        sourceUrl: selectedPost.media_url,
-        preset: selectedResizePreset,
-      });
+      const resizedUrl = result?.url || result?.publicUrl || result?.public_url;
+
+      if (!resizedUrl) {
+        throw new Error('The resized image was created but no download link was returned.');
+      }
 
       setResizedMedia({
         url: resizedUrl,
-        label: selectedResizePreset.label,
-        width: selectedResizePreset.width,
-        height: selectedResizePreset.height,
+        label: result?.label || selectedResizePreset.label,
+        width: Number(result?.width || selectedResizePreset.width),
+        height: Number(result?.height || selectedResizePreset.height),
       });
     } catch (error: any) {
       setResizeError(
