@@ -2563,108 +2563,529 @@ body:has(.fromone-simple-modal-overlay) {
     max-height: 340px !important;
   }
 }
-/* FINAL FIX: premium rewrite controls alignment */
 
-.fromone-premium-audience-grid {
+/* =========================================================
+   PREMIUM EASY POST MODAL REDESIGN
+   New f1-* classes avoid the old modal layout conflicts.
+   ========================================================= */
+
+.f1-post-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  padding: 22px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background: rgba(2, 6, 23, 0.72) !important;
+  backdrop-filter: blur(18px) !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+}
+
+.f1-post-modal-card {
+  width: min(1180px, calc(100vw - 44px)) !important;
+  max-width: 1180px !important;
+  color: #f8fafc !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.13), transparent 30%),
+    linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.98)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 34px !important;
+  box-shadow: 0 36px 120px rgba(0, 0, 0, 0.48) !important;
+  padding: clamp(18px, 3vw, 30px) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.f1-post-modal-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 18px !important;
+  align-items: start !important;
+  padding-bottom: 20px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09) !important;
+}
+
+.f1-post-eyebrow,
+.f1-post-panel-header span {
+  color: #ffd43b !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  font-weight: 950 !important;
+}
+
+.f1-post-modal-header h2 {
+  margin: 8px 0 12px !important;
+  color: #ffffff !important;
+  font-size: clamp(2.3rem, 5vw, 4.4rem) !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.06em !important;
+  max-width: 920px !important;
+  overflow-wrap: anywhere !important;
+}
+
+.f1-post-badges {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.f1-post-badges span {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  color: rgba(248, 250, 252, 0.85) !important;
+  background: rgba(255, 255, 255, 0.075) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  font-size: 0.8rem !important;
+  font-weight: 900 !important;
+}
+
+.f1-post-close,
+.f1-post-secondary,
+.f1-post-more-toggle,
+.f1-post-improve-toggle {
+  min-height: 48px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  font-weight: 950 !important;
+  padding: 0 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+}
+
+.f1-post-close:hover,
+.f1-post-secondary:hover:not(:disabled),
+.f1-post-more-toggle:hover:not(:disabled),
+.f1-post-improve-toggle:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12) !important;
+  transform: translateY(-1px) !important;
+}
+
+.f1-post-modal-body {
+  display: grid !important;
+  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr) !important;
+  gap: 20px !important;
+  margin-top: 22px !important;
+}
+
+.f1-post-media-panel,
+.f1-post-panel {
+  border-radius: 28px !important;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.038)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22) !important;
+}
+
+.f1-post-media-panel {
+  padding: 16px !important;
+  align-self: start !important;
+  position: sticky !important;
+  top: 16px !important;
+}
+
+.f1-post-media-frame {
+  min-height: 360px !important;
+  max-height: 620px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  border-radius: 24px !important;
+  background: rgba(2, 6, 23, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+}
+
+.f1-post-media-frame img,
+.f1-post-media-frame video {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 620px !important;
+  object-fit: contain !important;
+  background: rgba(0, 0, 0, 0.18) !important;
+}
+
+.f1-post-file-preview {
+  min-height: 260px !important;
+  display: grid !important;
+  place-items: center !important;
+  text-align: center !important;
+  padding: 28px !important;
+}
+
+.f1-post-file-preview strong {
+  color: #ffffff !important;
+  font-size: 1.35rem !important;
+}
+
+.f1-post-file-preview p,
+.f1-post-media-tools p,
+.f1-post-soft-note p,
+.f1-post-error-note p,
+.f1-post-primary-publish-card p,
+.f1-post-manual-card p,
+.f1-post-improve-head p,
+.f1-post-media-rewrite-card p,
+.f1-post-schedule-card p {
+  margin: 8px 0 0 !important;
+  color: rgba(248, 250, 252, 0.74) !important;
+  line-height: 1.48 !important;
+}
+
+.f1-post-media-tools {
+  display: grid !important;
+  gap: 12px !important;
+  margin-top: 14px !important;
+}
+
+.f1-post-media-tools strong,
+.f1-post-wording-card strong,
+.f1-post-panel-header h3,
+.f1-post-primary-publish-card strong,
+.f1-post-manual-card strong,
+.f1-post-improve-head strong,
+.f1-post-media-rewrite-card strong,
+.f1-post-schedule-card strong,
+.f1-post-admin-card strong,
+.f1-post-soft-note strong,
+.f1-post-error-note strong {
+  color: #ffffff !important;
+}
+
+.f1-post-media-tools small,
+.f1-post-primary-publish-card small,
+.f1-post-media-rewrite-card small {
+  display: block !important;
+  margin-top: 8px !important;
+  color: rgba(248, 250, 252, 0.58) !important;
+  line-height: 1.4 !important;
+}
+
+.f1-post-yellow-action {
+  min-height: 54px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255, 212, 59, 0.42) !important;
+  background: #ffd43b !important;
+  color: #101420 !important;
+  font-weight: 950 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 0 18px !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 18px 38px rgba(255, 212, 59, 0.16) !important;
+  box-sizing: border-box !important;
+}
+
+.f1-post-yellow-action span {
+  color: #101420 !important;
+  font-weight: 950 !important;
+}
+
+.f1-post-yellow-action:disabled,
+.f1-post-secondary:disabled,
+.f1-post-more-toggle:disabled,
+.f1-post-improve-toggle:disabled,
+.f1-post-pill-row button:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.f1-post-two-actions {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 18px !important;
-  align-items: end !important;
+  gap: 10px !important;
 }
 
-.fromone-premium-audience-grid label {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 9px !important;
-  min-width: 0 !important;
-  width: 100% !important;
+.f1-post-danger {
+  color: #fecaca !important;
+  border-color: rgba(248, 113, 113, 0.34) !important;
+  background: rgba(127, 29, 29, 0.18) !important;
 }
 
-.fromone-premium-audience-grid label strong {
-  min-height: 18px !important;
-  line-height: 18px !important;
-}
-
-.fromone-premium-audience-grid select.input,
-.fromone-premium-audience-grid input.input,
-.fromone-premium-audience-grid button {
-  width: 100% !important;
-  height: 64px !important;
-  min-height: 64px !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-}
-
-.fromone-premium-audience-grid button {
-  align-self: end !important;
-  border-radius: 22px !important;
-}
-
-@media (max-width: 760px) {
-  .fromone-premium-audience-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .fromone-premium-audience-grid select.input,
-  .fromone-premium-audience-grid input.input,
-  .fromone-premium-audience-grid button {
-    height: 58px !important;
-    min-height: 58px !important;
-  }
-}
-/* FINAL FIX: keep rewrite dropdowns and button on one row */
-
-.fromone-premium-audience-grid {
+.f1-post-content-panel {
   display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   gap: 16px !important;
-  align-items: end !important;
-}
-
-.fromone-premium-audience-grid label {
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-end !important;
-  gap: 9px !important;
   min-width: 0 !important;
-  width: 100% !important;
 }
 
-.fromone-premium-audience-grid label strong {
-  min-height: 18px !important;
-  line-height: 18px !important;
-  margin: 0 !important;
+.f1-post-panel {
+  padding: clamp(18px, 2.6vw, 26px) !important;
+  min-width: 0 !important;
 }
 
-.fromone-premium-audience-grid select.input,
-.fromone-premium-audience-grid input.input,
-.fromone-premium-audience-grid button {
+.f1-post-panel-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  margin-bottom: 16px !important;
+}
+
+.f1-post-panel-header h3 {
+  margin: 4px 0 0 !important;
+  font-size: clamp(1.45rem, 2.6vw, 2.1rem) !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.03em !important;
+}
+
+.f1-post-wording-card,
+.f1-post-soft-note,
+.f1-post-error-note,
+.f1-post-primary-publish-card,
+.f1-post-manual-card,
+.f1-post-improve-panel,
+.f1-post-media-rewrite-card,
+.f1-post-more-panel,
+.f1-post-schedule-card,
+.f1-post-admin-card {
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  padding: 18px !important;
+}
+
+.f1-post-wording-card p {
+  margin: 0 0 12px !important;
+  color: rgba(248, 250, 252, 0.86) !important;
+  line-height: 1.6 !important;
+  font-size: 1rem !important;
+}
+
+.f1-post-soft-note,
+.f1-post-error-note {
+  margin-top: 12px !important;
+}
+
+.f1-post-error-note {
+  border-color: rgba(248, 113, 113, 0.35) !important;
+  background: rgba(127, 29, 29, 0.16) !important;
+}
+
+.f1-post-improve-toggle,
+.f1-post-more-toggle {
   width: 100% !important;
-  height: 58px !important;
-  min-height: 58px !important;
-  margin: 0 !important;
+  margin-top: 12px !important;
+}
+
+.f1-post-edit-form,
+.f1-post-edit-form label,
+.f1-post-custom-audience,
+.f1-post-rewrite-grid label,
+.f1-post-edit-grid label {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.f1-post-edit-form {
+  gap: 14px !important;
+}
+
+.f1-post-edit-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.f1-post-edit-form .input,
+.f1-post-rewrite-grid .input,
+.f1-post-custom-audience .input,
+.f1-post-schedule-grid .input {
+  width: 100% !important;
+  min-height: 52px !important;
+  border-radius: 16px !important;
+  background: rgba(2, 6, 23, 0.78) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  padding: 0 16px !important;
   box-sizing: border-box !important;
 }
 
-.fromone-premium-audience-grid button {
-  align-self: end !important;
-  border-radius: 18px !important;
+.f1-post-edit-form textarea.input {
+  min-height: 170px !important;
+  padding: 16px !important;
+}
+
+.f1-post-improve-panel {
+  display: grid !important;
+  gap: 14px !important;
+  margin-top: 14px !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.1), transparent 30%),
+    rgba(255, 255, 255, 0.052) !important;
+}
+
+.f1-post-pill-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
+
+.f1-post-pill-row button {
+  min-height: 46px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  color: #fff8c5 !important;
+  background: rgba(255, 212, 59, 0.08) !important;
+  border: 1px solid rgba(255, 212, 59, 0.28) !important;
+  font-weight: 950 !important;
+  cursor: pointer !important;
+}
+
+.f1-post-pill-row button:hover:not(:disabled) {
+  background: rgba(255, 212, 59, 0.13) !important;
+  transform: translateY(-1px) !important;
+}
+
+.f1-post-rewrite-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(150px, 0.85fr) !important;
+  gap: 12px !important;
+  align-items: end !important;
+}
+
+.f1-post-rewrite-grid label span,
+.f1-post-custom-audience span {
+  color: rgba(248, 250, 252, 0.64) !important;
+  font-size: 0.74rem !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  font-weight: 950 !important;
+}
+
+.f1-post-rewrite-grid .f1-post-yellow-action {
+  width: 100% !important;
+  height: 52px !important;
+  min-height: 52px !important;
   white-space: nowrap !important;
 }
 
-/* Custom audience input should span neatly if it appears */
-.fromone-premium-audience-grid input.input {
-  grid-column: span 1 !important;
+.f1-post-media-rewrite-card,
+.f1-post-primary-publish-card,
+.f1-post-manual-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px) !important;
+  gap: 14px !important;
+  align-items: center !important;
+}
+
+.f1-post-primary-publish-card {
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.14), transparent 30%),
+    rgba(255, 255, 255, 0.06) !important;
+}
+
+.f1-post-primary-publish-card .f1-post-yellow-action {
+  width: 100% !important;
+}
+
+.f1-post-manual-card {
+  margin-top: 12px !important;
+}
+
+.f1-post-more-panel {
+  display: grid !important;
+  gap: 12px !important;
+  margin-top: 12px !important;
+}
+
+.f1-post-schedule-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 200px) auto !important;
+  gap: 10px !important;
+  align-items: center !important;
+  margin-top: 12px !important;
+}
+
+.f1-post-admin-card {
+  display: grid !important;
+  gap: 12px !important;
 }
 
 @media (max-width: 980px) {
-  .fromone-premium-audience-grid {
+  .f1-post-modal-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .f1-post-media-panel {
+    position: relative !important;
+    top: auto !important;
+  }
+
+  .f1-post-media-frame {
+    min-height: 260px !important;
+  }
+
+  .f1-post-rewrite-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
 @media (max-width: 640px) {
-  .fromone-premium-audience-grid {
+  .f1-post-modal-overlay {
+    padding: 10px !important;
+  }
+
+  .f1-post-modal-card {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    padding: 16px !important;
+    border-radius: 24px !important;
+  }
+
+  .f1-post-modal-header {
     grid-template-columns: 1fr !important;
+  }
+
+  .f1-post-close {
+    width: 100% !important;
+  }
+
+  .f1-post-modal-header h2 {
+    font-size: clamp(2rem, 12vw, 3.25rem) !important;
+  }
+
+  .f1-post-media-frame {
+    min-height: 220px !important;
+  }
+
+  .f1-post-panel-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .f1-post-two-actions,
+  .f1-post-edit-grid,
+  .f1-post-rewrite-grid,
+  .f1-post-media-rewrite-card,
+  .f1-post-primary-publish-card,
+  .f1-post-manual-card,
+  .f1-post-schedule-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .f1-post-pill-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .f1-post-pill-row button,
+  .f1-post-secondary,
+  .f1-post-yellow-action {
+    width: 100% !important;
   }
 }
