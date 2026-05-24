@@ -663,11 +663,13 @@ export default function PostActionModal({
 
               {showMoreOptions && (
                 <div className="f1-post-more-panel">
-                  <div className="f1-post-schedule-card">
-                    <strong>{canAutoPublish ? 'Autopost time' : 'Reminder time'}</strong>
-                    <p>{canAutoPublish ? 'Choose when FromOne should autopost this connected business account post.' : 'Choose a reminder time for manual posting.'}</p>
+                  <div className="f1-post-schedule-card f1-post-more-card">
+                    <div className="f1-post-more-card-copy">
+                      <strong>{canAutoPublish ? 'Autopost time' : 'Reminder time'}</strong>
+                      <p>{canAutoPublish ? 'Choose when FromOne should autopost this connected business account post.' : 'Choose a reminder time for manual posting.'}</p>
+                    </div>
 
-                    <div className="f1-post-schedule-grid">
+                    <div className="f1-post-schedule-stack">
                       <input
                         type="datetime-local"
                         className="input"
@@ -677,7 +679,7 @@ export default function PostActionModal({
 
                       <button
                         type="button"
-                        className="f1-post-yellow-action"
+                        className="f1-post-yellow-action f1-post-full-action"
                         onClick={() => onSaveReminder(selectedPost)}
                         disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning || posted}
                       >
@@ -687,25 +689,29 @@ export default function PostActionModal({
                       {hasSchedule && (
                         <button
                           type="button"
-                          className="f1-post-secondary"
+                          className="f1-post-secondary f1-post-full-action"
                           onClick={() => onClearReminder(selectedPost)}
                           disabled={savingReminderPostId === selectedPost.id || isRescanning || posted}
                         >
-                          Clear
+                          Clear time
                         </button>
                       )}
                     </div>
                   </div>
 
-                  <div className="f1-post-admin-card">
-                    <strong>Post status</strong>
-                    <div className="f1-post-two-actions">
+                  <div className="f1-post-admin-card f1-post-more-card">
+                    <div className="f1-post-more-card-copy">
+                      <strong>Post status</strong>
+                      <p>Use these only if you need to manually update or remove this post.</p>
+                    </div>
+
+                    <div className="f1-post-status-stack">
                       {posted ? (
-                        <button type="button" className="f1-post-secondary" onClick={() => onMarkAsNotPosted(selectedPost.id)} disabled={isRescanning}>
+                        <button type="button" className="f1-post-secondary f1-post-full-action" onClick={() => onMarkAsNotPosted(selectedPost.id)} disabled={isRescanning}>
                           Undo posted
                         </button>
                       ) : (
-                        <button type="button" className="f1-post-secondary" onClick={() => onMarkAsPosted(selectedPost.id)} disabled={isRescanning}>
+                        <button type="button" className="f1-post-secondary f1-post-full-action" onClick={() => onMarkAsPosted(selectedPost.id)} disabled={isRescanning}>
                           Mark posted manually
                         </button>
                       )}
@@ -713,7 +719,7 @@ export default function PostActionModal({
                       {onDeletePost && (
                         <button
                           type="button"
-                          className="f1-post-secondary f1-post-danger"
+                          className="f1-post-secondary f1-post-danger f1-post-full-action"
                           onClick={() => onDeletePost(selectedPost)}
                           disabled={deletingPostId === selectedPost.id || isRescanning}
                         >

@@ -3159,55 +3159,122 @@ body:has(.fromone-simple-modal-overlay) {
     min-height: 58px !important;
   }
 }
-/* FINAL FIX: align autopost schedule controls */
 
-.fromone-easy-schedule-card {
-  padding: 22px !important;
-  border-radius: 24px !important;
-}
-
-.fromone-easy-schedule-grid {
+/* FINAL REDESIGN: clean stacked More options actions */
+.f1-post-more-panel {
   display: grid !important;
-  grid-template-columns: minmax(240px, 1fr) minmax(220px, 0.85fr) minmax(96px, 0.35fr) !important;
   gap: 14px !important;
-  align-items: center !important;
-  margin-top: 18px !important;
+  margin-top: 14px !important;
+  padding: 16px !important;
+  border-radius: 26px !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.09), transparent 32%),
+    rgba(255, 255, 255, 0.045) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
 }
 
-.fromone-easy-schedule-grid input.input,
-.fromone-easy-schedule-grid button {
+.f1-post-more-card,
+.f1-post-schedule-card.f1-post-more-card,
+.f1-post-admin-card.f1-post-more-card {
+  display: grid !important;
+  gap: 16px !important;
+  padding: 20px !important;
+  border-radius: 24px !important;
+  background: rgba(2, 6, 23, 0.36) !important;
+  border: 1px solid rgba(255, 255, 255, 0.105) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+.f1-post-more-card-copy strong {
+  display: block !important;
+  color: #ffffff !important;
+  font-size: 1.08rem !important;
+  line-height: 1.2 !important;
+}
+
+.f1-post-more-card-copy p {
+  margin: 8px 0 0 !important;
+  color: rgba(248, 250, 252, 0.72) !important;
+  line-height: 1.5 !important;
+  max-width: 680px !important;
+}
+
+.f1-post-schedule-stack,
+.f1-post-status-stack {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 11px !important;
   width: 100% !important;
+}
+
+.f1-post-schedule-stack input.input,
+.f1-post-schedule-stack button,
+.f1-post-status-stack button,
+.f1-post-full-action {
+  width: 100% !important;
+  min-width: 0 !important;
   height: 58px !important;
   min-height: 58px !important;
   margin: 0 !important;
   border-radius: 18px !important;
-  box-sizing: border-box !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-}
-
-.fromone-easy-schedule-grid input.input {
-  padding: 0 18px !important;
-}
-
-.fromone-easy-schedule-grid button {
+  text-align: center !important;
+  box-sizing: border-box !important;
   font-weight: 950 !important;
-  white-space: nowrap !important;
 }
 
-.fromone-easy-schedule-grid button.secondary-button {
-  background: rgba(255, 255, 255, 0.09) !important;
+.f1-post-schedule-stack input.input {
+  padding: 0 18px !important;
+  background: rgba(2, 6, 23, 0.86) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
 }
 
-@media (max-width: 760px) {
-  .fromone-easy-schedule-grid {
-    grid-template-columns: 1fr !important;
+.f1-post-schedule-stack .f1-post-yellow-action {
+  background: #ffd43b !important;
+  color: #101420 !important;
+  border-color: rgba(255, 212, 59, 0.44) !important;
+  box-shadow: 0 18px 38px rgba(255, 212, 59, 0.16) !important;
+}
+
+.f1-post-schedule-stack .f1-post-secondary,
+.f1-post-status-stack .f1-post-secondary {
+  background: rgba(255, 255, 255, 0.085) !important;
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  color: #ffffff !important;
+}
+
+.f1-post-status-stack .f1-post-danger {
+  color: #fecaca !important;
+  border-color: rgba(248, 113, 113, 0.35) !important;
+  background: rgba(127, 29, 29, 0.18) !important;
+}
+
+@media (min-width: 900px) {
+  .f1-post-status-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .f1-post-more-panel {
+    padding: 12px !important;
+    border-radius: 22px !important;
   }
 
-  .fromone-easy-schedule-grid input.input,
-  .fromone-easy-schedule-grid button {
+  .f1-post-more-card,
+  .f1-post-schedule-card.f1-post-more-card,
+  .f1-post-admin-card.f1-post-more-card {
+    padding: 16px !important;
+    border-radius: 20px !important;
+  }
+
+  .f1-post-schedule-stack input.input,
+  .f1-post-schedule-stack button,
+  .f1-post-status-stack button,
+  .f1-post-full-action {
     height: 56px !important;
     min-height: 56px !important;
   }
