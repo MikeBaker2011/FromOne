@@ -134,6 +134,60 @@ function getBriefMediaGuidance({
   return 'Image attached.';
 }
 
+
+
+function isMetaReconnectError(value?: string | null) {
+  const message = String(value || '').toLowerCase();
+
+  return (
+    message.includes('connection has expired') ||
+    message.includes('reconnect facebook') ||
+    message.includes('reconnect instagram') ||
+    message.includes('error validating access token') ||
+    message.includes('invalid access token') ||
+    message.includes('session is invalid') ||
+    message.includes('user logged out')
+  );
+}
+
+function isGenericPostTitle(title?: string | null) {
+  const cleanTitle = String(title || '').trim();
+
+  if (!cleanTitle) return true;
+
+  return (
+    /^(facebook|instagram|tiktok|post)\s+post\s*\d*$/i.test(cleanTitle) ||
+    /^(facebook|instagram|tiktok)\s*\d+$/i.test(cleanTitle) ||
+    /^post\s*\d+$/i.test(cleanTitle)
+  );
+}
+
+function getBetterPostTitle(post: any, fallback: string) {
+  const savedTitle = String(post?.title || '').trim();
+
+  if (savedTitle && !isGenericPostTitle(savedTitle)) {
+    return savedTitle;
+  }
+
+  const caption = String(post?.caption || '').trim();
+
+  if (caption) {
+    const firstLine = caption
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .find(Boolean);
+
+    const firstSentence = firstLine?.split(/[.!?]/)[0]?.trim();
+    const candidate = firstSentence || firstLine || '';
+
+    if (candidate.length > 8) {
+      return candidate.length > 64 ? `${candidate.slice(0, 64).trim()}...` : candidate;
+    }
+  }
+
+  return fallback;
+}
+
 export default function PostActionModal({
   selectedPost,
   editingPostId,
@@ -211,6 +265,10 @@ export default function PostActionModal({
   if (!selectedPost) return null;
 
   const platformName = getPlatformDisplayName(selectedPost);
+  const modalTitle = getBetterPostTitle(
+    selectedPost,
+    `${platformName} ${getPostPositionLabel(selectedPost)}`,
+  );
   const captionLimit = getCaptionLimitForPlatform(platformName);
   const savedCaptionLength = String(selectedPost.caption || '').length;
   const editedCaptionLength = String(editCaption || '').length;
@@ -249,10 +307,21 @@ export default function PostActionModal({
   const savedScheduleLabel = canAutoPublish ? 'Autopost planned' : 'Reminder planned';
   const saveScheduleButtonLabel = canAutoPublish ? 'Save autopost time' : 'Save reminder time';
 
+  const publishErrorNeedsReconnect = isMetaReconnectError(selectedPost.publish_error);
+  const autopostNeedsAttention = canAutoPublish && (needsMetaConnection || publishErrorNeedsReconnect);
+  const manualPlatformLabel = isFacebookPost
+    ? 'Facebook'
+    : isInstagramPost
+      ? 'Instagram'
+      : isTikTokPost
+        ? 'TikTok'
+        : platformName;
+
   const canUsePrimaryPublish = !posted && !isPublishing && !isRescanning && !needsMedia && !instagramHasFlyerOnly;
 
+
   const handlePrimaryPublish = () => {
-    if (needsMetaConnection) {
+    if (autopostNeedsAttention) {
       window.location.href = '/settings?setup=business';
       return;
     }
@@ -279,8 +348,10 @@ export default function PostActionModal({
     ? 'Publishing...'
     : posted
       ? 'Already posted'
-      : needsMetaConnection
-        ? 'Connect business account'
+      : autopostNeedsAttention
+        ? publishErrorNeedsReconnect
+          ? 'Reconnect accounts'
+          : 'Connect business account'
         : canAutoPublish
           ? `Publish to ${autoPublishPlatformName}`
           : isTikTokPost
@@ -289,8 +360,8 @@ export default function PostActionModal({
 
   const primaryHelpText = posted
     ? 'This post has already been marked as posted.'
-    : needsMetaConnection
-      ? 'Autoposting needs a Facebook Page or Instagram professional account.'
+    : autopostNeedsAttention
+      ? 'Autoposting needs attention. You can reconnect, or copy and post manually now.'
       : canAutoPublish
         ? 'Publish now, or choose an autopost time in More options.'
         : 'Copy the wording and open the platform manually.';
@@ -306,7 +377,7 @@ export default function PostActionModal({
         <header className="f1-post-modal-header">
           <div className="f1-post-modal-title-block">
             <div className="f1-post-eyebrow">{getPostPositionLabel(selectedPost)} · {platformName}</div>
-            <h2>{selectedPost.title || 'Review post'}</h2>
+            <h2>{modalTitle}</h2>
             <div className="f1-post-badges">
               <span>{statusLabel}</span>
               {hasSchedule && !posted && (
@@ -612,6 +683,38 @@ export default function PostActionModal({
                 </div>
               )}
 
+              {autopostNeedsAttention && !posted && (
+                <div className="f1-post-soft-note">
+                  <strong>Autopost needs reconnecting</strong>
+                  <p>
+                    Facebook and Instagram autoposting needs a connected business account. You can reconnect,
+                    or copy this post and publish it manually now.
+                  </p>
+
+                  <div className="f1-post-two-actions">
+                    <button
+                      type="button"
+                      className="f1-post-secondary"
+                      onClick={() => {
+                        window.location.href = '/settings?setup=business';
+                      }}
+                      disabled={isRescanning}
+                    >
+                      Reconnect accounts
+                    </button>
+
+                    <button
+                      type="button"
+                      className="f1-post-secondary"
+                      onClick={() => onCopyPost(selectedPost)}
+                      disabled={isRescanning}
+                    >
+                      Copy post
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {instagramHasFlyerOnly && (
                 <div className="f1-post-soft-note">
                   <strong>Instagram needs an image or video</strong>
@@ -638,8 +741,8 @@ export default function PostActionModal({
 
               <div className="f1-post-manual-card">
                 <div>
-                  <strong>Personal account?</strong>
-                  <p>Autoposting is for Facebook Pages and Instagram professional accounts. Personal accounts can still copy and post manually.</p>
+                  <strong>Manual posting is always available</strong>
+                  <p>Autoposting is for Facebook Pages and Instagram professional accounts. If the connection is missing, expired, or you use a personal account, copy the post and open the platform manually.</p>
                 </div>
 
                 <div className="f1-post-two-actions">
@@ -649,10 +752,10 @@ export default function PostActionModal({
                   <button
                     type="button"
                     className="f1-post-secondary"
-                    onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
+                    onClick={() => onOpenPlatform(manualPlatformLabel)}
                     disabled={isRescanning}
                   >
-                    Open {platformName}
+                    Open {manualPlatformLabel}
                   </button>
                 </div>
               </div>
