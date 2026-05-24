@@ -2802,7 +2802,7 @@ Important:
 
           {campaigns.length > 0 && (
             <section
-              className="premium-card"
+              className="premium-card fromone-posts-hero-card"
               style={{
                 marginBottom: 22,
                 display: "grid",
@@ -2816,6 +2816,7 @@ Important:
               }}
             >
               <div
+                className="fromone-posts-hero-layout"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "minmax(0, 1fr) auto",
@@ -2823,7 +2824,7 @@ Important:
                   alignItems: "center",
                 }}
               >
-                <div style={{ minWidth: 0 }}>
+                <div className="fromone-posts-hero-copy" style={{ minWidth: 0 }}>
                   <div className="page-eyebrow">Posts</div>
                   <h1
                     className="page-title"
@@ -2846,74 +2847,41 @@ Important:
                 </div>
 
                 <div
+                  className="fromone-posts-hero-actions"
                   style={{
-                    display: "grid",
+                    display: "flex",
                     gap: 10,
-                    justifyItems: "end",
-                    minWidth: 190,
+                    flexWrap: "wrap",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    minWidth: 220,
                   }}
                 >
-                  <div
-                    style={{
-                      display: "inline-grid",
-                      gap: 4,
-                      padding: "13px 16px",
-                      borderRadius: 22,
-                      background: "rgba(15, 23, 42, 0.62)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      minWidth: 168,
-                      textAlign: "center",
-                    }}
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() =>
+                      setShowSavedWeekControls((current) => !current)
+                    }
+                    style={{ minHeight: 46, borderRadius: 16 }}
                   >
-                    <strong style={{ color: "#fff", fontSize: 22 }}>
-                      {sortedPosts.filter((post) => isPostPosted(post)).length}{" "}
-                      / {sortedPosts.length}
-                    </strong>
-                    <span
-                      style={{
-                        color: "rgba(248,250,252,0.7)",
-                        fontSize: 12,
-                        fontWeight: 900,
-                      }}
-                    >
-                      reviewed / posted
-                    </span>
-                  </div>
+                    {showSavedWeekControls ? "Hide weeks" : "Manage weeks"}
+                  </button>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      flexWrap: "wrap",
-                      justifyContent: "flex-end",
-                    }}
-                  >
+                  {sortedPosts.length > 0 && sortedPosts.length < 7 && (
                     <button
                       type="button"
                       className="secondary-button"
-                      onClick={() =>
-                        setShowSavedWeekControls((current) => !current)
-                      }
-                      style={{ minHeight: 42, borderRadius: 15 }}
+                      onClick={() => {
+                        window.location.href = campaign?.id
+                          ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
+                          : "/dashboard";
+                      }}
+                      style={{ minHeight: 46, borderRadius: 16 }}
                     >
-                      {showSavedWeekControls ? "Hide weeks" : "Manage weeks"}
+                      + Add media
                     </button>
-
-                    {sortedPosts.length > 0 && sortedPosts.length < 7 && (
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        onClick={() => {
-                          window.location.href = campaign?.id
-                            ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
-                            : "/dashboard";
-                        }}
-                        style={{ minHeight: 42, borderRadius: 15 }}
-                      >
-                        + Add media
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
 
