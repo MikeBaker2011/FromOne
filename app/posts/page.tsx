@@ -3002,25 +3002,24 @@ Important:
                       </div>
 
                       <div
-                        className="fromone-review-button-row"
                         style={{
+                          marginTop: "auto",
                           width: "100%",
                           display: "flex",
                           justifyContent: "center",
-                          marginTop: "auto",
                         }}
                       >
                         <span
-                          className="dashboard-platform-create-button fromone-review-post-button"
+                          className="dashboard-platform-create-button"
                           style={{
                             minHeight: 46,
                             borderRadius: 16,
                             display: "inline-flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            width: "min(100%, 360px)",
-                            maxWidth: 360,
-                            margin: "0 auto",
+                            width: "min(100%, 320px)",
+                            padding: "0 22px",
+                            textAlign: "center",
                           }}
                         >
                           Review post
