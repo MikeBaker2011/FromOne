@@ -305,21 +305,30 @@ async function getFacebookCredentials(body: FacebookPublishBody): Promise<Facebo
   });
 
   if (userId) {
-    const { data: connection, error } = await supabase
+    const { data: connections, error } = await supabase
       .from('social_connections')
-      .select('id, page_id, page_access_token, access_token, status, updated_at')
+      .select('id, page_id, page_access_token, access_token, status, updated_at, expires_at')
       .eq('user_id', userId)
       .eq('provider', 'meta')
       .eq('status', 'connected')
       .not('page_id', 'is', null)
       .not('page_access_token', 'is', null)
       .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(10);
 
     if (error) {
-      console.error('Could not load Facebook social connection:', error.message);
+      console.error('Could not load Facebook social connections:', error.message);
     }
+
+    const connection = (connections || []).find((item: any) => {
+      const expiresAt = cleanText(item?.expires_at);
+
+      if (!expiresAt) return true;
+
+      const expiryTime = new Date(expiresAt).getTime();
+
+      return !Number.isNaN(expiryTime) && expiryTime > Date.now();
+    });
 
     const connectedPageId = cleanText((connection as any)?.page_id);
     const connectedAccessToken = cleanText(
@@ -334,6 +343,13 @@ async function getFacebookCredentials(body: FacebookPublishBody): Promise<Facebo
         connectionId: cleanText((connection as any)?.id) || null,
       };
     }
+
+    // For real signed-in users, do not fall back to old/global env tokens.
+    // If their own Meta row is missing, expired, or invalid, they should reconnect
+    // and still have the manual copy/open fallback in the UI.
+    throw new Error(
+      'Facebook connection has expired. Please reconnect Facebook and Instagram in Settings, then try again.'
+    );
   }
 
   const envPageId = cleanText(process.env.FACEBOOK_PAGE_ID);
@@ -348,11 +364,7 @@ async function getFacebookCredentials(body: FacebookPublishBody): Promise<Facebo
     };
   }
 
-  throw new Error(
-    userId
-      ? 'No connected Facebook Page was found, and fallback Facebook env vars are missing.'
-      : 'Facebook page ID or access token is missing.'
-  );
+  throw new Error('Facebook page ID or access token is missing.');
 }
 
 async function updatePostAfterPublish({
@@ -721,11 +733,21 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const requiresReconnect =
+      isInvalidMetaTokenError(rawErrorMessage) ||
+      friendlyErrorMessage.toLowerCase().includes('connection has expired') ||
+      friendlyErrorMessage.toLowerCase().includes('reconnect facebook');
+
     return NextResponse.json(
       {
         error: friendlyErrorMessage,
+        requiresReconnect,
+        manualFallbackAvailable: true,
+        fallbackActions: requiresReconnect
+          ? ['reconnect_accounts', 'copy_post', 'open_facebook']
+          : ['copy_post', 'open_facebook'],
       },
-      { status: isInvalidMetaTokenError(rawErrorMessage) ? 401 : 500 }
+      { status: requiresReconnect ? 401 : 500 }
     );
   }
 }
