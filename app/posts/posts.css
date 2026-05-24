@@ -63,3 +63,123 @@
     justify-content: center !important;
   }
 }
+/* FINAL FIX: clean post modal mobile/overflow layout */
+
+.fromone-simple-modal-overlay,
+.fromone-modal-overlay {
+  overflow-x: hidden !important;
+}
+
+.fromone-simple-post-modal,
+.fromone-post-action-modal {
+  width: min(960px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.fromone-simple-modal-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 16px !important;
+  align-items: start !important;
+}
+
+.fromone-simple-modal-header h2 {
+  max-width: 100% !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+.fromone-simple-modal-pills {
+  max-width: 100% !important;
+}
+
+.fromone-simple-media-grid,
+.fromone-simple-action-strip,
+.fromone-simple-publish-card,
+.fromone-premium-audience-grid {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.fromone-simple-media-preview {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.fromone-simple-media-preview img,
+.fromone-simple-media-preview video {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: 520px !important;
+  object-fit: contain !important;
+}
+
+@media (max-width: 760px) {
+  .fromone-simple-modal-overlay,
+  .fromone-modal-overlay {
+    padding: 10px !important;
+  }
+
+  .fromone-simple-post-modal,
+  .fromone-post-action-modal {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    padding: 18px !important;
+    border-radius: 22px !important;
+  }
+
+  .fromone-simple-modal-header {
+    grid-template-columns: 1fr !important;
+  }
+
+  .fromone-simple-close {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .fromone-simple-modal-header h2 {
+    font-size: clamp(2rem, 12vw, 3.2rem) !important;
+    line-height: 0.95 !important;
+  }
+
+  .fromone-simple-note {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .fromone-simple-section {
+    padding: 16px !important;
+    border-radius: 22px !important;
+  }
+
+  .fromone-simple-section-title {
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .fromone-simple-section-title > span {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 14px !important;
+  }
+
+  .fromone-simple-media-grid,
+  .fromone-simple-action-strip,
+  .fromone-simple-publish-card,
+  .fromone-premium-audience-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .fromone-simple-media-preview {
+    min-height: 220px !important;
+  }
+
+  .fromone-simple-media-preview img,
+  .fromone-simple-media-preview video {
+    max-height: 340px !important;
+  }
+}
