@@ -2838,198 +2838,173 @@ Important:
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 240px), 300px))",
-                  justifyContent: "center",
-                  alignItems: "stretch",
-                  gap: 16,
+                  gap: 12,
                 }}
               >
                 {sortedPosts.map((post: any) => {
-                const status = getPostStatus(post);
-                const platformName = getPlatformDisplayName(post);
-                const captionPreview = String(post.caption || "").slice(0, 120);
+                  const status = getPostStatus(post);
+                  const platformName = getPlatformDisplayName(post);
+                  const captionPreview = String(post.caption || "").slice(0, 150);
+                  const mediaType = String(post.media_type || "").toLowerCase();
+                  const isVideoPreview = mediaType === "video";
+                  const isFlyerPreview =
+                    mediaType === "flyer" ||
+                    mediaType === "pdf" ||
+                    String(post.media_url || "").toLowerCase().includes(".pdf");
 
-                return (
-                  <button
-                    key={post.id}
-                    type="button"
-                    onClick={() => choosePost(post.id)}
-                    className="fromone-simple-post-card"
-                    style={{
-                      minHeight: 470,
-                      textAlign: "left",
-                      borderRadius: 26,
-                      padding: 0,
-                      overflow: "hidden",
-                      display: "flex",
-                      flexDirection: "column",
-                      background:
-                        "linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
-                      border:
-                        status === "Posted"
-                          ? "1px solid rgba(61, 220, 151, 0.28)"
-                          : "1px solid rgba(255,255,255,0.1)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div
+                  return (
+                    <article
+                      key={post.id}
+                      className="fromone-review-list-item"
                       style={{
-                        minHeight: 158,
-                        background: "rgba(15,23,42,0.72)",
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
+                        gap: 16,
+                        padding: 14,
+                        borderRadius: 22,
+                        background:
+                          status === "Posted"
+                            ? "linear-gradient(145deg, rgba(61,220,151,0.12), rgba(255,255,255,0.035))"
+                            : "linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035))",
+                        border:
+                          status === "Posted"
+                            ? "1px solid rgba(61, 220, 151, 0.28)"
+                            : "1px solid rgba(255,255,255,0.1)",
+                        boxShadow: "0 18px 45px rgba(0,0,0,0.18)",
                       }}
                     >
-                      {post.media_url ? (
-                        String(post.media_type || "").toLowerCase() === "video" ? (
-                          <video
-                            src={post.media_url}
-                            muted
-                            playsInline
-                            style={{
-                              width: "100%",
-                              height: 180,
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : String(post.media_type || "").toLowerCase() === "flyer" ? (
-                          <strong>PDF flyer</strong>
+                      <button
+                        type="button"
+                        onClick={() => choosePost(post.id)}
+                        aria-label={`Review ${post.title || platformName + " post"}`}
+                        style={{
+                          width: 92,
+                          height: 92,
+                          flex: "0 0 92px",
+                          border: 0,
+                          padding: 0,
+                          borderRadius: 18,
+                          overflow: "hidden",
+                          background: "rgba(15,23,42,0.72)",
+                          display: "grid",
+                          placeItems: "center",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {post.media_url ? (
+                          isVideoPreview ? (
+                            <video
+                              src={post.media_url}
+                              muted
+                              playsInline
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : isFlyerPreview ? (
+                            <strong style={{ color: "#fff", fontSize: 12 }}>PDF</strong>
+                          ) : (
+                            <img
+                              src={post.media_url}
+                              alt={post.title || "Post media"}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          )
                         ) : (
-                          <img
-                            src={post.media_url}
-                            alt={post.title || "Post media"}
-                            style={{
-                              width: "100%",
-                              height: 180,
-                              objectFit: "cover",
-                            }}
-                          />
-                        )
-                      ) : (
-                        <div style={{ textAlign: "center", padding: 20 }}>
-                          <strong>No media yet</strong>
-                          <p style={{ margin: "6px 0 0", color: "var(--muted)" }}>
-                            Add media in review.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ padding: 18, display: "grid", gap: 12, flex: 1 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: 10,
-                          alignItems: "center",
-                        }}
-                      >
-                        <div style={{ minWidth: 0 }}>
-                          <div
-                            className="page-eyebrow"
-                            style={{
-                              display: "block",
-                              marginBottom: 8,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {platformName}
-                          </div>
-
-                          <strong
-                            style={{
-                              display: "block",
-                              fontSize: "1.05rem",
-                              color: "#fff",
-                              lineHeight: 1.18,
-                              wordBreak: "normal",
-                            }}
-                          >
-                            {post.title || `${platformName} post`}
-                          </strong>
-                        </div>
-                      </div>
-
-                      <p
-                        style={{
-                          margin: 0,
-                          color: "rgba(248,250,252,0.76)",
-                          lineHeight: 1.45,
-                          minHeight: 52,
-                        }}
-                      >
-                        {captionPreview || "Open to add or review the wording."}
-                        {captionPreview.length >= 120 ? "..." : ""}
-                      </p>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 6,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            minHeight: 24,
-                            padding: "4px 9px",
-                            borderRadius: 10,
-                            background: "rgba(255,255,255,0.055)",
-                            border: "1px solid rgba(255,255,255,0.09)",
-                            color: "rgba(248,250,252,0.78)",
-                            fontSize: 11,
-                            fontWeight: 850,
-                            lineHeight: 1,
-                            letterSpacing: "0.01em",
-                          }}
-                        >
                           <span
                             style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              background: "#ffd43b",
-                              boxShadow: "0 0 12px rgba(255, 212, 59, 0.34)",
+                              color: "rgba(248,250,252,0.72)",
+                              fontSize: 12,
+                              fontWeight: 850,
+                              textAlign: "center",
+                              padding: 10,
                             }}
-                          />
-                          {platformName}
-                        </span>
-                      </div>
+                          >
+                            No media
+                          </span>
+                        )}
+                      </button>
 
-                      <div
+                      <button
+                        type="button"
+                        onClick={() => choosePost(post.id)}
                         style={{
-                          marginTop: "auto",
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "center",
+                          flex: "1 1 260px",
+                          minWidth: 0,
+                          padding: 0,
+                          border: 0,
+                          background: "transparent",
+                          textAlign: "left",
+                          cursor: "pointer",
                         }}
                       >
                         <span
-                          className="dashboard-platform-create-button"
+                          className="page-eyebrow"
                           style={{
-                            minHeight: 46,
-                            borderRadius: 16,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: "min(100%, 320px)",
-                            padding: "0 22px",
-                            textAlign: "center",
+                            display: "block",
+                            marginBottom: 7,
+                            color: "#ffd43b",
                           }}
                         >
-                          Review post
+                          {platformName}
                         </span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
 
+                        <strong
+                          style={{
+                            display: "block",
+                            color: "#fff",
+                            fontSize: "1.08rem",
+                            lineHeight: 1.18,
+                            marginBottom: 7,
+                          }}
+                        >
+                          {post.title || `${platformName} post`}
+                        </strong>
+
+                        <span
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            color: "rgba(248,250,252,0.72)",
+                            lineHeight: 1.45,
+                            fontSize: "0.94rem",
+                          }}
+                        >
+                          {captionPreview || "Open to add or review the wording."}
+                          {captionPreview.length >= 150 ? "..." : ""}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="dashboard-platform-create-button"
+                        onClick={() => choosePost(post.id)}
+                        style={{
+                          minHeight: 48,
+                          minWidth: 150,
+                          width: "auto",
+                          flex: "0 0 auto",
+                          borderRadius: 16,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "0 22px",
+                          textAlign: "center",
+                        }}
+                      >
+                        Review
+                      </button>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>
