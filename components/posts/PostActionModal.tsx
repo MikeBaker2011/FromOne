@@ -59,6 +59,20 @@ type MediaTransformDrag = {
   startOffset: MediaOffset;
 };
 
+type ActiveTransformPointer = {
+  pointerId: number;
+  clientX: number;
+  clientY: number;
+};
+
+type MediaPinchGesture = {
+  startDistance: number;
+  startZoom: number;
+  startOffset: MediaOffset;
+  startCenterX: number;
+  startCenterY: number;
+};
+
 type PrepareFitMode = 'fill' | 'fit';
 
 type PostActionModalProps = {
@@ -424,6 +438,8 @@ export default function PostActionModal({
   const [resizeError, setResizeError] = useState('');
   const cropStageRef = useRef<HTMLDivElement | null>(null);
   const transformFrameRef = useRef<HTMLDivElement | null>(null);
+  const activeTransformPointersRef = useRef<Map<number, ActiveTransformPointer>>(new Map());
+  const mediaPinchGestureRef = useRef<MediaPinchGesture | null>(null);
 
   if (!selectedPost) return null;
 
@@ -572,6 +588,9 @@ export default function PostActionModal({
     if (resizingMedia) return;
 
     setCropInteraction(null);
+    activeTransformPointersRef.current.clear();
+    mediaPinchGestureRef.current = null;
+    setMediaTransformDrag(null);
     setShowPrepareMediaModal(false);
   };
 
@@ -709,6 +728,9 @@ export default function PostActionModal({
 
 
   const resetMediaTransform = () => {
+    activeTransformPointersRef.current.clear();
+    mediaPinchGestureRef.current = null;
+    setMediaTransformDrag(null);
     setPrepareFitMode('fill');
     setMediaZoom(1);
     setMediaOffset({ x: 0, y: 0 });
@@ -717,6 +739,9 @@ export default function PostActionModal({
   };
 
   const fitFullImage = () => {
+    activeTransformPointersRef.current.clear();
+    mediaPinchGestureRef.current = null;
+    setMediaTransformDrag(null);
     setPrepareFitMode('fit');
     setMediaZoom(1);
     setMediaOffset({ x: 0, y: 0 });
@@ -725,11 +750,37 @@ export default function PostActionModal({
   };
 
   const fillFrame = () => {
+    activeTransformPointersRef.current.clear();
+    mediaPinchGestureRef.current = null;
+    setMediaTransformDrag(null);
     setPrepareFitMode('fill');
     setMediaZoom(1);
     setMediaOffset({ x: 0, y: 0 });
     setResizeError('');
     setResizedMedia(null);
+  };
+
+  const getTransformPointers = () => Array.from(activeTransformPointersRef.current.values());
+
+  const getPointerDistance = (first: ActiveTransformPointer, second: ActiveTransformPointer) => {
+    const deltaX = first.clientX - second.clientX;
+    const deltaY = first.clientY - second.clientY;
+    return Math.max(Math.hypot(deltaX, deltaY), 1);
+  };
+
+  const getPointerCenter = (first: ActiveTransformPointer, second: ActiveTransformPointer) => ({
+    clientX: (first.clientX + second.clientX) / 2,
+    clientY: (first.clientY + second.clientY) / 2,
+  });
+
+  const clampTransformOffset = (offset: MediaOffset, zoom = mediaZoom) => {
+    const zoomRoom = Math.max(zoom - 1, 0);
+    const maxOffset = Math.max(18, zoomRoom * 42);
+
+    return {
+      x: clampNumber(offset.x, -maxOffset, maxOffset),
+      y: clampNumber(offset.y, -maxOffset, maxOffset),
+    };
   };
 
   const startMediaTransformDrag = (event: PointerEvent<HTMLDivElement>) => {
@@ -738,6 +789,31 @@ export default function PostActionModal({
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture?.(event.pointerId);
+
+    activeTransformPointersRef.current.set(event.pointerId, {
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+
+    const pointers = getTransformPointers();
+
+    if (pointers.length >= 2) {
+      const [first, second] = pointers;
+      const center = getPointerCenter(first, second);
+
+      mediaPinchGestureRef.current = {
+        startDistance: getPointerDistance(first, second),
+        startZoom: mediaZoom,
+        startOffset: mediaOffset,
+        startCenterX: center.clientX,
+        startCenterY: center.clientY,
+      };
+
+      setMediaTransformDrag(null);
+      return;
+    }
+
     setMediaTransformDrag({
       startClientX: event.clientX,
       startClientY: event.clientY,
@@ -746,26 +822,89 @@ export default function PostActionModal({
   };
 
   const updateMediaTransformDrag = (event: PointerEvent<HTMLDivElement>) => {
-    if (!mediaTransformDrag || prepareFitMode === 'fit') return;
+    if (prepareFitMode === 'fit') return;
 
     const frame = transformFrameRef.current;
     const rect = frame?.getBoundingClientRect();
 
     if (!rect || rect.width <= 0 || rect.height <= 0) return;
 
+    const activePointer = activeTransformPointersRef.current.get(event.pointerId);
+
+    if (activePointer) {
+      activeTransformPointersRef.current.set(event.pointerId, {
+        pointerId: event.pointerId,
+        clientX: event.clientX,
+        clientY: event.clientY,
+      });
+    }
+
+    const pointers = getTransformPointers();
+
+    if (pointers.length >= 2 && mediaPinchGestureRef.current) {
+      event.preventDefault();
+
+      const [first, second] = pointers;
+      const pinch = mediaPinchGestureRef.current;
+      const center = getPointerCenter(first, second);
+      const distance = getPointerDistance(first, second);
+      const nextZoom = clampNumber(pinch.startZoom * (distance / pinch.startDistance), 1, 3);
+      const centerDeltaX = ((center.clientX - pinch.startCenterX) / rect.width) * 100;
+      const centerDeltaY = ((center.clientY - pinch.startCenterY) / rect.height) * 100;
+
+      setPrepareFitMode('fill');
+      setMediaZoom(nextZoom);
+      setMediaOffset(
+        clampTransformOffset(
+          {
+            x: pinch.startOffset.x + centerDeltaX,
+            y: pinch.startOffset.y + centerDeltaY,
+          },
+          nextZoom,
+        ),
+      );
+      setResizeError('');
+      setResizedMedia(null);
+      return;
+    }
+
+    if (!mediaTransformDrag) return;
+
+    event.preventDefault();
+
     const dx = ((event.clientX - mediaTransformDrag.startClientX) / rect.width) * 100;
     const dy = ((event.clientY - mediaTransformDrag.startClientY) / rect.height) * 100;
 
-    const zoomRoom = Math.max(mediaZoom - 1, 0);
-    const maxOffset = Math.max(18, zoomRoom * 42);
-
-    setMediaOffset({
-      x: clampNumber(mediaTransformDrag.startOffset.x + dx, -maxOffset, maxOffset),
-      y: clampNumber(mediaTransformDrag.startOffset.y + dy, -maxOffset, maxOffset),
-    });
+    setMediaOffset(
+      clampTransformOffset({
+        x: mediaTransformDrag.startOffset.x + dx,
+        y: mediaTransformDrag.startOffset.y + dy,
+      }),
+    );
   };
 
-  const stopMediaTransformDrag = () => {
+  const stopMediaTransformDrag = (event?: PointerEvent<HTMLDivElement>) => {
+    if (event) {
+      activeTransformPointersRef.current.delete(event.pointerId);
+    } else {
+      activeTransformPointersRef.current.clear();
+    }
+
+    mediaPinchGestureRef.current = null;
+
+    const remainingPointers = getTransformPointers();
+
+    if (remainingPointers.length === 1 && prepareFitMode !== 'fit') {
+      const remainingPointer = remainingPointers[0];
+
+      setMediaTransformDrag({
+        startClientX: remainingPointer.clientX,
+        startClientY: remainingPointer.clientY,
+        startOffset: mediaOffset,
+      });
+      return;
+    }
+
     setMediaTransformDrag(null);
   };
 
@@ -1417,8 +1556,8 @@ export default function PostActionModal({
             <header className="f1-prepare-media-header">
               <div>
                 <span>Prepare media</span>
-                <h3>Move, zoom and resize for social</h3>
-                <p>Choose a platform frame, move and zoom the image, then create a ready-to-share version.</p>
+                <h3>Move and pinch to fit</h3>
+                <p>Choose a platform frame, then drag or pinch the image until it fits. Create a ready-to-share version when it looks right.</p>
               </div>
 
               <button type="button" className="f1-post-close" onClick={closePrepareMediaModal} disabled={resizingMedia || sharingMedia}>
@@ -1431,6 +1570,7 @@ export default function PostActionModal({
                 <div
                   ref={transformFrameRef}
                   className={`f1-transform-frame is-${resizePresetValue}`}
+                  onPointerDown={startMediaTransformDrag}
                   onPointerMove={updateMediaTransformDrag}
                   onPointerUp={stopMediaTransformDrag}
                   onPointerCancel={stopMediaTransformDrag}
@@ -1438,7 +1578,6 @@ export default function PostActionModal({
                 >
                   <div
                     className={`f1-transform-image-layer ${prepareFitMode === 'fit' ? 'is-fit' : 'is-fill'}`}
-                    onPointerDown={startMediaTransformDrag}
                     style={{
                       transform:
                         prepareFitMode === 'fit'
@@ -1459,7 +1598,7 @@ export default function PostActionModal({
                 </div>
 
                 <p className="f1-prepare-media-tip">
-                  Drag the image to position it. Use zoom to fill the selected frame. Fit keeps the full image visible with a background.
+                  Drag with one finger to move. Pinch with two fingers to zoom. The frame stays locked to the selected platform size.
                 </p>
               </div>
 
@@ -1486,8 +1625,8 @@ export default function PostActionModal({
 
                 <div className="f1-transform-control-card">
                   <div>
-                    <strong>Move & zoom</strong>
-                    <p>{prepareFitMode === 'fit' ? 'Fit mode keeps the full image visible.' : 'Fill mode crops the image neatly into the frame.'}</p>
+                    <strong>Position image</strong>
+                    <p>{prepareFitMode === 'fit' ? 'Fit keeps the full image visible.' : 'Drag or pinch the image inside the fixed frame.'}</p>
                   </div>
 
                   <label className="f1-transform-zoom-control">
