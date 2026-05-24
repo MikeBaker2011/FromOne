@@ -5010,3 +5010,156 @@ body:has(.fromone-simple-modal-overlay) {
     display: none !important;
   }
 }
+
+/* FINAL DESKTOP PREPARE WORKSPACE: no visible inner scrollbars */
+@media (min-width: 761px) {
+  .f1-post-modal-overlay.is-desktop-prepare-open {
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    padding: 18px !important;
+  }
+
+  .f1-post-modal-overlay.is-desktop-prepare-open > .f1-post-modal-card {
+    display: none !important;
+  }
+
+  .f1-post-modal-overlay.is-desktop-prepare-open > .f1-desktop-prepare-card {
+    display: grid !important;
+  }
+
+  .f1-desktop-prepare-card {
+    width: min(1240px, calc(100vw - 36px)) !important;
+    max-width: 1240px !important;
+    height: min(820px, calc(100vh - 36px)) !important;
+    max-height: calc(100vh - 36px) !important;
+    overflow: hidden !important;
+    padding: 22px !important;
+    gap: 16px !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+  }
+
+  .f1-desktop-prepare-header {
+    padding-bottom: 12px !important;
+    min-height: 0 !important;
+  }
+
+  .f1-desktop-prepare-header h3 {
+    font-size: clamp(1.55rem, 2.4vw, 2.25rem) !important;
+    margin: 4px 0 5px !important;
+  }
+
+  .f1-desktop-prepare-header p {
+    font-size: 0.92rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .f1-desktop-prepare-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 330px) !important;
+    gap: 18px !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .f1-desktop-prepare-card .f1-prepare-media-stage-card {
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: none !important;
+    padding: 18px !important;
+    overflow: hidden !important;
+  }
+
+  .f1-desktop-prepare-card .f1-transform-frame {
+    max-height: calc(100vh - 210px) !important;
+  }
+
+  .f1-desktop-prepare-card .f1-transform-frame.is-instagram-square {
+    width: min(520px, 100%) !important;
+  }
+
+  .f1-desktop-prepare-card .f1-transform-frame.is-instagram-portrait {
+    width: min(460px, 100%) !important;
+  }
+
+  .f1-desktop-prepare-card .f1-transform-frame.is-facebook-feed {
+    width: min(690px, 100%) !important;
+  }
+
+  .f1-desktop-prepare-card .f1-transform-frame.is-story-reel {
+    width: min(330px, 100%) !important;
+  }
+
+  .f1-desktop-prepare-card .f1-prepare-media-tip {
+    margin-top: 12px !important;
+    font-size: 0.84rem !important;
+  }
+
+  .f1-desktop-prepare-controls {
+    height: 100% !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 16px !important;
+    gap: 12px !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .f1-desktop-prepare-controls::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+  }
+
+  .f1-desktop-prepare-controls .f1-prepare-preset-grid {
+    gap: 8px !important;
+  }
+
+  .f1-desktop-prepare-controls .f1-prepare-preset-grid button {
+    min-height: 58px !important;
+    padding: 10px 13px !important;
+    border-radius: 15px !important;
+  }
+
+  .f1-desktop-prepare-controls .f1-prepare-preset-grid button strong {
+    font-size: 0.94rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .f1-desktop-prepare-controls .f1-prepare-preset-grid button span {
+    font-size: 0.78rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .f1-desktop-prepare-controls .f1-transform-control-card,
+  .f1-desktop-prepare-controls .f1-prepare-selected-card,
+  .f1-desktop-prepare-controls .f1-prepare-ready-card {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .f1-desktop-prepare-controls .f1-transform-control-card p,
+  .f1-desktop-prepare-controls .f1-prepare-selected-card p,
+  .f1-desktop-prepare-controls .f1-prepare-ready-card p {
+    font-size: 0.86rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .f1-desktop-prepare-controls .f1-transform-quick-actions,
+  .f1-desktop-prepare-controls .f1-prepare-ready-actions {
+    gap: 8px !important;
+  }
+
+  .f1-desktop-prepare-controls .f1-transform-quick-actions button,
+  .f1-desktop-prepare-controls .f1-prepare-ready-actions button,
+  .f1-desktop-prepare-controls .f1-prepare-main-action {
+    min-height: 46px !important;
+    border-radius: 14px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .f1-desktop-prepare-controls .f1-transform-zoom-control {
+    gap: 8px !important;
+  }
+}
