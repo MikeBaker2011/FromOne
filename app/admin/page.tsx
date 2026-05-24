@@ -2,7 +2,7 @@
 
 import './admin.css';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/app/components/ToastProvider';
 
@@ -35,6 +35,43 @@ const cleanLabel = (value?: string | null) => {
   return value ? String(value).replace(/_/g, ' ') : 'not set';
 };
 
+const isActiveCustomer = (customer: AdminCustomer) => {
+  return (
+    customer.access?.access_status === 'active' &&
+    customer.access?.subscription_status === 'active'
+  );
+};
+
+const isPendingCustomer = (customer: AdminCustomer) => {
+  return (
+    customer.access?.access_status === 'pending_payment' ||
+    customer.access?.subscription_status === 'pending_payment' ||
+    customer.billing?.status === 'pending_payment'
+  );
+};
+
+const isDemoCustomer = (customer: AdminCustomer) => {
+  const accessStatus = String(customer.access?.access_status || '').toLowerCase();
+  const subscriptionStatus = String(customer.access?.subscription_status || '').toLowerCase();
+  const billingStatus = String(customer.billing?.status || '').toLowerCase();
+
+  return (
+    accessStatus === 'trial' ||
+    subscriptionStatus === 'none' ||
+    billingStatus === 'demo' ||
+    Boolean(customer.access?.trial_ends_at)
+  );
+};
+
+const isExpiredCustomer = (customer: AdminCustomer) => {
+  return (
+    customer.access?.access_status === 'expired' ||
+    customer.access?.access_status === 'locked' ||
+    customer.access?.subscription_status === 'expired' ||
+    customer.billing?.status === 'expired'
+  );
+};
+
 async function readJsonResponse(response: Response) {
   const responseText = await response.text();
 
@@ -61,12 +98,23 @@ export default function AdminPage() {
   const [actingUserId, setActingUserId] = useState<string | null>(null);
   const [confirmExpireCustomer, setConfirmExpireCustomer] = useState<AdminCustomer | null>(null);
   const [adminNotesByUserId, setAdminNotesByUserId] = useState<Record<string, string>>({});
+  const [paypalReferenceByUserId, setPaypalReferenceByUserId] = useState<Record<string, string>>({});
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setAdminEmail(data.user?.email || null);
     });
   }, []);
+
+  const stats = useMemo(() => {
+    return {
+      searched: customers.length,
+      demos: customers.filter(isDemoCustomer).length,
+      active: customers.filter(isActiveCustomer).length,
+      pending: customers.filter(isPendingCustomer).length,
+      expired: customers.filter(isExpiredCustomer).length,
+    };
+  }, [customers]);
 
   const notify = (
     message: string,
@@ -98,18 +146,23 @@ export default function AdminPage() {
     return data.session.access_token;
   };
 
-  const syncAdminNotes = (items: AdminCustomer[]) => {
+  const syncLocalCustomerFields = (items: AdminCustomer[]) => {
     const nextNotes: Record<string, string> = {};
+    const nextReferences: Record<string, string> = {};
 
     for (const customer of items) {
       nextNotes[customer.id] = String(customer.access?.admin_notes || '');
+      nextReferences[customer.id] = String(
+        customer.billing?.paypal_subscription_id || customer.access?.subscription_reference || '',
+      );
     }
 
     setAdminNotesByUserId(nextNotes);
+    setPaypalReferenceByUserId(nextReferences);
   };
 
-  const searchCustomer = async () => {
-    const cleanEmail = emailQuery.trim();
+  const searchCustomer = async (overrideQuery?: string) => {
+    const cleanEmail = String(overrideQuery ?? emailQuery).trim();
 
     if (!cleanEmail) {
       notify('Enter an email address or part of an email.', 'warning', 'Email needed');
@@ -136,7 +189,7 @@ export default function AdminPage() {
       const foundCustomers = result.customers || [];
 
       setCustomers(foundCustomers);
-      syncAdminNotes(foundCustomers);
+      syncLocalCustomerFields(foundCustomers);
 
       if (!foundCustomers.length) {
         notify('No matching customer found.', 'info', 'No result');
@@ -191,6 +244,16 @@ export default function AdminPage() {
     });
   };
 
+  const activateStarterManually = async (customer: AdminCustomer) => {
+    const paypalReference = String(paypalReferenceByUserId[customer.id] || '').trim();
+
+    await runAction(customer.id, 'manual_active', {
+      paypalSubscriptionId: paypalReference || undefined,
+      subscriptionReference: paypalReference || undefined,
+      adminNotes: adminNotesByUserId[customer.id] || undefined,
+    });
+  };
+
   const confirmExpireAccess = async () => {
     if (!confirmExpireCustomer) return;
 
@@ -211,7 +274,7 @@ export default function AdminPage() {
       `Billing: ${cleanLabel(customer.billing?.status)}`,
       `Payment: ${cleanLabel(customer.billing?.payment_status)}`,
       `Extension ends: ${formatDate(customer.access?.extension_ends_at)}`,
-      `Admin notes: ${customer.access?.admin_notes || 'None'}`,
+      `Admin notes: ${adminNotesByUserId[customer.id] || customer.access?.admin_notes || 'None'}`,
     ].join('\n');
 
     await navigator.clipboard.writeText(summary);
@@ -224,8 +287,8 @@ export default function AdminPage() {
         <div className="page-eyebrow">Admin support</div>
         <h1 className="page-title">Customer access panel</h1>
         <p className="page-description">
-          Search customers, check billing/access, extend beta access, clear pending payments,
-          activate manually, or expire access without using SQL.
+          Search customers, check demo/subscription access, manually activate paid users, extend
+          beta access, or expire access without using SQL.
         </p>
 
         <p className="admin-signed-in">
@@ -238,8 +301,8 @@ export default function AdminPage() {
           <div className="page-eyebrow">Find customer</div>
           <h2>Search by email.</h2>
           <p>
-            Use the full email or part of it. Admin access is restricted server-side to the owner
-            account only.
+            Use the full email or part of it. If a PayPal subscription does not auto-activate,
+            search the customer here and use <strong>Activate Starter</strong>.
           </p>
         </div>
 
@@ -253,9 +316,47 @@ export default function AdminPage() {
               if (event.key === 'Enter') searchCustomer();
             }}
           />
-          <button type="button" onClick={searchCustomer} disabled={loading}>
+          <button type="button" onClick={() => searchCustomer()} disabled={loading}>
             {loading ? 'Searching...' : 'Search'}
           </button>
+        </div>
+      </section>
+
+      <section className="admin-status-grid" aria-label="Admin customer overview">
+        <section className="admin-mini-card">
+          <span>Search results</span>
+          <strong>{stats.searched}</strong>
+          <p>Customers loaded in this admin view.</p>
+        </section>
+
+        <section className="admin-mini-card">
+          <span>Demo signups</span>
+          <strong>{stats.demos}</strong>
+          <p>Trial/demo customers in current results.</p>
+        </section>
+
+        <section className="admin-mini-card">
+          <span>Active subscribers</span>
+          <strong>{stats.active}</strong>
+          <p>Users with active Starter access.</p>
+        </section>
+
+        <section className="admin-mini-card">
+          <span>Needs attention</span>
+          <strong>{stats.pending + stats.expired}</strong>
+          <p>Pending, expired or locked users in current results.</p>
+        </section>
+      </section>
+
+      <section className="premium-card admin-search-card">
+        <div>
+          <div className="page-eyebrow">Billing safety net</div>
+          <h2>Manual activation fallback.</h2>
+          <p>
+            If PayPal shows a customer has subscribed but the webhook has not updated FromOne,
+            search their email, paste the PayPal subscription ID if available, then click
+            <strong> Activate Starter</strong>.
+          </p>
         </div>
       </section>
 
@@ -265,14 +366,10 @@ export default function AdminPage() {
           const isOwnerUnlimited =
             customer.access?.subscription_reference === 'owner-unlimited-access' ||
             customer.billing?.paypal_subscription_id === 'owner-unlimited-access';
-          const isActive =
-            customer.access?.access_status === 'active' &&
-            customer.access?.subscription_status === 'active';
+          const isActive = isActiveCustomer(customer);
           const isExpired = customer.access?.access_status === 'expired';
-          const isPending =
-            customer.access?.access_status === 'pending_payment' ||
-            customer.access?.subscription_status === 'pending_payment' ||
-            customer.billing?.status === 'pending_payment';
+          const isPending = isPendingCustomer(customer);
+          const demo = isDemoCustomer(customer);
 
           return (
             <article key={customer.id} className="premium-card admin-customer-card">
@@ -283,6 +380,14 @@ export default function AdminPage() {
                   <p>
                     User ID: <code>{customer.id}</code>
                   </p>
+
+                  <div className="selected-post-tags" style={{ marginTop: 12 }}>
+                    {isActive && <span>Active subscriber</span>}
+                    {demo && !isActive && <span>Demo / trial</span>}
+                    {isPending && <span>Pending payment</span>}
+                    {isExpired && <span>Expired</span>}
+                    {isOwnerUnlimited && <span>Owner unlimited</span>}
+                  </div>
                 </div>
 
                 <button
@@ -326,6 +431,26 @@ export default function AdminPage() {
                   <p>Cancelled: {formatDate(customer.billing?.cancelled_at)}</p>
                   <p>Billing updated: {formatDate(customer.billing?.updated_at)}</p>
                 </section>
+              </div>
+
+              <div className="admin-notes-card">
+                <label>
+                  <strong>PayPal subscription ID / reference</strong>
+                  <span>
+                    Optional, but useful when manually activating someone after checking PayPal.
+                  </span>
+                </label>
+                <input
+                  className="input"
+                  value={paypalReferenceByUserId[customer.id] || ''}
+                  onChange={(event) =>
+                    setPaypalReferenceByUserId((current) => ({
+                      ...current,
+                      [customer.id]: event.target.value,
+                    }))
+                  }
+                  placeholder="Example: I-XXXXXXXXXXXX"
+                />
               </div>
 
               <div className="admin-notes-card">
@@ -386,11 +511,11 @@ export default function AdminPage() {
                 <button
                   type="button"
                   className="secondary-button"
-                  onClick={() => runAction(customer.id, 'manual_active')}
+                  onClick={() => activateStarterManually(customer)}
                   disabled={busy || (isActive && !isOwnerUnlimited)}
                   title={isActive && !isOwnerUnlimited ? 'Customer is already active.' : undefined}
                 >
-                  Activate manually
+                  Activate Starter
                 </button>
                 <button
                   type="button"
