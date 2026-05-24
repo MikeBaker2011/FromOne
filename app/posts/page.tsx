@@ -1294,10 +1294,17 @@ export default function PostsPage() {
   };
 
   const choosePost = (postId: string) => {
-    setSelectedPostId(postId);
-    setImprovementNote(null);
-    setShowImproveTools(false);
-    cancelEditingPost();
+    const params = new URLSearchParams();
+
+    if (selectedCampaignId) {
+      params.set("campaign", selectedCampaignId);
+    }
+
+    const queryString = params.toString();
+
+    window.location.href = queryString
+      ? `/posts/${encodeURIComponent(postId)}?${queryString}`
+      : `/posts/${encodeURIComponent(postId)}`;
   };
 
   const closePostModal = () => {
