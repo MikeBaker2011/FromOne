@@ -445,14 +445,16 @@ export default function PostsPage() {
   const mediaRef = useRef<HTMLElement | null>(null);
   const publishRef = useRef<HTMLElement | null>(null);
 
+  const getPostDisplayScheduleValue = (post: any) => {
+    return post?.scheduled_publish_at || post?.scheduled_at || post?.created_at || null;
+  };
+
   const sortPostsByDate = (items: any[]) => {
     return [...items].sort((firstPost, secondPost) => {
-      const firstTime = firstPost.scheduled_at
-        ? new Date(firstPost.scheduled_at).getTime()
-        : 0;
-      const secondTime = secondPost.scheduled_at
-        ? new Date(secondPost.scheduled_at).getTime()
-        : 0;
+      const firstSchedule = getPostDisplayScheduleValue(firstPost);
+      const secondSchedule = getPostDisplayScheduleValue(secondPost);
+      const firstTime = firstSchedule ? new Date(firstSchedule).getTime() : 0;
+      const secondTime = secondSchedule ? new Date(secondSchedule).getTime() : 0;
       return firstTime - secondTime;
     });
   };
@@ -611,8 +613,9 @@ export default function PostsPage() {
   };
 
   const isPostScheduledToday = (post: any) => {
-    if (!post?.scheduled_at) return false;
-    return isSameDate(new Date(post.scheduled_at), new Date());
+    const displaySchedule = getPostDisplayScheduleValue(post);
+    if (!displaySchedule) return false;
+    return isSameDate(new Date(displaySchedule), new Date());
   };
 
   const isFutureDate = (value?: string | null) => {
@@ -3171,10 +3174,9 @@ Important:
                     0,
                     132,
                   );
+                  const hasCustomAutopostTime = Boolean(post.scheduled_publish_at);
                   const dateValue =
-                    post.scheduled_at ||
-                    post.scheduled_publish_at ||
-                    post.created_at ||
+                    getPostDisplayScheduleValue(post) ||
                     new Date().toISOString();
                   const postDate = new Date(dateValue);
                   const safeDate = Number.isNaN(postDate.getTime())
@@ -3197,7 +3199,11 @@ Important:
                   const isFailed = status === "Failed";
                   const isPlanned = status === "Reminder set";
                   const mediaType = String(post.media_type || "").toLowerCase();
-                  const statusLabel = isPlanned ? "Planned" : status;
+                  const statusLabel = hasCustomAutopostTime
+                    ? "Autopost set"
+                    : isPlanned
+                      ? "Planned"
+                      : status;
 
                   return (
                     <article
