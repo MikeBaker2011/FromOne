@@ -2,7 +2,14 @@
 
 import "./posts.css";
 
-import { CSSProperties, ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  CSSProperties,
+  ChangeEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
 import { useToast } from "@/app/components/ToastProvider";
@@ -31,7 +38,11 @@ const PAID_WEEKLY_MEDIA_RESCAN_LIMIT = 10;
 const DEMO_WEEKLY_VIDEO_RESCAN_LIMIT = 1;
 const PAID_WEEKLY_VIDEO_RESCAN_LIMIT = 2;
 
-const MEDIA_RESCAN_EVENT_TYPES = ["post_media_rescan", "post_image_rescan", "post_flyer_rescan"];
+const MEDIA_RESCAN_EVENT_TYPES = [
+  "post_media_rescan",
+  "post_image_rescan",
+  "post_flyer_rescan",
+];
 const VIDEO_RESCAN_EVENT_TYPES = ["post_video_rescan"];
 
 type AccessInfo = {
@@ -353,9 +364,13 @@ export default function PostsPage() {
   const [billingPlan, setBillingPlan] = useState<BillingPlan>("demo");
   const [weeklyMediaRescansUsed, setWeeklyMediaRescansUsed] = useState(0);
   const [weeklyVideoRescansUsed, setWeeklyVideoRescansUsed] = useState(0);
-  const [rescanningMediaPostId, setRescanningMediaPostId] = useState<string | null>(null);
+  const [rescanningMediaPostId, setRescanningMediaPostId] = useState<
+    string | null
+  >(null);
 
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
+    null,
+  );
   const [pendingCampaignId, setPendingCampaignId] = useState("");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
@@ -373,7 +388,8 @@ export default function PostsPage() {
   const [toneTarget, setToneTarget] = useState("Use current tone");
   const [rewritingPost, setRewritingPost] = useState(false);
   const [rewritingAction, setRewritingAction] = useState("");
-  const [improvementNote, setImprovementNote] = useState<ImprovementNote | null>(null);
+  const [improvementNote, setImprovementNote] =
+    useState<ImprovementNote | null>(null);
   const [showImproveTools, setShowImproveTools] = useState(false);
 
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -382,17 +398,29 @@ export default function PostsPage() {
   const [editHashtags, setEditHashtags] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const [uploadingMediaPostId, setUploadingMediaPostId] = useState<string | null>(null);
-  const [removingMediaPostId, setRemovingMediaPostId] = useState<string | null>(null);
+  const [uploadingMediaPostId, setUploadingMediaPostId] = useState<
+    string | null
+  >(null);
+  const [removingMediaPostId, setRemovingMediaPostId] = useState<string | null>(
+    null,
+  );
   const [publishingPostId, setPublishingPostId] = useState<string | null>(null);
-  const [savingReminderPostId, setSavingReminderPostId] = useState<string | null>(null);
+  const [savingReminderPostId, setSavingReminderPostId] = useState<
+    string | null
+  >(null);
   const [reminderValue, setReminderValue] = useState("");
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
-  const [recentlyDeletedPost, setRecentlyDeletedPost] = useState<any | null>(null);
+  const [recentlyDeletedPost, setRecentlyDeletedPost] = useState<any | null>(
+    null,
+  );
 
   const [showTodayReminder, setShowTodayReminder] = useState(false);
-  const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(null);
-  const [successMoment, setSuccessMoment] = useState<SuccessMoment | null>(null);
+  const [todayReminderPostId, setTodayReminderPostId] = useState<string | null>(
+    null,
+  );
+  const [successMoment, setSuccessMoment] = useState<SuccessMoment | null>(
+    null,
+  );
 
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
@@ -419,8 +447,12 @@ export default function PostsPage() {
 
   const sortPostsByDate = (items: any[]) => {
     return [...items].sort((firstPost, secondPost) => {
-      const firstTime = firstPost.scheduled_at ? new Date(firstPost.scheduled_at).getTime() : 0;
-      const secondTime = secondPost.scheduled_at ? new Date(secondPost.scheduled_at).getTime() : 0;
+      const firstTime = firstPost.scheduled_at
+        ? new Date(firstPost.scheduled_at).getTime()
+        : 0;
+      const secondTime = secondPost.scheduled_at
+        ? new Date(secondPost.scheduled_at).getTime()
+        : 0;
       return firstTime - secondTime;
     });
   };
@@ -483,7 +515,9 @@ export default function PostsPage() {
       activeIndustry.includes(key),
     );
 
-    return matchedKey ? industryAudienceTargets[matchedKey] : defaultAudienceTargets;
+    return matchedKey
+      ? industryAudienceTargets[matchedKey]
+      : defaultAudienceTargets;
   }, [activeIndustry]);
 
   useEffect(() => {
@@ -494,12 +528,20 @@ export default function PostsPage() {
     const metaError = params.get("meta_error");
 
     if (metaConnected === "true") {
-      notify("Facebook and Instagram connected.", "success", "Accounts connected");
+      notify(
+        "Facebook and Instagram connected.",
+        "success",
+        "Accounts connected",
+      );
       window.history.replaceState({}, "", window.location.pathname);
     }
 
     if (metaConnected === "false") {
-      notify(metaError || "Meta connection failed.", "error", "Connection failed");
+      notify(
+        metaError || "Meta connection failed.",
+        "error",
+        "Connection failed",
+      );
       window.history.replaceState({}, "", window.location.pathname);
     }
 
@@ -536,7 +578,9 @@ export default function PostsPage() {
       return;
     }
 
-    setReminderValue(toDateTimeInputValue(selectedPost.scheduled_publish_at || ""));
+    setReminderValue(
+      toDateTimeInputValue(selectedPost.scheduled_publish_at || ""),
+    );
   }, [selectedPost]);
 
   const getTodayKey = () => {
@@ -577,7 +621,9 @@ export default function PostsPage() {
   };
 
   const isPaidSubscription = (status?: string | null) => {
-    return ["active", "paid", "trialing"].includes(String(status || "").toLowerCase());
+    return ["active", "paid", "trialing"].includes(
+      String(status || "").toLowerCase(),
+    );
   };
 
   const calculateAccess = (access: AccessInfo | null) => {
@@ -596,7 +642,9 @@ export default function PostsPage() {
     }
 
     if (isFutureDate(access.extension_ends_at)) {
-      const date = new Date(access.extension_ends_at as string).toLocaleDateString(undefined, {
+      const date = new Date(
+        access.extension_ends_at as string,
+      ).toLocaleDateString(undefined, {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -609,11 +657,14 @@ export default function PostsPage() {
     }
 
     if (isFutureDate(access.trial_ends_at)) {
-      const date = new Date(access.trial_ends_at as string).toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
+      const date = new Date(access.trial_ends_at as string).toLocaleDateString(
+        undefined,
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        },
+      );
 
       return {
         locked: false,
@@ -703,7 +754,10 @@ export default function PostsPage() {
       return "demo" as BillingPlan;
     }
 
-    const plan = data?.plan === "starter" && data?.status === "active" ? "starter" : "demo";
+    const plan =
+      data?.plan === "starter" && data?.status === "active"
+        ? "starter"
+        : "demo";
 
     setBillingPlan(plan);
     return plan as BillingPlan;
@@ -712,21 +766,23 @@ export default function PostsPage() {
   const loadRescanUsage = async (userId: string) => {
     const since = getSevenDaysAgoIso();
 
-    const [{ count: mediaCount, error: mediaError }, { count: videoCount, error: videoError }] =
-      await Promise.all([
-        supabase
-          .from("usage_events")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .in("event_type", MEDIA_RESCAN_EVENT_TYPES)
-          .gte("created_at", since),
-        supabase
-          .from("usage_events")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .in("event_type", VIDEO_RESCAN_EVENT_TYPES)
-          .gte("created_at", since),
-      ]);
+    const [
+      { count: mediaCount, error: mediaError },
+      { count: videoCount, error: videoError },
+    ] = await Promise.all([
+      supabase
+        .from("usage_events")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .in("event_type", MEDIA_RESCAN_EVENT_TYPES)
+        .gte("created_at", since),
+      supabase
+        .from("usage_events")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .in("event_type", VIDEO_RESCAN_EVENT_TYPES)
+        .gte("created_at", since),
+    ]);
 
     if (mediaError) {
       console.error("Error loading media rescan usage:", mediaError.message);
@@ -768,11 +824,15 @@ export default function PostsPage() {
   };
 
   const getWeeklyMediaRescanLimit = () => {
-    return billingPlan === "starter" ? PAID_WEEKLY_MEDIA_RESCAN_LIMIT : DEMO_WEEKLY_MEDIA_RESCAN_LIMIT;
+    return billingPlan === "starter"
+      ? PAID_WEEKLY_MEDIA_RESCAN_LIMIT
+      : DEMO_WEEKLY_MEDIA_RESCAN_LIMIT;
   };
 
   const getWeeklyVideoRescanLimit = () => {
-    return billingPlan === "starter" ? PAID_WEEKLY_VIDEO_RESCAN_LIMIT : DEMO_WEEKLY_VIDEO_RESCAN_LIMIT;
+    return billingPlan === "starter"
+      ? PAID_WEEKLY_VIDEO_RESCAN_LIMIT
+      : DEMO_WEEKLY_VIDEO_RESCAN_LIMIT;
   };
 
   const getMediaRescanUsageLabel = () => {
@@ -993,7 +1053,8 @@ export default function PostsPage() {
   };
 
   const switchCampaign = async (campaignId: string) => {
-    const nextCampaign = campaigns.find((item) => item.id === campaignId) || null;
+    const nextCampaign =
+      campaigns.find((item) => item.id === campaignId) || null;
 
     setSelectedCampaignId(campaignId);
     setPendingCampaignId(campaignId);
@@ -1008,7 +1069,11 @@ export default function PostsPage() {
 
   const loadSelectedPlan = async () => {
     if (!pendingCampaignId) {
-      notify("Please choose a weekly post set first.", "warning", "Choose a weekly set");
+      notify(
+        "Please choose a weekly post set first.",
+        "warning",
+        "Choose a weekly set",
+      );
       return;
     }
 
@@ -1053,18 +1118,27 @@ export default function PostsPage() {
 
   const renameSelectedCampaign = async () => {
     if (!campaign?.id) {
-      notify("No weekly post set selected.", "warning", "No weekly set selected");
+      notify(
+        "No weekly post set selected.",
+        "warning",
+        "No weekly set selected",
+      );
       return;
     }
 
-    const currentName = campaign.name || campaign.campaign_idea || "Untitled weekly posts";
+    const currentName =
+      campaign.name || campaign.campaign_idea || "Untitled weekly posts";
     setRenameCampaignValue(currentName);
     setRenameDialogOpen(true);
   };
 
   const confirmRenameSelectedCampaign = async () => {
     if (!campaign?.id) {
-      notify("No weekly post set selected.", "warning", "No weekly set selected");
+      notify(
+        "No weekly post set selected.",
+        "warning",
+        "No weekly set selected",
+      );
       setRenameDialogOpen(false);
       return;
     }
@@ -1110,24 +1184,37 @@ export default function PostsPage() {
 
   const deleteSelectedCampaign = async () => {
     if (!campaign?.id) {
-      notify("No weekly post set selected.", "warning", "No weekly set selected");
+      notify(
+        "No weekly post set selected.",
+        "warning",
+        "No weekly set selected",
+      );
       return;
     }
 
     setConfirmDialog({
       type: "deleteCampaign",
-      title: posts.length === 0 ? "Delete empty weekly set?" : "Delete this weekly set?",
-      message: posts.length === 0
-        ? `${getCampaignDisplayName()} has no posts. Deleting it will free up a saved weekly set slot.`
-        : `This will delete ${getCampaignDisplayName()} and all posts inside it. This cannot be undone.`,
-      confirmLabel: posts.length === 0 ? "Delete empty set" : "Delete weekly set",
+      title:
+        posts.length === 0
+          ? "Delete empty weekly set?"
+          : "Delete this weekly set?",
+      message:
+        posts.length === 0
+          ? `${getCampaignDisplayName()} has no posts. Deleting it will free up a saved weekly set slot.`
+          : `This will delete ${getCampaignDisplayName()} and all posts inside it. This cannot be undone.`,
+      confirmLabel:
+        posts.length === 0 ? "Delete empty set" : "Delete weekly set",
       danger: true,
     });
   };
 
   const confirmDeleteSelectedCampaign = async () => {
     if (!campaign?.id) {
-      notify("No weekly post set selected.", "warning", "No weekly set selected");
+      notify(
+        "No weekly post set selected.",
+        "warning",
+        "No weekly set selected",
+      );
       closeConfirmDialog();
       return;
     }
@@ -1151,7 +1238,8 @@ export default function PostsPage() {
         campaignPosts
           ?.flatMap((post) => [post.image_path, post.media_path])
           .filter(Boolean)
-          .filter((value, index, array) => array.indexOf(value) === index) || [];
+          .filter((value, index, array) => array.indexOf(value) === index) ||
+        [];
 
       if (storagePaths.length > 0) {
         const { error: storageError } = await supabase.storage
@@ -1159,7 +1247,10 @@ export default function PostsPage() {
           .remove(storagePaths);
 
         if (storageError) {
-          console.error("Weekly posts media delete error:", storageError.message);
+          console.error(
+            "Weekly posts media delete error:",
+            storageError.message,
+          );
         }
       }
 
@@ -1196,7 +1287,9 @@ export default function PostsPage() {
 
   const updatePostLocally = (postId: string, updates: any) => {
     setPosts((currentPosts) =>
-      currentPosts.map((post) => (post.id === postId ? { ...post, ...updates } : post)),
+      currentPosts.map((post) =>
+        post.id === postId ? { ...post, ...updates } : post,
+      ),
     );
   };
 
@@ -1222,7 +1315,9 @@ export default function PostsPage() {
       return;
     }
 
-    const selectedIndex = sortedPosts.findIndex((post) => post.id === selectedPost.id);
+    const selectedIndex = sortedPosts.findIndex(
+      (post) => post.id === selectedPost.id,
+    );
     const safeIndex = selectedIndex >= 0 ? selectedIndex : 0;
     const nextIndex = (safeIndex + 1) % sortedPosts.length;
     const nextPost = sortedPosts[nextIndex];
@@ -1254,7 +1349,9 @@ export default function PostsPage() {
   const buildPostText = (post: any) => {
     const caption = post?.caption || "";
     const cta = post?.cta ? `CTA: ${post.cta}` : "";
-    const hashtags = Array.isArray(post?.hashtags) ? post.hashtags.join(" ") : "";
+    const hashtags = Array.isArray(post?.hashtags)
+      ? post.hashtags.join(" ")
+      : "";
 
     return [caption, cta, hashtags].filter(Boolean).join("\n\n").trim();
   };
@@ -1263,7 +1360,11 @@ export default function PostsPage() {
     const textToCopy = buildPostText(post);
 
     if (!textToCopy) {
-      notify("There is no post text to copy yet.", "warning", "Nothing to copy");
+      notify(
+        "There is no post text to copy yet.",
+        "warning",
+        "Nothing to copy",
+      );
       return;
     }
 
@@ -1288,7 +1389,9 @@ export default function PostsPage() {
   const mediaRequiredForPlatform = (platform?: string) => {
     const cleanPlatform = String(platform || "").toLowerCase();
 
-    return cleanPlatform.includes("instagram") || cleanPlatform.includes("tiktok");
+    return (
+      cleanPlatform.includes("instagram") || cleanPlatform.includes("tiktok")
+    );
   };
 
   const getPlatformUrl = (platform: string) => {
@@ -1296,7 +1399,8 @@ export default function PostsPage() {
 
     if (cleanPlatform.includes("facebook")) return "https://www.facebook.com";
     if (cleanPlatform.includes("instagram")) return "https://www.instagram.com";
-    if (cleanPlatform.includes("tiktok")) return "https://www.tiktok.com/upload";
+    if (cleanPlatform.includes("tiktok"))
+      return "https://www.tiktok.com/upload";
 
     return "https://www.facebook.com";
   };
@@ -1331,15 +1435,17 @@ export default function PostsPage() {
 
   const canDirectPublishToFacebook = (post: any) => {
     return (
-      String(post?.platform || "").toLowerCase().includes("facebook") &&
-      hasConnectedFacebookPage()
+      String(post?.platform || "")
+        .toLowerCase()
+        .includes("facebook") && hasConnectedFacebookPage()
     );
   };
 
   const canDirectPublishToInstagram = (post: any) => {
     return (
-      String(post?.platform || "").toLowerCase().includes("instagram") &&
-      hasConnectedInstagramAccount()
+      String(post?.platform || "")
+        .toLowerCase()
+        .includes("instagram") && hasConnectedInstagramAccount()
     );
   };
 
@@ -1357,8 +1463,14 @@ export default function PostsPage() {
     const mediaType = String(post?.media_type || "").toLowerCase();
     const mediaUrl = String(post?.media_url || "").toLowerCase();
 
-    if (mediaType === "video" || mediaUrl.match(/\.(mp4|mov|webm|m4v)(\?|$)/)) return "video";
-    if (mediaType === "flyer" || mediaType === "pdf" || mediaUrl.includes(".pdf")) return "flyer";
+    if (mediaType === "video" || mediaUrl.match(/\.(mp4|mov|webm|m4v)(\?|$)/))
+      return "video";
+    if (
+      mediaType === "flyer" ||
+      mediaType === "pdf" ||
+      mediaUrl.includes(".pdf")
+    )
+      return "flyer";
     return "image";
   };
 
@@ -1372,7 +1484,10 @@ export default function PostsPage() {
     return cleanName || "media";
   };
 
-  const uploadMedia = async (post: any, event: ChangeEvent<HTMLInputElement>) => {
+  const uploadMedia = async (
+    post: any,
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
 
     event.target.value = "";
@@ -1386,14 +1501,19 @@ export default function PostsPage() {
       !file.type.startsWith("video/") &&
       file.type !== "application/pdf"
     ) {
-      notify("Please upload an image, video, or PDF flyer.", "warning", "Unsupported file type");
+      notify(
+        "Please upload an image, video, or PDF flyer.",
+        "warning",
+        "Unsupported file type",
+      );
       return;
     }
 
     setUploadingMediaPostId(post.id);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
 
       if (authError) throw authError;
 
@@ -1412,7 +1532,9 @@ export default function PostsPage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+      const { data: publicUrlData } = supabase.storage
+        .from(MEDIA_BUCKET)
+        .getPublicUrl(path);
 
       const updates = {
         media_url: publicUrlData.publicUrl,
@@ -1453,7 +1575,8 @@ export default function PostsPage() {
     setConfirmDialog({
       type: "removeMedia",
       title: "Remove this media?",
-      message: "The post wording will stay saved, but the image, video or flyer will be removed from this post.",
+      message:
+        "The post wording will stay saved, but the image, video or flyer will be removed from this post.",
       confirmLabel: "Remove media",
       danger: true,
       post,
@@ -1549,7 +1672,8 @@ export default function PostsPage() {
       setImprovementNote({
         postId: activePostForEditing.id,
         label: "Wording saved",
-        detail: "Review the updated post, then add media or publish when ready.",
+        detail:
+          "Review the updated post, then add media or publish when ready.",
       });
 
       cancelEditingPost();
@@ -1564,7 +1688,8 @@ export default function PostsPage() {
   };
 
   const getToneForRewrite = () => {
-    const currentTone = profile?.tone_of_voice || campaign?.tone || "Professional";
+    const currentTone =
+      profile?.tone_of_voice || campaign?.tone || "Professional";
 
     if (toneTarget === "Use current tone") {
       return currentTone;
@@ -1613,15 +1738,25 @@ export default function PostsPage() {
     if (!ensureAccessAllowed()) return;
 
     const finalAudience =
-      audienceTarget === "Custom audience" ? customAudienceTarget.trim() : audienceTarget.trim();
+      audienceTarget === "Custom audience"
+        ? customAudienceTarget.trim()
+        : audienceTarget.trim();
 
     if (!finalAudience) {
-      notify("Please enter who this post is for.", "warning", "Audience needed");
+      notify(
+        "Please enter who this post is for.",
+        "warning",
+        "Audience needed",
+      );
       return;
     }
 
     if (!post.caption?.trim()) {
-      notify("This post needs a caption before it can be improved.", "warning", "Caption needed");
+      notify(
+        "This post needs a caption before it can be improved.",
+        "warning",
+        "Caption needed",
+      );
       return;
     }
 
@@ -1635,14 +1770,16 @@ export default function PostsPage() {
         marketReach: marketReachTarget,
         tone: getToneForRewrite(),
         toneAdjustment: toneTarget,
-        businessName: profile?.business_name || campaign?.business_name || "the business",
-        industry: profile?.industry || campaign?.business_type || "general business",
+        businessName:
+          profile?.business_name || campaign?.business_name || "the business",
+        industry:
+          profile?.industry || campaign?.business_type || "general business",
         platform: post.platform || "Facebook",
         caption: post.caption || "",
         cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
         image_prompt: post.image_prompt || "",
-        rewriteQualityInstructions: `Rewrite this as a high-quality, industry-specific social post. Use the selected audience, market reach and tone as hard guidance. Keep the business context, platform, CTA and media prompt aligned. Avoid generic filler. Make it sound like a real ${profile?.industry || campaign?.business_type || 'business'} post for ${finalAudience}.`,
+        rewriteQualityInstructions: `Rewrite this as a high-quality, industry-specific social post. Use the selected audience, market reach and tone as hard guidance. Keep the business context, platform, CTA and media prompt aligned. Avoid generic filler. Make it sound like a real ${profile?.industry || campaign?.business_type || "business"} post for ${finalAudience}.`,
       });
 
       const saved = await applyRewrittenPost(post, response.data, {
@@ -1668,20 +1805,31 @@ export default function PostsPage() {
     }
   };
 
-  const handleQuickImprovePost = async (post: any, improvementAction: string) => {
+  const handleQuickImprovePost = async (
+    post: any,
+    improvementAction: string,
+  ) => {
     if (!post?.id) return;
 
     if (!ensureAccessAllowed()) return;
 
     if (!post.caption?.trim()) {
-      notify("This post needs a caption before it can be improved.", "warning", "Caption needed");
+      notify(
+        "This post needs a caption before it can be improved.",
+        "warning",
+        "Caption needed",
+      );
       return;
     }
 
-    const selectedAction = quickImproveActions.find((item) => item.value === improvementAction);
+    const selectedAction = quickImproveActions.find(
+      (item) => item.value === improvementAction,
+    );
     const actionLabel = selectedAction?.label || "Improve post";
     const finalAudience =
-      audienceTarget === "Custom audience" ? customAudienceTarget.trim() : audienceTarget.trim();
+      audienceTarget === "Custom audience"
+        ? customAudienceTarget.trim()
+        : audienceTarget.trim();
     const selectedReach = marketReachTarget || "Local customers";
     const selectedTone = getToneForRewrite();
 
@@ -1692,18 +1840,21 @@ export default function PostsPage() {
       const response = await axios.post("/api/rewritePost", {
         provider: "gemini",
         improvementAction,
-        audienceTarget: finalAudience || post.audience_target || "Current audience",
+        audienceTarget:
+          finalAudience || post.audience_target || "Current audience",
         marketReach: selectedReach,
         tone: selectedTone,
         toneAdjustment: toneTarget,
-        businessName: profile?.business_name || campaign?.business_name || "the business",
-        industry: profile?.industry || campaign?.business_type || "general business",
+        businessName:
+          profile?.business_name || campaign?.business_name || "the business",
+        industry:
+          profile?.industry || campaign?.business_type || "general business",
         platform: post.platform || "Facebook",
         caption: post.caption || "",
         cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
         image_prompt: post.image_prompt || "",
-        rewriteQualityInstructions: `Rewrite this as a high-quality, industry-specific social post. Use the selected improvement action as hard guidance. The selected audience is ${finalAudience || post.audience_target || 'the current target audience'}, the selected reach is ${selectedReach}, and the tone guidance is ${selectedTone}. Keep the result useful, specific to ${profile?.industry || campaign?.business_type || 'the business industry'}, platform-appropriate, and likely to generate enquiries, bookings, visits, orders or messages. Do not use generic wording. Do not make it local unless the reach selection asks for local customers.`,
+        rewriteQualityInstructions: `Rewrite this as a high-quality, industry-specific social post. Use the selected improvement action as hard guidance. The selected audience is ${finalAudience || post.audience_target || "the current target audience"}, the selected reach is ${selectedReach}, and the tone guidance is ${selectedTone}. Keep the result useful, specific to ${profile?.industry || campaign?.business_type || "the business industry"}, platform-appropriate, and likely to generate enquiries, bookings, visits, orders or messages. Do not use generic wording. Do not make it local unless the reach selection asks for local customers.`,
       });
 
       const saved = await applyRewrittenPost(post, response.data, {
@@ -1735,7 +1886,11 @@ export default function PostsPage() {
     if (!ensureAccessAllowed()) return;
 
     if (!post.media_url) {
-      notify("Add media first, then rescan this post.", "warning", "Media needed");
+      notify(
+        "Add media first, then rescan this post.",
+        "warning",
+        "Media needed",
+      );
       return;
     }
 
@@ -1759,8 +1914,10 @@ export default function PostsPage() {
       const response = await axios.post("/api/generatePosts", {
         provider: "gemini",
         website: "",
-        clientName: profile?.business_name || campaign?.business_name || "the business",
-        industry: profile?.industry || campaign?.business_type || "general business",
+        clientName:
+          profile?.business_name || campaign?.business_name || "the business",
+        industry:
+          profile?.industry || campaign?.business_type || "general business",
         description: `
 Rewrite this single existing post after rescanning its attached media.
 
@@ -1771,7 +1928,9 @@ Tone: ${profile?.tone_of_voice || campaign?.tone || "Professional"}
 Main offer: ${profile?.main_offer || ""}
 Services: ${Array.isArray(profile?.services) ? profile.services.join(", ") : ""}
 Target audience: ${
-          Array.isArray(profile?.target_audience) ? profile.target_audience.join(", ") : ""
+          Array.isArray(profile?.target_audience)
+            ? profile.target_audience.join(", ")
+            : ""
         }
 
 Current post:
@@ -1795,7 +1954,9 @@ Important:
         postingFrequency: 1,
         numberOfPosts: 1,
         postCount: 1,
-        marketReach: profile?.location ? `Local customers in and around ${profile.location}` : "Local customers",
+        marketReach: profile?.location
+          ? `Local customers in and around ${profile.location}`
+          : "Local customers",
         mediaItems: [
           {
             id: post.id,
@@ -1831,7 +1992,11 @@ Important:
       const rewrittenPost = response.data?.posts?.[0];
 
       if (!rewrittenPost?.caption) {
-        notify("The media rescan did not return a new post. Please try again.", "error", "Rescan failed");
+        notify(
+          "The media rescan did not return a new post. Please try again.",
+          "error",
+          "Rescan failed",
+        );
         return;
       }
 
@@ -1895,12 +2060,16 @@ Important:
   const maybeShowReviewPrompt = () => {
     if (typeof window === "undefined") return;
 
-    const hasSubmitted = localStorage.getItem(REVIEW_PROMPT_SUBMITTED_KEY) === "true";
-    const hasDismissed = localStorage.getItem(REVIEW_PROMPT_DISMISSED_KEY) === "true";
+    const hasSubmitted =
+      localStorage.getItem(REVIEW_PROMPT_SUBMITTED_KEY) === "true";
+    const hasDismissed =
+      localStorage.getItem(REVIEW_PROMPT_DISMISSED_KEY) === "true";
 
     if (hasSubmitted || hasDismissed) return;
 
-    const currentCount = Number(localStorage.getItem(REVIEW_PROMPT_POSTED_COUNT_KEY) || "0");
+    const currentCount = Number(
+      localStorage.getItem(REVIEW_PROMPT_POSTED_COUNT_KEY) || "0",
+    );
     const nextCount = currentCount + 1;
 
     localStorage.setItem(REVIEW_PROMPT_POSTED_COUNT_KEY, String(nextCount));
@@ -1915,7 +2084,9 @@ Important:
     const updatedPosts = sortedPosts.map((item) =>
       item.id === postId ? { ...item, ...updates } : item,
     );
-    const postsLeftAfterPublishing = updatedPosts.filter((item) => !isPostPosted(item)).length;
+    const postsLeftAfterPublishing = updatedPosts.filter(
+      (item) => !isPostPosted(item),
+    ).length;
     const nextPost =
       updatedPosts.slice(postIndex + 1).find((item) => !isPostPosted(item)) ||
       updatedPosts.find((item) => !isPostPosted(item)) ||
@@ -1938,7 +2109,11 @@ Important:
     const text = buildPostText(post);
 
     if (!text) {
-      notify("This post needs wording before it can be published.", "warning", "Wording needed");
+      notify(
+        "This post needs wording before it can be published.",
+        "warning",
+        "Wording needed",
+      );
       return;
     }
 
@@ -2021,12 +2196,20 @@ Important:
     const text = buildPostText(post);
 
     if (!text) {
-      notify("This post needs wording before it can be published.", "warning", "Wording needed");
+      notify(
+        "This post needs wording before it can be published.",
+        "warning",
+        "Wording needed",
+      );
       return;
     }
 
     if (!post.media_url || !post.media_type || post.media_type === "flyer") {
-      notify("Instagram needs an image or video before publishing.", "warning", "Media needed");
+      notify(
+        "Instagram needs an image or video before publishing.",
+        "warning",
+        "Media needed",
+      );
       return;
     }
 
@@ -2102,7 +2285,11 @@ Important:
   };
 
   const publishToTikTokDemo = async (_post: any) => {
-    notify("TikTok is manual for now. Copy the post and open TikTok to publish it.", "info", "TikTok manual");
+    notify(
+      "TikTok is manual for now. Copy the post and open TikTok to publish it.",
+      "info",
+      "TikTok manual",
+    );
   };
 
   const markAsPosted = async (postId: string) => {
@@ -2114,7 +2301,10 @@ Important:
       published_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase.from("campaign_posts").update(updates).eq("id", postId);
+    const { error } = await supabase
+      .from("campaign_posts")
+      .update(updates)
+      .eq("id", postId);
 
     if (error) {
       notify(error.message, "error");
@@ -2141,7 +2331,10 @@ Important:
       publish_source: null,
     };
 
-    const { error } = await supabase.from("campaign_posts").update(updates).eq("id", postId);
+    const { error } = await supabase
+      .from("campaign_posts")
+      .update(updates)
+      .eq("id", postId);
 
     if (error) {
       notify(error.message, "error");
@@ -2155,7 +2348,11 @@ Important:
     if (!post?.id) return;
 
     if (!reminderValue) {
-      notify("Choose a date and time first.", "warning", "Schedule time needed");
+      notify(
+        "Choose a date and time first.",
+        "warning",
+        "Schedule time needed",
+      );
       return;
     }
 
@@ -2255,13 +2452,18 @@ Important:
       const updates = {
         deleted_at: new Date().toISOString(),
         deleted_by: authUserId,
-        delete_reason: posted ? "archived_from_posts_page" : "deleted_from_posts_page",
+        delete_reason: posted
+          ? "archived_from_posts_page"
+          : "deleted_from_posts_page",
         scheduled_publish_at: posted ? post.scheduled_publish_at || null : null,
         publish_status: posted ? post.publish_status || "posted" : null,
         status: posted ? post.status || "posted" : "deleted",
       };
 
-      const { error } = await supabase.from("campaign_posts").update(updates).eq("id", post.id);
+      const { error } = await supabase
+        .from("campaign_posts")
+        .update(updates)
+        .eq("id", post.id);
 
       if (error) throw error;
 
@@ -2272,14 +2474,20 @@ Important:
         deletedPost,
         ...currentDeletedPosts.filter((item) => item.id !== post.id),
       ]);
-      setPosts((currentPosts) => currentPosts.filter((item) => item.id !== post.id));
+      setPosts((currentPosts) =>
+        currentPosts.filter((item) => item.id !== post.id),
+      );
       setSelectedPostId(null);
       setImprovementNote(null);
       setShowImproveTools(false);
       cancelEditingPost();
       closeConfirmDialog();
 
-      notify("Use Undo delete at the top of the page, or restore it later from Deleted posts.", "success", "Post deleted");
+      notify(
+        "Use Undo delete at the top of the page, or restore it later from Deleted posts.",
+        "success",
+        "Post deleted",
+      );
 
       window.setTimeout(() => {
         setRecentlyDeletedPost((current: any | null) =>
@@ -2329,7 +2537,9 @@ Important:
       if (error) throw error;
 
       setRecentlyDeletedPost(null);
-      await loadPosts(selectedCampaignId || campaign?.id || postToRestore.campaign_id || null);
+      await loadPosts(
+        selectedCampaignId || campaign?.id || postToRestore.campaign_id || null,
+      );
       setSelectedPostId(postToRestore.id);
     } catch (error: any) {
       const message = getReadableError(error, "Error restoring post.");
@@ -2364,7 +2574,10 @@ Important:
               : null,
       };
 
-      const { error } = await supabase.from("campaign_posts").update(updates).eq("id", post.id);
+      const { error } = await supabase
+        .from("campaign_posts")
+        .update(updates)
+        .eq("id", post.id);
 
       if (error) throw error;
 
@@ -2373,7 +2586,9 @@ Important:
         currentDeletedPosts.filter((item) => item.id !== post.id),
       );
 
-      await loadPosts(selectedCampaignId || campaign?.id || post.campaign_id || null);
+      await loadPosts(
+        selectedCampaignId || campaign?.id || post.campaign_id || null,
+      );
       setSelectedPostId(post.id);
     } catch (error: any) {
       const message = getReadableError(error, "Error restoring post.");
@@ -2477,10 +2692,13 @@ Important:
     setSuccessMoment(null);
   };
 
-  const todayReminderPost = posts.find((post) => post.id === todayReminderPostId) || null;
+  const todayReminderPost =
+    posts.find((post) => post.id === todayReminderPostId) || null;
 
   const activeImprovementNote =
-    selectedPost && improvementNote?.postId === selectedPost.id ? improvementNote : null;
+    selectedPost && improvementNote?.postId === selectedPost.id
+      ? improvementNote
+      : null;
 
   const brandPrimary = profile?.brand_primary_color || "#ffd43b";
   const brandSecondary = profile?.brand_secondary_color || "#101420";
@@ -2500,7 +2718,10 @@ Important:
   } as CSSProperties;
 
   return (
-    <div className="campaign-brand-shell simplified-posts-page" style={brandStyle}>
+    <div
+      className="campaign-brand-shell simplified-posts-page"
+      style={brandStyle}
+    >
       {loading ? (
         <section
           className="premium-card"
@@ -2518,8 +2739,12 @@ Important:
           <h1 className="page-title" style={{ margin: "8px 0 12px" }}>
             This week’s posts.
           </h1>
-          <p className="page-description" style={{ margin: "0 auto 22px", maxWidth: 760 }}>
-            Review each post, then publish Facebook and Instagram or copy/open TikTok.
+          <p
+            className="page-description"
+            style={{ margin: "0 auto 22px", maxWidth: 760 }}
+          >
+            Review each post, then publish Facebook and Instagram or copy/open
+            TikTok.
           </p>
           <p>Loading posts...</p>
         </section>
@@ -2540,15 +2765,19 @@ Important:
           <h1 className="page-title" style={{ margin: "8px 0 12px" }}>
             This week’s posts.
           </h1>
-          <p className="page-description" style={{ margin: "0 auto 28px", maxWidth: 760 }}>
-            Review each post, then publish Facebook and Instagram or copy/open TikTok.
+          <p
+            className="page-description"
+            style={{ margin: "0 auto 28px", maxWidth: 760 }}
+          >
+            Review each post, then publish Facebook and Instagram or copy/open
+            TikTok.
           </p>
 
           <div className="page-eyebrow">No posts yet</div>
           <h2 style={{ marginTop: 0 }}>Create this week’s posts first.</h2>
           <p style={{ maxWidth: 680, margin: "0 auto 22px" }}>
-            Go to Dashboard, upload photos, videos or flyers, then FromOne will create posts ready
-            to review here.
+            Go to Dashboard, upload photos, videos or flyers, then FromOne will
+            create posts ready to review here.
           </p>
 
           <a href="/dashboard" className="dashboard-platform-create-button">
@@ -2579,61 +2808,113 @@ Important:
                 display: "grid",
                 gap: 18,
                 border: "1px solid rgba(255, 212, 59, 0.24)",
-                borderRadius: 34,
+                borderRadius: 36,
                 background:
-                  "radial-gradient(circle at top, rgba(255, 212, 59, 0.14), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.078), rgba(255,255,255,0.03))",
-                boxShadow: "0 30px 96px rgba(0,0,0,0.3)",
+                  "radial-gradient(circle at top right, rgba(255, 212, 59, 0.18), transparent 34%), radial-gradient(circle at bottom left, rgba(61, 220, 151, 0.09), transparent 28%), linear-gradient(145deg, rgba(255,255,255,0.086), rgba(255,255,255,0.032))",
+                boxShadow: "0 34px 110px rgba(0,0,0,0.34)",
+                overflow: "hidden",
               }}
             >
-              <div style={{ textAlign: "center", maxWidth: 860, margin: "0 auto" }}>
-                <div className="page-eyebrow">Posts</div>
-                <h1
-                  className="page-title"
-                  style={{
-                    margin: "8px 0 12px",
-                    fontSize: "clamp(2.4rem, 5.2vw, 4.8rem)",
-                    lineHeight: 0.92,
-                    letterSpacing: "-0.06em",
-                  }}
-                >
-                  This week’s posts.
-                </h1>
-                <p className="page-description" style={{ margin: "0 auto", maxWidth: 760 }}>
-                  Review each post before anything is published.
-                </p>
-              </div>
-
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: 10,
-                  flexWrap: "wrap",
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) auto",
+                  gap: 24,
+                  alignItems: "center",
                 }}
               >
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => setShowSavedWeekControls((current) => !current)}
-                  style={{ minHeight: 44, borderRadius: 16 }}
-                >
-                  {showSavedWeekControls ? "Hide saved weeks" : "Manage saved weeks"}
-                </button>
-
-                {sortedPosts.length > 0 && sortedPosts.length < 7 && (
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => {
-                      window.location.href = campaign?.id
-                        ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
-                        : "/dashboard";
+                <div style={{ minWidth: 0 }}>
+                  <div className="page-eyebrow">Posts</div>
+                  <h1
+                    className="page-title"
+                    style={{
+                      margin: "8px 0 12px",
+                      fontSize: "clamp(2.35rem, 5vw, 4.7rem)",
+                      lineHeight: 0.92,
+                      letterSpacing: "-0.06em",
                     }}
-                    style={{ minHeight: 44, borderRadius: 16 }}
                   >
-                    + Add more media
-                  </button>
-                )}
+                    This week’s posts.
+                  </h1>
+                  <p
+                    className="page-description"
+                    style={{ margin: 0, maxWidth: 760 }}
+                  >
+                    Open a post, check the media and wording, then publish or
+                    copy when ready.
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 10,
+                    justifyItems: "end",
+                    minWidth: 190,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "inline-grid",
+                      gap: 4,
+                      padding: "13px 16px",
+                      borderRadius: 22,
+                      background: "rgba(15, 23, 42, 0.62)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      minWidth: 168,
+                      textAlign: "center",
+                    }}
+                  >
+                    <strong style={{ color: "#fff", fontSize: 22 }}>
+                      {sortedPosts.filter((post) => isPostPosted(post)).length}{" "}
+                      / {sortedPosts.length}
+                    </strong>
+                    <span
+                      style={{
+                        color: "rgba(248,250,252,0.7)",
+                        fontSize: 12,
+                        fontWeight: 900,
+                      }}
+                    >
+                      reviewed / posted
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      flexWrap: "wrap",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() =>
+                        setShowSavedWeekControls((current) => !current)
+                      }
+                      style={{ minHeight: 42, borderRadius: 15 }}
+                    >
+                      {showSavedWeekControls ? "Hide weeks" : "Manage weeks"}
+                    </button>
+
+                    {sortedPosts.length > 0 && sortedPosts.length < 7 && (
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => {
+                          window.location.href = campaign?.id
+                            ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
+                            : "/dashboard";
+                        }}
+                        style={{ minHeight: 42, borderRadius: 15 }}
+                      >
+                        + Add media
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {showSavedWeekControls && (
@@ -2656,7 +2937,9 @@ Important:
                   >
                     <div>
                       <div className="page-eyebrow">Saved weeks</div>
-                      <h2 style={{ margin: "0 0 6px" }}>Switch or manage weeks.</h2>
+                      <h2 style={{ margin: "0 0 6px" }}>
+                        Switch or manage saved weeks.
+                      </h2>
                       <p style={{ margin: 0, color: "var(--muted)" }}>
                         Advanced controls for saved weekly post sets.
                       </p>
@@ -2676,7 +2959,8 @@ Important:
                         fontWeight: 900,
                       }}
                     >
-                      {campaigns.length} saved set{campaigns.length === 1 ? "" : "s"}
+                      {campaigns.length} saved set
+                      {campaigns.length === 1 ? "" : "s"}
                     </div>
                   </div>
 
@@ -2690,7 +2974,9 @@ Important:
                   >
                     <select
                       value={pendingCampaignId}
-                      onChange={(event) => setPendingCampaignId(event.target.value)}
+                      onChange={(event) =>
+                        setPendingCampaignId(event.target.value)
+                      }
                       style={{
                         minHeight: 50,
                         borderRadius: 16,
@@ -2741,7 +3027,11 @@ Important:
                         color: "rgba(255, 215, 220, 0.95)",
                       }}
                     >
-                      {deletingCampaign ? "Deleting..." : posts.length === 0 ? "Delete empty set" : "Delete set"}
+                      {deletingCampaign
+                        ? "Deleting..."
+                        : posts.length === 0
+                          ? "Delete empty set"
+                          : "Delete set"}
                     </button>
                   </div>
                 </div>
@@ -2753,9 +3043,12 @@ Important:
             className="premium-card"
             style={{
               display: "grid",
-              gap: 18,
-              border: "1px solid rgba(255, 212, 59, 0.24)",
-              borderRadius: 30,
+              gap: 20,
+              border: "1px solid rgba(255, 212, 59, 0.22)",
+              borderRadius: 34,
+              background:
+                "radial-gradient(circle at top left, rgba(255, 212, 59, 0.12), transparent 30%), linear-gradient(145deg, rgba(255,255,255,0.072), rgba(255,255,255,0.028))",
+              boxShadow: "0 30px 96px rgba(0,0,0,0.3)",
             }}
           >
             <div
@@ -2768,12 +3061,19 @@ Important:
               }}
             >
               <div>
-                <div className="page-eyebrow">Review</div>
-                <h2 style={{ margin: "0 0 8px" }}>
-                  {posts.length || 0} post{posts.length === 1 ? "" : "s"} ready to review.
+                <div className="page-eyebrow">Weekly calendar</div>
+                <h2
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: "clamp(1.65rem, 3vw, 2.45rem)",
+                  }}
+                >
+                  {posts.length || 0} post{posts.length === 1 ? "" : "s"} ready
+                  to review.
                 </h2>
                 <p style={{ margin: 0, color: "var(--muted)" }}>
-                  Open each post, check it, then publish or copy.
+                  A clean review board for this week. The full editing tools
+                  open inside each post.
                 </p>
               </div>
             </div>
@@ -2796,7 +3096,8 @@ Important:
                     This saved week has no posts.
                   </h3>
                   <p style={{ margin: 0, color: "var(--muted)" }}>
-                    This can happen if a test run was interrupted. Delete this empty set, or create a new week from Dashboard.
+                    This can happen if a test run was interrupted. Delete this
+                    empty set, or create a new week from Dashboard.
                   </p>
                 </div>
 
@@ -2838,289 +3139,307 @@ Important:
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
                   gap: 18,
                   alignItems: "stretch",
                 }}
               >
-                {sortedPosts.map((post: any) => {
+                {sortedPosts.map((post: any, index: number) => {
                   const status = getPostStatus(post);
                   const platformName = getPlatformDisplayName(post);
-                  const captionPreview = String(post.caption || "").slice(0, 132);
+                  const captionPreview = String(post.caption || "").slice(
+                    0,
+                    132,
+                  );
+                  const dateValue =
+                    post.scheduled_at ||
+                    post.scheduled_publish_at ||
+                    post.created_at ||
+                    new Date().toISOString();
+                  const postDate = new Date(dateValue);
+                  const safeDate = Number.isNaN(postDate.getTime())
+                    ? new Date()
+                    : postDate;
+                  const weekday = safeDate
+                    .toLocaleDateString(undefined, { weekday: "short" })
+                    .toUpperCase();
+                  const day = safeDate.toLocaleDateString(undefined, {
+                    day: "2-digit",
+                  });
+                  const month = safeDate
+                    .toLocaleDateString(undefined, { month: "short" })
+                    .toUpperCase();
+                  const time = safeDate.toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+                  const isPosted = status === "Posted";
+                  const isFailed = status === "Failed";
+                  const isPlanned = status === "Reminder set";
                   const mediaType = String(post.media_type || "").toLowerCase();
-                  const isVideoPreview = mediaType === "video";
-                  const isFlyerPreview =
-                    mediaType === "flyer" ||
-                    mediaType === "pdf" ||
-                    String(post.media_url || "").toLowerCase().includes(".pdf");
-                  const scheduledDate = post.scheduled_at ? new Date(post.scheduled_at) : null;
-                  const weekday = scheduledDate
-                    ? scheduledDate.toLocaleDateString(undefined, { weekday: "short" }).toUpperCase()
-                    : "POST";
-                  const day = scheduledDate
-                    ? scheduledDate.toLocaleDateString(undefined, { day: "2-digit" })
-                    : "--";
-                  const month = scheduledDate
-                    ? scheduledDate.toLocaleDateString(undefined, { month: "short" }).toUpperCase()
-                    : "";
-                  const time = scheduledDate
-                    ? scheduledDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-                    : "";
-                  const posted = status === "Posted";
-                  const failed = status === "Failed";
+                  const statusLabel = isPlanned ? "Planned" : status;
 
                   return (
                     <article
                       key={post.id}
                       className="fromone-premium-calendar-review-card"
                       style={{
-                        minHeight: 430,
-                        display: "flex",
-                        flexDirection: "column",
+                        position: "relative",
+                        minHeight: 520,
+                        display: "grid",
+                        gridTemplateRows: "188px minmax(0, 1fr)",
                         overflow: "hidden",
-                        borderRadius: 28,
-                        background: posted
-                          ? "radial-gradient(circle at top left, rgba(61,220,151,0.18), transparent 34%), linear-gradient(150deg, rgba(31,41,55,0.96), rgba(15,23,42,0.98))"
-                          : failed
-                            ? "radial-gradient(circle at top left, rgba(248,113,113,0.18), transparent 34%), linear-gradient(150deg, rgba(31,41,55,0.96), rgba(15,23,42,0.98))"
-                            : "radial-gradient(circle at top left, rgba(255,212,59,0.16), transparent 34%), linear-gradient(150deg, rgba(31,41,55,0.96), rgba(15,23,42,0.98))",
-                        border: posted
-                          ? "1px solid rgba(61,220,151,0.32)"
-                          : failed
-                            ? "1px solid rgba(248,113,113,0.32)"
-                            : "1px solid rgba(255,212,59,0.22)",
-                        boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
+                        borderRadius: 30,
+                        background: isPosted
+                          ? "radial-gradient(circle at top right, rgba(61, 220, 151, 0.18), transparent 32%), linear-gradient(145deg, rgba(255,255,255,0.088), rgba(255,255,255,0.036))"
+                          : "radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 30%), linear-gradient(145deg, rgba(255,255,255,0.088), rgba(255,255,255,0.036))",
+                        border: isPosted
+                          ? "1px solid rgba(61, 220, 151, 0.28)"
+                          : isFailed
+                            ? "1px solid rgba(248, 113, 113, 0.28)"
+                            : "1px solid rgba(255, 212, 59, 0.18)",
+                        boxShadow: "0 24px 72px rgba(0,0,0,0.28)",
                       }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => choosePost(post.id)}
-                        aria-label={`Review ${post.title || platformName + " post"}`}
+                      <div
                         style={{
-                          position: "relative",
-                          height: 178,
-                          width: "100%",
-                          border: 0,
-                          padding: 0,
+                          position: "absolute",
+                          zIndex: 3,
+                          top: 14,
+                          left: 14,
+                          width: 68,
+                          borderRadius: 20,
                           overflow: "hidden",
-                          background: "rgba(2,6,23,0.64)",
-                          display: "grid",
-                          placeItems: "center",
-                          cursor: "pointer",
+                          background: "rgba(2, 6, 23, 0.72)",
+                          border: "1px solid rgba(255,255,255,0.14)",
+                          boxShadow: "0 16px 38px rgba(0,0,0,0.28)",
+                          textAlign: "center",
+                          backdropFilter: "blur(12px)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: "#ffd43b",
+                            color: "#101420",
+                            fontSize: 10,
+                            fontWeight: 950,
+                            letterSpacing: "0.08em",
+                            padding: "5px 4px",
+                          }}
+                        >
+                          {weekday}
+                        </div>
+                        <strong
+                          style={{
+                            display: "block",
+                            color: "#fff",
+                            fontSize: 24,
+                            paddingTop: 7,
+                          }}
+                        >
+                          {day}
+                        </strong>
+                        <span
+                          style={{
+                            display: "block",
+                            color: "rgba(248,250,252,0.72)",
+                            fontSize: 10,
+                            fontWeight: 900,
+                            padding: "0 4px 8px",
+                          }}
+                        >
+                          {month}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          background: "rgba(15,23,42,0.72)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          overflow: "hidden",
                         }}
                       >
                         {post.media_url ? (
-                          isVideoPreview ? (
+                          mediaType === "video" ? (
                             <video
                               src={post.media_url}
                               muted
                               playsInline
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            />
-                          ) : isFlyerPreview ? (
-                            <div
                               style={{
-                                display: "grid",
-                                placeItems: "center",
-                                gap: 8,
-                                color: "#fff",
-                                textAlign: "center",
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
                               }}
-                            >
-                              <strong style={{ fontSize: 34 }}>PDF</strong>
-                              <span style={{ color: "rgba(248,250,252,0.72)", fontWeight: 850 }}>
-                                Flyer attached
-                              </span>
+                            />
+                          ) : mediaType === "flyer" || mediaType === "pdf" ? (
+                            <div style={{ textAlign: "center", padding: 20 }}>
+                              <strong style={{ color: "#fff" }}>
+                                PDF flyer
+                              </strong>
+                              <p
+                                style={{
+                                  margin: "6px 0 0",
+                                  color: "var(--muted)",
+                                }}
+                              >
+                                Open to review.
+                              </p>
                             </div>
                           ) : (
                             <img
                               src={post.media_url}
                               alt={post.title || "Post media"}
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
                             />
                           )
                         ) : (
-                          <div
-                            style={{
-                              display: "grid",
-                              placeItems: "center",
-                              gap: 8,
-                              textAlign: "center",
-                              color: "rgba(248,250,252,0.72)",
-                              padding: 22,
-                            }}
-                          >
-                            <strong style={{ color: "#fff", fontSize: 18 }}>No media yet</strong>
-                            <span style={{ fontWeight: 800 }}>Open this post to add media.</span>
+                          <div style={{ textAlign: "center", padding: 20 }}>
+                            <strong style={{ color: "#fff" }}>
+                              No media yet
+                            </strong>
+                            <p
+                              style={{
+                                margin: "6px 0 0",
+                                color: "var(--muted)",
+                              }}
+                            >
+                              Add media in review.
+                            </p>
                           </div>
                         )}
-
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 14,
-                            left: 14,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 8,
-                            padding: "8px 11px",
-                            borderRadius: 999,
-                            background: "rgba(2,6,23,0.78)",
-                            border: "1px solid rgba(255,255,255,0.14)",
-                            backdropFilter: "blur(10px)",
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 7,
-                              height: 7,
-                              borderRadius: 999,
-                              background: platformName === "Instagram" ? "#3ddc97" : "#ffd43b",
-                            }}
-                          />
-                          <span style={{ color: "#fff", fontSize: 12, fontWeight: 950 }}>
-                            {platformName}
-                          </span>
-                        </div>
-
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 14,
-                            right: 14,
-                            padding: "7px 10px",
-                            borderRadius: 999,
-                            background: posted
-                              ? "rgba(61,220,151,0.86)"
-                              : failed
-                                ? "rgba(248,113,113,0.86)"
-                                : "rgba(255,212,59,0.9)",
-                            color: posted || failed ? "#04130c" : "#101420",
-                            fontSize: 11,
-                            fontWeight: 950,
-                          }}
-                        >
-                          {posted ? "Posted" : failed ? "Check" : "Ready"}
-                        </div>
-                      </button>
+                      </div>
 
                       <div
                         style={{
                           padding: 18,
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 14,
-                          flex: 1,
+                          display: "grid",
+                          gridTemplateRows: "auto auto minmax(64px, 1fr) auto",
+                          gap: 13,
                         }}
                       >
                         <div
                           style={{
-                            display: "grid",
-                            gridTemplateColumns: "70px minmax(0, 1fr)",
-                            gap: 14,
-                            alignItems: "start",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 10,
+                            alignItems: "center",
                           }}
                         >
-                          <button
-                            type="button"
-                            onClick={() => choosePost(post.id)}
-                            aria-label={`Review ${post.title || platformName + " post"}`}
+                          <div
                             style={{
-                              minHeight: 78,
-                              borderRadius: 20,
-                              border: "1px solid rgba(255,212,59,0.22)",
-                              background: "rgba(255,212,59,0.1)",
-                              color: "#fff",
-                              display: "grid",
-                              placeItems: "center",
-                              cursor: "pointer",
+                              display: "flex",
+                              gap: 7,
+                              flexWrap: "wrap",
                             }}
                           >
                             <span
                               style={{
-                                color: "#ffd43b",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                minHeight: 28,
+                                padding: "5px 10px",
+                                borderRadius: 999,
+                                background: "rgba(255, 212, 59, 0.12)",
+                                border: "1px solid rgba(255, 212, 59, 0.2)",
+                                color: "#ffe58a",
                                 fontSize: 11,
-                                letterSpacing: "0.12em",
                                 fontWeight: 950,
                               }}
                             >
-                              {weekday}
+                              {platformName}
                             </span>
-                            <strong style={{ fontSize: 28, lineHeight: 1, color: "#fff" }}>{day}</strong>
-                            <span style={{ color: "rgba(248,250,252,0.68)", fontSize: 11, fontWeight: 900 }}>
-                              {month}
-                            </span>
-                          </button>
 
-                          <button
-                            type="button"
-                            onClick={() => choosePost(post.id)}
-                            style={{
-                              minWidth: 0,
-                              padding: 0,
-                              border: 0,
-                              background: "transparent",
-                              textAlign: "left",
-                              cursor: "pointer",
-                            }}
-                          >
                             <span
-                              className="page-eyebrow"
-                              style={{ display: "block", marginBottom: 7, color: "#ffd43b" }}
-                            >
-                              {time || getPostPositionLabel(post)}
-                            </span>
-
-                            <strong
                               style={{
-                                display: "-webkit-box",
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden",
-                                color: "#fff",
-                                fontSize: "1.12rem",
-                                lineHeight: 1.16,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                minHeight: 28,
+                                padding: "5px 10px",
+                                borderRadius: 999,
+                                background: isPosted
+                                  ? "rgba(61, 220, 151, 0.12)"
+                                  : isFailed
+                                    ? "rgba(248, 113, 113, 0.12)"
+                                    : "rgba(255,255,255,0.07)",
+                                border: isPosted
+                                  ? "1px solid rgba(61, 220, 151, 0.24)"
+                                  : isFailed
+                                    ? "1px solid rgba(248, 113, 113, 0.24)"
+                                    : "1px solid rgba(255,255,255,0.1)",
+                                color: isPosted
+                                  ? "#a7f3d0"
+                                  : isFailed
+                                    ? "#fecaca"
+                                    : "rgba(248,250,252,0.78)",
+                                fontSize: 11,
+                                fontWeight: 950,
                               }}
                             >
-                              {post.title || `${platformName} post`}
-                            </strong>
-                          </button>
-                        </div>
+                              {statusLabel}
+                            </span>
+                          </div>
 
-                        <button
-                          type="button"
-                          onClick={() => choosePost(post.id)}
-                          style={{
-                            minHeight: 62,
-                            padding: 0,
-                            border: 0,
-                            background: "transparent",
-                            textAlign: "left",
-                            cursor: "pointer",
-                          }}
-                        >
                           <span
                             style={{
-                              display: "-webkit-box",
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                              color: "rgba(248,250,252,0.74)",
-                              lineHeight: 1.42,
-                              fontSize: "0.92rem",
+                              color: "rgba(248,250,252,0.55)",
+                              fontSize: 12,
+                              fontWeight: 900,
                             }}
                           >
-                            {captionPreview || "Open to add or review the wording."}
-                            {captionPreview.length >= 132 ? "..." : ""}
+                            {time}
                           </span>
-                        </button>
+                        </div>
+
+                        <div>
+                          <div
+                            className="page-eyebrow"
+                            style={{ marginBottom: 7 }}
+                          >
+                            Post {index + 1}
+                          </div>
+                          <h3
+                            style={{
+                              margin: 0,
+                              color: "#fff",
+                              fontSize: "1.18rem",
+                              lineHeight: 1.12,
+                              letterSpacing: "-0.02em",
+                            }}
+                          >
+                            {post.title || `${platformName} post`}
+                          </h3>
+                        </div>
+
+                        <p
+                          style={{
+                            margin: 0,
+                            color: "rgba(248,250,252,0.74)",
+                            lineHeight: 1.48,
+                            fontSize: "0.94rem",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {captionPreview ||
+                            "Open to add or review the wording."}
+                          {captionPreview.length >= 132 ? "..." : ""}
+                        </p>
 
                         <button
                           type="button"
-                          className="dashboard-platform-create-button"
                           onClick={() => choosePost(post.id)}
+                          className="dashboard-platform-create-button"
                           style={{
-                            marginTop: "auto",
                             width: "100%",
                             minHeight: 52,
                             borderRadius: 18,
@@ -3128,6 +3447,7 @@ Important:
                             alignItems: "center",
                             justifyContent: "center",
                             textAlign: "center",
+                            marginTop: 4,
                           }}
                         >
                           Review post
@@ -3138,9 +3458,7 @@ Important:
                 })}
               </div>
             )}
-
           </section>
-
           {deletedPosts.length > 0 && (
             <section className="premium-card" style={{ marginTop: 22 }}>
               <div className="page-eyebrow">Deleted posts</div>
@@ -3163,10 +3481,14 @@ Important:
                     }}
                   >
                     <div>
-                      <strong>{post.title || post.platform || "Deleted post"}</strong>
+                      <strong>
+                        {post.title || post.platform || "Deleted post"}
+                      </strong>
                       <p style={{ margin: "4px 0 0", opacity: 0.78 }}>
                         {post.platform || "Post"} · deleted{" "}
-                        {post.deleted_at ? getReadableDateTime(post.deleted_at) : "recently"}
+                        {post.deleted_at
+                          ? getReadableDateTime(post.deleted_at)
+                          : "recently"}
                       </p>
                     </div>
 
@@ -3322,7 +3644,8 @@ Important:
               Give this week a clearer name.
             </h2>
             <p style={{ margin: "0 0 16px", color: "var(--muted)" }}>
-              This only changes the saved set name. Your posts and schedules stay the same.
+              This only changes the saved set name. Your posts and schedules
+              stay the same.
             </p>
 
             <input
@@ -3404,7 +3727,13 @@ Important:
             <h2 id="confirm-action-title" style={{ margin: "4px 0 10px" }}>
               {confirmDialog.title}
             </h2>
-            <p style={{ margin: "0 0 20px", color: "var(--muted)", lineHeight: 1.55 }}>
+            <p
+              style={{
+                margin: "0 0 20px",
+                color: "var(--muted)",
+                lineHeight: 1.55,
+              }}
+            >
               {confirmDialog.message}
             </p>
 
@@ -3416,13 +3745,21 @@ Important:
                 type="button"
                 className="secondary-button"
                 onClick={closeConfirmDialog}
-                disabled={deletingCampaign || deletingPostId === confirmDialog.post?.id || removingMediaPostId === confirmDialog.post?.id}
+                disabled={
+                  deletingCampaign ||
+                  deletingPostId === confirmDialog.post?.id ||
+                  removingMediaPostId === confirmDialog.post?.id
+                }
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className={confirmDialog.danger ? "secondary-button danger-button" : undefined}
+                className={
+                  confirmDialog.danger
+                    ? "secondary-button danger-button"
+                    : undefined
+                }
                 onClick={() => {
                   if (confirmDialog.type === "deleteCampaign") {
                     confirmDeleteSelectedCampaign();
@@ -3438,9 +3775,15 @@ Important:
                     confirmDeletePostWithUndo(confirmDialog.post);
                   }
                 }}
-                disabled={deletingCampaign || deletingPostId === confirmDialog.post?.id || removingMediaPostId === confirmDialog.post?.id}
+                disabled={
+                  deletingCampaign ||
+                  deletingPostId === confirmDialog.post?.id ||
+                  removingMediaPostId === confirmDialog.post?.id
+                }
               >
-                {deletingCampaign || deletingPostId === confirmDialog.post?.id || removingMediaPostId === confirmDialog.post?.id
+                {deletingCampaign ||
+                deletingPostId === confirmDialog.post?.id ||
+                removingMediaPostId === confirmDialog.post?.id
                   ? "Working..."
                   : confirmDialog.confirmLabel}
               </button>
@@ -3448,7 +3791,6 @@ Important:
           </div>
         </div>
       )}
-
     </div>
   );
 }
