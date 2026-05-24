@@ -317,10 +317,23 @@ export default function PostActionModal({
         ? 'TikTok'
         : platformName;
 
-  const canUsePrimaryPublish = !posted && !isPublishing && !isRescanning && !needsMedia && !instagramHasFlyerOnly;
+  const canUseManualPost = !posted && !isRescanning;
+  const canUseAutopostPublish =
+    canAutoPublish &&
+    directAutoPublishReady &&
+    !posted &&
+    !isPublishing &&
+    !isRescanning &&
+    !needsMedia &&
+    !instagramHasFlyerOnly &&
+    !publishErrorNeedsReconnect;
 
+  const handleManualPost = () => {
+    onCopyPost(selectedPost);
+    onOpenPlatform(manualPlatformLabel);
+  };
 
-  const handlePrimaryPublish = () => {
+  const handleAutopostPublish = () => {
     if (autopostNeedsAttention) {
       window.location.href = '/settings?setup=business';
       return;
@@ -344,7 +357,15 @@ export default function PostActionModal({
     onCopyPost(selectedPost);
   };
 
-  const primaryPublishLabel = isPublishing
+  const manualPostLabel = posted
+    ? 'Already posted'
+    : `Post manually to ${manualPlatformLabel}`;
+
+  const manualHelpText = posted
+    ? 'This post has already been marked as posted.'
+    : `FromOne copies the wording and opens ${manualPlatformLabel}. Add the media shown here, paste the caption, then publish.`;
+
+  const autopostLabel = isPublishing
     ? 'Publishing...'
     : posted
       ? 'Already posted'
@@ -352,19 +373,13 @@ export default function PostActionModal({
         ? publishErrorNeedsReconnect
           ? 'Reconnect accounts'
           : 'Connect business account'
-        : canAutoPublish
-          ? `Publish to ${autoPublishPlatformName}`
-          : isTikTokPost
-            ? 'Copy TikTok post'
-            : `Copy for ${platformName}`;
+        : `Autopost to ${autoPublishPlatformName}`;
 
-  const primaryHelpText = posted
-    ? 'This post has already been marked as posted.'
-    : autopostNeedsAttention
-      ? 'Autoposting needs attention. You can reconnect, or copy and post manually now.'
-      : canAutoPublish
-        ? 'Publish now, or choose an autopost time in More options.'
-        : 'Copy the wording and open the platform manually.';
+  const autopostHelpText = autopostNeedsAttention
+    ? 'Autoposting needs a connected Facebook Page or Instagram professional account. Manual posting still works.'
+    : canAutoPublish
+      ? 'Autopost sends the caption and media automatically when the business account connection is healthy.'
+      : 'Autopost is not available for this platform.';
 
   const openImprovePanel = () => {
     setShowImprovePanel((current) => !current);
@@ -672,7 +687,7 @@ export default function PostActionModal({
               <div className="f1-post-panel-header">
                 <div>
                   <span>Step 2</span>
-                  <h3>{posted ? 'Posted' : 'Publish or copy'}</h3>
+                  <h3>{posted ? 'Posted' : 'Post manually'}</h3>
                 </div>
               </div>
 
@@ -724,41 +739,77 @@ export default function PostActionModal({
 
               <div className="f1-post-primary-publish-card">
                 <div>
-                  <strong>{platformName}</strong>
-                  <p>{primaryHelpText}</p>
-                  {hasSchedule && !posted && <small>{savedScheduleLabel}: {getReadableDateTime(selectedPost.scheduled_publish_at)}</small>}
+                  <strong>Post manually</strong>
+                  <p>{manualHelpText}</p>
+                  {hasMedia && <small>Media is ready in FromOne. Add it to the platform before pasting the caption.</small>}
                 </div>
 
                 <button
                   type="button"
                   className="f1-post-yellow-action"
-                  onClick={handlePrimaryPublish}
-                  disabled={!canUsePrimaryPublish}
+                  onClick={handleManualPost}
+                  disabled={!canUseManualPost}
                 >
-                  {primaryPublishLabel}
+                  {manualPostLabel}
                 </button>
               </div>
 
-              <div className="f1-post-manual-card">
-                <div>
-                  <strong>Manual posting is always available</strong>
-                  <p>Autoposting is for Facebook Pages and Instagram professional accounts. If the connection is missing, expired, or you use a personal account, copy the post and open the platform manually.</p>
-                </div>
+              {canAutoPublish && (
+                <div className="f1-post-manual-card">
+                  <div>
+                    <strong>Autopost option</strong>
+                    <p>{autopostHelpText}</p>
+                    {hasSchedule && !posted && (
+                      <small>{savedScheduleLabel}: {getReadableDateTime(selectedPost.scheduled_publish_at)}</small>
+                    )}
+                  </div>
 
-                <div className="f1-post-two-actions">
-                  <button type="button" className="f1-post-secondary" onClick={() => onCopyPost(selectedPost)} disabled={isRescanning}>
-                    Copy wording
-                  </button>
-                  <button
-                    type="button"
-                    className="f1-post-secondary"
-                    onClick={() => onOpenPlatform(manualPlatformLabel)}
-                    disabled={isRescanning}
-                  >
-                    Open {manualPlatformLabel}
-                  </button>
+                  <div className="f1-post-two-actions">
+                    <button
+                      type="button"
+                      className="f1-post-secondary"
+                      onClick={handleAutopostPublish}
+                      disabled={posted || isPublishing || isRescanning || (!autopostNeedsAttention && !canUseAutopostPublish)}
+                    >
+                      {autopostLabel}
+                    </button>
+
+                    {autopostNeedsAttention && (
+                      <button
+                        type="button"
+                        className="f1-post-secondary"
+                        onClick={handleManualPost}
+                        disabled={!canUseManualPost}
+                      >
+                        Post manually now
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {!canAutoPublish && (
+                <div className="f1-post-manual-card">
+                  <div>
+                    <strong>Manual posting works for this platform</strong>
+                    <p>FromOne prepares the wording. You add the media, paste the caption and publish yourself.</p>
+                  </div>
+
+                  <div className="f1-post-two-actions">
+                    <button type="button" className="f1-post-secondary" onClick={() => onCopyPost(selectedPost)} disabled={isRescanning}>
+                      Copy wording
+                    </button>
+                    <button
+                      type="button"
+                      className="f1-post-secondary"
+                      onClick={() => onOpenPlatform(manualPlatformLabel)}
+                      disabled={isRescanning}
+                    >
+                      Open {manualPlatformLabel}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <button type="button" className="f1-post-more-toggle" onClick={() => setShowMoreOptions((current) => !current)}>
                 {showMoreOptions ? 'Hide more options' : 'More options'}
