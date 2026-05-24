@@ -2505,14 +2505,7 @@ Important:
     setSuccessMoment(null);
   };
 
-  const businessName =
-    profile?.business_name ||
-    campaign?.business_name ||
-    selectedPost?.business_name ||
-    "Your business";
-
   const postedCount = posts.filter((post) => isPostPosted(post)).length;
-  const postsLeftThisWeek = Math.max((posts.length || 0) - postedCount, 0);
   const weeklyProgressPercent =
     posts.length > 0 ? Math.round((postedCount / posts.length) * 100) : 0;
 
@@ -2537,10 +2530,6 @@ Important:
     maxHeight: "none",
     overflow: "visible",
   } as CSSProperties;
-
-  const primaryMetaConnection = metaConnections[0] || null;
-  const facebookConnected = Boolean(primaryMetaConnection?.page_id);
-  const instagramConnected = Boolean(primaryMetaConnection?.instagram_business_account_id);
 
   return (
     <div className="campaign-brand-shell simplified-posts-page" style={brandStyle}>
@@ -2650,23 +2639,6 @@ Important:
                 <p className="page-description" style={{ margin: "0 auto", maxWidth: 760 }}>
                   Review each post, then publish Facebook and Instagram or copy/open TikTok.
                 </p>
-
-                <div className="simplified-posts-meta" style={{ justifyContent: "center", marginTop: 18 }}>
-                  <span>{businessName}</span>
-                  <span>
-                    {postedCount}/{posts.length || 0} posted
-                  </span>
-                  {facebookConnected && <span>Facebook connected</span>}
-                  {instagramConnected && <span>Instagram connected</span>}
-                </div>
-
-                <button
-                  className="secondary-button refresh-button"
-                  onClick={loadPageData}
-                  style={{ marginTop: 18 }}
-                >
-                  Refresh
-                </button>
               </div>
 
               <div
