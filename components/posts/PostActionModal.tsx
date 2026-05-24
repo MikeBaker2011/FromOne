@@ -114,23 +114,24 @@ function getCaptionCountStatus(count: number, limit: number) {
 }
 
 function getCaptionCounterStyle(status: string): CSSProperties {
-  if (status === 'over') {
-    return { color: '#fecaca', fontWeight: 900 };
-  }
-
-  if (status === 'near') {
-    return { color: '#ffe58a', fontWeight: 900 };
-  }
-
-  return { color: 'rgba(248, 250, 252, 0.66)', fontWeight: 800 };
+  if (status === 'over') return { color: '#fecaca', fontWeight: 900 };
+  if (status === 'near') return { color: '#ffe58a', fontWeight: 900 };
+  return { color: 'rgba(248, 250, 252, 0.64)', fontWeight: 850 };
 }
 
-
-function getBriefMediaGuidance({ hasMedia, isVideoMedia, isFlyerMedia }: { hasMedia: boolean; isVideoMedia: boolean; isFlyerMedia: boolean }) {
-  if (!hasMedia) return 'Add a photo, video or flyer before posting.';
-  if (isVideoMedia) return 'Video attached. Check it matches the post.';
-  if (isFlyerMedia) return 'Flyer attached. Check the details are right.';
-  return 'Image attached. Check it matches the post.';
+function getBriefMediaGuidance({
+  hasMedia,
+  isVideoMedia,
+  isFlyerMedia,
+}: {
+  hasMedia: boolean;
+  isVideoMedia: boolean;
+  isFlyerMedia: boolean;
+}) {
+  if (!hasMedia) return 'Add media before posting.';
+  if (isVideoMedia) return 'Video attached.';
+  if (isFlyerMedia) return 'Flyer attached.';
+  return 'Image attached.';
 }
 
 export default function PostActionModal({
@@ -204,8 +205,8 @@ export default function PostActionModal({
   onClearReminder,
   onDeletePost,
 }: PostActionModalProps) {
-  const [showScheduleControls, setShowScheduleControls] = useState(false);
-  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [showImprovePanel, setShowImprovePanel] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
 
   if (!selectedPost) return null;
 
@@ -244,6 +245,11 @@ export default function PostActionModal({
   const instagramHasFlyerOnly = isInstagramPost && isFlyerMedia;
   const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
   const rescanUsageLabel = isVideoMedia ? videoRescanUsageLabel : mediaRescanUsageLabel;
+  const statusLabel = getPostStatus(selectedPost) === 'Reminder set' ? 'Scheduled' : getPostStatus(selectedPost);
+  const savedScheduleLabel = canAutoPublish ? 'Autopost planned' : 'Reminder planned';
+  const saveScheduleButtonLabel = canAutoPublish ? 'Save autopost time' : 'Save reminder time';
+
+  const canUsePrimaryPublish = !posted && !isPublishing && !isRescanning && !needsMedia && !instagramHasFlyerOnly;
 
   const handlePrimaryPublish = () => {
     if (needsMetaConnection) {
@@ -274,45 +280,37 @@ export default function PostActionModal({
     : posted
       ? 'Already posted'
       : needsMetaConnection
-        ? 'Connect Facebook & Instagram'
+        ? 'Connect business account'
         : canAutoPublish
           ? `Publish to ${autoPublishPlatformName}`
           : isTikTokPost
             ? 'Copy TikTok post'
             : `Copy for ${platformName}`;
 
-  const primaryPublishDisabled =
-    posted ||
-    isPublishing ||
-    isRescanning ||
-    (!needsMetaConnection && (needsMedia || instagramHasFlyerOnly));
+  const primaryHelpText = posted
+    ? 'This post has already been marked as posted.'
+    : needsMetaConnection
+      ? 'Autoposting needs a Facebook Page or Instagram professional account.'
+      : canAutoPublish
+        ? 'Publish now, or choose an autopost time in More options.'
+        : 'Copy the wording and open the platform manually.';
 
-  const statusLabel = getPostStatus(selectedPost) === 'Reminder set' ? 'Scheduled' : getPostStatus(selectedPost);
-  const scheduleActionLabel = canAutoPublish
-    ? hasSchedule
-      ? 'Edit planned autopost time'
-      : 'Choose autopost time'
-    : hasSchedule
-      ? 'Edit planned reminder time'
-      : isTikTokPost
-        ? 'Plan TikTok reminder'
-        : 'Plan reminder';
-  const savedScheduleLabel = canAutoPublish ? 'Autopost planned' : 'Reminder planned';
-  const saveScheduleButtonLabel = canAutoPublish ? 'Save autopost time' : 'Save reminder time';
+  const openImprovePanel = () => {
+    setShowImprovePanel((current) => !current);
+    if (!showImproveTools) onToggleImproveTools();
+  };
 
   return (
-    <div className="fromone-modal-overlay fromone-simple-modal-overlay" role="dialog" aria-modal="true">
-      <section className="fromone-modal-card fromone-post-action-modal fromone-simple-post-modal">
-        <header className="fromone-simple-modal-header">
-          <div>
-            <div className="page-eyebrow">{getPostPositionLabel(selectedPost)} · {platformName}</div>
+    <div className="f1-post-modal-overlay" role="dialog" aria-modal="true">
+      <section className="f1-post-modal-card">
+        <header className="f1-post-modal-header">
+          <div className="f1-post-modal-title-block">
+            <div className="f1-post-eyebrow">{getPostPositionLabel(selectedPost)} · {platformName}</div>
             <h2>{selectedPost.title || 'Review post'}</h2>
-            <div className="fromone-simple-modal-pills">
+            <div className="f1-post-badges">
               <span>{statusLabel}</span>
               {hasSchedule && !posted && (
-                <span>
-                  {canAutoPublish ? 'Autopost' : 'Planned'} · {getReadableDateTime(selectedPost.scheduled_publish_at)}
-                </span>
+                <span>{canAutoPublish ? 'Autopost' : 'Planned'} · {getReadableDateTime(selectedPost.scheduled_publish_at)}</span>
               )}
               {isPostScheduledToday(selectedPost) && !posted && <span>Today</span>}
               {hasMedia && <span>{isVideoMedia ? 'Video' : isFlyerMedia ? 'Flyer' : 'Image'}</span>}
@@ -320,72 +318,40 @@ export default function PostActionModal({
             </div>
           </div>
 
-          <button type="button" className="secondary-button fromone-simple-close" onClick={onClose}>
+          <button type="button" className="f1-post-close" onClick={onClose}>
             Done
           </button>
         </header>
 
-        <div
-          className="fromone-simple-note"
-          style={{
-            marginTop: 14,
-            marginBottom: 14,
-          }}
-        >
-          <strong>
-            {needsMetaConnection
-              ? 'Connect a business account for autoposting.'
-              : canAutoPublish
-                ? 'Review, edit, then publish now or let FromOne autopost.'
-                : 'Review, copy, then publish manually.'}
-          </strong>
-          <p>
-            {needsMetaConnection
-              ? 'Autoposting works with Facebook Pages and Instagram professional accounts. Personal accounts can still use copy and open below.'
-              : canAutoPublish
-                ? 'Autoposting is for Facebook Pages and Instagram professional accounts. Personal accounts can still use manual copy/open.'
-                : 'TikTok and personal accounts stay manual for now, so copy the post and open the platform when ready.'}
-          </p>
-        </div>
-
-        <section ref={mediaRef} className="fromone-simple-section fromone-simple-media-section">
-          <div className="fromone-simple-section-title">
-            <span>1</span>
-            <div>
-              <div className="page-eyebrow">Media</div>
-              <h3>Media</h3>
-            </div>
-          </div>
-
-          <div className="fromone-simple-media-grid">
-            <div className="fromone-simple-media-preview">
+        <div className="f1-post-modal-body">
+          <aside ref={mediaRef} className="f1-post-media-panel">
+            <div className="f1-post-media-frame">
               {selectedPost.media_url ? (
                 isVideoMedia ? (
                   <video src={selectedPost.media_url} controls />
                 ) : isFlyerMedia ? (
-                  <div className="fromone-simple-file-card">
+                  <div className="f1-post-file-preview">
                     <strong>PDF flyer</strong>
-                    <p>Open the flyer to check the details before posting.</p>
+                    <p>Open the flyer to check the details.</p>
                   </div>
                 ) : (
                   <img src={selectedPost.media_url} alt="Uploaded post media" />
                 )
               ) : (
-                <div className="fromone-simple-file-card">
+                <div className="f1-post-file-preview">
                   <strong>No media yet</strong>
-                  <p>Add or replace the media this post should use.</p>
+                  <p>Add a photo, video or flyer before posting.</p>
                 </div>
               )}
             </div>
 
-            <aside className="fromone-simple-media-actions">
-              <div className="fromone-media-brief">
-                <strong>Media check</strong>
-                <p>{getBriefMediaGuidance({ hasMedia, isVideoMedia, isFlyerMedia })}</p>
-                {hasMedia && <small>{getImageGuidance(selectedPost)}</small>}
+            <div className="f1-post-media-tools">
+              <div>
+                <strong>{getBriefMediaGuidance({ hasMedia, isVideoMedia, isFlyerMedia })}</strong>
+                {hasMedia && <p>{getImageGuidance(selectedPost)}</p>}
               </div>
 
-              <label className="fromone-simple-primary-action">
+              <label className="f1-post-yellow-action">
                 <input
                   type="file"
                   accept="image/*,video/*,application/pdf"
@@ -403,14 +369,14 @@ export default function PostActionModal({
               </label>
 
               {hasMedia && (
-                <div className="fromone-simple-two-actions">
-                  <a href={selectedPost.media_url} target="_blank" rel="noreferrer" className="secondary-button">
+                <div className="f1-post-two-actions">
+                  <a href={selectedPost.media_url} target="_blank" rel="noreferrer" className="f1-post-secondary">
                     {isFlyerMedia ? 'Open flyer' : 'View media'}
                   </a>
 
                   <button
                     type="button"
-                    className="secondary-button danger-button"
+                    className="f1-post-secondary f1-post-danger"
                     onClick={() => onRemoveMedia(selectedPost)}
                     disabled={removingMediaPostId === selectedPost.id || accessLocked}
                   >
@@ -418,408 +384,333 @@ export default function PostActionModal({
                   </button>
                 </div>
               )}
-            </aside>
-          </div>
-        </section>
-
-
-        <section ref={postRef} className="fromone-simple-section">
-          <div className="fromone-simple-section-title">
-            <span>2</span>
-            <div>
-              <div className="page-eyebrow">Wording</div>
-              <h3>Wording</h3>
             </div>
-          </div>
+          </aside>
 
-          {editingPostId === selectedPost.id ? (
-            <div className="fromone-simple-edit-form">
-              <label>
-                <strong>Caption</strong>
-                <textarea
-                  className="input"
-                  value={editCaption}
-                  onChange={(event) => onSetEditCaption(event.target.value)}
-                  rows={8}
-                />
-                <small style={getCaptionCounterStyle(editedCaptionStatus)}>
-                  {editedCaptionLength} / {captionLimit} characters for {platformName}
-                  {editedCaptionStatus === 'over' ? ' — shorten this before posting' : ''}
-                  {editedCaptionStatus === 'near' ? ' — close to the limit' : ''}
-                </small>
-              </label>
-
-              <label>
-                <strong>CTA</strong>
-                <input
-                  className="input"
-                  value={editCta}
-                  onChange={(event) => onSetEditCta(event.target.value)}
-                />
-              </label>
-
-              <label>
-                <strong>Hashtags</strong>
-                <input
-                  className="input"
-                  value={editHashtags}
-                  onChange={(event) => onSetEditHashtags(event.target.value)}
-                  placeholder="#LocalBusiness #Marketing"
-                />
-              </label>
-
-              <div className="fromone-simple-two-actions">
-                <button type="button" onClick={onSaveEditedPost} disabled={savingEdit}>
-                  {savingEdit ? 'Saving...' : 'Save wording'}
-                </button>
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={onCancelEditingPost}
-                  disabled={savingEdit}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="fromone-simple-wording-card">
-                <p>{selectedPost.caption || 'No caption saved.'}</p>
-
-                <small style={getCaptionCounterStyle(savedCaptionStatus)}>
-                  {savedCaptionLength} / {captionLimit} characters for {platformName}
-                  {savedCaptionStatus === 'over' ? ' — shorten this before posting' : ''}
-                  {savedCaptionStatus === 'near' ? ' — close to the limit' : ''}
-                </small>
-
-                {selectedPost.cta && (
-                  <p>
-                    <strong>CTA:</strong> {selectedPost.cta}
-                  </p>
-                )}
-
-                {Array.isArray(selectedPost.hashtags) && selectedPost.hashtags.length > 0 && (
-                  <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
-                )}
-              </div>
-
-              {activeImprovementNote && (
-                <div className="fromone-simple-note">
-                  <strong>{activeImprovementNote.label}</strong>
-                  <p>{activeImprovementNote.detail}</p>
+          <main className="f1-post-content-panel">
+            <section ref={postRef} className="f1-post-panel">
+              <div className="f1-post-panel-header">
+                <div>
+                  <span>Step 1</span>
+                  <h3>Check the wording</h3>
                 </div>
-              )}
-
-              <div className="fromone-simple-two-actions">
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => onStartEditingPost(selectedPost)}
-                  disabled={accessLocked}
-                >
-                  Edit wording
-                </button>
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => {
-                    setShowAdvancedTools((current) => !current);
-                    if (!showImproveTools) onToggleImproveTools();
-                  }}
-                  disabled={accessLocked || rewritingPost || isRescanning}
-                >
-                  {showAdvancedTools ? 'Hide improve tools' : 'Improve wording'}
-                </button>
-              </div>
-            </>
-          )}
-
-          {showAdvancedTools && showImproveTools && (
-            <div className="fromone-simple-improve-panel fromone-premium-rewrite-panel">
-              <div className="fromone-rewrite-intro">
-                <strong>Improve wording</strong>
-                <p>Pick what you want changed. FromOne uses the business industry, selected audience, reach and tone to rebuild the post.</p>
+                {editingPostId !== selectedPost.id && (
+                  <button
+                    type="button"
+                    className="f1-post-secondary"
+                    onClick={() => onStartEditingPost(selectedPost)}
+                    disabled={accessLocked}
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
 
-              {onRescanPostMedia && (
-                <div className="fromone-compact-media-rewrite">
-                  <div>
-                    <strong>Rewrite from attached media</strong>
-                    <p>Use this when the wording does not match the image, flyer or video closely enough.</p>
-                    {posted && <small>This will not change anything already posted on Facebook or Instagram.</small>}
-                    {!hasMedia && <small>Upload media first, then rewrite from it.</small>}
-                    {rescanUsageLabel && <small>{rescanUsageLabel}</small>}
+              {editingPostId === selectedPost.id ? (
+                <div className="f1-post-edit-form">
+                  <label>
+                    <strong>Caption</strong>
+                    <textarea
+                      className="input"
+                      value={editCaption}
+                      onChange={(event) => onSetEditCaption(event.target.value)}
+                      rows={7}
+                    />
+                    <small style={getCaptionCounterStyle(editedCaptionStatus)}>
+                      {editedCaptionLength} / {captionLimit} characters for {platformName}
+                      {editedCaptionStatus === 'over' ? ' — shorten this before posting' : ''}
+                      {editedCaptionStatus === 'near' ? ' — close to the limit' : ''}
+                    </small>
+                  </label>
+
+                  <div className="f1-post-edit-grid">
+                    <label>
+                      <strong>CTA</strong>
+                      <input className="input" value={editCta} onChange={(event) => onSetEditCta(event.target.value)} />
+                    </label>
+
+                    <label>
+                      <strong>Hashtags</strong>
+                      <input
+                        className="input"
+                        value={editHashtags}
+                        onChange={(event) => onSetEditHashtags(event.target.value)}
+                        placeholder="#LocalBusiness #Marketing"
+                      />
+                    </label>
                   </div>
 
+                  <div className="f1-post-two-actions">
+                    <button type="button" className="f1-post-yellow-action" onClick={onSaveEditedPost} disabled={savingEdit}>
+                      {savingEdit ? 'Saving...' : 'Save wording'}
+                    </button>
+                    <button type="button" className="f1-post-secondary" onClick={onCancelEditingPost} disabled={savingEdit}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <article className="f1-post-wording-card">
+                    <p>{selectedPost.caption || 'No caption saved.'}</p>
+
+                    <small style={getCaptionCounterStyle(savedCaptionStatus)}>
+                      {savedCaptionLength} / {captionLimit} characters for {platformName}
+                      {savedCaptionStatus === 'over' ? ' — shorten this before posting' : ''}
+                      {savedCaptionStatus === 'near' ? ' — close to the limit' : ''}
+                    </small>
+
+                    {selectedPost.cta && <p><strong>CTA:</strong> {selectedPost.cta}</p>}
+
+                    {Array.isArray(selectedPost.hashtags) && selectedPost.hashtags.length > 0 && (
+                      <p className="post-hashtags">{selectedPost.hashtags.join(' ')}</p>
+                    )}
+                  </article>
+
+                  {activeImprovementNote && (
+                    <div className="f1-post-soft-note">
+                      <strong>{activeImprovementNote.label}</strong>
+                      <p>{activeImprovementNote.detail}</p>
+                    </div>
+                  )}
+
                   <button
                     type="button"
-                    className="fromone-rewrite-media-button"
-                    onClick={() => onRescanPostMedia(selectedPost)}
-                    disabled={accessLocked || !hasMedia || isRescanning}
+                    className="f1-post-improve-toggle"
+                    onClick={openImprovePanel}
+                    disabled={accessLocked || rewritingPost || isRescanning}
                   >
-                    {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
+                    {showImprovePanel ? 'Hide improve tools' : 'Improve wording'}
                   </button>
+                </>
+              )}
+
+              {showImprovePanel && showImproveTools && (
+                <div className="f1-post-improve-panel">
+                  <div className="f1-post-improve-head">
+                    <strong>Improve this post</strong>
+                    <p>Choose one quick change, or target the post by audience, reach and tone.</p>
+                  </div>
+
+                  <div className="f1-post-pill-row">
+                    {quickImproveActions.map((action) => (
+                      <button
+                        key={action.value}
+                        type="button"
+                        onClick={() => onQuickImprovePost(selectedPost, action.value)}
+                        disabled={accessLocked || rewritingPost || isRescanning}
+                      >
+                        {rewritingPost && rewritingAction === action.value
+                          ? 'Improving...'
+                          : action.value === 'make_sales_focused'
+                            ? 'Sales focused'
+                            : action.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="f1-post-rewrite-grid">
+                    <label>
+                      <span>Audience</span>
+                      <select className="input" value={audienceTarget} onChange={(event) => onSetAudienceTarget(event.target.value)}>
+                        {dynamicAudienceTargets.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label>
+                      <span>Reach</span>
+                      <select className="input" value={marketReachTarget} onChange={(event) => onSetMarketReachTarget(event.target.value)}>
+                        {marketReachOptions.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label>
+                      <span>Tone</span>
+                      <select className="input" value={toneTarget} onChange={(event) => onSetToneTarget(event.target.value)}>
+                        {toneOptions.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <button
+                      type="button"
+                      className="f1-post-yellow-action"
+                      onClick={() => onRewriteForAudience(selectedPost)}
+                      disabled={accessLocked || rewritingPost || isRescanning}
+                    >
+                      {rewritingPost && rewritingAction === 'audience' ? 'Improving...' : 'Improve'}
+                    </button>
+                  </div>
+
+                  {audienceTarget === 'Custom audience' && (
+                    <label className="f1-post-custom-audience">
+                      <span>Custom audience</span>
+                      <input
+                        className="input"
+                        value={customAudienceTarget}
+                        onChange={(event) => onSetCustomAudienceTarget(event.target.value)}
+                        placeholder="Example: first-time homeowners"
+                      />
+                    </label>
+                  )}
+
+                  {onRescanPostMedia && (
+                    <div className="f1-post-media-rewrite-card">
+                      <div>
+                        <strong>Rewrite using media</strong>
+                        <p>Use this if the wording does not match the image, flyer or video closely enough.</p>
+                        {rescanUsageLabel && <small>{rescanUsageLabel}</small>}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="f1-post-secondary"
+                        onClick={() => onRescanPostMedia(selectedPost)}
+                        disabled={accessLocked || !hasMedia || isRescanning}
+                      >
+                        {isRescanning ? 'Rewriting...' : 'Rewrite from media'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+
+            <section ref={publishRef} className="f1-post-panel f1-post-publish-panel">
+              <div className="f1-post-panel-header">
+                <div>
+                  <span>Step 2</span>
+                  <h3>{posted ? 'Posted' : 'Publish or copy'}</h3>
+                </div>
+              </div>
+
+              {selectedPost.publish_error && (
+                <div className="f1-post-error-note">
+                  <strong>Publishing failed</strong>
+                  <p>{selectedPost.publish_error}</p>
                 </div>
               )}
 
-              <div className="fromone-simple-quick-grid fromone-premium-pill-grid">
-                {quickImproveActions.map((action) => (
-                  <button
-                    key={action.value}
-                    type="button"
-                    className="fromone-rewrite-pill"
-                    onClick={() => onQuickImprovePost(selectedPost, action.value)}
-                    disabled={accessLocked || rewritingPost || isRescanning}
-                  >
-                    {rewritingPost && rewritingAction === action.value
-                      ? 'Improving...'
-                      : action.value === 'make_sales_focused'
-                        ? 'Sales focused'
-                        : action.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="fromone-simple-audience-grid fromone-premium-select-grid">
-                <label className="fromone-premium-field">
-                  <span>Audience</span>
-                  <select
-                    className="input fromone-premium-select"
-                    value={audienceTarget}
-                    onChange={(event) => onSetAudienceTarget(event.target.value)}
-                  >
-                    {dynamicAudienceTargets.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                {audienceTarget === 'Custom audience' && (
-                  <label className="fromone-premium-field">
-                    <span>Custom audience</span>
-                    <input
-                      className="input fromone-premium-input"
-                      value={customAudienceTarget}
-                      onChange={(event) => onSetCustomAudienceTarget(event.target.value)}
-                      placeholder="Example: first-time homeowners"
-                    />
-                  </label>
-                )}
-
-                <label className="fromone-premium-field">
-                  <span>Reach</span>
-                  <select
-                    className="input fromone-premium-select"
-                    value={marketReachTarget}
-                    onChange={(event) => onSetMarketReachTarget(event.target.value)}
-                    aria-label="Market reach"
-                  >
-                    {marketReachOptions.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="fromone-premium-field">
-                  <span>Tone</span>
-                  <select
-                    className="input fromone-premium-select"
-                    value={toneTarget}
-                    onChange={(event) => onSetToneTarget(event.target.value)}
-                  >
-                    {toneOptions.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <button
-                  type="button"
-                  className="fromone-premium-improve-button"
-                  onClick={() => onRewriteForAudience(selectedPost)}
-                  disabled={accessLocked || rewritingPost || isRescanning}
-                >
-                  {rewritingPost && rewritingAction === 'audience' ? 'Improving...' : 'Improve for selected audience'}
-                </button>
-              </div>
-            </div>
-          )}
-        </section>
-
-        <section ref={publishRef} className="fromone-simple-section">
-          <div className="fromone-simple-section-title">
-            <span>3</span>
-            <div>
-              <div className="page-eyebrow">Publish</div>
-              <h3>{posted ? 'Posted' : canAutoPublish ? 'Publish or autopost' : 'Copy and open'}</h3>
-            </div>
-          </div>
-
-          {selectedPost.publish_error && (
-            <div className="fromone-simple-note is-error">
-              <strong>Publishing failed</strong>
-              <p>{selectedPost.publish_error}</p>
-            </div>
-          )}
-
-          {instagramHasFlyerOnly && (
-            <div className="fromone-simple-note">
-              <strong>Instagram needs an image or video</strong>
-              <p>PDF flyers cannot be direct-published to Instagram. Replace it with an image or video, or post manually.</p>
-            </div>
-          )}
-
-          <div className="fromone-simple-publish-card">
-            <div>
-              <strong>{platformName}</strong>
-              <p>
-                {posted
-                  ? `${platformName} has been marked as posted.`
-                  : needsMetaConnection
-                    ? `Autoposting to ${platformName} needs a Facebook Page or Instagram professional account. Personal accounts can still post manually.`
-                    : canAutoPublish
-                      ? `${platformName} can publish now, or FromOne can autopost at the planned time for connected business accounts.`
-                      : isTikTokPost
-                        ? 'Copy the post, open TikTok, then paste and publish manually.'
-                        : `Copy the post and open ${platformName}.`}
-              </p>
-
-              {hasSchedule && !posted && (
-                <small>
-                  {savedScheduleLabel}: {getReadableDateTime(selectedPost.scheduled_publish_at)}
-                </small>
+              {instagramHasFlyerOnly && (
+                <div className="f1-post-soft-note">
+                  <strong>Instagram needs an image or video</strong>
+                  <p>PDF flyers cannot be direct-published to Instagram. Replace it with an image/video, or post manually.</p>
+                </div>
               )}
-            </div>
 
-            <button
-              type="button"
-              className="fromone-simple-primary-action"
-              onClick={handlePrimaryPublish}
-              disabled={primaryPublishDisabled}
-            >
-              {primaryPublishLabel}
-            </button>
-          </div>
-
-          <div className="fromone-manual-personal-card">
-            <div>
-              <strong>Using a personal account?</strong>
-              <p>Autoposting is for Facebook Pages and Instagram professional accounts. For personal Facebook or Instagram accounts, copy the wording, open {platformName}, then paste and post manually.</p>
-            </div>
-
-            <div className="fromone-simple-two-actions">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onCopyPost(selectedPost)}
-                disabled={isRescanning}
-              >
-                Copy wording
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
-                disabled={isRescanning}
-              >
-                Open {platformName}
-              </button>
-            </div>
-          </div>
-
-          <div className="fromone-simple-schedule">
-            {!showScheduleControls ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setShowScheduleControls(true)}
-                disabled={posted || isRescanning}
-              >
-                {scheduleActionLabel}
-              </button>
-            ) : (
-              <div className="fromone-simple-schedule-grid">
-                <input
-                  type="datetime-local"
-                  className="input"
-                  value={reminderValue}
-                  onChange={(event) => onSetReminderValue(event.target.value)}
-                />
+              <div className="f1-post-primary-publish-card">
+                <div>
+                  <strong>{platformName}</strong>
+                  <p>{primaryHelpText}</p>
+                  {hasSchedule && !posted && <small>{savedScheduleLabel}: {getReadableDateTime(selectedPost.scheduled_publish_at)}</small>}
+                </div>
 
                 <button
                   type="button"
-                  onClick={() => onSaveReminder(selectedPost)}
-                  disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning}
+                  className="f1-post-yellow-action"
+                  onClick={handlePrimaryPublish}
+                  disabled={!canUsePrimaryPublish}
                 >
-                  {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleButtonLabel}
-                </button>
-
-                {hasSchedule && (
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => onClearReminder(selectedPost)}
-                    disabled={savingReminderPostId === selectedPost.id || isRescanning}
-                  >
-                    Clear
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => setShowScheduleControls(false)}
-                  disabled={savingReminderPostId === selectedPost.id || isRescanning}
-                >
-                  Hide
+                  {primaryPublishLabel}
                 </button>
               </div>
-            )}
-          </div>
 
-          <div className="fromone-simple-admin-actions">
-            {posted ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onMarkAsNotPosted(selectedPost.id)}
-                disabled={isRescanning}
-              >
-                Undo posted
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onMarkAsPosted(selectedPost.id)}
-                disabled={isRescanning}
-              >
-                Mark posted manually
-              </button>
-            )}
+              <div className="f1-post-manual-card">
+                <div>
+                  <strong>Personal account?</strong>
+                  <p>Autoposting is for Facebook Pages and Instagram professional accounts. Personal accounts can still copy and post manually.</p>
+                </div>
 
-            {onDeletePost && (
-              <button
-                type="button"
-                className="secondary-button danger-button"
-                onClick={() => onDeletePost(selectedPost)}
-                disabled={deletingPostId === selectedPost.id || isRescanning}
-              >
-                {deletingPostId === selectedPost.id ? 'Deleting...' : posted ? 'Archive post' : 'Delete post'}
+                <div className="f1-post-two-actions">
+                  <button type="button" className="f1-post-secondary" onClick={() => onCopyPost(selectedPost)} disabled={isRescanning}>
+                    Copy wording
+                  </button>
+                  <button
+                    type="button"
+                    className="f1-post-secondary"
+                    onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
+                    disabled={isRescanning}
+                  >
+                    Open {platformName}
+                  </button>
+                </div>
+              </div>
+
+              <button type="button" className="f1-post-more-toggle" onClick={() => setShowMoreOptions((current) => !current)}>
+                {showMoreOptions ? 'Hide more options' : 'More options'}
               </button>
-            )}
-          </div>
-        </section>
+
+              {showMoreOptions && (
+                <div className="f1-post-more-panel">
+                  <div className="f1-post-schedule-card">
+                    <strong>{canAutoPublish ? 'Autopost time' : 'Reminder time'}</strong>
+                    <p>{canAutoPublish ? 'Choose when FromOne should autopost this connected business account post.' : 'Choose a reminder time for manual posting.'}</p>
+
+                    <div className="f1-post-schedule-grid">
+                      <input
+                        type="datetime-local"
+                        className="input"
+                        value={reminderValue}
+                        onChange={(event) => onSetReminderValue(event.target.value)}
+                      />
+
+                      <button
+                        type="button"
+                        className="f1-post-yellow-action"
+                        onClick={() => onSaveReminder(selectedPost)}
+                        disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning || posted}
+                      >
+                        {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleButtonLabel}
+                      </button>
+
+                      {hasSchedule && (
+                        <button
+                          type="button"
+                          className="f1-post-secondary"
+                          onClick={() => onClearReminder(selectedPost)}
+                          disabled={savingReminderPostId === selectedPost.id || isRescanning || posted}
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="f1-post-admin-card">
+                    <strong>Post status</strong>
+                    <div className="f1-post-two-actions">
+                      {posted ? (
+                        <button type="button" className="f1-post-secondary" onClick={() => onMarkAsNotPosted(selectedPost.id)} disabled={isRescanning}>
+                          Undo posted
+                        </button>
+                      ) : (
+                        <button type="button" className="f1-post-secondary" onClick={() => onMarkAsPosted(selectedPost.id)} disabled={isRescanning}>
+                          Mark posted manually
+                        </button>
+                      )}
+
+                      {onDeletePost && (
+                        <button
+                          type="button"
+                          className="f1-post-secondary f1-post-danger"
+                          onClick={() => onDeletePost(selectedPost)}
+                          disabled={deletingPostId === selectedPost.id || isRescanning}
+                        >
+                          {deletingPostId === selectedPost.id ? 'Deleting...' : posted ? 'Archive post' : 'Delete post'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+          </main>
+        </div>
       </section>
     </div>
   );
