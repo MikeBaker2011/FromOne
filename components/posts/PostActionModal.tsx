@@ -509,55 +509,71 @@ export default function PostActionModal({
                     ))}
                   </div>
 
-                  <div className="f1-post-rewrite-grid">
-                    <label>
-                      <span>Audience</span>
-                      <select className="input" value={audienceTarget} onChange={(event) => onSetAudienceTarget(event.target.value)}>
-                        {dynamicAudienceTargets.map((item) => (
-                          <option key={item} value={item}>{item}</option>
-                        ))}
-                      </select>
-                    </label>
+                  <div className="f1-post-target-panel">
+                    <div className="f1-post-target-row">
+                      <label>
+                        <span>Audience</span>
+                        <select
+                          className="input"
+                          value={audienceTarget}
+                          onChange={(event) => onSetAudienceTarget(event.target.value)}
+                        >
+                          {dynamicAudienceTargets.map((item) => (
+                            <option key={item} value={item}>{item}</option>
+                          ))}
+                        </select>
+                      </label>
 
-                    <label>
-                      <span>Reach</span>
-                      <select className="input" value={marketReachTarget} onChange={(event) => onSetMarketReachTarget(event.target.value)}>
-                        {marketReachOptions.map((item) => (
-                          <option key={item} value={item}>{item}</option>
-                        ))}
-                      </select>
-                    </label>
+                      <label>
+                        <span>Reach</span>
+                        <select
+                          className="input"
+                          value={marketReachTarget}
+                          onChange={(event) => onSetMarketReachTarget(event.target.value)}
+                        >
+                          {marketReachOptions.map((item) => (
+                            <option key={item} value={item}>{item}</option>
+                          ))}
+                        </select>
+                      </label>
 
-                    <label>
-                      <span>Tone</span>
-                      <select className="input" value={toneTarget} onChange={(event) => onSetToneTarget(event.target.value)}>
-                        {toneOptions.map((item) => (
-                          <option key={item} value={item}>{item}</option>
-                        ))}
-                      </select>
-                    </label>
+                      <label>
+                        <span>Tone</span>
+                        <select
+                          className="input"
+                          value={toneTarget}
+                          onChange={(event) => onSetToneTarget(event.target.value)}
+                        >
+                          {toneOptions.map((item) => (
+                            <option key={item} value={item}>{item}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    {audienceTarget === 'Custom audience' && (
+                      <label className="f1-post-custom-audience">
+                        <span>Custom audience</span>
+                        <input
+                          className="input"
+                          value={customAudienceTarget}
+                          onChange={(event) => onSetCustomAudienceTarget(event.target.value)}
+                          placeholder="Example: first-time homeowners"
+                        />
+                      </label>
+                    )}
 
                     <button
                       type="button"
-                      className="f1-post-yellow-action"
+                      className="f1-post-yellow-action f1-post-target-improve-button"
                       onClick={() => onRewriteForAudience(selectedPost)}
                       disabled={accessLocked || rewritingPost || isRescanning}
                     >
-                      {rewritingPost && rewritingAction === 'audience' ? 'Improving...' : 'Improve'}
+                      {rewritingPost && rewritingAction === 'audience'
+                        ? 'Improving...'
+                        : 'Improve for selected audience'}
                     </button>
                   </div>
-
-                  {audienceTarget === 'Custom audience' && (
-                    <label className="f1-post-custom-audience">
-                      <span>Custom audience</span>
-                      <input
-                        className="input"
-                        value={customAudienceTarget}
-                        onChange={(event) => onSetCustomAudienceTarget(event.target.value)}
-                        placeholder="Example: first-time homeowners"
-                      />
-                    </label>
-                  )}
 
                   {onRescanPostMedia && (
                     <div className="f1-post-media-rewrite-card">
