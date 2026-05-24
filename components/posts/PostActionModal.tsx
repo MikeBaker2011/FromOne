@@ -334,17 +334,17 @@ export default function PostActionModal({
         >
           <strong>
             {needsMetaConnection
-              ? 'Connect Facebook and Instagram to enable publishing and autoposting.'
+              ? 'Connect a business account for autoposting.'
               : canAutoPublish
                 ? 'Review, edit, then publish now or let FromOne autopost.'
                 : 'Review, copy, then publish manually.'}
           </strong>
           <p>
             {needsMetaConnection
-              ? 'You can still review and edit this post. Connect Meta in Settings when you are ready to publish or autopost.'
+              ? 'Autoposting works with Facebook Pages and Instagram professional accounts. Personal accounts can still use copy and open below.'
               : canAutoPublish
-                ? 'Facebook and Instagram can use the planned time once the account is connected.'
-                : 'TikTok stays manual for now, so copy the post and open TikTok when ready.'}
+                ? 'Autoposting is for Facebook Pages and Instagram professional accounts. Personal accounts can still use manual copy/open.'
+                : 'TikTok and personal accounts stay manual for now, so copy the post and open the platform when ready.'}
           </p>
         </div>
 
@@ -685,12 +685,12 @@ export default function PostActionModal({
                 {posted
                   ? `${platformName} has been marked as posted.`
                   : needsMetaConnection
-                    ? `${platformName} is not connected yet. Connect Facebook and Instagram in Settings to publish now or autopost at the planned time.`
+                    ? `Autoposting to ${platformName} needs a Facebook Page or Instagram professional account. Personal accounts can still post manually.`
                     : canAutoPublish
-                      ? `${platformName} can publish now, or FromOne can autopost at the planned time.`
+                      ? `${platformName} can publish now, or FromOne can autopost at the planned time for connected business accounts.`
                       : isTikTokPost
-                      ? 'Copy the post, open TikTok, then paste and publish manually.'
-                      : `Copy the post and open ${platformName}.`}
+                        ? 'Copy the post, open TikTok, then paste and publish manually.'
+                        : `Copy the post and open ${platformName}.`}
               </p>
 
               {hasSchedule && !posted && (
@@ -712,8 +712,8 @@ export default function PostActionModal({
 
           <div className="fromone-manual-personal-card">
             <div>
-              <strong>Posting manually or to a personal account?</strong>
-              <p>Copy the wording, open {platformName}, then paste and publish yourself. This is the simple option for personal profiles.</p>
+              <strong>Using a personal account?</strong>
+              <p>Autoposting is for Facebook Pages and Instagram professional accounts. For personal Facebook or Instagram accounts, copy the wording, open {platformName}, then paste and post manually.</p>
             </div>
 
             <div className="fromone-simple-two-actions">
