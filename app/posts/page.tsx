@@ -410,6 +410,7 @@ export default function PostsPage() {
   } | null>(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [renameCampaignValue, setRenameCampaignValue] = useState("");
+  const [showSavedWeekControls, setShowSavedWeekControls] = useState(false);
 
   const queueRef = useRef<HTMLDivElement | null>(null);
   const postRef = useRef<HTMLElement | null>(null);
@@ -1229,16 +1230,6 @@ export default function PostsPage() {
     if (!nextPost) return;
 
     choosePost(nextPost.id);
-  };
-
-  const getPostDateParts = (post: any) => {
-    const date = post?.scheduled_at ? new Date(post.scheduled_at) : new Date();
-
-    return {
-      weekday: date.toLocaleDateString(undefined, { weekday: "short" }),
-      day: date.toLocaleDateString(undefined, { day: "2-digit" }),
-      month: date.toLocaleDateString(undefined, { month: "short" }),
-    };
   };
 
   const getPostPositionLabel = (post: any) => {
@@ -2412,34 +2403,6 @@ Important:
     });
   };
 
-  const getShortScheduledTime = (value?: string | null) => {
-    if (!value) return "";
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) return "";
-
-    return date.toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getCardScheduleLabel = (post: any) => {
-    const scheduledValue = post?.scheduled_publish_at || post?.scheduled_at;
-    const time = getShortScheduledTime(scheduledValue);
-
-    if (!time) return "";
-
-    if (isPostPosted(post)) {
-      return post?.published_at ? `Posted ${getReadableDateTime(post.published_at)}` : "Posted";
-    }
-
-    if (isPostFailed(post)) return `Needs attention · ${time}`;
-
-    return `Autopost · ${time}`;
-  };
-
   const submitReviewPrompt = async () => {
     if (!reviewText.trim()) {
       notify("Please write a short review.", "warning", "Review needed");
@@ -2504,10 +2467,6 @@ Important:
     choosePost(successMoment.nextPostId);
     setSuccessMoment(null);
   };
-
-  const postedCount = posts.filter((post) => isPostPosted(post)).length;
-  const weeklyProgressPercent =
-    posts.length > 0 ? Math.round((postedCount / posts.length) * 100) : 0;
 
   const todayReminderPost = posts.find((post) => post.id === todayReminderPostId) || null;
 
@@ -2613,17 +2572,11 @@ Important:
                 border: "1px solid rgba(255, 212, 59, 0.24)",
                 borderRadius: 34,
                 background:
-                  "radial-gradient(circle at top, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032))",
-                boxShadow: "0 30px 96px rgba(0,0,0,0.34)",
+                  "radial-gradient(circle at top, rgba(255, 212, 59, 0.14), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.078), rgba(255,255,255,0.03))",
+                boxShadow: "0 30px 96px rgba(0,0,0,0.3)",
               }}
             >
-              <div
-                style={{
-                  textAlign: "center",
-                  maxWidth: 860,
-                  margin: "0 auto 10px",
-                }}
-              >
+              <div style={{ textAlign: "center", maxWidth: 860, margin: "0 auto" }}>
                 <div className="page-eyebrow">Posts</div>
                 <h1
                   className="page-title"
@@ -2637,111 +2590,153 @@ Important:
                   This week’s posts.
                 </h1>
                 <p className="page-description" style={{ margin: "0 auto", maxWidth: 760 }}>
-                  Review each post, then publish Facebook and Instagram or copy/open TikTok.
+                  Review each post before anything is published.
                 </p>
               </div>
 
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  alignItems: "flex-start",
+                  justifyContent: "center",
+                  gap: 10,
                   flexWrap: "wrap",
-                  paddingTop: 18,
-                  borderTop: "1px solid rgba(255,255,255,0.09)",
                 }}
               >
-                <div>
-                  <div className="page-eyebrow">Weekly set</div>
-                  <h2 style={{ margin: "0 0 6px" }}>Choose a saved week.</h2>
-                  <p style={{ margin: 0, color: "var(--muted)" }}>
-                    Switch between saved weekly sets, or delete old empty test sets.
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowSavedWeekControls((current) => !current)}
+                  style={{ minHeight: 44, borderRadius: 16 }}
+                >
+                  {showSavedWeekControls ? "Hide saved weeks" : "Manage saved weeks"}
+                </button>
 
+                {sortedPosts.length > 0 && sortedPosts.length < 7 && (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => {
+                      window.location.href = campaign?.id
+                        ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
+                        : "/dashboard";
+                    }}
+                    style={{ minHeight: 44, borderRadius: 16 }}
+                  >
+                    + Add more media
+                  </button>
+                )}
+              </div>
+
+              {showSavedWeekControls && (
                 <div
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "8px 11px",
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.055)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    color: "rgba(248,250,252,0.78)",
-                    fontSize: 13,
-                    fontWeight: 900,
+                    display: "grid",
+                    gap: 14,
+                    paddingTop: 18,
+                    borderTop: "1px solid rgba(255,255,255,0.09)",
                   }}
                 >
-                  {campaigns.length} saved set{campaigns.length === 1 ? "" : "s"}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 12,
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <div>
+                      <div className="page-eyebrow">Saved weeks</div>
+                      <h2 style={{ margin: "0 0 6px" }}>Switch or manage weeks.</h2>
+                      <p style={{ margin: 0, color: "var(--muted)" }}>
+                        Advanced controls for saved weekly post sets.
+                      </p>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "8px 11px",
+                        borderRadius: 999,
+                        background: "rgba(255,255,255,0.055)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        color: "rgba(248,250,252,0.78)",
+                        fontSize: 13,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {campaigns.length} saved set{campaigns.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0, 1fr) auto auto auto",
+                      gap: 10,
+                      alignItems: "center",
+                    }}
+                  >
+                    <select
+                      value={pendingCampaignId}
+                      onChange={(event) => setPendingCampaignId(event.target.value)}
+                      style={{
+                        minHeight: 50,
+                        borderRadius: 16,
+                        padding: "0 14px",
+                        background: "rgba(15, 23, 42, 0.76)",
+                        color: "#f8fafc",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        fontWeight: 850,
+                        minWidth: 0,
+                      }}
+                    >
+                      {campaigns.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {getCampaignOptionLabel(item)}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={loadSelectedPlan}
+                      disabled={loadingSelectedPlan || !pendingCampaignId}
+                      style={{ minHeight: 50, borderRadius: 16 }}
+                    >
+                      {loadingSelectedPlan ? "Loading..." : "Load"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={renameSelectedCampaign}
+                      disabled={!campaign?.id || renamingCampaign}
+                      style={{ minHeight: 50, borderRadius: 16 }}
+                    >
+                      {renamingCampaign ? "Renaming..." : "Rename"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={deleteSelectedCampaign}
+                      disabled={!campaign?.id || deletingCampaign}
+                      style={{
+                        minHeight: 50,
+                        borderRadius: 16,
+                        borderColor: "rgba(255, 95, 109, 0.34)",
+                        color: "rgba(255, 215, 220, 0.95)",
+                      }}
+                    >
+                      {deletingCampaign ? "Deleting..." : posts.length === 0 ? "Delete empty set" : "Delete set"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(0, 1fr) auto auto auto",
-                  gap: 10,
-                  alignItems: "center",
-                }}
-              >
-                <select
-                  value={pendingCampaignId}
-                  onChange={(event) => setPendingCampaignId(event.target.value)}
-                  style={{
-                    minHeight: 50,
-                    borderRadius: 16,
-                    padding: "0 14px",
-                    background: "rgba(15, 23, 42, 0.76)",
-                    color: "#f8fafc",
-                    border: "1px solid rgba(255,255,255,0.14)",
-                    fontWeight: 850,
-                    minWidth: 0,
-                  }}
-                >
-                  {campaigns.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {getCampaignOptionLabel(item)}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={loadSelectedPlan}
-                  disabled={loadingSelectedPlan || !pendingCampaignId}
-                  style={{ minHeight: 50, borderRadius: 16 }}
-                >
-                  {loadingSelectedPlan ? "Loading..." : "Load"}
-                </button>
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={renameSelectedCampaign}
-                  disabled={!campaign?.id || renamingCampaign}
-                  style={{ minHeight: 50, borderRadius: 16 }}
-                >
-                  {renamingCampaign ? "Renaming..." : "Rename"}
-                </button>
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={deleteSelectedCampaign}
-                  disabled={!campaign?.id || deletingCampaign}
-                  style={{
-                    minHeight: 50,
-                    borderRadius: 16,
-                    borderColor: "rgba(255, 95, 109, 0.34)",
-                    color: "rgba(255, 215, 220, 0.95)",
-                  }}
-                >
-                  {deletingCampaign ? "Deleting..." : posts.length === 0 ? "Delete empty set" : "Delete set"}
-                </button>
-              </div>
+              )}
             </section>
           )}
 
@@ -2764,29 +2759,36 @@ Important:
               }}
             >
               <div>
-                <div className="page-eyebrow">Weekly calendar</div>
-                <h2 style={{ margin: "0 0 8px" }}>Review your posts.</h2>
+                <div className="page-eyebrow">Review</div>
+                <h2 style={{ margin: "0 0 8px" }}>
+                  {posts.length || 0} post{posts.length === 1 ? "" : "s"} ready to review.
+                </h2>
                 <p style={{ margin: 0, color: "var(--muted)" }}>
-                  Open a card, check the media and wording, then publish or copy.
+                  Open each post, check it, then publish or copy.
                 </p>
               </div>
 
-              <div
-                style={{
-                  minWidth: 180,
-                  padding: 14,
-                  borderRadius: 18,
-                  background: "rgba(255,255,255,0.055)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                <strong>
-                  {postedCount} of {posts.length || 0} done
-                </strong>
-                <div className="weekly-progress-bar" aria-label="Weekly post progress">
-                  <span style={{ width: `${weeklyProgressPercent}%` }} />
-                </div>
-              </div>
+              {sortedPosts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextPost = sortedPosts.find((post) => !isPostPosted(post)) || sortedPosts[0];
+                    if (nextPost?.id) choosePost(nextPost.id);
+                  }}
+                  className="dashboard-platform-create-button"
+                  style={{
+                    minHeight: 48,
+                    borderRadius: 16,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "0 18px",
+                    width: "auto",
+                  }}
+                >
+                  Review next post
+                </button>
+              )}
             </div>
 
             {sortedPosts.length === 0 && (
@@ -2849,30 +2851,16 @@ Important:
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 320px))",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 240px), 300px))",
                   justifyContent: "center",
                   alignItems: "stretch",
                   gap: 16,
                 }}
               >
                 {sortedPosts.map((post: any) => {
-                const dateParts = getPostDateParts(post);
                 const status = getPostStatus(post);
                 const platformName = getPlatformDisplayName(post);
-                const hasMedia = Boolean(post.media_url);
                 const captionPreview = String(post.caption || "").slice(0, 120);
-                const cardScheduleLabel = getCardScheduleLabel(post);
-                const scheduledTime = getShortScheduledTime(
-                  post.scheduled_publish_at || post.scheduled_at,
-                );
-                const statusDisplay =
-                  status === "Reminder set"
-                    ? scheduledTime
-                      ? `Planned · ${scheduledTime}`
-                      : "Planned"
-                    : status === "Ready" && scheduledTime
-                      ? `Ready · ${scheduledTime}`
-                      : status;
 
                 return (
                   <button
@@ -2881,7 +2869,7 @@ Important:
                     onClick={() => choosePost(post.id)}
                     className="fromone-simple-post-card"
                     style={{
-                      minHeight: 560,
+                      minHeight: 470,
                       textAlign: "left",
                       borderRadius: 26,
                       padding: 0,
@@ -2960,7 +2948,7 @@ Important:
                               whiteSpace: "nowrap",
                             }}
                           >
-                            {dateParts.weekday} {dateParts.day} {dateParts.month}
+                            {platformName}
                           </div>
 
                           <strong
@@ -2974,35 +2962,6 @@ Important:
                           >
                             {post.title || `${platformName} post`}
                           </strong>
-                        </div>
-
-                        <div
-                          style={{
-                            display: "grid",
-                            gap: 6,
-                            justifyItems: "end",
-                            flex: "0 0 auto",
-                          }}
-                        >
-                          <span
-                            className={`premium-calendar-status ${getStatusClass(status)}`}
-                            style={{ flex: "0 0 auto" }}
-                          >
-                            {status === "Reminder set" ? "Planned" : status}
-                          </span>
-
-                          {scheduledTime && status !== "Posted" && (
-                            <small
-                              style={{
-                                color: "rgba(248, 250, 252, 0.72)",
-                                fontWeight: 900,
-                                fontSize: 12,
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {scheduledTime}
-                            </small>
-                          )}
                         </div>
                       </div>
 
@@ -3053,40 +3012,6 @@ Important:
                           />
                           {platformName}
                         </span>
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            minHeight: 24,
-                            padding: "4px 9px",
-                            borderRadius: 10,
-                            background: hasMedia
-                              ? "rgba(61, 220, 151, 0.08)"
-                              : "rgba(255, 212, 59, 0.075)",
-                            border: hasMedia
-                              ? "1px solid rgba(61, 220, 151, 0.14)"
-                              : "1px solid rgba(255, 212, 59, 0.14)",
-                            color: "rgba(248,250,252,0.78)",
-                            fontSize: 11,
-                            fontWeight: 850,
-                            lineHeight: 1,
-                            letterSpacing: "0.01em",
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              background: hasMedia ? "#3ddc97" : "#ffd43b",
-                              boxShadow: hasMedia
-                                ? "0 0 12px rgba(61, 220, 151, 0.28)"
-                                : "0 0 12px rgba(255, 212, 59, 0.28)",
-                            }}
-                          />
-                          {hasMedia ? "Media ready" : "Needs media"}
-                        </span>
                       </div>
 
                       <span
@@ -3108,148 +3033,6 @@ Important:
                 );
               })}
 
-              {sortedPosts.length > 0 && sortedPosts.length < 7 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.location.href = campaign?.id
-                      ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
-                      : "/dashboard";
-                  }}
-                  className="fromone-simple-post-card"
-                  style={{
-                    minHeight: 560,
-                    textAlign: "left",
-                    borderRadius: 26,
-                    padding: 0,
-                    overflow: "hidden",
-                    background:
-                      "radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 36%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))",
-                    border: "1px solid rgba(255, 212, 59, 0.24)",
-                    cursor: "pointer",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        height: 180,
-                        background:
-                          "radial-gradient(circle at center, rgba(255, 212, 59, 0.18), rgba(15,23,42,0.72))",
-                        display: "grid",
-                        placeItems: "center",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 66,
-                          height: 66,
-                          borderRadius: 22,
-                          display: "grid",
-                          placeItems: "center",
-                          background: "rgba(255, 212, 59, 0.16)",
-                          border: "1px solid rgba(255, 212, 59, 0.28)",
-                          color: "#ffd43b",
-                          fontSize: 36,
-                          fontWeight: 950,
-                        }}
-                      >
-                        +
-                      </span>
-                    </div>
-
-                    <div style={{ padding: 18, display: "grid", gap: 12 }}>
-                      <div className="page-eyebrow">Add more</div>
-                      <h3 style={{ margin: 0, fontSize: 24, color: "#fff" }}>
-                        Create more posts
-                      </h3>
-                      <p style={{ margin: 0, color: "rgba(248,250,252,0.76)", lineHeight: 1.45 }}>
-                        Add another content day to this same weekly set. FromOne can create Facebook, Instagram and TikTok versions with staggered times.
-                      </p>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 8,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            minHeight: 24,
-                            padding: "4px 9px",
-                            borderRadius: 10,
-                            background: "rgba(255,255,255,0.055)",
-                            border: "1px solid rgba(255,255,255,0.09)",
-                            color: "rgba(248,250,252,0.74)",
-                            fontSize: 11,
-                            fontWeight: 850,
-                            lineHeight: 1,
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              background: "#ffd43b",
-                            }}
-                          />
-                          Same weekly set
-                        </span>
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            minHeight: 24,
-                            padding: "4px 9px",
-                            borderRadius: 10,
-                            background: "rgba(255,255,255,0.055)",
-                            border: "1px solid rgba(255,255,255,0.09)",
-                            color: "rgba(248,250,252,0.74)",
-                            fontSize: 11,
-                            fontWeight: 850,
-                            lineHeight: 1,
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              background: "#ffd43b",
-                            }}
-                          />
-                          Staggered times
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ padding: "0 18px 18px", marginTop: "auto" }}>
-                    <span
-                      className="dashboard-platform-create-button"
-                      style={{
-                        minHeight: 46,
-                        borderRadius: 16,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: "100%",
-                      }}
-                    >
-                      Add media
-                    </span>
-                  </div>
-                </button>
-              )}
               </div>
             )}
           </section>
