@@ -13,6 +13,27 @@ type QuickImproveAction = {
   label: string;
 };
 
+type ResizePresetValue =
+  | 'instagram-square'
+  | 'instagram-portrait'
+  | 'facebook-feed'
+  | 'story-reel';
+
+type ResizedMedia = {
+  url: string;
+  label: string;
+  width: number;
+  height: number;
+};
+
+type ResizePreset = {
+  value: ResizePresetValue;
+  label: string;
+  width: number;
+  height: number;
+  help: string;
+};
+
 type PostActionModalProps = {
   selectedPost: any;
   editingPostId: string | null;
@@ -92,6 +113,37 @@ const marketReachOptions = [
   'Online customers',
 ];
 
+const resizePresets: ResizePreset[] = [
+  {
+    value: 'instagram-square',
+    label: 'Instagram square',
+    width: 1080,
+    height: 1080,
+    help: 'Best for simple Instagram and Facebook image posts.',
+  },
+  {
+    value: 'instagram-portrait',
+    label: 'Instagram portrait',
+    width: 1080,
+    height: 1350,
+    help: 'Best for Instagram feed posts with more screen space.',
+  },
+  {
+    value: 'facebook-feed',
+    label: 'Facebook post',
+    width: 1200,
+    height: 630,
+    help: 'Best for Facebook feed and link-style landscape posts.',
+  },
+  {
+    value: 'story-reel',
+    label: 'Story / Reel',
+    width: 1080,
+    height: 1920,
+    help: 'Best for Stories, Reels covers and vertical promotions.',
+  },
+];
+
 const platformCaptionLimits: Record<string, number> = {
   Facebook: 700,
   Instagram: 1200,
@@ -134,6 +186,110 @@ function getBriefMediaGuidance({
   return 'Image attached.';
 }
 
+
+
+function getSafeDownloadName(value?: string | null) {
+  return (
+    String(value || 'fromone-post-media')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || 'fromone-post-media'
+  );
+}
+
+function triggerDownload(url: string, filename: string) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.rel = 'noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function loadImageFromBlob(blob: Blob) {
+  return new Promise<{ image: HTMLImageElement; objectUrl: string }>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(blob);
+    const image = new Image();
+
+    image.onload = () => resolve({ image, objectUrl });
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Could not prepare this image for resizing.'));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+async function createResizedImageUrl({
+  sourceUrl,
+  preset,
+}: {
+  sourceUrl: string;
+  preset: ResizePreset;
+}) {
+  const response = await fetch(sourceUrl);
+
+  if (!response.ok) {
+    throw new Error('Could not load the media for resizing.');
+  }
+
+  const blob = await response.blob();
+  const { image, objectUrl } = await loadImageFromBlob(blob);
+
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = preset.width;
+    canvas.height = preset.height;
+
+    const context = canvas.getContext('2d');
+
+    if (!context) {
+      throw new Error('Image resizing is not available in this browser.');
+    }
+
+    context.fillStyle = '#0f172a';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    const imageRatio = image.naturalWidth / image.naturalHeight;
+    const canvasRatio = canvas.width / canvas.height;
+
+    let drawWidth = canvas.width;
+    let drawHeight = canvas.height;
+
+    if (imageRatio > canvasRatio) {
+      drawWidth = canvas.width;
+      drawHeight = canvas.width / imageRatio;
+    } else {
+      drawHeight = canvas.height;
+      drawWidth = canvas.height * imageRatio;
+    }
+
+    const drawX = (canvas.width - drawWidth) / 2;
+    const drawY = (canvas.height - drawHeight) / 2;
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+
+    const resizedBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (result) => {
+          if (result) resolve(result);
+          else reject(new Error('Could not create resized image.'));
+        },
+        'image/jpeg',
+        0.92,
+      );
+    });
+
+    return URL.createObjectURL(resizedBlob);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
 
 
 function isMetaReconnectError(value?: string | null) {
@@ -261,6 +417,10 @@ export default function PostActionModal({
 }: PostActionModalProps) {
   const [showImprovePanel, setShowImprovePanel] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [resizePresetValue, setResizePresetValue] = useState<ResizePresetValue>('instagram-portrait');
+  const [resizingMedia, setResizingMedia] = useState(false);
+  const [resizedMedia, setResizedMedia] = useState<ResizedMedia | null>(null);
+  const [resizeError, setResizeError] = useState('');
 
   if (!selectedPost) return null;
 
@@ -289,6 +449,9 @@ export default function PostActionModal({
     mediaType === 'pdf' ||
     String(selectedPost.media_url || '').toLowerCase().includes('.pdf');
   const needsMedia = mediaRequiredForPlatform(selectedPost.platform) && !hasMedia;
+  const canResizeImageMedia = hasMedia && !isVideoMedia && !isFlyerMedia;
+  const selectedResizePreset =
+    resizePresets.find((item) => item.value === resizePresetValue) || resizePresets[1];
   const posted = isPostPosted(selectedPost);
   const isPublishing = publishingPostId === selectedPost.id;
   const directFacebookReady = isFacebookPost && canDirectPublishToFacebook(selectedPost);
@@ -360,7 +523,7 @@ export default function PostActionModal({
 
   const manualHelpText = posted
     ? 'This post has already been marked as posted.'
-    : `FromOne copies the wording and opens ${manualPlatformLabel}. Add the media shown here, paste the caption, then publish.`;
+    : `FromOne copies the wording and opens ${manualPlatformLabel}. Download or resize the media here, add it to the platform, paste the caption, then publish.`;
 
   const autopostLabel = isPublishing
     ? 'Publishing...'
@@ -377,6 +540,57 @@ export default function PostActionModal({
     : canAutoPublish
       ? 'Autopost sends the caption and media automatically when the business account connection is healthy.'
       : 'Autopost is not available for this platform.';
+
+  const handleDownloadOriginalMedia = () => {
+    if (!selectedPost.media_url) return;
+
+    const extension = isVideoMedia ? 'mp4' : isFlyerMedia ? 'pdf' : 'jpg';
+    triggerDownload(
+      selectedPost.media_url,
+      `${getSafeDownloadName(modalTitle)}-original.${extension}`,
+    );
+  };
+
+  const handleResizeMedia = async () => {
+    if (!selectedPost.media_url || !canResizeImageMedia) return;
+
+    setResizeError('');
+    setResizingMedia(true);
+
+    try {
+      if (resizedMedia?.url?.startsWith('blob:')) {
+        URL.revokeObjectURL(resizedMedia.url);
+      }
+
+      const resizedUrl = await createResizedImageUrl({
+        sourceUrl: selectedPost.media_url,
+        preset: selectedResizePreset,
+      });
+
+      setResizedMedia({
+        url: resizedUrl,
+        label: selectedResizePreset.label,
+        width: selectedResizePreset.width,
+        height: selectedResizePreset.height,
+      });
+    } catch (error: any) {
+      setResizeError(
+        error?.message ||
+          'Could not resize this image. Download the original media instead.',
+      );
+    } finally {
+      setResizingMedia(false);
+    }
+  };
+
+  const handleDownloadResizedMedia = () => {
+    if (!resizedMedia?.url) return;
+
+    triggerDownload(
+      resizedMedia.url,
+      `${getSafeDownloadName(modalTitle)}-${resizedMedia.width}x${resizedMedia.height}.jpg`,
+    );
+  };
 
   const openImprovePanel = () => {
     setShowImprovePanel((current) => !current);
@@ -449,20 +663,89 @@ export default function PostActionModal({
               </label>
 
               {hasMedia && (
-                <div className="f1-post-two-actions">
-                  <a href={selectedPost.media_url} target="_blank" rel="noreferrer" className="f1-post-secondary">
-                    {isFlyerMedia ? 'Open flyer' : 'View media'}
-                  </a>
+                <>
+                  <div className="f1-post-two-actions">
+                    <a href={selectedPost.media_url} target="_blank" rel="noreferrer" className="f1-post-secondary">
+                      {isFlyerMedia ? 'Open flyer' : 'View media'}
+                    </a>
 
-                  <button
-                    type="button"
-                    className="f1-post-secondary f1-post-danger"
-                    onClick={() => onRemoveMedia(selectedPost)}
-                    disabled={removingMediaPostId === selectedPost.id || accessLocked}
-                  >
-                    {removingMediaPostId === selectedPost.id ? 'Removing...' : 'Remove'}
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      className="f1-post-secondary"
+                      onClick={handleDownloadOriginalMedia}
+                      disabled={isRescanning}
+                    >
+                      Download media
+                    </button>
+
+                    <button
+                      type="button"
+                      className="f1-post-secondary f1-post-danger"
+                      onClick={() => onRemoveMedia(selectedPost)}
+                      disabled={removingMediaPostId === selectedPost.id || accessLocked}
+                    >
+                      {removingMediaPostId === selectedPost.id ? 'Removing...' : 'Remove'}
+                    </button>
+                  </div>
+
+                  {canResizeImageMedia && (
+                    <div className="f1-post-resize-card">
+                      <div>
+                        <strong>Resize for social</strong>
+                        <p>Prepare a platform-sized image for manual posting. The original image stays unchanged.</p>
+                      </div>
+
+                      <label>
+                        <span>Choose size</span>
+                        <select
+                          className="input"
+                          value={resizePresetValue}
+                          onChange={(event) => {
+                            setResizePresetValue(event.target.value as ResizePresetValue);
+                            setResizeError('');
+                          }}
+                        >
+                          {resizePresets.map((preset) => (
+                            <option key={preset.value} value={preset.value}>
+                              {preset.label} — {preset.width} × {preset.height}
+                            </option>
+                          ))}
+                        </select>
+                        <small>{selectedResizePreset.help}</small>
+                      </label>
+
+                      <div className="f1-post-resize-actions">
+                        <button
+                          type="button"
+                          className="f1-post-secondary"
+                          onClick={handleResizeMedia}
+                          disabled={resizingMedia || isRescanning}
+                        >
+                          {resizingMedia ? 'Resizing...' : 'Create resized image'}
+                        </button>
+
+                        {resizedMedia && (
+                          <button
+                            type="button"
+                            className="f1-post-yellow-action"
+                            onClick={handleDownloadResizedMedia}
+                            disabled={resizingMedia}
+                          >
+                            Download {resizedMedia.label}
+                          </button>
+                        )}
+                      </div>
+
+                      {resizedMedia && (
+                        <small className="f1-post-resize-ready">
+                          Ready: {resizedMedia.width} × {resizedMedia.height}. Download it, add it to {manualPlatformLabel}, then paste the copied caption.
+                        </small>
+                      )}
+
+                      {resizeError && <small className="f1-post-resize-error">{resizeError}</small>}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </aside>
@@ -735,7 +1018,7 @@ export default function PostActionModal({
                 <div>
                   <strong>Post manually</strong>
                   <p>{manualHelpText}</p>
-                  {hasMedia && <small>Media is ready in FromOne. Add it to the platform before pasting the caption.</small>}
+                  {hasMedia && <small>Use Download media, or Resize for social for images, then add the media before pasting the caption.</small>}
                 </div>
 
                 <div className="f1-post-manual-action-stack">

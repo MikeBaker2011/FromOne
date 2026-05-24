@@ -3539,3 +3539,90 @@ body:has(.fromone-simple-modal-overlay) {
 .f1-post-badges span:has(+ .fromone-hidden-schedule-never) {
   display: none !important;
 }
+
+/* FINAL BETA ADDITION: resize media for manual posting */
+.f1-post-resize-card {
+  display: grid !important;
+  gap: 14px !important;
+  padding: 16px !important;
+  border-radius: 20px !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.1), transparent 32%),
+    rgba(255, 255, 255, 0.055) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.f1-post-resize-card strong {
+  color: #ffffff !important;
+  display: block !important;
+  margin-bottom: 6px !important;
+}
+
+.f1-post-resize-card p {
+  margin: 0 !important;
+  color: rgba(248, 250, 252, 0.72) !important;
+  line-height: 1.45 !important;
+}
+
+.f1-post-resize-card label {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.f1-post-resize-card label span {
+  color: rgba(248, 250, 252, 0.64) !important;
+  font-size: 0.74rem !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  font-weight: 950 !important;
+}
+
+.f1-post-resize-card select.input {
+  width: 100% !important;
+  height: 54px !important;
+  min-height: 54px !important;
+  margin: 0 !important;
+  border-radius: 16px !important;
+}
+
+.f1-post-resize-card small {
+  display: block !important;
+  color: rgba(248, 250, 252, 0.62) !important;
+  line-height: 1.4 !important;
+  font-weight: 800 !important;
+}
+
+.f1-post-resize-actions {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.f1-post-resize-actions .f1-post-secondary,
+.f1-post-resize-actions .f1-post-yellow-action {
+  width: 100% !important;
+  min-height: 52px !important;
+  border-radius: 16px !important;
+}
+
+.f1-post-resize-ready {
+  padding: 11px 12px !important;
+  border-radius: 14px !important;
+  background: rgba(61, 220, 151, 0.12) !important;
+  border: 1px solid rgba(61, 220, 151, 0.22) !important;
+  color: #a7f3d0 !important;
+}
+
+.f1-post-resize-error {
+  padding: 11px 12px !important;
+  border-radius: 14px !important;
+  background: rgba(127, 29, 29, 0.2) !important;
+  border: 1px solid rgba(248, 113, 113, 0.24) !important;
+  color: #fecaca !important;
+}
+
+@media (max-width: 640px) {
+  .f1-post-resize-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
