@@ -76,6 +76,40 @@ function isCurrentlyPublishing(post: ScheduledPost) {
   );
 }
 
+function inferMediaKindFromUrl(mediaUrl?: string | null) {
+  const cleanUrl = cleanText(mediaUrl).toLowerCase().split('?')[0];
+
+  if (!cleanUrl) return '';
+
+  if (cleanUrl.match(/\.(jpg|jpeg|png|webp|gif)$/)) return 'image';
+  if (cleanUrl.match(/\.(mp4|mov|m4v|webm)$/)) return 'video';
+  if (cleanUrl.match(/\.(pdf)$/)) return 'flyer';
+
+  return '';
+}
+
+function getPublishMediaType(post: ScheduledPost) {
+  const storedMediaType = cleanText(post.media_type).toLowerCase();
+
+  if (storedMediaType.startsWith('image')) return storedMediaType;
+  if (storedMediaType.startsWith('video')) return storedMediaType;
+  if (storedMediaType === 'photo') return 'image';
+  if (storedMediaType === 'picture') return 'image';
+  if (storedMediaType === 'reel') return 'video';
+  if (storedMediaType === 'movie') return 'video';
+  if (storedMediaType === 'flyer' || storedMediaType === 'pdf') return 'flyer';
+
+  return inferMediaKindFromUrl(post.media_url);
+}
+
+function canInstagramAutopostMedia(post: ScheduledPost) {
+  if (!post.media_url) return false;
+
+  const publishMediaType = getPublishMediaType(post);
+
+  return publishMediaType.startsWith('image') || publishMediaType.startsWith('video');
+}
+
 function hashtagsToText(hashtags: ScheduledPost['hashtags']) {
   if (Array.isArray(hashtags)) return hashtags.join(' ');
   if (typeof hashtags === 'string') return hashtags;
@@ -305,17 +339,26 @@ async function publishScheduledPost({
     };
   }
 
-  if (platform === 'instagram') {
-    const mediaType = cleanText(post.media_type).toLowerCase();
+  const publishMediaType = getPublishMediaType(post);
 
-    if (!post.media_url || (!mediaType.startsWith('image') && !mediaType.startsWith('video'))) {
-      await markPostFailed(post.id, 'Instagram autopost needs an image or video.');
+  if (platform === 'instagram') {
+    if (!canInstagramAutopostMedia(post)) {
+      const message = post.media_url
+        ? 'Instagram autopost needs an image or video. PDF flyers and unsupported media must be posted manually.'
+        : 'Instagram autopost needs an image or video.';
+
+      await markPostFailed(post.id, message);
 
       return {
         post_id: post.id,
         platform,
         status: 'failed',
-        message: 'Instagram autopost needs an image or video.',
+        message,
+        details: {
+          media_url: post.media_url || null,
+          media_type: post.media_type || null,
+          inferred_media_type: publishMediaType || null,
+        },
       };
     }
   }
@@ -346,8 +389,8 @@ async function publishScheduledPost({
       hashtags: Array.isArray(post.hashtags) ? post.hashtags : hashtagsToText(post.hashtags).split(/\s+/).filter(Boolean),
       media_url: post.media_url || null,
       mediaUrl: post.media_url || null,
-      media_type: post.media_type || null,
-      mediaType: post.media_type || null,
+      media_type: publishMediaType || post.media_type || null,
+      mediaType: publishMediaType || post.media_type || null,
     }),
   });
 
@@ -449,6 +492,7 @@ async function handleScheduledPublish(req: NextRequest) {
   for (const post of posts) {
     try {
       const result = await publishScheduledPost({ req, post });
+      console.log('Scheduled publish result:', result);
       results.push(result);
     } catch (error: any) {
       const message = error?.message || 'Scheduled publish failed.';
