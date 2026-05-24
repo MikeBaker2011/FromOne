@@ -1049,99 +1049,253 @@ export default function PostActionModal({
         </header>
 
         <div className="f1-post-modal-body">
-          <aside ref={mediaRef} className="f1-post-media-panel">
-            <div className="f1-post-media-frame">
-              {selectedPost.media_url ? (
-                isVideoMedia ? (
-                  <video src={selectedPost.media_url} controls />
-                ) : isFlyerMedia ? (
-                  <div className="f1-post-file-preview">
-                    <strong>PDF flyer</strong>
-                    <p>Open the flyer to check the details.</p>
-                  </div>
-                ) : (
-                  <img src={selectedPost.media_url} alt="Uploaded post media" />
-                )
-              ) : (
-                <div className="f1-post-file-preview">
-                  <strong>No media yet</strong>
-                  <p>Add a photo, video or flyer before posting.</p>
+          <aside ref={mediaRef} className={`f1-post-media-panel ${showPrepareMediaModal ? 'is-preparing-media' : ''}`}>
+            {!showPrepareMediaModal && (
+              <>
+                <div className="f1-post-media-frame">
+                  {selectedPost.media_url ? (
+                    isVideoMedia ? (
+                      <video src={selectedPost.media_url} controls />
+                    ) : isFlyerMedia ? (
+                      <div className="f1-post-file-preview">
+                        <strong>PDF flyer</strong>
+                        <p>Open the flyer to check the details.</p>
+                      </div>
+                    ) : (
+                      <img src={selectedPost.media_url} alt="Uploaded post media" />
+                    )
+                  ) : (
+                    <div className="f1-post-file-preview">
+                      <strong>No media yet</strong>
+                      <p>Add a photo, video or flyer before posting.</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="f1-post-media-tools">
-              <div>
-                <strong>{getBriefMediaGuidance({ hasMedia, isVideoMedia, isFlyerMedia })}</strong>
-                {hasMedia && <p>{getImageGuidance(selectedPost)}</p>}
-              </div>
-
-              <label className="f1-post-yellow-action">
-                <input
-                  type="file"
-                  accept="image/*,video/*,application/pdf"
-                  onChange={(event) => onUploadMedia(selectedPost, event)}
-                  disabled={uploadingMediaPostId === selectedPost.id || accessLocked}
-                  style={{ display: 'none' }}
-                />
-                <span>
-                  {uploadingMediaPostId === selectedPost.id
-                    ? 'Uploading...'
-                    : hasMedia
-                      ? 'Replace media'
-                      : 'Choose media'}
-                </span>
-              </label>
-
-              {hasMedia && (
-                <>
-                  <div className="f1-post-two-actions">
-                    <a href={selectedPost.media_url} target="_blank" rel="noreferrer" className="f1-post-secondary">
-                      {isFlyerMedia ? 'Open flyer' : 'View media'}
-                    </a>
-
-                    <button
-                      type="button"
-                      className="f1-post-secondary"
-                      onClick={handleDownloadOriginalMedia}
-                      disabled={isRescanning}
-                    >
-                      Download media
-                    </button>
-
-                    <button
-                      type="button"
-                      className="f1-post-secondary f1-post-danger"
-                      onClick={() => onRemoveMedia(selectedPost)}
-                      disabled={removingMediaPostId === selectedPost.id || accessLocked}
-                    >
-                      {removingMediaPostId === selectedPost.id ? 'Removing...' : 'Remove'}
-                    </button>
+                <div className="f1-post-media-tools">
+                  <div>
+                    <strong>{getBriefMediaGuidance({ hasMedia, isVideoMedia, isFlyerMedia })}</strong>
+                    {hasMedia && <p>{getImageGuidance(selectedPost)}</p>}
                   </div>
 
-                  {canResizeImageMedia && (
-                    <div className="f1-post-resize-card f1-post-prepare-card">
-                      <div>
-                        <strong>Prepare media</strong>
-                        <p>Crop and resize this image for Facebook, Instagram or Stories before manual posting.</p>
+                  <label className="f1-post-yellow-action">
+                    <input
+                      type="file"
+                      accept="image/*,video/*,application/pdf"
+                      onChange={(event) => onUploadMedia(selectedPost, event)}
+                      disabled={uploadingMediaPostId === selectedPost.id || accessLocked}
+                      style={{ display: 'none' }}
+                    />
+                    <span>
+                      {uploadingMediaPostId === selectedPost.id
+                        ? 'Uploading...'
+                        : hasMedia
+                          ? 'Replace media'
+                          : 'Choose media'}
+                    </span>
+                  </label>
+
+                  {hasMedia && (
+                    <>
+                      <div className="f1-post-two-actions">
+                        <a href={selectedPost.media_url} target="_blank" rel="noreferrer" className="f1-post-secondary">
+                          {isFlyerMedia ? 'Open flyer' : 'View media'}
+                        </a>
+
+                        <button
+                          type="button"
+                          className="f1-post-secondary"
+                          onClick={handleDownloadOriginalMedia}
+                          disabled={isRescanning}
+                        >
+                          Download media
+                        </button>
+
+                        <button
+                          type="button"
+                          className="f1-post-secondary f1-post-danger"
+                          onClick={() => onRemoveMedia(selectedPost)}
+                          disabled={removingMediaPostId === selectedPost.id || accessLocked}
+                        >
+                          {removingMediaPostId === selectedPost.id ? 'Removing...' : 'Remove'}
+                        </button>
                       </div>
 
-                      <button
-                        type="button"
-                        className="f1-post-yellow-action"
-                        onClick={openPrepareMediaModal}
-                        disabled={isRescanning}
-                      >
-                        Crop / resize for social
-                      </button>
+                      {canResizeImageMedia && (
+                        <div className="f1-post-resize-card f1-post-prepare-card">
+                          <div>
+                            <strong>Prepare media</strong>
+                            <p>Move, zoom and resize this image for Facebook, Instagram or Stories before posting.</p>
+                          </div>
 
-                      {resizedMedia && (
-                        <div className="f1-post-prepared-actions">
+                          <button
+                            type="button"
+                            className="f1-post-yellow-action"
+                            onClick={openPrepareMediaModal}
+                            disabled={isRescanning}
+                          >
+                            Prepare media
+                          </button>
+
+                          {resizedMedia && (
+                            <div className="f1-post-prepared-actions">
+                              <button
+                                type="button"
+                                className="f1-post-yellow-action"
+                                onClick={handleSharePreparedMedia}
+                                disabled={resizingMedia || sharingMedia}
+                              >
+                                {sharingMedia ? 'Opening share...' : 'Share prepared image'}
+                              </button>
+                              <button
+                                type="button"
+                                className="f1-post-secondary"
+                                onClick={handleDownloadResizedMedia}
+                                disabled={resizingMedia}
+                              >
+                                Download prepared image
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+
+            {showPrepareMediaModal && canResizeImageMedia && (
+              <div className="f1-inline-prepare-media f1-prepare-transform-modal">
+                <header className="f1-inline-prepare-header">
+                  <div>
+                    <span>Prepare media</span>
+                    <h3>Move and pinch to fit</h3>
+                    <p>Choose a platform frame, then drag or pinch the image until it looks right.</p>
+                  </div>
+
+                  <button type="button" className="f1-post-secondary" onClick={closePrepareMediaModal} disabled={resizingMedia || sharingMedia}>
+                    Back to post
+                  </button>
+                </header>
+
+                <div className="f1-inline-prepare-layout">
+                  <div className="f1-prepare-media-stage-card">
+                    <div
+                      ref={transformFrameRef}
+                      className={`f1-transform-frame is-${resizePresetValue}`}
+                      style={{ aspectRatio: `${selectedResizePreset.width} / ${selectedResizePreset.height}` }}
+                      onPointerDown={startMediaTransformDrag}
+                      onPointerMove={updateMediaTransformDrag}
+                      onPointerUp={stopMediaTransformDrag}
+                      onPointerCancel={stopMediaTransformDrag}
+                      onPointerLeave={stopMediaTransformDrag}
+                    >
+                      <div
+                        className={`f1-transform-image-layer ${prepareFitMode === 'fit' ? 'is-fit' : 'is-fill'}`}
+                        style={{
+                          transform:
+                            prepareFitMode === 'fit'
+                              ? 'translate3d(0, 0, 0) scale(1)'
+                              : `translate3d(${mediaOffset.x}%, ${mediaOffset.y}%, 0) scale(${mediaZoom})`,
+                        }}
+                      >
+                        <img src={selectedPost.media_url} alt="Prepare media preview" draggable={false} />
+                      </div>
+
+                      <div className="f1-transform-safe-frame">
+                        <span className="f1-transform-grid" />
+                        <span className="f1-transform-corner is-tl" />
+                        <span className="f1-transform-corner is-tr" />
+                        <span className="f1-transform-corner is-bl" />
+                        <span className="f1-transform-corner is-br" />
+                      </div>
+                    </div>
+
+                    <p className="f1-prepare-media-tip">
+                      Drag with one finger to move. Pinch with two fingers to zoom. The frame stays locked to the selected platform size.
+                    </p>
+                  </div>
+
+                  <aside className="f1-prepare-media-controls">
+                    <div>
+                      <strong>Platform frame</strong>
+                      <p>Pick the shape you want the final image to fit.</p>
+                    </div>
+
+                    <div className="f1-prepare-preset-grid">
+                      {resizePresets.map((preset) => (
+                        <button
+                          key={preset.value}
+                          type="button"
+                          className={preset.value === resizePresetValue ? 'is-active' : ''}
+                          onClick={() => updateCropPreset(preset.value)}
+                          disabled={resizingMedia || sharingMedia}
+                        >
+                          <strong>{preset.label}</strong>
+                          <span>{preset.width} × {preset.height}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="f1-transform-control-card">
+                      <div>
+                        <strong>Position image</strong>
+                        <p>{prepareFitMode === 'fit' ? 'Fit keeps the full image visible.' : 'Drag or pinch the image inside the fixed frame.'}</p>
+                      </div>
+
+                      <label className="f1-transform-zoom-control">
+                        <span>Zoom</span>
+                        <input
+                          type="range"
+                          min="1"
+                          max="3"
+                          step="0.01"
+                          value={mediaZoom}
+                          onChange={(event) => updateMediaZoom(event.target.value)}
+                          disabled={resizingMedia || sharingMedia || prepareFitMode === 'fit'}
+                        />
+                        <small>{Math.round(mediaZoom * 100)}%</small>
+                      </label>
+
+                      <div className="f1-transform-quick-actions">
+                        <button type="button" className={prepareFitMode === 'fit' ? 'is-active' : ''} onClick={fitFullImage} disabled={resizingMedia || sharingMedia}>
+                          Fit full image
+                        </button>
+                        <button type="button" className={prepareFitMode === 'fill' ? 'is-active' : ''} onClick={fillFrame} disabled={resizingMedia || sharingMedia}>
+                          Fill frame
+                        </button>
+                        <button type="button" onClick={resetMediaTransform} disabled={resizingMedia || sharingMedia}>
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="f1-prepare-selected-card">
+                      <strong>{selectedResizePreset.label}</strong>
+                      <p>{selectedResizePreset.help}</p>
+                      <span>{selectedResizePreset.width} × {selectedResizePreset.height}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="f1-post-yellow-action f1-prepare-main-action"
+                      onClick={handleResizeMedia}
+                      disabled={resizingMedia || sharingMedia}
+                    >
+                      {resizingMedia ? 'Creating image...' : 'Create prepared image'}
+                    </button>
+
+                    {resizedMedia && (
+                      <div className="f1-prepare-ready-card">
+                        <strong>Prepared image ready</strong>
+                        <p>{resizedMedia.label} · {resizedMedia.width} × {resizedMedia.height}</p>
+                        <div className="f1-prepare-ready-actions">
                           <button
                             type="button"
                             className="f1-post-yellow-action"
                             onClick={handleSharePreparedMedia}
-                            disabled={resizingMedia || sharingMedia}
+                            disabled={sharingMedia || resizingMedia}
                           >
                             {sharingMedia ? 'Opening share...' : 'Share prepared image'}
                           </button>
@@ -1149,17 +1303,20 @@ export default function PostActionModal({
                             type="button"
                             className="f1-post-secondary"
                             onClick={handleDownloadResizedMedia}
-                            disabled={resizingMedia}
+                            disabled={sharingMedia || resizingMedia}
                           >
                             Download prepared image
                           </button>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+                        <small>Caption is copied before sharing. If sharing is not supported, FromOne downloads the image and opens the platform.</small>
+                      </div>
+                    )}
+
+                    {resizeError && <small className="f1-post-resize-error">{resizeError}</small>}
+                  </aside>
+                </div>
+              </div>
+            )}
           </aside>
 
           <main className="f1-post-content-panel">
@@ -1550,160 +1707,7 @@ export default function PostActionModal({
             </section>
           </main>
         </div>
-      {showPrepareMediaModal && canResizeImageMedia && (
-        <div className="f1-prepare-media-overlay" role="dialog" aria-modal="true">
-          <section className="f1-prepare-media-modal f1-prepare-transform-modal">
-            <header className="f1-prepare-media-header">
-              <div>
-                <span>Prepare media</span>
-                <h3>Move and pinch to fit</h3>
-                <p>Choose a platform frame, then drag or pinch the image until it fits. Create a ready-to-share version when it looks right.</p>
-              </div>
 
-              <button type="button" className="f1-post-close" onClick={closePrepareMediaModal} disabled={resizingMedia || sharingMedia}>
-                Close
-              </button>
-            </header>
-
-            <div className="f1-prepare-media-layout">
-              <div className="f1-prepare-media-stage-card">
-                <div
-                  ref={transformFrameRef}
-                  className={`f1-transform-frame is-${resizePresetValue}`}
-                  style={{ aspectRatio: `${selectedResizePreset.width} / ${selectedResizePreset.height}` }}
-                  onPointerDown={startMediaTransformDrag}
-                  onPointerMove={updateMediaTransformDrag}
-                  onPointerUp={stopMediaTransformDrag}
-                  onPointerCancel={stopMediaTransformDrag}
-                  onPointerLeave={stopMediaTransformDrag}
-                >
-                  <div
-                    className={`f1-transform-image-layer ${prepareFitMode === 'fit' ? 'is-fit' : 'is-fill'}`}
-                    style={{
-                      transform:
-                        prepareFitMode === 'fit'
-                          ? 'translate3d(0, 0, 0) scale(1)'
-                          : `translate3d(${mediaOffset.x}%, ${mediaOffset.y}%, 0) scale(${mediaZoom})`,
-                    }}
-                  >
-                    <img src={selectedPost.media_url} alt="Prepare media preview" draggable={false} />
-                  </div>
-
-                  <div className="f1-transform-safe-frame">
-                    <span className="f1-transform-grid" />
-                    <span className="f1-transform-corner is-tl" />
-                    <span className="f1-transform-corner is-tr" />
-                    <span className="f1-transform-corner is-bl" />
-                    <span className="f1-transform-corner is-br" />
-                  </div>
-                </div>
-
-                <p className="f1-prepare-media-tip">
-                  Drag with one finger to move. Pinch with two fingers to zoom. The frame stays locked to the selected platform size.
-                </p>
-              </div>
-
-              <aside className="f1-prepare-media-controls">
-                <div>
-                  <strong>Platform frame</strong>
-                  <p>Pick the shape you want the final image to fit.</p>
-                </div>
-
-                <div className="f1-prepare-preset-grid">
-                  {resizePresets.map((preset) => (
-                    <button
-                      key={preset.value}
-                      type="button"
-                      className={preset.value === resizePresetValue ? 'is-active' : ''}
-                      onClick={() => updateCropPreset(preset.value)}
-                      disabled={resizingMedia || sharingMedia}
-                    >
-                      <strong>{preset.label}</strong>
-                      <span>{preset.width} × {preset.height}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="f1-transform-control-card">
-                  <div>
-                    <strong>Position image</strong>
-                    <p>{prepareFitMode === 'fit' ? 'Fit keeps the full image visible.' : 'Drag or pinch the image inside the fixed frame.'}</p>
-                  </div>
-
-                  <label className="f1-transform-zoom-control">
-                    <span>Zoom</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="3"
-                      step="0.01"
-                      value={mediaZoom}
-                      onChange={(event) => updateMediaZoom(event.target.value)}
-                      disabled={resizingMedia || sharingMedia || prepareFitMode === 'fit'}
-                    />
-                    <small>{Math.round(mediaZoom * 100)}%</small>
-                  </label>
-
-                  <div className="f1-transform-quick-actions">
-                    <button type="button" className={prepareFitMode === 'fit' ? 'is-active' : ''} onClick={fitFullImage} disabled={resizingMedia || sharingMedia}>
-                      Fit full image
-                    </button>
-                    <button type="button" className={prepareFitMode === 'fill' ? 'is-active' : ''} onClick={fillFrame} disabled={resizingMedia || sharingMedia}>
-                      Fill frame
-                    </button>
-                    <button type="button" onClick={resetMediaTransform} disabled={resizingMedia || sharingMedia}>
-                      Reset
-                    </button>
-                  </div>
-                </div>
-
-                <div className="f1-prepare-selected-card">
-                  <strong>{selectedResizePreset.label}</strong>
-                  <p>{selectedResizePreset.help}</p>
-                  <span>{selectedResizePreset.width} × {selectedResizePreset.height}</span>
-                </div>
-
-                <button
-                  type="button"
-                  className="f1-post-yellow-action f1-prepare-main-action"
-                  onClick={handleResizeMedia}
-                  disabled={resizingMedia || sharingMedia}
-                >
-                  {resizingMedia ? 'Creating image...' : 'Create prepared image'}
-                </button>
-
-                {resizedMedia && (
-                  <div className="f1-prepare-ready-card">
-                    <strong>Prepared image ready</strong>
-                    <p>{resizedMedia.label} · {resizedMedia.width} × {resizedMedia.height}</p>
-                    <div className="f1-prepare-ready-actions">
-                      <button
-                        type="button"
-                        className="f1-post-yellow-action"
-                        onClick={handleSharePreparedMedia}
-                        disabled={sharingMedia || resizingMedia}
-                      >
-                        {sharingMedia ? 'Opening share...' : 'Share prepared image'}
-                      </button>
-                      <button
-                        type="button"
-                        className="f1-post-secondary"
-                        onClick={handleDownloadResizedMedia}
-                        disabled={sharingMedia || resizingMedia}
-                      >
-                        Download prepared image
-                      </button>
-                    </div>
-                    <small>Caption is copied before sharing. If sharing is not supported, FromOne downloads the image and opens the platform.</small>
-                  </div>
-                )}
-
-                {resizeError && <small className="f1-post-resize-error">{resizeError}</small>}
-              </aside>
-            </div>
-          </section>
-        </div>
-      )}
 
       </section>
     </div>

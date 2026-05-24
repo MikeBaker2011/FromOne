@@ -4467,3 +4467,207 @@ body:has(.fromone-simple-modal-overlay) {
     max-height: 34dvh !important;
   }
 }
+
+/* FINAL PHASE FIX: prepare media stays inside the current post modal on desktop and mobile */
+.f1-post-media-panel.is-preparing-media {
+  position: relative !important;
+  top: auto !important;
+  display: block !important;
+  overflow: visible !important;
+}
+
+.f1-post-modal-body:has(.f1-post-media-panel.is-preparing-media) {
+  grid-template-columns: minmax(420px, 0.95fr) minmax(0, 1.05fr) !important;
+  align-items: start !important;
+}
+
+.f1-inline-prepare-media {
+  display: grid !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+
+.f1-inline-prepare-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 4px 2px 0 !important;
+}
+
+.f1-inline-prepare-header span {
+  display: inline-flex !important;
+  color: #ffd43b !important;
+  font-size: 0.72rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 6px !important;
+}
+
+.f1-inline-prepare-header h3 {
+  margin: 0 0 8px !important;
+  color: #ffffff !important;
+  font-size: clamp(1.35rem, 3vw, 2.1rem) !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.f1-inline-prepare-header p {
+  margin: 0 !important;
+  color: rgba(248, 250, 252, 0.74) !important;
+  line-height: 1.45 !important;
+}
+
+.f1-inline-prepare-header .f1-post-secondary {
+  flex: 0 0 auto !important;
+  min-height: 42px !important;
+  padding: 0 14px !important;
+  border-radius: 14px !important;
+}
+
+.f1-inline-prepare-layout {
+  display: grid !important;
+  gap: 14px !important;
+  width: 100% !important;
+}
+
+.f1-inline-prepare-media .f1-prepare-media-stage-card,
+.f1-inline-prepare-media .f1-prepare-media-controls {
+  border-radius: 22px !important;
+  padding: 14px !important;
+}
+
+.f1-inline-prepare-media .f1-transform-frame {
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: none !important;
+}
+
+.f1-inline-prepare-media .f1-transform-frame.is-instagram-square {
+  max-width: min(100%, 520px) !important;
+}
+
+.f1-inline-prepare-media .f1-transform-frame.is-instagram-portrait {
+  max-width: min(100%, 470px) !important;
+}
+
+.f1-inline-prepare-media .f1-transform-frame.is-facebook-feed {
+  max-width: 100% !important;
+}
+
+.f1-inline-prepare-media .f1-transform-frame.is-story-reel {
+  max-width: min(100%, 330px) !important;
+}
+
+.f1-inline-prepare-media .f1-prepare-preset-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.f1-inline-prepare-media .f1-transform-control-card,
+.f1-inline-prepare-media .f1-prepare-selected-card,
+.f1-inline-prepare-media .f1-prepare-ready-card {
+  border-radius: 18px !important;
+}
+
+@media (max-width: 980px) {
+  .f1-post-modal-body:has(.f1-post-media-panel.is-preparing-media) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .f1-post-modal-overlay {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 10px !important;
+  }
+
+  .f1-post-modal-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .f1-post-modal-body,
+  .f1-post-modal-body:has(.f1-post-media-panel.is-preparing-media) {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .f1-post-media-panel.is-preparing-media,
+  .f1-inline-prepare-media,
+  .f1-inline-prepare-layout,
+  .f1-inline-prepare-media .f1-prepare-media-stage-card,
+  .f1-inline-prepare-media .f1-prepare-media-controls {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .f1-inline-prepare-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .f1-inline-prepare-header .f1-post-secondary {
+    width: 100% !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-media-stage-card {
+    padding: 12px !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame.is-instagram-square {
+    aspect-ratio: 1 / 1 !important;
+    max-width: min(100%, 390px) !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame.is-instagram-portrait {
+    aspect-ratio: 4 / 5 !important;
+    max-width: min(100%, 360px) !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame.is-facebook-feed {
+    aspect-ratio: 1200 / 630 !important;
+    max-width: 100% !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame.is-story-reel {
+    aspect-ratio: 9 / 16 !important;
+    max-width: min(100%, 260px) !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-media-controls {
+    padding: 12px !important;
+    gap: 12px !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-preset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-preset-grid button {
+    min-height: 56px !important;
+    padding: 10px !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-zoom-control {
+    display: none !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-quick-actions,
+  .f1-inline-prepare-media .f1-prepare-ready-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
