@@ -2767,28 +2767,6 @@ Important:
                   Open each post, check it, then publish or copy.
                 </p>
               </div>
-
-              {sortedPosts.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextPost = sortedPosts.find((post) => !isPostPosted(post)) || sortedPosts[0];
-                    if (nextPost?.id) choosePost(nextPost.id);
-                  }}
-                  className="dashboard-platform-create-button"
-                  style={{
-                    minHeight: 48,
-                    borderRadius: 16,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "0 18px",
-                    width: "auto",
-                  }}
-                >
-                  Review next post
-                </button>
-              )}
             </div>
 
             {sortedPosts.length === 0 && (
