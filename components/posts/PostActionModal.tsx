@@ -562,7 +562,7 @@ export default function PostActionModal({
   };
 
   const startCropInteraction = (
-    event: PointerEvent<HTMLDivElement>,
+    event: PointerEvent<HTMLElement>,
     type: CropInteraction['type'],
   ) => {
     event.preventDefault();
