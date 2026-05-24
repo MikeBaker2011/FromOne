@@ -4671,3 +4671,156 @@ body:has(.fromone-simple-modal-overlay) {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* FINAL FIX: inline prepare mode mobile controls + pinch behaviour */
+.f1-transform-frame,
+.f1-transform-frame * {
+  touch-action: none !important;
+}
+
+.f1-transform-image-layer,
+.f1-transform-image-layer img,
+.f1-transform-safe-frame {
+  pointer-events: none !important;
+  -webkit-user-drag: none !important;
+  user-select: none !important;
+}
+
+@media (max-width: 760px) {
+  .f1-inline-prepare-media {
+    gap: 12px !important;
+  }
+
+  .f1-inline-prepare-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-media-stage-card {
+    order: 1 !important;
+    padding: 10px !important;
+    border-radius: 20px !important;
+    overflow: visible !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-media-controls {
+    order: 2 !important;
+    padding: 10px !important;
+    border-radius: 20px !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame {
+    position: relative !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    touch-action: none !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame.is-instagram-square {
+    aspect-ratio: 1 / 1 !important;
+    width: min(100%, 380px) !important;
+    max-width: min(100%, 380px) !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame.is-instagram-portrait {
+    aspect-ratio: 4 / 5 !important;
+    width: min(100%, 340px) !important;
+    max-width: min(100%, 340px) !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame.is-facebook-feed {
+    aspect-ratio: 1200 / 630 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-frame.is-story-reel {
+    aspect-ratio: 9 / 16 !important;
+    width: min(100%, 240px) !important;
+    max-width: min(100%, 240px) !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-preset-grid {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(150px, 165px) !important;
+    grid-template-columns: none !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 2px 2px 8px !important;
+    scroll-snap-type: x proximity !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-preset-grid button {
+    min-height: 76px !important;
+    height: 76px !important;
+    padding: 11px 12px !important;
+    border-radius: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    text-align: left !important;
+    white-space: normal !important;
+    overflow: hidden !important;
+    scroll-snap-align: start !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-preset-grid button strong {
+    display: block !important;
+    width: 100% !important;
+    font-size: 0.86rem !important;
+    line-height: 1.08 !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-preset-grid button span {
+    display: block !important;
+    width: 100% !important;
+    font-size: 0.74rem !important;
+    line-height: 1 !important;
+    color: rgba(248, 250, 252, 0.74) !important;
+    margin: 0 !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-preset-grid button.is-active {
+    border-color: rgba(255, 212, 59, 0.72) !important;
+    background: rgba(255, 212, 59, 0.14) !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-control-card > div:first-child p {
+    display: none !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-quick-actions {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .f1-inline-prepare-media .f1-transform-quick-actions button {
+    min-height: 42px !important;
+    padding: 0 8px !important;
+    border-radius: 13px !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+  }
+
+  .f1-inline-prepare-media .f1-prepare-media-tip {
+    font-size: 0.78rem !important;
+    line-height: 1.28 !important;
+    margin: 8px 0 0 !important;
+  }
+}

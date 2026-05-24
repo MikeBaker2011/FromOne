@@ -784,8 +784,6 @@ export default function PostActionModal({
   };
 
   const startMediaTransformDrag = (event: PointerEvent<HTMLDivElement>) => {
-    if (prepareFitMode === 'fit') return;
-
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -822,8 +820,6 @@ export default function PostActionModal({
   };
 
   const updateMediaTransformDrag = (event: PointerEvent<HTMLDivElement>) => {
-    if (prepareFitMode === 'fit') return;
-
     const frame = transformFrameRef.current;
     const rect = frame?.getBoundingClientRect();
 
@@ -871,6 +867,9 @@ export default function PostActionModal({
     if (!mediaTransformDrag) return;
 
     event.preventDefault();
+    if (prepareFitMode === 'fit') {
+      setPrepareFitMode('fill');
+    }
 
     const dx = ((event.clientX - mediaTransformDrag.startClientX) / rect.width) * 100;
     const dy = ((event.clientY - mediaTransformDrag.startClientY) / rect.height) * 100;
