@@ -233,3 +233,18 @@
     display: grid;
   }
 }
+/* Match admin page width to Dashboard and Posts */
+
+.admin-page {
+  width: min(1120px, calc(100vw - 28px)) !important;
+  max-width: 1120px !important;
+  margin: 0 auto 56px !important;
+  padding: 0 0 42px !important;
+}
+
+@media (max-width: 760px) {
+  .admin-page {
+    width: min(100% - 24px, 520px) !important;
+    margin-bottom: 42px !important;
+  }
+}
