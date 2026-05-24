@@ -422,41 +422,10 @@ export default function PostActionModal({
           </div>
         </section>
 
-        {onRescanPostMedia && (
-          <section className="fromone-simple-section fromone-simple-rewrite-section">
-            <div className="fromone-simple-section-title">
-              <span>2</span>
-              <div>
-                <div className="page-eyebrow">Improve</div>
-                <h3>Rewrite from media</h3>
-              </div>
-            </div>
-
-            <div className="fromone-simple-action-strip">
-              <div>
-                <p>Create a fresh version using the attached media as the main topic.</p>
-                {posted && (
-                  <small>This will not change anything already posted on Facebook or Instagram.</small>
-                )}
-                {!hasMedia && <small>Upload media first, then rewrite this post.</small>}
-                {rescanUsageLabel && <small>{rescanUsageLabel}</small>}
-              </div>
-
-              <button
-                type="button"
-                className="fromone-simple-primary-action"
-                onClick={() => onRescanPostMedia(selectedPost)}
-                disabled={accessLocked || !hasMedia || isRescanning}
-              >
-                {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
-              </button>
-            </div>
-          </section>
-        )}
 
         <section ref={postRef} className="fromone-simple-section">
           <div className="fromone-simple-section-title">
-            <span>3</span>
+            <span>2</span>
             <div>
               <div className="page-eyebrow">Wording</div>
               <h3>Wording</h3>
@@ -575,6 +544,27 @@ export default function PostActionModal({
                 <p>Pick what you want changed. FromOne uses the business industry, selected audience, reach and tone to rebuild the post.</p>
               </div>
 
+              {onRescanPostMedia && (
+                <div className="fromone-compact-media-rewrite">
+                  <div>
+                    <strong>Rewrite from attached media</strong>
+                    <p>Use this when the wording does not match the image, flyer or video closely enough.</p>
+                    {posted && <small>This will not change anything already posted on Facebook or Instagram.</small>}
+                    {!hasMedia && <small>Upload media first, then rewrite from it.</small>}
+                    {rescanUsageLabel && <small>{rescanUsageLabel}</small>}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="fromone-rewrite-media-button"
+                    onClick={() => onRescanPostMedia(selectedPost)}
+                    disabled={accessLocked || !hasMedia || isRescanning}
+                  >
+                    {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
+                  </button>
+                </div>
+              )}
+
               <div className="fromone-simple-quick-grid fromone-premium-pill-grid">
                 {quickImproveActions.map((action) => (
                   <button
@@ -667,7 +657,7 @@ export default function PostActionModal({
 
         <section ref={publishRef} className="fromone-simple-section">
           <div className="fromone-simple-section-title">
-            <span>4</span>
+            <span>3</span>
             <div>
               <div className="page-eyebrow">Publish</div>
               <h3>{posted ? 'Posted' : canAutoPublish ? 'Publish or autopost' : 'Copy and open'}</h3>

@@ -75,7 +75,7 @@ const MAIN_POST_PLATFORMS = ["Facebook", "Instagram", "TikTok"];
 
 const quickImproveActions = [
   { value: "make_shorter", label: "Make shorter" },
-  { value: "make_more_local", label: "More local" },
+  { value: "make_more_premium", label: "More premium" },
   { value: "make_sales_focused", label: "More sales-focused" },
   { value: "make_less_generic", label: "Less generic" },
   { value: "different_version", label: "Different version" },
@@ -1680,6 +1680,10 @@ export default function PostsPage() {
 
     const selectedAction = quickImproveActions.find((item) => item.value === improvementAction);
     const actionLabel = selectedAction?.label || "Improve post";
+    const finalAudience =
+      audienceTarget === "Custom audience" ? customAudienceTarget.trim() : audienceTarget.trim();
+    const selectedReach = marketReachTarget || "Local customers";
+    const selectedTone = getToneForRewrite();
 
     setRewritingAction(improvementAction);
     setRewritingPost(true);
@@ -1688,7 +1692,10 @@ export default function PostsPage() {
       const response = await axios.post("/api/rewritePost", {
         provider: "gemini",
         improvementAction,
-        tone: getToneForRewrite(),
+        audienceTarget: finalAudience || post.audience_target || "Current audience",
+        marketReach: selectedReach,
+        tone: selectedTone,
+        toneAdjustment: toneTarget,
         businessName: profile?.business_name || campaign?.business_name || "the business",
         industry: profile?.industry || campaign?.business_type || "general business",
         platform: post.platform || "Facebook",
@@ -1696,7 +1703,7 @@ export default function PostsPage() {
         cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
         image_prompt: post.image_prompt || "",
-        rewriteQualityInstructions: `Rewrite this as a high-quality, industry-specific social post. Use the selected improvement action as hard guidance. Keep the result useful, specific to ${profile?.industry || campaign?.business_type || 'the business industry'}, platform-appropriate, and likely to generate enquiries, bookings, visits, orders or messages. Avoid generic wording.`,
+        rewriteQualityInstructions: `Rewrite this as a high-quality, industry-specific social post. Use the selected improvement action as hard guidance. The selected audience is ${finalAudience || post.audience_target || 'the current target audience'}, the selected reach is ${selectedReach}, and the tone guidance is ${selectedTone}. Keep the result useful, specific to ${profile?.industry || campaign?.business_type || 'the business industry'}, platform-appropriate, and likely to generate enquiries, bookings, visits, orders or messages. Do not use generic wording. Do not make it local unless the reach selection asks for local customers.`,
       });
 
       const saved = await applyRewrittenPost(post, response.data, {
