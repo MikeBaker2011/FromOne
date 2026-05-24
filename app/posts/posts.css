@@ -2308,3 +2308,30 @@ body:has(.fromone-simple-modal-overlay) {
     grid-template-columns: 1fr !important;
   }
 }
+/* FINAL FIX: align improve audience controls */
+
+.fromone-premium-audience-grid {
+  align-items: end !important;
+}
+
+.fromone-premium-audience-grid label {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  min-height: 96px !important;
+}
+
+.fromone-premium-audience-grid select.input,
+.fromone-premium-audience-grid input.input {
+  height: 58px !important;
+  min-height: 58px !important;
+  margin: 0 !important;
+}
+
+.fromone-premium-audience-grid button {
+  height: 58px !important;
+  min-height: 58px !important;
+  margin: 0 !important;
+  align-self: end !important;
+}
