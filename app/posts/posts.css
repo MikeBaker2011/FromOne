@@ -3972,3 +3972,225 @@ body:has(.fromone-simple-modal-overlay) {
     min-height: 0 !important;
   }
 }
+
+/* Prepare & Share Media Flow: fixed frame transform + sharing */
+.f1-post-prepared-actions,
+.f1-prepare-ready-actions {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+.f1-post-prepared-actions button,
+.f1-prepare-ready-actions button {
+  width: 100% !important;
+  min-height: 52px !important;
+  border-radius: 16px !important;
+  margin-top: 0 !important;
+}
+
+.f1-prepare-transform-modal .f1-prepare-media-stage-card {
+  display: grid !important;
+  gap: 14px !important;
+  align-content: start !important;
+}
+
+.f1-transform-frame {
+  position: relative !important;
+  width: min(100%, 720px) !important;
+  margin: 0 auto !important;
+  border-radius: 26px !important;
+  overflow: hidden !important;
+  background:
+    radial-gradient(circle at top, rgba(255, 212, 59, 0.13), transparent 38%),
+    rgba(2, 6, 23, 0.72) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.045), 0 26px 70px rgba(0, 0, 0, 0.26) !important;
+  touch-action: none !important;
+  user-select: none !important;
+  cursor: grab !important;
+}
+
+.f1-transform-frame:active {
+  cursor: grabbing !important;
+}
+
+.f1-transform-frame.is-instagram-square {
+  aspect-ratio: 1 / 1 !important;
+  max-height: min(68vh, 680px) !important;
+}
+
+.f1-transform-frame.is-instagram-portrait {
+  aspect-ratio: 4 / 5 !important;
+  max-height: min(72vh, 760px) !important;
+}
+
+.f1-transform-frame.is-facebook-feed {
+  aspect-ratio: 1200 / 630 !important;
+  max-height: min(58vh, 520px) !important;
+}
+
+.f1-transform-frame.is-story-reel {
+  aspect-ratio: 9 / 16 !important;
+  max-width: min(100%, 430px) !important;
+  max-height: min(76vh, 780px) !important;
+}
+
+.f1-transform-image-layer {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transform-origin: center center !important;
+  will-change: transform !important;
+}
+
+.f1-transform-image-layer img {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.f1-transform-image-layer.is-fill img {
+  object-fit: cover !important;
+}
+
+.f1-transform-image-layer.is-fit img {
+  object-fit: contain !important;
+}
+
+.f1-transform-safe-frame {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  border: 3px solid rgba(255, 212, 59, 0.98) !important;
+  box-shadow: inset 0 0 0 1px rgba(16, 20, 32, 0.54), 0 0 0 999px rgba(2, 6, 23, 0.16) !important;
+}
+
+.f1-transform-grid {
+  position: absolute !important;
+  inset: 0 !important;
+  background:
+    linear-gradient(to right, transparent 33.2%, rgba(255, 255, 255, 0.35) 33.2%, rgba(255, 255, 255, 0.35) 33.7%, transparent 33.7%, transparent 66.2%, rgba(255, 255, 255, 0.35) 66.2%, rgba(255, 255, 255, 0.35) 66.7%, transparent 66.7%),
+    linear-gradient(to bottom, transparent 33.2%, rgba(255, 255, 255, 0.35) 33.2%, rgba(255, 255, 255, 0.35) 33.7%, transparent 33.7%, transparent 66.2%, rgba(255, 255, 255, 0.35) 66.2%, rgba(255, 255, 255, 0.35) 66.7%, transparent 66.7%) !important;
+  opacity: 0.78 !important;
+}
+
+.f1-transform-corner {
+  position: absolute !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-color: #ffd43b !important;
+  opacity: 0.98 !important;
+}
+
+.f1-transform-corner.is-tl {
+  top: 14px !important;
+  left: 14px !important;
+  border-top: 4px solid !important;
+  border-left: 4px solid !important;
+}
+
+.f1-transform-corner.is-tr {
+  top: 14px !important;
+  right: 14px !important;
+  border-top: 4px solid !important;
+  border-right: 4px solid !important;
+}
+
+.f1-transform-corner.is-bl {
+  bottom: 14px !important;
+  left: 14px !important;
+  border-bottom: 4px solid !important;
+  border-left: 4px solid !important;
+}
+
+.f1-transform-corner.is-br {
+  right: 14px !important;
+  bottom: 14px !important;
+  border-right: 4px solid !important;
+  border-bottom: 4px solid !important;
+}
+
+.f1-transform-control-card {
+  display: grid !important;
+  gap: 14px !important;
+  padding: 16px !important;
+  border-radius: 20px !important;
+  background: rgba(2, 6, 23, 0.48) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.f1-transform-zoom-control {
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) 54px !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.f1-transform-zoom-control span,
+.f1-transform-zoom-control small {
+  color: rgba(248, 250, 252, 0.78) !important;
+  font-size: 0.84rem !important;
+  font-weight: 900 !important;
+}
+
+.f1-transform-zoom-control input[type="range"] {
+  width: 100% !important;
+  accent-color: #ffd43b !important;
+}
+
+.f1-transform-quick-actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.f1-transform-quick-actions button {
+  min-height: 44px !important;
+  border-radius: 14px !important;
+  padding: 0 12px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: rgba(248, 250, 252, 0.86) !important;
+  font-weight: 900 !important;
+}
+
+.f1-transform-quick-actions button.is-active {
+  background: rgba(255, 212, 59, 0.16) !important;
+  border-color: rgba(255, 212, 59, 0.44) !important;
+  color: #ffe58a !important;
+}
+
+.f1-prepare-ready-card small {
+  display: block !important;
+  margin-top: 10px !important;
+  color: rgba(248, 250, 252, 0.68) !important;
+  line-height: 1.42 !important;
+}
+
+@media (max-width: 860px) {
+  .f1-transform-frame {
+    border-radius: 20px !important;
+  }
+
+  .f1-transform-frame.is-facebook-feed {
+    max-height: none !important;
+  }
+
+  .f1-transform-frame.is-story-reel {
+    max-width: min(100%, 360px) !important;
+  }
+
+  .f1-transform-quick-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .f1-transform-zoom-control {
+    grid-template-columns: 1fr !important;
+  }
+}

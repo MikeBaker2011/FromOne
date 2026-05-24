@@ -48,6 +48,19 @@ type CropInteraction = {
   startCrop: CropBox;
 };
 
+type MediaOffset = {
+  x: number;
+  y: number;
+};
+
+type MediaTransformDrag = {
+  startClientX: number;
+  startClientY: number;
+  startOffset: MediaOffset;
+};
+
+type PrepareFitMode = 'fill' | 'fit';
+
 type PostActionModalProps = {
   selectedPost: any;
   editingPostId: string | null;
@@ -258,6 +271,20 @@ function triggerDownload(url: string, filename: string) {
   document.body.removeChild(link);
 }
 
+async function urlToShareFile(url: string, filename: string) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error('Could not load the prepared media for sharing.');
+  }
+
+  const blob = await response.blob();
+  const contentType = blob.type || 'image/jpeg';
+  const extension = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+
+  return new File([blob], `${filename}.${extension}`, { type: contentType });
+}
+
 function isMetaReconnectError(value?: string | null) {
   const message = String(value || '').toLowerCase();
 
@@ -387,10 +414,16 @@ export default function PostActionModal({
   const [resizePresetValue, setResizePresetValue] = useState<ResizePresetValue>('instagram-portrait');
   const [cropBox, setCropBox] = useState<CropBox>(() => createDefaultCrop(resizePresets[1]));
   const [cropInteraction, setCropInteraction] = useState<CropInteraction | null>(null);
+  const [prepareFitMode, setPrepareFitMode] = useState<PrepareFitMode>('fill');
+  const [mediaZoom, setMediaZoom] = useState(1);
+  const [mediaOffset, setMediaOffset] = useState<MediaOffset>({ x: 0, y: 0 });
+  const [mediaTransformDrag, setMediaTransformDrag] = useState<MediaTransformDrag | null>(null);
   const [resizingMedia, setResizingMedia] = useState(false);
+  const [sharingMedia, setSharingMedia] = useState(false);
   const [resizedMedia, setResizedMedia] = useState<ResizedMedia | null>(null);
   const [resizeError, setResizeError] = useState('');
   const cropStageRef = useRef<HTMLDivElement | null>(null);
+  const transformFrameRef = useRef<HTMLDivElement | null>(null);
 
   if (!selectedPost) return null;
 
@@ -528,6 +561,10 @@ export default function PostActionModal({
     setResizeError('');
     setResizedMedia(null);
     setCropBox(createDefaultCrop(selectedResizePreset));
+    setPrepareFitMode('fill');
+    setMediaZoom(1);
+    setMediaOffset({ x: 0, y: 0 });
+    setMediaTransformDrag(null);
     setShowPrepareMediaModal(true);
   };
 
@@ -543,6 +580,8 @@ export default function PostActionModal({
 
     setResizePresetValue(value);
     setCropBox(createDefaultCrop(nextPreset));
+    setMediaZoom(1);
+    setMediaOffset({ x: 0, y: 0 });
     setResizeError('');
     setResizedMedia(null);
   };
@@ -668,6 +707,118 @@ export default function PostActionModal({
     setCropInteraction(null);
   };
 
+
+  const resetMediaTransform = () => {
+    setPrepareFitMode('fill');
+    setMediaZoom(1);
+    setMediaOffset({ x: 0, y: 0 });
+    setResizeError('');
+    setResizedMedia(null);
+  };
+
+  const fitFullImage = () => {
+    setPrepareFitMode('fit');
+    setMediaZoom(1);
+    setMediaOffset({ x: 0, y: 0 });
+    setResizeError('');
+    setResizedMedia(null);
+  };
+
+  const fillFrame = () => {
+    setPrepareFitMode('fill');
+    setMediaZoom(1);
+    setMediaOffset({ x: 0, y: 0 });
+    setResizeError('');
+    setResizedMedia(null);
+  };
+
+  const startMediaTransformDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (prepareFitMode === 'fit') return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setMediaTransformDrag({
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startOffset: mediaOffset,
+    });
+  };
+
+  const updateMediaTransformDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (!mediaTransformDrag || prepareFitMode === 'fit') return;
+
+    const frame = transformFrameRef.current;
+    const rect = frame?.getBoundingClientRect();
+
+    if (!rect || rect.width <= 0 || rect.height <= 0) return;
+
+    const dx = ((event.clientX - mediaTransformDrag.startClientX) / rect.width) * 100;
+    const dy = ((event.clientY - mediaTransformDrag.startClientY) / rect.height) * 100;
+
+    const zoomRoom = Math.max(mediaZoom - 1, 0);
+    const maxOffset = Math.max(18, zoomRoom * 42);
+
+    setMediaOffset({
+      x: clampNumber(mediaTransformDrag.startOffset.x + dx, -maxOffset, maxOffset),
+      y: clampNumber(mediaTransformDrag.startOffset.y + dy, -maxOffset, maxOffset),
+    });
+  };
+
+  const stopMediaTransformDrag = () => {
+    setMediaTransformDrag(null);
+  };
+
+  const updateMediaZoom = (value: string) => {
+    const nextZoom = clampNumber(Number(value) || 1, 1, 3);
+    setPrepareFitMode('fill');
+    setMediaZoom(nextZoom);
+    setResizeError('');
+    setResizedMedia(null);
+  };
+
+  const getPreparedImageSource = () => resizedMedia?.url || selectedPost.media_url || '';
+
+  const handleSharePreparedMedia = async () => {
+    const mediaUrl = getPreparedImageSource();
+
+    if (!mediaUrl) return;
+
+    setSharingMedia(true);
+    setResizeError('');
+    onCopyPost(selectedPost);
+
+    try {
+      const filename = getSafeDownloadName(`${modalTitle}-${resizedMedia ? 'prepared' : 'original'}`);
+      const file = await urlToShareFile(mediaUrl, filename);
+      const nav = navigator as any;
+
+      if (nav.share && (!nav.canShare || nav.canShare({ files: [file] }))) {
+        await nav.share({
+          files: [file],
+          title: modalTitle,
+          text: 'Caption copied from FromOne. Paste it before posting.',
+        });
+        return;
+      }
+
+      throw new Error('Sharing files is not supported on this device.');
+    } catch (error: any) {
+      if (error?.name !== 'AbortError') {
+        if (resizedMedia?.url) {
+          handleDownloadResizedMedia();
+        } else {
+          handleDownloadOriginalMedia();
+        }
+
+        onOpenPlatform(manualPlatformLabel);
+        setResizeError('Sharing is not supported here, so the caption was copied, the media was downloaded, and the platform was opened.');
+      }
+    } finally {
+      setSharingMedia(false);
+    }
+  };
+
   const handleResizeMedia = async () => {
     if (!selectedPost.media_url || !canResizeImageMedia) return;
 
@@ -684,8 +835,13 @@ export default function PostActionModal({
           postId: selectedPost.id,
           mediaUrl: selectedPost.media_url,
           preset: selectedResizePreset.value,
-          mode: 'crop',
-          crop: cropBox,
+          mode: 'transform',
+          fitMode: prepareFitMode,
+          transform: {
+            zoom: mediaZoom,
+            offsetX: mediaOffset.x,
+            offsetY: mediaOffset.y,
+          },
         }),
       });
 
@@ -841,14 +997,24 @@ export default function PostActionModal({
                       </button>
 
                       {resizedMedia && (
-                        <button
-                          type="button"
-                          className="f1-post-secondary"
-                          onClick={handleDownloadResizedMedia}
-                          disabled={resizingMedia}
-                        >
-                          Download prepared image
-                        </button>
+                        <div className="f1-post-prepared-actions">
+                          <button
+                            type="button"
+                            className="f1-post-yellow-action"
+                            onClick={handleSharePreparedMedia}
+                            disabled={resizingMedia || sharingMedia}
+                          >
+                            {sharingMedia ? 'Opening share...' : 'Share prepared image'}
+                          </button>
+                          <button
+                            type="button"
+                            className="f1-post-secondary"
+                            onClick={handleDownloadResizedMedia}
+                            disabled={resizingMedia}
+                          >
+                            Download prepared image
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}
@@ -1247,15 +1413,15 @@ export default function PostActionModal({
         </div>
       {showPrepareMediaModal && canResizeImageMedia && (
         <div className="f1-prepare-media-overlay" role="dialog" aria-modal="true">
-          <section className="f1-prepare-media-modal">
+          <section className="f1-prepare-media-modal f1-prepare-transform-modal">
             <header className="f1-prepare-media-header">
               <div>
                 <span>Prepare media</span>
-                <h3>Crop and resize for social</h3>
-                <p>Choose a platform size, drag the border or corners, then create a ready-to-download image.</p>
+                <h3>Move, zoom and resize for social</h3>
+                <p>Choose a platform frame, move and zoom the image, then create a ready-to-share version.</p>
               </div>
 
-              <button type="button" className="f1-post-close" onClick={closePrepareMediaModal} disabled={resizingMedia}>
+              <button type="button" className="f1-post-close" onClick={closePrepareMediaModal} disabled={resizingMedia || sharingMedia}>
                 Close
               </button>
             </header>
@@ -1263,56 +1429,43 @@ export default function PostActionModal({
             <div className="f1-prepare-media-layout">
               <div className="f1-prepare-media-stage-card">
                 <div
-                  ref={cropStageRef}
-                  className="f1-prepare-media-stage"
-                  onPointerMove={updateCropFromPointer}
-                  onPointerUp={stopCropInteraction}
-                  onPointerCancel={stopCropInteraction}
-                  onPointerLeave={stopCropInteraction}
+                  ref={transformFrameRef}
+                  className={`f1-transform-frame is-${resizePresetValue}`}
+                  onPointerMove={updateMediaTransformDrag}
+                  onPointerUp={stopMediaTransformDrag}
+                  onPointerCancel={stopMediaTransformDrag}
+                  onPointerLeave={stopMediaTransformDrag}
                 >
-                  <img src={selectedPost.media_url} alt="Crop preview" draggable={false} />
-
-                  <div className="f1-prepare-media-shade" />
-
                   <div
-                    className="f1-prepare-crop-box"
-                    style={getCropStyle(cropBox)}
-                    onPointerDown={(event) => startCropInteraction(event, 'move')}
+                    className={`f1-transform-image-layer ${prepareFitMode === 'fit' ? 'is-fit' : 'is-fill'}`}
+                    onPointerDown={startMediaTransformDrag}
+                    style={{
+                      transform:
+                        prepareFitMode === 'fit'
+                          ? 'translate3d(0, 0, 0) scale(1)'
+                          : `translate3d(${mediaOffset.x}%, ${mediaOffset.y}%, 0) scale(${mediaZoom})`,
+                    }}
                   >
-                    <span className="f1-prepare-crop-grid" />
-                    <button
-                      type="button"
-                      aria-label="Resize from top left"
-                      className="f1-prepare-crop-handle is-tl"
-                      onPointerDown={(event) => startCropInteraction(event, 'tl')}
-                    />
-                    <button
-                      type="button"
-                      aria-label="Resize from top right"
-                      className="f1-prepare-crop-handle is-tr"
-                      onPointerDown={(event) => startCropInteraction(event, 'tr')}
-                    />
-                    <button
-                      type="button"
-                      aria-label="Resize from bottom left"
-                      className="f1-prepare-crop-handle is-bl"
-                      onPointerDown={(event) => startCropInteraction(event, 'bl')}
-                    />
-                    <button
-                      type="button"
-                      aria-label="Resize from bottom right"
-                      className="f1-prepare-crop-handle is-br"
-                      onPointerDown={(event) => startCropInteraction(event, 'br')}
-                    />
+                    <img src={selectedPost.media_url} alt="Prepare media preview" draggable={false} />
+                  </div>
+
+                  <div className="f1-transform-safe-frame">
+                    <span className="f1-transform-grid" />
+                    <span className="f1-transform-corner is-tl" />
+                    <span className="f1-transform-corner is-tr" />
+                    <span className="f1-transform-corner is-bl" />
+                    <span className="f1-transform-corner is-br" />
                   </div>
                 </div>
 
-                <p className="f1-prepare-media-tip">Drag inside the border to move it. Drag a corner to resize the crop area. The border keeps the selected platform shape.</p>
+                <p className="f1-prepare-media-tip">
+                  Drag the image to position it. Use zoom to fill the selected frame. Fit keeps the full image visible with a background.
+                </p>
               </div>
 
               <aside className="f1-prepare-media-controls">
                 <div>
-                  <strong>Platform size</strong>
+                  <strong>Platform frame</strong>
                   <p>Pick the shape you want the final image to fit.</p>
                 </div>
 
@@ -1323,12 +1476,45 @@ export default function PostActionModal({
                       type="button"
                       className={preset.value === resizePresetValue ? 'is-active' : ''}
                       onClick={() => updateCropPreset(preset.value)}
-                      disabled={resizingMedia}
+                      disabled={resizingMedia || sharingMedia}
                     >
                       <strong>{preset.label}</strong>
                       <span>{preset.width} × {preset.height}</span>
                     </button>
                   ))}
+                </div>
+
+                <div className="f1-transform-control-card">
+                  <div>
+                    <strong>Move & zoom</strong>
+                    <p>{prepareFitMode === 'fit' ? 'Fit mode keeps the full image visible.' : 'Fill mode crops the image neatly into the frame.'}</p>
+                  </div>
+
+                  <label className="f1-transform-zoom-control">
+                    <span>Zoom</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="3"
+                      step="0.01"
+                      value={mediaZoom}
+                      onChange={(event) => updateMediaZoom(event.target.value)}
+                      disabled={resizingMedia || sharingMedia || prepareFitMode === 'fit'}
+                    />
+                    <small>{Math.round(mediaZoom * 100)}%</small>
+                  </label>
+
+                  <div className="f1-transform-quick-actions">
+                    <button type="button" className={prepareFitMode === 'fit' ? 'is-active' : ''} onClick={fitFullImage} disabled={resizingMedia || sharingMedia}>
+                      Fit full image
+                    </button>
+                    <button type="button" className={prepareFitMode === 'fill' ? 'is-active' : ''} onClick={fillFrame} disabled={resizingMedia || sharingMedia}>
+                      Fill frame
+                    </button>
+                    <button type="button" onClick={resetMediaTransform} disabled={resizingMedia || sharingMedia}>
+                      Reset
+                    </button>
+                  </div>
                 </div>
 
                 <div className="f1-prepare-selected-card">
@@ -1341,22 +1527,34 @@ export default function PostActionModal({
                   type="button"
                   className="f1-post-yellow-action f1-prepare-main-action"
                   onClick={handleResizeMedia}
-                  disabled={resizingMedia}
+                  disabled={resizingMedia || sharingMedia}
                 >
                   {resizingMedia ? 'Creating image...' : 'Create prepared image'}
                 </button>
 
                 {resizedMedia && (
                   <div className="f1-prepare-ready-card">
-                    <strong>Image ready</strong>
+                    <strong>Prepared image ready</strong>
                     <p>{resizedMedia.label} · {resizedMedia.width} × {resizedMedia.height}</p>
-                    <button
-                      type="button"
-                      className="f1-post-secondary"
-                      onClick={handleDownloadResizedMedia}
-                    >
-                      Download prepared image
-                    </button>
+                    <div className="f1-prepare-ready-actions">
+                      <button
+                        type="button"
+                        className="f1-post-yellow-action"
+                        onClick={handleSharePreparedMedia}
+                        disabled={sharingMedia || resizingMedia}
+                      >
+                        {sharingMedia ? 'Opening share...' : 'Share prepared image'}
+                      </button>
+                      <button
+                        type="button"
+                        className="f1-post-secondary"
+                        onClick={handleDownloadResizedMedia}
+                        disabled={sharingMedia || resizingMedia}
+                      >
+                        Download prepared image
+                      </button>
+                    </div>
+                    <small>Caption is copied before sharing. If sharing is not supported, FromOne downloads the image and opens the platform.</small>
                   </div>
                 )}
 
