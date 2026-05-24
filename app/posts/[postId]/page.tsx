@@ -8,7 +8,6 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 type ResizePresetValue =
@@ -92,11 +91,10 @@ const audienceOptions = [
   "Small business owners",
   "Local customers",
   "Homeowners",
-  "Parents",
   "Families",
-  "Tradespeople",
   "Retail customers",
   "Event organisers",
+  "Tradespeople",
 ];
 
 const reachOptions = [
@@ -138,6 +136,7 @@ function getPlatformUrl(platform: string) {
 
   if (clean.includes("instagram")) return "https://www.instagram.com/";
   if (clean.includes("tiktok")) return "https://www.tiktok.com/upload";
+
   return "https://www.facebook.com/";
 }
 
@@ -168,8 +167,8 @@ function getPostTitle(post: any, platformName: string) {
 
   if (firstLine) {
     const firstSentence = firstLine.split(/[.!?]/)[0]?.trim() || firstLine;
-    return firstSentence.length > 74
-      ? `${firstSentence.slice(0, 74).trim()}...`
+    return firstSentence.length > 82
+      ? `${firstSentence.slice(0, 82).trim()}...`
       : firstSentence;
   }
 
@@ -222,7 +221,7 @@ export default function PostReviewPage() {
   const [hashtags, setHashtags] = useState("");
 
   const [message, setMessage] = useState("");
-  const [activeMode, setActiveMode] = useState<"preview" | "prepare">("preview");
+  const [activeMediaMode, setActiveMediaMode] = useState<"preview" | "prepare">("preview");
 
   const [resizePresetValue, setResizePresetValue] =
     useState<ResizePresetValue>("instagram-portrait");
@@ -239,7 +238,6 @@ export default function PostReviewPage() {
   const [reachTarget, setReachTarget] = useState("Local customers");
   const [toneTarget, setToneTarget] = useState("Use current tone");
 
-  const frameRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const platformName = normalisePlatform(post?.platform);
@@ -483,7 +481,7 @@ export default function PostReviewPage() {
         media_type: nextMediaType,
       });
       setPreparedMedia(null);
-      setActiveMode("preview");
+      setActiveMediaMode("preview");
       setMessage("Media updated.");
     } catch (error: any) {
       setMessage(error?.message || "Could not upload media.");
@@ -516,7 +514,7 @@ export default function PostReviewPage() {
 
     setPost({ ...post, media_url: null, media_type: null });
     setPreparedMedia(null);
-    setActiveMode("preview");
+    setActiveMediaMode("preview");
     setMessage("Media removed.");
     setSaving(false);
   };
@@ -742,8 +740,8 @@ export default function PostReviewPage() {
 
   if (loading) {
     return (
-      <main className="f1-review-shell">
-        <section className="f1-review-loading">
+      <main className="f1-studio-shell">
+        <section className="f1-studio-loading">
           <p>Loading post...</p>
         </section>
       </main>
@@ -752,8 +750,8 @@ export default function PostReviewPage() {
 
   if (!post) {
     return (
-      <main className="f1-review-shell">
-        <section className="f1-review-loading">
+      <main className="f1-studio-shell">
+        <section className="f1-studio-loading">
           <h1>Post not found</h1>
           <p>{message || "This post could not be loaded."}</p>
           <button type="button" onClick={() => router.push("/posts")}>
@@ -765,333 +763,332 @@ export default function PostReviewPage() {
   }
 
   return (
-    <main className="f1-review-shell">
-      <section className="f1-review-hero">
-        <button type="button" className="f1-review-back" onClick={() => router.push("/posts")}>
+    <main className="f1-studio-shell">
+      <section className="f1-studio-header">
+        <button type="button" className="f1-studio-back" onClick={() => router.push("/posts")}>
           ← Back to posts
         </button>
 
-        <div className="f1-review-title-block">
+        <div className="f1-studio-title">
           <span>{platformName}</span>
           <h1>{title}</h1>
-          <p>Review the wording, prepare the media, then publish with confidence.</p>
+          <p>Prepare the media, improve the wording, then post with confidence.</p>
         </div>
 
-        <span className={`f1-review-status ${isPosted ? "is-posted" : ""}`}>
+        <span className={`f1-studio-status ${isPosted ? "is-posted" : ""}`}>
           {isPosted ? "Posted" : "Ready"}
         </span>
       </section>
 
-      {message && <div className="f1-review-toast">{message}</div>}
+      {message && <div className="f1-studio-toast">{message}</div>}
 
-      <section className="f1-review-workspace">
-        <section className="f1-review-left">
-          <article className="f1-review-card f1-review-media-card">
-            <header className="f1-review-card-header">
-              <div>
-                <span>Media</span>
-                <h2>{activeMode === "prepare" ? "Prepare media" : "Media preview"}</h2>
+      <section className="f1-studio-stack">
+        <article className="f1-studio-card f1-studio-card-media">
+          <header className="f1-studio-card-header">
+            <div>
+              <span>Step 1</span>
+              <h2>{activeMediaMode === "prepare" ? "Prepare media" : "Media preview"}</h2>
+              <p>
+                {activeMediaMode === "prepare"
+                  ? "Choose a platform frame, then move and zoom the image until it looks right."
+                  : "Check the attached image, video or flyer before publishing."}
+              </p>
+            </div>
+
+            {canPrepareImage && (
+              <button
+                type="button"
+                className={activeMediaMode === "prepare" ? "f1-studio-secondary" : "f1-studio-primary-small"}
+                onClick={() => setActiveMediaMode(activeMediaMode === "prepare" ? "preview" : "prepare")}
+              >
+                {activeMediaMode === "prepare" ? "Back to preview" : "Prepare media"}
+              </button>
+            )}
+          </header>
+
+          {activeMediaMode === "prepare" && canPrepareImage ? (
+            <div className="f1-studio-prepare-layout">
+              <div
+                className="f1-studio-transform-stage"
+                onPointerDown={startDrag}
+                onPointerMove={moveDrag}
+                onPointerUp={stopDrag}
+                onPointerCancel={stopDrag}
+                onPointerLeave={stopDrag}
+                onWheel={onWheelZoom}
+              >
+                <div
+                  className="f1-studio-transform-frame"
+                  style={{ aspectRatio: `${selectedPreset.width} / ${selectedPreset.height}` }}
+                >
+                  <img
+                    src={mediaUrl}
+                    alt="Prepared media preview"
+                    draggable={false}
+                    className={prepareFitMode === "fit" ? "is-fit" : "is-fill"}
+                    style={transformStyle}
+                  />
+                  <span className="f1-studio-frame-grid" />
+                  <span className="f1-studio-frame-corner is-tl" />
+                  <span className="f1-studio-frame-corner is-tr" />
+                  <span className="f1-studio-frame-corner is-bl" />
+                  <span className="f1-studio-frame-corner is-br" />
+                </div>
               </div>
 
-              {canPrepareImage && (
+              <aside className="f1-studio-prepare-panel">
+                <div className="f1-studio-panel-section">
+                  <span>Platform frame</span>
+                  <div className="f1-studio-preset-grid">
+                    {resizePresets.map((preset) => (
+                      <button
+                        key={preset.value}
+                        type="button"
+                        className={resizePresetValue === preset.value ? "is-active" : ""}
+                        onClick={() => selectPreset(preset.value)}
+                      >
+                        <strong>{preset.label}</strong>
+                        <small>{preset.size}</small>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="f1-studio-tool-card">
+                  <strong>Move and zoom</strong>
+                  <p>Drag the image. Use the slider or mouse wheel to zoom.</p>
+
+                  <label className="f1-studio-range">
+                    <span>Zoom</span>
+                    <input
+                      type="range"
+                      min="0.75"
+                      max="3"
+                      step="0.01"
+                      value={mediaZoom}
+                      onChange={(event) => {
+                        setMediaZoom(Number(event.target.value));
+                        setPreparedMedia(null);
+                      }}
+                    />
+                  </label>
+
+                  <div className="f1-studio-three-actions">
+                    <button type="button" onClick={fitFullImage}>Fit</button>
+                    <button type="button" onClick={fillFrame}>Fill</button>
+                    <button type="button" onClick={resetTransform}>Reset</button>
+                  </div>
+                </div>
+
                 <button
                   type="button"
-                  className={activeMode === "prepare" ? "f1-review-secondary" : "f1-review-mini-primary"}
-                  onClick={() => setActiveMode(activeMode === "prepare" ? "preview" : "prepare")}
+                  className="f1-studio-primary"
+                  onClick={createPreparedImage}
+                  disabled={resizingMedia}
                 >
-                  {activeMode === "prepare" ? "Back to preview" : "Prepare media"}
+                  {resizingMedia ? "Creating..." : "Create prepared image"}
                 </button>
-              )}
-            </header>
-
-            {activeMode === "prepare" && canPrepareImage ? (
-              <div className="f1-review-editor">
-                <div
-                  className="f1-review-transform-stage"
-                  onPointerDown={startDrag}
-                  onPointerMove={moveDrag}
-                  onPointerUp={stopDrag}
-                  onPointerCancel={stopDrag}
-                  onPointerLeave={stopDrag}
-                  onWheel={onWheelZoom}
-                >
-                  <div
-                    ref={frameRef}
-                    className="f1-review-transform-frame"
-                    style={{ aspectRatio: `${selectedPreset.width} / ${selectedPreset.height}` }}
-                  >
-                    <img
-                      src={mediaUrl}
-                      alt="Prepared media preview"
-                      draggable={false}
-                      className={prepareFitMode === "fit" ? "is-fit" : "is-fill"}
-                      style={transformStyle}
-                    />
-                    <span className="f1-review-frame-grid" />
-                    <span className="f1-review-frame-corner is-tl" />
-                    <span className="f1-review-frame-corner is-tr" />
-                    <span className="f1-review-frame-corner is-bl" />
-                    <span className="f1-review-frame-corner is-br" />
-                  </div>
-                </div>
-
-                <aside className="f1-review-editor-panel">
-                  <div>
-                    <span>Platform size</span>
-                    <div className="f1-review-preset-list">
-                      {resizePresets.map((preset) => (
-                        <button
-                          key={preset.value}
-                          type="button"
-                          className={resizePresetValue === preset.value ? "is-active" : ""}
-                          onClick={() => selectPreset(preset.value)}
-                        >
-                          <strong>{preset.label}</strong>
-                          <small>{preset.size}</small>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="f1-review-tool-card">
-                    <strong>Move and zoom</strong>
-                    <p>Drag the image inside the frame. Use the slider or mouse wheel to zoom.</p>
-
-                    <label className="f1-review-range">
-                      <span>Zoom</span>
-                      <input
-                        type="range"
-                        min="0.75"
-                        max="3"
-                        step="0.01"
-                        value={mediaZoom}
-                        onChange={(event) => {
-                          setMediaZoom(Number(event.target.value));
-                          setPreparedMedia(null);
-                        }}
-                      />
-                    </label>
-
-                    <div className="f1-review-three-actions">
-                      <button type="button" onClick={fitFullImage}>Fit</button>
-                      <button type="button" onClick={fillFrame}>Fill</button>
-                      <button type="button" onClick={resetTransform}>Reset</button>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="f1-review-primary"
-                    onClick={createPreparedImage}
-                    disabled={resizingMedia}
-                  >
-                    {resizingMedia ? "Creating..." : "Create prepared image"}
-                  </button>
-
-                  {preparedMedia?.url && (
-                    <div className="f1-review-output">
-                      <strong>{preparedMedia.label}</strong>
-                      <p>{preparedMedia.width} × {preparedMedia.height}</p>
-                      <div className="f1-review-two-actions">
-                        <button type="button" onClick={sharePreparedImage} disabled={sharingMedia}>
-                          {sharingMedia ? "Opening share..." : "Share"}
-                        </button>
-                        <button type="button" onClick={downloadPreparedImage}>
-                          Download
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </aside>
-              </div>
-            ) : (
-              <>
-                <div className="f1-review-media-frame">
-                  {mediaUrl ? (
-                    isVideo ? (
-                      <video src={mediaUrl} controls />
-                    ) : isFlyer ? (
-                      <div className="f1-review-empty-media">
-                        <strong>PDF / flyer attached</strong>
-                        <p>Open or download the file before posting.</p>
-                      </div>
-                    ) : (
-                      <img src={mediaUrl} alt="Post media" />
-                    )
-                  ) : (
-                    <div className="f1-review-empty-media">
-                      <strong>No media attached</strong>
-                      <p>Upload an image, flyer or video before posting.</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="f1-review-media-actions">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,video/*,.pdf"
-                    hidden
-                    onChange={handleUploadMedia}
-                  />
-
-                  <button type="button" onClick={() => fileInputRef.current?.click()}>
-                    Upload / replace media
-                  </button>
-
-                  {mediaUrl && (
-                    <>
-                      <a href={mediaUrl} target="_blank" rel="noreferrer">
-                        View media
-                      </a>
-                      <button type="button" onClick={downloadMedia}>
-                        Download media
-                      </button>
-                      <button type="button" className="is-danger" onClick={removeMedia}>
-                        Remove media
-                      </button>
-                    </>
-                  )}
-                </div>
 
                 {preparedMedia?.url && (
-                  <div className="f1-review-output is-outside">
-                    <strong>Prepared image ready</strong>
+                  <div className="f1-studio-output">
+                    <strong>{preparedMedia.label}</strong>
                     <p>{preparedMedia.width} × {preparedMedia.height}</p>
-                    <div className="f1-review-two-actions">
-                      <button type="button" onClick={sharePreparedImage}>Share prepared image</button>
-                      <button type="button" onClick={downloadPreparedImage}>Download</button>
+                    <div className="f1-studio-two-actions">
+                      <button type="button" onClick={sharePreparedImage} disabled={sharingMedia}>
+                        {sharingMedia ? "Opening share..." : "Share prepared image"}
+                      </button>
+                      <button type="button" onClick={downloadPreparedImage}>
+                        Download
+                      </button>
                     </div>
                   </div>
                 )}
-              </>
-            )}
-          </article>
-        </section>
-
-        <aside className="f1-review-right">
-          <article className="f1-review-card">
-            <header className="f1-review-card-header">
-              <div>
-                <span>Step 1</span>
-                <h2>Check the wording</h2>
+              </aside>
+            </div>
+          ) : (
+            <>
+              <div className="f1-studio-media-frame">
+                {mediaUrl ? (
+                  isVideo ? (
+                    <video src={mediaUrl} controls />
+                  ) : isFlyer ? (
+                    <div className="f1-studio-empty-media">
+                      <strong>PDF / flyer attached</strong>
+                      <p>Open or download the file before posting.</p>
+                    </div>
+                  ) : (
+                    <img src={mediaUrl} alt="Post media" />
+                  )
+                ) : (
+                  <div className="f1-studio-empty-media">
+                    <strong>No media attached</strong>
+                    <p>Upload an image, flyer or video before posting.</p>
+                  </div>
+                )}
               </div>
-            </header>
 
-            <label className="f1-review-field">
+              <div className="f1-studio-media-actions">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*,.pdf"
+                  hidden
+                  onChange={handleUploadMedia}
+                />
+
+                <button type="button" onClick={() => fileInputRef.current?.click()}>
+                  Upload / replace media
+                </button>
+
+                {mediaUrl && (
+                  <>
+                    <a href={mediaUrl} target="_blank" rel="noreferrer">
+                      View media
+                    </a>
+                    <button type="button" onClick={downloadMedia}>
+                      Download media
+                    </button>
+                    <button type="button" className="is-danger" onClick={removeMedia}>
+                      Remove media
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {preparedMedia?.url && (
+                <div className="f1-studio-output is-wide">
+                  <strong>Prepared image ready</strong>
+                  <p>{preparedMedia.width} × {preparedMedia.height}</p>
+                  <div className="f1-studio-two-actions">
+                    <button type="button" onClick={sharePreparedImage}>Share prepared image</button>
+                    <button type="button" onClick={downloadPreparedImage}>Download</button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </article>
+
+        <article className="f1-studio-card">
+          <header className="f1-studio-card-header">
+            <div>
+              <span>Step 2</span>
+              <h2>Check the wording</h2>
+              <p>Keep the caption clear, useful and ready to paste.</p>
+            </div>
+          </header>
+
+          <div className="f1-studio-wording-grid">
+            <label className="f1-studio-field is-caption">
               <strong>Caption</strong>
               <textarea value={caption} onChange={(event) => setCaption(event.target.value)} />
             </label>
 
-            <label className="f1-review-field">
-              <strong>CTA</strong>
-              <input value={cta} onChange={(event) => setCta(event.target.value)} />
-            </label>
+            <div className="f1-studio-side-fields">
+              <label className="f1-studio-field">
+                <strong>CTA</strong>
+                <input value={cta} onChange={(event) => setCta(event.target.value)} />
+              </label>
 
-            <label className="f1-review-field">
-              <strong>Hashtags</strong>
-              <input value={hashtags} onChange={(event) => setHashtags(event.target.value)} />
-            </label>
+              <label className="f1-studio-field">
+                <strong>Hashtags</strong>
+                <input value={hashtags} onChange={(event) => setHashtags(event.target.value)} />
+              </label>
 
-            <div className="f1-review-two-actions">
-              <button type="button" onClick={saveWording} disabled={saving}>
-                {saving ? "Saving..." : "Save wording"}
-              </button>
-              <button type="button" onClick={copyCaption}>
-                Copy caption
-              </button>
-            </div>
-          </article>
-
-          <article className="f1-review-card">
-            <header className="f1-review-card-header">
-              <div>
-                <span>Improve</span>
-                <h2>Make this post stronger</h2>
-              </div>
-            </header>
-
-            <div className="f1-review-improve-grid">
-              {quickImproveActions.map((action) => (
-                <button
-                  key={action.value}
-                  type="button"
-                  onClick={() => quickImprove(action.value)}
-                  disabled={Boolean(rewriting)}
-                >
-                  {rewriting === action.value ? "Improving..." : action.label}
+              <div className="f1-studio-two-actions">
+                <button type="button" onClick={saveWording} disabled={saving}>
+                  {saving ? "Saving..." : "Save wording"}
                 </button>
-              ))}
-            </div>
-
-            <div className="f1-review-select-grid">
-              <label>
-                <strong>Audience</strong>
-                <select value={audienceTarget} onChange={(event) => setAudienceTarget(event.target.value)}>
-                  {audienceOptions.map((option) => <option key={option}>{option}</option>)}
-                </select>
-              </label>
-
-              <label>
-                <strong>Reach</strong>
-                <select value={reachTarget} onChange={(event) => setReachTarget(event.target.value)}>
-                  {reachOptions.map((option) => <option key={option}>{option}</option>)}
-                </select>
-              </label>
-
-              <label>
-                <strong>Tone</strong>
-                <select value={toneTarget} onChange={(event) => setToneTarget(event.target.value)}>
-                  {toneOptions.map((option) => <option key={option}>{option}</option>)}
-                </select>
-              </label>
-            </div>
-
-            <button
-              type="button"
-              className="f1-review-secondary-wide"
-              onClick={() => quickImprove("audience_targeted")}
-              disabled={Boolean(rewriting)}
-            >
-              {rewriting === "audience_targeted" ? "Improving..." : "Improve for selected audience"}
-            </button>
-          </article>
-
-          <article className="f1-review-card">
-            <header className="f1-review-card-header">
-              <div>
-                <span>Step 2</span>
-                <h2>Post it</h2>
+                <button type="button" onClick={copyCaption}>
+                  Copy caption
+                </button>
               </div>
-            </header>
+            </div>
+          </div>
+        </article>
 
-            <p className="f1-review-muted">
-              FromOne copies the caption and opens {platformName}. Add your prepared media, paste the caption, then publish.
-            </p>
+        <article className="f1-studio-card">
+          <header className="f1-studio-card-header">
+            <div>
+              <span>Step 3</span>
+              <h2>Improve the post</h2>
+              <p>Make it shorter, more premium, more direct, or tune it for a specific audience.</p>
+            </div>
+          </header>
 
-            <button type="button" className="f1-review-primary" onClick={openPlatform}>
+          <div className="f1-studio-improve-grid">
+            {quickImproveActions.map((action) => (
+              <button
+                key={action.value}
+                type="button"
+                onClick={() => quickImprove(action.value)}
+                disabled={Boolean(rewriting)}
+              >
+                {rewriting === action.value ? "Improving..." : action.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="f1-studio-select-row">
+            <label>
+              <strong>Audience</strong>
+              <select value={audienceTarget} onChange={(event) => setAudienceTarget(event.target.value)}>
+                {audienceOptions.map((option) => <option key={option}>{option}</option>)}
+              </select>
+            </label>
+
+            <label>
+              <strong>Reach</strong>
+              <select value={reachTarget} onChange={(event) => setReachTarget(event.target.value)}>
+                {reachOptions.map((option) => <option key={option}>{option}</option>)}
+              </select>
+            </label>
+
+            <label>
+              <strong>Tone</strong>
+              <select value={toneTarget} onChange={(event) => setToneTarget(event.target.value)}>
+                {toneOptions.map((option) => <option key={option}>{option}</option>)}
+              </select>
+            </label>
+          </div>
+
+          <button
+            type="button"
+            className="f1-studio-secondary-wide"
+            onClick={() => quickImprove("audience_targeted")}
+            disabled={Boolean(rewriting)}
+          >
+            {rewriting === "audience_targeted" ? "Improving..." : "Improve for selected audience"}
+          </button>
+        </article>
+
+        <article className="f1-studio-card f1-studio-publish-card">
+          <header className="f1-studio-card-header">
+            <div>
+              <span>Step 4</span>
+              <h2>Post it</h2>
+              <p>Copy the caption, use the prepared media, then publish on the platform.</p>
+            </div>
+          </header>
+
+          <div className="f1-studio-publish-actions">
+            <button type="button" className="f1-studio-primary" onClick={openPlatform}>
               Post manually to {platformName}
             </button>
 
-            <div className="f1-review-two-actions">
-              <button type="button" onClick={sharePreparedImage} disabled={!preparedMedia?.url || sharingMedia}>
-                {sharingMedia ? "Opening..." : "Share prepared image"}
-              </button>
-              <button type="button" onClick={() => window.alert("Autopost can be reconnected from Settings if needed.")}>
-                Autopost option
-              </button>
-            </div>
+            <button type="button" onClick={sharePreparedImage} disabled={!preparedMedia?.url || sharingMedia}>
+              {sharingMedia ? "Opening..." : "Share prepared image"}
+            </button>
 
-            <div className="f1-review-two-actions">
-              <button type="button" onClick={markAsPosted} disabled={saving}>
-                Mark as posted
-              </button>
-              <button type="button" onClick={markAsNotPosted} disabled={saving}>
-                Mark as not posted
-              </button>
-            </div>
-          </article>
-        </aside>
+            <button type="button" onClick={markAsPosted} disabled={saving}>
+              Mark as posted
+            </button>
+
+            <button type="button" onClick={markAsNotPosted} disabled={saving}>
+              Mark as not posted
+            </button>
+          </div>
+        </article>
       </section>
     </main>
   );
