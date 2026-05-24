@@ -2056,3 +2056,85 @@ body:has(.fromone-simple-modal-overlay) {
     color: #101420 !important;
   }
 }
+
+/* FINAL SIMPLIFIED POSTS MODAL OPTIONS */
+
+.fromone-simple-option-card,
+.fromone-simple-more-options-panel {
+  margin-top: 14px !important;
+  padding: 16px !important;
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.fromone-simple-option-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px) !important;
+  gap: 14px !important;
+  align-items: center !important;
+}
+
+.fromone-simple-option-card strong,
+.fromone-simple-options-heading strong {
+  display: block !important;
+  margin-bottom: 6px !important;
+  color: #ffffff !important;
+  font-size: 1rem !important;
+}
+
+.fromone-simple-option-card p,
+.fromone-simple-options-heading p {
+  margin: 0 !important;
+  color: rgba(248, 250, 252, 0.72) !important;
+  line-height: 1.45 !important;
+}
+
+.fromone-simple-option-card small {
+  display: block !important;
+  margin-top: 8px !important;
+  color: #ffe58a !important;
+  font-weight: 850 !important;
+}
+
+.fromone-simple-more-options-toggle {
+  margin-top: 14px !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+}
+
+.fromone-simple-more-options-toggle .secondary-button {
+  min-height: 46px !important;
+  border-radius: 16px !important;
+}
+
+.fromone-simple-more-options-panel {
+  display: grid !important;
+  gap: 14px !important;
+}
+
+.fromone-simple-options-heading {
+  padding-bottom: 4px !important;
+}
+
+.fromone-simple-admin-actions {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.fromone-simple-admin-actions button {
+  min-height: 48px !important;
+  border-radius: 16px !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 760px) {
+  .fromone-simple-option-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .fromone-simple-more-options-toggle .secondary-button {
+    width: 100% !important;
+  }
+}

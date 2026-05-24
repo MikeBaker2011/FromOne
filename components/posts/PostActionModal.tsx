@@ -198,6 +198,7 @@ export default function PostActionModal({
 }: PostActionModalProps) {
   const [showScheduleControls, setShowScheduleControls] = useState(false);
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [showPostOptions, setShowPostOptions] = useState(false);
 
   if (!selectedPost) return null;
 
@@ -410,38 +411,6 @@ export default function PostActionModal({
           </div>
         </section>
 
-        {onRescanPostMedia && (
-          <section className="fromone-simple-section fromone-simple-rewrite-section">
-            <div className="fromone-simple-section-title">
-              <span>2</span>
-              <div>
-                <div className="page-eyebrow">Improve</div>
-                <h3>Rewrite from media</h3>
-              </div>
-            </div>
-
-            <div className="fromone-simple-action-strip">
-              <div>
-                <p>Create a fresh version using the attached media as the main topic.</p>
-                {posted && (
-                  <small>This will not change anything already posted on Facebook or Instagram.</small>
-                )}
-                {!hasMedia && <small>Upload media first, then rewrite this post.</small>}
-                {rescanUsageLabel && <small>{rescanUsageLabel}</small>}
-              </div>
-
-              <button
-                type="button"
-                className="fromone-simple-primary-action"
-                onClick={() => onRescanPostMedia(selectedPost)}
-                disabled={accessLocked || !hasMedia || isRescanning}
-              >
-                {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
-              </button>
-            </div>
-          </section>
-        )}
-
         <section ref={postRef} className="fromone-simple-section">
           <div className="fromone-simple-section-title">
             <span>3</span>
@@ -550,7 +519,7 @@ export default function PostActionModal({
                   }}
                   disabled={accessLocked || rewritingPost || isRescanning}
                 >
-                  {showAdvancedTools ? 'Hide rewrite options' : 'Rewrite options'}
+                  {showAdvancedTools ? 'Hide improve options' : 'Improve wording'}
                 </button>
               </div>
             </>
@@ -558,6 +527,29 @@ export default function PostActionModal({
 
           {showAdvancedTools && showImproveTools && (
             <div className="fromone-simple-improve-panel">
+              {onRescanPostMedia && (
+                <div className="fromone-simple-option-card">
+                  <div>
+                    <strong>Rewrite using media</strong>
+                    <p>
+                      Create a fresh version using the attached media as the main topic.
+                      {posted ? ' This will not change anything already posted.' : ''}
+                    </p>
+                    {!hasMedia && <small>Upload media first, then rewrite this post.</small>}
+                    {rescanUsageLabel && <small>{rescanUsageLabel}</small>}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => onRescanPostMedia(selectedPost)}
+                    disabled={accessLocked || !hasMedia || isRescanning}
+                  >
+                    {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
+                  </button>
+                </div>
+              )}
+
               <div className="fromone-simple-quick-grid">
                 {quickImproveActions.map((action) => (
                   <button
@@ -710,88 +702,108 @@ export default function PostActionModal({
             </button>
           </div>
 
-          <div className="fromone-simple-schedule">
-            {!showScheduleControls ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setShowScheduleControls(true)}
-                disabled={posted || isRescanning}
-              >
-                {scheduleActionLabel}
-              </button>
-            ) : (
-              <div className="fromone-simple-schedule-grid">
-                <input
-                  type="datetime-local"
-                  className="input"
-                  value={reminderValue}
-                  onChange={(event) => onSetReminderValue(event.target.value)}
-                />
+          <div className="fromone-simple-more-options-toggle">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setShowPostOptions((current) => !current)}
+              disabled={isRescanning}
+            >
+              {showPostOptions ? 'Hide more options' : 'More options'}
+            </button>
+          </div>
 
-                <button
-                  type="button"
-                  onClick={() => onSaveReminder(selectedPost)}
-                  disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning}
-                >
-                  {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleButtonLabel}
-                </button>
+          {showPostOptions && (
+            <div className="fromone-simple-more-options-panel">
+              <div className="fromone-simple-options-heading">
+                <strong>Planning and management</strong>
+                <p>Use these only when you need to change the planned time, mark a manual post as done, or remove a post.</p>
+              </div>
 
-                {hasSchedule && (
+              <div className="fromone-simple-schedule">
+                {!showScheduleControls ? (
                   <button
                     type="button"
                     className="secondary-button"
-                    onClick={() => onClearReminder(selectedPost)}
-                    disabled={savingReminderPostId === selectedPost.id || isRescanning}
+                    onClick={() => setShowScheduleControls(true)}
+                    disabled={posted || isRescanning}
                   >
-                    Clear
+                    {scheduleActionLabel}
+                  </button>
+                ) : (
+                  <div className="fromone-simple-schedule-grid">
+                    <input
+                      type="datetime-local"
+                      className="input"
+                      value={reminderValue}
+                      onChange={(event) => onSetReminderValue(event.target.value)}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => onSaveReminder(selectedPost)}
+                      disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning}
+                    >
+                      {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleButtonLabel}
+                    </button>
+
+                    {hasSchedule && (
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => onClearReminder(selectedPost)}
+                        disabled={savingReminderPostId === selectedPost.id || isRescanning}
+                      >
+                        Clear
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => setShowScheduleControls(false)}
+                      disabled={savingReminderPostId === selectedPost.id || isRescanning}
+                    >
+                      Hide
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="fromone-simple-admin-actions">
+                {posted ? (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => onMarkAsNotPosted(selectedPost.id)}
+                    disabled={isRescanning}
+                  >
+                    Undo posted
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => onMarkAsPosted(selectedPost.id)}
+                    disabled={isRescanning}
+                  >
+                    Mark posted manually
                   </button>
                 )}
 
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => setShowScheduleControls(false)}
-                  disabled={savingReminderPostId === selectedPost.id || isRescanning}
-                >
-                  Hide
-                </button>
+                {onDeletePost && (
+                  <button
+                    type="button"
+                    className="secondary-button danger-button"
+                    onClick={() => onDeletePost(selectedPost)}
+                    disabled={deletingPostId === selectedPost.id || isRescanning}
+                  >
+                    {deletingPostId === selectedPost.id ? 'Deleting...' : posted ? 'Archive post' : 'Delete post'}
+                  </button>
+                )}
               </div>
-            )}
-          </div>
-
-          <div className="fromone-simple-admin-actions">
-            {posted ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onMarkAsNotPosted(selectedPost.id)}
-                disabled={isRescanning}
-              >
-                Undo posted
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => onMarkAsPosted(selectedPost.id)}
-                disabled={isRescanning}
-              >
-                Mark posted manually
-              </button>
-            )}
-
-            {onDeletePost && (
-              <button
-                type="button"
-                className="secondary-button danger-button"
-                onClick={() => onDeletePost(selectedPost)}
-                disabled={deletingPostId === selectedPost.id || isRescanning}
-              >
-                {deletingPostId === selectedPost.id ? 'Deleting...' : posted ? 'Archive post' : 'Delete post'}
-              </button>
-            )}
-          </div>
+            </div>
+          )}
         </section>
       </section>
     </div>
