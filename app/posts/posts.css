@@ -2335,3 +2335,22 @@ body:has(.fromone-simple-modal-overlay) {
   margin: 0 !important;
   align-self: end !important;
 }
+/* FINAL FIX: centre review buttons inside post cards */
+
+.fromone-simple-post-card {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.fromone-simple-post-card .dashboard-platform-create-button {
+  width: calc(100% - 32px) !important;
+  margin: 18px auto 0 !important;
+  align-self: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.fromone-simple-post-card .dashboard-platform-create-button:last-child {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
