@@ -772,7 +772,7 @@ export default function PostReviewPage() {
         <div className="f1-studio-title">
           <span>{platformName}</span>
           <h1>{title}</h1>
-          <p>Prepare the media, improve the wording, then post with confidence.</p>
+          <p>Prepare the media, check the wording, then post.</p>
         </div>
 
         <span className={`f1-studio-status ${isPosted ? "is-posted" : ""}`}>
@@ -791,7 +791,7 @@ export default function PostReviewPage() {
               <p>
                 {activeMediaMode === "prepare"
                   ? "Choose a platform frame, then move and zoom the image until it looks right."
-                  : "Check the attached image, video or flyer before publishing."}
+                  : "Check the media before publishing."}
               </p>
             </div>
 
@@ -974,7 +974,7 @@ export default function PostReviewPage() {
             <div>
               <span>Step 2</span>
               <h2>Check the wording</h2>
-              <p>Keep the caption clear, useful and ready to paste.</p>
+              <p>Check the caption before posting.</p>
             </div>
           </header>
 
@@ -1012,7 +1012,7 @@ export default function PostReviewPage() {
             <div>
               <span>Step 3</span>
               <h2>Improve the post</h2>
-              <p>Make it shorter, more premium, more direct, or tune it for a specific audience.</p>
+              <p>Improve the wording when needed.</p>
             </div>
           </header>
 
@@ -1067,7 +1067,7 @@ export default function PostReviewPage() {
             <div>
               <span>Step 4</span>
               <h2>Post it</h2>
-              <p>Copy the caption, use the prepared media, then publish on the platform.</p>
+              <p>Copy the caption, use the media, then publish.</p>
             </div>
           </header>
 
