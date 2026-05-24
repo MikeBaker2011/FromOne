@@ -2838,39 +2838,58 @@ Important:
               <div
                 style={{
                   display: "grid",
-                  gap: 12,
+                  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                  gap: 18,
+                  alignItems: "stretch",
                 }}
               >
                 {sortedPosts.map((post: any) => {
                   const status = getPostStatus(post);
                   const platformName = getPlatformDisplayName(post);
-                  const captionPreview = String(post.caption || "").slice(0, 150);
+                  const captionPreview = String(post.caption || "").slice(0, 132);
                   const mediaType = String(post.media_type || "").toLowerCase();
                   const isVideoPreview = mediaType === "video";
                   const isFlyerPreview =
                     mediaType === "flyer" ||
                     mediaType === "pdf" ||
                     String(post.media_url || "").toLowerCase().includes(".pdf");
+                  const scheduledDate = post.scheduled_at ? new Date(post.scheduled_at) : null;
+                  const weekday = scheduledDate
+                    ? scheduledDate.toLocaleDateString(undefined, { weekday: "short" }).toUpperCase()
+                    : "POST";
+                  const day = scheduledDate
+                    ? scheduledDate.toLocaleDateString(undefined, { day: "2-digit" })
+                    : "--";
+                  const month = scheduledDate
+                    ? scheduledDate.toLocaleDateString(undefined, { month: "short" }).toUpperCase()
+                    : "";
+                  const time = scheduledDate
+                    ? scheduledDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+                    : "";
+                  const posted = status === "Posted";
+                  const failed = status === "Failed";
 
                   return (
                     <article
                       key={post.id}
-                      className="fromone-review-list-item"
+                      className="fromone-premium-calendar-review-card"
                       style={{
+                        minHeight: 430,
                         display: "flex",
-                        alignItems: "center",
-                        gap: 16,
-                        padding: 14,
-                        borderRadius: 22,
-                        background:
-                          status === "Posted"
-                            ? "linear-gradient(145deg, rgba(61,220,151,0.12), rgba(255,255,255,0.035))"
-                            : "linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035))",
-                        border:
-                          status === "Posted"
-                            ? "1px solid rgba(61, 220, 151, 0.28)"
-                            : "1px solid rgba(255,255,255,0.1)",
-                        boxShadow: "0 18px 45px rgba(0,0,0,0.18)",
+                        flexDirection: "column",
+                        overflow: "hidden",
+                        borderRadius: 28,
+                        background: posted
+                          ? "radial-gradient(circle at top left, rgba(61,220,151,0.18), transparent 34%), linear-gradient(150deg, rgba(31,41,55,0.96), rgba(15,23,42,0.98))"
+                          : failed
+                            ? "radial-gradient(circle at top left, rgba(248,113,113,0.18), transparent 34%), linear-gradient(150deg, rgba(31,41,55,0.96), rgba(15,23,42,0.98))"
+                            : "radial-gradient(circle at top left, rgba(255,212,59,0.16), transparent 34%), linear-gradient(150deg, rgba(31,41,55,0.96), rgba(15,23,42,0.98))",
+                        border: posted
+                          ? "1px solid rgba(61,220,151,0.32)"
+                          : failed
+                            ? "1px solid rgba(248,113,113,0.32)"
+                            : "1px solid rgba(255,212,59,0.22)",
+                        boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
                       }}
                     >
                       <button
@@ -2878,14 +2897,13 @@ Important:
                         onClick={() => choosePost(post.id)}
                         aria-label={`Review ${post.title || platformName + " post"}`}
                         style={{
-                          width: 92,
-                          height: 92,
-                          flex: "0 0 92px",
+                          position: "relative",
+                          height: 178,
+                          width: "100%",
                           border: 0,
                           padding: 0,
-                          borderRadius: 18,
                           overflow: "hidden",
-                          background: "rgba(15,23,42,0.72)",
+                          background: "rgba(2,6,23,0.64)",
                           display: "grid",
                           placeItems: "center",
                           cursor: "pointer",
@@ -2897,116 +2915,230 @@ Important:
                               src={post.media_url}
                               muted
                               playsInline
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
                           ) : isFlyerPreview ? (
-                            <strong style={{ color: "#fff", fontSize: 12 }}>PDF</strong>
+                            <div
+                              style={{
+                                display: "grid",
+                                placeItems: "center",
+                                gap: 8,
+                                color: "#fff",
+                                textAlign: "center",
+                              }}
+                            >
+                              <strong style={{ fontSize: 34 }}>PDF</strong>
+                              <span style={{ color: "rgba(248,250,252,0.72)", fontWeight: 850 }}>
+                                Flyer attached
+                              </span>
+                            </div>
                           ) : (
                             <img
                               src={post.media_url}
                               alt={post.title || "Post media"}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
                           )
                         ) : (
-                          <span
+                          <div
                             style={{
-                              color: "rgba(248,250,252,0.72)",
-                              fontSize: 12,
-                              fontWeight: 850,
+                              display: "grid",
+                              placeItems: "center",
+                              gap: 8,
                               textAlign: "center",
-                              padding: 10,
+                              color: "rgba(248,250,252,0.72)",
+                              padding: 22,
                             }}
                           >
-                            No media
-                          </span>
+                            <strong style={{ color: "#fff", fontSize: 18 }}>No media yet</strong>
+                            <span style={{ fontWeight: 800 }}>Open this post to add media.</span>
+                          </div>
                         )}
+
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 14,
+                            left: 14,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding: "8px 11px",
+                            borderRadius: 999,
+                            background: "rgba(2,6,23,0.78)",
+                            border: "1px solid rgba(255,255,255,0.14)",
+                            backdropFilter: "blur(10px)",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: 999,
+                              background: platformName === "Instagram" ? "#3ddc97" : "#ffd43b",
+                            }}
+                          />
+                          <span style={{ color: "#fff", fontSize: 12, fontWeight: 950 }}>
+                            {platformName}
+                          </span>
+                        </div>
+
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 14,
+                            right: 14,
+                            padding: "7px 10px",
+                            borderRadius: 999,
+                            background: posted
+                              ? "rgba(61,220,151,0.86)"
+                              : failed
+                                ? "rgba(248,113,113,0.86)"
+                                : "rgba(255,212,59,0.9)",
+                            color: posted || failed ? "#04130c" : "#101420",
+                            fontSize: 11,
+                            fontWeight: 950,
+                          }}
+                        >
+                          {posted ? "Posted" : failed ? "Check" : "Ready"}
+                        </div>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => choosePost(post.id)}
+                      <div
                         style={{
-                          flex: "1 1 260px",
-                          minWidth: 0,
-                          padding: 0,
-                          border: 0,
-                          background: "transparent",
-                          textAlign: "left",
-                          cursor: "pointer",
+                          padding: 18,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 14,
+                          flex: 1,
                         }}
                       >
-                        <span
-                          className="page-eyebrow"
+                        <div
                           style={{
-                            display: "block",
-                            marginBottom: 7,
-                            color: "#ffd43b",
+                            display: "grid",
+                            gridTemplateColumns: "70px minmax(0, 1fr)",
+                            gap: 14,
+                            alignItems: "start",
                           }}
                         >
-                          {platformName}
-                        </span>
+                          <button
+                            type="button"
+                            onClick={() => choosePost(post.id)}
+                            aria-label={`Review ${post.title || platformName + " post"}`}
+                            style={{
+                              minHeight: 78,
+                              borderRadius: 20,
+                              border: "1px solid rgba(255,212,59,0.22)",
+                              background: "rgba(255,212,59,0.1)",
+                              color: "#fff",
+                              display: "grid",
+                              placeItems: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#ffd43b",
+                                fontSize: 11,
+                                letterSpacing: "0.12em",
+                                fontWeight: 950,
+                              }}
+                            >
+                              {weekday}
+                            </span>
+                            <strong style={{ fontSize: 28, lineHeight: 1, color: "#fff" }}>{day}</strong>
+                            <span style={{ color: "rgba(248,250,252,0.68)", fontSize: 11, fontWeight: 900 }}>
+                              {month}
+                            </span>
+                          </button>
 
-                        <strong
+                          <button
+                            type="button"
+                            onClick={() => choosePost(post.id)}
+                            style={{
+                              minWidth: 0,
+                              padding: 0,
+                              border: 0,
+                              background: "transparent",
+                              textAlign: "left",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span
+                              className="page-eyebrow"
+                              style={{ display: "block", marginBottom: 7, color: "#ffd43b" }}
+                            >
+                              {time || getPostPositionLabel(post)}
+                            </span>
+
+                            <strong
+                              style={{
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                color: "#fff",
+                                fontSize: "1.12rem",
+                                lineHeight: 1.16,
+                              }}
+                            >
+                              {post.title || `${platformName} post`}
+                            </strong>
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => choosePost(post.id)}
                           style={{
-                            display: "block",
-                            color: "#fff",
-                            fontSize: "1.08rem",
-                            lineHeight: 1.18,
-                            marginBottom: 7,
+                            minHeight: 62,
+                            padding: 0,
+                            border: 0,
+                            background: "transparent",
+                            textAlign: "left",
+                            cursor: "pointer",
                           }}
                         >
-                          {post.title || `${platformName} post`}
-                        </strong>
+                          <span
+                            style={{
+                              display: "-webkit-box",
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              color: "rgba(248,250,252,0.74)",
+                              lineHeight: 1.42,
+                              fontSize: "0.92rem",
+                            }}
+                          >
+                            {captionPreview || "Open to add or review the wording."}
+                            {captionPreview.length >= 132 ? "..." : ""}
+                          </span>
+                        </button>
 
-                        <span
+                        <button
+                          type="button"
+                          className="dashboard-platform-create-button"
+                          onClick={() => choosePost(post.id)}
                           style={{
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            color: "rgba(248,250,252,0.72)",
-                            lineHeight: 1.45,
-                            fontSize: "0.94rem",
+                            marginTop: "auto",
+                            width: "100%",
+                            minHeight: 52,
+                            borderRadius: 18,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            textAlign: "center",
                           }}
                         >
-                          {captionPreview || "Open to add or review the wording."}
-                          {captionPreview.length >= 150 ? "..." : ""}
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="dashboard-platform-create-button"
-                        onClick={() => choosePost(post.id)}
-                        style={{
-                          minHeight: 48,
-                          minWidth: 150,
-                          width: "auto",
-                          flex: "0 0 auto",
-                          borderRadius: 16,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "0 22px",
-                          textAlign: "center",
-                        }}
-                      >
-                        Review
-                      </button>
+                          Review post
+                        </button>
+                      </div>
                     </article>
                   );
                 })}
               </div>
             )}
+
           </section>
 
           {deletedPosts.length > 0 && (
