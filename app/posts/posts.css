@@ -4393,3 +4393,71 @@ body:has(.fromone-simple-modal-overlay) {
     object-fit: cover !important;
   }
 }
+/* FINAL FIX: remove nested mobile scrollbars */
+
+html,
+body {
+  overflow-x: hidden !important;
+}
+
+.f1-post-modal-overlay,
+.fromone-modal-overlay,
+.fromone-simple-modal-overlay {
+  overflow-x: hidden !important;
+}
+
+.f1-post-modal-card,
+.fromone-post-action-modal,
+.fromone-simple-post-modal {
+  overflow-x: hidden !important;
+}
+
+/* Let the main modal handle vertical scrolling, not every inner panel */
+@media (max-width: 760px) {
+  .f1-post-modal-overlay {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 10px !important;
+  }
+
+  .f1-post-modal-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border-radius: 22px !important;
+  }
+
+  .f1-post-modal-body,
+  .f1-post-media-panel,
+  .f1-post-content-panel,
+  .f1-post-media-frame,
+  .f1-post-panel {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .f1-prepare-media-modal,
+  .f1-prepare-media-card,
+  .f1-prepare-media-body,
+  .f1-prepare-media-preview,
+  .f1-prepare-media-controls {
+    overflow-x: hidden !important;
+  }
+
+  .f1-prepare-media-card {
+    max-height: calc(100vh - 24px) !important;
+    overflow-y: auto !important;
+  }
+
+  .f1-prepare-media-body {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .fromone-queue-card,
+  .premium-calendar-day-card {
+    overflow: hidden !important;
+  }
+}
