@@ -4337,3 +4337,59 @@ body:has(.fromone-simple-modal-overlay) {
     max-height: 150px !important;
   }
 }
+/* FINAL MOBILE FIX: compact calendar badge on post cards */
+
+@media (max-width: 760px) {
+  .fromone-queue-card .premium-calendar-date-badge,
+  .fromone-queue-card .premium-calendar-date-block,
+  .fromone-queue-card .premium-calendar-day-date,
+  .fromone-queue-card [class*="date-badge"],
+  .fromone-queue-card [class*="date-block"] {
+    width: 74px !important;
+    min-width: 74px !important;
+    max-width: 74px !important;
+    height: 96px !important;
+    min-height: 96px !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+  }
+
+  .fromone-queue-card .premium-calendar-date-badge strong,
+  .fromone-queue-card .premium-calendar-date-block strong,
+  .fromone-queue-card .premium-calendar-day-date strong,
+  .fromone-queue-card [class*="date-badge"] strong,
+  .fromone-queue-card [class*="date-block"] strong {
+    font-size: 1.45rem !important;
+    line-height: 1 !important;
+  }
+
+  .fromone-queue-card .premium-calendar-date-badge span,
+  .fromone-queue-card .premium-calendar-date-block span,
+  .fromone-queue-card .premium-calendar-day-date span,
+  .fromone-queue-card [class*="date-badge"] span,
+  .fromone-queue-card [class*="date-block"] span {
+    font-size: 0.66rem !important;
+    line-height: 1 !important;
+    padding: 7px 4px !important;
+  }
+
+  .fromone-queue-card .premium-calendar-date-badge small,
+  .fromone-queue-card .premium-calendar-date-block small,
+  .fromone-queue-card .premium-calendar-day-date small,
+  .fromone-queue-card [class*="date-badge"] small,
+  .fromone-queue-card [class*="date-block"] small {
+    font-size: 0.66rem !important;
+    line-height: 1 !important;
+  }
+
+  .fromone-queue-card .fromone-queue-media-preview {
+    min-height: 200px !important;
+    max-height: 220px !important;
+  }
+
+  .fromone-queue-card .fromone-queue-media-preview img,
+  .fromone-queue-card .fromone-queue-media-preview video {
+    height: 220px !important;
+    object-fit: cover !important;
+  }
+}
