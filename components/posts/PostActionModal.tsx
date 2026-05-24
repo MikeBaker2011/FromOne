@@ -777,10 +777,10 @@ export default function PostActionModal({
                     )}
                   </div>
 
-                  <div className="f1-post-two-actions">
+                  <div className="f1-post-autopost-actions">
                     <button
                       type="button"
-                      className="f1-post-secondary"
+                      className="f1-post-secondary f1-post-autopost-button"
                       onClick={handleAutopostPublish}
                       disabled={posted || isPublishing || isRescanning || (!autopostNeedsAttention && !canUseAutopostPublish)}
                     >
@@ -790,7 +790,7 @@ export default function PostActionModal({
                     {autopostNeedsAttention && (
                       <button
                         type="button"
-                        className="f1-post-secondary"
+                        className="f1-post-secondary f1-post-autopost-manual-button"
                         onClick={handleManualPost}
                         disabled={!canUseManualPost}
                       >
