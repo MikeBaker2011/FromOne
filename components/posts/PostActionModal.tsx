@@ -1,4 +1,4 @@
-import { ChangeEvent, CSSProperties, RefObject, useState } from 'react';
+import { ChangeEvent, CSSProperties, PointerEvent, RefObject, useRef, useState } from 'react';
 
 type PostStatus = 'Ready' | 'Reminder set' | 'Posted' | 'Failed';
 
@@ -32,6 +32,20 @@ type ResizePreset = {
   width: number;
   height: number;
   help: string;
+};
+
+type CropBox = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+type CropInteraction = {
+  type: 'move' | 'tl' | 'tr' | 'bl' | 'br';
+  startClientX: number;
+  startClientY: number;
+  startCrop: CropBox;
 };
 
 type PostActionModalProps = {
@@ -143,6 +157,42 @@ const resizePresets: ResizePreset[] = [
     help: 'Best for Stories, Reels covers and vertical promotions.',
   },
 ];
+
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getPresetAspect(preset: ResizePreset) {
+  return preset.width / preset.height;
+}
+
+function createDefaultCrop(preset: ResizePreset): CropBox {
+  const aspect = getPresetAspect(preset);
+  let width = 86;
+  let height = width / aspect;
+
+  if (height > 86) {
+    height = 86;
+    width = height * aspect;
+  }
+
+  return {
+    x: (100 - width) / 2,
+    y: (100 - height) / 2,
+    width,
+    height,
+  };
+}
+
+function getCropStyle(crop: CropBox): CSSProperties {
+  return {
+    left: `${crop.x}%`,
+    top: `${crop.y}%`,
+    width: `${crop.width}%`,
+    height: `${crop.height}%`,
+  };
+}
 
 const platformCaptionLimits: Record<string, number> = {
   Facebook: 700,
@@ -333,10 +383,14 @@ export default function PostActionModal({
 }: PostActionModalProps) {
   const [showImprovePanel, setShowImprovePanel] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showPrepareMediaModal, setShowPrepareMediaModal] = useState(false);
   const [resizePresetValue, setResizePresetValue] = useState<ResizePresetValue>('instagram-portrait');
+  const [cropBox, setCropBox] = useState<CropBox>(() => createDefaultCrop(resizePresets[1]));
+  const [cropInteraction, setCropInteraction] = useState<CropInteraction | null>(null);
   const [resizingMedia, setResizingMedia] = useState(false);
   const [resizedMedia, setResizedMedia] = useState<ResizedMedia | null>(null);
   const [resizeError, setResizeError] = useState('');
+  const cropStageRef = useRef<HTMLDivElement | null>(null);
 
   if (!selectedPost) return null;
 
@@ -368,6 +422,7 @@ export default function PostActionModal({
   const canResizeImageMedia = hasMedia && !isVideoMedia && !isFlyerMedia;
   const selectedResizePreset =
     resizePresets.find((item) => item.value === resizePresetValue) || resizePresets[1];
+  const selectedResizeAspect = getPresetAspect(selectedResizePreset);
   const posted = isPostPosted(selectedPost);
   const isPublishing = publishingPostId === selectedPost.id;
   const directFacebookReady = isFacebookPost && canDirectPublishToFacebook(selectedPost);
@@ -439,7 +494,7 @@ export default function PostActionModal({
 
   const manualHelpText = posted
     ? 'This post has already been marked as posted.'
-    : `FromOne copies the wording and opens ${manualPlatformLabel}. Download or resize the media here, add it to the platform, paste the caption, then publish.`;
+    : `FromOne copies the wording and opens ${manualPlatformLabel}. Prepare or download the media here, add it to the platform, paste the caption, then publish.`;
 
   const autopostLabel = isPublishing
     ? 'Publishing...'
@@ -467,6 +522,152 @@ export default function PostActionModal({
     );
   };
 
+  const openPrepareMediaModal = () => {
+    if (!canResizeImageMedia) return;
+
+    setResizeError('');
+    setResizedMedia(null);
+    setCropBox(createDefaultCrop(selectedResizePreset));
+    setShowPrepareMediaModal(true);
+  };
+
+  const closePrepareMediaModal = () => {
+    if (resizingMedia) return;
+
+    setCropInteraction(null);
+    setShowPrepareMediaModal(false);
+  };
+
+  const updateCropPreset = (value: ResizePresetValue) => {
+    const nextPreset = resizePresets.find((item) => item.value === value) || resizePresets[1];
+
+    setResizePresetValue(value);
+    setCropBox(createDefaultCrop(nextPreset));
+    setResizeError('');
+    setResizedMedia(null);
+  };
+
+  const getCropDelta = (event: PointerEvent<HTMLDivElement>, interaction: CropInteraction) => {
+    const stage = cropStageRef.current;
+    const rect = stage?.getBoundingClientRect();
+
+    if (!rect || rect.width <= 0 || rect.height <= 0) {
+      return { dx: 0, dy: 0 };
+    }
+
+    return {
+      dx: ((event.clientX - interaction.startClientX) / rect.width) * 100,
+      dy: ((event.clientY - interaction.startClientY) / rect.height) * 100,
+    };
+  };
+
+  const startCropInteraction = (
+    event: PointerEvent<HTMLDivElement>,
+    type: CropInteraction['type'],
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setCropInteraction({
+      type,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startCrop: cropBox,
+    });
+  };
+
+  const updateCropFromPointer = (event: PointerEvent<HTMLDivElement>) => {
+    if (!cropInteraction) return;
+
+    event.preventDefault();
+
+    const { dx, dy } = getCropDelta(event, cropInteraction);
+    const startCrop = cropInteraction.startCrop;
+    const minSize = 16;
+    const aspect = selectedResizeAspect;
+
+    if (cropInteraction.type === 'move') {
+      setCropBox({
+        ...startCrop,
+        x: clampNumber(startCrop.x + dx, 0, 100 - startCrop.width),
+        y: clampNumber(startCrop.y + dy, 0, 100 - startCrop.height),
+      });
+      return;
+    }
+
+    let nextWidth = startCrop.width;
+    let nextHeight = startCrop.height;
+    let nextX = startCrop.x;
+    let nextY = startCrop.y;
+
+    if (cropInteraction.type === 'br') {
+      nextWidth = clampNumber(startCrop.width + dx, minSize, 100 - startCrop.x);
+      nextHeight = nextWidth / aspect;
+
+      if (startCrop.y + nextHeight > 100) {
+        nextHeight = 100 - startCrop.y;
+        nextWidth = nextHeight * aspect;
+      }
+    }
+
+    if (cropInteraction.type === 'tr') {
+      nextWidth = clampNumber(startCrop.width + dx, minSize, 100 - startCrop.x);
+      nextHeight = nextWidth / aspect;
+      nextY = startCrop.y + startCrop.height - nextHeight;
+
+      if (nextY < 0) {
+        nextY = 0;
+        nextHeight = startCrop.y + startCrop.height;
+        nextWidth = nextHeight * aspect;
+      }
+    }
+
+    if (cropInteraction.type === 'bl') {
+      nextWidth = clampNumber(startCrop.width - dx, minSize, startCrop.x + startCrop.width);
+      nextHeight = nextWidth / aspect;
+      nextX = startCrop.x + startCrop.width - nextWidth;
+
+      if (startCrop.y + nextHeight > 100) {
+        nextHeight = 100 - startCrop.y;
+        nextWidth = nextHeight * aspect;
+        nextX = startCrop.x + startCrop.width - nextWidth;
+      }
+    }
+
+    if (cropInteraction.type === 'tl') {
+      nextWidth = clampNumber(startCrop.width - dx, minSize, startCrop.x + startCrop.width);
+      nextHeight = nextWidth / aspect;
+      nextX = startCrop.x + startCrop.width - nextWidth;
+      nextY = startCrop.y + startCrop.height - nextHeight;
+
+      if (nextX < 0) {
+        nextX = 0;
+        nextWidth = startCrop.x + startCrop.width;
+        nextHeight = nextWidth / aspect;
+        nextY = startCrop.y + startCrop.height - nextHeight;
+      }
+
+      if (nextY < 0) {
+        nextY = 0;
+        nextHeight = startCrop.y + startCrop.height;
+        nextWidth = nextHeight * aspect;
+        nextX = startCrop.x + startCrop.width - nextWidth;
+      }
+    }
+
+    setCropBox({
+      x: clampNumber(nextX, 0, 100 - nextWidth),
+      y: clampNumber(nextY, 0, 100 - nextHeight),
+      width: clampNumber(nextWidth, minSize, 100),
+      height: clampNumber(nextHeight, minSize, 100),
+    });
+  };
+
+  const stopCropInteraction = () => {
+    setCropInteraction(null);
+  };
+
   const handleResizeMedia = async () => {
     if (!selectedPost.media_url || !canResizeImageMedia) return;
 
@@ -483,6 +684,8 @@ export default function PostActionModal({
           postId: selectedPost.id,
           mediaUrl: selectedPost.media_url,
           preset: selectedResizePreset.value,
+          mode: 'crop',
+          crop: cropBox,
         }),
       });
 
@@ -490,14 +693,14 @@ export default function PostActionModal({
 
       if (!response.ok) {
         throw new Error(
-          result?.error || result?.message || 'Could not resize this image.',
+          result?.error || result?.message || 'Could not prepare this image.',
         );
       }
 
       const resizedUrl = result?.url || result?.publicUrl || result?.public_url;
 
       if (!resizedUrl) {
-        throw new Error('The resized image was created but no download link was returned.');
+        throw new Error('The prepared image was created but no download link was returned.');
       }
 
       setResizedMedia({
@@ -509,7 +712,7 @@ export default function PostActionModal({
     } catch (error: any) {
       setResizeError(
         error?.message ||
-          'Could not resize this image. Download the original media instead.',
+          'Could not prepare this image. Download the original media instead.',
       );
     } finally {
       setResizingMedia(false);
@@ -622,60 +825,31 @@ export default function PostActionModal({
                   </div>
 
                   {canResizeImageMedia && (
-                    <div className="f1-post-resize-card">
+                    <div className="f1-post-resize-card f1-post-prepare-card">
                       <div>
-                        <strong>Resize for social</strong>
-                        <p>Prepare a platform-sized image for manual posting. The original image stays unchanged.</p>
+                        <strong>Prepare media</strong>
+                        <p>Crop and resize this image for Facebook, Instagram or Stories before manual posting.</p>
                       </div>
 
-                      <label>
-                        <span>Choose size</span>
-                        <select
-                          className="input"
-                          value={resizePresetValue}
-                          onChange={(event) => {
-                            setResizePresetValue(event.target.value as ResizePresetValue);
-                            setResizeError('');
-                          }}
-                        >
-                          {resizePresets.map((preset) => (
-                            <option key={preset.value} value={preset.value}>
-                              {preset.label} — {preset.width} × {preset.height}
-                            </option>
-                          ))}
-                        </select>
-                        <small>{selectedResizePreset.help}</small>
-                      </label>
+                      <button
+                        type="button"
+                        className="f1-post-yellow-action"
+                        onClick={openPrepareMediaModal}
+                        disabled={isRescanning}
+                      >
+                        Crop / resize for social
+                      </button>
 
-                      <div className="f1-post-resize-actions">
+                      {resizedMedia && (
                         <button
                           type="button"
                           className="f1-post-secondary"
-                          onClick={handleResizeMedia}
-                          disabled={resizingMedia || isRescanning}
+                          onClick={handleDownloadResizedMedia}
+                          disabled={resizingMedia}
                         >
-                          {resizingMedia ? 'Resizing...' : 'Create resized image'}
+                          Download prepared image
                         </button>
-
-                        {resizedMedia && (
-                          <button
-                            type="button"
-                            className="f1-post-yellow-action"
-                            onClick={handleDownloadResizedMedia}
-                            disabled={resizingMedia}
-                          >
-                            Download {resizedMedia.label}
-                          </button>
-                        )}
-                      </div>
-
-                      {resizedMedia && (
-                        <small className="f1-post-resize-ready">
-                          Ready: {resizedMedia.width} × {resizedMedia.height}. Download it, add it to {manualPlatformLabel}, then paste the copied caption.
-                        </small>
                       )}
-
-                      {resizeError && <small className="f1-post-resize-error">{resizeError}</small>}
                     </div>
                   )}
                 </>
@@ -951,7 +1125,7 @@ export default function PostActionModal({
                 <div>
                   <strong>Post manually</strong>
                   <p>{manualHelpText}</p>
-                  {hasMedia && <small>Use Download media, or Resize for social for images, then add the media before pasting the caption.</small>}
+                  {hasMedia && <small>Use Prepare media or Download media, then add the media before pasting the caption.</small>}
                 </div>
 
                 <div className="f1-post-manual-action-stack">
@@ -1071,6 +1245,128 @@ export default function PostActionModal({
             </section>
           </main>
         </div>
+      {showPrepareMediaModal && canResizeImageMedia && (
+        <div className="f1-prepare-media-overlay" role="dialog" aria-modal="true">
+          <section className="f1-prepare-media-modal">
+            <header className="f1-prepare-media-header">
+              <div>
+                <span>Prepare media</span>
+                <h3>Crop and resize for social</h3>
+                <p>Choose a platform size, drag the border or corners, then create a ready-to-download image.</p>
+              </div>
+
+              <button type="button" className="f1-post-close" onClick={closePrepareMediaModal} disabled={resizingMedia}>
+                Close
+              </button>
+            </header>
+
+            <div className="f1-prepare-media-layout">
+              <div className="f1-prepare-media-stage-card">
+                <div
+                  ref={cropStageRef}
+                  className="f1-prepare-media-stage"
+                  onPointerMove={updateCropFromPointer}
+                  onPointerUp={stopCropInteraction}
+                  onPointerCancel={stopCropInteraction}
+                  onPointerLeave={stopCropInteraction}
+                >
+                  <img src={selectedPost.media_url} alt="Crop preview" draggable={false} />
+
+                  <div className="f1-prepare-media-shade" />
+
+                  <div
+                    className="f1-prepare-crop-box"
+                    style={getCropStyle(cropBox)}
+                    onPointerDown={(event) => startCropInteraction(event, 'move')}
+                  >
+                    <span className="f1-prepare-crop-grid" />
+                    <button
+                      type="button"
+                      aria-label="Resize from top left"
+                      className="f1-prepare-crop-handle is-tl"
+                      onPointerDown={(event) => startCropInteraction(event, 'tl')}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Resize from top right"
+                      className="f1-prepare-crop-handle is-tr"
+                      onPointerDown={(event) => startCropInteraction(event, 'tr')}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Resize from bottom left"
+                      className="f1-prepare-crop-handle is-bl"
+                      onPointerDown={(event) => startCropInteraction(event, 'bl')}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Resize from bottom right"
+                      className="f1-prepare-crop-handle is-br"
+                      onPointerDown={(event) => startCropInteraction(event, 'br')}
+                    />
+                  </div>
+                </div>
+
+                <p className="f1-prepare-media-tip">Drag inside the border to move it. Drag a corner to resize the crop area. The border keeps the selected platform shape.</p>
+              </div>
+
+              <aside className="f1-prepare-media-controls">
+                <div>
+                  <strong>Platform size</strong>
+                  <p>Pick the shape you want the final image to fit.</p>
+                </div>
+
+                <div className="f1-prepare-preset-grid">
+                  {resizePresets.map((preset) => (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      className={preset.value === resizePresetValue ? 'is-active' : ''}
+                      onClick={() => updateCropPreset(preset.value)}
+                      disabled={resizingMedia}
+                    >
+                      <strong>{preset.label}</strong>
+                      <span>{preset.width} × {preset.height}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="f1-prepare-selected-card">
+                  <strong>{selectedResizePreset.label}</strong>
+                  <p>{selectedResizePreset.help}</p>
+                  <span>{selectedResizePreset.width} × {selectedResizePreset.height}</span>
+                </div>
+
+                <button
+                  type="button"
+                  className="f1-post-yellow-action f1-prepare-main-action"
+                  onClick={handleResizeMedia}
+                  disabled={resizingMedia}
+                >
+                  {resizingMedia ? 'Creating image...' : 'Create prepared image'}
+                </button>
+
+                {resizedMedia && (
+                  <div className="f1-prepare-ready-card">
+                    <strong>Image ready</strong>
+                    <p>{resizedMedia.label} · {resizedMedia.width} × {resizedMedia.height}</p>
+                    <button
+                      type="button"
+                      className="f1-post-secondary"
+                      onClick={handleDownloadResizedMedia}
+                    >
+                      Download prepared image
+                    </button>
+                  </div>
+                )}
+
+                {resizeError && <small className="f1-post-resize-error">{resizeError}</small>}
+              </aside>
+            </div>
+          </section>
+        </div>
+      )}
+
       </section>
     </div>
   );

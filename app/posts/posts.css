@@ -3626,3 +3626,349 @@ body:has(.fromone-simple-modal-overlay) {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* FINAL: Prepare media crop and resize modal */
+.f1-post-prepare-card {
+  display: grid !important;
+  gap: 14px !important;
+}
+
+.f1-post-prepare-card .f1-post-yellow-action,
+.f1-post-prepare-card .f1-post-secondary {
+  width: 100% !important;
+  min-height: 52px !important;
+  border-radius: 16px !important;
+}
+
+.f1-prepare-media-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  padding: 18px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: rgba(2, 6, 23, 0.78) !important;
+  backdrop-filter: blur(18px) !important;
+  overflow-y: auto !important;
+}
+
+.f1-prepare-media-modal {
+  width: min(1120px, calc(100vw - 24px)) !important;
+  max-height: calc(100vh - 36px) !important;
+  overflow-y: auto !important;
+  border-radius: 30px !important;
+  padding: clamp(18px, 3vw, 28px) !important;
+  background:
+    radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%),
+    linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.98)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 38px 120px rgba(0, 0, 0, 0.52) !important;
+  color: #f8fafc !important;
+}
+
+.f1-prepare-media-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 18px !important;
+  margin-bottom: 20px !important;
+}
+
+.f1-prepare-media-header span {
+  color: #ffd43b !important;
+  font-size: 0.78rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+.f1-prepare-media-header h3 {
+  margin: 6px 0 8px !important;
+  color: #ffffff !important;
+  font-size: clamp(1.7rem, 4vw, 2.75rem) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.045em !important;
+}
+
+.f1-prepare-media-header p {
+  margin: 0 !important;
+  color: rgba(248, 250, 252, 0.76) !important;
+  line-height: 1.48 !important;
+  max-width: 720px !important;
+}
+
+.f1-prepare-media-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px) !important;
+  gap: 20px !important;
+  align-items: start !important;
+}
+
+.f1-prepare-media-stage-card,
+.f1-prepare-media-controls {
+  border-radius: 26px !important;
+  background: rgba(255, 255, 255, 0.058) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 18px !important;
+}
+
+.f1-prepare-media-stage {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 320px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  border-radius: 22px !important;
+  background: rgba(2, 6, 23, 0.72) !important;
+  touch-action: none !important;
+  user-select: none !important;
+}
+
+.f1-prepare-media-stage img {
+  display: block !important;
+  width: 100% !important;
+  max-height: min(62vh, 660px) !important;
+  object-fit: contain !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.f1-prepare-media-shade {
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(2, 6, 23, 0.34) !important;
+  pointer-events: none !important;
+}
+
+.f1-prepare-crop-box {
+  position: absolute !important;
+  border: 2px solid #ffd43b !important;
+  box-shadow:
+    0 0 0 9999px rgba(2, 6, 23, 0.46),
+    0 18px 46px rgba(0, 0, 0, 0.34) !important;
+  cursor: move !important;
+  touch-action: none !important;
+  border-radius: 10px !important;
+}
+
+.f1-prepare-crop-grid {
+  position: absolute !important;
+  inset: 0 !important;
+  background:
+    linear-gradient(to right, transparent 33.333%, rgba(255, 212, 59, 0.34) 33.333%, rgba(255, 212, 59, 0.34) 33.8%, transparent 33.8%, transparent 66.333%, rgba(255, 212, 59, 0.34) 66.333%, rgba(255, 212, 59, 0.34) 66.8%, transparent 66.8%),
+    linear-gradient(to bottom, transparent 33.333%, rgba(255, 212, 59, 0.34) 33.333%, rgba(255, 212, 59, 0.34) 33.8%, transparent 33.8%, transparent 66.333%, rgba(255, 212, 59, 0.34) 66.333%, rgba(255, 212, 59, 0.34) 66.8%, transparent 66.8%) !important;
+  pointer-events: none !important;
+}
+
+.f1-prepare-crop-handle {
+  position: absolute !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 9px !important;
+  border: 2px solid #101420 !important;
+  background: #ffd43b !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28) !important;
+  padding: 0 !important;
+  touch-action: none !important;
+}
+
+.f1-prepare-crop-handle.is-tl {
+  top: -14px !important;
+  left: -14px !important;
+  cursor: nwse-resize !important;
+}
+
+.f1-prepare-crop-handle.is-tr {
+  top: -14px !important;
+  right: -14px !important;
+  cursor: nesw-resize !important;
+}
+
+.f1-prepare-crop-handle.is-bl {
+  bottom: -14px !important;
+  left: -14px !important;
+  cursor: nesw-resize !important;
+}
+
+.f1-prepare-crop-handle.is-br {
+  bottom: -14px !important;
+  right: -14px !important;
+  cursor: nwse-resize !important;
+}
+
+.f1-prepare-media-tip {
+  margin: 14px 0 0 !important;
+  color: rgba(248, 250, 252, 0.7) !important;
+  line-height: 1.48 !important;
+  font-size: 0.92rem !important;
+}
+
+.f1-prepare-media-controls {
+  display: grid !important;
+  gap: 16px !important;
+}
+
+.f1-prepare-media-controls strong {
+  color: #ffffff !important;
+}
+
+.f1-prepare-media-controls p {
+  margin: 6px 0 0 !important;
+  color: rgba(248, 250, 252, 0.74) !important;
+  line-height: 1.45 !important;
+}
+
+.f1-prepare-preset-grid {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.f1-prepare-preset-grid button {
+  width: 100% !important;
+  min-height: 64px !important;
+  border-radius: 18px !important;
+  padding: 12px 14px !important;
+  text-align: left !important;
+  background: rgba(255, 255, 255, 0.075) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  display: grid !important;
+  gap: 4px !important;
+}
+
+.f1-prepare-preset-grid button strong {
+  color: #ffffff !important;
+  font-size: 0.94rem !important;
+}
+
+.f1-prepare-preset-grid button span {
+  color: rgba(248, 250, 252, 0.66) !important;
+  font-size: 0.82rem !important;
+  font-weight: 850 !important;
+}
+
+.f1-prepare-preset-grid button.is-active {
+  background: rgba(255, 212, 59, 0.16) !important;
+  border-color: rgba(255, 212, 59, 0.48) !important;
+}
+
+.f1-prepare-preset-grid button.is-active span {
+  color: #ffe58a !important;
+}
+
+.f1-prepare-selected-card,
+.f1-prepare-ready-card {
+  padding: 16px !important;
+  border-radius: 20px !important;
+  background: rgba(2, 6, 23, 0.48) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.f1-prepare-selected-card span {
+  display: inline-flex !important;
+  margin-top: 10px !important;
+  padding: 7px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 212, 59, 0.14) !important;
+  border: 1px solid rgba(255, 212, 59, 0.24) !important;
+  color: #ffe58a !important;
+  font-size: 0.82rem !important;
+  font-weight: 900 !important;
+}
+
+.f1-prepare-main-action {
+  width: 100% !important;
+  min-height: 58px !important;
+  border-radius: 18px !important;
+}
+
+.f1-prepare-ready-card {
+  border-color: rgba(61, 220, 151, 0.28) !important;
+  background: rgba(6, 78, 59, 0.18) !important;
+}
+
+.f1-prepare-ready-card button {
+  width: 100% !important;
+  margin-top: 12px !important;
+  min-height: 52px !important;
+  border-radius: 16px !important;
+}
+
+@media (max-width: 860px) {
+  .f1-prepare-media-overlay {
+    padding: 10px !important;
+    align-items: flex-start !important;
+  }
+
+  .f1-prepare-media-modal {
+    width: calc(100vw - 20px) !important;
+    max-height: none !important;
+    border-radius: 24px !important;
+    padding: 16px !important;
+  }
+
+  .f1-prepare-media-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .f1-prepare-media-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .f1-prepare-media-stage {
+    min-height: 260px !important;
+  }
+
+  .f1-prepare-crop-handle {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 12px !important;
+  }
+
+  .f1-prepare-crop-handle.is-tl {
+    top: -18px !important;
+    left: -18px !important;
+  }
+
+  .f1-prepare-crop-handle.is-tr {
+    top: -18px !important;
+    right: -18px !important;
+  }
+
+  .f1-prepare-crop-handle.is-bl {
+    bottom: -18px !important;
+    left: -18px !important;
+  }
+
+  .f1-prepare-crop-handle.is-br {
+    bottom: -18px !important;
+    right: -18px !important;
+  }
+}
+
+/* Keep crop coordinates aligned to the actual image area */
+.f1-prepare-media-stage {
+  display: block !important;
+  min-height: 0 !important;
+  line-height: 0 !important;
+}
+
+.f1-prepare-media-stage img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: min(62vh, 660px) !important;
+  object-fit: contain !important;
+}
+
+.f1-prepare-media-stage .f1-prepare-media-shade,
+.f1-prepare-media-stage .f1-prepare-crop-box {
+  line-height: normal !important;
+}
+
+@media (max-width: 860px) {
+  .f1-prepare-media-stage {
+    min-height: 0 !important;
+  }
+}
