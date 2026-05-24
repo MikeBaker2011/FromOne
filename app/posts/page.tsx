@@ -1332,6 +1332,57 @@ export default function PostsPage() {
     return index >= 0 ? `Post ${index + 1}` : post?.scheduled_day || "Post";
   };
 
+  const isGenericPostTitle = (value: any) => {
+    const cleanTitle = String(value || "").trim().toLowerCase();
+
+    if (!cleanTitle) return true;
+
+    return (
+      /^(facebook|instagram|tiktok|post)\s*post\s*\d*$/i.test(cleanTitle) ||
+      /^post\s*\d+$/i.test(cleanTitle) ||
+      cleanTitle === "review post" ||
+      cleanTitle === "untitled post"
+    );
+  };
+
+  const cleanGeneratedTitle = (value: any) => {
+    return String(value || "")
+      .replace(/https?:\/\/\S+/gi, "")
+      .replace(/#[\w-]+/g, "")
+      .replace(/\bCTA\s*:/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
+  const makeTitleFromCaption = (caption: any) => {
+    const cleanCaption = cleanGeneratedTitle(caption);
+
+    if (!cleanCaption) return "";
+
+    const firstSentence =
+      cleanCaption.split(/[.!?]/).find((part) => part.trim().length >= 12)?.trim() ||
+      cleanCaption;
+
+    if (firstSentence.length <= 58) return firstSentence;
+
+    return `${firstSentence.slice(0, 55).trim()}...`;
+  };
+
+  const getDisplayPostTitle = (post: any, index?: number) => {
+    const platformName = getPlatformDisplayName(post);
+    const cleanTitle = cleanGeneratedTitle(post?.title);
+
+    if (!isGenericPostTitle(cleanTitle)) {
+      return cleanTitle;
+    }
+
+    const captionTitle = makeTitleFromCaption(post?.caption);
+
+    if (captionTitle) return captionTitle;
+
+    return `${platformName} Post ${typeof index === "number" ? index + 1 : ""}`.trim();
+  };
+
   const hashtagsToString = (hashtags: any) => {
     if (Array.isArray(hashtags)) return hashtags.join(" ");
     if (typeof hashtags === "string") return hashtags;
@@ -3259,7 +3310,7 @@ Important:
                           ) : (
                             <img
                               src={post.media_url}
-                              alt={post.title || "Post media"}
+                              alt={getDisplayPostTitle(post, index) || "Post media"}
                               style={{
                                 width: "100%",
                                 height: "100%",
@@ -3382,7 +3433,7 @@ Important:
                               letterSpacing: "-0.02em",
                             }}
                           >
-                            {post.title || `${platformName} post`}
+                            {getDisplayPostTitle(post, index)}
                           </h3>
                         </div>
 
