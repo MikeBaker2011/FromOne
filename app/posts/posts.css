@@ -2563,3 +2563,52 @@ body:has(.fromone-simple-modal-overlay) {
     max-height: 340px !important;
   }
 }
+/* FINAL FIX: premium rewrite controls alignment */
+
+.fromone-premium-audience-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+  align-items: end !important;
+}
+
+.fromone-premium-audience-grid label {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 9px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.fromone-premium-audience-grid label strong {
+  min-height: 18px !important;
+  line-height: 18px !important;
+}
+
+.fromone-premium-audience-grid select.input,
+.fromone-premium-audience-grid input.input,
+.fromone-premium-audience-grid button {
+  width: 100% !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.fromone-premium-audience-grid button {
+  align-self: end !important;
+  border-radius: 22px !important;
+}
+
+@media (max-width: 760px) {
+  .fromone-premium-audience-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .fromone-premium-audience-grid select.input,
+  .fromone-premium-audience-grid input.input,
+  .fromone-premium-audience-grid button {
+    height: 58px !important;
+    min-height: 58px !important;
+  }
+}
