@@ -2,7 +2,7 @@
 
 import './admin.css';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/app/components/ToastProvider';
 
@@ -17,6 +17,19 @@ type AdminCustomer = {
   last_sign_in_at: string | null;
   access: any | null;
   billing: any | null;
+};
+
+type AdminBugReport = {
+  id: string;
+  user_id: string | null;
+  user_email?: string | null;
+  title: string;
+  severity: string;
+  description: string;
+  steps_to_reproduce: string | null;
+  page_url: string | null;
+  status: string;
+  created_at: string;
 };
 
 const formatDate = (value?: string | null) => {
@@ -35,43 +48,6 @@ const cleanLabel = (value?: string | null) => {
   return value ? String(value).replace(/_/g, ' ') : 'not set';
 };
 
-const isActiveCustomer = (customer: AdminCustomer) => {
-  return (
-    customer.access?.access_status === 'active' &&
-    customer.access?.subscription_status === 'active'
-  );
-};
-
-const isPendingCustomer = (customer: AdminCustomer) => {
-  return (
-    customer.access?.access_status === 'pending_payment' ||
-    customer.access?.subscription_status === 'pending_payment' ||
-    customer.billing?.status === 'pending_payment'
-  );
-};
-
-const isDemoCustomer = (customer: AdminCustomer) => {
-  const accessStatus = String(customer.access?.access_status || '').toLowerCase();
-  const subscriptionStatus = String(customer.access?.subscription_status || '').toLowerCase();
-  const billingStatus = String(customer.billing?.status || '').toLowerCase();
-
-  return (
-    accessStatus === 'trial' ||
-    subscriptionStatus === 'none' ||
-    billingStatus === 'demo' ||
-    Boolean(customer.access?.trial_ends_at)
-  );
-};
-
-const isExpiredCustomer = (customer: AdminCustomer) => {
-  return (
-    customer.access?.access_status === 'expired' ||
-    customer.access?.access_status === 'locked' ||
-    customer.access?.subscription_status === 'expired' ||
-    customer.billing?.status === 'expired'
-  );
-};
-
 async function readJsonResponse(response: Response) {
   const responseText = await response.text();
 
@@ -88,33 +64,57 @@ async function readJsonResponse(response: Response) {
   }
 }
 
+function getCustomerStatus(customer: AdminCustomer) {
+  const accessStatus = String(customer.access?.access_status || '').toLowerCase();
+  const subscriptionStatus = String(customer.access?.subscription_status || '').toLowerCase();
+  const billingStatus = String(customer.billing?.status || '').toLowerCase();
+  const plan = String(customer.billing?.plan || '').toLowerCase();
+
+  if (accessStatus === 'active' && subscriptionStatus === 'active') return 'Active subscriber';
+  if (plan === 'starter' || billingStatus === 'active') return 'Subscriber';
+  if (accessStatus === 'pending_payment' || subscriptionStatus === 'pending_payment' || billingStatus === 'pending_payment') return 'Pending';
+  if (accessStatus === 'expired' || billingStatus === 'expired') return 'Expired';
+  if (accessStatus === 'locked' || ['past_due', 'suspended'].includes(billingStatus)) return 'Needs attention';
+  return 'Demo / trial';
+}
+
+function isSubscriber(customer: AdminCustomer) {
+  const status = getCustomerStatus(customer).toLowerCase();
+  const plan = String(customer.billing?.plan || '').toLowerCase();
+  const billingStatus = String(customer.billing?.status || '').toLowerCase();
+  const reference = customer.billing?.paypal_subscription_id || customer.access?.subscription_reference;
+
+  return status.includes('subscriber') || plan === 'starter' || billingStatus === 'active' || Boolean(reference);
+}
+
+function needsAttention(customer: AdminCustomer) {
+  const status = getCustomerStatus(customer).toLowerCase();
+  return status.includes('pending') || status.includes('expired') || status.includes('attention');
+}
+
 export default function AdminPage() {
   const { showToast } = useToast();
+  const resultsRef = useRef<HTMLDivElement | null>(null);
 
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [emailQuery, setEmailQuery] = useState('');
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
+  const [recentCustomers, setRecentCustomers] = useState<AdminCustomer[]>([]);
+  const [bugReports, setBugReports] = useState<AdminBugReport[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingOverview, setLoadingOverview] = useState(false);
   const [actingUserId, setActingUserId] = useState<string | null>(null);
   const [confirmExpireCustomer, setConfirmExpireCustomer] = useState<AdminCustomer | null>(null);
   const [adminNotesByUserId, setAdminNotesByUserId] = useState<Record<string, string>>({});
-  const [paypalReferenceByUserId, setPaypalReferenceByUserId] = useState<Record<string, string>>({});
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setAdminEmail(data.user?.email || null);
     });
-  }, []);
 
-  const stats = useMemo(() => {
-    return {
-      searched: customers.length,
-      demos: customers.filter(isDemoCustomer).length,
-      active: customers.filter(isActiveCustomer).length,
-      pending: customers.filter(isPendingCustomer).length,
-      expired: customers.filter(isExpiredCustomer).length,
-    };
-  }, [customers]);
+    loadOverview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const notify = (
     message: string,
@@ -146,23 +146,49 @@ export default function AdminPage() {
     return data.session.access_token;
   };
 
-  const syncLocalCustomerFields = (items: AdminCustomer[]) => {
-    const nextNotes: Record<string, string> = {};
-    const nextReferences: Record<string, string> = {};
+  const syncAdminNotes = (items: AdminCustomer[]) => {
+    setAdminNotesByUserId((current) => {
+      const nextNotes: Record<string, string> = { ...current };
 
-    for (const customer of items) {
-      nextNotes[customer.id] = String(customer.access?.admin_notes || '');
-      nextReferences[customer.id] = String(
-        customer.billing?.paypal_subscription_id || customer.access?.subscription_reference || '',
-      );
-    }
+      for (const customer of items) {
+        nextNotes[customer.id] = String(customer.access?.admin_notes || nextNotes[customer.id] || '');
+      }
 
-    setAdminNotesByUserId(nextNotes);
-    setPaypalReferenceByUserId(nextReferences);
+      return nextNotes;
+    });
   };
 
-  const searchCustomer = async (overrideQuery?: string) => {
-    const cleanEmail = String(overrideQuery ?? emailQuery).trim();
+  const loadOverview = async () => {
+    setLoadingOverview(true);
+
+    try {
+      const token = await getToken();
+
+      const response = await fetch('/api/admin/customer?mode=overview', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await readJsonResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Could not load admin overview.');
+      }
+
+      const overviewCustomers = result.customers || [];
+      setRecentCustomers(overviewCustomers);
+      setBugReports(result.bugReports || []);
+      syncAdminNotes(overviewCustomers);
+    } catch (error: any) {
+      notify(error?.message || 'Could not load admin overview.', 'error');
+    } finally {
+      setLoadingOverview(false);
+    }
+  };
+
+  const searchCustomer = async (overrideEmail?: string) => {
+    const cleanEmail = (overrideEmail || emailQuery).trim();
 
     if (!cleanEmail) {
       notify('Enter an email address or part of an email.', 'warning', 'Email needed');
@@ -189,7 +215,7 @@ export default function AdminPage() {
       const foundCustomers = result.customers || [];
 
       setCustomers(foundCustomers);
-      syncLocalCustomerFields(foundCustomers);
+      syncAdminNotes(foundCustomers);
 
       if (!foundCustomers.length) {
         notify('No matching customer found.', 'info', 'No result');
@@ -197,11 +223,19 @@ export default function AdminPage() {
       }
 
       notify(`${foundCustomers.length} customer result found.`, 'success', 'Customer found');
+      window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
     } catch (error: any) {
       notify(error?.message || 'Could not search customers.', 'error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const openCustomer = async (customer: AdminCustomer) => {
+    setEmailQuery(customer.email || '');
+    setCustomers([customer]);
+    syncAdminNotes([customer]);
+    window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 
   const runAction = async (userId: string, action: string, extraBody?: Record<string, any>) => {
@@ -230,7 +264,11 @@ export default function AdminPage() {
       }
 
       notify(result?.message || 'Customer updated.', 'success', 'Updated');
-      await searchCustomer();
+      await loadOverview();
+
+      if (customers.some((customer) => customer.id === userId)) {
+        await searchCustomer(customers.find((customer) => customer.id === userId)?.email || emailQuery);
+      }
     } catch (error: any) {
       notify(error?.message || 'Admin action failed.', 'error');
     } finally {
@@ -241,16 +279,6 @@ export default function AdminPage() {
   const saveAdminNotes = async (customer: AdminCustomer) => {
     await runAction(customer.id, 'save_notes', {
       adminNotes: adminNotesByUserId[customer.id] || '',
-    });
-  };
-
-  const activateStarterManually = async (customer: AdminCustomer) => {
-    const paypalReference = String(paypalReferenceByUserId[customer.id] || '').trim();
-
-    await runAction(customer.id, 'manual_active', {
-      paypalSubscriptionId: paypalReference || undefined,
-      subscriptionReference: paypalReference || undefined,
-      adminNotes: adminNotesByUserId[customer.id] || undefined,
     });
   };
 
@@ -274,170 +302,76 @@ export default function AdminPage() {
       `Billing: ${cleanLabel(customer.billing?.status)}`,
       `Payment: ${cleanLabel(customer.billing?.payment_status)}`,
       `Extension ends: ${formatDate(customer.access?.extension_ends_at)}`,
-      `Admin notes: ${adminNotesByUserId[customer.id] || customer.access?.admin_notes || 'None'}`,
+      `Admin notes: ${customer.access?.admin_notes || 'None'}`,
     ].join('\n');
 
     await navigator.clipboard.writeText(summary);
     notify('Support summary copied.', 'success', 'Copied');
   };
 
+  const demoCustomers = useMemo(() => {
+    return recentCustomers.filter((customer) => !isSubscriber(customer)).slice(0, 8);
+  }, [recentCustomers]);
+
+  const subscriberCustomers = useMemo(() => {
+    return recentCustomers.filter((customer) => isSubscriber(customer)).slice(0, 8);
+  }, [recentCustomers]);
+
+  const attentionCustomers = useMemo(() => {
+    return recentCustomers.filter((customer) => needsAttention(customer)).slice(0, 8);
+  }, [recentCustomers]);
+
+  const renderCustomerList = (items: AdminCustomer[], emptyText: string, actionLabel = 'Open') => {
+    if (loadingOverview) {
+      return <p className="admin-muted-text">Loading...</p>;
+    }
+
+    if (!items.length) {
+      return <p className="admin-muted-text">{emptyText}</p>;
+    }
+
+    return (
+      <div className="admin-action-list">
+        {items.map((customer) => {
+          const busy = actingUserId === customer.id;
+          const status = getCustomerStatus(customer);
+          const isActive = customer.access?.access_status === 'active' && customer.access?.subscription_status === 'active';
+
+          return (
+            <article key={customer.id} className="admin-action-item">
+              <button type="button" className="admin-action-main" onClick={() => openCustomer(customer)}>
+                <strong>{customer.email}</strong>
+                <span>{status} · Created {formatDate(customer.created_at)}</span>
+              </button>
+
+              <div className="admin-action-buttons">
+                <button type="button" className="secondary-button" onClick={() => openCustomer(customer)}>
+                  {actionLabel}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => runAction(customer.id, 'manual_active')}
+                  disabled={busy || isActive}
+                  title={isActive ? 'Customer is already active.' : undefined}
+                >
+                  {busy ? 'Updating...' : 'Activate Starter'}
+                </button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <main className="admin-page">
-
-      <style jsx global>{`
-        .admin-page {
-          width: min(1180px, calc(100vw - 32px));
-          margin: 0 auto 56px;
-          padding: 0 0 48px;
-        }
-
-        .admin-header {
-          margin-bottom: 22px !important;
-        }
-
-        .admin-header .page-description {
-          max-width: 780px !important;
-        }
-
-        .admin-primary-search-card,
-        .admin-summary-panel {
-          padding: clamp(22px, 3vw, 32px) !important;
-          border-radius: 34px !important;
-        }
-
-        .admin-primary-search-card {
-          display: grid !important;
-          gap: 20px !important;
-          margin-bottom: 20px !important;
-        }
-
-        .admin-primary-search-card h2,
-        .admin-summary-panel h2 {
-          margin: 8px 0 10px !important;
-          line-height: 1.05 !important;
-        }
-
-        .admin-primary-search-card p,
-        .admin-summary-panel p {
-          margin: 0 !important;
-          max-width: 920px !important;
-          line-height: 1.62 !important;
-        }
-
-        .admin-search-row {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) minmax(160px, 200px) !important;
-          gap: 14px !important;
-          align-items: center !important;
-        }
-
-        .admin-search-row .input,
-        .admin-search-row button {
-          height: 58px !important;
-          min-height: 58px !important;
-          border-radius: 18px !important;
-        }
-
-        .admin-overview-grid {
-          display: grid !important;
-          grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-          gap: 14px !important;
-          margin: 20px 0 !important;
-        }
-
-        .admin-overview-grid .admin-mini-card {
-          min-height: 138px !important;
-          padding: 20px !important;
-          border-radius: 24px !important;
-        }
-
-        .admin-summary-panel {
-          margin: 0 0 22px !important;
-        }
-
-        .admin-summary-grid {
-          display: grid !important;
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          gap: 14px !important;
-          margin-top: 20px !important;
-        }
-
-        .admin-summary-item {
-          padding: 18px !important;
-          border-radius: 22px !important;
-          background: rgba(255, 255, 255, 0.055) !important;
-          border: 1px solid rgba(255, 255, 255, 0.09) !important;
-        }
-
-        .admin-summary-item strong {
-          display: block !important;
-          margin-bottom: 7px !important;
-          color: #ffffff !important;
-          font-size: 1.02rem !important;
-        }
-
-        .admin-summary-item p {
-          color: rgba(248, 250, 252, 0.72) !important;
-          font-size: 0.94rem !important;
-        }
-
-        .admin-results {
-          display: grid !important;
-          gap: 18px !important;
-        }
-
-        .admin-customer-card {
-          padding: clamp(20px, 3vw, 30px) !important;
-          border-radius: 30px !important;
-        }
-
-        .admin-customer-top {
-          margin-bottom: 18px !important;
-        }
-
-        .admin-customer-card .admin-status-grid {
-          margin: 0 0 18px !important;
-        }
-
-        .admin-notes-card {
-          margin-top: 14px !important;
-        }
-
-        .admin-actions {
-          margin-top: 18px !important;
-        }
-
-        @media (max-width: 980px) {
-          .admin-overview-grid,
-          .admin-summary-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          }
-        }
-
-        @media (max-width: 680px) {
-          .admin-page {
-            width: min(100% - 22px, 560px);
-            margin-bottom: 36px;
-          }
-
-          .admin-search-row,
-          .admin-overview-grid,
-          .admin-summary-grid {
-            grid-template-columns: 1fr !important;
-          }
-
-          .admin-primary-search-card,
-          .admin-summary-panel {
-            border-radius: 26px !important;
-          }
-        }
-      `}</style>
       <div className="page-header admin-header">
         <div className="page-eyebrow">Admin support</div>
-        <h1 className="page-title">Customer access panel</h1>
+        <h1 className="page-title">Customer action panel</h1>
         <p className="page-description">
-          Search customers, check demo/subscription access, manually activate paid users, extend
-          beta access, or expire access without using SQL.
+          See recent demo signups, subscribers and support reports. Open a customer and activate
+          Starter manually if PayPal does not auto-update access.
         </p>
 
         <p className="admin-signed-in">
@@ -445,13 +379,13 @@ export default function AdminPage() {
         </p>
       </div>
 
-      <section className="premium-card admin-search-card admin-primary-search-card">
+      <section className="premium-card admin-search-card admin-compact-search-card">
         <div>
           <div className="page-eyebrow">Find customer</div>
           <h2>Search by email.</h2>
           <p>
-            Use the full email or part of it. If a PayPal subscription does not auto-activate,
-            search the customer here and use <strong>Activate Starter</strong>.
+            Use the full email or part of it. Search a customer, then use <strong>Activate Starter</strong>
+            if a subscription needs manual activation.
           </p>
         </div>
 
@@ -471,71 +405,81 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section className="admin-overview-grid" aria-label="Admin customer overview">
-        <section className="admin-mini-card">
-          <span>Search results</span>
-          <strong>{stats.searched}</strong>
-          <p>Customers loaded in this admin view.</p>
-        </section>
+      <section className="admin-live-sections">
+        <article className="premium-card admin-live-card">
+          <div className="admin-live-card-header">
+            <div>
+              <div className="page-eyebrow">Recent demo signups</div>
+              <h2>People trying FromOne</h2>
+            </div>
+            <button type="button" className="secondary-button" onClick={loadOverview} disabled={loadingOverview}>
+              Refresh
+            </button>
+          </div>
+          {renderCustomerList(demoCustomers, 'No recent demo signups found.', 'Open')}
+        </article>
 
-        <section className="admin-mini-card">
-          <span>Demo signups</span>
-          <strong>{stats.demos}</strong>
-          <p>Trial/demo customers in current results.</p>
-        </section>
-
-        <section className="admin-mini-card">
-          <span>Active subscribers</span>
-          <strong>{stats.active}</strong>
-          <p>Users with active Starter access.</p>
-        </section>
-
-        <section className="admin-mini-card">
-          <span>Needs attention</span>
-          <strong>{stats.pending + stats.expired}</strong>
-          <p>Pending, expired or locked users in current results.</p>
-        </section>
+        <article className="premium-card admin-live-card">
+          <div className="admin-live-card-header">
+            <div>
+              <div className="page-eyebrow">Recent subscribers</div>
+              <h2>Billing and access</h2>
+            </div>
+          </div>
+          {renderCustomerList(
+            subscriberCustomers.length ? subscriberCustomers : attentionCustomers,
+            'No recent subscribers or billing records found.',
+            'Open',
+          )}
+        </article>
       </section>
 
-      <section className="premium-card admin-summary-panel">
-        <div>
-          <div className="page-eyebrow">Quick admin summary</div>
-          <h2>Billing and bug-fix fallback.</h2>
-          <p>
-            Yes — you can activate subscriptions from this admin panel. If PayPal shows someone
-            has subscribed but FromOne has not unlocked them, search their email, paste the PayPal
-            subscription ID if you have it, then click <strong>Activate Starter</strong>.
-          </p>
-        </div>
-
-        <div className="admin-summary-grid" aria-label="Admin quick actions">
-          <div className="admin-summary-item">
-            <strong>Subscription fallback</strong>
-            <p>Search the customer, confirm their PayPal payment, then use Activate Starter to unlock access.</p>
-          </div>
-
-          <div className="admin-summary-item">
-            <strong>Demo support</strong>
-            <p>Use Extend 7, 14 or 30 days if a tester needs more time or hits an onboarding issue.</p>
-          </div>
-
-          <div className="admin-summary-item">
-            <strong>Webhook watch</strong>
-            <p>Ignore repeated old PayPal retry events. Only investigate again if a fresh event ID fails.</p>
+      <section className="premium-card admin-live-card admin-support-overview-card">
+        <div className="admin-live-card-header">
+          <div>
+            <div className="page-eyebrow">Support / bug reports</div>
+            <h2>Latest things customers reported</h2>
+            <p>Use this to spot anything from the support/bug fix form without opening the support page.</p>
           </div>
         </div>
+
+        {loadingOverview ? (
+          <p className="admin-muted-text">Loading reports...</p>
+        ) : bugReports.length === 0 ? (
+          <p className="admin-muted-text">No support or bug reports found.</p>
+        ) : (
+          <div className="admin-bug-summary-list">
+            {bugReports.slice(0, 8).map((report) => (
+              <article key={report.id} className="admin-bug-summary-item">
+                <div>
+                  <span className="admin-bug-pill">{report.severity || 'Medium'}</span>
+                  <span className="admin-bug-pill is-muted">{report.status || 'new'}</span>
+                </div>
+                <h3>{report.title}</h3>
+                <p>{report.description}</p>
+                <small>
+                  {report.user_email || report.user_id || 'Unknown user'} · {report.page_url || 'No page'} · {formatDate(report.created_at)}
+                </small>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
-      <section className="admin-results">
+      <section ref={resultsRef} className="admin-results">
         {customers.map((customer) => {
           const busy = actingUserId === customer.id;
           const isOwnerUnlimited =
             customer.access?.subscription_reference === 'owner-unlimited-access' ||
             customer.billing?.paypal_subscription_id === 'owner-unlimited-access';
-          const isActive = isActiveCustomer(customer);
+          const isActive =
+            customer.access?.access_status === 'active' &&
+            customer.access?.subscription_status === 'active';
           const isExpired = customer.access?.access_status === 'expired';
-          const isPending = isPendingCustomer(customer);
-          const demo = isDemoCustomer(customer);
+          const isPending =
+            customer.access?.access_status === 'pending_payment' ||
+            customer.access?.subscription_status === 'pending_payment' ||
+            customer.billing?.status === 'pending_payment';
 
           return (
             <article key={customer.id} className="premium-card admin-customer-card">
@@ -546,23 +490,18 @@ export default function AdminPage() {
                   <p>
                     User ID: <code>{customer.id}</code>
                   </p>
-
-                  <div className="selected-post-tags" style={{ marginTop: 12 }}>
-                    {isActive && <span>Active subscriber</span>}
-                    {demo && !isActive && <span>Demo / trial</span>}
-                    {isPending && <span>Pending payment</span>}
-                    {isExpired && <span>Expired</span>}
-                    {isOwnerUnlimited && <span>Owner unlimited</span>}
-                  </div>
                 </div>
 
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => copySupportSummary(customer)}
-                >
-                  Copy summary
-                </button>
+                <div className="admin-customer-top-actions">
+                  <span className="admin-customer-badge">{getCustomerStatus(customer)}</span>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => copySupportSummary(customer)}
+                  >
+                    Copy summary
+                  </button>
+                </div>
               </div>
 
               <div className="admin-status-grid">
@@ -597,26 +536,6 @@ export default function AdminPage() {
                   <p>Cancelled: {formatDate(customer.billing?.cancelled_at)}</p>
                   <p>Billing updated: {formatDate(customer.billing?.updated_at)}</p>
                 </section>
-              </div>
-
-              <div className="admin-notes-card">
-                <label>
-                  <strong>PayPal subscription ID / reference</strong>
-                  <span>
-                    Optional, but useful when manually activating someone after checking PayPal.
-                  </span>
-                </label>
-                <input
-                  className="input"
-                  value={paypalReferenceByUserId[customer.id] || ''}
-                  onChange={(event) =>
-                    setPaypalReferenceByUserId((current) => ({
-                      ...current,
-                      [customer.id]: event.target.value,
-                    }))
-                  }
-                  placeholder="Example: I-XXXXXXXXXXXX"
-                />
               </div>
 
               <div className="admin-notes-card">
@@ -676,8 +595,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="button"
-                  className="secondary-button"
-                  onClick={() => activateStarterManually(customer)}
+                  onClick={() => runAction(customer.id, 'manual_active')}
                   disabled={busy || (isActive && !isOwnerUnlimited)}
                   title={isActive && !isOwnerUnlimited ? 'Customer is already active.' : undefined}
                 >

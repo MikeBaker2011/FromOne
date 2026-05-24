@@ -1,250 +1,185 @@
-.admin-page {
-  width: min(1180px, calc(100vw - 28px));
-  margin: 0 auto 56px;
+/* Admin action panel cleanup */
+
+.admin-compact-search-card {
+  padding: clamp(20px, 3vw, 30px) !important;
+  border-radius: 30px !important;
 }
 
-.admin-header {
-  max-width: 920px;
-  margin: 0 auto 24px;
-  text-align: center;
+.admin-live-sections {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  margin: 18px 0 !important;
 }
 
-.admin-signed-in {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  margin: 12px 0 0;
-  padding: 9px 13px;
-  border-radius: 999px;
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  font-size: 0.9rem;
+.admin-live-card {
+  padding: clamp(18px, 2.4vw, 26px) !important;
+  border-radius: 28px !important;
 }
 
-.admin-signed-in strong {
-  color: #ffffff;
+.admin-live-card-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  margin-bottom: 16px !important;
 }
 
-.admin-search-card,
-.admin-customer-card {
-  width: 100%;
-  max-width: none;
+.admin-live-card-header h2 {
+  margin: 6px 0 0 !important;
 }
 
-.admin-search-card {
-  margin: 0 auto 22px;
-  border-radius: 34px;
-  border: 1px solid rgba(255, 212, 59, 0.24);
-  background:
-    radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035));
+.admin-live-card-header p {
+  margin: 8px 0 0 !important;
+  color: var(--muted) !important;
+  line-height: 1.5 !important;
 }
 
-.admin-search-card h2,
-.admin-customer-card h2 {
-  margin-top: 0;
+.admin-muted-text {
+  color: var(--muted) !important;
+  margin: 0 !important;
 }
 
-.admin-search-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 160px;
-  gap: 12px;
-  margin-top: 18px;
+.admin-action-list,
+.admin-bug-summary-list {
+  display: grid !important;
+  gap: 10px !important;
 }
 
-.admin-results {
-  display: grid;
-  gap: 18px;
+.admin-action-item {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+  padding: 13px !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
 }
 
-.admin-customer-card {
-  border-radius: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.admin-action-main {
+  appearance: none !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  text-align: left !important;
+  color: inherit !important;
+  cursor: pointer !important;
 }
 
-.admin-customer-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 18px;
+.admin-action-main strong {
+  display: block !important;
+  color: #ffffff !important;
+  font-size: 0.98rem !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere !important;
 }
 
-.admin-customer-top code {
-  color: #ffe58a;
-  overflow-wrap: anywhere;
+.admin-action-main span {
+  display: block !important;
+  margin-top: 4px !important;
+  color: var(--muted) !important;
+  font-size: 0.84rem !important;
+  line-height: 1.35 !important;
 }
 
-.admin-status-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+.admin-action-buttons {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
 }
 
-.admin-mini-card {
-  padding: 16px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+.admin-action-buttons button {
+  min-height: 40px !important;
+  border-radius: 13px !important;
+  padding: 0 13px !important;
+  white-space: nowrap !important;
 }
 
-.admin-mini-card span {
-  display: block;
-  color: var(--gold);
-  font-size: 0.76rem;
-  font-weight: 1000;
-  text-transform: uppercase;
-  letter-spacing: 0.11em;
-  margin-bottom: 8px;
+.admin-support-overview-card {
+  margin: 18px 0 !important;
 }
 
-.admin-mini-card strong {
-  display: block;
-  color: #ffffff;
-  font-size: 1.1rem;
-  margin-bottom: 10px;
-  text-transform: capitalize;
+.admin-bug-summary-item {
+  padding: 15px !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
 }
 
-.admin-mini-card p {
-  margin: 5px 0 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-  overflow-wrap: anywhere;
+.admin-bug-summary-item h3 {
+  margin: 10px 0 8px !important;
+  color: #ffffff !important;
+  font-size: 1.05rem !important;
 }
 
-.admin-notes-card {
-  display: grid;
-  gap: 10px;
-  margin-top: 18px;
-  padding: 16px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+.admin-bug-summary-item p {
+  margin: 0 !important;
+  color: rgba(248, 250, 252, 0.76) !important;
+  line-height: 1.48 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
 }
 
-.admin-notes-card label {
-  display: grid;
-  gap: 4px;
+.admin-bug-summary-item small {
+  display: block !important;
+  margin-top: 10px !important;
+  color: var(--muted) !important;
+  overflow-wrap: anywhere !important;
 }
 
-.admin-notes-card label strong {
-  color: #ffffff;
+.admin-bug-pill,
+.admin-customer-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 7px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 212, 59, 0.13) !important;
+  border: 1px solid rgba(255, 212, 59, 0.24) !important;
+  color: #ffe58a !important;
+  font-size: 0.78rem !important;
+  font-weight: 950 !important;
+  margin-right: 6px !important;
 }
 
-.admin-notes-card label span {
-  color: var(--muted);
-  font-size: 0.9rem;
+.admin-bug-pill.is-muted {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.11) !important;
+  color: rgba(248, 250, 252, 0.78) !important;
 }
 
-.admin-notes-card textarea {
-  min-height: 92px;
-  resize: vertical;
-}
-
-.admin-notes-card button {
-  justify-self: start;
-}
-
-.admin-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.09);
-}
-
-.admin-actions button {
-  min-height: 46px;
-  border-radius: 16px;
-  font-size: 0.92rem;
-}
-
-.admin-actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.46;
-  filter: grayscale(0.35);
-}
-
-.admin-working {
-  margin: 14px 0 0;
-  color: #ffe58a;
-  font-weight: 850;
-}
-
-.admin-confirm-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: grid;
-  place-items: center;
-  padding: 18px;
-  background: rgba(2, 6, 23, 0.72);
-  backdrop-filter: blur(14px);
-}
-
-.admin-confirm-card {
-  width: min(540px, 100%);
-  border-radius: 30px;
-  border: 1px solid rgba(255, 95, 109, 0.34);
-  box-shadow: 0 34px 110px rgba(0, 0, 0, 0.48);
-}
-
-.admin-confirm-card p {
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.admin-confirm-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+.admin-customer-top-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 10px !important;
 }
 
 @media (max-width: 900px) {
-  .admin-status-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .admin-page {
-    width: min(100vw - 20px, 1180px);
+  .admin-live-sections {
+    grid-template-columns: 1fr !important;
   }
 
-  .admin-search-row,
-  .admin-status-grid {
-    grid-template-columns: 1fr;
+  .admin-action-item {
+    grid-template-columns: 1fr !important;
   }
 
-  .admin-customer-top {
-    display: grid;
+  .admin-action-buttons {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
   }
 
-  .admin-customer-top button,
-  .admin-notes-card button {
-    width: 100%;
+  .admin-action-buttons button {
+    width: 100% !important;
   }
 
-  .admin-confirm-actions {
-    display: grid;
-  }
-}
-/* Match admin page width to Dashboard and Posts */
-
-.admin-page {
-  width: min(1120px, calc(100vw - 28px)) !important;
-  max-width: 1120px !important;
-  margin: 0 auto 56px !important;
-  padding: 0 0 42px !important;
-}
-
-@media (max-width: 760px) {
-  .admin-page {
-    width: min(100% - 24px, 520px) !important;
-    margin-bottom: 42px !important;
+  .admin-live-card-header {
+    display: grid !important;
   }
 }
