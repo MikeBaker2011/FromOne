@@ -283,6 +283,155 @@ export default function AdminPage() {
 
   return (
     <main className="admin-page">
+
+      <style jsx global>{`
+        .admin-page {
+          width: min(1180px, calc(100vw - 32px));
+          margin: 0 auto 56px;
+          padding: 0 0 48px;
+        }
+
+        .admin-header {
+          margin-bottom: 22px !important;
+        }
+
+        .admin-header .page-description {
+          max-width: 780px !important;
+        }
+
+        .admin-primary-search-card,
+        .admin-summary-panel {
+          padding: clamp(22px, 3vw, 32px) !important;
+          border-radius: 34px !important;
+        }
+
+        .admin-primary-search-card {
+          display: grid !important;
+          gap: 20px !important;
+          margin-bottom: 20px !important;
+        }
+
+        .admin-primary-search-card h2,
+        .admin-summary-panel h2 {
+          margin: 8px 0 10px !important;
+          line-height: 1.05 !important;
+        }
+
+        .admin-primary-search-card p,
+        .admin-summary-panel p {
+          margin: 0 !important;
+          max-width: 920px !important;
+          line-height: 1.62 !important;
+        }
+
+        .admin-search-row {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) minmax(160px, 200px) !important;
+          gap: 14px !important;
+          align-items: center !important;
+        }
+
+        .admin-search-row .input,
+        .admin-search-row button {
+          height: 58px !important;
+          min-height: 58px !important;
+          border-radius: 18px !important;
+        }
+
+        .admin-overview-grid {
+          display: grid !important;
+          grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+          gap: 14px !important;
+          margin: 20px 0 !important;
+        }
+
+        .admin-overview-grid .admin-mini-card {
+          min-height: 138px !important;
+          padding: 20px !important;
+          border-radius: 24px !important;
+        }
+
+        .admin-summary-panel {
+          margin: 0 0 22px !important;
+        }
+
+        .admin-summary-grid {
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 14px !important;
+          margin-top: 20px !important;
+        }
+
+        .admin-summary-item {
+          padding: 18px !important;
+          border-radius: 22px !important;
+          background: rgba(255, 255, 255, 0.055) !important;
+          border: 1px solid rgba(255, 255, 255, 0.09) !important;
+        }
+
+        .admin-summary-item strong {
+          display: block !important;
+          margin-bottom: 7px !important;
+          color: #ffffff !important;
+          font-size: 1.02rem !important;
+        }
+
+        .admin-summary-item p {
+          color: rgba(248, 250, 252, 0.72) !important;
+          font-size: 0.94rem !important;
+        }
+
+        .admin-results {
+          display: grid !important;
+          gap: 18px !important;
+        }
+
+        .admin-customer-card {
+          padding: clamp(20px, 3vw, 30px) !important;
+          border-radius: 30px !important;
+        }
+
+        .admin-customer-top {
+          margin-bottom: 18px !important;
+        }
+
+        .admin-customer-card .admin-status-grid {
+          margin: 0 0 18px !important;
+        }
+
+        .admin-notes-card {
+          margin-top: 14px !important;
+        }
+
+        .admin-actions {
+          margin-top: 18px !important;
+        }
+
+        @media (max-width: 980px) {
+          .admin-overview-grid,
+          .admin-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+        }
+
+        @media (max-width: 680px) {
+          .admin-page {
+            width: min(100% - 22px, 560px);
+            margin-bottom: 36px;
+          }
+
+          .admin-search-row,
+          .admin-overview-grid,
+          .admin-summary-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .admin-primary-search-card,
+          .admin-summary-panel {
+            border-radius: 26px !important;
+          }
+        }
+      `}</style>
       <div className="page-header admin-header">
         <div className="page-eyebrow">Admin support</div>
         <h1 className="page-title">Customer access panel</h1>
@@ -296,7 +445,7 @@ export default function AdminPage() {
         </p>
       </div>
 
-      <section className="premium-card admin-search-card">
+      <section className="premium-card admin-search-card admin-primary-search-card">
         <div>
           <div className="page-eyebrow">Find customer</div>
           <h2>Search by email.</h2>
@@ -322,7 +471,7 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section className="admin-status-grid" aria-label="Admin customer overview">
+      <section className="admin-overview-grid" aria-label="Admin customer overview">
         <section className="admin-mini-card">
           <span>Search results</span>
           <strong>{stats.searched}</strong>
@@ -348,15 +497,32 @@ export default function AdminPage() {
         </section>
       </section>
 
-      <section className="premium-card admin-search-card">
+      <section className="premium-card admin-summary-panel">
         <div>
-          <div className="page-eyebrow">Billing safety net</div>
-          <h2>Manual activation fallback.</h2>
+          <div className="page-eyebrow">Quick admin summary</div>
+          <h2>Billing and bug-fix fallback.</h2>
           <p>
-            If PayPal shows a customer has subscribed but the webhook has not updated FromOne,
-            search their email, paste the PayPal subscription ID if available, then click
-            <strong> Activate Starter</strong>.
+            Yes — you can activate subscriptions from this admin panel. If PayPal shows someone
+            has subscribed but FromOne has not unlocked them, search their email, paste the PayPal
+            subscription ID if you have it, then click <strong>Activate Starter</strong>.
           </p>
+        </div>
+
+        <div className="admin-summary-grid" aria-label="Admin quick actions">
+          <div className="admin-summary-item">
+            <strong>Subscription fallback</strong>
+            <p>Search the customer, confirm their PayPal payment, then use Activate Starter to unlock access.</p>
+          </div>
+
+          <div className="admin-summary-item">
+            <strong>Demo support</strong>
+            <p>Use Extend 7, 14 or 30 days if a tester needs more time or hits an onboarding issue.</p>
+          </div>
+
+          <div className="admin-summary-item">
+            <strong>Webhook watch</strong>
+            <p>Ignore repeated old PayPal retry events. Only investigate again if a fresh event ID fails.</p>
+          </div>
         </div>
       </section>
 
