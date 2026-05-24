@@ -289,7 +289,6 @@ export default function PostActionModal({
     mediaType === 'pdf' ||
     String(selectedPost.media_url || '').toLowerCase().includes('.pdf');
   const needsMedia = mediaRequiredForPlatform(selectedPost.platform) && !hasMedia;
-  const hasSchedule = Boolean(selectedPost.scheduled_publish_at);
   const posted = isPostPosted(selectedPost);
   const isPublishing = publishingPostId === selectedPost.id;
   const directFacebookReady = isFacebookPost && canDirectPublishToFacebook(selectedPost);
@@ -304,8 +303,6 @@ export default function PostActionModal({
   const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
   const rescanUsageLabel = isVideoMedia ? videoRescanUsageLabel : mediaRescanUsageLabel;
   const statusLabel = getPostStatus(selectedPost) === 'Reminder set' ? 'Scheduled' : getPostStatus(selectedPost);
-  const savedScheduleLabel = canAutoPublish ? 'Autopost planned' : 'Reminder planned';
-  const saveScheduleButtonLabel = canAutoPublish ? 'Save autopost time' : 'Save reminder time';
 
   const publishErrorNeedsReconnect = isMetaReconnectError(selectedPost.publish_error);
   const autopostNeedsAttention = canAutoPublish && (needsMetaConnection || publishErrorNeedsReconnect);
@@ -395,9 +392,6 @@ export default function PostActionModal({
             <h2>{modalTitle}</h2>
             <div className="f1-post-badges">
               <span>{statusLabel}</span>
-              {hasSchedule && !posted && (
-                <span>{canAutoPublish ? 'Autopost' : 'Planned'} · {getReadableDateTime(selectedPost.scheduled_publish_at)}</span>
-              )}
               {isPostScheduledToday(selectedPost) && !posted && <span>Today</span>}
               {hasMedia && <span>{isVideoMedia ? 'Video' : isFlyerMedia ? 'Flyer' : 'Image'}</span>}
               {isTikTokPost && <span>TikTok manual</span>}
@@ -772,9 +766,6 @@ export default function PostActionModal({
                   <div>
                     <strong>Autopost option</strong>
                     <p>{autopostHelpText}</p>
-                    {hasSchedule && !posted && (
-                      <small>{savedScheduleLabel}: {getReadableDateTime(selectedPost.scheduled_publish_at)}</small>
-                    )}
                   </div>
 
                   <div className="f1-post-autopost-actions">
@@ -825,47 +816,11 @@ export default function PostActionModal({
               )}
 
               <button type="button" className="f1-post-more-toggle" onClick={() => setShowMoreOptions((current) => !current)}>
-                {showMoreOptions ? 'Hide more options' : 'More options'}
+                {showMoreOptions ? 'Hide post controls' : 'Post controls'}
               </button>
 
               {showMoreOptions && (
                 <div className="f1-post-more-panel">
-                  <div className="f1-post-schedule-card f1-post-more-card">
-                    <div className="f1-post-more-card-copy">
-                      <strong>{canAutoPublish ? 'Autopost time' : 'Reminder time'}</strong>
-                      <p>{canAutoPublish ? 'Choose when FromOne should autopost this connected business account post.' : 'Choose a reminder time for manual posting.'}</p>
-                    </div>
-
-                    <div className="f1-post-schedule-stack">
-                      <input
-                        type="datetime-local"
-                        className="input"
-                        value={reminderValue}
-                        onChange={(event) => onSetReminderValue(event.target.value)}
-                      />
-
-                      <button
-                        type="button"
-                        className="f1-post-yellow-action f1-post-full-action"
-                        onClick={() => onSaveReminder(selectedPost)}
-                        disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning || posted}
-                      >
-                        {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleButtonLabel}
-                      </button>
-
-                      {hasSchedule && (
-                        <button
-                          type="button"
-                          className="f1-post-secondary f1-post-full-action"
-                          onClick={() => onClearReminder(selectedPost)}
-                          disabled={savingReminderPostId === selectedPost.id || isRescanning || posted}
-                        >
-                          Clear time
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
                   <div className="f1-post-admin-card f1-post-more-card">
                     <div className="f1-post-more-card-copy">
                       <strong>Post status</strong>

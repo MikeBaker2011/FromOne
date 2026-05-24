@@ -3519,3 +3519,23 @@ body:has(.fromone-simple-modal-overlay) {
     padding: 0 18px !important;
   }
 }
+
+
+/* BETA SIMPLIFICATION: hide/neutralise scheduled-autopost controls in the post modal */
+.f1-post-schedule-card,
+.f1-post-schedule-stack {
+  display: none !important;
+}
+
+.f1-post-more-toggle {
+  margin-top: 18px !important;
+}
+
+.f1-post-more-panel {
+  grid-template-columns: 1fr !important;
+}
+
+.f1-post-autopost-option-card small,
+.f1-post-badges span:has(+ .fromone-hidden-schedule-never) {
+  display: none !important;
+}

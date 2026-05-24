@@ -446,7 +446,7 @@ export default function PostsPage() {
   const publishRef = useRef<HTMLElement | null>(null);
 
   const getPostDisplayScheduleValue = (post: any) => {
-    return post?.scheduled_publish_at || post?.scheduled_at || post?.created_at || null;
+    return post?.scheduled_at || post?.created_at || null;
   };
 
   const sortPostsByDate = (items: any[]) => {
@@ -476,7 +476,6 @@ export default function PostsPage() {
     if (isPostFailed(post)) return false;
 
     return (
-      Boolean(post?.scheduled_publish_at) ||
       String(post?.status || "").toLowerCase() === "scheduled" ||
       String(post?.publish_status || "").toLowerCase() === "scheduled"
     );
@@ -580,9 +579,7 @@ export default function PostsPage() {
       return;
     }
 
-    setReminderValue(
-      toDateTimeInputValue(selectedPost.scheduled_publish_at || ""),
-    );
+    setReminderValue("");
   }, [selectedPost]);
 
   const getTodayKey = () => {
@@ -2398,47 +2395,12 @@ Important:
     updatePostLocally(postId, updates);
   };
 
-  const saveReminder = async (post: any) => {
-    if (!post?.id) return;
-
-    if (!reminderValue) {
-      notify(
-        "Choose a date and time first.",
-        "warning",
-        "Schedule time needed",
-      );
-      return;
-    }
-
-    setSavingReminderPostId(post.id);
-
-    try {
-      const scheduledIso = new Date(reminderValue).toISOString();
-
-      const updates = {
-        scheduled_publish_at: scheduledIso,
-        status: "scheduled",
-        publish_status: "scheduled",
-        publish_error: null,
-        is_posted: false,
-      };
-
-      const { error } = await supabase
-        .from("campaign_posts")
-        .update(updates)
-        .eq("id", post.id);
-
-      if (error) throw error;
-
-      updatePostLocally(post.id, updates);
-      notify("Schedule time saved.", "success", "Autopost time saved");
-    } catch (error: any) {
-      const message = getReadableError(error, "Error saving schedule time.");
-      console.error("Save reminder error:", error);
-      notify(message, "error");
-    } finally {
-      setSavingReminderPostId(null);
-    }
+  const saveReminder = async (_post: any) => {
+    notify(
+      "Scheduling is paused for beta. Use Post manually or Autopost now instead.",
+      "info",
+      "Scheduling paused",
+    );
   };
 
   const clearReminder = async (post: any) => {
@@ -3174,7 +3136,6 @@ Important:
                     0,
                     132,
                   );
-                  const hasCustomAutopostTime = Boolean(post.scheduled_publish_at);
                   const dateValue =
                     getPostDisplayScheduleValue(post) ||
                     new Date().toISOString();
@@ -3199,11 +3160,7 @@ Important:
                   const isFailed = status === "Failed";
                   const isPlanned = status === "Reminder set";
                   const mediaType = String(post.media_type || "").toLowerCase();
-                  const statusLabel = hasCustomAutopostTime
-                    ? "Autopost set"
-                    : isPlanned
-                      ? "Planned"
-                      : status;
+                  const statusLabel = isPlanned ? "Planned" : status;
 
                   return (
                     <article
