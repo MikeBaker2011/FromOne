@@ -2612,3 +2612,59 @@ body:has(.fromone-simple-modal-overlay) {
     min-height: 58px !important;
   }
 }
+/* FINAL FIX: keep rewrite dropdowns and button on one row */
+
+.fromone-premium-audience-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  align-items: end !important;
+}
+
+.fromone-premium-audience-grid label {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  gap: 9px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.fromone-premium-audience-grid label strong {
+  min-height: 18px !important;
+  line-height: 18px !important;
+  margin: 0 !important;
+}
+
+.fromone-premium-audience-grid select.input,
+.fromone-premium-audience-grid input.input,
+.fromone-premium-audience-grid button {
+  width: 100% !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.fromone-premium-audience-grid button {
+  align-self: end !important;
+  border-radius: 18px !important;
+  white-space: nowrap !important;
+}
+
+/* Custom audience input should span neatly if it appears */
+.fromone-premium-audience-grid input.input {
+  grid-column: span 1 !important;
+}
+
+@media (max-width: 980px) {
+  .fromone-premium-audience-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .fromone-premium-audience-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
