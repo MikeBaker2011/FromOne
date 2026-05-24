@@ -1642,6 +1642,7 @@ export default function PostsPage() {
         cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
         image_prompt: post.image_prompt || "",
+        rewriteQualityInstructions: `Rewrite this as a high-quality, industry-specific social post. Use the selected audience, market reach and tone as hard guidance. Keep the business context, platform, CTA and media prompt aligned. Avoid generic filler. Make it sound like a real ${profile?.industry || campaign?.business_type || 'business'} post for ${finalAudience}.`,
       });
 
       const saved = await applyRewrittenPost(post, response.data, {
@@ -1695,6 +1696,7 @@ export default function PostsPage() {
         cta: post.cta || "",
         hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
         image_prompt: post.image_prompt || "",
+        rewriteQualityInstructions: `Rewrite this as a high-quality, industry-specific social post. Use the selected improvement action as hard guidance. Keep the result useful, specific to ${profile?.industry || campaign?.business_type || 'the business industry'}, platform-appropriate, and likely to generate enquiries, bookings, visits, orders or messages. Avoid generic wording.`,
       });
 
       const saved = await applyRewrittenPost(post, response.data, {

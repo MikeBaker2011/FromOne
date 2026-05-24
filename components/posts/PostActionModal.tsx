@@ -125,6 +125,14 @@ function getCaptionCounterStyle(status: string): CSSProperties {
   return { color: 'rgba(248, 250, 252, 0.66)', fontWeight: 800 };
 }
 
+
+function getBriefMediaGuidance({ hasMedia, isVideoMedia, isFlyerMedia }: { hasMedia: boolean; isVideoMedia: boolean; isFlyerMedia: boolean }) {
+  if (!hasMedia) return 'Add a photo, video or flyer before posting.';
+  if (isVideoMedia) return 'Video attached. Check it matches the post.';
+  if (isFlyerMedia) return 'Flyer attached. Check the details are right.';
+  return 'Image attached. Check it matches the post.';
+}
+
 export default function PostActionModal({
   selectedPost,
   editingPostId,
@@ -198,7 +206,6 @@ export default function PostActionModal({
 }: PostActionModalProps) {
   const [showScheduleControls, setShowScheduleControls] = useState(false);
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
-  const [showPostOptions, setShowPostOptions] = useState(false);
 
   if (!selectedPost) return null;
 
@@ -372,7 +379,11 @@ export default function PostActionModal({
             </div>
 
             <aside className="fromone-simple-media-actions">
-              <p>{hasMedia ? getImageGuidance(selectedPost) : 'Choose a photo, video or flyer. This keeps the post specific to the business.'}</p>
+              <div className="fromone-media-brief">
+                <strong>Media check</strong>
+                <p>{getBriefMediaGuidance({ hasMedia, isVideoMedia, isFlyerMedia })}</p>
+                {hasMedia && <small>{getImageGuidance(selectedPost)}</small>}
+              </div>
 
               <label className="fromone-simple-primary-action">
                 <input
@@ -410,6 +421,38 @@ export default function PostActionModal({
             </aside>
           </div>
         </section>
+
+        {onRescanPostMedia && (
+          <section className="fromone-simple-section fromone-simple-rewrite-section">
+            <div className="fromone-simple-section-title">
+              <span>2</span>
+              <div>
+                <div className="page-eyebrow">Improve</div>
+                <h3>Rewrite from media</h3>
+              </div>
+            </div>
+
+            <div className="fromone-simple-action-strip">
+              <div>
+                <p>Create a fresh version using the attached media as the main topic.</p>
+                {posted && (
+                  <small>This will not change anything already posted on Facebook or Instagram.</small>
+                )}
+                {!hasMedia && <small>Upload media first, then rewrite this post.</small>}
+                {rescanUsageLabel && <small>{rescanUsageLabel}</small>}
+              </div>
+
+              <button
+                type="button"
+                className="fromone-simple-primary-action"
+                onClick={() => onRescanPostMedia(selectedPost)}
+                disabled={accessLocked || !hasMedia || isRescanning}
+              >
+                {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
+              </button>
+            </div>
+          </section>
+        )}
 
         <section ref={postRef} className="fromone-simple-section">
           <div className="fromone-simple-section-title">
@@ -519,43 +562,25 @@ export default function PostActionModal({
                   }}
                   disabled={accessLocked || rewritingPost || isRescanning}
                 >
-                  {showAdvancedTools ? 'Hide improve options' : 'Improve wording'}
+                  {showAdvancedTools ? 'Hide improve tools' : 'Improve wording'}
                 </button>
               </div>
             </>
           )}
 
           {showAdvancedTools && showImproveTools && (
-            <div className="fromone-simple-improve-panel">
-              {onRescanPostMedia && (
-                <div className="fromone-simple-option-card">
-                  <div>
-                    <strong>Rewrite using media</strong>
-                    <p>
-                      Create a fresh version using the attached media as the main topic.
-                      {posted ? ' This will not change anything already posted.' : ''}
-                    </p>
-                    {!hasMedia && <small>Upload media first, then rewrite this post.</small>}
-                    {rescanUsageLabel && <small>{rescanUsageLabel}</small>}
-                  </div>
+            <div className="fromone-simple-improve-panel fromone-premium-rewrite-panel">
+              <div className="fromone-rewrite-intro">
+                <strong>Improve wording</strong>
+                <p>Pick what you want changed. FromOne uses the business industry, selected audience, reach and tone to rebuild the post.</p>
+              </div>
 
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => onRescanPostMedia(selectedPost)}
-                    disabled={accessLocked || !hasMedia || isRescanning}
-                  >
-                    {isRescanning ? 'Rewriting...' : 'Rewrite using media'}
-                  </button>
-                </div>
-              )}
-
-              <div className="fromone-simple-quick-grid">
+              <div className="fromone-simple-quick-grid fromone-premium-pill-grid">
                 {quickImproveActions.map((action) => (
                   <button
                     key={action.value}
                     type="button"
-                    className="secondary-button"
+                    className="fromone-rewrite-pill"
                     onClick={() => onQuickImprovePost(selectedPost, action.value)}
                     disabled={accessLocked || rewritingPost || isRescanning}
                   >
@@ -568,59 +593,72 @@ export default function PostActionModal({
                 ))}
               </div>
 
-              <div className="fromone-simple-audience-grid">
-                <select
-                  className="input"
-                  value={audienceTarget}
-                  onChange={(event) => onSetAudienceTarget(event.target.value)}
-                >
-                  {dynamicAudienceTargets.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
+              <div className="fromone-simple-audience-grid fromone-premium-select-grid">
+                <label className="fromone-premium-field">
+                  <span>Audience</span>
+                  <select
+                    className="input fromone-premium-select"
+                    value={audienceTarget}
+                    onChange={(event) => onSetAudienceTarget(event.target.value)}
+                  >
+                    {dynamicAudienceTargets.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
                 {audienceTarget === 'Custom audience' && (
-                  <input
-                    className="input"
-                    value={customAudienceTarget}
-                    onChange={(event) => onSetCustomAudienceTarget(event.target.value)}
-                    placeholder="Example: first-time homeowners"
-                  />
+                  <label className="fromone-premium-field">
+                    <span>Custom audience</span>
+                    <input
+                      className="input fromone-premium-input"
+                      value={customAudienceTarget}
+                      onChange={(event) => onSetCustomAudienceTarget(event.target.value)}
+                      placeholder="Example: first-time homeowners"
+                    />
+                  </label>
                 )}
 
-                <select
-                  className="input"
-                  value={marketReachTarget}
-                  onChange={(event) => onSetMarketReachTarget(event.target.value)}
-                  aria-label="Market reach"
-                >
-                  {marketReachOptions.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
+                <label className="fromone-premium-field">
+                  <span>Reach</span>
+                  <select
+                    className="input fromone-premium-select"
+                    value={marketReachTarget}
+                    onChange={(event) => onSetMarketReachTarget(event.target.value)}
+                    aria-label="Market reach"
+                  >
+                    {marketReachOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-                <select
-                  className="input"
-                  value={toneTarget}
-                  onChange={(event) => onSetToneTarget(event.target.value)}
-                >
-                  {toneOptions.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
+                <label className="fromone-premium-field">
+                  <span>Tone</span>
+                  <select
+                    className="input fromone-premium-select"
+                    value={toneTarget}
+                    onChange={(event) => onSetToneTarget(event.target.value)}
+                  >
+                    {toneOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
                 <button
                   type="button"
+                  className="fromone-premium-improve-button"
                   onClick={() => onRewriteForAudience(selectedPost)}
                   disabled={accessLocked || rewritingPost || isRescanning}
                 >
-                  {rewritingPost && rewritingAction === 'audience' ? 'Improving...' : 'Improve for audience'}
+                  {rewritingPost && rewritingAction === 'audience' ? 'Improving...' : 'Improve for selected audience'}
                 </button>
               </div>
             </div>
@@ -682,128 +720,115 @@ export default function PostActionModal({
             </button>
           </div>
 
-          <div className="fromone-simple-two-actions">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => onCopyPost(selectedPost)}
-              disabled={isRescanning}
-            >
-              Copy post
-            </button>
-
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
-              disabled={isRescanning}
-            >
-              Open {platformName}
-            </button>
-          </div>
-
-          <div className="fromone-simple-more-options-toggle">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => setShowPostOptions((current) => !current)}
-              disabled={isRescanning}
-            >
-              {showPostOptions ? 'Hide more options' : 'More options'}
-            </button>
-          </div>
-
-          {showPostOptions && (
-            <div className="fromone-simple-more-options-panel">
-              <div className="fromone-simple-options-heading">
-                <strong>Planning and management</strong>
-                <p>Use these only when you need to change the planned time, mark a manual post as done, or remove a post.</p>
-              </div>
-
-              <div className="fromone-simple-schedule">
-                {!showScheduleControls ? (
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => setShowScheduleControls(true)}
-                    disabled={posted || isRescanning}
-                  >
-                    {scheduleActionLabel}
-                  </button>
-                ) : (
-                  <div className="fromone-simple-schedule-grid">
-                    <input
-                      type="datetime-local"
-                      className="input"
-                      value={reminderValue}
-                      onChange={(event) => onSetReminderValue(event.target.value)}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => onSaveReminder(selectedPost)}
-                      disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning}
-                    >
-                      {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleButtonLabel}
-                    </button>
-
-                    {hasSchedule && (
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        onClick={() => onClearReminder(selectedPost)}
-                        disabled={savingReminderPostId === selectedPost.id || isRescanning}
-                      >
-                        Clear
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => setShowScheduleControls(false)}
-                      disabled={savingReminderPostId === selectedPost.id || isRescanning}
-                    >
-                      Hide
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="fromone-simple-admin-actions">
-                {posted ? (
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => onMarkAsNotPosted(selectedPost.id)}
-                    disabled={isRescanning}
-                  >
-                    Undo posted
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => onMarkAsPosted(selectedPost.id)}
-                    disabled={isRescanning}
-                  >
-                    Mark posted manually
-                  </button>
-                )}
-
-                {onDeletePost && (
-                  <button
-                    type="button"
-                    className="secondary-button danger-button"
-                    onClick={() => onDeletePost(selectedPost)}
-                    disabled={deletingPostId === selectedPost.id || isRescanning}
-                  >
-                    {deletingPostId === selectedPost.id ? 'Deleting...' : posted ? 'Archive post' : 'Delete post'}
-                  </button>
-                )}
-              </div>
+          <div className="fromone-manual-personal-card">
+            <div>
+              <strong>Posting manually or to a personal account?</strong>
+              <p>Copy the wording, open {platformName}, then paste and publish yourself. This is the simple option for personal profiles.</p>
             </div>
-          )}
+
+            <div className="fromone-simple-two-actions">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onCopyPost(selectedPost)}
+                disabled={isRescanning}
+              >
+                Copy wording
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onOpenPlatform(selectedPost.platform || 'Facebook')}
+                disabled={isRescanning}
+              >
+                Open {platformName}
+              </button>
+            </div>
+          </div>
+
+          <div className="fromone-simple-schedule">
+            {!showScheduleControls ? (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setShowScheduleControls(true)}
+                disabled={posted || isRescanning}
+              >
+                {scheduleActionLabel}
+              </button>
+            ) : (
+              <div className="fromone-simple-schedule-grid">
+                <input
+                  type="datetime-local"
+                  className="input"
+                  value={reminderValue}
+                  onChange={(event) => onSetReminderValue(event.target.value)}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => onSaveReminder(selectedPost)}
+                  disabled={savingReminderPostId === selectedPost.id || !reminderValue || isRescanning}
+                >
+                  {savingReminderPostId === selectedPost.id ? 'Saving...' : saveScheduleButtonLabel}
+                </button>
+
+                {hasSchedule && (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => onClearReminder(selectedPost)}
+                    disabled={savingReminderPostId === selectedPost.id || isRescanning}
+                  >
+                    Clear
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowScheduleControls(false)}
+                  disabled={savingReminderPostId === selectedPost.id || isRescanning}
+                >
+                  Hide
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="fromone-simple-admin-actions">
+            {posted ? (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onMarkAsNotPosted(selectedPost.id)}
+                disabled={isRescanning}
+              >
+                Undo posted
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onMarkAsPosted(selectedPost.id)}
+                disabled={isRescanning}
+              >
+                Mark posted manually
+              </button>
+            )}
+
+            {onDeletePost && (
+              <button
+                type="button"
+                className="secondary-button danger-button"
+                onClick={() => onDeletePost(selectedPost)}
+                disabled={deletingPostId === selectedPost.id || isRescanning}
+              >
+                {deletingPostId === selectedPost.id ? 'Deleting...' : posted ? 'Archive post' : 'Delete post'}
+              </button>
+            )}
+          </div>
         </section>
       </section>
     </div>
