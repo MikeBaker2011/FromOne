@@ -691,7 +691,7 @@ export default function PostActionModal({
                 </div>
               </div>
 
-              {selectedPost.publish_error && (
+              {selectedPost.publish_error && !publishErrorNeedsReconnect && (
                 <div className="f1-post-error-note">
                   <strong>Publishing failed</strong>
                   <p>{selectedPost.publish_error}</p>
@@ -699,14 +699,23 @@ export default function PostActionModal({
               )}
 
               {autopostNeedsAttention && !posted && (
-                <div className="f1-post-soft-note">
+                <div className="f1-post-soft-note f1-post-reconnect-card">
                   <strong>Autopost needs reconnecting</strong>
                   <p>
-                    Facebook and Instagram autoposting needs a connected business account. You can reconnect,
-                    or copy this post and publish it manually now.
+                    Facebook and Instagram need a quick reconnect before FromOne can autopost again.
+                    You can still post this now using the manual flow.
                   </p>
 
                   <div className="f1-post-two-actions">
+                    <button
+                      type="button"
+                      className="f1-post-yellow-action"
+                      onClick={handleManualPost}
+                      disabled={!canUseManualPost}
+                    >
+                      Post manually now
+                    </button>
+
                     <button
                       type="button"
                       className="f1-post-secondary"
@@ -716,15 +725,6 @@ export default function PostActionModal({
                       disabled={isRescanning}
                     >
                       Reconnect accounts
-                    </button>
-
-                    <button
-                      type="button"
-                      className="f1-post-secondary"
-                      onClick={() => onCopyPost(selectedPost)}
-                      disabled={isRescanning}
-                    >
-                      Copy post
                     </button>
                   </div>
                 </div>
@@ -744,18 +744,31 @@ export default function PostActionModal({
                   {hasMedia && <small>Media is ready in FromOne. Add it to the platform before pasting the caption.</small>}
                 </div>
 
-                <button
-                  type="button"
-                  className="f1-post-yellow-action"
-                  onClick={handleManualPost}
-                  disabled={!canUseManualPost}
-                >
-                  {manualPostLabel}
-                </button>
+                <div className="f1-post-manual-action-stack">
+                  <button
+                    type="button"
+                    className="f1-post-yellow-action"
+                    onClick={handleManualPost}
+                    disabled={!canUseManualPost}
+                  >
+                    {manualPostLabel}
+                  </button>
+
+                  {!posted && (
+                    <button
+                      type="button"
+                      className="f1-post-secondary"
+                      onClick={() => onMarkAsPosted(selectedPost.id)}
+                      disabled={isRescanning}
+                    >
+                      Mark as posted
+                    </button>
+                  )}
+                </div>
               </div>
 
               {canAutoPublish && (
-                <div className="f1-post-manual-card">
+                <div className="f1-post-manual-card f1-post-autopost-option-card">
                   <div>
                     <strong>Autopost option</strong>
                     <p>{autopostHelpText}</p>

@@ -3279,3 +3279,85 @@ body:has(.fromone-simple-modal-overlay) {
     min-height: 56px !important;
   }
 }
+
+
+/* FINAL: big-boy fallback flow polish */
+
+.f1-post-reconnect-card {
+  border-color: rgba(255, 212, 59, 0.34) !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 212, 59, 0.16), transparent 32%),
+    rgba(255, 255, 255, 0.065) !important;
+}
+
+.f1-post-reconnect-card strong::before {
+  content: "⚠ ";
+}
+
+.f1-post-reconnect-card .f1-post-two-actions {
+  margin-top: 14px !important;
+}
+
+.f1-post-reconnect-card .f1-post-yellow-action,
+.f1-post-reconnect-card .f1-post-secondary {
+  width: 100% !important;
+  min-height: 52px !important;
+  border-radius: 16px !important;
+}
+
+.f1-post-primary-publish-card {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) !important;
+  align-items: center !important;
+  border-color: rgba(255, 212, 59, 0.2) !important;
+}
+
+.f1-post-primary-publish-card > div:first-child strong::before {
+  content: "✓ ";
+  color: #ffd43b !important;
+}
+
+.f1-post-manual-action-stack {
+  display: grid !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+.f1-post-manual-action-stack .f1-post-yellow-action,
+.f1-post-manual-action-stack .f1-post-secondary {
+  width: 100% !important;
+  min-height: 54px !important;
+  border-radius: 17px !important;
+}
+
+.f1-post-autopost-option-card {
+  background: rgba(255, 255, 255, 0.042) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.f1-post-autopost-option-card strong::before {
+  content: "↗ ";
+  color: rgba(255, 212, 59, 0.9) !important;
+}
+
+.f1-post-autopost-option-card .f1-post-secondary {
+  min-height: 50px !important;
+  border-radius: 16px !important;
+}
+
+.f1-post-publish-panel .f1-post-error-note + .f1-post-reconnect-card,
+.f1-post-publish-panel .f1-post-reconnect-card + .f1-post-primary-publish-card {
+  margin-top: 12px !important;
+}
+
+@media (max-width: 760px) {
+  .f1-post-primary-publish-card,
+  .f1-post-autopost-option-card,
+  .f1-post-reconnect-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .f1-post-reconnect-card .f1-post-two-actions,
+  .f1-post-autopost-option-card .f1-post-two-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
