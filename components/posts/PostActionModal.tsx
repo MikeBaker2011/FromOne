@@ -1570,6 +1570,7 @@ export default function PostActionModal({
                 <div
                   ref={transformFrameRef}
                   className={`f1-transform-frame is-${resizePresetValue}`}
+                  style={{ aspectRatio: `${selectedResizePreset.width} / ${selectedResizePreset.height}` }}
                   onPointerDown={startMediaTransformDrag}
                   onPointerMove={updateMediaTransformDrag}
                   onPointerUp={stopMediaTransformDrag}

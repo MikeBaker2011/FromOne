@@ -4401,3 +4401,69 @@ body:has(.fromone-simple-modal-overlay) {
     border-radius: 14px !important;
   }
 }
+
+
+/* FINAL FIX: make mobile prepare media frame follow selected social preset */
+.f1-transform-frame {
+  height: auto !important;
+}
+
+.f1-transform-frame.is-instagram-square {
+  aspect-ratio: 1 / 1 !important;
+}
+
+.f1-transform-frame.is-instagram-portrait {
+  aspect-ratio: 4 / 5 !important;
+}
+
+.f1-transform-frame.is-facebook-feed {
+  aspect-ratio: 1200 / 630 !important;
+}
+
+.f1-transform-frame.is-story-reel {
+  aspect-ratio: 9 / 16 !important;
+}
+
+@media (max-width: 760px) {
+  .f1-prepare-transform-modal .f1-prepare-media-stage-card {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .f1-transform-frame {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .f1-transform-frame.is-instagram-square {
+    aspect-ratio: 1 / 1 !important;
+    max-width: min(100%, 390px) !important;
+  }
+
+  .f1-transform-frame.is-instagram-portrait {
+    aspect-ratio: 4 / 5 !important;
+    max-width: min(100%, 360px) !important;
+  }
+
+  .f1-transform-frame.is-facebook-feed {
+    aspect-ratio: 1200 / 630 !important;
+    max-width: 100% !important;
+  }
+
+  .f1-transform-frame.is-story-reel {
+    aspect-ratio: 9 / 16 !important;
+    max-width: min(100%, 260px) !important;
+  }
+
+  .f1-prepare-media-layout {
+    overflow: visible !important;
+  }
+
+  .f1-prepare-media-controls {
+    max-height: 34dvh !important;
+  }
+}
