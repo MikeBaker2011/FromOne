@@ -10,11 +10,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-type ResizePresetValue =
-  | "instagram-square"
-  | "instagram-portrait"
-  | "facebook-feed"
-  | "story-reel";
+type ResizePresetValue = "instagram-square" | "instagram-portrait" | "facebook-feed" | "story-reel";
 
 type ResizePreset = {
   value: ResizePresetValue;
@@ -22,7 +18,6 @@ type ResizePreset = {
   size: string;
   width: number;
   height: number;
-  help: string;
 };
 
 type MediaOffset = {
@@ -45,38 +40,10 @@ type PreparedMedia = {
 };
 
 const resizePresets: ResizePreset[] = [
-  {
-    value: "instagram-square",
-    label: "Instagram square",
-    size: "1080 × 1080",
-    width: 1080,
-    height: 1080,
-    help: "Best for square Instagram and Facebook posts.",
-  },
-  {
-    value: "instagram-portrait",
-    label: "Instagram portrait",
-    size: "1080 × 1350",
-    width: 1080,
-    height: 1350,
-    help: "Best for Instagram feed posts with more screen space.",
-  },
-  {
-    value: "facebook-feed",
-    label: "Facebook post",
-    size: "1200 × 630",
-    width: 1200,
-    height: 630,
-    help: "Best for Facebook feed and landscape image posts.",
-  },
-  {
-    value: "story-reel",
-    label: "Story / Reel",
-    size: "1080 × 1920",
-    width: 1080,
-    height: 1920,
-    help: "Best for stories, reels covers and vertical promotions.",
-  },
+  { value: "instagram-square", label: "Instagram square", size: "1080 × 1080", width: 1080, height: 1080 },
+  { value: "instagram-portrait", label: "Instagram portrait", size: "1080 × 1350", width: 1080, height: 1350 },
+  { value: "facebook-feed", label: "Facebook post", size: "1200 × 630", width: 1200, height: 630 },
+  { value: "story-reel", label: "Story / Reel", size: "1080 × 1920", width: 1080, height: 1920 },
 ];
 
 const quickImproveActions = [
@@ -123,20 +90,16 @@ function clampNumber(value: number, min: number, max: number) {
 
 function normalisePlatform(platform?: string | null) {
   const clean = cleanText(platform).toLowerCase();
-
   if (clean.includes("instagram")) return "Instagram";
   if (clean.includes("tiktok")) return "TikTok";
   if (clean.includes("facebook")) return "Facebook";
-
   return "Facebook";
 }
 
 function getPlatformUrl(platform: string) {
   const clean = platform.toLowerCase();
-
   if (clean.includes("instagram")) return "https://www.instagram.com/";
   if (clean.includes("tiktok")) return "https://www.tiktok.com/upload";
-
   return "https://www.facebook.com/";
 }
 
@@ -153,10 +116,7 @@ function getSafeFileName(value?: string | null) {
 function getPostTitle(post: any, platformName: string) {
   const savedTitle = cleanText(post?.title);
 
-  if (
-    savedTitle &&
-    !/^(facebook|instagram|tiktok|post)\s*(post)?\s*\d*$/i.test(savedTitle)
-  ) {
+  if (savedTitle && !/^(facebook|instagram|tiktok|post)\s*(post)?\s*\d*$/i.test(savedTitle)) {
     return savedTitle;
   }
 
@@ -167,9 +127,7 @@ function getPostTitle(post: any, platformName: string) {
 
   if (firstLine) {
     const firstSentence = firstLine.split(/[.!?]/)[0]?.trim() || firstLine;
-    return firstSentence.length > 82
-      ? `${firstSentence.slice(0, 82).trim()}...`
-      : firstSentence;
+    return firstSentence.length > 78 ? `${firstSentence.slice(0, 78).trim()}...` : firstSentence;
   }
 
   return `${platformName} post`;
@@ -187,19 +145,11 @@ function triggerDownload(url: string, filename: string) {
 
 async function urlToFile(url: string, filename: string) {
   const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error("Could not load the prepared image for sharing.");
-  }
+  if (!response.ok) throw new Error("Could not load the prepared image for sharing.");
 
   const blob = await response.blob();
   const type = blob.type || "image/jpeg";
-  const extension = type.includes("png")
-    ? "png"
-    : type.includes("webp")
-      ? "webp"
-      : "jpg";
-
+  const extension = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
   return new File([blob], `${filename}.${extension}`, { type });
 }
 
@@ -221,10 +171,9 @@ export default function PostReviewPage() {
   const [hashtags, setHashtags] = useState("");
 
   const [message, setMessage] = useState("");
-  const [activeMediaMode, setActiveMediaMode] = useState<"preview" | "prepare">("preview");
+  const [activePanel, setActivePanel] = useState<"review" | "prepare" | "improve">("review");
 
-  const [resizePresetValue, setResizePresetValue] =
-    useState<ResizePresetValue>("instagram-portrait");
+  const [resizePresetValue, setResizePresetValue] = useState<ResizePresetValue>("instagram-portrait");
   const [prepareFitMode, setPrepareFitMode] = useState<"fill" | "fit">("fill");
   const [mediaZoom, setMediaZoom] = useState(1);
   const [mediaOffset, setMediaOffset] = useState<MediaOffset>({ x: 0, y: 0 });
@@ -241,19 +190,14 @@ export default function PostReviewPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const platformName = normalisePlatform(post?.platform);
-  const selectedPreset =
-    resizePresets.find((preset) => preset.value === resizePresetValue) ||
-    resizePresets[1];
+  const selectedPreset = resizePresets.find((preset) => preset.value === resizePresetValue) || resizePresets[1];
 
   const mediaUrl = cleanText(post?.media_url);
   const mediaType = cleanText(post?.media_type).toLowerCase();
   const isVideo = mediaType === "video";
-  const isFlyer =
-    mediaType === "flyer" ||
-    mediaType === "pdf" ||
-    mediaUrl.toLowerCase().includes(".pdf");
-
+  const isFlyer = mediaType === "flyer" || mediaType === "pdf" || mediaUrl.toLowerCase().includes(".pdf");
   const canPrepareImage = Boolean(mediaUrl) && !isVideo && !isFlyer;
+
   const isPosted =
     Boolean(post?.is_posted) ||
     cleanText(post?.status).toLowerCase() === "posted" ||
@@ -273,7 +217,6 @@ export default function PostReviewPage() {
 
   useEffect(() => {
     if (!postId) return;
-
     loadPost();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
@@ -303,11 +246,7 @@ export default function PostReviewPage() {
     setPost(data);
     setCaption(cleanText(data.caption));
     setCta(cleanText(data.cta));
-    setHashtags(
-      Array.isArray(data.hashtags)
-        ? data.hashtags.join(" ")
-        : cleanText(data.hashtags),
-    );
+    setHashtags(Array.isArray(data.hashtags) ? data.hashtags.join(" ") : cleanText(data.hashtags));
     setLoading(false);
   };
 
@@ -338,12 +277,7 @@ export default function PostReviewPage() {
       return;
     }
 
-    setPost({
-      ...post,
-      caption,
-      cta,
-      hashtags: cleanHashtags,
-    });
+    setPost({ ...post, caption, cta, hashtags: cleanHashtags });
     setMessage("Wording saved.");
     setSaving(false);
   };
@@ -386,12 +320,7 @@ export default function PostReviewPage() {
       return;
     }
 
-    setPost({
-      ...post,
-      is_posted: true,
-      status: "posted",
-      publish_status: "posted",
-    });
+    setPost({ ...post, is_posted: true, status: "posted", publish_status: "posted" });
     setMessage("Marked as posted.");
     setSaving(false);
   };
@@ -419,19 +348,13 @@ export default function PostReviewPage() {
       return;
     }
 
-    setPost({
-      ...post,
-      is_posted: false,
-      status: "ready",
-      publish_status: "ready",
-    });
+    setPost({ ...post, is_posted: false, status: "ready", publish_status: "ready" });
     setMessage("Post set back to ready.");
     setSaving(false);
   };
 
   const handleUploadMedia = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-
     if (!file || !post?.id) return;
 
     setSaving(true);
@@ -440,9 +363,7 @@ export default function PostReviewPage() {
     try {
       const extension = file.name.split(".").pop() || "jpg";
       const userId = cleanText(post.user_id) || "anonymous";
-      const path = `${userId}/posts/${post.id}/media/${Date.now()}-${getSafeFileName(
-        file.name,
-      )}.${extension}`;
+      const path = `${userId}/posts/${post.id}/media/${Date.now()}-${getSafeFileName(file.name)}.${extension}`;
 
       const { error: uploadError } = await supabase.storage
         .from("campaign-assets")
@@ -454,9 +375,7 @@ export default function PostReviewPage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage
-        .from("campaign-assets")
-        .getPublicUrl(path);
+      const { data: publicUrlData } = supabase.storage.from("campaign-assets").getPublicUrl(path);
 
       const nextMediaType = file.type.startsWith("video/")
         ? "video"
@@ -475,13 +394,8 @@ export default function PostReviewPage() {
 
       if (updateError) throw updateError;
 
-      setPost({
-        ...post,
-        media_url: publicUrlData.publicUrl,
-        media_type: nextMediaType,
-      });
+      setPost({ ...post, media_url: publicUrlData.publicUrl, media_type: nextMediaType });
       setPreparedMedia(null);
-      setActiveMediaMode("preview");
       setMessage("Media updated.");
     } catch (error: any) {
       setMessage(error?.message || "Could not upload media.");
@@ -499,11 +413,7 @@ export default function PostReviewPage() {
 
     const { error } = await supabase
       .from("campaign_posts")
-      .update({
-        media_url: null,
-        media_type: null,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ media_url: null, media_type: null, updated_at: new Date().toISOString() })
       .eq("id", post.id);
 
     if (error) {
@@ -514,14 +424,12 @@ export default function PostReviewPage() {
 
     setPost({ ...post, media_url: null, media_type: null });
     setPreparedMedia(null);
-    setActiveMediaMode("preview");
     setMessage("Media removed.");
     setSaving(false);
   };
 
   const downloadMedia = () => {
     if (!mediaUrl) return;
-
     const extension = isVideo ? "mp4" : isFlyer ? "pdf" : "jpg";
     triggerDownload(mediaUrl, `${getSafeFileName(title)}-original.${extension}`);
   };
@@ -556,10 +464,8 @@ export default function PostReviewPage() {
 
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (!canPrepareImage) return;
-
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
-
     setDragState({
       pointerId: event.pointerId,
       startClientX: event.clientX,
@@ -570,7 +476,6 @@ export default function PostReviewPage() {
 
   const moveDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (!dragState || dragState.pointerId !== event.pointerId) return;
-
     event.preventDefault();
     setMediaOffset({
       x: dragState.startOffset.x + event.clientX - dragState.startClientX,
@@ -578,15 +483,11 @@ export default function PostReviewPage() {
     });
   };
 
-  const stopDrag = () => {
-    setDragState(null);
-  };
+  const stopDrag = () => setDragState(null);
 
   const onWheelZoom = (event: React.WheelEvent<HTMLDivElement>) => {
     if (!canPrepareImage) return;
-
     event.preventDefault();
-
     const direction = event.deltaY > 0 ? -0.05 : 0.05;
     setMediaZoom((current) => clampNumber(Number((current + direction).toFixed(2)), 0.75, 3));
     setPreparedMedia(null);
@@ -601,9 +502,7 @@ export default function PostReviewPage() {
     try {
       const response = await fetch("/api/media/resize", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           postId: post.id,
           mediaUrl,
@@ -618,15 +517,10 @@ export default function PostReviewPage() {
 
       const result = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(result?.error || result?.message || "Could not prepare this image.");
-      }
+      if (!response.ok) throw new Error(result?.error || result?.message || "Could not prepare this image.");
 
       const url = result?.url || result?.publicUrl || result?.public_url;
-
-      if (!url) {
-        throw new Error("Prepared image was created but no URL was returned.");
-      }
+      if (!url) throw new Error("Prepared image was created but no URL was returned.");
 
       setPreparedMedia({
         url,
@@ -644,11 +538,7 @@ export default function PostReviewPage() {
 
   const downloadPreparedImage = () => {
     if (!preparedMedia?.url) return;
-
-    triggerDownload(
-      preparedMedia.url,
-      `${getSafeFileName(title)}-${preparedMedia.width}x${preparedMedia.height}.jpg`,
-    );
+    triggerDownload(preparedMedia.url, `${getSafeFileName(title)}-${preparedMedia.width}x${preparedMedia.height}.jpg`);
   };
 
   const sharePreparedImage = async () => {
@@ -665,11 +555,7 @@ export default function PostReviewPage() {
       const nav = navigator as any;
 
       if (nav.canShare?.({ files: [file] }) && nav.share) {
-        await nav.share({
-          title,
-          text: fullCaption,
-          files: [file],
-        });
+        await nav.share({ title, text: fullCaption, files: [file] });
         setMessage("Share sheet opened.");
         return;
       }
@@ -695,9 +581,7 @@ export default function PostReviewPage() {
     try {
       const response = await fetch("/api/rewritePost", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           postId: post.id,
           action,
@@ -716,9 +600,7 @@ export default function PostReviewPage() {
 
       const result = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(result?.error || result?.message || "Could not improve this post.");
-      }
+      if (!response.ok) throw new Error(result?.error || result?.message || "Could not improve this post.");
 
       const nextCaption = cleanText(result.caption || result.rewrittenCaption || result.post?.caption);
       const nextCta = cleanText(result.cta || result.rewrittenCta || result.post?.cta);
@@ -740,106 +622,87 @@ export default function PostReviewPage() {
 
   if (loading) {
     return (
-      <main className="f1-studio-shell">
-        <section className="f1-studio-loading">
-          <p>Loading post...</p>
-        </section>
+      <main className="f1-clean-review-shell">
+        <section className="f1-clean-review-loading">Loading post...</section>
       </main>
     );
   }
 
   if (!post) {
     return (
-      <main className="f1-studio-shell">
-        <section className="f1-studio-loading">
+      <main className="f1-clean-review-shell">
+        <section className="f1-clean-review-loading">
           <h1>Post not found</h1>
           <p>{message || "This post could not be loaded."}</p>
-          <button type="button" onClick={() => router.push("/posts")}>
-            Back to posts
-          </button>
+          <button type="button" onClick={() => router.push("/posts")}>Back to posts</button>
         </section>
       </main>
     );
   }
 
   return (
-    <main className="f1-studio-shell">
-      <section className="f1-studio-header">
-        <button type="button" className="f1-studio-back" onClick={() => router.push("/posts")}>
+    <main className="f1-clean-review-shell">
+      <section className="f1-clean-review-topbar">
+        <button type="button" className="f1-clean-review-back" onClick={() => router.push("/posts")}>
           ← Back to posts
         </button>
 
-        <div className="f1-studio-title">
+        <div className="f1-clean-review-meta">
           <span>{platformName}</span>
-          <h1>{title}</h1>
-          <p>Prepare the media, check the wording, then post.</p>
+          <strong>{isPosted ? "Posted" : "Ready"}</strong>
         </div>
-
-        <span className={`f1-studio-status ${isPosted ? "is-posted" : ""}`}>
-          {isPosted ? "Posted" : "Ready"}
-        </span>
       </section>
 
-      {message && <div className="f1-studio-toast">{message}</div>}
+      {message && <div className="f1-clean-review-message">{message}</div>}
 
-      <section className="f1-studio-stack">
-        <article className="f1-studio-card f1-studio-card-media">
-          <header className="f1-studio-card-header">
-            <div>
-              <span>Step 1</span>
-              <h2>{activeMediaMode === "prepare" ? "Prepare media" : "Media preview"}</h2>
-              <p>
-                {activeMediaMode === "prepare"
-                  ? "Choose a platform frame, then move and zoom the image until it looks right."
-                  : "Check the media before publishing."}
-              </p>
-            </div>
-
-            {canPrepareImage && (
-              <button
-                type="button"
-                className={activeMediaMode === "prepare" ? "f1-studio-secondary" : "f1-studio-primary-small"}
-                onClick={() => setActiveMediaMode(activeMediaMode === "prepare" ? "preview" : "prepare")}
-              >
-                {activeMediaMode === "prepare" ? "Back to preview" : "Prepare media"}
-              </button>
-            )}
-          </header>
-
-          {activeMediaMode === "prepare" && canPrepareImage ? (
-            <div className="f1-studio-prepare-layout">
-              <div
-                className="f1-studio-transform-stage"
-                onPointerDown={startDrag}
-                onPointerMove={moveDrag}
-                onPointerUp={stopDrag}
-                onPointerCancel={stopDrag}
-                onPointerLeave={stopDrag}
-                onWheel={onWheelZoom}
-              >
-                <div
-                  className="f1-studio-transform-frame"
-                  style={{ aspectRatio: `${selectedPreset.width} / ${selectedPreset.height}` }}
-                >
-                  <img
-                    src={mediaUrl}
-                    alt="Prepared media preview"
-                    draggable={false}
-                    className={prepareFitMode === "fit" ? "is-fit" : "is-fill"}
-                    style={transformStyle}
-                  />
-                  <span className="f1-studio-frame-grid" />
-                  <span className="f1-studio-frame-corner is-tl" />
-                  <span className="f1-studio-frame-corner is-tr" />
-                  <span className="f1-studio-frame-corner is-bl" />
-                  <span className="f1-studio-frame-corner is-br" />
-                </div>
+      <section className="f1-clean-review-layout">
+        <section className="f1-clean-review-main">
+          <article className="f1-clean-card">
+            <div className="f1-clean-card-title">
+              <div>
+                <span>Media</span>
+                <h1>Review media</h1>
               </div>
 
-              <aside className="f1-studio-prepare-panel">
-                <div className="f1-studio-panel-section">
-                  <span>Platform frame</span>
-                  <div className="f1-studio-preset-grid">
+              {canPrepareImage && (
+                <button
+                  type="button"
+                  className={activePanel === "prepare" ? "f1-clean-secondary" : "f1-clean-primary"}
+                  onClick={() => setActivePanel(activePanel === "prepare" ? "review" : "prepare")}
+                >
+                  {activePanel === "prepare" ? "Done" : "Prepare media"}
+                </button>
+              )}
+            </div>
+
+            {activePanel === "prepare" && canPrepareImage ? (
+              <div className="f1-clean-prepare">
+                <div
+                  className="f1-clean-transform-stage"
+                  onPointerDown={startDrag}
+                  onPointerMove={moveDrag}
+                  onPointerUp={stopDrag}
+                  onPointerCancel={stopDrag}
+                  onPointerLeave={stopDrag}
+                  onWheel={onWheelZoom}
+                >
+                  <div
+                    className="f1-clean-transform-frame"
+                    style={{ aspectRatio: `${selectedPreset.width} / ${selectedPreset.height}` }}
+                  >
+                    <img
+                      src={mediaUrl}
+                      alt="Prepared media preview"
+                      draggable={false}
+                      className={prepareFitMode === "fit" ? "is-fit" : "is-fill"}
+                      style={transformStyle}
+                    />
+                    <span className="f1-clean-frame-grid" />
+                  </div>
+                </div>
+
+                <div className="f1-clean-prepare-tools">
+                  <div className="f1-clean-preset-row">
                     {resizePresets.map((preset) => (
                       <button
                         key={preset.value}
@@ -852,232 +715,200 @@ export default function PostReviewPage() {
                       </button>
                     ))}
                   </div>
-                </div>
 
-                <div className="f1-studio-tool-card">
-                  <strong>Move and zoom</strong>
-                  <p>Drag the image. Use the slider or mouse wheel to zoom.</p>
+                  <div className="f1-clean-tool-row">
+                    <label>
+                      <span>Zoom</span>
+                      <input
+                        type="range"
+                        min="0.75"
+                        max="3"
+                        step="0.01"
+                        value={mediaZoom}
+                        onChange={(event) => {
+                          setMediaZoom(Number(event.target.value));
+                          setPreparedMedia(null);
+                        }}
+                      />
+                    </label>
 
-                  <label className="f1-studio-range">
-                    <span>Zoom</span>
-                    <input
-                      type="range"
-                      min="0.75"
-                      max="3"
-                      step="0.01"
-                      value={mediaZoom}
-                      onChange={(event) => {
-                        setMediaZoom(Number(event.target.value));
-                        setPreparedMedia(null);
-                      }}
-                    />
-                  </label>
-
-                  <div className="f1-studio-three-actions">
                     <button type="button" onClick={fitFullImage}>Fit</button>
                     <button type="button" onClick={fillFrame}>Fill</button>
                     <button type="button" onClick={resetTransform}>Reset</button>
                   </div>
+
+                  <div className="f1-clean-action-row">
+                    <button type="button" className="f1-clean-primary" onClick={createPreparedImage} disabled={resizingMedia}>
+                      {resizingMedia ? "Creating..." : "Create prepared image"}
+                    </button>
+
+                    <button type="button" onClick={sharePreparedImage} disabled={!preparedMedia?.url || sharingMedia}>
+                      {sharingMedia ? "Opening..." : "Share prepared image"}
+                    </button>
+
+                    <button type="button" onClick={downloadPreparedImage} disabled={!preparedMedia?.url}>
+                      Download
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="f1-clean-media-frame">
+                  {mediaUrl ? (
+                    isVideo ? (
+                      <video src={mediaUrl} controls />
+                    ) : isFlyer ? (
+                      <div className="f1-clean-empty-media">
+                        <strong>PDF / flyer attached</strong>
+                        <p>Open or download the file before posting.</p>
+                      </div>
+                    ) : (
+                      <img src={mediaUrl} alt="Post media" />
+                    )
+                  ) : (
+                    <div className="f1-clean-empty-media">
+                      <strong>No media attached</strong>
+                      <p>Upload an image, flyer or video before posting.</p>
+                    </div>
+                  )}
                 </div>
 
-                <button
-                  type="button"
-                  className="f1-studio-primary"
-                  onClick={createPreparedImage}
-                  disabled={resizingMedia}
-                >
-                  {resizingMedia ? "Creating..." : "Create prepared image"}
-                </button>
+                <div className="f1-clean-action-row">
+                  <input ref={fileInputRef} type="file" accept="image/*,video/*,.pdf" hidden onChange={handleUploadMedia} />
+
+                  <button type="button" onClick={() => fileInputRef.current?.click()}>
+                    Upload / replace
+                  </button>
+
+                  {mediaUrl && (
+                    <>
+                      <a href={mediaUrl} target="_blank" rel="noreferrer">View media</a>
+                      <button type="button" onClick={downloadMedia}>Download</button>
+                      <button type="button" className="is-danger" onClick={removeMedia}>Remove</button>
+                    </>
+                  )}
+                </div>
 
                 {preparedMedia?.url && (
-                  <div className="f1-studio-output">
-                    <strong>{preparedMedia.label}</strong>
-                    <p>{preparedMedia.width} × {preparedMedia.height}</p>
-                    <div className="f1-studio-two-actions">
-                      <button type="button" onClick={sharePreparedImage} disabled={sharingMedia}>
-                        {sharingMedia ? "Opening share..." : "Share prepared image"}
-                      </button>
-                      <button type="button" onClick={downloadPreparedImage}>
-                        Download
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </aside>
-            </div>
-          ) : (
-            <>
-              <div className="f1-studio-media-frame">
-                {mediaUrl ? (
-                  isVideo ? (
-                    <video src={mediaUrl} controls />
-                  ) : isFlyer ? (
-                    <div className="f1-studio-empty-media">
-                      <strong>PDF / flyer attached</strong>
-                      <p>Open or download the file before posting.</p>
-                    </div>
-                  ) : (
-                    <img src={mediaUrl} alt="Post media" />
-                  )
-                ) : (
-                  <div className="f1-studio-empty-media">
-                    <strong>No media attached</strong>
-                    <p>Upload an image, flyer or video before posting.</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="f1-studio-media-actions">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,video/*,.pdf"
-                  hidden
-                  onChange={handleUploadMedia}
-                />
-
-                <button type="button" onClick={() => fileInputRef.current?.click()}>
-                  Upload / replace media
-                </button>
-
-                {mediaUrl && (
-                  <>
-                    <a href={mediaUrl} target="_blank" rel="noreferrer">
-                      View media
-                    </a>
-                    <button type="button" onClick={downloadMedia}>
-                      Download media
-                    </button>
-                    <button type="button" className="is-danger" onClick={removeMedia}>
-                      Remove media
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {preparedMedia?.url && (
-                <div className="f1-studio-output is-wide">
-                  <strong>Prepared image ready</strong>
-                  <p>{preparedMedia.width} × {preparedMedia.height}</p>
-                  <div className="f1-studio-two-actions">
-                    <button type="button" onClick={sharePreparedImage}>Share prepared image</button>
+                  <div className="f1-clean-prepared-strip">
+                    <strong>Prepared image ready</strong>
+                    <span>{preparedMedia.width} × {preparedMedia.height}</span>
+                    <button type="button" onClick={sharePreparedImage}>Share</button>
                     <button type="button" onClick={downloadPreparedImage}>Download</button>
                   </div>
-                </div>
-              )}
-            </>
-          )}
-        </article>
+                )}
+              </>
+            )}
+          </article>
 
-        <article className="f1-studio-card">
-          <header className="f1-studio-card-header">
-            <div>
-              <span>Step 2</span>
-              <h2>Check the wording</h2>
-              <p>Check the caption before posting.</p>
+          <article className="f1-clean-card">
+            <div className="f1-clean-card-title">
+              <div>
+                <span>Wording</span>
+                <h2>Check caption</h2>
+              </div>
             </div>
-          </header>
 
-          <div className="f1-studio-wording-grid">
-            <label className="f1-studio-field is-caption">
-              <strong>Caption</strong>
-              <textarea value={caption} onChange={(event) => setCaption(event.target.value)} />
-            </label>
+            <div className="f1-clean-wording">
+              <label className="is-caption">
+                <strong>Caption</strong>
+                <textarea value={caption} onChange={(event) => setCaption(event.target.value)} />
+              </label>
 
-            <div className="f1-studio-side-fields">
-              <label className="f1-studio-field">
+              <label>
                 <strong>CTA</strong>
                 <input value={cta} onChange={(event) => setCta(event.target.value)} />
               </label>
 
-              <label className="f1-studio-field">
+              <label>
                 <strong>Hashtags</strong>
                 <input value={hashtags} onChange={(event) => setHashtags(event.target.value)} />
               </label>
+            </div>
 
-              <div className="f1-studio-two-actions">
-                <button type="button" onClick={saveWording} disabled={saving}>
-                  {saving ? "Saving..." : "Save wording"}
-                </button>
-                <button type="button" onClick={copyCaption}>
-                  Copy caption
+            <div className="f1-clean-action-row">
+              <button type="button" className="f1-clean-primary" onClick={saveWording} disabled={saving}>
+                {saving ? "Saving..." : "Save wording"}
+              </button>
+              <button type="button" onClick={copyCaption}>Copy caption</button>
+              <button type="button" onClick={() => setActivePanel("improve")}>Improve wording</button>
+            </div>
+          </article>
+
+          {activePanel === "improve" && (
+            <article className="f1-clean-card">
+              <div className="f1-clean-card-title">
+                <div>
+                  <span>Improve</span>
+                  <h2>Make it stronger</h2>
+                </div>
+
+                <button type="button" className="f1-clean-secondary" onClick={() => setActivePanel("review")}>
+                  Done
                 </button>
               </div>
-            </div>
-          </div>
-        </article>
 
-        <article className="f1-studio-card">
-          <header className="f1-studio-card-header">
-            <div>
-              <span>Step 3</span>
-              <h2>Improve the post</h2>
-              <p>Improve the wording when needed.</p>
-            </div>
-          </header>
+              <div className="f1-clean-improve-grid">
+                {quickImproveActions.map((action) => (
+                  <button
+                    key={action.value}
+                    type="button"
+                    onClick={() => quickImprove(action.value)}
+                    disabled={Boolean(rewriting)}
+                  >
+                    {rewriting === action.value ? "Improving..." : action.label}
+                  </button>
+                ))}
+              </div>
 
-          <div className="f1-studio-improve-grid">
-            {quickImproveActions.map((action) => (
+              <div className="f1-clean-select-row">
+                <label>
+                  <strong>Audience</strong>
+                  <select value={audienceTarget} onChange={(event) => setAudienceTarget(event.target.value)}>
+                    {audienceOptions.map((option) => <option key={option}>{option}</option>)}
+                  </select>
+                </label>
+
+                <label>
+                  <strong>Reach</strong>
+                  <select value={reachTarget} onChange={(event) => setReachTarget(event.target.value)}>
+                    {reachOptions.map((option) => <option key={option}>{option}</option>)}
+                  </select>
+                </label>
+
+                <label>
+                  <strong>Tone</strong>
+                  <select value={toneTarget} onChange={(event) => setToneTarget(event.target.value)}>
+                    {toneOptions.map((option) => <option key={option}>{option}</option>)}
+                  </select>
+                </label>
+              </div>
+
               <button
-                key={action.value}
                 type="button"
-                onClick={() => quickImprove(action.value)}
+                className="f1-clean-primary"
+                onClick={() => quickImprove("audience_targeted")}
                 disabled={Boolean(rewriting)}
               >
-                {rewriting === action.value ? "Improving..." : action.label}
+                {rewriting === "audience_targeted" ? "Improving..." : "Improve for selected audience"}
               </button>
-            ))}
-          </div>
+            </article>
+          )}
+        </section>
 
-          <div className="f1-studio-select-row">
-            <label>
-              <strong>Audience</strong>
-              <select value={audienceTarget} onChange={(event) => setAudienceTarget(event.target.value)}>
-                {audienceOptions.map((option) => <option key={option}>{option}</option>)}
-              </select>
-            </label>
+        <aside className="f1-clean-review-side">
+          <article className="f1-clean-side-card">
+            <span>Post</span>
+            <h2>{platformName}</h2>
+            <p>Copy the caption, add the media, then publish.</p>
 
-            <label>
-              <strong>Reach</strong>
-              <select value={reachTarget} onChange={(event) => setReachTarget(event.target.value)}>
-                {reachOptions.map((option) => <option key={option}>{option}</option>)}
-              </select>
-            </label>
-
-            <label>
-              <strong>Tone</strong>
-              <select value={toneTarget} onChange={(event) => setToneTarget(event.target.value)}>
-                {toneOptions.map((option) => <option key={option}>{option}</option>)}
-              </select>
-            </label>
-          </div>
-
-          <button
-            type="button"
-            className="f1-studio-secondary-wide"
-            onClick={() => quickImprove("audience_targeted")}
-            disabled={Boolean(rewriting)}
-          >
-            {rewriting === "audience_targeted" ? "Improving..." : "Improve for selected audience"}
-          </button>
-        </article>
-
-        <article className="f1-studio-card f1-studio-publish-card">
-          <header className="f1-studio-card-header">
-            <div>
-              <span>Step 4</span>
-              <h2>Post it</h2>
-              <p>Copy the caption, use the media, then publish.</p>
-            </div>
-          </header>
-
-          <div className="f1-studio-publish-actions">
-            <button type="button" className="f1-studio-primary" onClick={openPlatform}>
-              Post manually to {platformName}
+            <button type="button" className="f1-clean-primary" onClick={openPlatform}>
+              Post manually
             </button>
 
             <button type="button" onClick={sharePreparedImage} disabled={!preparedMedia?.url || sharingMedia}>
-              {sharingMedia ? "Opening..." : "Share prepared image"}
+              Share prepared image
             </button>
 
             <button type="button" onClick={markAsPosted} disabled={saving}>
@@ -1087,8 +918,8 @@ export default function PostReviewPage() {
             <button type="button" onClick={markAsNotPosted} disabled={saving}>
               Mark as not posted
             </button>
-          </div>
-        </article>
+          </article>
+        </aside>
       </section>
     </main>
   );
