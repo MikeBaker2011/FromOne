@@ -360,6 +360,8 @@ export default function PostReviewPage() {
     };
   }, [mediaOffset, mediaZoom]);
 
+  const frameClassName = `f1-clean-transform-frame f1-clean-frame-${resizePresetValue}`;
+
   useEffect(() => {
     if (!postId) return;
 
@@ -1029,7 +1031,7 @@ export default function PostReviewPage() {
                   onWheel={onWheelZoom}
                 >
                   <div
-                    className="f1-clean-transform-frame"
+                    className={frameClassName}
                     style={{ aspectRatio: `${selectedPreset.width} / ${selectedPreset.height}` }}
                   >
                     <img

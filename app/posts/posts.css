@@ -645,3 +645,84 @@ button:disabled {
     width: 100% !important;
   }
 }
+
+
+/* FINAL FRAME SHAPE FIX
+   These rules override earlier generic aspect-ratio styling so each frame is visibly different. */
+
+.f1-clean-transform-stage {
+  height: 430px !important;
+  min-height: 430px !important;
+  padding: 22px !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.f1-clean-transform-frame {
+  width: auto !important;
+  height: auto !important;
+  max-width: 94% !important;
+  max-height: 380px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Facebook feed: clearly wide landscape */
+.f1-clean-frame-facebook-feed {
+  width: min(94%, 660px) !important;
+  aspect-ratio: 1200 / 630 !important;
+}
+
+/* Square formats: true square */
+.f1-clean-frame-facebook-square,
+.f1-clean-frame-instagram-square {
+  width: min(84%, 360px) !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* Instagram feed portrait: visibly taller than square */
+.f1-clean-frame-instagram-portrait {
+  width: min(78%, 300px) !important;
+  aspect-ratio: 4 / 5 !important;
+}
+
+/* Stories/Reels/TikTok: tall narrow vertical */
+.f1-clean-frame-facebook-story,
+.f1-clean-frame-instagram-story,
+.f1-clean-frame-tiktok-vertical {
+  width: min(58%, 215px) !important;
+  aspect-ratio: 9 / 16 !important;
+}
+
+/* Keep the image filling/containing inside the actual selected frame */
+.f1-clean-transform-frame img {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@media (max-width: 680px) {
+  .f1-clean-transform-stage {
+    height: 430px !important;
+    min-height: 430px !important;
+    padding: 16px !important;
+  }
+
+  .f1-clean-frame-facebook-feed {
+    width: min(96%, 360px) !important;
+  }
+
+  .f1-clean-frame-facebook-square,
+  .f1-clean-frame-instagram-square {
+    width: min(86%, 320px) !important;
+  }
+
+  .f1-clean-frame-instagram-portrait {
+    width: min(76%, 265px) !important;
+  }
+
+  .f1-clean-frame-facebook-story,
+  .f1-clean-frame-instagram-story,
+  .f1-clean-frame-tiktok-vertical {
+    width: min(54%, 205px) !important;
+  }
+}
