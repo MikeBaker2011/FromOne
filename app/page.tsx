@@ -4,14 +4,14 @@ import PublicNav from './components/PublicNav';
 import PublicFooter from './components/PublicFooter';
 
 export const metadata: Metadata = {
-  title: 'FromOne | Weekly Social Posts From Your Media',
+  title: 'FromOne | Create, Prepare, Schedule and Publish Social Posts',
   description:
-    'FromOne turns small business photos, videos and flyers into ready-to-review weekly social posts with Facebook and Instagram autoposting.',
+    'FromOne scans your business, creates weekly social posts, prepares the media, and helps you publish manually or automatically to Facebook and Instagram.',
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'FromOne | Weekly Social Posts From Your Media',
+    title: 'FromOne | Create, Prepare, Schedule and Publish Social Posts',
     description:
-      'Upload this week’s media. FromOne writes the posts, suggests times, and can publish Facebook and Instagram after review.',
+      'Scan your business, create posts, prepare images, review everything, then schedule or autopublish to Facebook and Instagram with manual fallback.',
     url: '/',
     type: 'website',
     images: [
@@ -25,30 +25,46 @@ export const metadata: Metadata = {
   },
 };
 
-const proofPoints = ['Photos, videos & flyers', 'Review before publishing', 'Facebook + Instagram autopost'];
+const proofPoints = [
+  'Website + business scanning',
+  'Image prep for each platform',
+  'Schedule, autopublish or post manually',
+];
 
 const workflow = [
   {
     step: '01',
-    title: 'Upload real media',
-    text: 'Add this week’s photos, videos or flyers from the work already happening in the business.',
+    title: 'Scan or add your business',
+    text: 'Start with a website, business details, photos, videos or flyers so the posts are based on real context.',
   },
   {
     step: '02',
-    title: 'Review ready posts',
-    text: 'FromOne writes platform-ready posts, suggests times and keeps everything editable before anything goes live.',
+    title: 'Create and prepare posts',
+    text: 'FromOne writes captions, suggests times, and helps resize or prepare media for each platform before publishing.',
   },
   {
     step: '03',
-    title: 'Publish with control',
-    text: 'Facebook and Instagram can autopost when connected. TikTok stays copy/open manual.',
+    title: 'Publish your way',
+    text: 'Schedule posts, autopublish to Facebook and Instagram where supported, or use the manual fallback anytime.',
   },
 ];
 
 const platformCards = [
-  { name: 'Facebook', label: 'Autopost ready', text: 'Publish to a connected Facebook Page after review.' },
-  { name: 'Instagram', label: 'Image/video ready', text: 'Publish to a connected professional account with supported media.' },
-  { name: 'TikTok', label: 'Manual by design', text: 'Copy the caption and open TikTok when it is time to post.' },
+  {
+    name: 'Facebook',
+    label: 'Autopublish + schedule',
+    text: 'Publish now or schedule to a connected Facebook Page, with manual posting always available.',
+  },
+  {
+    name: 'Instagram',
+    label: 'Media-ready publishing',
+    text: 'Prepare supported images or videos, then publish now or schedule to a connected professional account.',
+  },
+  {
+    name: 'TikTok',
+    label: 'Manual by design',
+    text: 'FromOne prepares the wording and media so the user can copy, open TikTok and post manually.',
+  },
 ];
 
 export default function Home() {
@@ -308,18 +324,18 @@ export default function Home() {
         <div className="fromone-shell fromone-hero-grid">
           <div className="fromone-hero-copy">
             <h1 className="fromone-hero-title">
-              Turn this week’s media into <span>ready posts.</span>
+              Create, prepare and publish <span>ready posts.</span>
             </h1>
 
             <p className="fromone-hero-text">
-              Upload photos, videos or flyers. FromOne writes the posts, suggests the times and keeps publishing under your control.
+              FromOne scans your business, creates social posts, prepares the media, and helps you schedule, autopublish or post manually from one place.
             </p>
 
             <div className="fromone-hero-actions">
               <Link href="/signin" className="sales-primary-button">Start 7-day demo</Link>
-              <a href="/download/FromOne-beta-v1.apk" download className="sales-secondary-button">
-                Download Android APK
-              </a>
+              <Link href="/tutorial" className="sales-secondary-button">
+                See how it works
+              </Link>
             </div>
 
             <div className="fromone-proof-row" aria-label="FromOne highlights">
@@ -331,16 +347,16 @@ export default function Home() {
 
           <div className="fromone-product-preview" aria-label="FromOne product preview">
             <div className="fromone-product-inner">
-              <div className="fromone-preview-toolbar"><strong>This week</strong><span>3 posts ready</span></div>
+              <div className="fromone-preview-toolbar"><strong>This week</strong><span>Posts ready to review</span></div>
               <div className="fromone-media-grid">
-                <div className="fromone-media-tile"><small>Upload 01</small><strong>New offer flyer</strong></div>
-                <div className="fromone-media-tile secondary"><small>Upload 02</small><strong>Behind-the-scenes clip</strong></div>
+                <div className="fromone-media-tile"><small>Scan 01</small><strong>Business website</strong></div>
+                <div className="fromone-media-tile secondary"><small>Media 02</small><strong>Photos, flyers or video</strong></div>
               </div>
-              <div className="fromone-sample-post"><div className="meta"><span>Instagram</span><span>Thu · 18:45</span></div><p>Fresh content built from the media you already have, with wording shaped around your business, offer and audience.</p></div>
+              <div className="fromone-sample-post"><div className="meta"><span>Instagram</span><span>Thu · 18:45</span></div><p>Fresh content built from your business and media, with wording, prepared images and a clear publish option.</p></div>
               <div className="fromone-schedule-grid">
-                <div className="fromone-schedule-chip"><strong>Facebook</strong><span>Autopost</span></div>
-                <div className="fromone-schedule-chip"><strong>Instagram</strong><span>Autopost</span></div>
-                <div className="fromone-schedule-chip"><strong>TikTok</strong><span>Copy/open</span></div>
+                <div className="fromone-schedule-chip"><strong>Facebook</strong><span>Schedule</span></div>
+                <div className="fromone-schedule-chip"><strong>Instagram</strong><span>Autopublish</span></div>
+                <div className="fromone-schedule-chip"><strong>TikTok</strong><span>Manual</span></div>
               </div>
             </div>
           </div>
@@ -352,7 +368,7 @@ export default function Home() {
           <div className="fromone-section-heading">
             <div className="page-eyebrow">How it works</div>
             <h2>A simple weekly rhythm.</h2>
-            <p>FromOne keeps the workflow focused: upload real media, review the posts, then publish when they are ready.</p>
+            <p>FromOne keeps the workflow focused: understand the business, create the posts, prepare the media, then publish when ready.</p>
           </div>
           <div className="fromone-workflow-grid">
             {workflow.map((item) => (
@@ -365,9 +381,14 @@ export default function Home() {
       <section className="fromone-section">
         <div className="fromone-shell">
           <div className="fromone-feature-panel">
-            <div><div className="page-eyebrow">Why it feels different</div><h2>No blank page. No content guesswork.</h2><p>FromOne starts with the business’s own media and profile. That means each post has a real topic, a clear audience and a practical next step.</p></div>
+            <div><div className="page-eyebrow">Why it feels different</div><h2>No blank page. No messy handover.</h2><p>FromOne starts with the business, website and media. That means each post has a real topic, the image can be prepared, and the publishing path is clear.</p></div>
             <div className="fromone-feature-list">
-              {['Posts created from real media, not generic prompts','Suggested posting times for the week','Instagram-safe image handling','Edit, improve, rescan and review before publishing'].map((feature) => (<div key={feature}><span aria-hidden="true">✓</span><strong>{feature}</strong></div>))}
+              {[
+                'Website and business scanning for better context',
+                'Posts created from real media, not generic prompts',
+                'Image preparation, resizing and platform-safe media',
+                'Editable schedule, autopublish now and manual fallback',
+              ].map((feature) => (<div key={feature}><span aria-hidden="true">✓</span><strong>{feature}</strong></div>))}
             </div>
           </div>
         </div>
@@ -375,7 +396,7 @@ export default function Home() {
 
       <section className="fromone-section">
         <div className="fromone-shell">
-          <div className="fromone-section-heading"><div className="page-eyebrow">Publishing</div><h2>Built around real platform rules.</h2><p>Clear publishing options without pretending every platform works the same way.</p></div>
+          <div className="fromone-section-heading"><div className="page-eyebrow">Publishing</div><h2>Built around real platform rules.</h2><p>Autopublish where Facebook and Instagram support it, with a simple manual route when a platform or connection needs attention.</p></div>
           <div className="fromone-platform-grid">
             {platformCards.map((platform) => (<article key={platform.name} className="fromone-card fromone-platform-card"><span className="label">{platform.label}</span><h3>{platform.name}</h3><p>{platform.text}</p></article>))}
           </div>
@@ -385,7 +406,7 @@ export default function Home() {
       <section className="fromone-section" style={{ paddingBottom: 72 }}>
         <div className="fromone-shell">
           <div className="fromone-final-cta">
-            <div className="page-eyebrow">FromOne Starter</div><h2>Make posting weekly feel manageable.</h2><p>Start with the demo, set up the Business Profile and see how quickly real media becomes a usable weekly posting plan.</p>
+            <div className="page-eyebrow">FromOne Starter</div><h2>Create, prepare and publish from one place.</h2><p>Start with the demo, add your business or website, and see how quickly FromOne turns real context and media into a usable posting plan.</p>
             <div className="fromone-final-actions"><Link href="/signin" className="sales-primary-button">Start 7-day demo</Link><a href="mailto:info@fromone.co.uk" className="sales-secondary-button">Email info@fromone.co.uk</a></div>
           </div>
         </div>
