@@ -1554,7 +1554,7 @@ export default function PostReviewPage() {
                 <div>
                   <h2 style={{ marginBottom: 6 }}>{platformName}</h2>
                   <p>
-                    Schedule autopublish, publish now, or use the manual fallback.
+                    Schedule autopublish, publish now, or post manually.
                   </p>
                 </div>
 
@@ -1630,42 +1630,18 @@ export default function PostReviewPage() {
 
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 10,
+                    padding: 10,
+                    borderRadius: 14,
+                    background: "rgba(15, 23, 42, 0.55)",
+                    border: "1px solid rgba(255,255,255,0.08)",
                   }}
                 >
-                  <div
-                    style={{
-                      padding: 10,
-                      borderRadius: 14,
-                      background: "rgba(15, 23, 42, 0.55)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                  >
-                    <span className="pr2-kicker" style={{ margin: 0 }}>
-                      Planned
-                    </span>
-                    <strong style={{ display: "block", marginTop: 4 }}>
-                      {scheduledLabel || "Not set"}
-                    </strong>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 10,
-                      borderRadius: 14,
-                      background: "rgba(15, 23, 42, 0.55)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                  >
-                    <span className="pr2-kicker" style={{ margin: 0 }}>
-                      Method
-                    </span>
-                    <strong style={{ display: "block", marginTop: 4 }}>
-                      {canAutopublish ? "Auto + manual" : "Manual only"}
-                    </strong>
-                  </div>
+                  <span className="pr2-kicker" style={{ margin: 0 }}>
+                    Method
+                  </span>
+                  <strong style={{ display: "block", marginTop: 4 }}>
+                    {canAutopublish ? "Auto + manual" : "Manual only"}
+                  </strong>
                 </div>
               </div>
 
