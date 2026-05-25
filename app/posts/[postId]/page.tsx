@@ -69,55 +69,13 @@ type PreparedMedia = {
 };
 
 const resizePresets: ResizePreset[] = [
-  {
-    value: "instagram-portrait",
-    label: "Instagram portrait",
-    size: "1080 × 1350",
-    width: 1080,
-    height: 1350,
-  },
-  {
-    value: "instagram-square",
-    label: "Instagram square",
-    size: "1080 × 1080",
-    width: 1080,
-    height: 1080,
-  },
-  {
-    value: "instagram-story",
-    label: "Instagram story / reel",
-    size: "1080 × 1920",
-    width: 1080,
-    height: 1920,
-  },
-  {
-    value: "facebook-feed",
-    label: "Facebook feed",
-    size: "1200 × 630",
-    width: 1200,
-    height: 630,
-  },
-  {
-    value: "facebook-square",
-    label: "Facebook square",
-    size: "1080 × 1080",
-    width: 1080,
-    height: 1080,
-  },
-  {
-    value: "facebook-story",
-    label: "Facebook story",
-    size: "1080 × 1920",
-    width: 1080,
-    height: 1920,
-  },
-  {
-    value: "tiktok-vertical",
-    label: "TikTok vertical",
-    size: "1080 × 1920",
-    width: 1080,
-    height: 1920,
-  },
+  { value: "instagram-portrait", label: "Instagram portrait", size: "1080 × 1350", width: 1080, height: 1350 },
+  { value: "instagram-square", label: "Instagram square", size: "1080 × 1080", width: 1080, height: 1080 },
+  { value: "instagram-story", label: "Instagram story / reel", size: "1080 × 1920", width: 1080, height: 1920 },
+  { value: "facebook-feed", label: "Facebook feed", size: "1200 × 630", width: 1200, height: 630 },
+  { value: "facebook-square", label: "Facebook square", size: "1080 × 1080", width: 1080, height: 1080 },
+  { value: "facebook-story", label: "Facebook story", size: "1080 × 1920", width: 1080, height: 1920 },
+  { value: "tiktok-vertical", label: "TikTok vertical", size: "1080 × 1920", width: 1080, height: 1920 },
 ];
 
 const quickImproveActions = [
@@ -240,29 +198,6 @@ function getSafeFileName(value?: string | null) {
   );
 }
 
-function getPostTitle(post: any, platformName: string) {
-  const savedTitle = cleanText(post?.title);
-
-  if (savedTitle && !/^(facebook|instagram|tiktok|post)\s*(post)?\s*\d*$/i.test(savedTitle)) {
-    return savedTitle;
-  }
-
-  const firstLine = cleanText(post?.caption)
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .find(Boolean);
-
-  if (firstLine) {
-    const firstSentence = firstLine.split(/[.!?]/)[0]?.trim() || firstLine;
-
-    return firstSentence.length > 78
-      ? `${firstSentence.slice(0, 78).trim()}...`
-      : firstSentence;
-  }
-
-  return `${platformName} post`;
-}
-
 function triggerDownload(url: string, filename: string) {
   const link = document.createElement("a");
   link.href = url;
@@ -338,6 +273,7 @@ export default function PostReviewPage() {
   const isVideo = mediaType === "video";
   const isFlyer = mediaType === "flyer" || mediaType === "pdf" || mediaUrl.toLowerCase().includes(".pdf");
   const canPrepareImage = Boolean(mediaUrl) && !isVideo && !isFlyer;
+
   const isFacebookPost = platformName.toLowerCase().includes("facebook");
   const isInstagramPost = platformName.toLowerCase().includes("instagram");
   const canAutopublish = isFacebookPost || isInstagramPost;
@@ -347,8 +283,6 @@ export default function PostReviewPage() {
     Boolean(post?.is_posted) ||
     cleanText(post?.status).toLowerCase() === "posted" ||
     cleanText(post?.publish_status).toLowerCase() === "posted";
-
-  const title = useMemo(() => getPostTitle(post, platformName), [post, platformName]);
 
   const fullCaption = useMemo(() => {
     return [caption, cta, hashtags].map(cleanText).filter(Boolean).join("\n\n");
@@ -360,7 +294,7 @@ export default function PostReviewPage() {
     };
   }, [mediaOffset, mediaZoom]);
 
-  const frameClassName = `f1-clean-transform-frame f1-clean-frame-${resizePresetValue}`;
+  const frameClassName = `f1-review-frame f1-review-frame-${resizePresetValue}`;
 
   useEffect(() => {
     if (!postId) return;
@@ -595,7 +529,7 @@ export default function PostReviewPage() {
     if (!mediaUrl) return;
 
     const extension = isVideo ? "mp4" : isFlyer ? "pdf" : "jpg";
-    triggerDownload(mediaUrl, `${getSafeFileName(title)}-original.${extension}`);
+    triggerDownload(mediaUrl, `${getSafeFileName("fromone-post-media")}-original.${extension}`);
   };
 
   const resetTransform = () => {
@@ -790,7 +724,7 @@ export default function PostReviewPage() {
 
     triggerDownload(
       preparedMedia.url,
-      `${getSafeFileName(title)}-${preparedMedia.width}x${preparedMedia.height}.jpg`,
+      `fromone-post-${preparedMedia.width}x${preparedMedia.height}.jpg`,
     );
   };
 
@@ -804,11 +738,11 @@ export default function PostReviewPage() {
     await copyCaption();
 
     try {
-      const file = await urlToFile(preparedMedia.url, getSafeFileName(title));
+      const file = await urlToFile(preparedMedia.url, "fromone-post");
       const nav = navigator as any;
 
       if (nav.canShare?.({ files: [file] }) && nav.share) {
-        await nav.share({ title, text: fullCaption, files: [file] });
+        await nav.share({ title: "FromOne post", text: fullCaption, files: [file] });
         setMessage("Share sheet opened.");
         return;
       }
@@ -860,9 +794,7 @@ export default function PostReviewPage() {
 
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           postId: post.id,
           campaignPostId: post.id,
@@ -966,16 +898,16 @@ export default function PostReviewPage() {
 
   if (loading) {
     return (
-      <main className="f1-clean-review-shell">
-        <section className="f1-clean-review-loading">Loading post...</section>
+      <main className="f1-review-page">
+        <section className="f1-review-loading">Loading post...</section>
       </main>
     );
   }
 
   if (!post) {
     return (
-      <main className="f1-clean-review-shell">
-        <section className="f1-clean-review-loading">
+      <main className="f1-review-page">
+        <section className="f1-review-loading">
           <h1>Post not found</h1>
           <p>{message || "This post could not be loaded."}</p>
           <button type="button" onClick={() => router.push("/posts")}>Back to posts</button>
@@ -985,44 +917,46 @@ export default function PostReviewPage() {
   }
 
   return (
-    <main className="f1-clean-review-shell">
-      <section className="f1-clean-review-topbar">
-        <button type="button" className="f1-clean-review-back" onClick={() => router.push("/posts")}>
+    <main className="f1-review-page">
+      <section className="f1-review-topbar">
+        <button type="button" className="f1-review-back" onClick={() => router.push("/posts")}>
           ← Back to posts
         </button>
 
-        <div className="f1-clean-review-meta">
+        <div className="f1-review-status-pill">
           <span>{platformName}</span>
           <strong>{isPosted ? "Posted" : "Ready"}</strong>
         </div>
       </section>
 
-      {message && <div className="f1-clean-review-message">{message}</div>}
+      {message && <div className="f1-review-message">{message}</div>}
 
-      <section className="f1-clean-review-layout">
-        <section className="f1-clean-review-main">
-          <article className="f1-clean-card">
-            <div className="f1-clean-card-title">
+      <section className="f1-review-layout">
+        <section className="f1-review-main">
+          <article className="f1-review-card">
+            <div className="f1-review-card-title">
               <div>
                 <span>Media</span>
                 <h1>{activePanel === "prepare" ? "Prepare media" : "Review media"}</h1>
               </div>
 
+              {canPrepareImage && activePanel !== "prepare" && (
+                <button type="button" className="f1-review-primary" onClick={() => setActivePanel("prepare")}>
+                  Prepare media
+                </button>
+              )}
+
               {activePanel === "prepare" && (
-                <button
-                  type="button"
-                  className="f1-clean-secondary"
-                  onClick={() => setActivePanel("review")}
-                >
+                <button type="button" className="f1-review-secondary" onClick={() => setActivePanel("review")}>
                   Done
                 </button>
               )}
             </div>
 
             {activePanel === "prepare" && canPrepareImage ? (
-              <div className="f1-clean-prepare">
+              <div className="f1-review-prepare">
                 <div
-                  className="f1-clean-transform-stage"
+                  className="f1-review-transform-stage"
                   onPointerDown={startTransform}
                   onPointerMove={moveTransform}
                   onPointerUp={stopTransform}
@@ -1030,10 +964,7 @@ export default function PostReviewPage() {
                   onPointerLeave={stopTransform}
                   onWheel={onWheelZoom}
                 >
-                  <div
-                    className={frameClassName}
-                    style={{ aspectRatio: `${selectedPreset.width} / ${selectedPreset.height}` }}
-                  >
+                  <div className={frameClassName}>
                     <img
                       src={mediaUrl}
                       alt="Prepared media preview"
@@ -1041,12 +972,12 @@ export default function PostReviewPage() {
                       className={prepareFitMode === "fit" ? "is-fit" : "is-fill"}
                       style={transformStyle}
                     />
-                    <span className="f1-clean-frame-grid" />
+                    <span className="f1-review-frame-grid" />
                   </div>
                 </div>
 
-                <div className="f1-clean-prepare-tools">
-                  <div className="f1-clean-preset-row">
+                <div className="f1-review-prepare-tools">
+                  <div className="f1-review-preset-row">
                     {recommendedPresets.map((preset) => (
                       <button
                         key={preset.value}
@@ -1060,7 +991,7 @@ export default function PostReviewPage() {
                     ))}
                   </div>
 
-                  <div className="f1-clean-tool-row">
+                  <div className="f1-review-tool-row">
                     <label>
                       <span>Zoom</span>
                       <input
@@ -1081,13 +1012,13 @@ export default function PostReviewPage() {
                     <button type="button" onClick={resetTransform}>Reset</button>
                   </div>
 
-                  <div className="f1-clean-action-row">
-                    <button type="button" className="f1-clean-primary" onClick={createPreparedImage} disabled={resizingMedia}>
+                  <div className="f1-review-action-row">
+                    <button type="button" className="f1-review-primary" onClick={createPreparedImage} disabled={resizingMedia}>
                       {resizingMedia ? "Creating..." : "Create prepared image"}
                     </button>
 
                     <button type="button" onClick={sharePreparedImage} disabled={!preparedMedia?.url || sharingMedia}>
-                      {sharingMedia ? "Opening..." : "Share prepared image"}
+                      {sharingMedia ? "Opening..." : "Share to social app"}
                     </button>
 
                     <button type="button" onClick={downloadPreparedImage} disabled={!preparedMedia?.url}>
@@ -1098,12 +1029,12 @@ export default function PostReviewPage() {
               </div>
             ) : (
               <>
-                <div className="f1-clean-media-frame">
+                <div className="f1-review-media-frame">
                   {mediaUrl ? (
                     isVideo ? (
                       <video src={mediaUrl} controls />
                     ) : isFlyer ? (
-                      <div className="f1-clean-empty-media">
+                      <div className="f1-review-empty">
                         <strong>PDF / flyer attached</strong>
                         <p>Open or download the file before posting.</p>
                       </div>
@@ -1111,7 +1042,7 @@ export default function PostReviewPage() {
                       <img src={mediaUrl} alt="Post media" />
                     )
                   ) : (
-                    <div className="f1-clean-empty-media">
+                    <div className="f1-review-empty">
                       <strong>No media attached</strong>
                       <p>Upload an image, flyer or video before posting.</p>
                     </div>
@@ -1120,16 +1051,10 @@ export default function PostReviewPage() {
 
                 <input ref={fileInputRef} type="file" accept="image/*,video/*,.pdf" hidden onChange={handleUploadMedia} />
 
-                <details className="f1-clean-media-menu">
+                <details className="f1-review-options">
                   <summary>Media options</summary>
 
-                  <div className="f1-clean-action-row">
-                    {canPrepareImage && (
-                      <button type="button" className="f1-clean-primary" onClick={() => setActivePanel("prepare")}>
-                        Prepare media
-                      </button>
-                    )}
-
+                  <div className="f1-review-action-row">
                     <button type="button" onClick={() => fileInputRef.current?.click()}>
                       Upload / replace
                     </button>
@@ -1145,10 +1070,10 @@ export default function PostReviewPage() {
                 </details>
 
                 {preparedMedia?.url && (
-                  <div className="f1-clean-prepared-strip">
+                  <div className="f1-review-prepared-strip">
                     <strong>Prepared image ready</strong>
                     <span>{preparedMedia.width} × {preparedMedia.height}</span>
-                    <button type="button" onClick={sharePreparedImage}>Share</button>
+                    <button type="button" onClick={sharePreparedImage}>Share to social app</button>
                     <button type="button" onClick={downloadPreparedImage}>Download</button>
                   </div>
                 )}
@@ -1156,15 +1081,15 @@ export default function PostReviewPage() {
             )}
           </article>
 
-          <article className="f1-clean-card">
-            <div className="f1-clean-card-title">
+          <article className="f1-review-card">
+            <div className="f1-review-card-title">
               <div>
                 <span>Wording</span>
                 <h2>Check caption</h2>
               </div>
             </div>
 
-            <div className="f1-clean-wording">
+            <div className="f1-review-wording">
               <label className="is-caption">
                 <strong>Caption</strong>
                 <textarea value={caption} onChange={(event) => setCaption(event.target.value)} />
@@ -1181,8 +1106,8 @@ export default function PostReviewPage() {
               </label>
             </div>
 
-            <div className="f1-clean-action-row">
-              <button type="button" className="f1-clean-primary" onClick={saveWording} disabled={saving}>
+            <div className="f1-review-action-row">
+              <button type="button" className="f1-review-primary" onClick={saveWording} disabled={saving}>
                 {saving ? "Saving..." : "Save wording"}
               </button>
               <button type="button" onClick={copyCaption}>Copy caption</button>
@@ -1191,19 +1116,19 @@ export default function PostReviewPage() {
           </article>
 
           {activePanel === "improve" && (
-            <article className="f1-clean-card">
-              <div className="f1-clean-card-title">
+            <article className="f1-review-card">
+              <div className="f1-review-card-title">
                 <div>
                   <span>Improve</span>
                   <h2>Make it stronger</h2>
                 </div>
 
-                <button type="button" className="f1-clean-secondary" onClick={() => setActivePanel("review")}>
+                <button type="button" className="f1-review-secondary" onClick={() => setActivePanel("review")}>
                   Done
                 </button>
               </div>
 
-              <div className="f1-clean-improve-grid">
+              <div className="f1-review-improve-grid">
                 {quickImproveActions.map((action) => (
                   <button
                     key={action.value}
@@ -1216,7 +1141,7 @@ export default function PostReviewPage() {
                 ))}
               </div>
 
-              <div className="f1-clean-select-row">
+              <div className="f1-review-select-row">
                 <label>
                   <strong>Audience</strong>
                   <select value={audienceTarget} onChange={(event) => setAudienceTarget(event.target.value)}>
@@ -1241,7 +1166,7 @@ export default function PostReviewPage() {
 
               <button
                 type="button"
-                className="f1-clean-primary"
+                className="f1-review-primary"
                 onClick={() => quickImprove("audience_targeted")}
                 disabled={Boolean(rewriting)}
               >
@@ -1251,33 +1176,43 @@ export default function PostReviewPage() {
           )}
         </section>
 
-        <aside className="f1-clean-review-side">
-          <article className="f1-clean-side-card">
+        <aside className="f1-review-side">
+          <article className="f1-review-side-card">
             <span>Publish</span>
             <h2>{platformName}</h2>
             <p>Copy the caption, add the media, then publish.</p>
 
-            <button type="button" className="f1-clean-primary" onClick={openPlatform}>
+            <button type="button" className="f1-review-primary" onClick={openPlatform}>
               Post manually
             </button>
 
-            <button type="button" onClick={sharePreparedImage} disabled={!preparedMedia?.url || sharingMedia}>
-              Share prepared image
-            </button>
-
-            {canAutopublish && (
-              <button type="button" onClick={autopublishNow} disabled={autoPublishing || isPosted}>
-                {autoPublishing ? "Autopublishing..." : `Autopublish to ${autopublishPlatformLabel}`}
+            {preparedMedia?.url && (
+              <button type="button" onClick={sharePreparedImage} disabled={sharingMedia}>
+                {sharingMedia ? "Opening..." : "Share to social app"}
               </button>
             )}
 
-            <button type="button" onClick={markAsPosted} disabled={saving || isPosted}>
-              Mark as posted
-            </button>
+            <details className="f1-review-options">
+              <summary>More options</summary>
 
-            <button type="button" onClick={markAsNotPosted} disabled={saving || !isPosted}>
-              Mark as not posted
-            </button>
+              <div className="f1-review-side-options">
+                {canAutopublish && (
+                  <button type="button" onClick={autopublishNow} disabled={autoPublishing || isPosted}>
+                    {autoPublishing ? "Autopublishing..." : `Autopublish to ${autopublishPlatformLabel}`}
+                  </button>
+                )}
+
+                <button type="button" onClick={markAsPosted} disabled={saving || isPosted}>
+                  Mark as posted
+                </button>
+
+                {isPosted && (
+                  <button type="button" onClick={markAsNotPosted} disabled={saving}>
+                    Mark as not posted
+                  </button>
+                )}
+              </div>
+            </details>
           </article>
         </aside>
       </section>

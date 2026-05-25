@@ -1,7 +1,7 @@
 
-/* Clean premium post review page */
+/* Final simplified premium post review page */
 
-.f1-clean-review-shell {
+.f1-review-page {
   min-height: 100vh;
   padding: 28px;
   background:
@@ -10,15 +10,15 @@
   color: #f8fafc;
 }
 
-.f1-clean-review-topbar,
-.f1-clean-review-message,
-.f1-clean-review-layout {
+.f1-review-topbar,
+.f1-review-message,
+.f1-review-layout {
   max-width: 1120px;
   margin-left: auto;
   margin-right: auto;
 }
 
-.f1-clean-review-topbar {
+.f1-review-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,17 +26,17 @@
   margin-bottom: 18px;
 }
 
-.f1-clean-review-back,
-.f1-clean-review-meta,
-.f1-clean-card,
-.f1-clean-side-card {
+.f1-review-back,
+.f1-review-status-pill,
+.f1-review-card,
+.f1-review-side-card {
   border: 1px solid rgba(255, 255, 255, 0.11);
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.035));
   box-shadow: 0 20px 55px rgba(0, 0, 0, 0.2);
 }
 
-.f1-clean-review-back {
+.f1-review-back {
   min-height: 44px;
   border-radius: 14px;
   color: #f8fafc;
@@ -45,7 +45,7 @@
   cursor: pointer;
 }
 
-.f1-clean-review-meta {
+.f1-review-status-pill {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -54,9 +54,9 @@
   border-radius: 999px;
 }
 
-.f1-clean-review-meta span,
-.f1-clean-card-title span,
-.f1-clean-side-card span {
+.f1-review-status-pill span,
+.f1-review-card-title span,
+.f1-review-side-card span {
   color: #ffd43b;
   font-size: 0.76rem;
   font-weight: 950;
@@ -64,12 +64,12 @@
   text-transform: uppercase;
 }
 
-.f1-clean-review-meta strong {
+.f1-review-status-pill strong {
   color: #ffffff;
   font-size: 0.9rem;
 }
 
-.f1-clean-review-message {
+.f1-review-message {
   width: fit-content;
   margin-bottom: 14px;
   padding: 9px 13px;
@@ -81,31 +81,31 @@
   font-weight: 950;
 }
 
-.f1-clean-review-layout {
+.f1-review-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 18px;
   align-items: start;
 }
 
-.f1-clean-review-main {
+.f1-review-main {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
 
-.f1-clean-review-side {
+.f1-review-side {
   position: sticky;
   top: 22px;
 }
 
-.f1-clean-card,
-.f1-clean-side-card {
+.f1-review-card,
+.f1-review-side-card {
   border-radius: 24px;
   padding: 20px;
 }
 
-.f1-clean-card-title {
+.f1-review-card-title {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -113,31 +113,31 @@
   margin-bottom: 14px;
 }
 
-.f1-clean-card-title h1,
-.f1-clean-card-title h2,
-.f1-clean-side-card h2 {
+.f1-review-card-title h1,
+.f1-review-card-title h2,
+.f1-review-side-card h2 {
   margin: 4px 0 0;
   color: #ffffff;
   line-height: 1.05;
   letter-spacing: -0.035em;
 }
 
-.f1-clean-card-title h1,
-.f1-clean-card-title h2 {
+.f1-review-card-title h1,
+.f1-review-card-title h2 {
   font-size: clamp(1.45rem, 2.6vw, 2.1rem);
 }
 
-.f1-clean-side-card h2 {
+.f1-review-side-card h2 {
   font-size: 1.8rem;
 }
 
-.f1-clean-side-card p {
+.f1-review-side-card p {
   margin: 8px 0 14px;
   color: rgba(248, 250, 252, 0.72);
   line-height: 1.5;
 }
 
-.f1-clean-media-frame {
+.f1-review-media-frame {
   height: 340px;
   border-radius: 20px;
   overflow: hidden;
@@ -147,54 +147,55 @@
   place-items: center;
 }
 
-.f1-clean-media-frame img,
-.f1-clean-media-frame video {
+.f1-review-media-frame img,
+.f1-review-media-frame video {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
 }
 
-.f1-clean-empty-media {
+.f1-review-empty {
   padding: 24px;
   text-align: center;
 }
 
-.f1-clean-empty-media strong {
+.f1-review-empty strong {
   display: block;
   color: #ffffff;
   margin-bottom: 6px;
 }
 
-.f1-clean-empty-media p {
+.f1-review-empty p {
   margin: 0;
   color: rgba(248, 250, 252, 0.7);
 }
 
-.f1-clean-action-row,
-.f1-clean-tool-row,
-.f1-clean-two-actions,
-.f1-clean-side-card {
+.f1-review-action-row,
+.f1-review-tool-row,
+.f1-review-side-card,
+.f1-review-side-options {
   display: grid;
   gap: 10px;
 }
 
-.f1-clean-action-row {
+.f1-review-action-row {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   margin-top: 12px;
 }
 
-.f1-clean-tool-row {
+.f1-review-tool-row {
   grid-template-columns: minmax(180px, 1fr) repeat(3, 88px);
   align-items: end;
 }
 
-.f1-clean-action-row button,
-.f1-clean-action-row a,
-.f1-clean-tool-row button,
-.f1-clean-side-card button,
-.f1-clean-improve-grid button,
-.f1-clean-secondary {
+.f1-review-action-row button,
+.f1-review-action-row a,
+.f1-review-tool-row button,
+.f1-review-side-card button,
+.f1-review-improve-grid button,
+.f1-review-secondary,
+.f1-review-side-options button {
   min-height: 44px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -210,7 +211,7 @@
   text-align: center;
 }
 
-.f1-clean-primary {
+.f1-review-primary {
   min-height: 44px;
   border-radius: 14px;
   border: 1px solid rgba(255, 212, 59, 0.42);
@@ -219,15 +220,18 @@
   font-weight: 950;
   box-shadow: 0 16px 32px rgba(255, 212, 59, 0.14);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.f1-clean-action-row .is-danger {
+.f1-review-action-row .is-danger {
   background: rgba(127, 29, 29, 0.18);
   border-color: rgba(248, 113, 113, 0.28);
   color: #fecaca;
 }
 
-.f1-clean-prepared-strip {
+.f1-review-prepared-strip {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto auto;
   gap: 10px;
@@ -239,16 +243,16 @@
   border: 1px solid rgba(61, 220, 151, 0.22);
 }
 
-.f1-clean-prepared-strip strong {
+.f1-review-prepared-strip strong {
   color: #ffffff;
 }
 
-.f1-clean-prepared-strip span {
+.f1-review-prepared-strip span {
   color: rgba(248, 250, 252, 0.7);
   font-weight: 900;
 }
 
-.f1-clean-prepared-strip button {
+.f1-review-prepared-strip button {
   min-height: 38px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -258,13 +262,13 @@
   padding: 0 12px;
 }
 
-.f1-clean-prepare {
+.f1-review-prepare {
   display: grid;
   gap: 14px;
 }
 
-.f1-clean-transform-stage {
-  height: 380px;
+.f1-review-transform-stage {
+  height: 430px;
   border-radius: 20px;
   background: rgba(2, 6, 23, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -274,12 +278,15 @@
   overflow: hidden;
   touch-action: none;
   user-select: none;
+  padding: 22px;
 }
 
-.f1-clean-transform-frame {
+.f1-review-frame {
   position: relative;
-  width: min(88%, 520px);
-  max-height: 340px;
+  width: auto;
+  height: auto;
+  max-width: 94%;
+  max-height: 380px;
   border-radius: 18px;
   overflow: hidden;
   border: 2px solid rgba(255, 212, 59, 0.92);
@@ -287,11 +294,34 @@
   cursor: grab;
 }
 
-.f1-clean-transform-frame:active {
+.f1-review-frame:active {
   cursor: grabbing;
 }
 
-.f1-clean-transform-frame img {
+.f1-review-frame-facebook-feed {
+  width: min(94%, 660px);
+  aspect-ratio: 1200 / 630;
+}
+
+.f1-review-frame-facebook-square,
+.f1-review-frame-instagram-square {
+  width: min(84%, 360px);
+  aspect-ratio: 1 / 1;
+}
+
+.f1-review-frame-instagram-portrait {
+  width: min(78%, 300px);
+  aspect-ratio: 4 / 5;
+}
+
+.f1-review-frame-facebook-story,
+.f1-review-frame-instagram-story,
+.f1-review-frame-tiktok-vertical {
+  width: min(58%, 215px);
+  aspect-ratio: 9 / 16;
+}
+
+.f1-review-frame img {
   width: 100%;
   height: 100%;
   display: block;
@@ -300,16 +330,16 @@
   transition: transform 80ms ease-out;
 }
 
-.f1-clean-transform-frame img.is-fill {
+.f1-review-frame img.is-fill {
   object-fit: cover;
 }
 
-.f1-clean-transform-frame img.is-fit {
+.f1-review-frame img.is-fit {
   object-fit: contain;
   background: rgba(2, 6, 23, 0.9);
 }
 
-.f1-clean-frame-grid {
+.f1-review-frame-grid {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -318,18 +348,18 @@
     linear-gradient(to bottom, transparent 33.1%, rgba(255,255,255,0.22) 33.2%, rgba(255,255,255,0.22) 33.6%, transparent 33.7%, transparent 66.1%, rgba(255,255,255,0.22) 66.2%, rgba(255,255,255,0.22) 66.6%, transparent 66.7%);
 }
 
-.f1-clean-prepare-tools {
+.f1-review-prepare-tools {
   display: grid;
   gap: 12px;
 }
 
-.f1-clean-preset-row {
+.f1-review-preset-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
-.f1-clean-preset-row button {
+.f1-review-preset-row button {
   min-height: 58px;
   border-radius: 15px;
   padding: 10px 12px;
@@ -341,59 +371,59 @@
   cursor: pointer;
 }
 
-.f1-clean-preset-row button.is-active {
+.f1-review-preset-row button.is-active {
   background: rgba(255, 212, 59, 0.14);
   border-color: rgba(255, 212, 59, 0.42);
 }
 
-.f1-clean-preset-row strong,
-.f1-clean-preset-row small {
+.f1-review-preset-row strong,
+.f1-review-preset-row small {
   display: block;
 }
 
-.f1-clean-preset-row small {
+.f1-review-preset-row small {
   margin-top: 3px;
   color: rgba(248, 250, 252, 0.66);
   font-weight: 850;
 }
 
-.f1-clean-tool-row label {
+.f1-review-tool-row label {
   display: grid;
   gap: 7px;
 }
 
-.f1-clean-tool-row label span {
+.f1-review-tool-row label span {
   color: rgba(248, 250, 252, 0.76);
   font-size: 0.85rem;
   font-weight: 900;
 }
 
-.f1-clean-tool-row input[type="range"] {
+.f1-review-tool-row input[type="range"] {
   width: 100%;
   accent-color: #ffd43b;
 }
 
-.f1-clean-wording {
+.f1-review-wording {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 14px;
 }
 
-.f1-clean-wording label,
-.f1-clean-select-row label {
+.f1-review-wording label,
+.f1-review-select-row label {
   display: grid;
   gap: 7px;
 }
 
-.f1-clean-wording strong,
-.f1-clean-select-row strong {
+.f1-review-wording strong,
+.f1-review-select-row strong {
   color: #ffffff;
   font-size: 0.88rem;
 }
 
-.f1-clean-wording textarea,
-.f1-clean-wording input,
-.f1-clean-select-row select {
+.f1-review-wording textarea,
+.f1-review-wording input,
+.f1-review-select-row select {
   width: 100%;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -404,29 +434,63 @@
   box-sizing: border-box;
 }
 
-.f1-clean-wording textarea {
+.f1-review-wording textarea {
   min-height: 180px;
   resize: vertical;
 }
 
-.f1-clean-wording .is-caption {
+.f1-review-wording .is-caption {
   grid-row: span 2;
 }
 
-.f1-clean-improve-grid {
+.f1-review-improve-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 }
 
-.f1-clean-select-row {
+.f1-review-select-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin: 12px 0;
 }
 
-.f1-clean-review-loading {
+.f1-review-options {
+  margin-top: 12px;
+}
+
+.f1-review-options summary {
+  min-height: 40px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.07);
+  color: #f8fafc;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.f1-review-options summary::-webkit-details-marker {
+  display: none;
+}
+
+.f1-review-options summary::after {
+  content: "▾";
+  margin-left: 10px;
+  color: #ffd43b;
+  font-size: 0.8rem;
+}
+
+.f1-review-options[open] summary::after {
+  content: "▴";
+}
+
+.f1-review-loading {
   max-width: 620px;
   margin: 120px auto;
   padding: 24px;
@@ -442,146 +506,35 @@ button:disabled {
 }
 
 @media (max-width: 980px) {
-  .f1-clean-review-layout {
+  .f1-review-layout {
     grid-template-columns: 1fr;
   }
 
-  .f1-clean-review-side {
+  .f1-review-side {
     position: static;
   }
 
-  .f1-clean-side-card {
+  .f1-review-side-card {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .f1-clean-side-card span,
-  .f1-clean-side-card h2,
-  .f1-clean-side-card p {
+  .f1-review-side-card span,
+  .f1-review-side-card h2,
+  .f1-review-side-card p,
+  .f1-review-side-card .f1-review-options {
     grid-column: 1 / -1;
   }
 
-  .f1-clean-preset-row,
-  .f1-clean-improve-grid,
-  .f1-clean-select-row,
-  .f1-clean-media-actions,
-  .f1-clean-action-row {
+  .f1-review-preset-row,
+  .f1-review-improve-grid,
+  .f1-review-select-row,
+  .f1-review-action-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .f1-clean-tool-row {
+  .f1-review-tool-row {
     grid-template-columns: 1fr repeat(3, 80px);
   }
-}
-
-@media (max-width: 680px) {
-  .f1-clean-review-shell {
-    padding: 14px 10px 28px;
-  }
-
-  .f1-clean-review-topbar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .f1-clean-card,
-  .f1-clean-side-card {
-    border-radius: 22px;
-    padding: 16px;
-  }
-
-  .f1-clean-card-title {
-    flex-direction: column;
-  }
-
-  .f1-clean-media-frame {
-    height: 280px;
-  }
-
-  .f1-clean-transform-stage {
-    height: 380px;
-  }
-
-  .f1-clean-transform-frame {
-    width: 100%;
-  }
-
-  .f1-clean-preset-row {
-    display: flex;
-    overflow-x: auto;
-    padding-bottom: 6px;
-    scroll-snap-type: x mandatory;
-  }
-
-  .f1-clean-preset-row button {
-    flex: 0 0 210px;
-    scroll-snap-align: start;
-  }
-
-  .f1-clean-improve-grid,
-  .f1-clean-select-row,
-  .f1-clean-media-actions,
-  .f1-clean-action-row,
-  .f1-clean-tool-row,
-  .f1-clean-side-card,
-  .f1-clean-wording,
-  .f1-clean-prepared-strip {
-    grid-template-columns: 1fr;
-  }
-
-  .f1-clean-prepared-strip {
-    align-items: stretch;
-  }
-}
-
-
-/* Media actions dropdown + cleaner mobile posts header */
-
-.f1-clean-media-menu {
-  margin-top: 12px;
-}
-
-.f1-clean-media-menu summary {
-  min-height: 44px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  background: rgba(255, 255, 255, 0.08);
-  color: #f8fafc;
-  font-weight: 950;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 16px;
-  cursor: pointer;
-  list-style: none;
-  width: fit-content;
-}
-
-.f1-clean-media-menu summary::-webkit-details-marker {
-  display: none;
-}
-
-.f1-clean-media-menu summary::after {
-  content: "▾";
-  margin-left: 10px;
-  color: #ffd43b;
-  font-size: 0.82rem;
-}
-
-.f1-clean-media-menu[open] summary::after {
-  content: "▴";
-}
-
-.f1-clean-media-menu .f1-clean-action-row {
-  margin-top: 12px;
-}
-
-/* Keep the post review page simple and not cramped */
-.f1-clean-card-title .f1-clean-secondary {
-  white-space: nowrap;
-}
-
-.f1-clean-side-card button {
-  width: 100%;
 }
 
 /* Posts page mobile header stacking fix */
@@ -637,92 +590,79 @@ button:disabled {
     grid-template-columns: 1fr !important;
     width: 100% !important;
   }
-
-  .posts-plan-actions button,
-  .premium-calendar-actions button,
-  .posts-header-actions button,
-  .fromone-header-actions button {
-    width: 100% !important;
-  }
-}
-
-
-/* FINAL FRAME SHAPE FIX
-   These rules override earlier generic aspect-ratio styling so each frame is visibly different. */
-
-.f1-clean-transform-stage {
-  height: 430px !important;
-  min-height: 430px !important;
-  padding: 22px !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.f1-clean-transform-frame {
-  width: auto !important;
-  height: auto !important;
-  max-width: 94% !important;
-  max-height: 380px !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-}
-
-/* Facebook feed: clearly wide landscape */
-.f1-clean-frame-facebook-feed {
-  width: min(94%, 660px) !important;
-  aspect-ratio: 1200 / 630 !important;
-}
-
-/* Square formats: true square */
-.f1-clean-frame-facebook-square,
-.f1-clean-frame-instagram-square {
-  width: min(84%, 360px) !important;
-  aspect-ratio: 1 / 1 !important;
-}
-
-/* Instagram feed portrait: visibly taller than square */
-.f1-clean-frame-instagram-portrait {
-  width: min(78%, 300px) !important;
-  aspect-ratio: 4 / 5 !important;
-}
-
-/* Stories/Reels/TikTok: tall narrow vertical */
-.f1-clean-frame-facebook-story,
-.f1-clean-frame-instagram-story,
-.f1-clean-frame-tiktok-vertical {
-  width: min(58%, 215px) !important;
-  aspect-ratio: 9 / 16 !important;
-}
-
-/* Keep the image filling/containing inside the actual selected frame */
-.f1-clean-transform-frame img {
-  width: 100% !important;
-  height: 100% !important;
 }
 
 @media (max-width: 680px) {
-  .f1-clean-transform-stage {
-    height: 430px !important;
-    min-height: 430px !important;
-    padding: 16px !important;
+  .f1-review-page {
+    padding: 14px 10px 28px;
   }
 
-  .f1-clean-frame-facebook-feed {
-    width: min(96%, 360px) !important;
+  .f1-review-topbar {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .f1-clean-frame-facebook-square,
-  .f1-clean-frame-instagram-square {
-    width: min(86%, 320px) !important;
+  .f1-review-card,
+  .f1-review-side-card {
+    border-radius: 22px;
+    padding: 16px;
   }
 
-  .f1-clean-frame-instagram-portrait {
-    width: min(76%, 265px) !important;
+  .f1-review-card-title {
+    flex-direction: column;
   }
 
-  .f1-clean-frame-facebook-story,
-  .f1-clean-frame-instagram-story,
-  .f1-clean-frame-tiktok-vertical {
-    width: min(54%, 205px) !important;
+  .f1-review-media-frame {
+    height: 280px;
+  }
+
+  .f1-review-transform-stage {
+    height: 430px;
+    padding: 16px;
+  }
+
+  .f1-review-frame-facebook-feed {
+    width: min(96%, 360px);
+  }
+
+  .f1-review-frame-facebook-square,
+  .f1-review-frame-instagram-square {
+    width: min(86%, 320px);
+  }
+
+  .f1-review-frame-instagram-portrait {
+    width: min(76%, 265px);
+  }
+
+  .f1-review-frame-facebook-story,
+  .f1-review-frame-instagram-story,
+  .f1-review-frame-tiktok-vertical {
+    width: min(54%, 205px);
+  }
+
+  .f1-review-preset-row {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .f1-review-preset-row button {
+    flex: 0 0 210px;
+    scroll-snap-align: start;
+  }
+
+  .f1-review-improve-grid,
+  .f1-review-select-row,
+  .f1-review-action-row,
+  .f1-review-tool-row,
+  .f1-review-side-card,
+  .f1-review-wording,
+  .f1-review-prepared-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .f1-review-prepared-strip {
+    align-items: stretch;
   }
 }
