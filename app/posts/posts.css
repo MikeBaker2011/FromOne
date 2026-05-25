@@ -1002,3 +1002,63 @@ button:disabled {
     min-height: 58px !important;
   }
 }
+/* HARD FIX: tighten review publish spacing */
+
+.f1-review-side-card {
+  gap: 6px !important;
+}
+
+.f1-review-side-card > .f1-review-primary,
+.f1-review-publish-primary-actions,
+.f1-review-side-card > button {
+  margin: 0 !important;
+}
+
+.f1-review-more-options,
+.f1-review-options {
+  margin-top: 4px !important;
+  width: 100% !important;
+}
+
+.f1-review-more-options summary,
+.f1-review-options summary {
+  width: 100% !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+}
+
+.f1-review-side-options {
+  margin-top: 8px !important;
+  gap: 8px !important;
+}
+
+/* HARD FIX: mobile posts hero layout */
+
+@media (max-width: 760px) {
+  section:has(h1) :where(h1) {
+    max-width: 100% !important;
+  }
+
+  section:has(h1):has(button) {
+    grid-template-columns: 1fr !important;
+  }
+
+  section:has(h1):has(button) > div {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  section:has(h1):has(button) div:has(button) {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  section:has(h1):has(button) button,
+  section:has(h1):has(button) a {
+    width: 100% !important;
+    min-height: 58px !important;
+    justify-content: center !important;
+  }
+}
