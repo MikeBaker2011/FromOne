@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import axios from "axios";
 import { useToast } from "@/app/components/ToastProvider";
 
@@ -20,10 +20,6 @@ import PostActionModal from "@/components/posts/PostActionModal";
 import TodayReminderModal from "@/components/posts/TodayReminderModal";
 import PostSuccessModal from "@/components/posts/PostSuccessModal";
 import ReviewPromptModal from "@/components/posts/ReviewPromptModal";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const MEDIA_BUCKET = "campaign-assets";
 const MAX_SAVED_CAMPAIGNS = 4;

@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 import { usePathname, useRouter } from 'next/navigation';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const protectedRoutes = ['/dashboard', '/posts', '/settings', '/subscription'];
 

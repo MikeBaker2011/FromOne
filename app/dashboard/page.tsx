@@ -1,15 +1,11 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { useToast } from "@/app/components/ToastProvider";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const MEDIA_BUCKET = "campaign-assets";
 

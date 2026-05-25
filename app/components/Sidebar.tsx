@@ -2,12 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const NEW_POSTS_KEY = 'fromone_has_new_posts';
 

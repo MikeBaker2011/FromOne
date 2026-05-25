@@ -185,6 +185,94 @@ function getFriendlyInstagramError(message: string) {
   return cleanMessage || 'Instagram publish failed.';
 }
 
+function getInstagramErrorCode(message?: string | null) {
+  const lowerMessage = cleanText(message).toLowerCase();
+
+  if (isInstagramAuthorizationError(cleanText(message))) {
+    if (
+      lowerMessage.includes('permission') ||
+      lowerMessage.includes('permissions') ||
+      lowerMessage.includes('does not have permission')
+    ) {
+      return 'PERMISSION_MISSING';
+    }
+
+    return 'TOKEN_EXPIRED';
+  }
+
+  if (
+    lowerMessage.includes('no connected instagram') ||
+    lowerMessage.includes('instagram account id') ||
+    lowerMessage.includes('access token is missing') ||
+    lowerMessage.includes('account is missing') ||
+    lowerMessage.includes('fallback instagram env vars are missing')
+  ) {
+    return 'ACCOUNT_NOT_CONNECTED';
+  }
+
+  if (
+    lowerMessage.includes('wording is required') ||
+    lowerMessage.includes('caption') ||
+    lowerMessage.includes('message is required')
+  ) {
+    return 'MESSAGE_REQUIRED';
+  }
+
+  if (
+    lowerMessage.includes('image or video') ||
+    lowerMessage.includes('media') ||
+    lowerMessage.includes('pdf') ||
+    lowerMessage.includes('flyer') ||
+    lowerMessage.includes('unsupported') ||
+    lowerMessage.includes('aspect ratio')
+  ) {
+    return 'MEDIA_REQUIRED';
+  }
+
+  if (
+    lowerMessage.includes('demo has ended') ||
+    lowerMessage.includes('subscription is not active') ||
+    lowerMessage.includes('access is active') ||
+    lowerMessage.includes('no active account access')
+  ) {
+    return 'ACCESS_LOCKED';
+  }
+
+  return 'META_API_ERROR';
+}
+
+function instagramErrorResponse({
+  message,
+  status = 500,
+  details,
+}: {
+  message: string;
+  status?: number;
+  details?: any;
+}) {
+  const cleanMessage = getFriendlyInstagramError(message);
+  const code = getInstagramErrorCode(message);
+  const requiresReconnect = ['TOKEN_EXPIRED', 'PERMISSION_MISSING', 'ACCOUNT_NOT_CONNECTED'].includes(code);
+
+  return NextResponse.json(
+    {
+      ok: false,
+      success: false,
+      code,
+      message: cleanMessage,
+      error: cleanMessage,
+      details,
+      requiresReconnect,
+      reconnectMeta: requiresReconnect,
+      manualFallbackAvailable: true,
+      fallbackActions: requiresReconnect
+        ? ['reconnect_accounts', 'copy_post', 'open_instagram']
+        : ['copy_post', 'open_instagram'],
+    },
+    { status },
+  );
+}
+
 function getSafeStorageName(value: string) {
   return cleanText(value)
     .toLowerCase()
@@ -698,12 +786,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json(
-        {
-          error: access.message,
-        },
-        { status: 403 }
-      );
+      return instagramErrorResponse({
+        message: access.message,
+        status: 403,
+      });
     }
 
     const caption = buildCaption(body);
@@ -727,12 +813,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json(
-        {
-          error: 'Instagram post wording is required.',
-        },
-        { status: 400 }
-      );
+      return instagramErrorResponse({
+        message: 'Instagram post wording is required.',
+        status: 400,
+      });
     }
 
     if (!mediaUrl) {
@@ -751,12 +835,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json(
-        {
-          error: 'Instagram needs an image or video before publishing. PDF flyers cannot be posted directly to Instagram.',
-        },
-        { status: 400 }
-      );
+      return instagramErrorResponse({
+        message: 'Instagram needs an image or video before publishing. PDF flyers cannot be posted directly to Instagram.',
+        status: 400,
+      });
     }
 
     if (!isImageMedia(mediaType) && !isVideoMedia(mediaType)) {
@@ -776,12 +858,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json(
-        {
-          error: 'Instagram needs an image or video before publishing. PDF flyers cannot be posted directly to Instagram.',
-        },
-        { status: 400 }
-      );
+      return instagramErrorResponse({
+        message: 'Instagram needs an image or video before publishing. PDF flyers cannot be posted directly to Instagram.',
+        status: 400,
+      });
     }
 
     if (isImageMedia(mediaType)) {
@@ -833,13 +913,11 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json(
-        {
-          error: 'Instagram published the post but did not return a post ID.',
-          details: publishResult,
-        },
-        { status: 500 }
-      );
+      return instagramErrorResponse({
+        message: 'Instagram published the post but did not return a post ID.',
+        status: 500,
+        details: publishResult,
+      });
     }
 
     await updatePostAfterPublish({
@@ -872,11 +950,13 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
+      ok: true,
       success: true,
       provider: 'instagram',
       postId: instagramPostId,
       instagramPostId,
       instagram_post_id: instagramPostId,
+      message: 'Instagram posted successfully.',
       creationId,
       credentialSource: credentials.source,
       connectionId: credentials.connectionId || null,
@@ -939,12 +1019,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      {
-        error: friendlyErrorMessage,
-        reconnectMeta: isAuthorizationFailure,
-      },
-      { status: responseStatus }
-    );
+    return instagramErrorResponse({
+      message: friendlyErrorMessage,
+      status: responseStatus,
+    });
   }
 }

@@ -172,6 +172,87 @@ function getFriendlyFacebookError(message?: string | null) {
   return cleanText(message) || 'Facebook publish failed.';
 }
 
+function getFacebookErrorCode(message?: string | null) {
+  const lowerMessage = cleanText(message).toLowerCase();
+
+  if (isInvalidMetaTokenError(message)) return 'TOKEN_EXPIRED';
+
+  if (
+    lowerMessage.includes('permission') ||
+    lowerMessage.includes('permissions') ||
+    lowerMessage.includes('missing scope') ||
+    lowerMessage.includes('manage_pages') ||
+    lowerMessage.includes('pages_manage_posts')
+  ) {
+    return 'PERMISSION_MISSING';
+  }
+
+  if (
+    lowerMessage.includes('not connected') ||
+    lowerMessage.includes('connection has expired') ||
+    lowerMessage.includes('reconnect facebook') ||
+    lowerMessage.includes('page id') ||
+    lowerMessage.includes('access token is missing') ||
+    lowerMessage.includes('missing facebook')
+  ) {
+    return 'ACCOUNT_NOT_CONNECTED';
+  }
+
+  if (lowerMessage.includes('message is required') || lowerMessage.includes('wording')) {
+    return 'MESSAGE_REQUIRED';
+  }
+
+  if (
+    lowerMessage.includes('demo has ended') ||
+    lowerMessage.includes('subscription is not active') ||
+    lowerMessage.includes('access is active') ||
+    lowerMessage.includes('no active account access')
+  ) {
+    return 'ACCESS_LOCKED';
+  }
+
+  if (
+    lowerMessage.includes('media') ||
+    lowerMessage.includes('image') ||
+    lowerMessage.includes('photo')
+  ) {
+    return 'MEDIA_ERROR';
+  }
+
+  return 'META_API_ERROR';
+}
+
+function facebookErrorResponse({
+  message,
+  status = 500,
+  details,
+}: {
+  message: string;
+  status?: number;
+  details?: any;
+}) {
+  const cleanMessage = getFriendlyFacebookError(message);
+  const code = getFacebookErrorCode(message);
+  const requiresReconnect = ['TOKEN_EXPIRED', 'PERMISSION_MISSING', 'ACCOUNT_NOT_CONNECTED'].includes(code);
+
+  return NextResponse.json(
+    {
+      ok: false,
+      success: false,
+      code,
+      message: cleanMessage,
+      error: cleanMessage,
+      details,
+      requiresReconnect,
+      manualFallbackAvailable: true,
+      fallbackActions: requiresReconnect
+        ? ['reconnect_accounts', 'copy_post', 'open_facebook']
+        : ['copy_post', 'open_facebook'],
+    },
+    { status },
+  );
+}
+
 async function markMetaConnectionExpired(connectionId?: string | null, userId?: string | null) {
   try {
     const supabase = getSupabaseAdmin();
@@ -535,12 +616,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json(
-        {
-          error: access.message,
-        },
-        { status: 403 }
-      );
+      return facebookErrorResponse({
+        message: access.message,
+        status: 403,
+      });
     }
 
     const credentials = await getFacebookCredentials(body);
@@ -565,12 +644,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json(
-        {
-          error: 'Message is required.',
-        },
-        { status: 400 }
-      );
+      return facebookErrorResponse({
+        message: 'Message is required.',
+        status: 400,
+      });
     }
 
     let result;
@@ -630,13 +707,11 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json(
-        {
-          error: 'Facebook published the post but did not return a post ID.',
-          details: result,
-        },
-        { status: 500 }
-      );
+      return facebookErrorResponse({
+        message: 'Facebook published the post but did not return a post ID.',
+        status: 500,
+        details: result,
+      });
     }
 
     await updatePostAfterPublish({
@@ -666,11 +741,13 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
+      ok: true,
       success: true,
       provider: 'facebook',
       postId: facebookPostId,
       facebookPostId,
       facebook_post_id: facebookPostId,
+      message: 'Facebook posted successfully.',
       credentialSource: credentials.source,
       connectionId: credentials.connectionId || null,
       facebookResult: result,
@@ -733,21 +810,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const code = getFacebookErrorCode(rawErrorMessage);
     const requiresReconnect =
-      isInvalidMetaTokenError(rawErrorMessage) ||
-      friendlyErrorMessage.toLowerCase().includes('connection has expired') ||
-      friendlyErrorMessage.toLowerCase().includes('reconnect facebook');
+      code === 'TOKEN_EXPIRED' ||
+      code === 'PERMISSION_MISSING' ||
+      code === 'ACCOUNT_NOT_CONNECTED';
 
-    return NextResponse.json(
-      {
-        error: friendlyErrorMessage,
-        requiresReconnect,
-        manualFallbackAvailable: true,
-        fallbackActions: requiresReconnect
-          ? ['reconnect_accounts', 'copy_post', 'open_facebook']
-          : ['copy_post', 'open_facebook'],
-      },
-      { status: requiresReconnect ? 401 : 500 }
-    );
+    return facebookErrorResponse({
+      message: friendlyErrorMessage,
+      status: requiresReconnect ? 401 : 500,
+    });
   }
 }

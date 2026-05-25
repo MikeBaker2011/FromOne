@@ -2,11 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 
 export default function PublicNav() {
   const [open, setOpen] = useState(false);
