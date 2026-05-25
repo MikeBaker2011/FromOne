@@ -9,6 +9,11 @@ const scheduledPublishingEnabled =
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const appBaseUrl =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.APP_URL ||
+  process.env.RENDER_EXTERNAL_URL ||
+  '';
 
 type ScheduledPost = {
   id: string;
@@ -60,6 +65,14 @@ function isCronAuthorised(req: NextRequest) {
 
 function cleanText(value: unknown) {
   return String(value || '').trim();
+}
+
+function getBaseUrl(req: NextRequest) {
+  const envUrl = cleanText(appBaseUrl);
+
+  if (envUrl) return envUrl.replace(/\/$/, '');
+
+  return req.nextUrl.origin.replace(/\/$/, '');
 }
 
 function normalisePlatform(platform?: string | null) {
@@ -230,30 +243,50 @@ async function publishDuePost({
     };
   }
 
-  const response = await fetch(new URL(endpoint, req.nextUrl.origin), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-fromone-scheduled-publish': 'true',
-    },
-    body: JSON.stringify({
+  const publishUrl = new URL(endpoint, getBaseUrl(req));
+
+  let response: Response;
+
+  try {
+    response = await fetch(publishUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-fromone-scheduled-publish': 'true',
+      },
+      body: JSON.stringify({
+        postId: post.id,
+        campaignPostId: post.id,
+        campaign_id: post.campaign_id || null,
+        userId: post.user_id || null,
+        user_id: post.user_id || null,
+        platform: post.platform || platform,
+        message: text,
+        text,
+        caption: post.caption || '',
+        cta: post.cta || '',
+        hashtags: hashtagsToArray(post.hashtags),
+        media_url: mediaUrl || null,
+        mediaUrl: mediaUrl || null,
+        media_type: mediaType || null,
+        mediaType: mediaType || null,
+      }),
+    });
+  } catch (fetchError: any) {
+    const message =
+      fetchError?.message ||
+      `Could not reach ${platform} publish route from scheduled publishing.`;
+
+    await markPostFailed(post.id, message, 'INTERNAL_PUBLISH_ROUTE_FAILED');
+
+    return {
       postId: post.id,
-      campaignPostId: post.id,
-      campaign_id: post.campaign_id || null,
-      userId: post.user_id || null,
-      user_id: post.user_id || null,
-      platform: post.platform || platform,
-      message: text,
-      text,
-      caption: post.caption || '',
-      cta: post.cta || '',
-      hashtags: hashtagsToArray(post.hashtags),
-      media_url: mediaUrl || null,
-      mediaUrl: mediaUrl || null,
-      media_type: mediaType || null,
-      mediaType: mediaType || null,
-    }),
-  });
+      platform,
+      status: 'failed',
+      code: 'INTERNAL_PUBLISH_ROUTE_FAILED',
+      message,
+    };
+  }
 
   const result = await response.json().catch(() => ({}));
 
