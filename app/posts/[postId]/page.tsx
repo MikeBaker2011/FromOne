@@ -1540,7 +1540,7 @@ export default function PostReviewPage() {
 
           <aside className="pr2-side">
             <article className="pr2-publish-card">
-              <span className="pr2-kicker">Autopublish</span>
+              <span className="pr2-kicker">Publish</span>
 
               <div
                 style={{
@@ -1552,8 +1552,10 @@ export default function PostReviewPage() {
                 }}
               >
                 <div>
-                  <h2 style={{ marginBottom: 6 }}>{autopublishStatus.label}</h2>
-                  <p>{autopublishStatus.description}</p>
+                  <h2 style={{ marginBottom: 6 }}>{platformName}</h2>
+                  <p>
+                    Schedule autopublish, publish now, or use the manual fallback.
+                  </p>
                 </div>
 
                 <span
@@ -1592,13 +1594,17 @@ export default function PostReviewPage() {
                 style={{
                   display: "grid",
                   gap: 12,
-                  margin: "14px 0",
+                  margin: "14px 0 16px",
                   padding: 14,
                   borderRadius: 18,
                   background: "rgba(255,255,255,0.055)",
                   border: "1px solid rgba(255,255,255,0.1)",
                 }}
               >
+                <p style={{ margin: 0, fontSize: 14, opacity: 0.86 }}>
+                  {autopublishStatus.description}
+                </p>
+
                 <label style={{ display: "grid", gap: 7 }}>
                   <span className="pr2-kicker" style={{ margin: 0 }}>
                     Scheduled time
@@ -1629,7 +1635,14 @@ export default function PostReviewPage() {
                     gap: 10,
                   }}
                 >
-                  <div>
+                  <div
+                    style={{
+                      padding: 10,
+                      borderRadius: 14,
+                      background: "rgba(15, 23, 42, 0.55)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
                     <span className="pr2-kicker" style={{ margin: 0 }}>
                       Planned
                     </span>
@@ -1638,12 +1651,19 @@ export default function PostReviewPage() {
                     </strong>
                   </div>
 
-                  <div>
+                  <div
+                    style={{
+                      padding: 10,
+                      borderRadius: 14,
+                      background: "rgba(15, 23, 42, 0.55)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
                     <span className="pr2-kicker" style={{ margin: 0 }}>
-                      Platform
+                      Method
                     </span>
                     <strong style={{ display: "block", marginTop: 4 }}>
-                      {platformName}
+                      {canAutopublish ? "Auto + manual" : "Manual only"}
                     </strong>
                   </div>
                 </div>
@@ -1655,7 +1675,10 @@ export default function PostReviewPage() {
                 </div>
               )}
 
-              <div className="pr2-publish-actions">
+              <div
+                className="pr2-publish-actions"
+                style={{ display: "grid", gap: 10 }}
+              >
                 <button
                   type="button"
                   className="pr2-btn"
@@ -1675,53 +1698,56 @@ export default function PostReviewPage() {
                     {autoPublishing ? "Autopublishing..." : "Autopublish now"}
                   </button>
                 )}
-              </div>
 
-              {canScheduledAutopublish && (
-                <p style={{ marginTop: 12, fontSize: 13, opacity: 0.78 }}>
-                  FromOne will try this automatically when the scheduled time arrives.
-                </p>
-              )}
-
-              {!canAutopublish && (
-                <p style={{ marginTop: 12, fontSize: 13, opacity: 0.78 }}>
-                  TikTok stays manual for now.
-                </p>
-              )}
-            </article>
-
-            <article className="pr2-publish-card">
-              <span className="pr2-kicker">Manual publish</span>
-              <h2>{platformName}</h2>
-              <p>Copy the caption, use the prepared media, then publish manually.</p>
-
-              <div className="pr2-publish-actions">
-                <button type="button" className="pr2-btn pr2-btn-primary" onClick={openPlatform}>
+                <button
+                  type="button"
+                  className="pr2-btn"
+                  onClick={openPlatform}
+                >
                   Post manually
                 </button>
 
                 {preparedDisplayMedia?.url && (
-                  <button type="button" className="pr2-btn" onClick={sharePreparedImage} disabled={sharingMedia}>
-                    {sharingMedia ? "Opening..." : "Share to social app"}
+                  <button
+                    type="button"
+                    className="pr2-btn"
+                    onClick={sharePreparedImage}
+                    disabled={sharingMedia}
+                  >
+                    {sharingMedia ? "Opening..." : "Share prepared media"}
                   </button>
                 )}
               </div>
 
-              <details className="pr2-details is-tight">
+              <details className="pr2-details is-tight" style={{ marginTop: 12 }}>
                 <summary>More options</summary>
 
                 <div className="pr2-side-options">
-                  <button type="button" className="pr2-btn" onClick={markAsPosted} disabled={saving || isPosted}>
+                  <button
+                    type="button"
+                    className="pr2-btn"
+                    onClick={markAsPosted}
+                    disabled={saving || isPosted}
+                  >
                     Mark as posted
                   </button>
 
                   {isPosted && (
-                    <button type="button" className="pr2-btn" onClick={markAsNotPosted} disabled={saving}>
+                    <button
+                      type="button"
+                      className="pr2-btn"
+                      onClick={markAsNotPosted}
+                      disabled={saving}
+                    >
                       Mark as not posted
                     </button>
                   )}
                 </div>
               </details>
+
+              <p style={{ marginTop: 12, fontSize: 13, opacity: 0.78 }}>
+                Facebook and Instagram can autopublish when connected. TikTok stays manual.
+              </p>
             </article>
           </aside>
         </section>
