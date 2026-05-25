@@ -1,0 +1,680 @@
+/* FromOne post review page module.
+   Turbopack-safe CSS module: selectors are globalised individually.
+   Imported by app/posts/[postId]/page.tsx. */
+
+/* FromOne post review page
+   Built to match the dashboard/posts page dimensions and premium visual language.
+   Do not import posts.css here. This file is intentionally scoped to .pr2-page. */
+
+:global(.pr2-page) {
+  --bg: #07090f;
+  --panel: rgba(16, 20, 32, 0.88);
+  --panel-solid: #101420;
+  --panel-soft: #151a2a;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-gold: rgba(255, 212, 59, 0.28);
+  --text: #f6f7fb;
+  --muted: #9ca5bb;
+  --muted-strong: #c4cad8;
+  --gold: #ffd43b;
+  --gold-dark: #b8860b;
+  --danger: #ff5f6d;
+  --success: #3ddc97;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+
+  width: min(1120px, calc(100vw - 28px));
+  min-height: calc(100vh - 120px);
+  margin: 0 auto 56px;
+  padding: 0 0 42px;
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+:global(.pr2-page),
+:global(.pr2-page *) {
+  box-sizing: border-box;
+}
+
+:global(.pr2-page button),
+:global(.pr2-page input),
+:global(.pr2-page textarea),
+:global(.pr2-page select) {
+  font-family: inherit;
+}
+
+:global(.pr2-page button),
+:global(.pr2-page a) {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+:global(.pr2-shell) {
+  width: 100%;
+  display: grid;
+  gap: 18px;
+}
+
+:global(.pr2-topbar) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+:global(.pr2-back),
+:global(.pr2-btn-primary) {
+  min-height: 44px;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 18px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  font-weight: 900;
+  color: #0a0c12;
+  background: linear-gradient(135deg, var(--gold), #f7b733);
+  box-shadow: 0 14px 34px rgba(255, 212, 59, 0.18);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:global(.pr2-back:hover),
+:global(.pr2-btn-primary:hover) {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 18px 44px rgba(255, 212, 59, 0.25);
+}
+
+:global(.pr2-status) {
+  min-height: 44px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  background: rgba(255, 212, 59, 0.1);
+  border: 1px solid rgba(255, 212, 59, 0.2);
+  color: #ffe58a;
+  font-weight: 950;
+}
+
+:global(.pr2-kicker),
+:global(.pr2-status span) {
+  color: var(--gold);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+:global(.pr2-message) {
+  width: fit-content;
+  max-width: 100%;
+  padding: 9px 13px;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.13);
+  border: 1px solid rgba(255, 212, 59, 0.26);
+  color: #ffe58a;
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+:global(.pr2-layout) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+
+:global(.pr2-main) {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+:global(.pr2-side) {
+  position: sticky;
+  top: 22px;
+}
+
+:global(.pr2-card),
+:global(.pr2-publish-card) {
+  width: 100%;
+  padding: clamp(18px, 2.4vw, 28px);
+  border-radius: 34px;
+  border: 1px solid rgba(255, 212, 59, 0.22);
+  background:
+    radial-gradient(circle at top, rgba(255, 212, 59, 0.13), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.032));
+  box-shadow: 0 30px 96px rgba(0, 0, 0, 0.34);
+  overflow: hidden;
+}
+
+:global(.pr2-card-head) {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+:global(.pr2-card-head h1),
+:global(.pr2-card-head h2),
+:global(.pr2-publish-card h2) {
+  margin: 4px 0 0;
+  color: var(--text);
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+}
+
+:global(.pr2-card-head h1),
+:global(.pr2-card-head h2) {
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+}
+
+:global(.pr2-publish-card) {
+  display: grid;
+  gap: 8px;
+}
+
+:global(.pr2-publish-card h2) {
+  font-size: 1.8rem;
+}
+
+:global(.pr2-publish-card p) {
+  margin: 6px 0 4px;
+  color: var(--muted-strong);
+  line-height: 1.55;
+}
+
+:global(.pr2-media-box) {
+  width: 100%;
+  height: 320px;
+  max-height: 320px;
+  overflow: hidden;
+  border-radius: 28px;
+  background: rgba(2, 6, 23, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+}
+
+:global(.pr2-media-box img),
+:global(.pr2-media-box video) {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  display: block;
+}
+
+:global(.pr2-empty) {
+  padding: 24px;
+  text-align: center;
+}
+
+:global(.pr2-empty strong) {
+  display: block;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+:global(.pr2-empty p) {
+  margin: 0;
+  color: var(--muted);
+}
+
+:global(.pr2-actions),
+:global(.pr2-tool-row),
+:global(.pr2-side-options),
+:global(.pr2-publish-actions) {
+  display: grid;
+  gap: 10px;
+}
+
+:global(.pr2-actions) {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-top: 12px;
+}
+
+:global(.pr2-tool-row) {
+  grid-template-columns: minmax(180px, 1fr) repeat(3, 88px);
+  align-items: end;
+}
+
+:global(.pr2-publish-actions) {
+  gap: 6px;
+  width: 100%;
+}
+
+:global(.pr2-btn),
+:global(.pr2-actions a),
+:global(.pr2-details summary) {
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 18px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  font-weight: 900;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+:global(.pr2-btn:hover),
+:global(.pr2-actions a:hover),
+:global(.pr2-details summary:hover) {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+:global(.pr2-btn-danger) {
+  color: #ffd7dc;
+  background: rgba(255, 95, 109, 0.1);
+  border: 1px solid rgba(255, 95, 109, 0.22);
+}
+
+:global(.pr2-details) {
+  width: 100%;
+  margin-top: 14px;
+}
+
+:global(.pr2-details.is-tight) {
+  margin-top: 0;
+}
+
+:global(.pr2-details summary) {
+  width: 100%;
+  list-style: none;
+}
+
+:global(.pr2-details summary::-webkit-details-marker) {
+  display: none;
+}
+
+:global(.pr2-details summary::after) {
+  content: "▾";
+  margin-left: 10px;
+  color: var(--gold);
+  font-size: 0.8rem;
+}
+
+:global(.pr2-details[open] summary::after) {
+  content: "▴";
+}
+
+:global(.pr2-side-options) {
+  margin-top: 8px;
+}
+
+:global(.pr2-side-options .pr2-btn),
+:global(.pr2-publish-actions .pr2-btn) {
+  width: 100%;
+}
+
+:global(.pr2-prepared-strip) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(61, 220, 151, 0.1);
+  border: 1px solid rgba(61, 220, 151, 0.22);
+}
+
+:global(.pr2-prepare) {
+  display: grid;
+  gap: 14px;
+}
+
+:global(.pr2-stage) {
+  height: 410px;
+  border-radius: 28px;
+  background: rgba(2, 6, 23, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  padding: 22px;
+}
+
+:global(.pr2-frame) {
+  position: relative;
+  width: auto;
+  height: auto;
+  max-width: 94%;
+  max-height: 360px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 212, 59, 0.78);
+  background: rgba(15, 23, 42, 0.9);
+  cursor: grab;
+}
+
+:global(.pr2-frame-facebook-feed) {
+  width: min(94%, 620px);
+  aspect-ratio: 1200 / 630;
+}
+
+:global(.pr2-frame-facebook-square),
+:global(.pr2-frame-instagram-square),
+:global(.pr2-frame-tiktok-square) {
+  width: min(84%, 340px);
+  aspect-ratio: 1 / 1;
+}
+
+:global(.pr2-frame-instagram-portrait) {
+  width: min(78%, 280px);
+  aspect-ratio: 4 / 5;
+}
+
+:global(.pr2-frame-facebook-story),
+:global(.pr2-frame-instagram-story),
+:global(.pr2-frame-tiktok-vertical) {
+  width: min(58%, 205px);
+  aspect-ratio: 9 / 16;
+}
+
+:global(.pr2-frame img) {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  transform-origin: center;
+  transition: transform 80ms ease-out;
+}
+
+:global(.pr2-frame img.is-fill) {
+  object-fit: cover;
+}
+
+:global(.pr2-frame img.is-fit) {
+  object-fit: contain;
+  background: rgba(2, 6, 23, 0.9);
+}
+
+:global(.pr2-grid) {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, transparent 33.1%, rgba(255,255,255,0.22) 33.2%, rgba(255,255,255,0.22) 33.6%, transparent 33.7%, transparent 66.1%, rgba(255,255,255,0.22) 66.2%, rgba(255,255,255,0.22) 66.6%, transparent 66.7%),
+    linear-gradient(to bottom, transparent 33.1%, rgba(255,255,255,0.22) 33.2%, rgba(255,255,255,0.22) 33.6%, transparent 33.7%, transparent 66.1%, rgba(255,255,255,0.22) 66.2%, rgba(255,255,255,0.22) 66.6%, transparent 66.7%);
+}
+
+:global(.pr2-mode-row) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 6px;
+  border-radius: 20px;
+  background: rgba(5, 7, 12, 0.34);
+  border: 1px solid var(--border);
+}
+
+:global(.pr2-mode-btn) {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 15px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted-strong);
+  box-shadow: none;
+  font-size: 0.95rem;
+  line-height: 1;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+:global(.pr2-mode-btn.is-active) {
+  color: #0a0c12;
+  background: linear-gradient(135deg, var(--gold), #f7b733);
+  box-shadow: 0 14px 34px rgba(255, 212, 59, 0.18);
+}
+
+:global(.pr2-mode-panel-note) {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+:global(.pr2-presets) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+:global(.pr2-preset) {
+  min-height: 88px;
+  border-radius: 18px;
+  padding: 14px;
+  color: var(--text);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018)),
+    rgba(16, 20, 32, 0.84);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+:global(.pr2-preset.is-active) {
+  border-color: var(--gold);
+  background:
+    linear-gradient(135deg, rgba(255, 212, 59, 0.16), transparent 70%),
+    rgba(16, 20, 32, 0.92);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 212, 59, 0.24),
+    0 16px 36px rgba(0, 0, 0, 0.28);
+}
+
+:global(.pr2-preset strong) {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 950;
+}
+
+:global(.pr2-preset small) {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 10px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--muted-strong);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+:global(.pr2-preset.is-active small) {
+  color: var(--gold);
+  background: rgba(255, 212, 59, 0.1);
+}
+
+:global(.pr2-tool-row label) {
+  display: grid;
+  gap: 7px;
+}
+
+:global(.pr2-tool-row label span),
+:global(.pr2-wording strong),
+:global(.pr2-select-row strong) {
+  color: var(--muted-strong);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+:global(.pr2-tool-row input[type="range"]) {
+  width: 100%;
+  accent-color: var(--gold);
+}
+
+:global(.pr2-wording) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 14px;
+}
+
+:global(.pr2-wording label),
+:global(.pr2-select-row label) {
+  display: grid;
+  gap: 7px;
+}
+
+:global(.pr2-wording textarea),
+:global(.pr2-wording input),
+:global(.pr2-select-row select) {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 15px;
+  border: 1px solid var(--border);
+  outline: none;
+  color: var(--text);
+  background: rgba(5, 7, 12, 0.55);
+  font: inherit;
+  padding: 13px 14px;
+}
+
+:global(.pr2-wording textarea) {
+  min-height: 180px;
+  resize: vertical;
+}
+
+:global(.pr2-wording .is-caption) {
+  grid-row: span 2;
+}
+
+:global(.pr2-improve-grid) {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+:global(.pr2-select-row) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+:global(.pr2-loading) {
+  width: 100%;
+  padding: 24px;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at top, rgba(255, 212, 59, 0.13), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.032));
+  border: 1px solid rgba(255, 212, 59, 0.22);
+}
+
+:global(button:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 980px) {
+  :global(.pr2-layout) {
+    grid-template-columns: 1fr;
+  }
+
+  :global(.pr2-side) {
+    position: static;
+  }
+
+  :global(.pr2-presets),
+:global(.pr2-improve-grid),
+:global(.pr2-select-row),
+:global(.pr2-actions) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :global(.pr2-tool-row) {
+    grid-template-columns: 1fr repeat(3, 80px);
+  }
+}
+
+@media (max-width: 680px) {
+  :global(.pr2-page) {
+    width: min(100%, calc(100vw - 20px));
+  }
+
+  :global(.pr2-card),
+:global(.pr2-publish-card) {
+    padding: 18px;
+    border-radius: 26px;
+  }
+
+  :global(.pr2-card-head) {
+    flex-direction: column;
+  }
+
+  :global(.pr2-media-box) {
+    height: 270px;
+    max-height: 270px;
+  }
+
+  :global(.pr2-media-box img),
+:global(.pr2-media-box video) {
+    max-height: 270px;
+  }
+
+  :global(.pr2-stage) {
+    height: 410px;
+    padding: 14px;
+  }
+
+  :global(.pr2-tool-row label) {
+    display: none;
+  }
+
+  :global(.pr2-tool-row),
+:global(.pr2-mode-row),
+:global(.pr2-improve-grid),
+:global(.pr2-select-row),
+:global(.pr2-actions),
+:global(.pr2-wording),
+:global(.pr2-prepared-strip) {
+    grid-template-columns: 1fr;
+  }
+
+  :global(.pr2-presets) {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
+  }
+
+  :global(.pr2-preset) {
+    flex: 0 0 220px;
+    scroll-snap-align: start;
+  }
+}
