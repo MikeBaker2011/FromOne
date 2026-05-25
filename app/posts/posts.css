@@ -1,58 +1,58 @@
 
-/* FINAL posts mobile hero fix - keep one copy at the bottom of app/posts/posts.css */
+/* Free transform handles + mobile pinch-only zoom */
 
-@media (max-width: 760px) {
-  .fromone-posts-hero-card {
-    padding: 24px !important;
-    border-radius: 30px !important;
-  }
-
-  .fromone-posts-hero-card .fromone-posts-hero-layout {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 22px !important;
-    align-items: start !important;
-  }
-
-  .fromone-posts-hero-card .fromone-posts-hero-copy,
-  .fromone-posts-hero-card .fromone-posts-hero-actions {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .fromone-posts-hero-card .page-title {
-    font-size: clamp(2.35rem, 13vw, 3.5rem) !important;
-    line-height: 0.98 !important;
-    letter-spacing: -0.055em !important;
-    max-width: 100% !important;
-    margin-bottom: 16px !important;
-  }
-
-  .fromone-posts-hero-card .page-description {
-    max-width: 100% !important;
-    font-size: 1rem !important;
-    line-height: 1.55 !important;
-  }
-
-  .fromone-posts-hero-card .fromone-posts-hero-actions {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-    justify-content: stretch !important;
-    align-items: stretch !important;
-  }
-
-  .fromone-posts-hero-card .fromone-posts-hero-actions button,
-  .fromone-posts-hero-card .fromone-posts-hero-actions a {
-    width: 100% !important;
-    min-height: 58px !important;
-    justify-content: center !important;
-  }
+.f1-review-frame {
+  position: relative;
 }
 
-@media (max-width: 420px) {
-  .fromone-posts-hero-card .page-title {
-    font-size: clamp(2.15rem, 14vw, 3.2rem) !important;
+.f1-review-transform-handles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.f1-review-transform-handle {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid #101420;
+  background: #ffd43b;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.72), 0 8px 18px rgba(0,0,0,0.28);
+  padding: 0;
+  pointer-events: auto;
+  touch-action: none;
+  z-index: 3;
+}
+
+.f1-review-transform-handle.is-top-left { top: 8px; left: 8px; cursor: nwse-resize; }
+.f1-review-transform-handle.is-top { top: 8px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.f1-review-transform-handle.is-top-right { top: 8px; right: 8px; cursor: nesw-resize; }
+.f1-review-transform-handle.is-right { top: 50%; right: 8px; transform: translateY(-50%); cursor: ew-resize; }
+.f1-review-transform-handle.is-bottom-right { right: 8px; bottom: 8px; cursor: nwse-resize; }
+.f1-review-transform-handle.is-bottom { left: 50%; bottom: 8px; transform: translateX(-50%); cursor: ns-resize; }
+.f1-review-transform-handle.is-bottom-left { left: 8px; bottom: 8px; cursor: nesw-resize; }
+.f1-review-transform-handle.is-left { top: 50%; left: 8px; transform: translateY(-50%); cursor: ew-resize; }
+
+.f1-review-transform-hint {
+  margin: -4px 0 0;
+  color: rgba(248,250,252,0.68);
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+@media (max-width: 680px) {
+  .f1-review-tool-row label {
+    display: none !important;
+  }
+
+  .f1-review-tool-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .f1-review-transform-handle {
+    width: 20px;
+    height: 20px;
   }
 }
