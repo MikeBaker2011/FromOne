@@ -122,12 +122,15 @@ export default function Home() {
         .fromone-hero-title {
           margin: 0 0 22px;
           color: #ffffff;
-          font-size: clamp(3.8rem, 7.3vw, 7.55rem);
-          line-height: 0.96;
-          letter-spacing: -0.065em;
+          font-size: clamp(3.1rem, 6vw, 6.25rem);
+          line-height: 1.06;
+          letter-spacing: -0.035em;
         }
 
-        .fromone-hero-title span { color: #ffd43b; }
+        .fromone-hero-title span {
+          color: #ffd43b;
+          display: inline-block;
+        }
 
         .fromone-hero-text {
           max-width: 620px;
@@ -306,7 +309,7 @@ export default function Home() {
           .fromone-marketing-page .public-nav { width: calc(100vw - 32px) !important; padding-top: 18px !important; }
           .fromone-shell { width: min(100% - 24px, 520px); }
           .fromone-hero-grid { padding-top: 54px; padding-bottom: 42px; gap: 32px; }
-          .fromone-hero-title { font-size: clamp(2.65rem, 12vw, 3.55rem); line-height: 1; letter-spacing: -0.055em; }
+          .fromone-hero-title { font-size: clamp(2.35rem, 10.5vw, 3.15rem); line-height: 1.08; letter-spacing: -0.03em; }
           .fromone-hero-actions, .fromone-final-actions { display: grid; grid-template-columns: 1fr; width: 100%; }
           .fromone-hero-actions a, .fromone-final-actions a { width: 100%; justify-content: center; text-align: center; }
           .fromone-proof-row { display: grid; grid-template-columns: 1fr; }
@@ -324,7 +327,7 @@ export default function Home() {
         <div className="fromone-shell fromone-hero-grid">
           <div className="fromone-hero-copy">
             <h1 className="fromone-hero-title">
-              Social posts, <span>ready to publish.</span>
+              Ready-to-publish <span>social posts.</span>
             </h1>
 
             <p className="fromone-hero-text">
