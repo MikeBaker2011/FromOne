@@ -173,6 +173,21 @@ function getScheduleValue(post: any) {
   return cleanText(post?.scheduled_publish_at || post?.scheduled_at);
 }
 
+function getDateTimeLocalValue(value?: string | null) {
+  const cleanValue = cleanText(value);
+
+  if (!cleanValue) return "";
+
+  const date = new Date(cleanValue);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  const localDate = new Date(date.getTime() - offsetMs);
+
+  return localDate.toISOString().slice(0, 16);
+}
+
 function getAutopublishStatus(post: any, isPosted: boolean) {
   const publishStatus = cleanText(post?.publish_status).toLowerCase();
   const status = cleanText(post?.status).toLowerCase();
@@ -183,7 +198,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
     return {
       label: "Published",
       tone: "success",
-      description: "This post has been marked as published.",
+      description: "This post has been published.",
     };
   }
 
@@ -193,7 +208,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
       tone: "error",
       description:
         publishError ||
-        "Autopublish did not complete. You can reconnect Meta or post manually.",
+        "Autopublish did not complete. Reconnect Meta or post manually.",
     };
   }
 
@@ -202,7 +217,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
       label: "Not scheduled",
       tone: "neutral",
       description:
-        "This post does not have a scheduled publish time yet. You can still autopublish now or post manually.",
+        "Choose a time or publish manually.",
     };
   }
 
@@ -214,7 +229,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
       label: "Due now",
       tone: "warning",
       description:
-        "This post is due. The scheduler will try to publish it when the cron runs, or you can autopublish now.",
+        "This post is due. The scheduler will try to publish it, or you can publish now.",
     };
   }
 
@@ -222,7 +237,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
     label: "Planned",
     tone: "planned",
     description:
-      "FromOne will try to autopublish this at the planned time if the account is connected.",
+      "FromOne will try to publish this automatically at the planned time.",
   };
 }
 
@@ -347,6 +362,9 @@ export default function PostReviewPage() {
   const [reachTarget, setReachTarget] = useState("Local customers");
   const [toneTarget, setToneTarget] = useState("Use current tone");
 
+  const [scheduleInputValue, setScheduleInputValue] = useState("");
+  const [savingSchedule, setSavingSchedule] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const activePointersRef = useRef<Map<number, ActivePointer>>(new Map());
   const pinchStateRef = useRef<PinchState | null>(null);
@@ -398,7 +416,6 @@ export default function PostReviewPage() {
   const scheduleValue = getScheduleValue(post);
   const scheduledLabel = formatScheduledDate(scheduleValue);
   const autopublishStatus = getAutopublishStatus(post, isPosted);
-  const autopublishStatusClass = `pr2-status-pill pr2-status-pill-${autopublishStatus.tone}`;
   const canScheduledAutopublish = canAutopublish && Boolean(scheduleValue) && !isPosted;
 
   const fullCaption = useMemo(() => {
@@ -435,6 +452,10 @@ export default function PostReviewPage() {
     resetTransform();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [platformName]);
+
+  useEffect(() => {
+    setScheduleInputValue(getDateTimeLocalValue(getScheduleValue(post)));
+  }, [post]);
 
   const loadPost = async () => {
     setLoading(true);
@@ -509,6 +530,52 @@ export default function PostReviewPage() {
   const openPlatform = async () => {
     await copyCaption();
     window.open(getPlatformUrl(platformName), "_blank", "noopener,noreferrer");
+  };
+
+  const saveSchedule = async () => {
+    if (!post?.id) return;
+
+    if (!scheduleInputValue) {
+      setMessage("Choose a scheduled publish time first.");
+      return;
+    }
+
+    const nextDate = new Date(scheduleInputValue);
+
+    if (Number.isNaN(nextDate.getTime())) {
+      setMessage("Choose a valid scheduled publish time.");
+      return;
+    }
+
+    setSavingSchedule(true);
+    setMessage("");
+
+    const scheduledIso = nextDate.toISOString();
+
+    const updates = {
+      scheduled_at: scheduledIso,
+      scheduled_publish_at: scheduledIso,
+      status: "scheduled",
+      publish_status: "scheduled",
+      publish_error: null,
+      is_posted: false,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from("campaign_posts")
+      .update(updates)
+      .eq("id", post.id);
+
+    if (error) {
+      setMessage(error.message || "Could not save the scheduled time.");
+      setSavingSchedule(false);
+      return;
+    }
+
+    setPost({ ...post, ...updates });
+    setMessage("Scheduled autopublish time saved.");
+    setSavingSchedule(false);
   };
 
   const markAsPosted = async () => {
@@ -1474,15 +1541,57 @@ export default function PostReviewPage() {
           <aside className="pr2-side">
             <article className="pr2-publish-card">
               <span className="pr2-kicker">Autopublish</span>
-              <h2>{autopublishStatus.label}</h2>
-
-              <p>{autopublishStatus.description}</p>
 
               <div
-                className="pr2-autopublish-box"
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  marginBottom: 12,
+                }}
+              >
+                <div>
+                  <h2 style={{ marginBottom: 6 }}>{autopublishStatus.label}</h2>
+                  <p>{autopublishStatus.description}</p>
+                </div>
+
+                <span
+                  style={{
+                    flex: "0 0 auto",
+                    borderRadius: 999,
+                    padding: "7px 10px",
+                    fontSize: 11,
+                    fontWeight: 950,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color:
+                      autopublishStatus.tone === "error"
+                        ? "#fecaca"
+                        : autopublishStatus.tone === "success"
+                          ? "#bbf7d0"
+                          : autopublishStatus.tone === "warning"
+                            ? "#fde68a"
+                            : "#f8fafc",
+                    background:
+                      autopublishStatus.tone === "error"
+                        ? "rgba(239, 68, 68, 0.16)"
+                        : autopublishStatus.tone === "success"
+                          ? "rgba(34, 197, 94, 0.15)"
+                          : autopublishStatus.tone === "warning"
+                            ? "rgba(245, 158, 11, 0.14)"
+                            : "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  {autopublishStatus.label}
+                </span>
+              </div>
+
+              <div
                 style={{
                   display: "grid",
-                  gap: 10,
+                  gap: 12,
                   margin: "14px 0",
                   padding: 14,
                   borderRadius: 18,
@@ -1490,48 +1599,53 @@ export default function PostReviewPage() {
                   border: "1px solid rgba(255,255,255,0.1)",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    alignItems: "center",
-                  }}
-                >
+                <label style={{ display: "grid", gap: 7 }}>
                   <span className="pr2-kicker" style={{ margin: 0 }}>
-                    Status
+                    Scheduled time
                   </span>
-                  <strong className={autopublishStatusClass}>
-                    {autopublishStatus.label}
-                  </strong>
-                </div>
+
+                  <input
+                    type="datetime-local"
+                    value={scheduleInputValue}
+                    onChange={(event) => setScheduleInputValue(event.target.value)}
+                    disabled={savingSchedule || isPosted}
+                    style={{
+                      width: "100%",
+                      minHeight: 46,
+                      borderRadius: 12,
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      background: "rgba(15, 23, 42, 0.72)",
+                      color: "#ffffff",
+                      padding: "0 12px",
+                      fontWeight: 800,
+                    }}
+                  />
+                </label>
 
                 <div
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    alignItems: "center",
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 10,
                   }}
                 >
-                  <span className="pr2-kicker" style={{ margin: 0 }}>
-                    Planned time
-                  </span>
-                  <strong>{scheduledLabel || "Not set"}</strong>
-                </div>
+                  <div>
+                    <span className="pr2-kicker" style={{ margin: 0 }}>
+                      Planned
+                    </span>
+                    <strong style={{ display: "block", marginTop: 4 }}>
+                      {scheduledLabel || "Not set"}
+                    </strong>
+                  </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    alignItems: "center",
-                  }}
-                >
-                  <span className="pr2-kicker" style={{ margin: 0 }}>
-                    Platform
-                  </span>
-                  <strong>{platformName}</strong>
+                  <div>
+                    <span className="pr2-kicker" style={{ margin: 0 }}>
+                      Platform
+                    </span>
+                    <strong style={{ display: "block", marginTop: 4 }}>
+                      {platformName}
+                    </strong>
+                  </div>
                 </div>
               </div>
 
@@ -1542,6 +1656,15 @@ export default function PostReviewPage() {
               )}
 
               <div className="pr2-publish-actions">
+                <button
+                  type="button"
+                  className="pr2-btn"
+                  onClick={saveSchedule}
+                  disabled={savingSchedule || isPosted}
+                >
+                  {savingSchedule ? "Saving..." : "Save schedule"}
+                </button>
+
                 {canAutopublish && (
                   <button
                     type="button"
@@ -1552,23 +1675,25 @@ export default function PostReviewPage() {
                     {autoPublishing ? "Autopublishing..." : "Autopublish now"}
                   </button>
                 )}
-
-                {canScheduledAutopublish && (
-                  <button type="button" className="pr2-btn" disabled>
-                    Uses scheduled time
-                  </button>
-                )}
               </div>
 
-              <p style={{ marginTop: 12, fontSize: 13, opacity: 0.78 }}>
-                Facebook and Instagram can autopublish when connected. TikTok stays manual.
-              </p>
+              {canScheduledAutopublish && (
+                <p style={{ marginTop: 12, fontSize: 13, opacity: 0.78 }}>
+                  FromOne will try this automatically when the scheduled time arrives.
+                </p>
+              )}
+
+              {!canAutopublish && (
+                <p style={{ marginTop: 12, fontSize: 13, opacity: 0.78 }}>
+                  TikTok stays manual for now.
+                </p>
+              )}
             </article>
 
             <article className="pr2-publish-card">
-              <span className="pr2-kicker">Publish</span>
+              <span className="pr2-kicker">Manual publish</span>
               <h2>{platformName}</h2>
-              <p>Copy the caption, add the media, then publish.</p>
+              <p>Copy the caption, use the prepared media, then publish manually.</p>
 
               <div className="pr2-publish-actions">
                 <button type="button" className="pr2-btn pr2-btn-primary" onClick={openPlatform}>
