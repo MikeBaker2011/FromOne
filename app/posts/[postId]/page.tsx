@@ -214,6 +214,14 @@ function triggerDownload(url: string, filename: string) {
   document.body.removeChild(link);
 }
 
+
+function withCacheBust(url: string) {
+  if (!url) return url;
+
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}v=${Date.now()}`;
+}
+
 async function urlToFile(url: string, filename: string) {
   const response = await fetch(url);
 
@@ -247,6 +255,7 @@ export default function PostReviewPage() {
 
   const [message, setMessage] = useState("");
   const [activePanel, setActivePanel] = useState<"review" | "prepare" | "improve">("review");
+  const [isPositioningMedia, setIsPositioningMedia] = useState(false);
 
   const [resizePresetValue, setResizePresetValue] = useState<ResizePresetValue>("facebook-feed");
   const [prepareFitMode, setPrepareFitMode] = useState<"fill" | "fit">("fill");
@@ -277,6 +286,27 @@ export default function PostReviewPage() {
     recommendedPresets.find((preset) => preset.value === resizePresetValue) ||
     recommendedPresets[0] ||
     resizePresets[0];
+
+  const preparedDisplayMedia = useMemo<PreparedMedia | null>(() => {
+    if (preparedMedia?.url) return preparedMedia;
+
+    const savedUrl = cleanText(
+      post?.prepared_media_url ||
+        post?.preparedMediaUrl ||
+        post?.prepared_url ||
+        post?.resized_media_url ||
+        post?.resizedMediaUrl,
+    );
+
+    if (!savedUrl) return null;
+
+    return {
+      url: savedUrl,
+      label: selectedPreset.label,
+      width: Number(post?.prepared_media_width || post?.preparedWidth || selectedPreset.width),
+      height: Number(post?.prepared_media_height || post?.preparedHeight || selectedPreset.height),
+    };
+  }, [preparedMedia, post, selectedPreset]);
 
   const mediaUrl = cleanText(post?.media_url);
   const mediaType = cleanText(post?.media_type).toLowerCase();
@@ -585,6 +615,7 @@ export default function PostReviewPage() {
 
   const selectPreset = (value: ResizePresetValue) => {
     setResizePresetValue(value);
+    setIsPositioningMedia(false);
     resetTransform();
   };
 
@@ -593,6 +624,13 @@ export default function PostReviewPage() {
     activePointersRef.current.clear();
     pinchStateRef.current = null;
     setDragState(null);
+  };
+
+  const togglePositioningMedia = () => {
+    activePointersRef.current.clear();
+    pinchStateRef.current = null;
+    setDragState(null);
+    setIsPositioningMedia((current) => !current);
   };
 
   const rotateLeft = () => {
@@ -617,6 +655,7 @@ export default function PostReviewPage() {
 
   const startTransform = (event: PointerEvent<HTMLDivElement>) => {
     if (!canPrepareImage) return;
+    if (event.pointerType === "touch" && !isPositioningMedia) return;
 
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -654,6 +693,7 @@ export default function PostReviewPage() {
 
   const moveTransform = (event: PointerEvent<HTMLDivElement>) => {
     if (!canPrepareImage) return;
+    if (event.pointerType === "touch" && !isPositioningMedia) return;
 
     const pointer = activePointersRef.current.get(event.pointerId);
     if (!pointer) return;
@@ -752,16 +792,46 @@ export default function PostReviewPage() {
 
       if (!response.ok) throw new Error(result?.error || result?.message || "Could not prepare this image.");
 
-      const url = result?.url || result?.publicUrl || result?.public_url;
-      if (!url) throw new Error("Prepared image was created but no URL was returned.");
+      const rawUrl =
+        result?.url ||
+        result?.publicUrl ||
+        result?.public_url ||
+        result?.preparedUrl ||
+        result?.prepared_url ||
+        result?.preparedMediaUrl ||
+        result?.prepared_media_url ||
+        result?.resizedUrl ||
+        result?.resized_url ||
+        result?.mediaUrl ||
+        result?.media_url ||
+        result?.data?.url ||
+        result?.data?.publicUrl ||
+        result?.data?.public_url;
 
-      setPreparedMedia({
+      if (!rawUrl) {
+        throw new Error("Prepared image was created but no URL was returned.");
+      }
+
+      const url = withCacheBust(String(rawUrl));
+      const nextPreparedMedia = {
         url,
         label: result?.label || selectedPreset.label,
-        width: Number(result?.width || selectedPreset.width),
-        height: Number(result?.height || selectedPreset.height),
-      });
-      setMessage("Prepared image created.");
+        width: Number(result?.width || result?.outputWidth || selectedPreset.width),
+        height: Number(result?.height || result?.outputHeight || selectedPreset.height),
+      };
+
+      setPreparedMedia(nextPreparedMedia);
+      setPost((current: any) =>
+        current
+          ? {
+              ...current,
+              prepared_media_url: url,
+              prepared_media_width: nextPreparedMedia.width,
+              prepared_media_height: nextPreparedMedia.height,
+            }
+          : current,
+      );
+      setMessage("Prepared image ready. You can now share or download it.");
     } catch (error: any) {
       setMessage(error?.message || "Could not prepare this image.");
     } finally {
@@ -770,13 +840,13 @@ export default function PostReviewPage() {
   };
 
   const downloadPreparedImage = () => {
-    if (!preparedMedia?.url) return;
+    if (!preparedDisplayMedia?.url) return;
 
-    triggerDownload(preparedMedia.url, `fromone-post-${preparedMedia.width}x${preparedMedia.height}.jpg`);
+    triggerDownload(preparedDisplayMedia.url, `fromone-post-${preparedDisplayMedia.width}x${preparedDisplayMedia.height}.jpg`);
   };
 
   const sharePreparedImage = async () => {
-    if (!preparedMedia?.url) {
+    if (!preparedDisplayMedia?.url) {
       setMessage("Create a prepared image first.");
       return;
     }
@@ -785,7 +855,7 @@ export default function PostReviewPage() {
     await copyCaption();
 
     try {
-      const file = await urlToFile(preparedMedia.url, "fromone-post");
+      const file = await urlToFile(preparedDisplayMedia.url, "fromone-post");
       const nav = navigator as any;
 
       if (nav.canShare?.({ files: [file] }) && nav.share) {
@@ -836,8 +906,8 @@ export default function PostReviewPage() {
 
     try {
       const endpoint = isInstagramPost ? "/api/instagram/publish" : "/api/facebook/publish";
-      const publishMediaUrl = preparedMedia?.url || mediaUrl;
-      const publishMediaType = preparedMedia?.url ? "image" : mediaType;
+      const publishMediaUrl = preparedDisplayMedia?.url || mediaUrl;
+      const publishMediaType = preparedDisplayMedia?.url ? "image" : mediaType;
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -945,7 +1015,7 @@ export default function PostReviewPage() {
 
   if (loading) {
     return (
-      <main className="pr2-page" data-review-page="module-css-v1">
+      <main className="pr2-page" data-review-page="simple-mobile-tools-v1">
         <section className="pr2-loading">Loading post...</section>
       </main>
     );
@@ -953,7 +1023,7 @@ export default function PostReviewPage() {
 
   if (!post) {
     return (
-      <main className="pr2-page" data-review-page="module-css-v1">
+      <main className="pr2-page" data-review-page="simple-mobile-tools-v1">
         <section className="pr2-loading">
           <h1>Post not found</h1>
           <p>{message || "This post could not be loaded."}</p>
@@ -966,7 +1036,7 @@ export default function PostReviewPage() {
   }
 
   return (
-    <main className="pr2-page" data-review-page="module-css-v1">
+    <main className="pr2-page" data-review-page="simple-mobile-tools-v1">
 
       <section className="pr2-shell">
         <div className="pr2-topbar">
@@ -998,7 +1068,14 @@ export default function PostReviewPage() {
                 )}
 
                 {activePanel === "prepare" && (
-                  <button type="button" className="pr2-btn" onClick={() => setActivePanel("review")}>
+                  <button
+                    type="button"
+                    className="pr2-btn"
+                    onClick={() => {
+                      setIsPositioningMedia(false);
+                      setActivePanel("review");
+                    }}
+                  >
                     Done
                   </button>
                 )}
@@ -1007,7 +1084,7 @@ export default function PostReviewPage() {
               {activePanel === "prepare" && canPrepareImage ? (
                 <div className="pr2-prepare">
                   <div
-                    className="pr2-stage"
+                    className={isPositioningMedia ? "pr2-stage is-positioning" : "pr2-stage"}
                     onPointerDown={startTransform}
                     onPointerMove={moveTransform}
                     onPointerUp={stopTransform}
@@ -1069,29 +1146,16 @@ export default function PostReviewPage() {
                     {editMode === "crop" && (
                       <>
                         <p className="pr2-mode-panel-note">
-                          Crop mode keeps the image natural. Drag to position, use wheel or pinch to zoom.
+                          Tap Position image before dragging or pinching. Lock it again when you want to scroll.
                         </p>
 
-                        <div className="pr2-tool-row">
-                          <label>
-                            <span>Zoom</span>
-                            <input
-                              type="range"
-                              min="0.75"
-                              max="3"
-                              step="0.01"
-                              value={mediaZoom}
-                              onChange={(event) => {
-                                setMediaZoom(Number(event.target.value));
-                                setPreparedMedia(null);
-                              }}
-                            />
-                          </label>
-
-                          <button type="button" className="pr2-btn" onClick={fitFullImage}>Fit</button>
-                          <button type="button" className="pr2-btn" onClick={fillFrame}>Fill</button>
-                          <button type="button" className="pr2-btn" onClick={resetTransform}>Reset</button>
-                        </div>
+                        <button
+                          type="button"
+                          className={isPositioningMedia ? "pr2-btn pr2-btn-primary" : "pr2-btn pr2-position-btn"}
+                          onClick={togglePositioningMedia}
+                        >
+                          {isPositioningMedia ? "Lock image" : "Position image"}
+                        </button>
                       </>
                     )}
 
@@ -1124,22 +1188,57 @@ export default function PostReviewPage() {
                     )}
                   </div>
 
-                  <div className="pr2-actions">
+                  <details className="pr2-mobile-editing-tools">
+                    <summary>More editing tools</summary>
+
+                    <div className="pr2-mobile-tools-grid">
+                      <button type="button" className="pr2-btn" onClick={fitFullImage}>Fit image</button>
+                      <button type="button" className="pr2-btn" onClick={fillFrame}>Fill frame</button>
+                      <button type="button" className="pr2-btn" onClick={resetTransform}>Reset image</button>
+                      <button type="button" className="pr2-btn" onClick={rotateLeft}>Rotate left</button>
+                      <button type="button" className="pr2-btn" onClick={rotateRight}>Rotate right</button>
+                      <button type="button" className="pr2-btn" onClick={flipHorizontal}>Flip horizontal</button>
+                      <button type="button" className="pr2-btn" onClick={flipVertical}>Flip vertical</button>
+                    </div>
+                  </details>
+
+                  <div className="pr2-actions pr2-create-actions">
                     <button type="button" className="pr2-btn pr2-btn-primary" onClick={createPreparedImage} disabled={resizingMedia}>
-                      {resizingMedia ? "Creating..." : "Create prepared image"}
-                    </button>
-
-                    <button type="button" className="pr2-btn" onClick={sharePreparedImage} disabled={!preparedMedia?.url || sharingMedia}>
-                      {sharingMedia ? "Opening..." : "Share to social app"}
-                    </button>
-
-                    <button type="button" className="pr2-btn" onClick={downloadPreparedImage} disabled={!preparedMedia?.url}>
-                      Download
+                      {resizingMedia
+                        ? "Creating..."
+                        : preparedDisplayMedia?.url
+                          ? "Update prepared image"
+                          : "Create prepared image"}
                     </button>
                   </div>
+
+                  {preparedDisplayMedia?.url && (
+                    <div className="pr2-prepared-ready">
+                      <div>
+                        <strong>Prepared image ready</strong>
+                        <span>
+                          {preparedDisplayMedia.width} × {preparedDisplayMedia.height}
+                        </span>
+                      </div>
+
+                      <div className="pr2-prepared-ready-actions">
+                        <button type="button" className="pr2-btn pr2-btn-primary" onClick={sharePreparedImage} disabled={sharingMedia}>
+                          {sharingMedia ? "Opening..." : "Share to social app"}
+                        </button>
+
+                        <button type="button" className="pr2-btn" onClick={downloadPreparedImage}>
+                          Download
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
+                  {preparedDisplayMedia?.url && activePanel !== "prepare" && (
+                    <div className="pr2-media-current-label">Showing prepared image</div>
+                  )}
+
                   <div className="pr2-media-box">
                     {mediaUrl ? (
                       isVideo ? (
@@ -1150,7 +1249,7 @@ export default function PostReviewPage() {
                           <p>Open or download the file before posting.</p>
                         </div>
                       ) : (
-                        <img src={mediaUrl} alt="Post media" />
+                        <img src={preparedDisplayMedia?.url || mediaUrl} alt="Post media" />
                       )
                     ) : (
                       <div className="pr2-empty">
@@ -1180,10 +1279,10 @@ export default function PostReviewPage() {
                     </div>
                   </details>
 
-                  {preparedMedia?.url && (
+                  {preparedDisplayMedia?.url && (
                     <div className="pr2-prepared-strip">
                       <strong>Prepared image ready</strong>
-                      <span>{preparedMedia.width} × {preparedMedia.height}</span>
+                      <span>{preparedDisplayMedia.width} × {preparedDisplayMedia.height}</span>
                       <button type="button" className="pr2-btn" onClick={sharePreparedImage}>Share to social app</button>
                       <button type="button" className="pr2-btn" onClick={downloadPreparedImage}>Download</button>
                     </div>
@@ -1234,7 +1333,14 @@ export default function PostReviewPage() {
                     <h2>Make it stronger</h2>
                   </div>
 
-                  <button type="button" className="pr2-btn" onClick={() => setActivePanel("review")}>
+                  <button
+                    type="button"
+                    className="pr2-btn"
+                    onClick={() => {
+                      setIsPositioningMedia(false);
+                      setActivePanel("review");
+                    }}
+                  >
                     Done
                   </button>
                 </div>
@@ -1299,7 +1405,7 @@ export default function PostReviewPage() {
                   Post manually
                 </button>
 
-                {preparedMedia?.url && (
+                {preparedDisplayMedia?.url && (
                   <button type="button" className="pr2-btn" onClick={sharePreparedImage} disabled={sharingMedia}>
                     {sharingMedia ? "Opening..." : "Share to social app"}
                   </button>
