@@ -2886,7 +2886,7 @@ Important:
                     onClick={() =>
                       setShowSavedWeekControls((current) => !current)
                     }
-                    style={{ minHeight: 46, borderRadius: 16 }}
+                    style={{ minHeight: 52, borderRadius: 16, width: "100%" }}
                   >
                     {showSavedWeekControls ? "Hide weeks" : "Manage weeks"}
                   </button>
@@ -2900,7 +2900,7 @@ Important:
                           ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
                           : "/dashboard";
                       }}
-                      style={{ minHeight: 46, borderRadius: 16 }}
+                      style={{ minHeight: 52, borderRadius: 16, width: "100%" }}
                     >
                       + Add media
                     </button>
