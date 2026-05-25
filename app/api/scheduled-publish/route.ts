@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 const cronSecret = process.env.CRON_SECRET || '';
 
 function isCronAuthorised(req: NextRequest) {
-  if (!cronSecret) return true;
+  if (!cronSecret) return false;
 
   const authHeader = req.headers.get('authorization') || '';
   const bearerToken = authHeader.replace(/^Bearer\s+/i, '').trim();
@@ -18,6 +18,7 @@ async function handleScheduledPublish(req: NextRequest) {
   if (!isCronAuthorised(req)) {
     return NextResponse.json(
       {
+        ok: false,
         error: 'Unauthorised scheduled publish request.',
       },
       { status: 401 },
@@ -25,6 +26,7 @@ async function handleScheduledPublish(req: NextRequest) {
   }
 
   return NextResponse.json({
+    ok: true,
     success: true,
     scheduling_enabled: false,
     checked_at: new Date().toISOString(),
