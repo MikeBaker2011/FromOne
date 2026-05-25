@@ -532,3 +532,116 @@ button:disabled {
     align-items: stretch;
   }
 }
+
+
+/* Media actions dropdown + cleaner mobile posts header */
+
+.f1-clean-media-menu {
+  margin-top: 12px;
+}
+
+.f1-clean-media-menu summary {
+  min-height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  cursor: pointer;
+  list-style: none;
+  width: fit-content;
+}
+
+.f1-clean-media-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.f1-clean-media-menu summary::after {
+  content: "▾";
+  margin-left: 10px;
+  color: #ffd43b;
+  font-size: 0.82rem;
+}
+
+.f1-clean-media-menu[open] summary::after {
+  content: "▴";
+}
+
+.f1-clean-media-menu .f1-clean-action-row {
+  margin-top: 12px;
+}
+
+/* Keep the post review page simple and not cramped */
+.f1-clean-card-title .f1-clean-secondary {
+  white-space: nowrap;
+}
+
+.f1-clean-side-card button {
+  width: 100%;
+}
+
+/* Posts page mobile header stacking fix */
+@media (max-width: 760px) {
+  .simplified-section-heading,
+  .premium-calendar-header,
+  .fromone-weekly-header,
+  .fromone-posts-header,
+  .posts-header,
+  .posts-page-header,
+  .campaign-header,
+  .dashboard-section-heading {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    align-items: start !important;
+    text-align: left !important;
+  }
+
+  .simplified-section-heading > *,
+  .premium-calendar-header > *,
+  .fromone-weekly-header > *,
+  .fromone-posts-header > *,
+  .posts-header > *,
+  .posts-page-header > *,
+  .campaign-header > *,
+  .dashboard-section-heading > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+  }
+
+  .simplified-section-heading h1,
+  .simplified-section-heading h2,
+  .premium-calendar-header h1,
+  .premium-calendar-header h2,
+  .fromone-posts-header h1,
+  .posts-header h1,
+  .posts-page-header h1,
+  .campaign-header h1,
+  .dashboard-section-heading h1,
+  .dashboard-section-heading h2 {
+    font-size: clamp(1.85rem, 10vw, 2.7rem) !important;
+    line-height: 0.98 !important;
+    max-width: 100% !important;
+  }
+
+  .posts-plan-actions,
+  .fromone-publish-card-actions,
+  .premium-calendar-actions,
+  .posts-header-actions,
+  .fromone-header-actions {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .posts-plan-actions button,
+  .premium-calendar-actions button,
+  .posts-header-actions button,
+  .fromone-header-actions button {
+    width: 100% !important;
+  }
+}

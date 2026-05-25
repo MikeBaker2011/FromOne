@@ -314,6 +314,7 @@ export default function PostReviewPage() {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [resizingMedia, setResizingMedia] = useState(false);
   const [sharingMedia, setSharingMedia] = useState(false);
+  const [autoPublishing, setAutoPublishing] = useState(false);
   const [preparedMedia, setPreparedMedia] = useState<PreparedMedia | null>(null);
 
   const [rewriting, setRewriting] = useState("");
@@ -337,6 +338,10 @@ export default function PostReviewPage() {
   const isVideo = mediaType === "video";
   const isFlyer = mediaType === "flyer" || mediaType === "pdf" || mediaUrl.toLowerCase().includes(".pdf");
   const canPrepareImage = Boolean(mediaUrl) && !isVideo && !isFlyer;
+  const isFacebookPost = platformName.toLowerCase().includes("facebook");
+  const isInstagramPost = platformName.toLowerCase().includes("instagram");
+  const canAutopublish = isFacebookPost || isInstagramPost;
+  const autopublishPlatformLabel = isInstagramPost ? "Instagram" : "Facebook";
 
   const isPosted =
     Boolean(post?.is_posted) ||
@@ -818,6 +823,97 @@ export default function PostReviewPage() {
     }
   };
 
+  const autopublishNow = async () => {
+    if (!post?.id) return;
+
+    if (!canAutopublish) {
+      setMessage("Autopublish is only available for connected Facebook and Instagram business accounts.");
+      return;
+    }
+
+    if (isInstagramPost && !mediaUrl) {
+      setMessage("Instagram autopublish needs an image or video attached.");
+      return;
+    }
+
+    if (isInstagramPost && isFlyer) {
+      setMessage("Instagram cannot autopublish a PDF or flyer file. Use Prepare media or manual posting.");
+      return;
+    }
+
+    const text = fullCaption;
+
+    if (!cleanText(text)) {
+      setMessage("Add wording before autopublishing.");
+      return;
+    }
+
+    setAutoPublishing(true);
+    setMessage("");
+
+    try {
+      const endpoint = isInstagramPost ? "/api/instagram/publish" : "/api/facebook/publish";
+      const publishMediaUrl = preparedMedia?.url || mediaUrl;
+      const publishMediaType = preparedMedia?.url ? "image" : mediaType;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId: post.id,
+          campaignPostId: post.id,
+          campaign_id: post.campaign_id,
+          platform: post.platform || platformName,
+          message: text,
+          text,
+          caption,
+          cta,
+          hashtags: hashtags
+            .split(/\s+/)
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+          media_url: publishMediaUrl || null,
+          mediaUrl: publishMediaUrl || null,
+          media_type: publishMediaType || null,
+          mediaType: publishMediaType || null,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message = cleanText(result?.error || result?.message);
+
+        if (
+          message.toLowerCase().includes("access token") ||
+          message.toLowerCase().includes("reconnect") ||
+          message.toLowerCase().includes("connection") ||
+          message.toLowerCase().includes("permissions")
+        ) {
+          setMessage("Autopublish needs attention. Reconnect Facebook/Instagram in Settings, or use manual posting.");
+          return;
+        }
+
+        throw new Error(message || `Could not autopublish to ${autopublishPlatformLabel}.`);
+      }
+
+      setPost({
+        ...post,
+        is_posted: true,
+        status: "posted",
+        publish_status: "published",
+        publish_error: null,
+      });
+      setMessage(`Autopublished to ${autopublishPlatformLabel}.`);
+    } catch (error: any) {
+      setMessage(error?.message || `Could not autopublish to ${autopublishPlatformLabel}.`);
+    } finally {
+      setAutoPublishing(false);
+    }
+  };
+
   const quickImprove = async (action: string) => {
     if (!post?.id) return;
 
@@ -910,13 +1006,13 @@ export default function PostReviewPage() {
                 <h1>{activePanel === "prepare" ? "Prepare media" : "Review media"}</h1>
               </div>
 
-              {canPrepareImage && (
+              {activePanel === "prepare" && (
                 <button
                   type="button"
-                  className={activePanel === "prepare" ? "f1-clean-secondary" : "f1-clean-primary"}
-                  onClick={() => setActivePanel(activePanel === "prepare" ? "review" : "prepare")}
+                  className="f1-clean-secondary"
+                  onClick={() => setActivePanel("review")}
                 >
-                  {activePanel === "prepare" ? "Done" : "Prepare media"}
+                  Done
                 </button>
               )}
             </div>
@@ -1020,21 +1116,31 @@ export default function PostReviewPage() {
                   )}
                 </div>
 
-                <div className="f1-clean-action-row">
-                  <input ref={fileInputRef} type="file" accept="image/*,video/*,.pdf" hidden onChange={handleUploadMedia} />
+                <input ref={fileInputRef} type="file" accept="image/*,video/*,.pdf" hidden onChange={handleUploadMedia} />
 
-                  <button type="button" onClick={() => fileInputRef.current?.click()}>
-                    Upload / replace
-                  </button>
+                <details className="f1-clean-media-menu">
+                  <summary>Media options</summary>
 
-                  {mediaUrl && (
-                    <>
-                      <a href={mediaUrl} target="_blank" rel="noreferrer">View media</a>
-                      <button type="button" onClick={downloadMedia}>Download</button>
-                      <button type="button" className="is-danger" onClick={removeMedia}>Remove</button>
-                    </>
-                  )}
-                </div>
+                  <div className="f1-clean-action-row">
+                    {canPrepareImage && (
+                      <button type="button" className="f1-clean-primary" onClick={() => setActivePanel("prepare")}>
+                        Prepare media
+                      </button>
+                    )}
+
+                    <button type="button" onClick={() => fileInputRef.current?.click()}>
+                      Upload / replace
+                    </button>
+
+                    {mediaUrl && (
+                      <>
+                        <a href={mediaUrl} target="_blank" rel="noreferrer">View media</a>
+                        <button type="button" onClick={downloadMedia}>Download</button>
+                        <button type="button" className="is-danger" onClick={removeMedia}>Remove</button>
+                      </>
+                    )}
+                  </div>
+                </details>
 
                 {preparedMedia?.url && (
                   <div className="f1-clean-prepared-strip">
@@ -1157,11 +1263,17 @@ export default function PostReviewPage() {
               Share prepared image
             </button>
 
-            <button type="button" onClick={markAsPosted} disabled={saving}>
+            {canAutopublish && (
+              <button type="button" onClick={autopublishNow} disabled={autoPublishing || isPosted}>
+                {autoPublishing ? "Autopublishing..." : `Autopublish to ${autopublishPlatformLabel}`}
+              </button>
+            )}
+
+            <button type="button" onClick={markAsPosted} disabled={saving || isPosted}>
               Mark as posted
             </button>
 
-            <button type="button" onClick={markAsNotPosted} disabled={saving}>
+            <button type="button" onClick={markAsNotPosted} disabled={saving || !isPosted}>
               Mark as not posted
             </button>
           </article>
