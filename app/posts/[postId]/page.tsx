@@ -1054,7 +1054,7 @@ export default function PostReviewPage() {
 
                 <input ref={fileInputRef} type="file" accept="image/*,video/*,.pdf" hidden onChange={handleUploadMedia} />
 
-                <details className="f1-review-options">
+                <details className="f1-review-options f1-review-media-options">
                   <summary>Media options</summary>
 
                   <div className="f1-review-action-row">
