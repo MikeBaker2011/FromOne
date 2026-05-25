@@ -2,7 +2,15 @@
 
 import "../posts.css";
 
-import { ChangeEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  PointerEvent,
+  WheelEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
@@ -10,7 +18,14 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-type ResizePresetValue = "instagram-square" | "instagram-portrait" | "facebook-feed" | "story-reel";
+type ResizePresetValue =
+  | "instagram-square"
+  | "instagram-portrait"
+  | "facebook-feed"
+  | "facebook-square"
+  | "facebook-story"
+  | "instagram-story"
+  | "tiktok-vertical";
 
 type ResizePreset = {
   value: ResizePresetValue;
@@ -32,6 +47,20 @@ type DragState = {
   startOffset: MediaOffset;
 };
 
+type ActivePointer = {
+  pointerId: number;
+  clientX: number;
+  clientY: number;
+};
+
+type PinchState = {
+  startDistance: number;
+  startZoom: number;
+  startOffset: MediaOffset;
+  startCenterX: number;
+  startCenterY: number;
+};
+
 type PreparedMedia = {
   url: string;
   label: string;
@@ -40,10 +69,55 @@ type PreparedMedia = {
 };
 
 const resizePresets: ResizePreset[] = [
-  { value: "instagram-square", label: "Instagram square", size: "1080 × 1080", width: 1080, height: 1080 },
-  { value: "instagram-portrait", label: "Instagram portrait", size: "1080 × 1350", width: 1080, height: 1350 },
-  { value: "facebook-feed", label: "Facebook post", size: "1200 × 630", width: 1200, height: 630 },
-  { value: "story-reel", label: "Story / Reel", size: "1080 × 1920", width: 1080, height: 1920 },
+  {
+    value: "instagram-portrait",
+    label: "Instagram portrait",
+    size: "1080 × 1350",
+    width: 1080,
+    height: 1350,
+  },
+  {
+    value: "instagram-square",
+    label: "Instagram square",
+    size: "1080 × 1080",
+    width: 1080,
+    height: 1080,
+  },
+  {
+    value: "instagram-story",
+    label: "Instagram story / reel",
+    size: "1080 × 1920",
+    width: 1080,
+    height: 1920,
+  },
+  {
+    value: "facebook-feed",
+    label: "Facebook feed",
+    size: "1200 × 630",
+    width: 1200,
+    height: 630,
+  },
+  {
+    value: "facebook-square",
+    label: "Facebook square",
+    size: "1080 × 1080",
+    width: 1080,
+    height: 1080,
+  },
+  {
+    value: "facebook-story",
+    label: "Facebook story",
+    size: "1080 × 1920",
+    width: 1080,
+    height: 1920,
+  },
+  {
+    value: "tiktok-vertical",
+    label: "TikTok vertical",
+    size: "1080 × 1920",
+    width: 1080,
+    height: 1920,
+  },
 ];
 
 const quickImproveActions = [
@@ -88,19 +162,72 @@ function clampNumber(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function getPointerDistance(first: ActivePointer, second: ActivePointer) {
+  return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+}
+
+function getPointerCenter(first: ActivePointer, second: ActivePointer) {
+  return {
+    x: (first.clientX + second.clientX) / 2,
+    y: (first.clientY + second.clientY) / 2,
+  };
+}
+
 function normalisePlatform(platform?: string | null) {
   const clean = cleanText(platform).toLowerCase();
+
   if (clean.includes("instagram")) return "Instagram";
   if (clean.includes("tiktok")) return "TikTok";
   if (clean.includes("facebook")) return "Facebook";
+
   return "Facebook";
 }
 
 function getPlatformUrl(platform: string) {
   const clean = platform.toLowerCase();
+
   if (clean.includes("instagram")) return "https://www.instagram.com/";
   if (clean.includes("tiktok")) return "https://www.tiktok.com/upload";
+
   return "https://www.facebook.com/";
+}
+
+function getPresetForApi(value: ResizePresetValue) {
+  if (value === "facebook-square") return "instagram-square";
+  if (value === "facebook-story") return "story-reel";
+  if (value === "instagram-story") return "story-reel";
+  if (value === "tiktok-vertical") return "story-reel";
+
+  return value;
+}
+
+function getRecommendedPresets(platformName: string) {
+  const platform = platformName.toLowerCase();
+
+  if (platform.includes("instagram")) {
+    return resizePresets.filter((preset) =>
+      ["instagram-portrait", "instagram-square", "instagram-story"].includes(preset.value),
+    );
+  }
+
+  if (platform.includes("tiktok")) {
+    return resizePresets.filter((preset) =>
+      ["tiktok-vertical", "instagram-square"].includes(preset.value),
+    );
+  }
+
+  return resizePresets.filter((preset) =>
+    ["facebook-feed", "facebook-square", "facebook-story"].includes(preset.value),
+  );
+}
+
+function getDefaultPresetForPlatform(platformName: string): ResizePresetValue {
+  const platform = platformName.toLowerCase();
+
+  if (platform.includes("instagram")) return "instagram-portrait";
+  if (platform.includes("tiktok")) return "tiktok-vertical";
+
+  return "facebook-feed";
 }
 
 function getSafeFileName(value?: string | null) {
@@ -127,7 +254,10 @@ function getPostTitle(post: any, platformName: string) {
 
   if (firstLine) {
     const firstSentence = firstLine.split(/[.!?]/)[0]?.trim() || firstLine;
-    return firstSentence.length > 78 ? `${firstSentence.slice(0, 78).trim()}...` : firstSentence;
+
+    return firstSentence.length > 78
+      ? `${firstSentence.slice(0, 78).trim()}...`
+      : firstSentence;
   }
 
   return `${platformName} post`;
@@ -145,11 +275,15 @@ function triggerDownload(url: string, filename: string) {
 
 async function urlToFile(url: string, filename: string) {
   const response = await fetch(url);
-  if (!response.ok) throw new Error("Could not load the prepared image for sharing.");
+
+  if (!response.ok) {
+    throw new Error("Could not load the prepared image for sharing.");
+  }
 
   const blob = await response.blob();
   const type = blob.type || "image/jpeg";
   const extension = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
+
   return new File([blob], `${filename}.${extension}`, { type });
 }
 
@@ -173,7 +307,7 @@ export default function PostReviewPage() {
   const [message, setMessage] = useState("");
   const [activePanel, setActivePanel] = useState<"review" | "prepare" | "improve">("review");
 
-  const [resizePresetValue, setResizePresetValue] = useState<ResizePresetValue>("instagram-portrait");
+  const [resizePresetValue, setResizePresetValue] = useState<ResizePresetValue>("facebook-feed");
   const [prepareFitMode, setPrepareFitMode] = useState<"fill" | "fit">("fill");
   const [mediaZoom, setMediaZoom] = useState(1);
   const [mediaOffset, setMediaOffset] = useState<MediaOffset>({ x: 0, y: 0 });
@@ -188,9 +322,15 @@ export default function PostReviewPage() {
   const [toneTarget, setToneTarget] = useState("Use current tone");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const activePointersRef = useRef<Map<number, ActivePointer>>(new Map());
+  const pinchStateRef = useRef<PinchState | null>(null);
 
   const platformName = normalisePlatform(post?.platform);
-  const selectedPreset = resizePresets.find((preset) => preset.value === resizePresetValue) || resizePresets[1];
+  const recommendedPresets = useMemo(() => getRecommendedPresets(platformName), [platformName]);
+  const selectedPreset =
+    recommendedPresets.find((preset) => preset.value === resizePresetValue) ||
+    recommendedPresets[0] ||
+    resizePresets[0];
 
   const mediaUrl = cleanText(post?.media_url);
   const mediaType = cleanText(post?.media_type).toLowerCase();
@@ -217,9 +357,24 @@ export default function PostReviewPage() {
 
   useEffect(() => {
     if (!postId) return;
+
     loadPost();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
+
+  useEffect(() => {
+    const defaultPreset = getDefaultPresetForPlatform(platformName);
+    const nextPresets = getRecommendedPresets(platformName);
+
+    if (nextPresets.some((preset) => preset.value === defaultPreset)) {
+      setResizePresetValue(defaultPreset);
+    } else if (nextPresets[0]) {
+      setResizePresetValue(nextPresets[0].value);
+    }
+
+    resetTransform();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [platformName]);
 
   const loadPost = async () => {
     setLoading(true);
@@ -355,6 +510,7 @@ export default function PostReviewPage() {
 
   const handleUploadMedia = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+
     if (!file || !post?.id) return;
 
     setSaving(true);
@@ -430,11 +586,15 @@ export default function PostReviewPage() {
 
   const downloadMedia = () => {
     if (!mediaUrl) return;
+
     const extension = isVideo ? "mp4" : isFlyer ? "pdf" : "jpg";
     triggerDownload(mediaUrl, `${getSafeFileName(title)}-original.${extension}`);
   };
 
   const resetTransform = () => {
+    activePointersRef.current.clear();
+    pinchStateRef.current = null;
+    setDragState(null);
     setPrepareFitMode("fill");
     setMediaZoom(1);
     setMediaOffset({ x: 0, y: 0 });
@@ -442,6 +602,9 @@ export default function PostReviewPage() {
   };
 
   const fitFullImage = () => {
+    activePointersRef.current.clear();
+    pinchStateRef.current = null;
+    setDragState(null);
     setPrepareFitMode("fit");
     setMediaZoom(1);
     setMediaOffset({ x: 0, y: 0 });
@@ -449,6 +612,9 @@ export default function PostReviewPage() {
   };
 
   const fillFrame = () => {
+    activePointersRef.current.clear();
+    pinchStateRef.current = null;
+    setDragState(null);
     setPrepareFitMode("fill");
     setMediaZoom(1);
     setMediaOffset({ x: 0, y: 0 });
@@ -457,15 +623,38 @@ export default function PostReviewPage() {
 
   const selectPreset = (value: ResizePresetValue) => {
     setResizePresetValue(value);
-    setMediaZoom(1);
-    setMediaOffset({ x: 0, y: 0 });
-    setPreparedMedia(null);
+    resetTransform();
   };
 
-  const startDrag = (event: PointerEvent<HTMLDivElement>) => {
+  const startTransform = (event: PointerEvent<HTMLDivElement>) => {
     if (!canPrepareImage) return;
+
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
+
+    activePointersRef.current.set(event.pointerId, {
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+
+    const pointers = Array.from(activePointersRef.current.values());
+
+    if (pointers.length >= 2) {
+      const [first, second] = pointers;
+      const center = getPointerCenter(first, second);
+
+      pinchStateRef.current = {
+        startDistance: Math.max(getPointerDistance(first, second), 1),
+        startZoom: mediaZoom,
+        startOffset: mediaOffset,
+        startCenterX: center.x,
+        startCenterY: center.y,
+      };
+      setDragState(null);
+      return;
+    }
+
     setDragState({
       pointerId: event.pointerId,
       startClientX: event.clientX,
@@ -474,20 +663,71 @@ export default function PostReviewPage() {
     });
   };
 
-  const moveDrag = (event: PointerEvent<HTMLDivElement>) => {
-    if (!dragState || dragState.pointerId !== event.pointerId) return;
+  const moveTransform = (event: PointerEvent<HTMLDivElement>) => {
+    if (!canPrepareImage) return;
+
+    const pointer = activePointersRef.current.get(event.pointerId);
+
+    if (!pointer) return;
+
     event.preventDefault();
+
+    activePointersRef.current.set(event.pointerId, {
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+
+    const pointers = Array.from(activePointersRef.current.values());
+
+    if (pointers.length >= 2 && pinchStateRef.current) {
+      const [first, second] = pointers;
+      const distance = Math.max(getPointerDistance(first, second), 1);
+      const center = getPointerCenter(first, second);
+      const pinch = pinchStateRef.current;
+
+      setMediaZoom(clampNumber(Number((pinch.startZoom * (distance / pinch.startDistance)).toFixed(2)), 0.75, 3));
+      setMediaOffset({
+        x: pinch.startOffset.x + center.x - pinch.startCenterX,
+        y: pinch.startOffset.y + center.y - pinch.startCenterY,
+      });
+      setPreparedMedia(null);
+      return;
+    }
+
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+
     setMediaOffset({
       x: dragState.startOffset.x + event.clientX - dragState.startClientX,
       y: dragState.startOffset.y + event.clientY - dragState.startClientY,
     });
+    setPreparedMedia(null);
   };
 
-  const stopDrag = () => setDragState(null);
+  const stopTransform = (event: PointerEvent<HTMLDivElement>) => {
+    activePointersRef.current.delete(event.pointerId);
+    pinchStateRef.current = null;
+    setDragState(null);
 
-  const onWheelZoom = (event: React.WheelEvent<HTMLDivElement>) => {
+    const pointers = Array.from(activePointersRef.current.values());
+
+    if (pointers.length === 1) {
+      const pointer = pointers[0];
+
+      setDragState({
+        pointerId: pointer.pointerId,
+        startClientX: pointer.clientX,
+        startClientY: pointer.clientY,
+        startOffset: mediaOffset,
+      });
+    }
+  };
+
+  const onWheelZoom = (event: WheelEvent<HTMLDivElement>) => {
     if (!canPrepareImage) return;
+
     event.preventDefault();
+
     const direction = event.deltaY > 0 ? -0.05 : 0.05;
     setMediaZoom((current) => clampNumber(Number((current + direction).toFixed(2)), 0.75, 3));
     setPreparedMedia(null);
@@ -506,12 +746,14 @@ export default function PostReviewPage() {
         body: JSON.stringify({
           postId: post.id,
           mediaUrl,
-          preset: resizePresetValue,
+          preset: getPresetForApi(resizePresetValue),
           mode: "transform",
           fitMode: prepareFitMode,
           zoom: mediaZoom,
           offsetX: mediaOffset.x,
           offsetY: mediaOffset.y,
+          outputWidth: selectedPreset.width,
+          outputHeight: selectedPreset.height,
         }),
       });
 
@@ -538,7 +780,11 @@ export default function PostReviewPage() {
 
   const downloadPreparedImage = () => {
     if (!preparedMedia?.url) return;
-    triggerDownload(preparedMedia.url, `${getSafeFileName(title)}-${preparedMedia.width}x${preparedMedia.height}.jpg`);
+
+    triggerDownload(
+      preparedMedia.url,
+      `${getSafeFileName(title)}-${preparedMedia.width}x${preparedMedia.height}.jpg`,
+    );
   };
 
   const sharePreparedImage = async () => {
@@ -661,7 +907,7 @@ export default function PostReviewPage() {
             <div className="f1-clean-card-title">
               <div>
                 <span>Media</span>
-                <h1>Review media</h1>
+                <h1>{activePanel === "prepare" ? "Prepare media" : "Review media"}</h1>
               </div>
 
               {canPrepareImage && (
@@ -679,11 +925,11 @@ export default function PostReviewPage() {
               <div className="f1-clean-prepare">
                 <div
                   className="f1-clean-transform-stage"
-                  onPointerDown={startDrag}
-                  onPointerMove={moveDrag}
-                  onPointerUp={stopDrag}
-                  onPointerCancel={stopDrag}
-                  onPointerLeave={stopDrag}
+                  onPointerDown={startTransform}
+                  onPointerMove={moveTransform}
+                  onPointerUp={stopTransform}
+                  onPointerCancel={stopTransform}
+                  onPointerLeave={stopTransform}
                   onWheel={onWheelZoom}
                 >
                   <div
@@ -703,7 +949,7 @@ export default function PostReviewPage() {
 
                 <div className="f1-clean-prepare-tools">
                   <div className="f1-clean-preset-row">
-                    {resizePresets.map((preset) => (
+                    {recommendedPresets.map((preset) => (
                       <button
                         key={preset.value}
                         type="button"
@@ -899,7 +1145,7 @@ export default function PostReviewPage() {
 
         <aside className="f1-clean-review-side">
           <article className="f1-clean-side-card">
-            <span>Post</span>
+            <span>Publish</span>
             <h2>{platformName}</h2>
             <p>Copy the caption, add the media, then publish.</p>
 

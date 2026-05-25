@@ -325,7 +325,7 @@
 
 .f1-clean-preset-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -505,7 +505,18 @@ button:disabled {
     width: 100%;
   }
 
-  .f1-clean-preset-row,
+  .f1-clean-preset-row {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .f1-clean-preset-row button {
+    flex: 0 0 210px;
+    scroll-snap-align: start;
+  }
+
   .f1-clean-improve-grid,
   .f1-clean-select-row,
   .f1-clean-media-actions,
