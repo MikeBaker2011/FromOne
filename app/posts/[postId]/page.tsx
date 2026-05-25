@@ -151,6 +151,81 @@ function getPlatformUrl(platform: string) {
   return "https://www.facebook.com/";
 }
 
+function formatScheduledDate(value?: string | null) {
+  const cleanValue = cleanText(value);
+
+  if (!cleanValue) return "";
+
+  const date = new Date(cleanValue);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleString(undefined, {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getScheduleValue(post: any) {
+  return cleanText(post?.scheduled_publish_at || post?.scheduled_at);
+}
+
+function getAutopublishStatus(post: any, isPosted: boolean) {
+  const publishStatus = cleanText(post?.publish_status).toLowerCase();
+  const status = cleanText(post?.status).toLowerCase();
+  const publishError = cleanText(post?.publish_error);
+  const scheduleValue = getScheduleValue(post);
+
+  if (isPosted || publishStatus === "posted" || publishStatus === "published" || status === "posted") {
+    return {
+      label: "Published",
+      tone: "success",
+      description: "This post has been marked as published.",
+    };
+  }
+
+  if (publishStatus === "failed" || status === "failed" || publishError) {
+    return {
+      label: "Needs attention",
+      tone: "error",
+      description:
+        publishError ||
+        "Autopublish did not complete. You can reconnect Meta or post manually.",
+    };
+  }
+
+  if (!scheduleValue) {
+    return {
+      label: "Not scheduled",
+      tone: "neutral",
+      description:
+        "This post does not have a scheduled publish time yet. You can still autopublish now or post manually.",
+    };
+  }
+
+  const scheduleTime = new Date(scheduleValue).getTime();
+  const isDue = !Number.isNaN(scheduleTime) && scheduleTime <= Date.now();
+
+  if (isDue) {
+    return {
+      label: "Due now",
+      tone: "warning",
+      description:
+        "This post is due. The scheduler will try to publish it when the cron runs, or you can autopublish now.",
+    };
+  }
+
+  return {
+    label: "Planned",
+    tone: "planned",
+    description:
+      "FromOne will try to autopublish this at the planned time if the account is connected.",
+  };
+}
+
 function getPresetForApi(value: ResizePresetValue) {
   if (value === "facebook-square") return "instagram-square";
   if (value === "facebook-story") return "story-reel";
@@ -319,6 +394,12 @@ export default function PostReviewPage() {
     Boolean(post?.is_posted) ||
     cleanText(post?.status).toLowerCase() === "posted" ||
     cleanText(post?.publish_status).toLowerCase() === "posted";
+
+  const scheduleValue = getScheduleValue(post);
+  const scheduledLabel = formatScheduledDate(scheduleValue);
+  const autopublishStatus = getAutopublishStatus(post, isPosted);
+  const autopublishStatusClass = `pr2-status-pill pr2-status-pill-${autopublishStatus.tone}`;
+  const canScheduledAutopublish = canAutopublish && Boolean(scheduleValue) && !isPosted;
 
   const fullCaption = useMemo(() => {
     return [caption, cta, hashtags].map(cleanText).filter(Boolean).join("\n\n");
@@ -1392,6 +1473,99 @@ export default function PostReviewPage() {
 
           <aside className="pr2-side">
             <article className="pr2-publish-card">
+              <span className="pr2-kicker">Autopublish</span>
+              <h2>{autopublishStatus.label}</h2>
+
+              <p>{autopublishStatus.description}</p>
+
+              <div
+                className="pr2-autopublish-box"
+                style={{
+                  display: "grid",
+                  gap: 10,
+                  margin: "14px 0",
+                  padding: 14,
+                  borderRadius: 18,
+                  background: "rgba(255,255,255,0.055)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <span className="pr2-kicker" style={{ margin: 0 }}>
+                    Status
+                  </span>
+                  <strong className={autopublishStatusClass}>
+                    {autopublishStatus.label}
+                  </strong>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <span className="pr2-kicker" style={{ margin: 0 }}>
+                    Planned time
+                  </span>
+                  <strong>{scheduledLabel || "Not set"}</strong>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <span className="pr2-kicker" style={{ margin: 0 }}>
+                    Platform
+                  </span>
+                  <strong>{platformName}</strong>
+                </div>
+              </div>
+
+              {post?.publish_error && (
+                <div className="pr2-message" style={{ marginBottom: 12 }}>
+                  {cleanText(post.publish_error)}
+                </div>
+              )}
+
+              <div className="pr2-publish-actions">
+                {canAutopublish && (
+                  <button
+                    type="button"
+                    className="pr2-btn pr2-btn-primary"
+                    onClick={autopublishNow}
+                    disabled={autoPublishing || isPosted}
+                  >
+                    {autoPublishing ? "Autopublishing..." : "Autopublish now"}
+                  </button>
+                )}
+
+                {canScheduledAutopublish && (
+                  <button type="button" className="pr2-btn" disabled>
+                    Uses scheduled time
+                  </button>
+                )}
+              </div>
+
+              <p style={{ marginTop: 12, fontSize: 13, opacity: 0.78 }}>
+                Facebook and Instagram can autopublish when connected. TikTok stays manual.
+              </p>
+            </article>
+
+            <article className="pr2-publish-card">
               <span className="pr2-kicker">Publish</span>
               <h2>{platformName}</h2>
               <p>Copy the caption, add the media, then publish.</p>
@@ -1412,12 +1586,6 @@ export default function PostReviewPage() {
                 <summary>More options</summary>
 
                 <div className="pr2-side-options">
-                  {canAutopublish && (
-                    <button type="button" className="pr2-btn" onClick={autopublishNow} disabled={autoPublishing || isPosted}>
-                      {autoPublishing ? "Autopublishing..." : `Autopublish to ${autopublishPlatformLabel}`}
-                    </button>
-                  )}
-
                   <button type="button" className="pr2-btn" onClick={markAsPosted} disabled={saving || isPosted}>
                     Mark as posted
                   </button>
