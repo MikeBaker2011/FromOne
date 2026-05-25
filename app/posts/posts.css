@@ -666,3 +666,128 @@ button:disabled {
     align-items: stretch;
   }
 }
+
+
+/* Final polish: publish options width, TikTok frame, mobile posts hero */
+
+.f1-review-publish-primary-actions {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.f1-review-more-options {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.f1-review-more-options summary {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.f1-review-side-options {
+  margin-top: 10px;
+}
+
+.f1-review-side-options button {
+  width: 100%;
+}
+
+/* TikTok square cover should be square and distinct from vertical */
+.f1-review-frame-tiktok-square {
+  width: min(84%, 360px);
+  aspect-ratio: 1 / 1;
+}
+
+/* Make the posts page mobile hero stack cleanly */
+@media (max-width: 760px) {
+  .fromone-posts-hero,
+  .posts-hero,
+  .posts-page-hero,
+  .simplified-posts-hero,
+  .premium-posts-hero,
+  .dashboard-hero-card,
+  .simplified-hero-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 22px !important;
+    align-items: start !important;
+    padding: 24px !important;
+  }
+
+  .fromone-posts-hero > *,
+  .posts-hero > *,
+  .posts-page-hero > *,
+  .simplified-posts-hero > *,
+  .premium-posts-hero > *,
+  .dashboard-hero-card > *,
+  .simplified-hero-card > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .fromone-posts-hero h1,
+  .posts-hero h1,
+  .posts-page-hero h1,
+  .simplified-posts-hero h1,
+  .premium-posts-hero h1,
+  .dashboard-hero-card h1,
+  .simplified-hero-card h1 {
+    font-size: clamp(2.4rem, 15vw, 4rem) !important;
+    line-height: 0.98 !important;
+    max-width: 100% !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+  .fromone-posts-hero p,
+  .posts-hero p,
+  .posts-page-hero p,
+  .simplified-posts-hero p,
+  .premium-posts-hero p,
+  .dashboard-hero-card p,
+  .simplified-hero-card p {
+    max-width: 100% !important;
+    font-size: 1rem !important;
+    line-height: 1.55 !important;
+  }
+
+  .fromone-posts-hero-actions,
+  .posts-hero-actions,
+  .posts-page-hero-actions,
+  .simplified-posts-actions,
+  .premium-posts-actions,
+  .dashboard-hero-actions,
+  .simplified-hero-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .fromone-posts-hero-actions button,
+  .fromone-posts-hero-actions a,
+  .posts-hero-actions button,
+  .posts-hero-actions a,
+  .posts-page-hero-actions button,
+  .posts-page-hero-actions a,
+  .simplified-posts-actions button,
+  .simplified-posts-actions a,
+  .premium-posts-actions button,
+  .premium-posts-actions a,
+  .dashboard-hero-actions button,
+  .dashboard-hero-actions a,
+  .simplified-hero-actions button,
+  .simplified-hero-actions a {
+    width: 100% !important;
+    min-height: 58px !important;
+    justify-content: center !important;
+  }
+
+  .f1-review-frame-tiktok-square {
+    width: min(86%, 320px);
+  }
+}

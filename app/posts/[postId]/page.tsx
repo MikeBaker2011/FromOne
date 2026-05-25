@@ -25,7 +25,8 @@ type ResizePresetValue =
   | "facebook-square"
   | "facebook-story"
   | "instagram-story"
-  | "tiktok-vertical";
+  | "tiktok-vertical"
+  | "tiktok-square";
 
 type ResizePreset = {
   value: ResizePresetValue;
@@ -76,6 +77,7 @@ const resizePresets: ResizePreset[] = [
   { value: "facebook-square", label: "Facebook square", size: "1080 × 1080", width: 1080, height: 1080 },
   { value: "facebook-story", label: "Facebook story", size: "1080 × 1920", width: 1080, height: 1920 },
   { value: "tiktok-vertical", label: "TikTok vertical", size: "1080 × 1920", width: 1080, height: 1920 },
+  { value: "tiktok-square", label: "TikTok square cover", size: "1080 × 1080", width: 1080, height: 1080 },
 ];
 
 const quickImproveActions = [
@@ -155,6 +157,7 @@ function getPresetForApi(value: ResizePresetValue) {
   if (value === "facebook-story") return "story-reel";
   if (value === "instagram-story") return "story-reel";
   if (value === "tiktok-vertical") return "story-reel";
+  if (value === "tiktok-square") return "instagram-square";
 
   return value;
 }
@@ -170,7 +173,7 @@ function getRecommendedPresets(platformName: string) {
 
   if (platform.includes("tiktok")) {
     return resizePresets.filter((preset) =>
-      ["tiktok-vertical", "instagram-square"].includes(preset.value),
+      ["tiktok-vertical", "tiktok-square"].includes(preset.value),
     );
   }
 
@@ -1182,17 +1185,19 @@ export default function PostReviewPage() {
             <h2>{platformName}</h2>
             <p>Copy the caption, add the media, then publish.</p>
 
-            <button type="button" className="f1-review-primary" onClick={openPlatform}>
-              Post manually
-            </button>
-
-            {preparedMedia?.url && (
-              <button type="button" onClick={sharePreparedImage} disabled={sharingMedia}>
-                {sharingMedia ? "Opening..." : "Share to social app"}
+            <div className="f1-review-publish-primary-actions">
+              <button type="button" className="f1-review-primary" onClick={openPlatform}>
+                Post manually
               </button>
-            )}
 
-            <details className="f1-review-options">
+              {preparedMedia?.url && (
+                <button type="button" onClick={sharePreparedImage} disabled={sharingMedia}>
+                  {sharingMedia ? "Opening..." : "Share to social app"}
+                </button>
+              )}
+            </div>
+
+            <details className="f1-review-options f1-review-more-options">
               <summary>More options</summary>
 
               <div className="f1-review-side-options">
