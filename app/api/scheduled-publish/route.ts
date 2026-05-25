@@ -26,6 +26,7 @@ type ScheduledPost = {
   media_url?: string | null;
   media_type?: string | null;
   prepared_media_url?: string | null;
+  scheduled_at?: string | null;
   scheduled_publish_at?: string | null;
   publish_status?: string | null;
   status?: string | null;
@@ -160,31 +161,58 @@ async function markPostSkipped(postId: string, message: string, code?: string) {
     .eq('id', postId);
 }
 
+function getDueDate(post: ScheduledPost) {
+  return cleanText(post.scheduled_publish_at || post.scheduled_at);
+}
+
+function isDuePost(post: ScheduledPost, nowTime: number) {
+  const dueDate = getDueDate(post);
+
+  if (!dueDate) return false;
+
+  const dueTime = new Date(dueDate).getTime();
+
+  if (Number.isNaN(dueTime) || dueTime > nowTime) return false;
+
+  const publishStatus = cleanText(post.publish_status).toLowerCase();
+  const status = cleanText(post.status).toLowerCase();
+
+  const blockedStatuses = ['posted', 'published', 'failed', 'skipped'];
+
+  if (blockedStatuses.includes(publishStatus)) return false;
+  if (blockedStatuses.includes(status)) return false;
+  if (post.is_posted === true) return false;
+
+  return true;
+}
+
 async function loadDuePosts(limit: number) {
   const supabase = getSupabaseAdmin();
-  const nowIso = new Date().toISOString();
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const nowTime = now.getTime();
 
   const { data, error } = await supabase
     .from('campaign_posts')
     .select('*')
-    .not('scheduled_publish_at', 'is', null)
-    .lte('scheduled_publish_at', nowIso)
-    .neq('publish_status', 'posted')
-    .neq('publish_status', 'published')
-    .neq('publish_status', 'failed')
-    .neq('publish_status', 'skipped')
-    .neq('status', 'posted')
-    .neq('status', 'failed')
-    .eq('is_posted', false)
+    .or(`scheduled_publish_at.lte.${nowIso},scheduled_at.lte.${nowIso}`)
     .is('deleted_at', null)
-    .order('scheduled_publish_at', { ascending: true })
-    .limit(limit);
+    .order('created_at', { ascending: false })
+    .limit(100);
 
   if (error) {
     throw new Error(error.message || 'Could not load due scheduled posts.');
   }
 
-  return (data || []) as ScheduledPost[];
+  return ((data || []) as ScheduledPost[])
+    .filter((post) => isDuePost(post, nowTime))
+    .sort((firstPost, secondPost) => {
+      const firstTime = new Date(getDueDate(firstPost)).getTime();
+      const secondTime = new Date(getDueDate(secondPost)).getTime();
+
+      return firstTime - secondTime;
+    })
+    .slice(0, limit);
 }
 
 async function publishDuePost({
