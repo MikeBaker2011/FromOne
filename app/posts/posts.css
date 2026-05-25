@@ -905,3 +905,100 @@ button:disabled {
     gap: 10px !important;
   }
 }
+/* Tighten publish card spacing */
+
+.f1-review-side-card {
+  gap: 8px !important;
+}
+
+.f1-review-publish-primary-actions {
+  gap: 8px !important;
+}
+
+.f1-review-more-options,
+.f1-review-options {
+  margin-top: 6px !important;
+}
+
+.f1-review-side-card .f1-review-primary {
+  margin-bottom: 0 !important;
+}
+
+.f1-review-options summary {
+  margin-top: 0 !important;
+}
+
+.f1-review-side-options {
+  margin-top: 8px !important;
+}
+/* Mobile posts hero: cleaner stacked card */
+
+@media (max-width: 760px) {
+  .posts-hero,
+  .posts-page-hero,
+  .fromone-posts-hero,
+  .simplified-posts-hero,
+  .premium-posts-hero {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 22px !important;
+    padding: 24px !important;
+    border-radius: 30px !important;
+  }
+
+  .posts-hero > *,
+  .posts-page-hero > *,
+  .fromone-posts-hero > *,
+  .simplified-posts-hero > *,
+  .premium-posts-hero > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .posts-hero h1,
+  .posts-page-hero h1,
+  .fromone-posts-hero h1,
+  .simplified-posts-hero h1,
+  .premium-posts-hero h1 {
+    font-size: clamp(2.35rem, 13vw, 3.5rem) !important;
+    line-height: 0.98 !important;
+    max-width: 100% !important;
+    margin-bottom: 16px !important;
+  }
+
+  .posts-hero p,
+  .posts-page-hero p,
+  .fromone-posts-hero p,
+  .simplified-posts-hero p,
+  .premium-posts-hero p {
+    max-width: 100% !important;
+    font-size: 1rem !important;
+    line-height: 1.55 !important;
+  }
+
+  .posts-hero-actions,
+  .posts-page-hero-actions,
+  .fromone-posts-hero-actions,
+  .simplified-posts-actions,
+  .premium-posts-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .posts-hero-actions button,
+  .posts-hero-actions a,
+  .posts-page-hero-actions button,
+  .posts-page-hero-actions a,
+  .fromone-posts-hero-actions button,
+  .fromone-posts-hero-actions a,
+  .simplified-posts-actions button,
+  .simplified-posts-actions a,
+  .premium-posts-actions button,
+  .premium-posts-actions a {
+    width: 100% !important;
+    min-height: 58px !important;
+  }
+}
