@@ -707,3 +707,13 @@ button:disabled {
     font-size: clamp(2.15rem, 14vw, 3.2rem) !important;
   }
 }
+/* Add space between media preview and Media options */
+
+.f1-review-options {
+  margin-top: 18px !important;
+}
+
+.f1-review-media-frame + .f1-review-options,
+.f1-review-media-frame + input + .f1-review-options {
+  margin-top: 18px !important;
+}
