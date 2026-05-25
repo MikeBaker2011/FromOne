@@ -4,14 +4,14 @@ import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
 
 export const metadata: Metadata = {
-  title: 'How FromOne Works | FromOne Help Guide',
+  title: 'How FromOne Works | Create, Prepare, Schedule and Publish',
   description:
-    'Learn how FromOne helps small businesses set up a Business Profile, upload media, review posts and publish to Facebook, Instagram and TikTok.',
+    'Learn how FromOne scans a business, creates posts, prepares media, schedules publishing and supports Facebook, Instagram and TikTok workflows.',
   alternates: { canonical: '/tutorial' },
   openGraph: {
-    title: 'How FromOne Works | FromOne Help Guide',
+    title: 'How FromOne Works | Create, Prepare, Schedule and Publish',
     description:
-      'A simple walkthrough for turning photos, videos and flyers into ready-to-review social posts.',
+      'A simple walkthrough for scanning a business, creating posts, preparing media, scheduling autopublish and using manual fallback.',
     url: '/tutorial',
     type: 'website',
     images: [
@@ -28,36 +28,36 @@ export const metadata: Metadata = {
 const guideSteps = [
   {
     number: '01',
-    title: 'Set up the business',
-    text: 'Save the business name, services, location, customers and tone once in Settings.',
+    title: 'Scan or set up the business',
+    text: 'Add a website or business details so FromOne understands the services, audience, tone and location.',
   },
   {
     number: '02',
-    title: 'Upload the week',
-    text: 'Add photos, videos or flyers on the Dashboard. Each upload becomes a post idea.',
+    title: 'Create and prepare posts',
+    text: 'Generate posts, check the wording, and prepare images or media for the right platform format.',
   },
   {
     number: '03',
-    title: 'Review and publish',
-    text: 'Check the wording, media and time on Posts before publishing or copying anything.',
+    title: 'Schedule or publish',
+    text: 'Choose a scheduled time, autopublish to Facebook or Instagram where supported, or use the manual fallback.',
   },
 ];
 
 const platformNotes = [
   {
     title: 'Facebook',
-    label: 'Autopost ready',
-    text: 'FromOne can publish to a connected Facebook Page after review.',
+    label: 'Autopublish + schedule',
+    text: 'FromOne can publish now or schedule to a connected Facebook Page, with manual posting as a fallback.',
   },
   {
     title: 'Instagram',
-    label: 'Image/video needed',
-    text: 'Instagram publishing needs supported image or video media. PDF flyers are not direct Instagram media.',
+    label: 'Prepared media needed',
+    text: 'Instagram needs supported image or video media. FromOne helps prepare platform-safe media before publishing.',
   },
   {
     title: 'TikTok',
     label: 'Manual for now',
-    text: 'FromOne prepares the wording. You copy it and open TikTok yourself.',
+    text: 'FromOne prepares the wording and media. The user copies it and opens TikTok to post manually.',
   },
 ];
 
@@ -114,12 +114,15 @@ export default function TutorialPage() {
         .fromone-guide-title {
           margin: 0 0 20px;
           color: #ffffff;
-          font-size: clamp(3.4rem, 7vw, 7rem);
-          line-height: 0.9;
-          letter-spacing: -0.08em;
+          font-size: clamp(3rem, 5.9vw, 6rem);
+          line-height: 1.06;
+          letter-spacing: -0.035em;
         }
 
-        .fromone-guide-title span { color: #ffd43b; }
+        .fromone-guide-title span {
+          color: #ffd43b;
+          display: inline-block;
+        }
 
         .fromone-guide-text {
           max-width: 610px;
@@ -390,9 +393,9 @@ export default function TutorialPage() {
           }
 
           .fromone-guide-title {
-            font-size: clamp(2.85rem, 13.4vw, 3.82rem);
-            line-height: 0.94;
-            letter-spacing: -0.074em;
+            font-size: clamp(2.35rem, 10.5vw, 3.15rem);
+            line-height: 1.08;
+            letter-spacing: -0.03em;
           }
 
           .fromone-guide-actions,
@@ -438,10 +441,10 @@ export default function TutorialPage() {
         <div className="fromone-shell fromone-guide-grid">
           <div className="fromone-guide-copy">
             <h1 className="fromone-guide-title">
-              How FromOne turns media into <span>weekly posts.</span>
+              How FromOne creates <span>ready posts.</span>
             </h1>
             <p className="fromone-guide-text">
-              A focused walkthrough for setting up the business, creating posts from real media and publishing with control.
+              A focused walkthrough for scanning a business, creating posts, preparing media, scheduling autopublish and keeping manual fallback available.
             </p>
             <div className="fromone-guide-actions">
               <Link href="/signin" className="sales-primary-button">Start 7-day demo</Link>
@@ -470,7 +473,7 @@ export default function TutorialPage() {
           <div className="fromone-section-heading">
             <div className="page-eyebrow">The workflow</div>
             <h2>Simple enough to use every week.</h2>
-            <p>FromOne keeps the process practical: media in, posts reviewed, publishing controlled.</p>
+            <p>FromOne keeps the process practical: scan the business, create posts, prepare the media, then publish with control.</p>
           </div>
 
           <div className="fromone-card-grid">
@@ -490,14 +493,19 @@ export default function TutorialPage() {
           <div className="fromone-wide-panel">
             <div>
               <div className="page-eyebrow">Review before publishing</div>
-              <h2>Nothing has to go live unseen.</h2>
+              <h2>Every post stays under control.</h2>
               <p>
-                Posts are created for review first. You can edit wording, change media, adjust time and choose whether to publish, schedule or copy manually.
+                Posts are created for review first. You can edit wording, prepare the image, adjust the scheduled time and choose whether to autopublish, schedule or post manually.
               </p>
             </div>
 
             <div className="fromone-checklist">
-              {['Check the caption and CTA', 'Confirm the media is right', 'Publish Facebook/Instagram or copy TikTok'].map((item) => (
+              {[
+                'Check the caption, CTA and hashtags',
+                'Prepare or replace the media',
+                'Set the scheduled time or publish now',
+                'Use manual fallback if a connection needs attention',
+              ].map((item) => (
                 <div key={item}><span aria-hidden="true">✓</span><strong>{item}</strong></div>
               ))}
             </div>
@@ -510,7 +518,7 @@ export default function TutorialPage() {
           <div className="fromone-section-heading">
             <div className="page-eyebrow">Publishing rules</div>
             <h2>Each platform is handled honestly.</h2>
-            <p>No confusing promises. FromOne follows the real limits of each social platform.</p>
+            <p>Autopublish where Facebook and Instagram support it. Keep TikTok and any connection issues simple with manual fallback.</p>
           </div>
 
           <div className="fromone-card-grid">
@@ -529,8 +537,8 @@ export default function TutorialPage() {
         <div className="fromone-shell">
           <div className="fromone-final-cta">
             <div className="page-eyebrow">Ready to try it?</div>
-            <h2>Create the first weekly set.</h2>
-            <p>Start with the demo, set up the Business Profile and upload the week’s media.</p>
+            <h2>Create the first posting plan.</h2>
+            <p>Start with the demo, add the business or website, prepare the first posts and choose how they should publish.</p>
             <div className="fromone-final-actions">
               <Link href="/signin" className="sales-primary-button">Start 7-day demo</Link>
               <Link href="/" className="sales-secondary-button">Back to homepage</Link>
