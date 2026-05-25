@@ -123,8 +123,8 @@ export default function Home() {
           margin: 0 0 22px;
           color: #ffffff;
           font-size: clamp(3.8rem, 7.3vw, 7.55rem);
-          line-height: 0.88;
-          letter-spacing: -0.085em;
+          line-height: 0.96;
+          letter-spacing: -0.065em;
         }
 
         .fromone-hero-title span { color: #ffd43b; }
@@ -306,7 +306,7 @@ export default function Home() {
           .fromone-marketing-page .public-nav { width: calc(100vw - 32px) !important; padding-top: 18px !important; }
           .fromone-shell { width: min(100% - 24px, 520px); }
           .fromone-hero-grid { padding-top: 54px; padding-bottom: 42px; gap: 32px; }
-          .fromone-hero-title { font-size: clamp(2.85rem, 13.4vw, 3.82rem); line-height: 0.94; letter-spacing: -0.074em; }
+          .fromone-hero-title { font-size: clamp(2.65rem, 12vw, 3.55rem); line-height: 1; letter-spacing: -0.055em; }
           .fromone-hero-actions, .fromone-final-actions { display: grid; grid-template-columns: 1fr; width: 100%; }
           .fromone-hero-actions a, .fromone-final-actions a { width: 100%; justify-content: center; text-align: center; }
           .fromone-proof-row { display: grid; grid-template-columns: 1fr; }
@@ -324,7 +324,7 @@ export default function Home() {
         <div className="fromone-shell fromone-hero-grid">
           <div className="fromone-hero-copy">
             <h1 className="fromone-hero-title">
-              Create, prepare and publish <span>ready posts.</span>
+              Social posts, <span>ready to publish.</span>
             </h1>
 
             <p className="fromone-hero-text">
