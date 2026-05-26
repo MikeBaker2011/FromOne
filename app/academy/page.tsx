@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-const academyTopics = [
+const academyLessons = [
   {
     step: "01",
     title: "Create your account",
-    section: "Start here",
+    group: "Start here",
     time: "3 minutes",
     keywords: ["signup", "sign up", "login", "password", "account", "demo", "reset"],
     intro:
-      "This is the first step. You create your FromOne account, sign in, and reach the place where you can start setting up the app.",
-    beforeYouStart: [
+      "Start here if you are brand new to FromOne. This lesson gets you from the homepage into your account.",
+    before: [
       "Have your email address ready.",
       "Choose a password you can remember.",
       "Use a test email if you are recording a guide or demo.",
@@ -20,25 +20,25 @@ const academyTopics = [
     steps: [
       "Go to fromone.co.uk.",
       "Click Start 7-day demo.",
-      "Create your account with your email address and password.",
+      "Create your account with your email and password.",
       "If you already have an account, sign in instead.",
       "If you cannot remember your password, use Reset password and check your email.",
       "After signing in, FromOne may take you to Settings first. That is normal.",
     ],
     tip:
-      "If the reset email does not appear straight away, check junk or spam before trying again.",
-    outcome: "You can now sign in and start setting up FromOne.",
+      "If the reset email does not arrive straight away, check junk or spam before trying again.",
+    outcome: "You can sign in and start setting up FromOne.",
   },
   {
     step: "02",
     title: "Set up your business profile",
-    section: "Start here",
+    group: "Start here",
     time: "5 minutes",
     keywords: ["settings", "business", "website", "scan", "profile", "tone", "services"],
     intro:
-      "FromOne creates better posts when it understands the business. This step tells FromOne what the business does and how it should sound.",
-    beforeYouStart: [
-      "Have your business website ready if you have one.",
+      "FromOne creates better posts when it understands the business. This lesson explains how to add that information.",
+    before: [
+      "Have your website ready if you have one.",
       "Think about your main services.",
       "Think about your ideal customer.",
     ],
@@ -51,18 +51,18 @@ const academyTopics = [
       "Save the settings before moving on.",
     ],
     tip:
-      "You do not need perfect wording. Simple details are enough to help FromOne create more relevant posts.",
-    outcome: "FromOne now understands the business well enough to create better post ideas.",
+      "You do not need perfect wording. Simple business details are enough to help FromOne create more relevant posts.",
+    outcome: "FromOne now has the context it needs to create better post ideas.",
   },
   {
     step: "03",
     title: "Create your first posts",
-    section: "Create posts",
+    group: "Create posts",
     time: "5 minutes",
     keywords: ["dashboard", "create", "generate", "weekly posts", "media", "photos", "flyers"],
     intro:
-      "This step creates a set of posts for review. Nothing needs to go live yet.",
-    beforeYouStart: [
+      "This lesson creates a set of posts for review. Nothing needs to go live yet.",
+    before: [
       "Make sure the business profile is saved.",
       "Have photos, videos or flyers ready if you want to use them.",
       "Decide whether you want general posts or posts based on specific media.",
@@ -82,12 +82,12 @@ const academyTopics = [
   {
     step: "04",
     title: "Review a post",
-    section: "Review",
+    group: "Review",
     time: "3 minutes",
     keywords: ["posts", "review", "caption", "hashtags", "cta", "platform", "planned"],
     intro:
       "Review is where you stay in control. You check the post before it is published, scheduled or copied manually.",
-    beforeYouStart: [
+    before: [
       "Open the Posts page.",
       "Choose one post card to review.",
       "Take your time. Nothing publishes just by opening the post.",
@@ -107,12 +107,12 @@ const academyTopics = [
   {
     step: "05",
     title: "Prepare images and media",
-    section: "Media prep",
+    group: "Media prep",
     time: "5 minutes",
     keywords: ["image", "media", "crop", "resize", "rotate", "flip", "instagram", "facebook", "tiktok"],
     intro:
       "Media prep helps your images look better on each platform. You can crop, resize and create a prepared image before publishing.",
-    beforeYouStart: [
+    before: [
       "Open a post that has an image.",
       "Use a clear image where possible.",
       "Remember that PDF flyers may need manual posting or conversion for some platforms.",
@@ -133,12 +133,12 @@ const academyTopics = [
   {
     step: "06",
     title: "Edit captions and wording",
-    section: "Review",
+    group: "Review",
     time: "4 minutes",
     keywords: ["caption", "cta", "hashtags", "edit", "improve", "tone", "audience"],
     intro:
-      "This step helps you make the wording sound right for the business and the customer.",
-    beforeYouStart: [
+      "This lesson helps you make the wording sound right for the business and the customer.",
+    before: [
       "Open the post you want to edit.",
       "Read the caption from start to finish.",
       "Check that the CTA tells the customer what to do next.",
@@ -158,12 +158,12 @@ const academyTopics = [
   {
     step: "07",
     title: "Schedule a post",
-    section: "Publishing",
+    group: "Publishing",
     time: "2 minutes",
     keywords: ["schedule", "scheduled time", "planned", "autopublish", "time", "date"],
     intro:
       "Scheduling lets you choose when the post should go out. FromOne will only try to publish once the scheduled time has arrived.",
-    beforeYouStart: [
+    before: [
       "Open the post review page.",
       "Check the post is not already marked as posted.",
       "Make sure the schedule time is correct.",
@@ -182,12 +182,12 @@ const academyTopics = [
   {
     step: "08",
     title: "Publish now or manually",
-    section: "Publishing",
+    group: "Publishing",
     time: "4 minutes",
     keywords: ["publish", "autopublish now", "manual", "copy", "share", "download", "posted"],
     intro:
       "FromOne gives you options. You can autopublish where supported, or use manual posting if that is safer or easier.",
-    beforeYouStart: [
+    before: [
       "Check the post first.",
       "Make sure the media and wording are ready.",
       "For Facebook and Instagram autopublish, make sure Meta is connected.",
@@ -206,12 +206,12 @@ const academyTopics = [
   {
     step: "09",
     title: "Connect Facebook and Instagram",
-    section: "Connections",
+    group: "Connections",
     time: "5 minutes",
     keywords: ["facebook", "instagram", "meta", "connect", "reconnect", "token", "page"],
     intro:
       "Facebook and Instagram need to be connected before FromOne can attempt autopublishing.",
-    beforeYouStart: [
+    before: [
       "Make sure you have access to the Facebook Page.",
       "For Instagram, use a professional account linked to the Facebook Page.",
       "Have your Meta login ready.",
@@ -231,12 +231,12 @@ const academyTopics = [
   {
     step: "10",
     title: "Fix publish errors",
-    section: "Troubleshooting",
+    group: "Troubleshooting",
     time: "3 minutes",
     keywords: ["error", "failed", "needs attention", "manual fallback", "account not connected"],
     intro:
       "If a post cannot autopublish, FromOne should explain what needs attention. The post is not lost.",
-    beforeYouStart: [
+    before: [
       "Open the post that failed.",
       "Read the message in the Publish card.",
       "Do not delete the post unless you are sure you no longer need it.",
@@ -254,19 +254,19 @@ const academyTopics = [
   {
     step: "11",
     title: "Subscription and account",
-    section: "Account",
+    group: "Account",
     time: "2 minutes",
     keywords: ["subscription", "demo", "settings", "support", "sign out", "billing"],
     intro:
-      "This step shows where to check account details, subscription access and support options.",
-    beforeYouStart: [
+      "This lesson shows where to check account details, subscription access and support options.",
+    before: [
       "Open FromOne while signed in.",
       "Use the sidebar to move around.",
       "Check the Subscription page if access looks different from expected.",
     ],
     steps: [
       "Open Subscription to check plan or demo access.",
-      "Open Settings to update business or connection details.",
+      "Use Settings to update business or connection details.",
       "Use Support or Bug Report if something needs reporting.",
       "Sign out when finished if you are on a shared device.",
     ],
@@ -277,12 +277,12 @@ const academyTopics = [
   {
     step: "12",
     title: "Best weekly routine",
-    section: "Workflow",
+    group: "Workflow",
     time: "3 minutes",
     keywords: ["weekly", "routine", "process", "business", "posts"],
     intro:
       "This is the simple weekly routine for getting the most from FromOne without overcomplicating social media.",
-    beforeYouStart: [
+    before: [
       "Set aside a small amount of time each week.",
       "Gather photos, videos or flyers from the business.",
       "Review posts before they go live.",
@@ -301,211 +301,165 @@ const academyTopics = [
   },
 ];
 
-const sections = ["All", "Start here", "Create posts", "Review", "Media prep", "Publishing", "Connections", "Troubleshooting", "Account", "Workflow"];
+const groups = ["All", "Start here", "Create posts", "Review", "Media prep", "Publishing", "Connections", "Troubleshooting", "Account", "Workflow"];
 
 export default function FromOneAcademyPage() {
   const [query, setQuery] = useState("");
-  const [section, setSection] = useState("All");
+  const [group, setGroup] = useState("All");
   const [selectedStep, setSelectedStep] = useState("01");
 
-  const filteredTopics = useMemo(() => {
+  const filteredLessons = useMemo(() => {
     const cleanQuery = query.trim().toLowerCase();
 
-    return academyTopics.filter((topic) => {
-      const matchesSection = section === "All" || topic.section === section;
+    return academyLessons.filter((lesson) => {
+      const matchesGroup = group === "All" || lesson.group === group;
       const searchable = [
-        topic.step,
-        topic.title,
-        topic.section,
-        topic.intro,
-        topic.outcome,
-        topic.tip,
-        ...topic.keywords,
-        ...topic.beforeYouStart,
-        ...topic.steps,
+        lesson.step,
+        lesson.title,
+        lesson.group,
+        lesson.intro,
+        lesson.outcome,
+        lesson.tip,
+        ...lesson.keywords,
+        ...lesson.before,
+        ...lesson.steps,
       ]
         .join(" ")
         .toLowerCase();
 
-      return matchesSection && (!cleanQuery || searchable.includes(cleanQuery));
+      return matchesGroup && (!cleanQuery || searchable.includes(cleanQuery));
     });
-  }, [query, section]);
+  }, [group, query]);
 
-  const selectedTopic =
-    filteredTopics.find((topic) => topic.step === selectedStep) ||
-    filteredTopics[0] ||
-    academyTopics[0];
+  const selectedLesson =
+    filteredLessons.find((lesson) => lesson.step === selectedStep) ||
+    filteredLessons[0] ||
+    academyLessons[0];
 
-  const selectedIndex = academyTopics.findIndex((topic) => topic.step === selectedTopic.step);
-  const previousTopic = selectedIndex > 0 ? academyTopics[selectedIndex - 1] : null;
-  const nextTopic =
-    selectedIndex >= 0 && selectedIndex < academyTopics.length - 1
-      ? academyTopics[selectedIndex + 1]
+  const selectedIndex = academyLessons.findIndex((lesson) => lesson.step === selectedLesson.step);
+  const previousLesson = selectedIndex > 0 ? academyLessons[selectedIndex - 1] : null;
+  const nextLesson =
+    selectedIndex >= 0 && selectedIndex < academyLessons.length - 1
+      ? academyLessons[selectedIndex + 1]
       : null;
 
-  const chooseTopic = (step: string) => {
+  const chooseLesson = (step: string) => {
     setSelectedStep(step);
 
     window.setTimeout(() => {
-      const lessonPanel = document.getElementById("academy-lesson-panel");
-
-      if (lessonPanel) {
-        lessonPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      document
+        .getElementById("academy-selected-lesson")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
   };
 
   return (
-    <main className="academy-page">
-      <style>{`
-        .academy-page {
-          min-height: 100vh;
+    <main
+      className="fromone-academy-page"
+      style={{
+        width: "min(1120px, calc(100vw - 28px))",
+        minHeight: "calc(100vh - 120px)",
+        margin: "0 auto 56px",
+        padding: "0 0 42px",
+      }}
+    >
+      <style jsx global>{`
+        .academy-shell-card {
           width: 100%;
-          padding: clamp(20px, 3vw, 34px);
-          color: #ffffff;
-        }
-
-        .academy-shell {
-          width: 100%;
-          max-width: 1380px;
-          margin: 0 auto;
+          padding: clamp(22px, 3.5vw, 38px);
+          border-radius: 36px;
+          border: 1px solid rgba(255, 212, 59, 0.28);
+          background:
+            radial-gradient(circle at top, rgba(255, 212, 59, 0.16), transparent 34%),
+            linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032));
+          box-shadow: 0 30px 96px rgba(0, 0, 0, 0.34);
         }
 
         .academy-hero {
-          margin-bottom: 18px;
-          padding: clamp(28px, 5vw, 52px);
-          border-radius: 38px;
-          background:
-            radial-gradient(circle at 12% 18%, rgba(255, 212, 59, 0.24), transparent 34%),
-            radial-gradient(circle at 88% 14%, rgba(61, 220, 151, 0.13), transparent 34%),
-            linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.035));
-          border: 1px solid rgba(255,255,255,0.11);
-          box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
-        }
-
-        .academy-hero-inner {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
-          gap: 24px;
-          align-items: end;
-        }
-
-        .academy-eyebrow {
-          margin: 0 0 10px;
-          color: #ffd43b;
-          font-size: 0.78rem;
-          font-weight: 950;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
+          text-align: center;
+          max-width: 780px;
+          margin: 0 auto 22px;
         }
 
         .academy-hero h1 {
-          max-width: 880px;
-          margin: 0;
-          font-size: clamp(2.2rem, 4.7vw, 4.7rem);
-          line-height: 1.04;
-          letter-spacing: -0.04em;
+          margin: 8px 0 12px;
+          font-size: clamp(2.25rem, 5.4vw, 4.8rem);
+          line-height: 0.92;
+          letter-spacing: -0.06em;
+          color: #ffffff;
         }
 
         .academy-hero p {
-          max-width: 850px;
-          margin: 16px 0 0;
-          color: rgba(248,250,252,0.76);
-          font-size: 1.04rem;
-          line-height: 1.72;
+          margin: 0 auto;
+          max-width: 700px;
+          color: var(--muted);
+          line-height: 1.7;
         }
 
-        .academy-actions {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-        }
-
-        .academy-button {
-          display: inline-flex;
-          min-height: 44px;
-          align-items: center;
-          justify-content: center;
-          padding: 0 16px;
-          border-radius: 999px;
-          border: 1px solid rgba(255,255,255,0.13);
-          background: rgba(255,255,255,0.075);
-          color: #ffffff;
-          font-weight: 900;
-          text-decoration: none;
-          cursor: pointer;
-        }
-
-        .academy-button.primary {
-          background: #ffd43b;
-          color: #101420;
-          border-color: rgba(255,212,59,0.48);
-          box-shadow: 0 16px 42px rgba(255, 212, 59, 0.16);
-        }
-
-        .academy-simple-note {
-          margin-top: 24px;
+        .academy-help-row {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 12px;
+          margin-bottom: 18px;
         }
 
-        .academy-simple-note div {
-          padding: 16px;
-          border-radius: 22px;
-          background: rgba(2, 6, 23, 0.35);
+        .academy-help-card {
+          padding: 14px 15px;
+          border-radius: 20px;
+          background: rgba(255,255,255,0.055);
           border: 1px solid rgba(255,255,255,0.08);
+          text-align: center;
         }
 
-        .academy-simple-note strong {
+        .academy-help-card strong {
           display: block;
-          margin-bottom: 6px;
           color: #ffffff;
+          margin-bottom: 5px;
         }
 
-        .academy-simple-note span {
-          color: rgba(248,250,252,0.68);
-          line-height: 1.5;
-          font-weight: 750;
+        .academy-help-card span {
+          color: var(--muted);
+          font-size: 0.9rem;
+          line-height: 1.45;
         }
 
-        .academy-search-panel {
+        .academy-search-card {
           display: grid;
           gap: 12px;
           margin-bottom: 18px;
-          padding: 16px;
-          border-radius: 30px;
-          background: rgba(255,255,255,0.055);
-          border: 1px solid rgba(255,255,255,0.1);
+          padding: 14px;
+          border-radius: 24px;
+          background: rgba(15, 23, 42, 0.56);
+          border: 1px solid rgba(255,255,255,0.08);
         }
 
-        .academy-search {
-          min-height: 54px;
+        .academy-search-input {
           width: 100%;
-          border: 1px solid rgba(255,255,255,0.13);
+          min-height: 48px;
           border-radius: 999px;
-          background: rgba(15, 23, 42, 0.74);
+          border: 1px solid rgba(255,255,255,0.14);
+          background: rgba(2, 6, 23, 0.44);
           color: #ffffff;
-          padding: 0 20px;
+          padding: 0 18px;
           font-weight: 850;
           outline: none;
         }
 
-        .academy-search::placeholder {
+        .academy-search-input::placeholder {
           color: rgba(248,250,252,0.48);
         }
 
         .academy-filter-row {
           display: flex;
-          gap: 8px;
           flex-wrap: wrap;
+          gap: 8px;
+          justify-content: center;
         }
 
-        .academy-filter {
-          min-height: 40px;
-          border: 1px solid rgba(255,255,255,0.12);
+        .academy-filter-button {
+          min-height: 38px;
           border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.12);
           background: rgba(255,255,255,0.07);
           color: rgba(255,255,255,0.82);
           padding: 0 12px;
@@ -513,7 +467,7 @@ export default function FromOneAcademyPage() {
           cursor: pointer;
         }
 
-        .academy-filter.is-active {
+        .academy-filter-button.is-active {
           background: #ffd43b;
           color: #101420;
           border-color: rgba(255,212,59,0.42);
@@ -521,64 +475,59 @@ export default function FromOneAcademyPage() {
 
         .academy-layout {
           display: grid;
-          grid-template-columns: 340px minmax(0, 1fr);
+          grid-template-columns: minmax(250px, 310px) minmax(0, 1fr);
           gap: 18px;
           align-items: start;
         }
 
-        .academy-index {
-          position: sticky;
-          top: 18px;
-          padding: 18px;
-          border-radius: 30px;
-          background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035));
-          border: 1px solid rgba(255,255,255,0.1);
-          box-shadow: 0 18px 55px rgba(0,0,0,0.2);
+        .academy-sidebar-card,
+        .academy-lesson-card {
+          border-radius: 28px;
+          background: rgba(255,255,255,0.055);
+          border: 1px solid rgba(255,255,255,0.09);
+          box-shadow: 0 18px 55px rgba(0,0,0,0.16);
         }
 
-        .academy-index h2 {
-          margin: 0 0 12px;
+        .academy-sidebar-card {
+          position: sticky;
+          top: 18px;
+          padding: 14px;
+        }
+
+        .academy-sidebar-card h2 {
+          margin: 4px 4px 12px;
+          color: #ffffff;
           font-size: 1.08rem;
         }
 
-        .academy-empty {
-          padding: 16px;
-          border-radius: 18px;
-          background: rgba(255,255,255,0.055);
-          border: 1px solid rgba(255,255,255,0.1);
-          color: rgba(248,250,252,0.72);
-          line-height: 1.5;
-        }
-
-        .academy-topic-list {
+        .academy-lesson-list {
           display: grid;
           gap: 8px;
         }
 
-        .academy-topic-button {
+        .academy-lesson-button {
           display: grid;
-          grid-template-columns: 42px minmax(0, 1fr);
+          grid-template-columns: 40px minmax(0, 1fr);
           gap: 10px;
           align-items: center;
           width: 100%;
           padding: 10px;
-          border-radius: 17px;
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.07);
+          background: rgba(2, 6, 23, 0.24);
           color: rgba(248,250,252,0.78);
           text-align: left;
-          background: rgba(255,255,255,0.045);
-          border: 1px solid rgba(255,255,255,0.07);
           font-weight: 850;
-          line-height: 1.25;
           cursor: pointer;
         }
 
-        .academy-topic-button.is-active {
-          background: rgba(255, 212, 59, 0.13);
-          border-color: rgba(255, 212, 59, 0.24);
+        .academy-lesson-button.is-active {
+          background: rgba(255, 212, 59, 0.14);
+          border-color: rgba(255, 212, 59, 0.26);
           color: #ffffff;
         }
 
-        .academy-topic-button span {
+        .academy-lesson-button span {
           display: inline-flex;
           width: 36px;
           height: 36px;
@@ -590,52 +539,59 @@ export default function FromOneAcademyPage() {
           font-weight: 1000;
         }
 
-        .academy-topic-button.is-active span {
+        .academy-lesson-button.is-active span {
           background: #ffd43b;
           color: #101420;
         }
 
-        .academy-topic-button small {
+        .academy-lesson-button small {
           display: block;
           margin-top: 3px;
-          color: rgba(248,250,252,0.5);
+          color: rgba(248,250,252,0.52);
           font-weight: 800;
         }
 
-        .academy-lesson {
+        .academy-empty-message {
+          padding: 16px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.055);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: var(--muted);
+          line-height: 1.5;
+        }
+
+        .academy-lesson-card {
           overflow: hidden;
-          scroll-margin-top: 20px;
-          border-radius: 34px;
-          background: linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.035));
-          border: 1px solid rgba(255,255,255,0.1);
-          box-shadow: 0 18px 55px rgba(0,0,0,0.2);
+          scroll-margin-top: 12px;
         }
 
-        .academy-lesson-header {
+        .academy-lesson-head {
           display: grid;
-          grid-template-columns: 70px minmax(0, 1fr) auto;
-          gap: 16px;
+          grid-template-columns: 64px minmax(0, 1fr) auto;
+          gap: 14px;
           align-items: center;
-          padding: clamp(20px, 3vw, 30px);
+          padding: clamp(18px, 3vw, 26px);
           border-bottom: 1px solid rgba(255,255,255,0.08);
+          background: rgba(2, 6, 23, 0.18);
         }
 
-        .academy-step {
+        .academy-step-badge {
           display: inline-flex;
-          width: 60px;
-          height: 60px;
+          width: 56px;
+          height: 56px;
           align-items: center;
           justify-content: center;
-          border-radius: 21px;
+          border-radius: 20px;
           background: #ffd43b;
           color: #101420;
           font-weight: 1000;
-          box-shadow: 0 14px 30px rgba(255, 212, 59, 0.16);
+          box-shadow: 0 16px 36px rgba(255, 212, 59, 0.18);
         }
 
-        .academy-section {
+        .academy-group-pill {
           display: inline-flex;
           width: fit-content;
+          margin-bottom: 8px;
           padding: 7px 10px;
           border-radius: 999px;
           background: rgba(255, 212, 59, 0.1);
@@ -643,57 +599,54 @@ export default function FromOneAcademyPage() {
           color: #ffe58a;
           font-size: 0.75rem;
           font-weight: 950;
-          margin-bottom: 9px;
         }
 
-        .academy-lesson h2 {
+        .academy-lesson-head h2 {
           margin: 0;
-          font-size: clamp(1.45rem, 2.4vw, 2.25rem);
-          line-height: 1.16;
+          color: #ffffff;
+          font-size: clamp(1.32rem, 2.1vw, 1.95rem);
+          line-height: 1.15;
         }
 
         .academy-time {
-          color: rgba(248,250,252,0.62);
+          color: var(--muted);
           font-weight: 900;
           white-space: nowrap;
         }
 
         .academy-lesson-body {
           display: grid;
-          gap: 20px;
-          padding: clamp(20px, 3vw, 30px);
+          gap: 18px;
+          padding: clamp(18px, 3vw, 26px);
         }
 
         .academy-intro {
           margin: 0;
-          max-width: 920px;
           color: rgba(248,250,252,0.76);
-          line-height: 1.72;
-          font-size: 1.04rem;
+          line-height: 1.7;
+          font-size: 1.02rem;
         }
 
-        .academy-columns {
+        .academy-two-col {
           display: grid;
-          grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-          gap: 16px;
-          align-items: start;
+          grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+          gap: 14px;
         }
 
-        .academy-box {
-          padding: 18px;
-          border-radius: 26px;
-          background: rgba(2, 6, 23, 0.34);
+        .academy-inner-card {
+          padding: 16px;
+          border-radius: 22px;
+          background: rgba(2, 6, 23, 0.32);
           border: 1px solid rgba(255,255,255,0.08);
         }
 
-        .academy-box h3 {
-          margin: 0 0 14px;
+        .academy-inner-card h3 {
+          margin: 0 0 12px;
           color: #ffffff;
-          font-size: 1.08rem;
+          font-size: 1.05rem;
         }
 
-        .academy-list-small,
-        .academy-steps {
+        .academy-check-list {
           display: grid;
           gap: 10px;
           margin: 0;
@@ -701,49 +654,44 @@ export default function FromOneAcademyPage() {
           list-style: none;
         }
 
-        .academy-list-small li,
-        .academy-steps li {
+        .academy-check-list li {
           display: grid;
-          grid-template-columns: 30px minmax(0, 1fr);
-          gap: 11px;
+          grid-template-columns: 28px minmax(0, 1fr);
+          gap: 10px;
           align-items: start;
-          color: rgba(248,250,252,0.83);
-          line-height: 1.52;
+          color: rgba(248,250,252,0.82);
+          line-height: 1.5;
           font-weight: 760;
         }
 
-        .academy-list-small span,
-        .academy-steps span {
+        .academy-check-list span {
           display: inline-flex;
-          width: 26px;
-          height: 26px;
+          width: 24px;
+          height: 24px;
           align-items: center;
           justify-content: center;
           border-radius: 999px;
-          font-size: 0.8rem;
+          background: rgba(61, 220, 151, 0.12);
+          color: #a7f3d0;
+          font-size: 0.78rem;
           font-weight: 1000;
         }
 
-        .academy-list-small span {
+        .academy-check-list.before span {
           background: rgba(255, 212, 59, 0.12);
           color: #ffd43b;
         }
 
-        .academy-steps span {
-          background: rgba(61, 220, 151, 0.12);
-          color: #a7f3d0;
-        }
-
-        .academy-bottom {
+        .academy-bottom-row {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          grid-template-columns: 1fr 1fr;
           gap: 14px;
         }
 
         .academy-tip,
         .academy-outcome {
-          padding: 17px;
-          border-radius: 23px;
+          padding: 16px;
+          border-radius: 22px;
           line-height: 1.58;
           font-weight: 800;
         }
@@ -783,7 +731,6 @@ export default function FromOneAcademyPage() {
           justify-content: space-between;
           gap: 12px;
           flex-wrap: wrap;
-          padding-top: 2px;
         }
 
         .academy-nav-button {
@@ -808,111 +755,107 @@ export default function FromOneAcademyPage() {
           cursor: not-allowed;
         }
 
-        @media (max-width: 1180px) {
-          .academy-layout {
-            grid-template-columns: 1fr;
+        @media (max-width: 900px) {
+          .fromone-academy-page {
+            width: min(100% - 24px, 720px) !important;
           }
 
-          .academy-index {
+          .academy-help-row,
+          .academy-layout,
+          .academy-two-col,
+          .academy-bottom-row {
+            grid-template-columns: 1fr !important;
+          }
+
+          .academy-sidebar-card {
             position: static;
           }
 
-          .academy-topic-list {
+          .academy-lesson-list {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
-        @media (max-width: 900px) {
-          .academy-hero-inner,
-          .academy-columns,
-          .academy-bottom {
-            grid-template-columns: 1fr;
+        @media (max-width: 760px) {
+          .fromone-academy-page {
+            width: min(100% - 24px, 520px) !important;
+            margin-bottom: 42px !important;
           }
 
-          .academy-actions {
-            justify-content: flex-start;
+          .academy-shell-card {
+            padding: 22px 24px 26px !important;
+            border-radius: 30px !important;
           }
 
-          .academy-simple-note {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .academy-page {
-            padding: 18px 12px 32px;
+          .academy-hero {
+            margin-bottom: 16px !important;
           }
 
-          .academy-hero,
-          .academy-lesson,
-          .academy-index,
-          .academy-search-panel {
-            border-radius: 24px;
+          .academy-hero .page-eyebrow {
+            font-size: 0.72rem !important;
+            letter-spacing: 0.13em !important;
           }
 
-          .academy-hero,
-          .academy-search-panel,
-          .academy-index,
-          .academy-lesson {
+          .academy-hero h1 {
+            font-size: clamp(2.1rem, 11vw, 3.1rem) !important;
+            line-height: 0.92 !important;
+            margin: 7px 0 10px !important;
+          }
+
+          .academy-hero p {
+            font-size: 0.98rem !important;
+            line-height: 1.55 !important;
+          }
+
+          .academy-help-row {
+            gap: 10px !important;
+          }
+
+          .academy-search-card,
+          .academy-sidebar-card,
+          .academy-lesson-card {
+            border-radius: 22px !important;
+          }
+
+          .academy-search-input {
             text-align: center;
           }
 
-          .academy-hero-inner {
-            justify-items: center;
-          }
-
-          .academy-actions,
           .academy-filter-row {
             justify-content: center;
           }
 
-          .academy-search {
-            text-align: center;
-          }
-
-          .academy-topic-list {
+          .academy-lesson-list {
             grid-template-columns: 1fr;
           }
 
-          .academy-topic-button {
+          .academy-lesson-button {
             grid-template-columns: 1fr;
             justify-items: center;
             text-align: center;
           }
 
-          .academy-topic-button span {
-            margin: 0 auto;
-          }
-
-          .academy-lesson-header {
+          .academy-lesson-head {
             grid-template-columns: 1fr;
-            text-align: center;
             justify-items: center;
+            text-align: center;
           }
 
-          .academy-section {
+          .academy-group-pill {
             margin-left: auto;
             margin-right: auto;
           }
 
-          .academy-box {
-            text-align: center;
-          }
-
-          .academy-list-small li,
-          .academy-steps li {
-            grid-template-columns: 1fr;
-            justify-items: center;
-            text-align: center;
-          }
-
-          .academy-list-small span,
-          .academy-steps span {
-            margin: 0 auto;
-          }
-
+          .academy-lesson-body,
+          .academy-inner-card,
           .academy-tip,
           .academy-outcome {
+            text-align: center;
+          }
+
+          .academy-check-list li {
+            grid-template-columns: 1fr;
+            justify-items: center;
             text-align: center;
           }
 
@@ -923,60 +866,58 @@ export default function FromOneAcademyPage() {
         }
       `}</style>
 
-      <div className="academy-shell">
-        <section className="academy-hero">
-          <div className="academy-hero-inner">
-            <div>
-              <p className="academy-eyebrow">FromOne Academy</p>
-              <h1>One lesson at a time.</h1>
-              <p>
-                Follow one simple lesson, finish it, then move to the next. Search for help when you need it, or start at step 1 and work through the full FromOne setup.
-              </p>
-            </div>
+      <section className="premium-card academy-shell-card">
+        <div className="academy-hero">
+          <div className="page-eyebrow">FromOne Academy</div>
+          <h1 className="page-title">
+            One lesson.
+            <br />
+            One clear step.
+          </h1>
+          <p className="page-description">
+            Learn FromOne slowly and simply. Choose a lesson, follow the steps, then move to
+            the next one when you are ready.
+          </p>
+        </div>
 
-            <div className="academy-actions">
-              <Link href="/tutorial" className="academy-button">
-                Quick tutorial
-              </Link>
-              <Link href="/dashboard" className="academy-button primary">
-                Back to dashboard
-              </Link>
-            </div>
+        <div className="academy-help-row">
+          <div className="academy-help-card">
+            <strong>Start at step 1</strong>
+            <span>Best if you are new to FromOne.</span>
           </div>
-
-          <div className="academy-simple-note">
-            <div>
-              <strong>Less overwhelm</strong>
-              <span>Only one full lesson is shown at a time.</span>
-            </div>
-            <div>
-              <strong>Plain English</strong>
-              <span>Each lesson explains what to do before, during and after.</span>
-            </div>
-            <div>
-              <strong>Safe publishing</strong>
-              <span>Nothing publishes unseen. Manual fallback stays available.</span>
-            </div>
+          <div className="academy-help-card">
+            <strong>Search anytime</strong>
+            <span>Find help for media, schedule, Facebook or password.</span>
           </div>
-        </section>
+          <div className="academy-help-card">
+            <strong>Stay in control</strong>
+            <span>Nothing publishes until the post is ready.</span>
+          </div>
+        </div>
 
-        <section className="academy-search-panel" aria-label="Search FromOne Academy">
+        <div className="academy-search-card">
           <input
-            className="academy-search"
+            className="academy-search-input"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search topics, for example: schedule, media, Facebook, reset password..."
+            placeholder="Search the Academy, for example: schedule, media, Facebook, reset password..."
           />
 
-          <div className="academy-filter-row" aria-label="Filter academy topics">
-            {sections.map((item) => (
+          <div className="academy-filter-row">
+            {groups.map((item) => (
               <button
                 key={item}
                 type="button"
-                className={section === item ? "academy-filter is-active" : "academy-filter"}
+                className={
+                  group === item
+                    ? "academy-filter-button is-active"
+                    : "academy-filter-button"
+                }
                 onClick={() => {
-                  setSection(item);
-                  const firstMatch = academyTopics.find((topic) => item === "All" || topic.section === item);
+                  setGroup(item);
+                  const firstMatch = academyLessons.find(
+                    (lesson) => item === "All" || lesson.group === item
+                  );
                   if (firstMatch) setSelectedStep(firstMatch.step);
                 }}
               >
@@ -984,33 +925,33 @@ export default function FromOneAcademyPage() {
               </button>
             ))}
           </div>
-        </section>
+        </div>
 
-        <section className="academy-layout">
-          <aside className="academy-index" aria-label="Academy lessons">
+        <div className="academy-layout">
+          <aside className="academy-sidebar-card">
             <h2>Choose a lesson</h2>
 
-            {filteredTopics.length === 0 ? (
-              <div className="academy-empty">
+            {filteredLessons.length === 0 ? (
+              <div className="academy-empty-message">
                 No lessons matched your search. Try another word.
               </div>
             ) : (
-              <div className="academy-topic-list">
-                {filteredTopics.map((topic) => (
+              <div className="academy-lesson-list">
+                {filteredLessons.map((lesson) => (
                   <button
-                    key={topic.step}
+                    key={lesson.step}
                     type="button"
                     className={
-                      topic.step === selectedTopic.step
-                        ? "academy-topic-button is-active"
-                        : "academy-topic-button"
+                      lesson.step === selectedLesson.step
+                        ? "academy-lesson-button is-active"
+                        : "academy-lesson-button"
                     }
-                    onClick={() => chooseTopic(topic.step)}
+                    onClick={() => chooseLesson(lesson.step)}
                   >
-                    <span>{topic.step}</span>
+                    <span>{lesson.step}</span>
                     <strong>
-                      {topic.title}
-                      <small>{topic.section}</small>
+                      {lesson.title}
+                      <small>{lesson.group}</small>
                     </strong>
                   </button>
                 ))}
@@ -1018,26 +959,30 @@ export default function FromOneAcademyPage() {
             )}
           </aside>
 
-          <section id="academy-lesson-panel" className="academy-lesson" aria-label="Selected Academy lesson">
-            <div className="academy-lesson-header">
-              <span className="academy-step">{selectedTopic.step}</span>
+          <article
+            id="academy-selected-lesson"
+            className="academy-lesson-card"
+            aria-label="Selected Academy lesson"
+          >
+            <div className="academy-lesson-head">
+              <span className="academy-step-badge">{selectedLesson.step}</span>
 
               <div>
-                <span className="academy-section">{selectedTopic.section}</span>
-                <h2>{selectedTopic.title}</h2>
+                <span className="academy-group-pill">{selectedLesson.group}</span>
+                <h2>{selectedLesson.title}</h2>
               </div>
 
-              <span className="academy-time">{selectedTopic.time}</span>
+              <span className="academy-time">{selectedLesson.time}</span>
             </div>
 
             <div className="academy-lesson-body">
-              <p className="academy-intro">{selectedTopic.intro}</p>
+              <p className="academy-intro">{selectedLesson.intro}</p>
 
-              <div className="academy-columns">
-                <div className="academy-box">
+              <div className="academy-two-col">
+                <div className="academy-inner-card">
                   <h3>Before you start</h3>
-                  <ul className="academy-list-small">
-                    {selectedTopic.beforeYouStart.map((item, index) => (
+                  <ul className="academy-check-list before">
+                    {selectedLesson.before.map((item, index) => (
                       <li key={item}>
                         <span>{index + 1}</span>
                         {item}
@@ -1046,10 +991,10 @@ export default function FromOneAcademyPage() {
                   </ul>
                 </div>
 
-                <div className="academy-box">
+                <div className="academy-inner-card">
                   <h3>Step by step</h3>
-                  <ul className="academy-steps">
-                    {selectedTopic.steps.map((item, index) => (
+                  <ul className="academy-check-list">
+                    {selectedLesson.steps.map((item, index) => (
                       <li key={item}>
                         <span>{index + 1}</span>
                         {item}
@@ -1059,15 +1004,15 @@ export default function FromOneAcademyPage() {
                 </div>
               </div>
 
-              <div className="academy-bottom">
+              <div className="academy-bottom-row">
                 <div className="academy-tip">
                   <span>Helpful tip</span>
-                  {selectedTopic.tip}
+                  {selectedLesson.tip}
                 </div>
 
                 <div className="academy-outcome">
                   <span>Outcome</span>
-                  {selectedTopic.outcome}
+                  {selectedLesson.outcome}
                 </div>
               </div>
 
@@ -1075,8 +1020,8 @@ export default function FromOneAcademyPage() {
                 <button
                   type="button"
                   className="academy-nav-button"
-                  disabled={!previousTopic}
-                  onClick={() => previousTopic && chooseTopic(previousTopic.step)}
+                  disabled={!previousLesson}
+                  onClick={() => previousLesson && chooseLesson(previousLesson.step)}
                 >
                   ← Previous lesson
                 </button>
@@ -1084,16 +1029,16 @@ export default function FromOneAcademyPage() {
                 <button
                   type="button"
                   className="academy-nav-button primary"
-                  disabled={!nextTopic}
-                  onClick={() => nextTopic && chooseTopic(nextTopic.step)}
+                  disabled={!nextLesson}
+                  onClick={() => nextLesson && chooseLesson(nextLesson.step)}
                 >
                   Next lesson →
                 </button>
               </div>
             </div>
-          </section>
-        </section>
-      </div>
+          </article>
+        </div>
+      </section>
     </main>
   );
 }
