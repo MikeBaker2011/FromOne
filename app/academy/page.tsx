@@ -345,7 +345,14 @@ export default function FromOneAcademyPage() {
 
   const chooseTopic = (step: string) => {
     setSelectedStep(step);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.setTimeout(() => {
+      const lessonPanel = document.getElementById("academy-lesson-panel");
+
+      if (lessonPanel) {
+        lessonPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 50);
   };
 
   return (
@@ -597,6 +604,7 @@ export default function FromOneAcademyPage() {
 
         .academy-lesson {
           overflow: hidden;
+          scroll-margin-top: 20px;
           border-radius: 34px;
           background: linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.035));
           border: 1px solid rgba(255,255,255,0.1);
@@ -842,8 +850,38 @@ export default function FromOneAcademyPage() {
             border-radius: 24px;
           }
 
+          .academy-hero,
+          .academy-search-panel,
+          .academy-index,
+          .academy-lesson {
+            text-align: center;
+          }
+
+          .academy-hero-inner {
+            justify-items: center;
+          }
+
+          .academy-actions,
+          .academy-filter-row {
+            justify-content: center;
+          }
+
+          .academy-search {
+            text-align: center;
+          }
+
           .academy-topic-list {
             grid-template-columns: 1fr;
+          }
+
+          .academy-topic-button {
+            grid-template-columns: 1fr;
+            justify-items: center;
+            text-align: center;
+          }
+
+          .academy-topic-button span {
+            margin: 0 auto;
           }
 
           .academy-lesson-header {
@@ -857,10 +895,24 @@ export default function FromOneAcademyPage() {
             margin-right: auto;
           }
 
+          .academy-box {
+            text-align: center;
+          }
+
           .academy-list-small li,
           .academy-steps li {
             grid-template-columns: 1fr;
             justify-items: center;
+            text-align: center;
+          }
+
+          .academy-list-small span,
+          .academy-steps span {
+            margin: 0 auto;
+          }
+
+          .academy-tip,
+          .academy-outcome {
             text-align: center;
           }
 
@@ -966,7 +1018,7 @@ export default function FromOneAcademyPage() {
             )}
           </aside>
 
-          <section className="academy-lesson" aria-label="Selected Academy lesson">
+          <section id="academy-lesson-panel" className="academy-lesson" aria-label="Selected Academy lesson">
             <div className="academy-lesson-header">
               <span className="academy-step">{selectedTopic.step}</span>
 
