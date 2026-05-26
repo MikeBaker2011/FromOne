@@ -134,6 +134,11 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </span>
           </Link>
 
+          <Link className="sidebar-link" href="/academy" onClick={closeMenu}>
+            <span className="sidebar-link-icon">★</span>
+            FromOne Academy
+          </Link>
+
           <Link className="sidebar-link" href="/settings" onClick={closeMenu}>
             <span className="sidebar-link-icon">⚙</span>
             Settings
@@ -146,11 +151,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         </div>
 
         <div className="sidebar-nav-bottom">
-          <Link className="sidebar-link" href="/tutorial" onClick={closeMenu}>
-            <span className="sidebar-link-icon">?</span>
-            Help
-          </Link>
-
           <Link className="sidebar-link" href="/bugreport" onClick={closeMenu}>
             <span className="sidebar-link-icon">✉</span>
             Support
