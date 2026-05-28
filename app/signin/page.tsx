@@ -360,85 +360,52 @@ export default function SignInPage() {
   return (
     <div className="signin-page">
       <style jsx global>{`
-        .signin-journey-note {
-          margin-top: 18px;
-          padding: 16px 18px;
-          border-radius: 22px;
-          background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.12), transparent 38%),
-            rgba(255,255,255,0.055);
-          border: 1px solid rgba(255, 212, 59, 0.16);
-          box-shadow: 0 18px 48px rgba(0,0,0,0.18);
+        .signin-wrap-clean {
+          min-height: calc(100vh - 48px);
+          display: grid !important;
+          grid-template-columns: minmax(0, 460px) !important;
+          justify-content: center !important;
+          align-items: center !important;
+          width: min(100%, 560px) !important;
+          margin: 0 auto !important;
+          padding: clamp(22px, 4vw, 42px) 14px !important;
         }
 
-        .signin-journey-note strong {
-          display: block;
-          margin-bottom: 7px;
-          color: #ffffff;
-          font-size: 1rem;
+        .signin-wrap-clean .signin-card {
+          width: 100% !important;
+          max-width: 460px !important;
+          margin: 0 auto !important;
         }
 
-        .signin-journey-note span {
-          display: block;
-          color: rgba(248,250,252,0.72);
-          line-height: 1.55;
-          font-weight: 760;
+        .signin-wrap-clean .signin-logo-img {
+          margin-left: auto !important;
+          margin-right: auto !important;
         }
 
-        @media (max-width: 840px) {
-          .signin-journey-note {
-            text-align: center;
+        .signin-wrap-clean h2,
+        .signin-wrap-clean .signin-card-text {
+          text-align: center !important;
+        }
+
+        @media (max-width: 760px) {
+          .signin-wrap-clean {
+            min-height: calc(100vh - 24px);
+            width: min(100%, 520px) !important;
+            padding: 18px 12px 28px !important;
+            align-items: start !important;
+          }
+
+          .signin-wrap-clean .signin-card {
+            margin-top: 0 !important;
           }
         }
       `}</style>
 
+
       <div className="signin-background-glow signin-glow-one"></div>
       <div className="signin-background-glow signin-glow-two"></div>
 
-      <div className="signin-wrap">
-        <section className="signin-intro">
-          <div>
-            <div className="page-eyebrow">FromOne Access</div>
-
-            <h1 className="signin-main-title">
-              Your social posts start here.
-            </h1>
-
-            <p className="signin-main-text">
-              Sign in to set up your Business Profile, create ready-to-review posts, prepare
-              media, schedule content, and publish with more control.
-            </p>
-          </div>
-
-          <div className="signin-mini-grid">
-            <div className="signin-mini-card">
-              <span>01</span>
-              <strong>Sign in</strong>
-              <p>Create your account or access your FromOne workspace.</p>
-            </div>
-
-            <div className="signin-mini-card">
-              <span>02</span>
-              <strong>Set up profile</strong>
-              <p>FromOne guides new users to complete the Business Profile first.</p>
-            </div>
-
-            <div className="signin-mini-card">
-              <span>03</span>
-              <strong>Create posts</strong>
-              <p>Upload media, review wording, prepare images, then schedule or publish.</p>
-            </div>
-          </div>
-
-          <div className="signin-journey-note">
-            <strong>What happens after sign in?</strong>
-            <span>
-              New users go straight to Business Profile setup. Once that is complete,
-              the Dashboard becomes the main place to upload media and create posts.
-            </span>
-          </div>
-        </section>
-
+      <div className="signin-wrap signin-wrap-clean">
         <section className="signin-card">
           <img
             src="/fromone-logo.png"
@@ -450,7 +417,7 @@ export default function SignInPage() {
 
           <p className="signin-card-text">
             {mode === 'signin'
-              ? 'Sign in to continue. If your Business Profile is not complete, we will take you there first.'
+              ? 'Sign in to continue to FromOne.'
               : 'Create your account to start your 7-day FromOne demo.'}
           </p>
 

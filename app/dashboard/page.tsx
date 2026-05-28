@@ -242,7 +242,7 @@ export default function DashboardPage() {
         message.includes("refresh_token_not_found")
       ) {
         await supabase.auth.signOut({ scope: "local" });
-        router.replace("/login");
+        router.replace("/signin");
         return null;
       }
 
