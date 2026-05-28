@@ -790,7 +790,7 @@ export default function SettingsPage() {
           </section>
 
           <section
-            className="premium-card settings-numbered-section"
+            className="premium-card settings-numbered-section settings-profile-start-card"
             style={{
               maxWidth: 1120,
               margin: '0 auto 22px',
@@ -801,143 +801,91 @@ export default function SettingsPage() {
               boxShadow: '0 26px 84px rgba(0,0,0,0.28)',
             }}
           >
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: 24,
-                alignItems: 'start',
-              }}
-            >
-              <div>
+            <div className="settings-profile-start-layout">
+              <div className="settings-profile-start-copy">
                 <div className="settings-live-step-label">
                   <span>1</span>
                   <strong>Business Profile</strong>
                 </div>
-                <h2 style={{ marginTop: 0, fontSize: 'clamp(2rem, 4vw, 3.4rem)', lineHeight: 0.95 }}>
-                  {businessName || 'Set up once. Create better posts every week.'}
+
+                <h2>
+                  {businessName ? `${businessName} is ready to improve.` : 'Tell FromOne about the business.'}
                 </h2>
-                <p style={{ maxWidth: 820 }}>
-                  {businessName
-                    ? 'Your Business Profile is saved. FromOne will use these details whenever you upload media and create weekly posts.'
-                    : 'Scan a website or add the business details manually. FromOne will use this profile every time posts are created from uploaded media.'}
+
+                <p>
+                  This is the most important setup step. FromOne uses these details to write posts
+                  that sound relevant to the business, the services, the location and the customer.
                 </p>
 
-                <div className="button-row" style={{ marginTop: 20 }}>
+                <div className="settings-profile-choice-grid">
                   <button
                     type="button"
+                    className="settings-profile-choice-card"
                     onClick={() => {
-                      if (showBusinessDetails) {
-                        setShowBusinessDetails(false);
-                        return;
-                      }
-
-                      openProfileEditor();
+                      setShowBusinessDetails(true);
+                      window.setTimeout(() => {
+                        document.getElementById('website-setup-card')?.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start',
+                        });
+                      }, 80);
                     }}
                   >
-                    {showBusinessDetails ? 'Close profile editor' : businessName ? 'Edit profile' : 'Set up profile'}
+                    <span>Fastest</span>
+                    <strong>Scan a website</strong>
+                    <small>Add the website and FromOne will try to fill the profile for you.</small>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      !showBusinessDetails && profileCompletionPercent < 100
+                        ? 'settings-profile-choice-card settings-setup-profile-button-pulse'
+                        : 'settings-profile-choice-card'
+                    }
+                    onClick={openProfileEditor}
+                  >
+                    <span>No website?</span>
+                    <strong>Enter details manually</strong>
+                    <small>Add the business name, services, customers and tone yourself.</small>
                   </button>
                 </div>
+
+                {profileCompletionPercent < 100 && !showBusinessDetails && (
+                  <p className="settings-profile-incomplete-hint settings-profile-soft-hint">
+                    Finish the Business Profile first so FromOne can create better posts.
+                  </p>
+                )}
               </div>
 
-              <div
-                className="settings-profile-strength-card"
-                style={{
-                  padding: 24,
-                  borderRadius: 30,
-                  background:
-                    'radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%), rgba(5, 10, 24, 0.42)',
-                  border: '1px solid rgba(255, 212, 59, 0.18)',
-                  boxShadow: '0 24px 70px rgba(0,0,0,0.24)',
-                }}
-              >
-                <div className="page-eyebrow">Profile strength</div>
+              <div className="settings-profile-strength-card settings-profile-simple-progress">
+                <div className="page-eyebrow">Profile progress</div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    justifyContent: 'space-between',
-                    gap: 16,
-                    marginBottom: 12,
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: 'clamp(2.4rem, 6vw, 4rem)',
-                      lineHeight: 0.9,
-                      letterSpacing: '-0.07em',
-                    }}
-                  >
-                    {profileCompletionPercent}%
-                  </h3>
-
-                  <span
-                    className="status-pill"
-                    style={{
-                      marginBottom: 4,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {profileCompletionPercent >= 80 ? 'Ready' : 'Needs details'}
+                <div className="settings-profile-progress-head">
+                  <h3>{profileCompletionPercent}%</h3>
+                  <span className="status-pill">
+                    {profileCompletionPercent >= 100
+                      ? 'Complete'
+                      : profileCompletionPercent >= 80
+                        ? 'Nearly there'
+                        : 'Needs details'}
                   </span>
                 </div>
 
-                <p
-                  style={{
-                    margin: '0 0 16px',
-                    color: 'var(--muted-strong)',
-                    lineHeight: 1.55,
-                  }}
-                >
-                  Complete the essentials so FromOne can create better posts for this business.
-                </p>
-
-                <div
-                  style={{
-                    height: 12,
-                    borderRadius: 999,
-                    overflow: 'hidden',
-                    background: 'rgba(255,255,255,0.1)',
-                    marginBottom: 16,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                  }}
-                >
-                  <span
-                    style={{
-                      display: 'block',
-                      width: `${profileCompletionPercent}%`,
-                      height: '100%',
-                      background: 'linear-gradient(135deg, #ffd43b, #f7b733)',
-                      boxShadow: '0 0 22px rgba(255, 212, 59, 0.28)',
-                    }}
-                  />
+                <div className="settings-profile-progress-bar" aria-hidden="true">
+                  <span style={{ width: `${profileCompletionPercent}%` }} />
                 </div>
 
-                <div style={{ display: 'grid', gap: 8 }}>
+                <p>
+                  Complete the simple checklist below. More detail helps FromOne create more useful
+                  captions, calls to action and post ideas.
+                </p>
+
+                <div className="settings-profile-checklist">
                   {profileCompletionItems.map((item) => (
-                    <span
-                      key={item.label}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: '10px 12px',
-                        borderRadius: 16,
-                        background: item.ready
-                          ? 'rgba(61, 220, 151, 0.09)'
-                          : 'rgba(255,255,255,0.055)',
-                        border: item.ready
-                          ? '1px solid rgba(61, 220, 151, 0.18)'
-                          : '1px solid rgba(255,255,255,0.08)',
-                        color: item.ready ? '#a7f3d0' : 'rgba(255,255,255,0.7)',
-                        fontWeight: 850,
-                      }}
-                    >
-                      {item.label}
+                    <span key={item.label} className={item.ready ? 'is-ready' : undefined}>
                       <strong>{item.ready ? '✓' : '•'}</strong>
+                      {item.label}
                     </span>
                   ))}
                 </div>
@@ -946,23 +894,52 @@ export default function SettingsPage() {
           </section>
 
           {showBusinessDetails && (
-            <>
-              <section className="scan-feature-card settings-simple-scan" style={{ maxWidth: 1120, margin: '0 auto 22px' }}>
-                <div className="scan-feature-content">
-                  <div>
-                    <div className="page-eyebrow">Website scan</div>
-                    <h2>Scan the website</h2>
-                    <p>
-                      FromOne can fill the Business Profile from a website. Review the details,
-                      edit anything, then save.
-                    </p>
-                  </div>
+            <section
+              ref={profileEditorRef}
+              id="business-profile-editor"
+              className="premium-card settings-profile-wizard-card"
+              style={{
+                scrollMarginTop: 96,
+                maxWidth: 1120,
+                margin: '0 auto 22px',
+                borderRadius: 34,
+                border: '1px solid rgba(255, 212, 59, 0.22)',
+                background:
+                  'radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.032))',
+                boxShadow: '0 26px 84px rgba(0,0,0,0.28)',
+              }}
+            >
+              <div className="settings-profile-wizard-head">
+                <div>
+                  <div className="page-eyebrow">Business Profile setup</div>
+                  <h2>Start simple. You can improve it later.</h2>
+                  <p>
+                    Use the website scan if you have a website, or fill in the simple fields manually.
+                    The required fields are marked clearly.
+                  </p>
                 </div>
 
-                <div className="scan-feature-form">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowBusinessDetails(false)}
+                >
+                  Close setup
+                </button>
+              </div>
+
+              <div id="website-setup-card" className="settings-simple-setup-grid">
+                <section className="settings-simple-setup-card">
+                  <span className="settings-simple-step">Option 1</span>
+                  <h3>Scan the website</h3>
+                  <p>
+                    Add the website URL and FromOne will try to detect the business name, services,
+                    tone and useful profile details. You can edit anything before saving.
+                  </p>
+
                   <label>
                     <strong>Website URL</strong>
-                    <span>Used to detect business details, services, tone and brand style.</span>
+                    <span>Example: https://yourbusiness.co.uk</span>
                   </label>
 
                   <input
@@ -972,175 +949,177 @@ export default function SettingsPage() {
                     placeholder="https://example.com"
                   />
 
-                  <button
-                    type="button"
-                    onClick={handleScanWebsite}
-                    disabled={scanningWebsite || saving}
-                  >
-                    {scanningWebsite ? 'Scanning...' : 'Scan website'}
-                  </button>
+                  <div className="button-row settings-simple-button-row">
+                    <button
+                      type="button"
+                      onClick={handleScanWebsite}
+                      disabled={scanningWebsite || saving}
+                    >
+                      {scanningWebsite ? 'Scanning...' : 'Scan website'}
+                    </button>
 
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={handleSaveProfile}
-                    disabled={saving}
-                  >
-                    {saving ? 'Saving...' : 'Save profile'}
-                  </button>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={handleSaveProfile}
+                      disabled={saving}
+                    >
+                      {saving ? 'Saving...' : 'Save profile'}
+                    </button>
+                  </div>
 
                   {scanMessage && (
-                    <p style={{ margin: '4px 0 0', color: '#ffe58a', fontWeight: 850 }}>
+                    <p className="settings-scan-message">
                       {scanMessage}
                     </p>
                   )}
-                </div>
-              </section>
+                </section>
 
-              <section
-                ref={profileEditorRef}
-                id="business-profile-editor"
-                className="manual-collapse-card manual-open-card settings-profile-editor-card"
-                style={{
-                  scrollMarginTop: 96,
-                  maxWidth: 1120,
-                  margin: '0 auto 22px',
-                  position: 'relative',
-                  zIndex: 5,
-                  overflow: 'visible',
-                  pointerEvents: 'auto',
-                  touchAction: 'manipulation',
-                }}
-              >
-                <div
-                  className="manual-collapse-content manual-visible-content settings-profile-editor-content"
-                  style={{
-                    position: 'relative',
-                    zIndex: 6,
-                    overflow: 'visible',
-                    pointerEvents: 'auto',
-                    touchAction: 'manipulation',
-                  }}
-                >
-                  <div className="page-eyebrow">Edit Business Profile</div>
-                  <h2>Business details</h2>
+                <section className="settings-simple-setup-card">
+                  <span className="settings-simple-step">Option 2</span>
+                  <h3>Enter the basics manually</h3>
                   <p>
-                    These details give every generated post the right tone, location, services and CTA.
+                    No website? No problem. Add the main business details below. Simple, clear
+                    answers are enough to get started.
                   </p>
 
-                  <div className="manual-backup-grid">
-                    <div>
-                      <label>
-                        <strong>Business name</strong>
-                        <span>Who are we creating posts for?</span>
-                      </label>
-                      <input
-                        className="input"
-                        value={businessName}
-                        onChange={(event) => setBusinessName(event.target.value)}
-                        placeholder="Example: Baker Roofing"
-                      />
+                  <div className="settings-required-note">
+                    Required to start: <strong>Business name</strong> and <strong>Industry</strong>.
+                    The rest makes the posts better.
+                  </div>
+                </section>
+              </div>
 
-                      <label>
-                        <strong>Industry</strong>
-                        <span>What type of business is it?</span>
-                      </label>
-                      <input
-                        className="input settings-mobile-editable-input"
-                        value={industry}
-                        onChange={(event) => setIndustry(event.target.value)}
-                        autoComplete="organization-title"
-                        inputMode="text"
-                        style={{
-                          position: 'relative',
-                          zIndex: 20,
-                          pointerEvents: 'auto',
-                          touchAction: 'manipulation',
-                          WebkitUserSelect: 'text',
-                          userSelect: 'text',
-                        }}
-                        placeholder="Example: Roofing, Beauty, Fitness"
-                      />
+              <div className="settings-simple-form-grid">
+                <section className="settings-form-panel">
+                  <div className="settings-form-panel-head">
+                    <span>Required basics</span>
+                    <strong>Who is the business?</strong>
+                  </div>
 
-                      <label>
-                        <strong>Location or service area</strong>
-                        <span>Where does the business operate?</span>
-                      </label>
-                      <input
-                        className="input settings-mobile-editable-input"
-                        value={location}
-                        onChange={(event) => setLocation(event.target.value)}
-                        autoComplete="address-level2"
-                        inputMode="text"
-                        style={{
-                          position: 'relative',
-                          zIndex: 20,
-                          pointerEvents: 'auto',
-                          touchAction: 'manipulation',
-                          WebkitUserSelect: 'text',
-                          userSelect: 'text',
-                        }}
-                        placeholder="Example: Manchester, UK"
-                      />
+                  <label>
+                    <strong>Business name *</strong>
+                    <span>The name customers know.</span>
+                  </label>
+                  <input
+                    className="input"
+                    value={businessName}
+                    onChange={(event) => setBusinessName(event.target.value)}
+                    placeholder="Example: Baker Roofing"
+                  />
 
-                      <label>
-                        <strong>Services</strong>
-                        <span>Separate each service with a comma.</span>
-                      </label>
-                      <textarea
-                        className="input"
-                        value={services}
-                        onChange={(event) => setServices(event.target.value)}
-                        placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
-                        rows={5}
-                      />
-                    </div>
+                  <label>
+                    <strong>Industry *</strong>
+                    <span>What type of business is it?</span>
+                  </label>
+                  <input
+                    className="input settings-mobile-editable-input"
+                    value={industry}
+                    onChange={(event) => setIndustry(event.target.value)}
+                    autoComplete="organization-title"
+                    inputMode="text"
+                    placeholder="Example: Roofing, Beauty, Fitness"
+                  />
 
-                    <div>
-                      <label>
-                        <strong>Target customers</strong>
-                        <span>Who should the posts speak to?</span>
-                      </label>
-                      <textarea
-                        className="input"
-                        value={targetAudience}
-                        onChange={(event) => setTargetAudience(event.target.value)}
-                        placeholder="Example: Homeowners, landlords, local businesses"
-                        rows={5}
-                      />
+                  <label>
+                    <strong>Location or service area</strong>
+                    <span>Where does the business operate?</span>
+                  </label>
+                  <input
+                    className="input settings-mobile-editable-input"
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    autoComplete="address-level2"
+                    inputMode="text"
+                    placeholder="Example: Manchester, UK"
+                  />
 
-                      <label>
-                        <strong>Tone of voice</strong>
-                        <span>How should the content sound?</span>
-                      </label>
-                      <select
-                        className="input"
-                        value={toneOfVoice}
-                        onChange={(event) => setToneOfVoice(event.target.value)}
-                      >
-                        {toneOptions.map((tone) => (
-                          <option key={tone} value={tone}>
-                            {tone}
-                          </option>
-                        ))}
-                      </select>
+                  <label>
+                    <strong>Services</strong>
+                    <span>Separate each service with a comma.</span>
+                  </label>
+                  <textarea
+                    className="input"
+                    value={services}
+                    onChange={(event) => setServices(event.target.value)}
+                    placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
+                    rows={5}
+                  />
+                </section>
 
-                      <label>
-                        <strong>Main offer or CTA</strong>
-                        <span>Optional offer, service, or action to promote.</span>
-                      </label>
-                      <textarea
-                        className="input"
-                        value={mainOffer}
-                        onChange={(event) => setMainOffer(event.target.value)}
-                        placeholder="Example: Book a free quote this month"
-                        rows={4}
-                      />
+                <section className="settings-form-panel">
+                  <div className="settings-form-panel-head">
+                    <span>Helpful details</span>
+                    <strong>Who should the posts speak to?</strong>
+                  </div>
 
-                      <label>
-                        <strong>Content themes</strong>
-                        <span>Separate each theme with a comma.</span>
-                      </label>
+                  <label>
+                    <strong>Target customers</strong>
+                    <span>Who should the posts be written for?</span>
+                  </label>
+                  <textarea
+                    className="input"
+                    value={targetAudience}
+                    onChange={(event) => setTargetAudience(event.target.value)}
+                    placeholder="Example: Homeowners, landlords, local businesses"
+                    rows={5}
+                  />
+
+                  <label>
+                    <strong>Tone of voice</strong>
+                    <span>How should the content sound?</span>
+                  </label>
+                  <select
+                    className="input"
+                    value={toneOfVoice}
+                    onChange={(event) => setToneOfVoice(event.target.value)}
+                  >
+                    {toneOptions.map((tone) => (
+                      <option key={tone} value={tone}>
+                        {tone}
+                      </option>
+                    ))}
+                  </select>
+
+                  <label>
+                    <strong>Main offer or CTA</strong>
+                    <span>Optional offer, service, or action to promote.</span>
+                  </label>
+                  <textarea
+                    className="input"
+                    value={mainOffer}
+                    onChange={(event) => setMainOffer(event.target.value)}
+                    placeholder="Example: Book a free quote this month"
+                    rows={4}
+                  />
+
+                  <div className="settings-optional-details">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => setShowBrandDetails((current) => !current)}
+                    >
+                      {showBrandDetails ? 'Hide extra details' : 'Add content themes'}
+                    </button>
+                  </div>
+                </section>
+              </div>
+
+              {showBrandDetails && (
+                <section className="settings-extra-details-card">
+                  <div>
+                    <div className="page-eyebrow">Optional extras</div>
+                    <h3>Content themes and goals</h3>
+                    <p>
+                      These are optional. Add them if you want FromOne to understand what the
+                      business talks about and what results you want from the posts.
+                    </p>
+                  </div>
+
+                  <div className="settings-simple-form-grid settings-content-themes-grid">
+                    <label>
+                      <strong>Content themes</strong>
+                      <span>Separate each theme with a comma.</span>
                       <textarea
                         className="input"
                         value={contentPillars}
@@ -1148,11 +1127,11 @@ export default function SettingsPage() {
                         placeholder="Example: Tips, reviews, offers, before and afters"
                         rows={4}
                       />
+                    </label>
 
-                      <label>
-                        <strong>Business goals</strong>
-                        <span>Separate each goal with a comma.</span>
-                      </label>
+                    <label>
+                      <strong>Business goals</strong>
+                      <span>Separate each goal with a comma.</span>
                       <textarea
                         className="input"
                         value={businessGoals}
@@ -1160,101 +1139,22 @@ export default function SettingsPage() {
                         placeholder="Example: More calls, more bookings, more enquiries"
                         rows={4}
                       />
-                    </div>
+                    </label>
                   </div>
+                </section>
+              )}
 
-                  <div className="button-row" style={{ marginTop: 20 }}>
-                    <button type="button" onClick={handleSaveProfile} disabled={saving}>
-                      {saving ? 'Saving...' : 'Save Business Profile'}
-                    </button>
-
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => setShowBrandDetails((current) => !current)}
-                    >
-                      {showBrandDetails ? 'Hide brand details' : 'Edit brand details'}
-                    </button>
-                  </div>
-
-                  {showBrandDetails && (
-                    <div
-                      style={{
-                        display: 'grid',
-                        gap: 18,
-                        marginTop: 18,
-                        paddingTop: 18,
-                        borderTop: '1px solid rgba(255,255,255,0.1)',
-                      }}
-                    >
-                      <div>
-                        <div className="page-eyebrow">Brand style</div>
-                        <h2 style={{ marginTop: 0 }}>Colours and logo.</h2>
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                          gap: 14,
-                        }}
-                      >
-                        <label>
-                          <strong>Primary colour</strong>
-                          <input
-                            className="input"
-                            value={brandPrimaryColor}
-                            onChange={(event) => setBrandPrimaryColor(event.target.value)}
-                            placeholder="#ffd43b"
-                          />
-                        </label>
-
-                        <label>
-                          <strong>Secondary colour</strong>
-                          <input
-                            className="input"
-                            value={brandSecondaryColor}
-                            onChange={(event) => setBrandSecondaryColor(event.target.value)}
-                            placeholder="#101420"
-                          />
-                        </label>
-
-                        <label>
-                          <strong>Accent colour</strong>
-                          <input
-                            className="input"
-                            value={brandAccentColor}
-                            onChange={(event) => setBrandAccentColor(event.target.value)}
-                            placeholder="#3ddc97"
-                          />
-                        </label>
-                      </div>
-
-                      <label>
-                        <strong>Logo URL</strong>
-                        <input
-                          className="input"
-                          value={brandLogoUrl}
-                          onChange={(event) => setBrandLogoUrl(event.target.value)}
-                          placeholder="https://example.com/logo.png"
-                        />
-                      </label>
-
-                      <label>
-                        <strong>Brand summary</strong>
-                        <textarea
-                          className="input"
-                          value={brandSummary}
-                          onChange={(event) => setBrandSummary(event.target.value)}
-                          placeholder="Example: Premium dark brand with yellow accent and practical local tone."
-                          rows={4}
-                        />
-                      </label>
-                    </div>
-                  )}
+              <div className="settings-save-strip">
+                <div>
+                  <strong>Ready?</strong>
+                  <span>Save the Business Profile before creating posts.</span>
                 </div>
-              </section>
-            </>
+
+                <button type="button" onClick={handleSaveProfile} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Business Profile'}
+                </button>
+              </div>
+            </section>
           )}
 
           {showOnboardingNextStep && (
@@ -1694,6 +1594,339 @@ export default function SettingsPage() {
       )}
 
       <style jsx global>{`
+        .settings-profile-start-layout {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+          gap: 24px;
+          align-items: stretch;
+        }
+
+        .settings-profile-start-copy h2,
+        .settings-profile-wizard-head h2 {
+          margin: 0 0 12px;
+          font-size: clamp(2rem, 4vw, 3.4rem);
+          line-height: 0.95;
+          letter-spacing: -0.06em;
+        }
+
+        .settings-profile-start-copy p,
+        .settings-profile-wizard-head p {
+          max-width: 780px;
+          color: rgba(248,250,252,0.74);
+          line-height: 1.6;
+        }
+
+        .settings-profile-choice-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+          margin-top: 20px;
+        }
+
+        .settings-profile-choice-card {
+          appearance: none;
+          width: 100%;
+          min-height: 154px;
+          display: grid;
+          gap: 8px;
+          align-content: start;
+          text-align: left;
+          padding: 18px;
+          border-radius: 24px;
+          border: 1px solid rgba(255,255,255,0.1);
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.09), transparent 34%),
+            linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.028));
+          color: #ffffff;
+          cursor: pointer;
+        }
+
+        .settings-profile-choice-card span,
+        .settings-simple-step,
+        .settings-form-panel-head span {
+          width: fit-content;
+          padding: 7px 10px;
+          border-radius: 999px;
+          background: rgba(255, 212, 59, 0.11);
+          border: 1px solid rgba(255, 212, 59, 0.18);
+          color: #ffe58a;
+          font-size: 0.75rem;
+          font-weight: 950;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        .settings-profile-choice-card strong {
+          font-size: 1.22rem;
+          line-height: 1.1;
+        }
+
+        .settings-profile-choice-card small {
+          color: rgba(248,250,252,0.64);
+          font-size: 0.92rem;
+          line-height: 1.45;
+          font-weight: 760;
+        }
+
+        .settings-profile-soft-hint {
+          margin-top: 14px !important;
+        }
+
+        .settings-profile-simple-progress {
+          display: grid;
+          align-content: start;
+          gap: 12px;
+          padding: 22px !important;
+        }
+
+        .settings-profile-progress-head {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 14px;
+        }
+
+        .settings-profile-progress-head h3 {
+          margin: 0;
+          font-size: clamp(2.7rem, 6vw, 4.2rem);
+          line-height: 0.9;
+          letter-spacing: -0.07em;
+        }
+
+        .settings-profile-progress-bar {
+          height: 12px;
+          overflow: hidden;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .settings-profile-progress-bar span {
+          display: block;
+          height: 100%;
+          border-radius: inherit;
+          background: linear-gradient(135deg, #ffd43b, #f7b733);
+          box-shadow: 0 0 22px rgba(255, 212, 59, 0.28);
+        }
+
+        .settings-profile-simple-progress p {
+          margin: 0;
+          color: rgba(248,250,252,0.7);
+          line-height: 1.5;
+        }
+
+        .settings-profile-checklist {
+          display: grid;
+          gap: 8px;
+        }
+
+        .settings-profile-checklist span {
+          display: grid;
+          grid-template-columns: 28px minmax(0, 1fr);
+          gap: 9px;
+          align-items: center;
+          padding: 10px 12px;
+          border-radius: 16px;
+          background: rgba(255,255,255,0.055);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.7);
+          font-weight: 850;
+        }
+
+        .settings-profile-checklist span.is-ready {
+          background: rgba(61, 220, 151, 0.09);
+          border-color: rgba(61, 220, 151, 0.18);
+          color: #a7f3d0;
+        }
+
+        .settings-profile-wizard-card {
+          overflow: hidden;
+        }
+
+        .settings-profile-wizard-head {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 18px;
+          align-items: start;
+          margin-bottom: 22px;
+        }
+
+        .settings-simple-setup-grid,
+        .settings-simple-form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 16px;
+        }
+
+        .settings-simple-setup-grid {
+          margin-bottom: 18px;
+        }
+
+        .settings-simple-setup-card,
+        .settings-form-panel,
+        .settings-extra-details-card {
+          padding: 18px;
+          border-radius: 26px;
+          background: rgba(5, 10, 24, 0.34);
+          border: 1px solid rgba(255,255,255,0.09);
+        }
+
+        .settings-simple-setup-card h3,
+        .settings-form-panel h3,
+        .settings-extra-details-card h3 {
+          margin: 12px 0 8px;
+          font-size: 1.45rem;
+          line-height: 1.1;
+        }
+
+        .settings-simple-setup-card p,
+        .settings-extra-details-card p {
+          color: rgba(248,250,252,0.68);
+          line-height: 1.55;
+        }
+
+        .settings-simple-setup-card label,
+        .settings-form-panel label,
+        .settings-extra-details-card label {
+          display: grid;
+          gap: 6px;
+          margin-top: 14px;
+        }
+
+        .settings-simple-setup-card label strong,
+        .settings-form-panel label strong,
+        .settings-extra-details-card label strong {
+          color: #ffffff;
+        }
+
+        .settings-simple-setup-card label span,
+        .settings-form-panel label span,
+        .settings-extra-details-card label span {
+          color: rgba(248,250,252,0.64);
+          line-height: 1.4;
+        }
+
+        .settings-simple-button-row {
+          margin-top: 14px;
+        }
+
+        .settings-scan-message,
+        .settings-required-note {
+          margin: 14px 0 0;
+          padding: 12px 14px;
+          border-radius: 18px;
+          background: rgba(255, 212, 59, 0.09);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+          color: #ffe58a;
+          font-weight: 850;
+          line-height: 1.45;
+        }
+
+        .settings-form-panel-head {
+          display: grid;
+          gap: 10px;
+          margin-bottom: 4px;
+        }
+
+        .settings-form-panel-head strong {
+          color: #ffffff;
+          font-size: 1.25rem;
+          line-height: 1.2;
+        }
+
+        .settings-optional-details {
+          margin-top: 16px;
+        }
+
+        .settings-extra-details-card {
+          margin-top: 18px;
+        }
+
+        .settings-content-themes-grid {
+          align-items: start;
+        }
+
+        .settings-save-strip {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 18px;
+          align-items: center;
+          margin-top: 18px;
+          padding: 16px;
+          border-radius: 24px;
+          background: rgba(255, 212, 59, 0.085);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+        }
+
+        .settings-save-strip strong {
+          display: block;
+          color: #ffffff;
+          margin-bottom: 4px;
+        }
+
+        .settings-save-strip span {
+          color: rgba(248,250,252,0.68);
+          font-weight: 760;
+        }
+
+        @media (max-width: 900px) {
+          .settings-profile-start-layout,
+          .settings-profile-wizard-head,
+          .settings-simple-setup-grid,
+          .settings-simple-form-grid,
+          .settings-save-strip {
+            grid-template-columns: 1fr;
+          }
+
+          .settings-profile-choice-grid,
+          .settings-colour-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .settings-profile-wizard-head,
+          .settings-save-strip {
+            text-align: center;
+            justify-items: center;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .settings-profile-start-card,
+          .settings-profile-wizard-card {
+            width: min(100%, calc(100vw - 24px)) !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            border-radius: 26px !important;
+            padding: 20px !important;
+          }
+
+          .settings-profile-start-copy,
+          .settings-profile-simple-progress,
+          .settings-simple-setup-card,
+          .settings-form-panel,
+          .settings-extra-details-card {
+            text-align: center;
+          }
+
+          .settings-profile-choice-card {
+            text-align: center;
+            justify-items: center;
+            min-height: 0;
+          }
+
+          .settings-profile-checklist span {
+            grid-template-columns: 1fr;
+            justify-items: center;
+          }
+
+          .settings-form-panel-head {
+            justify-items: center;
+          }
+        }
+      `}</style>
+
+
+      <style jsx global>{`
         @media (max-width: 720px) {
           .settings-profile-editor-card,
           .settings-profile-editor-content,
@@ -1810,6 +2043,18 @@ export default function SettingsPage() {
           animation: settingsButtonPulse 1.65s ease-in-out infinite;
         }
 
+        .settings-setup-profile-button-pulse {
+          position: relative;
+          animation: settingsSetupProfilePulse 1.55s ease-in-out infinite;
+          box-shadow:
+            0 16px 38px rgba(255, 212, 59, 0.22),
+            0 0 0 0 rgba(255, 212, 59, 0.24);
+        }
+
+        .settings-profile-incomplete-hint {
+          animation: settingsHintFade 2.2s ease-in-out infinite;
+        }
+
         @keyframes settingsReadyGlow {
           0%, 100% {
             border-color: rgba(255, 212, 59, 0.24);
@@ -1835,9 +2080,35 @@ export default function SettingsPage() {
           }
         }
 
+        @keyframes settingsSetupProfilePulse {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+            box-shadow:
+              0 16px 38px rgba(255, 212, 59, 0.2),
+              0 0 0 0 rgba(255, 212, 59, 0.22);
+          }
+          50% {
+            transform: translateY(-1px) scale(1.03);
+            box-shadow:
+              0 22px 58px rgba(255, 212, 59, 0.42),
+              0 0 0 7px rgba(255, 212, 59, 0.08);
+          }
+        }
+
+        @keyframes settingsHintFade {
+          0%, 100% {
+            opacity: 0.72;
+          }
+          50% {
+            opacity: 1;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .settings-step-ready-pulse,
-          .settings-create-posts-button-pulse {
+          .settings-create-posts-button-pulse,
+          .settings-setup-profile-button-pulse,
+          .settings-profile-incomplete-hint {
             animation: none !important;
           }
         }
