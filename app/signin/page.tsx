@@ -363,10 +363,10 @@ export default function SignInPage() {
         .signin-wrap-responsive {
           min-height: calc(100vh - 48px);
           display: grid !important;
-          grid-template-columns: minmax(0, 1fr) minmax(360px, 460px) !important;
-          gap: clamp(28px, 5vw, 72px) !important;
+          grid-template-columns: minmax(0, 1.12fr) minmax(360px, 450px) !important;
+          gap: clamp(28px, 4.4vw, 58px) !important;
           align-items: center !important;
-          width: min(1120px, calc(100vw - 28px)) !important;
+          width: min(1180px, calc(100vw - 28px)) !important;
           margin: 0 auto !important;
           padding: clamp(24px, 4vw, 48px) 0 !important;
         }
@@ -391,7 +391,7 @@ export default function SignInPage() {
         .signin-main-title {
           max-width: 620px;
           margin: 0;
-          font-size: clamp(2.65rem, 5.2vw, 5.25rem);
+          font-size: clamp(2.45rem, 4.6vw, 4.75rem);
           line-height: 0.92;
           letter-spacing: -0.065em;
           color: #ffffff;
@@ -406,53 +406,122 @@ export default function SignInPage() {
           font-weight: 760;
         }
 
-        .signin-mini-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 12px;
-          max-width: 680px;
-        }
-
-        .signin-mini-card {
-          padding: 15px;
-          border-radius: 22px;
+        .signin-feature-panel {
+          max-width: 720px;
+          padding: 18px;
+          border-radius: 28px;
           background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.1), transparent 35%),
-            rgba(255,255,255,0.055);
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.12), transparent 36%),
+            linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.028));
           border: 1px solid rgba(255,255,255,0.09);
-          box-shadow: 0 18px 48px rgba(0,0,0,0.18);
+          box-shadow: 0 20px 58px rgba(0,0,0,0.2);
         }
 
-        .signin-mini-card span {
+        .signin-feature-panel-head {
+          display: flex;
+          align-items: end;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 14px;
+        }
+
+        .signin-feature-panel-head span {
           display: inline-flex;
-          width: 38px;
-          height: 38px;
+          width: fit-content;
+          padding: 7px 10px;
+          border-radius: 999px;
+          background: rgba(255, 212, 59, 0.12);
+          border: 1px solid rgba(255, 212, 59, 0.18);
+          color: #ffe58a;
+          font-size: 0.75rem;
+          font-weight: 950;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          white-space: nowrap;
+        }
+
+        .signin-feature-panel-head strong {
+          color: #ffffff;
+          font-size: 1.1rem;
+          line-height: 1.2;
+          text-align: right;
+        }
+
+        .signin-feature-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .signin-feature-card {
+          display: grid;
+          grid-template-columns: 38px minmax(0, 1fr);
+          gap: 11px;
+          align-items: start;
+          padding: 13px;
+          border-radius: 20px;
+          background: rgba(2, 6, 23, 0.3);
+          border: 1px solid rgba(255,255,255,0.075);
+        }
+
+        .signin-feature-card span {
+          display: inline-flex;
+          width: 36px;
+          height: 36px;
           align-items: center;
           justify-content: center;
-          border-radius: 14px;
+          border-radius: 13px;
           background: rgba(255, 212, 59, 0.14);
           color: #ffd43b;
           font-weight: 1000;
-          margin-bottom: 12px;
         }
 
-        .signin-mini-card strong {
+        .signin-feature-card strong {
           display: block;
           color: #ffffff;
-          margin-bottom: 6px;
+          margin-bottom: 4px;
           line-height: 1.2;
         }
 
-        .signin-mini-card p {
+        .signin-feature-card p {
           margin: 0;
           color: rgba(248,250,252,0.62);
-          line-height: 1.45;
-          font-size: 0.92rem;
+          line-height: 1.42;
+          font-size: 0.88rem;
+          font-weight: 740;
+        }
+
+        .signin-proof-row {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+          max-width: 720px;
+        }
+
+        .signin-proof-row div {
+          padding: 14px;
+          border-radius: 20px;
+          background: rgba(255, 212, 59, 0.08);
+          border: 1px solid rgba(255, 212, 59, 0.14);
+        }
+
+        .signin-proof-row strong {
+          display: block;
+          color: #ffffff;
+          margin-bottom: 5px;
+          line-height: 1.15;
+        }
+
+        .signin-proof-row span {
+          display: block;
+          color: rgba(248,250,252,0.66);
+          line-height: 1.38;
+          font-size: 0.88rem;
           font-weight: 740;
         }
 
         .signin-journey-note {
-          max-width: 680px;
+          max-width: 720px;
           padding: 16px 18px;
           border-radius: 22px;
           background:
@@ -512,35 +581,77 @@ export default function SignInPage() {
       <div className="signin-wrap signin-wrap-responsive">
         <section className="signin-intro signin-intro-desktop-only">
           <div>
-            <div className="page-eyebrow">FromOne Access</div>
+            <div className="page-eyebrow">FromOne for small businesses</div>
 
             <h1 className="signin-main-title">
-              Your social posts start here.
+              Create, prepare and publish posts without the stress.
             </h1>
 
             <p className="signin-main-text">
-              Set up your Business Profile, create ready-to-review posts, prepare media,
-              schedule content, and publish with more control.
+              FromOne helps small businesses turn a website, business profile, photos,
+              videos or flyers into ready-to-review social posts.
             </p>
           </div>
 
-          <div className="signin-mini-grid">
-            <div className="signin-mini-card">
-              <span>01</span>
-              <strong>Set up profile</strong>
-              <p>Tell FromOne about the business once, then reuse it every week.</p>
+          <div className="signin-feature-panel">
+            <div className="signin-feature-panel-head">
+              <span>Included in FromOne</span>
+              <strong>Your online social media assistant</strong>
             </div>
 
-            <div className="signin-mini-card">
-              <span>02</span>
-              <strong>Create posts</strong>
-              <p>Upload photos, videos or flyers and create posts for review.</p>
+            <div className="signin-feature-grid">
+              <div className="signin-feature-card">
+                <span>01</span>
+                <strong>Business Profile</strong>
+                <p>Set up the business once so every post has the right services, audience, location and tone.</p>
+              </div>
+
+              <div className="signin-feature-card">
+                <span>02</span>
+                <strong>Website scan</strong>
+                <p>Use a website to help FromOne understand what the business does and who it helps.</p>
+              </div>
+
+              <div className="signin-feature-card">
+                <span>03</span>
+                <strong>Media prep</strong>
+                <p>Prepare images for social platforms before posting, sharing or downloading.</p>
+              </div>
+
+              <div className="signin-feature-card">
+                <span>04</span>
+                <strong>Scheduling</strong>
+                <p>Plan posts ahead of time and keep a simple weekly workflow.</p>
+              </div>
+
+              <div className="signin-feature-card">
+                <span>05</span>
+                <strong>Autopublish</strong>
+                <p>Facebook and Instagram can autopublish when Meta is connected and the post is ready.</p>
+              </div>
+
+              <div className="signin-feature-card">
+                <span>06</span>
+                <strong>Manual fallback</strong>
+                <p>Copy captions, download media and publish manually whenever a platform needs extra control.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="signin-proof-row">
+            <div>
+              <strong>7-day demo</strong>
+              <span>Try the workflow before subscribing.</span>
             </div>
 
-            <div className="signin-mini-card">
-              <span>03</span>
-              <strong>Publish safely</strong>
-              <p>Schedule, autopublish where supported, or use manual fallback.</p>
+            <div>
+              <strong>FromOne Academy</strong>
+              <span>Step-by-step guidance built into the app.</span>
+            </div>
+
+            <div>
+              <strong>£39.99/month</strong>
+              <span>Built to avoid big agency fees.</span>
             </div>
           </div>
 
@@ -548,7 +659,7 @@ export default function SignInPage() {
             <strong>New here?</strong>
             <span>
               After sign in, FromOne will guide you to Business Profile setup first if it
-              has not been completed yet.
+              has not been completed yet. Once that is done, the Dashboard becomes your main workspace.
             </span>
           </div>
         </section>
