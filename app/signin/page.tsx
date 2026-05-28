@@ -360,203 +360,137 @@ export default function SignInPage() {
   return (
     <div className="signin-page">
       <style jsx global>{`
-        .signin-wrap-responsive {
+        .signin-wrap-balanced {
           min-height: calc(100vh - 48px);
           display: grid !important;
-          grid-template-columns: minmax(0, 1.12fr) minmax(360px, 450px) !important;
-          gap: clamp(28px, 4.4vw, 58px) !important;
+          grid-template-columns: minmax(0, 520px) minmax(360px, 450px) !important;
+          gap: clamp(34px, 5vw, 70px) !important;
           align-items: center !important;
-          width: min(1180px, calc(100vw - 28px)) !important;
+          justify-content: center !important;
+          width: min(1080px, calc(100vw - 28px)) !important;
           margin: 0 auto !important;
           padding: clamp(24px, 4vw, 48px) 0 !important;
         }
 
-        .signin-wrap-responsive .signin-card {
+        .signin-wrap-balanced .signin-card {
           width: 100% !important;
-          max-width: 460px !important;
+          max-width: 450px !important;
           margin: 0 auto !important;
         }
 
-        .signin-intro-desktop-only {
+        .signin-sales-panel {
           display: grid;
           gap: 22px;
           align-content: center;
           min-width: 0;
         }
 
-        .signin-intro-desktop-only .page-eyebrow {
-          margin-bottom: 10px;
-        }
-
         .signin-main-title {
-          max-width: 620px;
+          max-width: 520px;
           margin: 0;
-          font-size: clamp(2.45rem, 4.6vw, 4.75rem);
+          font-size: clamp(2.6rem, 4.8vw, 5rem);
           line-height: 0.92;
           letter-spacing: -0.065em;
           color: #ffffff;
         }
 
         .signin-main-text {
-          max-width: 580px;
-          margin: 18px 0 0;
+          max-width: 500px;
+          margin: 16px 0 0;
           color: rgba(248,250,252,0.72);
           font-size: 1.04rem;
-          line-height: 1.7;
+          line-height: 1.68;
           font-weight: 760;
         }
 
-        .signin-feature-panel {
-          max-width: 720px;
-          padding: 18px;
-          border-radius: 28px;
-          background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.12), transparent 36%),
-            linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.028));
-          border: 1px solid rgba(255,255,255,0.09);
-          box-shadow: 0 20px 58px rgba(0,0,0,0.2);
-        }
-
-        .signin-feature-panel-head {
-          display: flex;
-          align-items: end;
-          justify-content: space-between;
-          gap: 16px;
-          margin-bottom: 14px;
-        }
-
-        .signin-feature-panel-head span {
-          display: inline-flex;
-          width: fit-content;
-          padding: 7px 10px;
-          border-radius: 999px;
-          background: rgba(255, 212, 59, 0.12);
-          border: 1px solid rgba(255, 212, 59, 0.18);
-          color: #ffe58a;
-          font-size: 0.75rem;
-          font-weight: 950;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          white-space: nowrap;
-        }
-
-        .signin-feature-panel-head strong {
-          color: #ffffff;
-          font-size: 1.1rem;
-          line-height: 1.2;
-          text-align: right;
-        }
-
-        .signin-feature-grid {
+        .signin-selling-list {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 10px;
+          max-width: 520px;
         }
 
-        .signin-feature-card {
+        .signin-selling-list div {
           display: grid;
-          grid-template-columns: 38px minmax(0, 1fr);
-          gap: 11px;
+          grid-template-columns: 42px minmax(0, 1fr);
+          column-gap: 13px;
+          row-gap: 4px;
           align-items: start;
-          padding: 13px;
+          padding: 14px;
           border-radius: 20px;
-          background: rgba(2, 6, 23, 0.3);
-          border: 1px solid rgba(255,255,255,0.075);
+          background: rgba(255,255,255,0.055);
+          border: 1px solid rgba(255,255,255,0.085);
         }
 
-        .signin-feature-card span {
+        .signin-selling-list span {
+          grid-row: span 2;
           display: inline-flex;
-          width: 36px;
-          height: 36px;
+          width: 38px;
+          height: 38px;
           align-items: center;
           justify-content: center;
-          border-radius: 13px;
+          border-radius: 14px;
           background: rgba(255, 212, 59, 0.14);
           color: #ffd43b;
           font-weight: 1000;
+          font-size: 0.86rem;
         }
 
-        .signin-feature-card strong {
-          display: block;
+        .signin-selling-list strong {
           color: #ffffff;
-          margin-bottom: 4px;
           line-height: 1.2;
         }
 
-        .signin-feature-card p {
+        .signin-selling-list p {
           margin: 0;
           color: rgba(248,250,252,0.62);
-          line-height: 1.42;
-          font-size: 0.88rem;
+          line-height: 1.45;
+          font-size: 0.92rem;
           font-weight: 740;
         }
 
-        .signin-proof-row {
+        .signin-selling-footer {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 10px;
-          max-width: 720px;
+          max-width: 520px;
         }
 
-        .signin-proof-row div {
+        .signin-selling-footer div {
           padding: 14px;
           border-radius: 20px;
-          background: rgba(255, 212, 59, 0.08);
-          border: 1px solid rgba(255, 212, 59, 0.14);
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.1), transparent 42%),
+            rgba(255,255,255,0.045);
+          border: 1px solid rgba(255, 212, 59, 0.13);
         }
 
-        .signin-proof-row strong {
+        .signin-selling-footer strong {
           display: block;
           color: #ffffff;
           margin-bottom: 5px;
           line-height: 1.15;
         }
 
-        .signin-proof-row span {
+        .signin-selling-footer span {
           display: block;
-          color: rgba(248,250,252,0.66);
+          color: rgba(248,250,252,0.64);
           line-height: 1.38;
-          font-size: 0.88rem;
+          font-size: 0.9rem;
           font-weight: 740;
         }
 
-        .signin-journey-note {
-          max-width: 720px;
-          padding: 16px 18px;
-          border-radius: 22px;
-          background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.12), transparent 38%),
-            rgba(255,255,255,0.055);
-          border: 1px solid rgba(255, 212, 59, 0.16);
-          box-shadow: 0 18px 48px rgba(0,0,0,0.18);
-        }
-
-        .signin-journey-note strong {
-          display: block;
-          margin-bottom: 7px;
-          color: #ffffff;
-          font-size: 1rem;
-        }
-
-        .signin-journey-note span {
-          display: block;
-          color: rgba(248,250,252,0.72);
-          line-height: 1.55;
-          font-weight: 760;
-        }
-
-        .signin-wrap-responsive .signin-logo-img {
+        .signin-wrap-balanced .signin-logo-img {
           margin-left: auto !important;
           margin-right: auto !important;
         }
 
-        .signin-wrap-responsive .signin-card h2,
-        .signin-wrap-responsive .signin-card-text {
+        .signin-wrap-balanced .signin-card h2,
+        .signin-wrap-balanced .signin-card-text {
           text-align: center !important;
         }
 
         @media (max-width: 980px) {
-          .signin-wrap-responsive {
+          .signin-wrap-balanced {
             grid-template-columns: minmax(0, 460px) !important;
             justify-content: center !important;
             width: min(100%, 560px) !important;
@@ -569,7 +503,7 @@ export default function SignInPage() {
             display: none !important;
           }
 
-          .signin-wrap-responsive .signin-card {
+          .signin-wrap-balanced .signin-card {
             margin-top: 0 !important;
           }
         }
@@ -578,89 +512,50 @@ export default function SignInPage() {
       <div className="signin-background-glow signin-glow-one"></div>
       <div className="signin-background-glow signin-glow-two"></div>
 
-      <div className="signin-wrap signin-wrap-responsive">
-        <section className="signin-intro signin-intro-desktop-only">
+      <div className="signin-wrap signin-wrap-balanced">
+        <section className="signin-intro signin-intro-desktop-only signin-sales-panel">
           <div>
             <div className="page-eyebrow">FromOne for small businesses</div>
 
             <h1 className="signin-main-title">
-              Create, prepare and publish posts without the stress.
+              Social posts, ready to review.
             </h1>
 
             <p className="signin-main-text">
-              FromOne helps small businesses turn a website, business profile, photos,
-              videos or flyers into ready-to-review social posts.
+              FromOne helps you create, prepare, schedule and publish social posts from one simple workspace.
             </p>
           </div>
 
-          <div className="signin-feature-panel">
-            <div className="signin-feature-panel-head">
-              <span>Included in FromOne</span>
-              <strong>Your online social media assistant</strong>
+          <div className="signin-selling-list">
+            <div>
+              <span>01</span>
+              <strong>Set up the business once</strong>
+              <p>Add a website or simple business profile so posts match the services, location and tone.</p>
             </div>
 
-            <div className="signin-feature-grid">
-              <div className="signin-feature-card">
-                <span>01</span>
-                <strong>Business Profile</strong>
-                <p>Set up the business once so every post has the right services, audience, location and tone.</p>
-              </div>
+            <div>
+              <span>02</span>
+              <strong>Create posts from real media</strong>
+              <p>Upload photos, videos or flyers and turn them into ready-to-review social content.</p>
+            </div>
 
-              <div className="signin-feature-card">
-                <span>02</span>
-                <strong>Website scan</strong>
-                <p>Use a website to help FromOne understand what the business does and who it helps.</p>
-              </div>
-
-              <div className="signin-feature-card">
-                <span>03</span>
-                <strong>Media prep</strong>
-                <p>Prepare images for social platforms before posting, sharing or downloading.</p>
-              </div>
-
-              <div className="signin-feature-card">
-                <span>04</span>
-                <strong>Scheduling</strong>
-                <p>Plan posts ahead of time and keep a simple weekly workflow.</p>
-              </div>
-
-              <div className="signin-feature-card">
-                <span>05</span>
-                <strong>Autopublish</strong>
-                <p>Facebook and Instagram can autopublish when Meta is connected and the post is ready.</p>
-              </div>
-
-              <div className="signin-feature-card">
-                <span>06</span>
-                <strong>Manual fallback</strong>
-                <p>Copy captions, download media and publish manually whenever a platform needs extra control.</p>
-              </div>
+            <div>
+              <span>03</span>
+              <strong>Publish with control</strong>
+              <p>Schedule, autopublish where supported, or copy/download everything for manual posting.</p>
             </div>
           </div>
 
-          <div className="signin-proof-row">
+          <div className="signin-selling-footer">
             <div>
               <strong>7-day demo</strong>
-              <span>Try the workflow before subscribing.</span>
+              <span>Try FromOne before subscribing.</span>
             </div>
 
             <div>
               <strong>FromOne Academy</strong>
-              <span>Step-by-step guidance built into the app.</span>
+              <span>Step-by-step help inside the app.</span>
             </div>
-
-            <div>
-              <strong>£39.99/month</strong>
-              <span>Built to avoid big agency fees.</span>
-            </div>
-          </div>
-
-          <div className="signin-journey-note">
-            <strong>New here?</strong>
-            <span>
-              After sign in, FromOne will guide you to Business Profile setup first if it
-              has not been completed yet. Once that is done, the Dashboard becomes your main workspace.
-            </span>
           </div>
         </section>
 
