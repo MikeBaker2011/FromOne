@@ -359,6 +359,39 @@ export default function SignInPage() {
 
   return (
     <div className="signin-page">
+      <style jsx global>{`
+        .signin-journey-note {
+          margin-top: 18px;
+          padding: 16px 18px;
+          border-radius: 22px;
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.12), transparent 38%),
+            rgba(255,255,255,0.055);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+          box-shadow: 0 18px 48px rgba(0,0,0,0.18);
+        }
+
+        .signin-journey-note strong {
+          display: block;
+          margin-bottom: 7px;
+          color: #ffffff;
+          font-size: 1rem;
+        }
+
+        .signin-journey-note span {
+          display: block;
+          color: rgba(248,250,252,0.72);
+          line-height: 1.55;
+          font-weight: 760;
+        }
+
+        @media (max-width: 840px) {
+          .signin-journey-note {
+            text-align: center;
+          }
+        }
+      `}</style>
+
       <div className="signin-background-glow signin-glow-one"></div>
       <div className="signin-background-glow signin-glow-two"></div>
 
@@ -368,33 +401,41 @@ export default function SignInPage() {
             <div className="page-eyebrow">FromOne Access</div>
 
             <h1 className="signin-main-title">
-              Sign in to your FromOne workspace.
+              Your social posts start here.
             </h1>
 
             <p className="signin-main-text">
-              Manage your Business Profile, upload media, create scheduled posts, and publish
-              to Facebook and Instagram after review.
+              Sign in to set up your Business Profile, create ready-to-review posts, prepare
+              media, schedule content, and publish with more control.
             </p>
           </div>
 
           <div className="signin-mini-grid">
             <div className="signin-mini-card">
               <span>01</span>
-              <strong>Account</strong>
-              <p>Create or access your FromOne account.</p>
+              <strong>Sign in</strong>
+              <p>Create your account or access your FromOne workspace.</p>
             </div>
 
             <div className="signin-mini-card">
               <span>02</span>
-              <strong>Business setup</strong>
-              <p>New users start by setting up their Business Profile.</p>
+              <strong>Set up profile</strong>
+              <p>FromOne guides new users to complete the Business Profile first.</p>
             </div>
 
             <div className="signin-mini-card">
               <span>03</span>
-              <strong>Weekly posts</strong>
-              <p>Upload media and turn it into scheduled posts.</p>
+              <strong>Create posts</strong>
+              <p>Upload media, review wording, prepare images, then schedule or publish.</p>
             </div>
+          </div>
+
+          <div className="signin-journey-note">
+            <strong>What happens after sign in?</strong>
+            <span>
+              New users go straight to Business Profile setup. Once that is complete,
+              the Dashboard becomes the main place to upload media and create posts.
+            </span>
           </div>
         </section>
 
@@ -409,8 +450,8 @@ export default function SignInPage() {
 
           <p className="signin-card-text">
             {mode === 'signin'
-              ? 'Sign in to continue to your FromOne workspace.'
-              : 'Create your account to start your FromOne demo.'}
+              ? 'Sign in to continue. If your Business Profile is not complete, we will take you there first.'
+              : 'Create your account to start your 7-day FromOne demo.'}
           </p>
 
           <div ref={messageRef}>
