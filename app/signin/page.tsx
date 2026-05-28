@@ -360,151 +360,169 @@ export default function SignInPage() {
   return (
     <div className="signin-page">
       <style jsx global>{`
-        .signin-wrap-balanced {
+        .signin-wrap-merged-premium {
           min-height: calc(100vh - 48px);
           display: grid !important;
-          grid-template-columns: minmax(0, 520px) minmax(360px, 450px) !important;
-          gap: clamp(34px, 5vw, 70px) !important;
-          align-items: center !important;
+          grid-template-columns: minmax(0, 1fr) minmax(360px, 440px) !important;
+          gap: clamp(24px, 4vw, 46px) !important;
+          align-items: stretch !important;
           justify-content: center !important;
-          width: min(1080px, calc(100vw - 28px)) !important;
+          width: min(1060px, calc(100vw - 28px)) !important;
           margin: 0 auto !important;
-          padding: clamp(24px, 4vw, 48px) 0 !important;
+          padding: clamp(24px, 4vw, 48px) !important;
+          border-radius: 40px !important;
+          border: 1px solid rgba(255, 212, 59, 0.2) !important;
+          background:
+            radial-gradient(circle at 12% 14%, rgba(255, 212, 59, 0.18), transparent 34%),
+            radial-gradient(circle at 88% 10%, rgba(61, 220, 151, 0.1), transparent 32%),
+            linear-gradient(145deg, rgba(255,255,255,0.088), rgba(255,255,255,0.032)) !important;
+          box-shadow: 0 32px 105px rgba(0,0,0,0.38) !important;
         }
 
-        .signin-wrap-balanced .signin-card {
-          width: 100% !important;
-          max-width: 450px !important;
-          margin: 0 auto !important;
-        }
-
-        .signin-sales-panel {
+        .signin-merged-sales {
           display: grid;
           gap: 22px;
           align-content: center;
           min-width: 0;
+          padding: clamp(4px, 1.2vw, 12px) 0;
         }
 
         .signin-main-title {
-          max-width: 520px;
+          max-width: 560px;
           margin: 0;
-          font-size: clamp(2.6rem, 4.8vw, 5rem);
+          font-size: clamp(2.65rem, 4.7vw, 5.1rem);
           line-height: 0.92;
           letter-spacing: -0.065em;
           color: #ffffff;
         }
 
         .signin-main-text {
-          max-width: 500px;
+          max-width: 540px;
           margin: 16px 0 0;
-          color: rgba(248,250,252,0.72);
+          color: rgba(248,250,252,0.74);
           font-size: 1.04rem;
           line-height: 1.68;
           font-weight: 760;
         }
 
-        .signin-selling-list {
+        .signin-merged-feature-list {
           display: grid;
           gap: 10px;
-          max-width: 520px;
+          max-width: 560px;
         }
 
-        .signin-selling-list div {
+        .signin-merged-feature-list div {
           display: grid;
-          grid-template-columns: 42px minmax(0, 1fr);
-          column-gap: 13px;
+          grid-template-columns: 34px minmax(0, 1fr);
+          column-gap: 12px;
           row-gap: 4px;
           align-items: start;
-          padding: 14px;
+          padding: 13px 14px;
           border-radius: 20px;
-          background: rgba(255,255,255,0.055);
-          border: 1px solid rgba(255,255,255,0.085);
+          background: rgba(2, 6, 23, 0.24);
+          border: 1px solid rgba(255,255,255,0.075);
         }
 
-        .signin-selling-list span {
+        .signin-merged-feature-list span {
           grid-row: span 2;
           display: inline-flex;
-          width: 38px;
-          height: 38px;
+          width: 30px;
+          height: 30px;
           align-items: center;
           justify-content: center;
-          border-radius: 14px;
-          background: rgba(255, 212, 59, 0.14);
-          color: #ffd43b;
+          border-radius: 999px;
+          background: rgba(61, 220, 151, 0.13);
+          color: #a7f3d0;
           font-weight: 1000;
-          font-size: 0.86rem;
         }
 
-        .signin-selling-list strong {
+        .signin-merged-feature-list strong {
           color: #ffffff;
           line-height: 1.2;
         }
 
-        .signin-selling-list p {
+        .signin-merged-feature-list p {
           margin: 0;
           color: rgba(248,250,252,0.62);
-          line-height: 1.45;
+          line-height: 1.42;
           font-size: 0.92rem;
           font-weight: 740;
         }
 
-        .signin-selling-footer {
+        .signin-merged-stats {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 10px;
-          max-width: 520px;
+          max-width: 560px;
         }
 
-        .signin-selling-footer div {
+        .signin-merged-stats div {
           padding: 14px;
           border-radius: 20px;
-          background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.1), transparent 42%),
-            rgba(255,255,255,0.045);
-          border: 1px solid rgba(255, 212, 59, 0.13);
+          background: rgba(255, 212, 59, 0.08);
+          border: 1px solid rgba(255, 212, 59, 0.14);
+          text-align: center;
         }
 
-        .signin-selling-footer strong {
+        .signin-merged-stats strong {
           display: block;
           color: #ffffff;
-          margin-bottom: 5px;
-          line-height: 1.15;
+          font-size: 1.12rem;
+          margin-bottom: 4px;
+          line-height: 1.1;
         }
 
-        .signin-selling-footer span {
+        .signin-merged-stats span {
           display: block;
-          color: rgba(248,250,252,0.64);
-          line-height: 1.38;
-          font-size: 0.9rem;
-          font-weight: 740;
+          color: rgba(248,250,252,0.66);
+          line-height: 1.25;
+          font-size: 0.86rem;
+          font-weight: 760;
         }
 
-        .signin-wrap-balanced .signin-logo-img {
+        .signin-merged-form {
+          align-self: center !important;
+          width: 100% !important;
+          max-width: 440px !important;
+          margin: 0 !important;
+          background:
+            radial-gradient(circle at top, rgba(255, 212, 59, 0.08), transparent 30%),
+            rgba(5, 10, 24, 0.44) !important;
+          border: 1px solid rgba(255,255,255,0.11) !important;
+          box-shadow: 0 22px 70px rgba(0,0,0,0.24) !important;
+        }
+
+        .signin-wrap-merged-premium .signin-logo-img {
           margin-left: auto !important;
           margin-right: auto !important;
         }
 
-        .signin-wrap-balanced .signin-card h2,
-        .signin-wrap-balanced .signin-card-text {
+        .signin-wrap-merged-premium .signin-card h2,
+        .signin-wrap-merged-premium .signin-card-text {
           text-align: center !important;
         }
 
         @media (max-width: 980px) {
-          .signin-wrap-balanced {
+          .signin-wrap-merged-premium {
             grid-template-columns: minmax(0, 460px) !important;
             justify-content: center !important;
             width: min(100%, 560px) !important;
             min-height: calc(100vh - 24px);
             padding: 18px 12px 28px !important;
             align-items: start !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
           }
 
           .signin-intro-desktop-only {
             display: none !important;
           }
 
-          .signin-wrap-balanced .signin-card {
-            margin-top: 0 !important;
+          .signin-merged-form {
+            max-width: 460px !important;
+            margin: 0 auto !important;
+            background: rgba(255,255,255,0.075) !important;
           }
         }
       `}</style>
@@ -512,54 +530,60 @@ export default function SignInPage() {
       <div className="signin-background-glow signin-glow-one"></div>
       <div className="signin-background-glow signin-glow-two"></div>
 
-      <div className="signin-wrap signin-wrap-balanced">
-        <section className="signin-intro signin-intro-desktop-only signin-sales-panel">
+      <div className="signin-wrap signin-wrap-merged-premium">
+        <section className="signin-intro signin-intro-desktop-only signin-merged-sales">
           <div>
             <div className="page-eyebrow">FromOne for small businesses</div>
 
             <h1 className="signin-main-title">
-              Social posts, ready to review.
+              Create better social posts in less time.
             </h1>
 
             <p className="signin-main-text">
-              FromOne helps you create, prepare, schedule and publish social posts from one simple workspace.
+              FromOne helps you set up your business profile, create ready-to-review posts,
+              prepare media, schedule content and publish with more control.
             </p>
           </div>
 
-          <div className="signin-selling-list">
+          <div className="signin-merged-feature-list">
             <div>
-              <span>01</span>
-              <strong>Set up the business once</strong>
-              <p>Add a website or simple business profile so posts match the services, location and tone.</p>
+              <span>✓</span>
+              <strong>Business Profile setup</strong>
+              <p>Tell FromOne about the business once, then use it every week.</p>
             </div>
 
             <div>
-              <span>02</span>
-              <strong>Create posts from real media</strong>
-              <p>Upload photos, videos or flyers and turn them into ready-to-review social content.</p>
+              <span>✓</span>
+              <strong>Posts from media</strong>
+              <p>Upload photos, videos or flyers and turn them into social posts.</p>
             </div>
 
             <div>
-              <span>03</span>
-              <strong>Publish with control</strong>
-              <p>Schedule, autopublish where supported, or copy/download everything for manual posting.</p>
+              <span>✓</span>
+              <strong>Schedule or publish</strong>
+              <p>Autopublish where supported, or use manual fallback anytime.</p>
             </div>
           </div>
 
-          <div className="signin-selling-footer">
+          <div className="signin-merged-stats">
             <div>
-              <strong>7-day demo</strong>
-              <span>Try FromOne before subscribing.</span>
+              <strong>7-day</strong>
+              <span>free demo</span>
             </div>
 
             <div>
-              <strong>FromOne Academy</strong>
-              <span>Step-by-step help inside the app.</span>
+              <strong>£39.99</strong>
+              <span>per month</span>
+            </div>
+
+            <div>
+              <strong>Academy</strong>
+              <span>built in</span>
             </div>
           </div>
         </section>
 
-        <section className="signin-card">
+        <section className="signin-card signin-merged-form">
           <img
             src="/fromone-logo.png"
             alt="FromOne logo"
