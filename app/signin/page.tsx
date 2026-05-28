@@ -27,6 +27,8 @@ export default function SignInPage() {
   const [authMessage, setAuthMessage] = useState('');
   const [authError, setAuthError] = useState('');
   const [resetCooldown, setResetCooldown] = useState(0);
+  const [showResetOptions, setShowResetOptions] = useState(false);
+  const [showVerificationOptions, setShowVerificationOptions] = useState(false);
 
   const messageRef = useRef<HTMLDivElement | null>(null);
 
@@ -360,169 +362,239 @@ export default function SignInPage() {
   return (
     <div className="signin-page">
       <style jsx global>{`
-        .signin-wrap-merged-premium {
+        .signin-wrap-left-sales {
           min-height: calc(100vh - 48px);
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) minmax(360px, 440px) !important;
-          gap: clamp(24px, 4vw, 46px) !important;
-          align-items: stretch !important;
-          justify-content: center !important;
-          width: min(1060px, calc(100vw - 28px)) !important;
+          width: min(1040px, calc(100vw - 28px)) !important;
           margin: 0 auto !important;
-          padding: clamp(24px, 4vw, 48px) !important;
-          border-radius: 40px !important;
-          border: 1px solid rgba(255, 212, 59, 0.2) !important;
-          background:
-            radial-gradient(circle at 12% 14%, rgba(255, 212, 59, 0.18), transparent 34%),
-            radial-gradient(circle at 88% 10%, rgba(61, 220, 151, 0.1), transparent 32%),
-            linear-gradient(145deg, rgba(255,255,255,0.088), rgba(255,255,255,0.032)) !important;
-          box-shadow: 0 32px 105px rgba(0,0,0,0.38) !important;
+          padding: clamp(18px, 3vw, 34px) 0 !important;
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) minmax(360px, 430px) !important;
+          gap: clamp(18px, 3vw, 34px) !important;
+          align-items: stretch !important;
         }
 
-        .signin-merged-sales {
+        .signin-left-sales-desktop {
+          height: 100%;
+          min-height: 610px;
           display: grid;
-          gap: 22px;
-          align-content: center;
-          min-width: 0;
-          padding: clamp(4px, 1.2vw, 12px) 0;
+          grid-template-rows: auto auto auto;
+          gap: 14px;
         }
 
-        .signin-main-title {
-          max-width: 560px;
-          margin: 0;
-          font-size: clamp(2.65rem, 4.7vw, 5.1rem);
-          line-height: 0.92;
-          letter-spacing: -0.065em;
+        .signin-left-sales-main {
+          padding: 24px;
+          border-radius: 30px;
+          border: 1px solid rgba(255, 212, 59, 0.18);
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.16), transparent 36%),
+            linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.028));
+          box-shadow: 0 22px 70px rgba(0,0,0,0.24);
+        }
+
+        .signin-left-sales-main h1 {
+          margin: 8px 0 12px;
           color: #ffffff;
+          font-size: clamp(2.1rem, 4vw, 4rem);
+          line-height: 0.94;
+          letter-spacing: -0.065em;
         }
 
-        .signin-main-text {
-          max-width: 540px;
-          margin: 16px 0 0;
-          color: rgba(248,250,252,0.74);
-          font-size: 1.04rem;
-          line-height: 1.68;
+        .signin-left-sales-main p {
+          max-width: 520px;
+          margin: 0;
+          color: rgba(248,250,252,0.72);
+          line-height: 1.58;
           font-weight: 760;
         }
 
-        .signin-merged-feature-list {
+        .signin-left-sales-stack {
           display: grid;
           gap: 10px;
-          max-width: 560px;
         }
 
-        .signin-merged-feature-list div {
+        .signin-left-sales-stack div {
           display: grid;
-          grid-template-columns: 34px minmax(0, 1fr);
-          column-gap: 12px;
+          grid-template-columns: 42px minmax(0, 1fr);
+          column-gap: 13px;
           row-gap: 4px;
           align-items: start;
-          padding: 13px 14px;
-          border-radius: 20px;
-          background: rgba(2, 6, 23, 0.24);
-          border: 1px solid rgba(255,255,255,0.075);
+          padding: 15px;
+          border-radius: 22px;
+          background: rgba(5, 10, 24, 0.42);
+          border: 1px solid rgba(255,255,255,0.09);
+          box-shadow: 0 14px 42px rgba(0,0,0,0.16);
         }
 
-        .signin-merged-feature-list span {
+        .signin-left-sales-stack span {
           grid-row: span 2;
           display: inline-flex;
-          width: 30px;
-          height: 30px;
+          width: 38px;
+          height: 38px;
           align-items: center;
           justify-content: center;
-          border-radius: 999px;
-          background: rgba(61, 220, 151, 0.13);
-          color: #a7f3d0;
+          border-radius: 14px;
+          background: rgba(255, 212, 59, 0.14);
+          color: #ffd43b;
           font-weight: 1000;
+          font-size: 0.84rem;
         }
 
-        .signin-merged-feature-list strong {
+        .signin-left-sales-stack strong {
           color: #ffffff;
           line-height: 1.2;
         }
 
-        .signin-merged-feature-list p {
+        .signin-left-sales-stack p {
           margin: 0;
-          color: rgba(248,250,252,0.62);
+          color: rgba(248,250,252,0.64);
           line-height: 1.42;
           font-size: 0.92rem;
           font-weight: 740;
         }
 
-        .signin-merged-stats {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 10px;
-          max-width: 560px;
+        .signin-left-sales-price {
+          margin-top: auto;
+          padding: 16px 18px;
+          border-radius: 22px;
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.13), transparent 36%),
+            rgba(255, 212, 59, 0.075);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+          box-shadow: 0 14px 42px rgba(0,0,0,0.16);
         }
 
-        .signin-merged-stats div {
-          padding: 14px;
-          border-radius: 20px;
-          background: rgba(255, 212, 59, 0.08);
-          border: 1px solid rgba(255, 212, 59, 0.14);
-          text-align: center;
-        }
-
-        .signin-merged-stats strong {
+        .signin-left-sales-price strong {
           display: block;
           color: #ffffff;
-          font-size: 1.12rem;
-          margin-bottom: 4px;
-          line-height: 1.1;
+          margin-bottom: 5px;
+          line-height: 1.15;
         }
 
-        .signin-merged-stats span {
+        .signin-left-sales-price span {
           display: block;
-          color: rgba(248,250,252,0.66);
-          line-height: 1.25;
-          font-size: 0.86rem;
+          color: rgba(248,250,252,0.68);
+          line-height: 1.45;
           font-weight: 760;
         }
 
-        .signin-merged-form {
-          align-self: center !important;
+        .signin-login-card-right {
+          height: 100% !important;
+          min-height: 610px !important;
           width: 100% !important;
-          max-width: 440px !important;
-          margin: 0 !important;
+          max-width: 430px !important;
+          margin: 0 auto !important;
+          padding: 26px !important;
+          border-radius: 30px !important;
+          display: grid !important;
+          align-content: center !important;
           background:
             radial-gradient(circle at top, rgba(255, 212, 59, 0.08), transparent 30%),
-            rgba(5, 10, 24, 0.44) !important;
+            rgba(5, 10, 24, 0.55) !important;
           border: 1px solid rgba(255,255,255,0.11) !important;
-          box-shadow: 0 22px 70px rgba(0,0,0,0.24) !important;
+          box-shadow: 0 24px 80px rgba(0,0,0,0.28) !important;
         }
 
-        .signin-wrap-merged-premium .signin-logo-img {
+        .signin-wrap-left-sales .signin-logo-img {
           margin-left: auto !important;
           margin-right: auto !important;
         }
 
-        .signin-wrap-merged-premium .signin-card h2,
-        .signin-wrap-merged-premium .signin-card-text {
+        .signin-wrap-left-sales .signin-card h2,
+        .signin-wrap-left-sales .signin-card-text {
           text-align: center !important;
         }
 
-        @media (max-width: 980px) {
-          .signin-wrap-merged-premium {
-            grid-template-columns: minmax(0, 460px) !important;
-            justify-content: center !important;
-            width: min(100%, 560px) !important;
+        .signin-login-card-right label {
+          margin-top: 12px !important;
+        }
+
+        .signin-login-card-right .input {
+          min-height: 46px !important;
+        }
+
+        .signin-compact-options-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin: 10px 0 12px;
+        }
+
+        .signin-compact-options-row label {
+          margin: 0 !important;
+        }
+
+        .signin-compact-help {
+          margin: -2px 0 12px;
+          text-align: center;
+        }
+
+        .signin-text-link {
+          appearance: none;
+          border: 0;
+          background: transparent;
+          color: #ffe58a;
+          font-weight: 900;
+          cursor: pointer;
+          padding: 4px 6px;
+          text-decoration: none;
+        }
+
+        .signin-text-link:hover {
+          text-decoration: underline;
+        }
+
+        .signin-compact-help-panel {
+          display: grid;
+          gap: 10px;
+          margin-top: 8px;
+          padding: 12px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.055);
+          border: 1px solid rgba(255, 212, 59, 0.13);
+          text-align: left;
+        }
+
+        .signin-compact-help-panel p {
+          margin: 0;
+          color: rgba(248,250,252,0.68);
+          line-height: 1.42;
+          font-size: 0.9rem;
+        }
+
+        .signin-verify-compact {
+          margin: 10px 0 0;
+        }
+
+        @media (max-width: 760px) {
+          .signin-wrap-left-sales {
+            width: min(100%, 520px) !important;
             min-height: calc(100vh - 24px);
             padding: 18px 12px 28px !important;
-            align-items: start !important;
-            border: 0 !important;
-            background: transparent !important;
-            box-shadow: none !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            align-content: start !important;
           }
 
-          .signin-intro-desktop-only {
+          .signin-left-sales-desktop {
             display: none !important;
           }
 
-          .signin-merged-form {
+          .signin-login-card-right {
+            height: auto !important;
+            min-height: 0 !important;
             max-width: 460px !important;
-            margin: 0 auto !important;
+            padding: 24px !important;
+            display: block !important;
             background: rgba(255,255,255,0.075) !important;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .signin-compact-options-row {
+            justify-content: center;
+            text-align: center;
           }
         }
       `}</style>
@@ -530,60 +602,45 @@ export default function SignInPage() {
       <div className="signin-background-glow signin-glow-one"></div>
       <div className="signin-background-glow signin-glow-two"></div>
 
-      <div className="signin-wrap signin-wrap-merged-premium">
-        <section className="signin-intro signin-intro-desktop-only signin-merged-sales">
-          <div>
-            <div className="page-eyebrow">FromOne for small businesses</div>
+      <div className="signin-wrap-left-sales">
 
-            <h1 className="signin-main-title">
-              Create better social posts in less time.
-            </h1>
-
-            <p className="signin-main-text">
-              FromOne helps you set up your business profile, create ready-to-review posts,
-              prepare media, schedule content and publish with more control.
+        <section className="signin-left-sales-desktop" aria-label="FromOne overview">
+          <div className="signin-left-sales-main">
+            <div className="page-eyebrow">FromOne beta access</div>
+            <h1>Create better posts without the social media stress.</h1>
+            <p>
+              FromOne helps small businesses create, prepare, schedule and publish
+              ready-to-review posts from one simple workspace.
             </p>
           </div>
 
-          <div className="signin-merged-feature-list">
+          <div className="signin-left-sales-stack">
             <div>
-              <span>✓</span>
-              <strong>Business Profile setup</strong>
-              <p>Tell FromOne about the business once, then use it every week.</p>
+              <span>01</span>
+              <strong>Set up the business</strong>
+              <p>Add your Business Profile so posts match your services, audience and tone.</p>
             </div>
 
             <div>
-              <span>✓</span>
-              <strong>Posts from media</strong>
-              <p>Upload photos, videos or flyers and turn them into social posts.</p>
+              <span>02</span>
+              <strong>Create posts from media</strong>
+              <p>Use photos, videos or flyers to create more relevant content.</p>
             </div>
 
             <div>
-              <span>✓</span>
-              <strong>Schedule or publish</strong>
-              <p>Autopublish where supported, or use manual fallback anytime.</p>
+              <span>03</span>
+              <strong>Review and publish</strong>
+              <p>Schedule, autopublish where supported, or post manually with control.</p>
             </div>
           </div>
 
-          <div className="signin-merged-stats">
-            <div>
-              <strong>7-day</strong>
-              <span>free demo</span>
-            </div>
-
-            <div>
-              <strong>£39.99</strong>
-              <span>per month</span>
-            </div>
-
-            <div>
-              <strong>Academy</strong>
-              <span>built in</span>
-            </div>
+          <div className="signin-left-sales-price">
+            <strong>7-day demo included</strong>
+            <span>Then £39.99/month. FromOne Academy is built in to guide every step.</span>
           </div>
         </section>
 
-        <section className="signin-card signin-merged-form">
+        <section className="signin-card signin-login-card-right">
           <img
             src="/fromone-logo.png"
             alt="FromOne logo"
@@ -640,46 +697,58 @@ export default function SignInPage() {
             autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
           />
 
-          <label className="show-password-row">
-            <input
-              type="checkbox"
-              checked={showPassword}
-              onChange={(event) => setShowPassword(event.target.checked)}
-            />
-            <span>Show password</span>
-          </label>
-
-          {mode === 'signin' && (
-            <label className="signin-remember-label signin-remember-standalone">
+          <div className="signin-compact-options-row">
+            <label className="show-password-row">
               <input
                 type="checkbox"
-                checked={rememberMe}
-                onChange={(event) => setRememberMe(event.target.checked)}
+                checked={showPassword}
+                onChange={(event) => setShowPassword(event.target.checked)}
               />
-              <span>Remember email</span>
+              <span>Show password</span>
             </label>
-          )}
+
+            {mode === 'signin' && (
+              <label className="signin-remember-label signin-remember-standalone">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(event) => setRememberMe(event.target.checked)}
+                />
+                <span>Remember email</span>
+              </label>
+            )}
+          </div>
 
           {mode === 'signin' && (
-            <div className="signin-reset-panel">
-              <strong>Can’t sign in?</strong>
-              <p>
-                Enter your email above and we’ll send a fresh password reset link. Use the newest
-                email only.
-              </p>
-
+            <div className="signin-compact-help">
               <button
                 type="button"
-                className="secondary-button"
-                onClick={handleForgotPassword}
-                disabled={resettingPassword || loading || resendingConfirmation || resetCooldown > 0}
+                className="signin-text-link"
+                onClick={() => setShowResetOptions((current) => !current)}
               >
-                {resettingPassword
-                  ? 'Sending reset email...'
-                  : resetCooldown > 0
-                    ? `Reset sent · ${resetCooldown}s`
-                    : 'Send reset email'}
+                Forgot password?
               </button>
+
+              {showResetOptions && (
+                <div className="signin-compact-help-panel">
+                  <p>
+                    Enter your email above and we’ll send a fresh password reset link.
+                  </p>
+
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={handleForgotPassword}
+                    disabled={resettingPassword || loading || resendingConfirmation || resetCooldown > 0}
+                  >
+                    {resettingPassword
+                      ? 'Sending reset email...'
+                      : resetCooldown > 0
+                        ? `Reset sent · ${resetCooldown}s`
+                        : 'Send reset email'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -697,17 +766,29 @@ export default function SignInPage() {
           </button>
 
           {mode === 'signin' && (
-            <div className="signin-verification-help">
-              <span>Waiting for your verification email?</span>
-
+            <div className="signin-compact-help signin-verify-compact">
               <button
                 type="button"
-                className="signin-resend-button"
-                onClick={handleResendConfirmation}
-                disabled={loading || resettingPassword || resendingConfirmation}
+                className="signin-text-link"
+                onClick={() => setShowVerificationOptions((current) => !current)}
               >
-                {resendingConfirmation ? 'Sending...' : 'Resend verification email'}
+                Waiting for verification email?
               </button>
+
+              {showVerificationOptions && (
+                <div className="signin-compact-help-panel">
+                  <p>Use this if your account verification email has not arrived.</p>
+
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={handleResendConfirmation}
+                    disabled={loading || resettingPassword || resendingConfirmation}
+                  >
+                    {resendingConfirmation ? 'Sending...' : 'Resend verification email'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -727,7 +808,7 @@ export default function SignInPage() {
                 setMode(mode === 'signin' ? 'signup' : 'signin');
               }}
             >
-              {mode === 'signin' ? 'Create one' : 'Sign in'}
+              {mode === 'signin' ? 'Create account' : 'Sign in'}
             </button>
           </div>
         </section>
