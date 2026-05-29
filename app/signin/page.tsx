@@ -664,34 +664,52 @@ export default function SignInPage() {
         }
 
         .signin-compact-help {
-          margin: -2px 0 12px;
+          margin: 12px 0 0;
           text-align: center;
+          display: grid;
+          gap: 10px;
+        }
+
+        .signin-login-card-right .signin-primary-button,
+        .signin-login-card-right .signin-text-link,
+        .signin-login-card-right .signin-compact-help-panel button,
+        .signin-login-card-right .signin-switch button {
+          width: 100% !important;
+          min-height: 48px !important;
+          border-radius: 16px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          text-align: center !important;
         }
 
         .signin-text-link {
           appearance: none;
-          border: 0;
-          background: transparent;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.065);
           color: #ffe58a;
-          font-weight: 900;
+          font-weight: 950;
           cursor: pointer;
-          padding: 4px 6px;
+          padding: 0 14px;
           text-decoration: none;
+          box-shadow: none;
         }
 
         .signin-text-link:hover {
-          text-decoration: underline;
+          border-color: rgba(255, 212, 59, 0.24);
+          background: rgba(255,255,255,0.085);
+          text-decoration: none;
         }
 
         .signin-compact-help-panel {
           display: grid;
-          gap: 10px;
-          margin-top: 8px;
+          gap: 12px;
+          margin-top: 0;
           padding: 12px;
           border-radius: 18px;
           background: rgba(255,255,255,0.055);
           border: 1px solid rgba(255, 212, 59, 0.13);
-          text-align: left;
+          text-align: center;
         }
 
         .signin-compact-help-panel p {
@@ -702,8 +720,20 @@ export default function SignInPage() {
         }
 
         .signin-verify-compact {
-          margin: 10px 0 0;
+          margin: 12px 0 0;
         }
+
+        .signin-login-card-right .signin-primary-button {
+          margin-top: 12px !important;
+        }
+
+        .signin-switch {
+          display: grid !important;
+          gap: 10px !important;
+          margin-top: 14px !important;
+          text-align: center !important;
+        }
+
 
         @media (max-width: 760px) {
           .signin-wrap-left-sales {
