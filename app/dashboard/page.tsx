@@ -1981,6 +1981,12 @@ If uploads are supplied:
       }}
     >
       <style jsx global>{`        @media (max-width: 900px) {
+          .dashboard-upload-file-name {
+            display: none !important;
+          }
+        }
+
+        @media (max-width: 900px) {
           .dashboard-final-card textarea::placeholder {
             color: rgba(248,250,252,0.42);
           }
@@ -2413,6 +2419,7 @@ If uploads are supplied:
                     </div>
 
                     <p
+                      className="dashboard-upload-file-name"
                       style={{
                         margin: "5px 0 10px",
                         color: "var(--muted)",
