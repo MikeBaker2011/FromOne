@@ -36,25 +36,19 @@ function ConnectSuccessContent() {
   const isSuccess = status === 'success';
 
   const destinationLabel = useMemo(() => {
-    if (returnTo.includes('/dashboard')) return 'Continue to Dashboard';
-    if (returnTo.includes('/posts')) return 'Continue to Posts';
-    return 'Continue to Settings';
-  }, [returnTo]);
+    return 'Continue to FromOne';
+  }, []);
 
   return (
     <main className="connect-result-page">
       <section className="connect-result-card">
-        <div className={isSuccess ? 'connect-result-icon is-success' : 'connect-result-icon is-error'}>
-          {isSuccess ? '✓' : '!'}
-        </div>
-
         <div className="page-eyebrow">Connected accounts</div>
 
         <h1>{isSuccess ? 'Facebook and Instagram connected.' : 'Connection needs attention.'}</h1>
 
         <p>
           {isSuccess
-            ? 'You can now continue back to FromOne. If this opened in your browser from the mobile app, use the button below to carry on.'
+            ? 'Connection complete. You can continue here, or return to the FromOne app if you opened this from your home screen.'
             : error || 'Meta did not complete the connection. You can go back and try again.'}
         </p>
 
@@ -69,18 +63,39 @@ function ConnectSuccessContent() {
         )}
 
         <div className="connect-result-actions">
-          <button type="button" onClick={() => { window.location.href = returnTo; }}>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = returnTo;
+            }}
+          >
             {destinationLabel}
           </button>
 
-          <button type="button" className="secondary-button" onClick={() => { window.location.href = '/dashboard'; }}>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              window.location.href = '/dashboard';
+            }}
+          >
             Go to Dashboard
           </button>
 
-          <button type="button" className="secondary-button" onClick={() => { window.location.href = '/settings'; }}>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              window.location.href = '/settings';
+            }}
+          >
             Manage connections
           </button>
         </div>
+
+        <p className="connect-result-app-note">
+          Opened from the installed app? After continuing, you can also switch back to FromOne from your phone’s app switcher.
+        </p>
       </section>
 
       <style jsx global>{`
@@ -101,29 +116,6 @@ function ConnectSuccessContent() {
             linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.035));
           border: 1px solid rgba(255, 212, 59, 0.2);
           box-shadow: 0 30px 96px rgba(0,0,0,0.34);
-        }
-
-        .connect-result-icon {
-          width: 68px;
-          height: 68px;
-          display: inline-grid;
-          place-items: center;
-          margin: 0 auto 16px;
-          border-radius: 22px;
-          font-size: 2rem;
-          font-weight: 1000;
-        }
-
-        .connect-result-icon.is-success {
-          color: #062116;
-          background: linear-gradient(135deg, #3ddc97, #a7f3d0);
-          box-shadow: 0 18px 46px rgba(61, 220, 151, 0.24);
-        }
-
-        .connect-result-icon.is-error {
-          color: #101420;
-          background: linear-gradient(135deg, #ffd43b, #f7b733);
-          box-shadow: 0 18px 46px rgba(255, 212, 59, 0.2);
         }
 
         .connect-result-card h1 {
@@ -173,6 +165,12 @@ function ConnectSuccessContent() {
           width: 100%;
           min-height: 54px;
           border-radius: 18px;
+        }
+
+        .connect-result-app-note {
+          margin-top: 16px !important;
+          font-size: 0.9rem;
+          color: rgba(248,250,252,0.56) !important;
         }
 
         @media (max-width: 560px) {
