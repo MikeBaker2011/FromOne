@@ -563,6 +563,28 @@ export default function PostActionModal({
       ? 'Autopost sends the caption and media automatically when the business account connection is healthy.'
       : 'Autopost is not available for this platform.';
 
+  const publishNowLabel = posted
+    ? 'Already posted'
+    : autopostNeedsAttention
+      ? publishErrorNeedsReconnect
+        ? 'Reconnect accounts'
+        : 'Connect account'
+      : canAutoPublish
+        ? `Publish now to ${autoPublishPlatformName}`
+        : `Post manually to ${manualPlatformLabel}`;
+
+  const handlePublishNowChoice = () => {
+    if (!canAutoPublish) {
+      handleManualPost();
+      return;
+    }
+
+    handleAutopostPublish();
+  };
+
+  const scheduleLaterLabel =
+    savingReminderPostId === selectedPost.id ? 'Checking schedule...' : 'Schedule later';
+
   const handleDownloadOriginalMedia = () => {
     if (!selectedPost.media_url) return;
 
@@ -1212,10 +1234,79 @@ export default function PostActionModal({
           </button>
         </header>
 
-        <div className="f1-post-review-hint" aria-label="Review navigation hint">
-          <span>Review tip</span>
-          <strong>Use ↑ / ↓ keys or your mouse wheel to move through this post review.</strong>
+        <div className="f1-post-review-hint" aria-label="Review safety note">
+          <span>Review first</span>
+          <strong>Nothing is published until you choose publish, schedule or manual post.</strong>
         </div>
+
+        <section className="f1-post-next-action-card" aria-label="Choose what happens next">
+          <div className="f1-post-next-action-copy">
+            <span>Next action</span>
+            <strong>What would you like to do with this post?</strong>
+            <p>Review the wording and media, then choose the safest next step.</p>
+          </div>
+
+          <div className="f1-post-next-action-grid">
+            <button
+              type="button"
+              className="f1-post-next-action-button is-primary"
+              onClick={handlePublishNowChoice}
+              disabled={
+                posted ||
+                isPublishing ||
+                isRescanning ||
+                needsMedia ||
+                instagramHasFlyerOnly ||
+                (canAutoPublish && !autopostNeedsAttention && !canUseAutopostPublish)
+              }
+            >
+              <span>Publish now</span>
+              <strong>{publishNowLabel}</strong>
+            </button>
+
+            <button
+              type="button"
+              className="f1-post-next-action-button"
+              onClick={handleManualPost}
+              disabled={!canUseManualPost}
+            >
+              <span>Manual post</span>
+              <strong>Copy and open {manualPlatformLabel}</strong>
+            </button>
+
+            <button
+              type="button"
+              className="f1-post-next-action-button"
+              onClick={() => onSaveReminder(selectedPost)}
+              disabled={posted || isRescanning || savingReminderPostId === selectedPost.id}
+            >
+              <span>Schedule</span>
+              <strong>{scheduleLaterLabel}</strong>
+            </button>
+
+            <button
+              type="button"
+              className="f1-post-next-action-button"
+              onClick={() => onStartEditingPost(selectedPost)}
+              disabled={accessLocked || editingPostId === selectedPost.id || isRescanning}
+            >
+              <span>Edit</span>
+              <strong>Edit wording</strong>
+            </button>
+
+            {onDeletePost && (
+              <button
+                type="button"
+                className="f1-post-next-action-button is-danger"
+                onClick={() => onDeletePost(selectedPost)}
+                disabled={deletingPostId === selectedPost.id || isRescanning}
+              >
+                <span>{posted ? 'Archive' : 'Delete'}</span>
+                <strong>{deletingPostId === selectedPost.id ? 'Deleting...' : posted ? 'Archive post' : 'Delete post'}</strong>
+              </button>
+            )}
+          </div>
+        </section>
 
         <div className="f1-post-modal-body">
           <aside ref={mediaRef} className={`f1-post-media-panel ${showPrepareMediaModal ? 'is-preparing-media' : ''}`}>
@@ -1702,7 +1793,7 @@ export default function PostActionModal({
               <div className="f1-post-panel-header">
                 <div>
                   <span>Step 2</span>
-                  <h3>{posted ? 'Posted' : 'Post manually'}</h3>
+                  <h3>{posted ? 'Posted' : 'Choose publish option'}</h3>
                 </div>
               </div>
 
@@ -1754,7 +1845,7 @@ export default function PostActionModal({
 
               <div className="f1-post-primary-publish-card">
                 <div>
-                  <strong>Post manually</strong>
+                  <strong>Manual post</strong>
                   <p>{manualHelpText}</p>
                   {hasMedia && <small>Use Prepare media or Download media, then add the media before pasting the caption.</small>}
                 </div>
@@ -1879,6 +1970,131 @@ export default function PostActionModal({
 
 
       </section>
+
+      <style jsx global>{`
+        .f1-post-next-action-card {
+          margin: 0 clamp(14px, 2vw, 22px) 18px;
+          padding: 16px;
+          border-radius: 26px;
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.12), transparent 34%),
+            rgba(255,255,255,0.055);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+          box-shadow: 0 18px 54px rgba(0,0,0,0.18);
+          display: grid;
+          grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+          gap: 16px;
+          align-items: center;
+        }
+
+        .f1-post-next-action-copy {
+          display: grid;
+          gap: 5px;
+        }
+
+        .f1-post-next-action-copy span,
+        .f1-post-next-action-button span {
+          color: #ffe58a;
+          font-size: 0.72rem;
+          font-weight: 1000;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .f1-post-next-action-copy strong {
+          color: #ffffff;
+          font-size: clamp(1.15rem, 2vw, 1.55rem);
+          line-height: 1.08;
+          letter-spacing: -0.035em;
+        }
+
+        .f1-post-next-action-copy p {
+          margin: 0;
+          color: rgba(248,250,252,0.66);
+          line-height: 1.45;
+          font-weight: 760;
+        }
+
+        .f1-post-next-action-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .f1-post-next-action-button {
+          appearance: none;
+          border: 1px solid rgba(255,255,255,0.11);
+          border-radius: 18px;
+          min-height: 74px;
+          padding: 12px 13px;
+          display: grid;
+          align-content: center;
+          gap: 5px;
+          text-align: left;
+          color: #ffffff;
+          background: rgba(255,255,255,0.06);
+          cursor: pointer;
+          transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+        }
+
+        .f1-post-next-action-button:hover:not(:disabled) {
+          transform: translateY(-1px);
+          border-color: rgba(255, 212, 59, 0.28);
+          background: rgba(255,255,255,0.08);
+        }
+
+        .f1-post-next-action-button strong {
+          font-size: 0.95rem;
+          line-height: 1.15;
+        }
+
+        .f1-post-next-action-button.is-primary {
+          border-color: rgba(255, 212, 59, 0.36);
+          background: linear-gradient(135deg, #ffd43b, #f7b733);
+          color: #101420;
+          box-shadow: 0 16px 38px rgba(255, 212, 59, 0.16);
+        }
+
+        .f1-post-next-action-button.is-primary span {
+          color: rgba(16, 20, 32, 0.72);
+        }
+
+        .f1-post-next-action-button.is-danger {
+          border-color: rgba(248, 113, 113, 0.25);
+          background: rgba(248, 113, 113, 0.1);
+          color: #fecaca;
+        }
+
+        .f1-post-next-action-button.is-danger span {
+          color: #fecaca;
+        }
+
+        .f1-post-next-action-button:disabled {
+          opacity: 0.52;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        @media (max-width: 900px) {
+          .f1-post-next-action-card {
+            grid-template-columns: 1fr;
+            margin: 0 12px 14px;
+            padding: 14px;
+            border-radius: 22px;
+            text-align: center;
+          }
+
+          .f1-post-next-action-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .f1-post-next-action-button {
+            min-height: 62px;
+            text-align: center;
+            justify-items: center;
+          }
+        }
+      `}</style>
     </div>
   );
 }
