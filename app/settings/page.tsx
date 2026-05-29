@@ -159,6 +159,54 @@ export default function SettingsPage() {
     disconnectingConnectionId === primaryMetaConnection?.id ||
     disconnectingConnectionId === 'all';
 
+  const getConnectionStatusLabel = (ready: boolean) => {
+    if (loadingConnections) return 'Checking...';
+    return ready ? 'Connected' : 'Not connected';
+  };
+
+  const getConnectionStatusStyle = (ready: boolean) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    width: 'fit-content',
+    minHeight: 30,
+    padding: '6px 11px',
+    borderRadius: 999,
+    background: ready ? 'rgba(61, 220, 151, 0.12)' : 'rgba(248, 113, 113, 0.1)',
+    border: ready ? '1px solid rgba(61, 220, 151, 0.24)' : '1px solid rgba(248, 113, 113, 0.22)',
+    color: ready ? '#a7f3d0' : '#fecaca',
+    fontSize: 12,
+    fontWeight: 950,
+  });
+
+  const getMetaUpdatedLabel = () => {
+    if (!primaryMetaConnection?.updated_at) return 'Not checked yet';
+
+    try {
+      return new Date(primaryMetaConnection.updated_at).toLocaleString(undefined, {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return 'Recently checked';
+    }
+  };
+
+  const getMetaExpiryLabel = () => {
+    if (!primaryMetaConnection?.expires_at) return 'No expiry date shown';
+
+    try {
+      return new Date(primaryMetaConnection.expires_at).toLocaleDateString(undefined, {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return 'Expiry date unavailable';
+    }
+  };
+
   const businessProfileReady = Boolean(businessName.trim() && industry.trim());
   const connectionsReady = businessProfileReady;
   const createPostsReady = businessProfileReady;
@@ -1387,18 +1435,55 @@ export default function SettingsPage() {
                   alignItems: 'stretch',
                 }}
               >
-                <section className="card settings-channel-card" style={{ padding: 20, borderRadius: 24 }}>
+                <section
+                  className="card settings-channel-card settings-channel-card-premium"
+                  style={{
+                    padding: 20,
+                    borderRadius: 24,
+                    background:
+                      hasFacebookConnection
+                        ? 'radial-gradient(circle at top right, rgba(61, 220, 151, 0.13), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))'
+                        : 'linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))',
+                    border: hasFacebookConnection
+                      ? '1px solid rgba(61, 220, 151, 0.24)'
+                      : '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
                   <div>
-                    <div className="page-eyebrow">Facebook</div>
-                  <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
-                    {hasFacebookConnection ? 'Connected ✓' : 'Not connected'}
-                  </h3>
-                  <p style={{ color: 'var(--muted)', minHeight: 96 }}>
-                    {hasFacebookConnection
-                      ? `Ready to publish to ${primaryMetaConnection?.page_name || 'your Facebook Page'}.`
-                      : 'Connect Meta to enable Facebook Page publishing.'}
-                  </p>
+                    <div className="settings-channel-card-head">
+                      <div>
+                        <div className="page-eyebrow">Facebook</div>
+                        <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
+                          Facebook Page
+                        </h3>
+                      </div>
+
+                      <span style={getConnectionStatusStyle(hasFacebookConnection)}>
+                        {getConnectionStatusLabel(hasFacebookConnection)}
+                      </span>
+                    </div>
+
+                    <div className="settings-connected-account-box">
+                      <span>Publishing destination</span>
+                      <strong>
+                        {hasFacebookConnection
+                          ? primaryMetaConnection?.page_name || 'Connected Facebook Page'
+                          : 'No Facebook Page connected'}
+                      </strong>
+                      <small>
+                        {hasFacebookConnection
+                          ? `Page ID: ${primaryMetaConnection?.page_id || 'Connected'}`
+                          : 'Connect Meta to publish Facebook posts after review.'}
+                      </small>
+                    </div>
+
+                    <p style={{ color: 'var(--muted)', minHeight: 72 }}>
+                      {hasFacebookConnection
+                        ? 'Ready for reviewed Facebook autoposting. You can still copy and post manually if preferred.'
+                        : 'Connect Meta to enable Facebook Page publishing.'}
+                    </p>
                   </div>
+
                   <button
                     type="button"
                     className={hasMetaConnection ? 'secondary-button' : undefined}
@@ -1406,24 +1491,61 @@ export default function SettingsPage() {
                     disabled={metaConnectionBusy}
                     style={{ width: '100%', marginTop: 'auto' }}
                   >
-                    {hasMetaConnection ? 'Manage Meta' : 'Connect'}
+                    {hasFacebookConnection ? 'Reconnect / manage' : 'Connect Facebook'}
                   </button>
                 </section>
 
-                <section className="card settings-channel-card" style={{ padding: 20, borderRadius: 24 }}>
+                <section
+                  className="card settings-channel-card settings-channel-card-premium"
+                  style={{
+                    padding: 20,
+                    borderRadius: 24,
+                    background:
+                      hasInstagramConnection
+                        ? 'radial-gradient(circle at top right, rgba(61, 220, 151, 0.13), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))'
+                        : 'linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))',
+                    border: hasInstagramConnection
+                      ? '1px solid rgba(61, 220, 151, 0.24)'
+                      : '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
                   <div>
-                    <div className="page-eyebrow">Instagram</div>
-                  <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
-                    {hasInstagramConnection ? 'Connected ✓' : 'Not connected'}
-                  </h3>
-                  <p style={{ color: 'var(--muted)', minHeight: 96 }}>
-                    {hasInstagramConnection
-                      ? `Ready as @${primaryMetaConnection?.instagram_username || 'Instagram'}. Instagram posts need an image or video.`
-                      : hasMetaConnection
-                        ? 'Link a professional Instagram account in Meta.'
-                        : 'Connect Meta to enable Instagram publishing. Instagram needs an image or video, not a PDF flyer.'}
-                  </p>
+                    <div className="settings-channel-card-head">
+                      <div>
+                        <div className="page-eyebrow">Instagram</div>
+                        <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
+                          Instagram Account
+                        </h3>
+                      </div>
+
+                      <span style={getConnectionStatusStyle(hasInstagramConnection)}>
+                        {getConnectionStatusLabel(hasInstagramConnection)}
+                      </span>
+                    </div>
+
+                    <div className="settings-connected-account-box">
+                      <span>Publishing account</span>
+                      <strong>
+                        {hasInstagramConnection
+                          ? `@${primaryMetaConnection?.instagram_username || 'Instagram'}`
+                          : 'No Instagram account connected'}
+                      </strong>
+                      <small>
+                        {hasInstagramConnection
+                          ? 'Image and video posts can be autoposted after review.'
+                          : hasMetaConnection
+                            ? 'Meta is connected, but Instagram is not linked yet.'
+                            : 'Connect Meta to enable Instagram publishing.'}
+                      </small>
+                    </div>
+
+                    <p style={{ color: 'var(--muted)', minHeight: 72 }}>
+                      {hasInstagramConnection
+                        ? 'Instagram is ready. It needs an image or video; PDF flyers can still be rewritten for manual use.'
+                        : 'Instagram requires a professional Instagram account connected through Meta.'}
+                    </p>
                   </div>
+
                   <button
                     type="button"
                     className={hasMetaConnection ? 'secondary-button' : undefined}
@@ -1431,18 +1553,58 @@ export default function SettingsPage() {
                     disabled={metaConnectionBusy}
                     style={{ width: '100%', marginTop: 'auto' }}
                   >
-                    {hasInstagramConnection ? 'Manage Meta' : 'Connect'}
+                    {hasInstagramConnection ? 'Reconnect / manage' : 'Connect Instagram'}
                   </button>
                 </section>
 
-                <section className="card settings-channel-card" style={{ padding: 20, borderRadius: 24 }}>
+                <section
+                  className="card settings-channel-card settings-channel-card-premium"
+                  style={{
+                    padding: 20,
+                    borderRadius: 24,
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
                   <div>
-                    <div className="page-eyebrow">TikTok</div>
-                  <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>Manual</h3>
-                  <p style={{ color: 'var(--muted)', minHeight: 96 }}>
-                    FromOne creates the wording. The user copies it and opens TikTok manually.
-                  </p>
+                    <div className="settings-channel-card-head">
+                      <div>
+                        <div className="page-eyebrow">TikTok</div>
+                        <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
+                          Manual posting
+                        </h3>
+                      </div>
+
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          width: 'fit-content',
+                          minHeight: 30,
+                          padding: '6px 11px',
+                          borderRadius: 999,
+                          background: 'rgba(255, 212, 59, 0.1)',
+                          border: '1px solid rgba(255, 212, 59, 0.2)',
+                          color: '#ffe58a',
+                          fontSize: 12,
+                          fontWeight: 950,
+                        }}
+                      >
+                        Manual
+                      </span>
+                    </div>
+
+                    <div className="settings-connected-account-box">
+                      <span>Current method</span>
+                      <strong>Copy and open TikTok</strong>
+                      <small>FromOne creates the wording; the user publishes manually.</small>
+                    </div>
+
+                    <p style={{ color: 'var(--muted)', minHeight: 72 }}>
+                      TikTok stays simple for beta. Create the caption in FromOne, copy it, then open TikTok.
+                    </p>
                   </div>
+
                   <button
                     type="button"
                     className="secondary-button"
@@ -1456,17 +1618,53 @@ export default function SettingsPage() {
             )}
 
             {hasMetaConnection && (
-              <div className="button-row" style={{ marginTop: 18 }}>
-                <button
-                  type="button"
-                  className="secondary-button danger-button"
-                  onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
-                  disabled={metaConnectionBusy}
-                >
-                  {metaConnectionBusy ? 'Disconnecting...' : 'Disconnect Meta'}
-                </button>
+              <div
+                className="settings-meta-summary-card"
+                style={{
+                  marginTop: 18,
+                  padding: 18,
+                  borderRadius: 24,
+                  background:
+                    'radial-gradient(circle at top left, rgba(61, 220, 151, 0.12), transparent 34%), rgba(255,255,255,0.055)',
+                  border: '1px solid rgba(61, 220, 151, 0.18)',
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) auto',
+                  gap: 14,
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <div className="page-eyebrow">Meta connection</div>
+                  <h3 style={{ margin: '6px 0 8px', color: '#fff' }}>
+                    Facebook and Instagram are managed through Meta.
+                  </h3>
+                  <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.5 }}>
+                    Last checked: {getMetaUpdatedLabel()} · Token expiry: {getMetaExpiryLabel()}
+                  </p>
+                </div>
+
+                <div className="button-row" style={{ justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={connectMetaAccount}
+                    disabled={metaConnectionBusy}
+                  >
+                    Reconnect
+                  </button>
+
+                  <button
+                    type="button"
+                    className="secondary-button danger-button"
+                    onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
+                    disabled={metaConnectionBusy}
+                  >
+                    {metaConnectionBusy ? 'Disconnecting...' : 'Disconnect'}
+                  </button>
+                </div>
               </div>
             )}
+
           </section>
 
           <section
@@ -2116,7 +2314,51 @@ export default function SettingsPage() {
         .settings-channel-card {
           display: flex !important;
           flex-direction: column !important;
-          min-height: 276px !important;
+          min-height: 316px !important;
+        }
+
+        .settings-channel-card-premium {
+          gap: 14px !important;
+        }
+
+        .settings-channel-card-head {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .settings-connected-account-box {
+          display: grid;
+          gap: 5px;
+          margin: 14px 0;
+          padding: 13px 14px;
+          border-radius: 18px;
+          background: rgba(2, 6, 23, 0.28);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .settings-connected-account-box span {
+          color: rgba(248,250,252,0.56);
+          font-size: 0.74rem;
+          font-weight: 950;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        .settings-connected-account-box strong {
+          color: #ffffff;
+          line-height: 1.2;
+        }
+
+        .settings-connected-account-box small {
+          color: rgba(248,250,252,0.62);
+          line-height: 1.4;
+          font-weight: 760;
+        }
+
+        .settings-meta-summary-card .button-row {
+          margin: 0;
         }
 
         .settings-channel-card h3 {
@@ -2132,6 +2374,19 @@ export default function SettingsPage() {
         @media (max-width: 900px) {
           .settings-connections-section div[style*="repeat(3, minmax(0, 1fr))"] {
             grid-template-columns: 1fr !important;
+          }
+
+          .settings-meta-summary-card {
+            grid-template-columns: 1fr !important;
+            text-align: center;
+          }
+
+          .settings-meta-summary-card .button-row {
+            justify-content: center !important;
+          }
+
+          .settings-channel-card-head {
+            align-items: center;
           }
 
           .settings-channel-card {

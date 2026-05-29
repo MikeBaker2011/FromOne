@@ -369,6 +369,7 @@ export default function PostsPage() {
   );
   const [pendingCampaignId, setPendingCampaignId] = useState("");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [createdReviewActive, setCreatedReviewActive] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [loadingSelectedPlan, setLoadingSelectedPlan] = useState(false);
@@ -502,6 +503,12 @@ export default function PostsPage() {
     if (!editingPostId) return null;
     return sortedPosts.find((post) => post.id === editingPostId) || null;
   }, [editingPostId, sortedPosts]);
+
+  const selectedPostPosition = useMemo(() => {
+    if (!selectedPost) return 0;
+    const index = sortedPosts.findIndex((post) => post.id === selectedPost.id);
+    return index >= 0 ? index + 1 : 0;
+  }, [selectedPost, sortedPosts]);
 
   const activeIndustry = String(
     profile?.industry || campaign?.business_type || campaign?.industry || "",
@@ -1025,8 +1032,20 @@ export default function PostsPage() {
     }
 
     if (shouldOpenCreatedPostForReview()) {
+      setCreatedReviewActive(true);
       setSelectedPostId(loadedPosts[0].id);
-      window.history.replaceState({}, "", window.location.pathname);
+
+      const cleanParams = new URLSearchParams();
+      if (campaignId) {
+        cleanParams.set("campaign", campaignId);
+      }
+
+      const cleanQuery = cleanParams.toString();
+      window.history.replaceState(
+        {},
+        "",
+        cleanQuery ? `${window.location.pathname}?${cleanQuery}` : window.location.pathname,
+      );
       return;
     }
 
@@ -1067,6 +1086,7 @@ export default function PostsPage() {
     setPendingCampaignId(campaignId);
     setCampaign(nextCampaign);
     setSelectedPostId(null);
+    setCreatedReviewActive(false);
     cancelEditingPost();
     setImprovementNote(null);
     setShowImproveTools(false);
@@ -2871,8 +2891,8 @@ Important:
                     className="page-description"
                     style={{ margin: 0, maxWidth: 760 }}
                   >
-                    Open a post, check the media and wording, then publish or
-                    copy when ready.
+                    Review, edit or delete each post. Nothing publishes until
+                    you choose the next action.
                   </p>
                 </div>
 
@@ -3131,6 +3151,63 @@ Important:
                   </a>
                 </div>
               </div>
+            )}
+
+            {createdReviewActive && sortedPosts.length > 0 && (
+              <section
+                style={{
+                  marginBottom: 18,
+                  padding: "18px 20px",
+                  borderRadius: 26,
+                  background:
+                    "radial-gradient(circle at top left, rgba(61, 220, 151, 0.16), transparent 34%), rgba(255,255,255,0.065)",
+                  border: "1px solid rgba(61, 220, 151, 0.22)",
+                  boxShadow: "0 18px 52px rgba(0,0,0,0.2)",
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) auto",
+                  gap: 14,
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <div className="page-eyebrow">Posts created</div>
+                  <h2
+                    style={{
+                      margin: "6px 0 6px",
+                      color: "#ffffff",
+                      fontSize: "clamp(1.45rem, 3vw, 2.2rem)",
+                      letterSpacing: "-0.04em",
+                    }}
+                  >
+                    Review your new posts.
+                  </h2>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "rgba(248,250,252,0.72)",
+                      lineHeight: 1.5,
+                      fontWeight: 760,
+                    }}
+                  >
+                    Start with Post 1 of {sortedPosts.length}. Edit the wording,
+                    publish now, schedule later, post manually or delete anything you do not need.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="dashboard-platform-create-button"
+                  onClick={() => choosePost(sortedPosts[0].id)}
+                  style={{
+                    minHeight: 52,
+                    borderRadius: 18,
+                    padding: "0 18px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Start review
+                </button>
+              </section>
             )}
 
             {sortedPosts.length > 0 && (
@@ -3399,7 +3476,7 @@ Important:
                             className="page-eyebrow"
                             style={{ marginBottom: 7 }}
                           >
-                            Post {index + 1}
+                            Post {index + 1} of {sortedPosts.length}
                           </div>
                           <h3
                             style={{
@@ -3453,7 +3530,7 @@ Important:
                               textAlign: "center",
                             }}
                           >
-                            Review post
+                            Review / edit
                           </button>
 
                           <button
