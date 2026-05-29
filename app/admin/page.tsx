@@ -8,7 +8,17 @@ import { useToast } from '@/app/components/ToastProvider';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Keep this aligned with app/signin/page.tsx and lib/supabase/browser.ts.
+// If the admin page uses a different auth storage key, it can fail to see the active session.
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'fromone-auth-session',
+  },
+});
 
 type AdminCustomer = {
   id: string;
@@ -97,6 +107,7 @@ export default function AdminPage() {
   const resultsRef = useRef<HTMLDivElement | null>(null);
 
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [emailQuery, setEmailQuery] = useState('');
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
   const [recentCustomers, setRecentCustomers] = useState<AdminCustomer[]>([]);
@@ -108,13 +119,40 @@ export default function AdminPage() {
   const [adminNotesByUserId, setAdminNotesByUserId] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setAdminEmail(data.user?.email || null);
+    let mounted = true;
+
+    const initialiseAdminSession = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (!mounted) return;
+
+      setAdminEmail(data.session?.user?.email || null);
+      setAuthReady(true);
+    };
+
+    initialiseAdminSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+
+      setAdminEmail(session?.user?.email || null);
+      setAuthReady(true);
     });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!authReady || !adminEmail) return;
 
     loadOverview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authReady, adminEmail]);
 
   const notify = (
     message: string,
@@ -137,13 +175,23 @@ export default function AdminPage() {
   };
 
   const getToken = async () => {
-    const { data, error } = await supabase.auth.getSession();
+    let lastError: string | null = null;
 
-    if (error || !data.session?.access_token) {
-      throw new Error('Please sign in as the admin account first.');
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        lastError = error.message;
+      }
+
+      if (data.session?.access_token) {
+        return data.session.access_token;
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 250));
     }
 
-    return data.session.access_token;
+    throw new Error(lastError || 'Please sign in as the admin account first.');
   };
 
   const syncAdminNotes = (items: AdminCustomer[]) => {
@@ -159,6 +207,8 @@ export default function AdminPage() {
   };
 
   const loadOverview = async () => {
+    if (!authReady && !adminEmail) return;
+
     setLoadingOverview(true);
 
     try {
@@ -192,6 +242,11 @@ export default function AdminPage() {
 
     if (!cleanEmail) {
       notify('Enter an email address or part of an email.', 'warning', 'Email needed');
+      return;
+    }
+
+    if (!authReady && !adminEmail) {
+      notify('Checking admin session. Please try again in a moment.', 'info', 'Checking session');
       return;
     }
 
@@ -375,7 +430,7 @@ export default function AdminPage() {
         </p>
 
         <p className="admin-signed-in">
-          Signed in as <strong>{adminEmail || 'checking session...'}</strong>
+          Signed in as <strong>{authReady ? adminEmail || 'not signed in' : 'checking session...'}</strong>
         </p>
       </div>
 
