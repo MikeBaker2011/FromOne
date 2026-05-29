@@ -69,15 +69,41 @@ const academyLessons = [
     ],
     steps: [
       "Go to the Dashboard.",
-      "Add photos, videos or flyers if you have them.",
+      "Add photos, videos or flyers if you have them. On mobile, you can take a photo, record a video or upload a file.",
       "Choose the option to create posts.",
       "Wait while FromOne creates the post set.",
       "Open the posts when they are ready.",
       "Review them before publishing anything.",
     ],
     tip:
-      "Real photos, videos and flyers usually make the posts more specific and less generic.",
+      "Real photos, videos and flyers usually make the posts more specific and less generic. On mobile, always add the quick description so FromOne knows what the media is about.",
     outcome: "You now have posts ready to check and improve.",
+  },
+  {
+    step: "03A",
+    title: "Use the FromOne mobile app",
+    group: "Create posts",
+    time: "4 minutes",
+    keywords: ["mobile", "phone", "android", "app", "apk", "camera", "photo", "video", "quick description", "download"],
+    intro:
+      "The FromOne Android beta app is designed for quick posting from your phone. Take a photo or video, add a short description, then review the post before anything goes live.",
+    before: [
+      "Download the Android beta from the sign-in page or from /download/FromOne-beta-v1.apk.",
+      "Sign in with your FromOne account.",
+      "Allow camera or file permissions when your phone asks.",
+    ],
+    steps: [
+      "Open the FromOne app on your phone.",
+      "Go to Dashboard.",
+      "Tap Take photo, Record video or Upload file.",
+      "Add a quick description in the “What is this about?” box.",
+      "Choose the platforms you want FromOne to create posts for.",
+      "Tap Create and review posts.",
+      "Open the Posts page and review the wording before publishing, scheduling or posting manually.",
+    ],
+    tip:
+      "The quick description matters. A few words like “new roof repair in Sale today” helps FromOne write a much better post.",
+    outcome: "You can create useful posts from real business moments while you are on the move.",
   },
   {
     step: "04",
@@ -421,6 +447,66 @@ export default function FromOneAcademyPage() {
           color: var(--muted);
           font-size: 0.9rem;
           line-height: 1.45;
+        }
+
+        .academy-app-download-card {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 14px;
+          align-items: center;
+          margin: 0 0 18px;
+          padding: 16px 18px;
+          border-radius: 24px;
+          border: 1px solid rgba(255, 212, 59, 0.24);
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.18), transparent 38%),
+            linear-gradient(145deg, rgba(255, 212, 59, 0.105), rgba(255,255,255,0.035));
+          color: inherit;
+          text-decoration: none;
+          box-shadow: 0 18px 54px rgba(0,0,0,0.2);
+        }
+
+        .academy-app-download-card span {
+          display: inline-flex;
+          width: fit-content;
+          margin-bottom: 7px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: rgba(255, 212, 59, 0.14);
+          border: 1px solid rgba(255, 212, 59, 0.2);
+          color: #ffe58a;
+          font-size: 0.72rem;
+          font-weight: 1000;
+          text-transform: uppercase;
+          letter-spacing: 0.09em;
+        }
+
+        .academy-app-download-card strong {
+          display: block;
+          color: #ffffff;
+          font-size: 1.22rem;
+          line-height: 1.1;
+          margin-bottom: 5px;
+        }
+
+        .academy-app-download-card small {
+          display: block;
+          color: rgba(248,250,252,0.68);
+          line-height: 1.42;
+          font-weight: 760;
+        }
+
+        .academy-app-download-card b {
+          width: 48px;
+          height: 48px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 18px;
+          background: linear-gradient(135deg, #ffd43b, #f7b733);
+          color: #101420;
+          font-size: 1.45rem;
+          font-weight: 1000;
+          box-shadow: 0 16px 36px rgba(255, 212, 59, 0.22);
         }
 
         .academy-search-card {
@@ -811,6 +897,13 @@ export default function FromOneAcademyPage() {
             gap: 10px !important;
           }
 
+          .academy-app-download-card {
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            text-align: center !important;
+            border-radius: 22px !important;
+          }
+
           .academy-search-card,
           .academy-sidebar-card,
           .academy-lesson-card {
@@ -886,14 +979,23 @@ export default function FromOneAcademyPage() {
             <span>Best if you are new to FromOne.</span>
           </div>
           <div className="academy-help-card">
-            <strong>Search anytime</strong>
-            <span>Find help for media, schedule, Facebook or password.</span>
+            <strong>Use the mobile app</strong>
+            <span>Take photos or videos and create posts faster from your phone.</span>
           </div>
           <div className="academy-help-card">
             <strong>Stay in control</strong>
             <span>Nothing publishes until the post is ready.</span>
           </div>
         </div>
+
+        <Link href="/download/FromOne-beta-v1.apk" className="academy-app-download-card">
+          <div>
+            <span>FromOne App</span>
+            <strong>Download Android beta</strong>
+            <small>Use the beta app to take photos, record videos and create posts from your phone.</small>
+          </div>
+          <b aria-hidden="true">↓</b>
+        </Link>
 
         <div className="academy-search-card">
           <input

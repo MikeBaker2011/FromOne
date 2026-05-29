@@ -160,22 +160,32 @@ export default function SettingsPage() {
     disconnectingConnectionId === 'all';
 
   const getConnectionStatusLabel = (ready: boolean) => {
-    if (loadingConnections) return 'Checking...';
-    return ready ? 'Connected' : 'Not connected';
+    if (loadingConnections) return 'Checking';
+    return ready ? 'Connected' : 'Needs connection';
   };
 
   const getConnectionStatusStyle = (ready: boolean) => ({
     display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
     width: 'fit-content',
-    minHeight: 30,
-    padding: '6px 11px',
+    minHeight: 32,
+    padding: '7px 12px',
     borderRadius: 999,
-    background: ready ? 'rgba(61, 220, 151, 0.12)' : 'rgba(248, 113, 113, 0.1)',
-    border: ready ? '1px solid rgba(61, 220, 151, 0.24)' : '1px solid rgba(248, 113, 113, 0.22)',
-    color: ready ? '#a7f3d0' : '#fecaca',
-    fontSize: 12,
-    fontWeight: 950,
+    background: ready
+      ? 'linear-gradient(135deg, rgba(61, 220, 151, 0.16), rgba(61, 220, 151, 0.08))'
+      : 'linear-gradient(135deg, rgba(255, 212, 59, 0.16), rgba(255, 212, 59, 0.07))',
+    border: ready
+      ? '1px solid rgba(61, 220, 151, 0.28)'
+      : '1px solid rgba(255, 212, 59, 0.26)',
+    color: ready ? '#a7f3d0' : '#ffe58a',
+    fontSize: 11,
+    fontWeight: 1000,
+    letterSpacing: '0.055em',
+    textTransform: 'uppercase',
+    boxShadow: ready
+      ? '0 10px 24px rgba(61, 220, 151, 0.08)'
+      : '0 10px 24px rgba(255, 212, 59, 0.08)',
   });
 
   const getMetaUpdatedLabel = () => {
@@ -1468,7 +1478,7 @@ export default function SettingsPage() {
                       <strong>
                         {hasFacebookConnection
                           ? primaryMetaConnection?.page_name || 'Connected Facebook Page'
-                          : 'No Facebook Page connected'}
+                          : 'Facebook not connected'}
                       </strong>
                       <small>
                         {hasFacebookConnection
@@ -1528,7 +1538,7 @@ export default function SettingsPage() {
                       <strong>
                         {hasInstagramConnection
                           ? `@${primaryMetaConnection?.instagram_username || 'Instagram'}`
-                          : 'No Instagram account connected'}
+                          : 'Instagram not connected'}
                       </strong>
                       <small>
                         {hasInstagramConnection
@@ -2312,9 +2322,11 @@ export default function SettingsPage() {
         }
 
         .settings-channel-card {
-          display: flex !important;
-          flex-direction: column !important;
+          display: grid !important;
+          grid-template-rows: auto 1fr auto !important;
           min-height: 316px !important;
+          height: 100% !important;
+          align-content: stretch !important;
         }
 
         .settings-channel-card-premium {
@@ -2357,19 +2369,43 @@ export default function SettingsPage() {
           font-weight: 760;
         }
 
+        .settings-channel-card-premium > div:first-child {
+          display: grid;
+          grid-template-rows: 86px 136px minmax(96px, auto);
+          gap: 0;
+        }
+
+        .settings-channel-card-head {
+          min-height: 86px;
+          align-items: flex-start;
+        }
+
+        .settings-channel-card-head h3 {
+          min-height: 58px !important;
+          margin-bottom: 0 !important;
+        }
+
+        .settings-connected-account-box {
+          min-height: 112px;
+          align-content: center;
+        }
+
+        .settings-channel-card-premium > div:first-child > p {
+          min-height: 96px !important;
+          margin: 0 !important;
+          display: flex;
+          align-items: flex-start;
+        }
+
+        .settings-channel-card-premium > button {
+          align-self: end;
+          min-height: 52px;
+        }
+
         .settings-meta-summary-card .button-row {
           margin: 0;
         }
 
-        .settings-channel-card h3 {
-          min-height: 58px !important;
-          display: flex !important;
-          align-items: flex-start !important;
-        }
-
-        .settings-channel-card p {
-          min-height: 104px !important;
-        }
 
         @media (max-width: 900px) {
           .settings-connections-section div[style*="repeat(3, minmax(0, 1fr))"] {
@@ -2389,13 +2425,30 @@ export default function SettingsPage() {
             align-items: center;
           }
 
-          .settings-channel-card {
-            min-height: auto !important;
+          .settings-channel-card-head > span {
+            flex-shrink: 0;
           }
 
-          .settings-channel-card h3,
-          .settings-channel-card p {
+          .settings-channel-card {
+            min-height: auto !important;
+            display: grid !important;
+            grid-template-rows: auto !important;
+          }
+
+          .settings-channel-card-premium > div:first-child {
+            grid-template-rows: auto !important;
+            gap: 12px !important;
+          }
+
+          .settings-channel-card-head,
+          .settings-channel-card-head h3,
+          .settings-connected-account-box,
+          .settings-channel-card-premium > div:first-child > p {
             min-height: 0 !important;
+          }
+
+          .settings-channel-card-premium > div:first-child > p {
+            display: block !important;
           }
         }
 

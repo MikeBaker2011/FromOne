@@ -528,6 +528,93 @@ export default function SignInPage() {
           font-weight: 760;
         }
 
+        .signin-app-download-card {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 14px;
+          align-items: center;
+          padding: 16px 18px;
+          border-radius: 24px;
+          border: 1px solid rgba(255, 212, 59, 0.24);
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.2), transparent 38%),
+            linear-gradient(145deg, rgba(255, 212, 59, 0.105), rgba(255,255,255,0.035));
+          box-shadow:
+            0 18px 54px rgba(0,0,0,0.22),
+            0 0 0 0 rgba(255, 212, 59, 0.22);
+          text-decoration: none;
+          color: inherit;
+          animation: signinAppPulse 1.85s ease-in-out infinite;
+        }
+
+        .signin-app-download-card:hover {
+          transform: translateY(-1px);
+          border-color: rgba(255, 212, 59, 0.42);
+        }
+
+        .signin-app-download-card span {
+          display: inline-flex;
+          width: fit-content;
+          margin-bottom: 7px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: rgba(255, 212, 59, 0.14);
+          border: 1px solid rgba(255, 212, 59, 0.2);
+          color: #ffe58a;
+          font-size: 0.72rem;
+          font-weight: 1000;
+          text-transform: uppercase;
+          letter-spacing: 0.09em;
+        }
+
+        .signin-app-download-card strong {
+          display: block;
+          color: #ffffff;
+          font-size: 1.2rem;
+          line-height: 1.1;
+          margin-bottom: 5px;
+        }
+
+        .signin-app-download-card small {
+          display: block;
+          color: rgba(248,250,252,0.68);
+          line-height: 1.42;
+          font-weight: 760;
+        }
+
+        .signin-app-download-arrow {
+          width: 48px;
+          height: 48px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 18px;
+          background: linear-gradient(135deg, #ffd43b, #f7b733);
+          color: #101420;
+          font-size: 1.45rem;
+          font-weight: 1000;
+          box-shadow: 0 16px 36px rgba(255, 212, 59, 0.22);
+        }
+
+        @keyframes signinAppPulse {
+          0%, 100% {
+            box-shadow:
+              0 18px 54px rgba(0,0,0,0.22),
+              0 0 0 0 rgba(255, 212, 59, 0.2);
+          }
+          50% {
+            box-shadow:
+              0 22px 64px rgba(0,0,0,0.28),
+              0 0 0 7px rgba(255, 212, 59, 0.075),
+              0 0 42px rgba(255, 212, 59, 0.16);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .signin-app-download-card {
+            animation: none !important;
+          }
+        }
+
         .signin-login-card-right {
           height: 100% !important;
           min-height: 610px !important;
@@ -632,6 +719,12 @@ export default function SignInPage() {
             display: none !important;
           }
 
+          .signin-app-download-card {
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            text-align: center !important;
+          }
+
           .signin-login-card-right {
             height: auto !important;
             min-height: 0 !important;
@@ -684,6 +777,21 @@ export default function SignInPage() {
               <p>Schedule, autopublish where supported, or post manually with control.</p>
             </div>
           </div>
+
+          <a
+            className="signin-app-download-card"
+            href="/download/FromOne-beta-v1.apk"
+            download
+            aria-label="Download the FromOne Android beta app"
+          >
+            <div>
+              <span>FromOne App</span>
+              <strong>Download Android beta</strong>
+              <small>Install the beta app for faster mobile posting from your phone.</small>
+            </div>
+
+            <div className="signin-app-download-arrow" aria-hidden="true">↓</div>
+          </a>
 
           <div className="signin-left-sales-price">
             <strong>7-day demo included</strong>
