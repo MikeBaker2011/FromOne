@@ -7,7 +7,14 @@ import { useToast } from '@/app/components/ToastProvider';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'fromone-auth-session',
+  },
+});
 
 const REMEMBER_EMAIL_KEY = 'fromone_remember_email';
 const RESET_COOLDOWN_SECONDS = 60;
@@ -33,12 +40,56 @@ export default function SignInPage() {
   const messageRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+    let isMounted = true;
 
-    if (rememberedEmail) {
-      setEmail(rememberedEmail);
-      setRememberMe(true);
-    }
+    const prepareSigninPage = async () => {
+      const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+
+      if (rememberedEmail && isMounted) {
+        setEmail(rememberedEmail);
+        setRememberMe(true);
+      }
+
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (!isMounted) return;
+
+        if (error) {
+          const message = error.message || '';
+
+          if (isRefreshTokenError(message)) {
+            await clearStaleAuthSession();
+          }
+
+          return;
+        }
+
+        if (session?.user) {
+          const destination = await getPostLoginDestination();
+
+          if (isMounted) {
+            router.replace(destination);
+          }
+        }
+      } catch (error: any) {
+        const message = error?.message || error?.code || '';
+
+        if (isRefreshTokenError(message)) {
+          await clearStaleAuthSession();
+        }
+      }
+    };
+
+    prepareSigninPage();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -227,7 +278,7 @@ export default function SignInPage() {
         saveRememberedEmail(cleanEmail);
 
         const destination = await getPostLoginDestination();
-        router.push(destination);
+        router.replace(destination);
       } else {
         const { error } = await supabase.auth.signUp({
           email: cleanEmail,
