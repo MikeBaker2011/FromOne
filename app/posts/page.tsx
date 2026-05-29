@@ -16,7 +16,6 @@ import { useToast } from "@/app/components/ToastProvider";
 
 import WeeklyPlanControls from "@/components/posts/WeeklyPlanControls";
 import WeeklyQueue from "@/components/posts/WeeklyQueue";
-import PostActionModal from "@/components/posts/PostActionModal";
 import TodayReminderModal from "@/components/posts/TodayReminderModal";
 import PostSuccessModal from "@/components/posts/PostSuccessModal";
 import ReviewPromptModal from "@/components/posts/ReviewPromptModal";
@@ -1027,13 +1026,12 @@ export default function PostsPage() {
     );
 
     if (shouldOpenTodayPost() && todayUnpostedPost) {
-      setSelectedPostId(todayUnpostedPost.id);
+      choosePost(todayUnpostedPost.id);
       return;
     }
 
     if (shouldOpenCreatedPostForReview()) {
       setCreatedReviewActive(true);
-      setSelectedPostId(loadedPosts[0].id);
 
       const cleanParams = new URLSearchParams();
       if (campaignId) {
@@ -3606,80 +3604,6 @@ Important:
             </section>
           )}
         </>
-      )}
-
-      {selectedPost && (
-        <PostActionModal
-          selectedPost={selectedPost}
-          editingPostId={editingPostId}
-          editCaption={editCaption}
-          editCta={editCta}
-          editHashtags={editHashtags}
-          savingEdit={savingEdit}
-          accessLocked={accessLocked}
-          rewritingPost={rewritingPost}
-          rewritingAction={rewritingAction}
-          showImproveTools={showImproveTools}
-          quickImproveActions={quickImproveActions}
-          dynamicAudienceTargets={dynamicAudienceTargets}
-          audienceTarget={audienceTarget}
-          customAudienceTarget={customAudienceTarget}
-          marketReachTarget={marketReachTarget}
-          toneTarget={toneTarget}
-          toneOptions={toneOptions}
-          activeImprovementNote={activeImprovementNote}
-          uploadingMediaPostId={uploadingMediaPostId}
-          removingMediaPostId={removingMediaPostId}
-          publishingPostId={publishingPostId}
-          savingReminderPostId={savingReminderPostId}
-          reminderValue={reminderValue}
-          deletingPostId={deletingPostId}
-          rescanningMediaPostId={rescanningMediaPostId}
-          mediaRescanUsageLabel={getMediaRescanUsageLabel()}
-          videoRescanUsageLabel={getVideoRescanUsageLabel()}
-          postRef={postRef}
-          mediaRef={mediaRef}
-          publishRef={publishRef}
-          getPostPositionLabel={getPostPositionLabel}
-          getPlatformDisplayName={getPlatformDisplayName}
-          getPostStatus={getPostStatus}
-          getImageGuidance={getImageGuidance}
-          getReadableDateTime={getReadableDateTime}
-          mediaRequiredForPlatform={mediaRequiredForPlatform}
-          canDirectPublishToFacebook={canDirectPublishToFacebook}
-          canDirectPublishToInstagram={canDirectPublishToInstagram}
-          canDemoPublishToTikTok={canDemoPublishToTikTok}
-          isPostPosted={isPostPosted}
-          isPostScheduledToday={isPostScheduledToday}
-          onClose={closePostModal}
-          onStartEditingPost={startEditingPost}
-          onCancelEditingPost={cancelEditingPost}
-          onSaveEditedPost={saveEditedPost}
-          onSetEditCaption={setEditCaption}
-          onSetEditCta={setEditCta}
-          onSetEditHashtags={setEditHashtags}
-          onToggleImproveTools={() => setShowImproveTools(!showImproveTools)}
-          onQuickImprovePost={handleQuickImprovePost}
-          onRewriteForAudience={handleRewriteForAudience}
-          onRescanPostMedia={handleRescanPostMedia}
-          onSetAudienceTarget={setAudienceTarget}
-          onSetCustomAudienceTarget={setCustomAudienceTarget}
-          onSetMarketReachTarget={setMarketReachTarget}
-          onSetToneTarget={setToneTarget}
-          onUploadMedia={uploadMedia}
-          onRemoveMedia={removeMedia}
-          onPublishToFacebook={publishToFacebook}
-          onPublishToInstagram={publishToInstagram}
-          onPublishToTikTokDemo={publishToTikTokDemo}
-          onCopyPost={copyPost}
-          onOpenPlatform={openPlatform}
-          onMarkAsPosted={markAsPosted}
-          onMarkAsNotPosted={markAsNotPosted}
-          onSetReminderValue={setReminderValue}
-          onSaveReminder={saveReminder}
-          onClearReminder={clearReminder}
-          onDeletePost={deletePostWithUndo}
-        />
       )}
 
       {showTodayReminder && todayReminderPost && (
