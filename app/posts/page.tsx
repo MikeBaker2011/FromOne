@@ -597,6 +597,11 @@ export default function PostsPage() {
     return params.get("today") === "true";
   };
 
+  const shouldOpenCreatedPostForReview = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("created") === "true" || params.get("review") === "true";
+  };
+
   const isSameDate = (firstDate: Date, secondDate: Date) => {
     return (
       firstDate.getFullYear() === secondDate.getFullYear() &&
@@ -1016,6 +1021,12 @@ export default function PostsPage() {
 
     if (shouldOpenTodayPost() && todayUnpostedPost) {
       setSelectedPostId(todayUnpostedPost.id);
+      return;
+    }
+
+    if (shouldOpenCreatedPostForReview()) {
+      setSelectedPostId(loadedPosts[0].id);
+      window.history.replaceState({}, "", window.location.pathname);
       return;
     }
 
@@ -3420,23 +3431,51 @@ Important:
                           {captionPreview.length >= 132 ? "..." : ""}
                         </p>
 
-                        <button
-                          type="button"
-                          onClick={() => choosePost(post.id)}
-                          className="dashboard-platform-create-button"
+                        <div
                           style={{
-                            width: "100%",
-                            minHeight: 52,
-                            borderRadius: 18,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            textAlign: "center",
+                            display: "grid",
+                            gridTemplateColumns: "1fr auto",
+                            gap: 10,
                             marginTop: 4,
                           }}
                         >
-                          Review post
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => choosePost(post.id)}
+                            className="dashboard-platform-create-button"
+                            style={{
+                              width: "100%",
+                              minHeight: 52,
+                              borderRadius: 18,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              textAlign: "center",
+                            }}
+                          >
+                            Review post
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => deletePostWithUndo(post)}
+                            disabled={deletingPostId === post.id}
+                            aria-label={`Delete ${getPostPositionLabel(post)}`}
+                            style={{
+                              minWidth: 94,
+                              minHeight: 52,
+                              borderRadius: 18,
+                              border: "1px solid rgba(248, 113, 113, 0.3)",
+                              background: "rgba(248, 113, 113, 0.1)",
+                              color: "#fecaca",
+                              fontWeight: 950,
+                              cursor:
+                                deletingPostId === post.id ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            {deletingPostId === post.id ? "..." : "Delete"}
+                          </button>
+                        </div>
                       </div>
                     </article>
                   );

@@ -43,6 +43,7 @@ type WeeklyUpload = {
   mediaUrl?: string;
   mediaPath?: string;
   mediaType?: "image" | "flyer" | "video";
+  note: string;
 };
 
 type UploadedMediaItem = {
@@ -54,6 +55,7 @@ type UploadedMediaItem = {
   media_type: "image" | "flyer" | "video";
   content_type: string;
   topic_hint: string;
+  note: string;
 };
 
 type PlatformOption = {
@@ -1261,6 +1263,8 @@ Core FromOne rule:
 
       const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
 
+      const uploadNote = String(upload.note || "").trim();
+
       uploadedItems.push({
         upload_id: upload.id,
         position: index + 1,
@@ -1269,12 +1273,15 @@ Core FromOne rule:
         media_path: path,
         media_type: mediaType,
         content_type: upload.file.type,
+        note: uploadNote,
         topic_hint:
-          mediaType === "video"
-            ? "Short business video upload. Use the video as the topic. If this is an event, venue, product, job, result, food, beauty, fitness, club night, live atmosphere, or behind-the-scenes clip, create a promotional post based on what the clip appears to show."
-            : mediaType === "flyer"
-              ? "Flyer, poster, offer graphic or PDF upload. Extract the offer/details where possible and rewrite it as a natural business post."
-              : "Business photo upload. Use the image as the topic, but write the post using the business profile.",
+          `${uploadNote ? `User note for this upload: ${uploadNote}. ` : ""}${
+            mediaType === "video"
+              ? "Short business video upload. Use the video and the user note as the topic. If this is an event, venue, product, job, result, food, beauty, fitness, club night, live atmosphere, or behind-the-scenes clip, create a promotional post based on what the clip appears to show."
+              : mediaType === "flyer"
+                ? "Flyer, poster, offer graphic or PDF upload. Use the user note if supplied, extract the offer/details where possible and rewrite it as a natural business post."
+                : "Business photo upload. Use the image and the user note as the topic, but write the post using the business profile."
+          }`,
       });
     }
 
@@ -1515,6 +1522,7 @@ If uploads are supplied:
 - Post 1 must use Upload 1 as the topic.
 - Post 2 must use Upload 2 as the topic.
 - Continue one base post per upload.
+- Use each upload's note field as the most important user context for that specific post.
 - Platform distribution mode: ${platformDistributionMode === "every_platform" ? "create each base post for every selected platform" : "split base posts across selected platforms"}.
 - Do not only describe the image, flyer or video.
 - Use the business profile to add quality, local angle, industry relevance, tone, CTA and sales angle.`,
@@ -1849,6 +1857,7 @@ If uploads are supplied:
           file,
           previewUrl: URL.createObjectURL(file),
           mediaType: getWeeklyUploadMediaType(file),
+          note: "",
         })),
       ].slice(0, 7);
 
@@ -1869,6 +1878,14 @@ If uploads are supplied:
       setSelectedPostingFrequency(nextUploads.length > 0 ? nextUploads.length : 3);
       return nextUploads;
     });
+  };
+
+  const updateWeeklyUploadNote = (uploadId: string, note: string) => {
+    setWeeklyUploads((currentUploads) =>
+      currentUploads.map((upload) =>
+        upload.id === uploadId ? { ...upload, note } : upload
+      )
+    );
   };
 
   const handleSaveWebsiteOnly = async () => {
@@ -1963,9 +1980,10 @@ If uploads are supplied:
         padding: "0 0 42px",
       }}
     >
-      <style jsx global>{`        .dashboard-mobile-capture-actions,
-        .dashboard-mobile-capture-hidden-input {
-          display: none;
+      <style jsx global>{`        @media (max-width: 900px) {
+          .dashboard-final-card textarea::placeholder {
+            color: rgba(248,250,252,0.42);
+          }
         }
 
         .dashboard-mobile-capture-actions,
@@ -1974,7 +1992,7 @@ If uploads are supplied:
         }
 
 
-        @media (max-width: 900px) {
+        @media (max-width: 760px) {
           .dashboard-final-card {
             padding: 22px 24px 26px !important;
             border-radius: 30px !important;
@@ -2012,40 +2030,38 @@ If uploads are supplied:
             border-radius: 28px !important;
           }
 
-          .dashboard-upload-dropzone .dashboard-mobile-capture-actions {
-            width: 100% !important;
+          .dashboard-mobile-capture-actions {
+            width: 100%;
             display: grid !important;
-            grid-template-columns: 1fr !important;
-            gap: 10px !important;
-            margin: 0 0 18px !important;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin: 0 0 18px;
           }
 
-          .dashboard-upload-dropzone .dashboard-mobile-capture-actions button {
-            width: 100% !important;
-            min-height: 56px !important;
-            border-radius: 18px !important;
-            border: 1px solid rgba(255, 212, 59, 0.32) !important;
-            background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-            color: #101420 !important;
-            font-weight: 1000 !important;
-            font-size: 1rem !important;
-            box-shadow: 0 16px 34px rgba(255, 212, 59, 0.16) !important;
-            cursor: pointer !important;
+          .dashboard-mobile-capture-actions button {
+            width: 100%;
+            min-height: 56px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 212, 59, 0.32);
+            background: linear-gradient(135deg, #ffd43b, #f7b733);
+            color: #101420;
+            font-weight: 1000;
+            font-size: 1rem;
+            box-shadow: 0 16px 34px rgba(255, 212, 59, 0.16);
           }
 
-          .dashboard-upload-dropzone .dashboard-mobile-capture-actions button.secondary {
-            background: rgba(255,255,255,0.075) !important;
-            color: #ffffff !important;
-            border-color: rgba(255,255,255,0.14) !important;
-            box-shadow: none !important;
+          .dashboard-mobile-capture-actions button.secondary {
+            background: rgba(255,255,255,0.075);
+            color: #ffffff;
+            border-color: rgba(255,255,255,0.14);
+            box-shadow: none;
           }
 
-          .dashboard-upload-dropzone .dashboard-mobile-capture-hidden-input {
+          .dashboard-mobile-capture-hidden-input {
             display: none !important;
           }
 
-
-.dashboard-upload-icon {
+          .dashboard-upload-icon {
             width: 62px !important;
             height: 62px !important;
             border-radius: 22px !important;
@@ -2366,7 +2382,36 @@ If uploads are supplied:
                       )}
                     </div>
 
-                    <strong>Post {index + 1}</strong>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 10,
+                      }}
+                    >
+                      <strong>Post {index + 1}</strong>
+
+                      <button
+                        type="button"
+                        onClick={() => removeWeeklyUpload(upload.id)}
+                        disabled={scanning}
+                        aria-label={`Delete upload ${index + 1}`}
+                        style={{
+                          minWidth: 78,
+                          minHeight: 34,
+                          borderRadius: 999,
+                          border: "1px solid rgba(248,113,113,0.32)",
+                          background: "rgba(248,113,113,0.1)",
+                          color: "#fecaca",
+                          fontWeight: 900,
+                          cursor: scanning ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+
                     <p
                       style={{
                         margin: "5px 0 10px",
@@ -2380,19 +2425,46 @@ If uploads are supplied:
                       {upload.file.name}
                     </p>
 
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => removeWeeklyUpload(upload.id)}
-                      disabled={scanning}
+                    <label
                       style={{
-                        width: "100%",
-                        minHeight: 38,
-                        borderRadius: 12,
+                        display: "grid",
+                        gap: 6,
+                        marginTop: 8,
                       }}
                     >
-                      Remove
-                    </button>
+                      <span
+                        style={{
+                          color: "#f8fafc",
+                          fontSize: 12,
+                          fontWeight: 900,
+                        }}
+                      >
+                        What is this {upload.mediaType === "video" ? "video" : upload.mediaType === "flyer" ? "flyer" : "image"} about?
+                      </span>
+
+                      <textarea
+                        value={upload.note}
+                        onChange={(event) =>
+                          updateWeeklyUploadNote(upload.id, event.target.value)
+                        }
+                        disabled={scanning}
+                        rows={3}
+                        placeholder="Example: Finished garden job in Sale today"
+                        style={{
+                          width: "100%",
+                          minHeight: 76,
+                          resize: "vertical",
+                          borderRadius: 14,
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          background: "rgba(2,6,23,0.48)",
+                          color: "#f8fafc",
+                          padding: "10px 11px",
+                          fontWeight: 760,
+                          lineHeight: 1.35,
+                          outline: "none",
+                        }}
+                      />
+                    </label>
                   </div>
                 ))}
               </div>
