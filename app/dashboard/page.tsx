@@ -252,6 +252,14 @@ export default function DashboardPage() {
         return null;
       }
 
+      const isMissingSession =
+        error.message?.toLowerCase().includes("auth session missing") ||
+        error.name === "AuthSessionMissingError";
+
+      if (isMissingSession) {
+        return null;
+      }
+
       console.error("Auth user error:", error.message);
       return null;
     }
