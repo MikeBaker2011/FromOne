@@ -449,66 +449,6 @@ export default function FromOneAcademyPage() {
           line-height: 1.45;
         }
 
-        .academy-app-download-card {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
-          gap: 14px;
-          align-items: center;
-          margin: 0 0 18px;
-          padding: 16px 18px;
-          border-radius: 24px;
-          border: 1px solid rgba(255, 212, 59, 0.24);
-          background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.18), transparent 38%),
-            linear-gradient(145deg, rgba(255, 212, 59, 0.105), rgba(255,255,255,0.035));
-          color: inherit;
-          text-decoration: none;
-          box-shadow: 0 18px 54px rgba(0,0,0,0.2);
-        }
-
-        .academy-app-download-card span {
-          display: inline-flex;
-          width: fit-content;
-          margin-bottom: 7px;
-          padding: 6px 10px;
-          border-radius: 999px;
-          background: rgba(255, 212, 59, 0.14);
-          border: 1px solid rgba(255, 212, 59, 0.2);
-          color: #ffe58a;
-          font-size: 0.72rem;
-          font-weight: 1000;
-          text-transform: uppercase;
-          letter-spacing: 0.09em;
-        }
-
-        .academy-app-download-card strong {
-          display: block;
-          color: #ffffff;
-          font-size: 1.22rem;
-          line-height: 1.1;
-          margin-bottom: 5px;
-        }
-
-        .academy-app-download-card small {
-          display: block;
-          color: rgba(248,250,252,0.68);
-          line-height: 1.42;
-          font-weight: 760;
-        }
-
-        .academy-app-download-card b {
-          width: 48px;
-          height: 48px;
-          display: inline-grid;
-          place-items: center;
-          border-radius: 18px;
-          background: linear-gradient(135deg, #ffd43b, #f7b733);
-          color: #101420;
-          font-size: 1.45rem;
-          font-weight: 1000;
-          box-shadow: 0 16px 36px rgba(255, 212, 59, 0.22);
-        }
-
         .academy-search-card {
           display: grid;
           gap: 12px;
@@ -897,13 +837,6 @@ export default function FromOneAcademyPage() {
             gap: 10px !important;
           }
 
-          .academy-app-download-card {
-            grid-template-columns: 1fr !important;
-            justify-items: center !important;
-            text-align: center !important;
-            border-radius: 22px !important;
-          }
-
           .academy-search-card,
           .academy-sidebar-card,
           .academy-lesson-card {
@@ -988,14 +921,6 @@ export default function FromOneAcademyPage() {
           </div>
         </div>
 
-        <Link href="/download/FromOne-beta-v1.apk" className="academy-app-download-card">
-          <div>
-            <span>FromOne App</span>
-            <strong>Download Android beta</strong>
-            <small>Use the beta app to take photos, record videos and create posts from your phone.</small>
-          </div>
-          <b aria-hidden="true">↓</b>
-        </Link>
 
         <div className="academy-search-card">
           <input
