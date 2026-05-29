@@ -95,8 +95,49 @@ function parseAndVerifyState(state: string) {
 
   return {
     userId: cleanText(parsed.userId),
-    returnTo: cleanText(parsed.returnTo) || '/posts',
+    returnTo: cleanText(parsed.returnTo) || '/settings',
   };
+}
+
+function getReturnToFromStateSafely(state: string) {
+  try {
+    return parseAndVerifyState(state).returnTo || '/settings';
+  } catch {
+    return '/settings';
+  }
+}
+
+function getConnectResultUrl({
+  status,
+  returnTo,
+  error,
+  permissionWarning,
+  missingPermissions,
+}: {
+  status: 'success' | 'error';
+  returnTo: string;
+  error?: string;
+  permissionWarning?: boolean;
+  missingPermissions?: string[];
+}) {
+  const redirectUrl = new URL('/connect/success', getAppUrl());
+
+  redirectUrl.searchParams.set('status', status);
+  redirectUrl.searchParams.set('return_to', returnTo || '/settings');
+
+  if (status === 'success') {
+    redirectUrl.searchParams.set('meta_connected', 'true');
+  } else {
+    redirectUrl.searchParams.set('meta_connected', 'false');
+    redirectUrl.searchParams.set('meta_error', error || 'Meta connection failed.');
+  }
+
+  if (permissionWarning) {
+    redirectUrl.searchParams.set('meta_permission_warning', 'true');
+    redirectUrl.searchParams.set('meta_missing_permissions', (missingPermissions || []).join(','));
+  }
+
+  return redirectUrl;
 }
 
 async function exchangeCodeForShortLivedToken(code: string) {
@@ -330,23 +371,28 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const redirectUrl = new URL(verifiedState.returnTo, getAppUrl());
-    redirectUrl.searchParams.set('meta_connected', 'true');
+    const missingPermissions = [
+      ...missingFacebookPermissions,
+      ...missingInstagramPermissions,
+    ];
 
-    if (missingFacebookPermissions.length > 0 || missingInstagramPermissions.length > 0) {
-      redirectUrl.searchParams.set('meta_permission_warning', 'true');
-      redirectUrl.searchParams.set(
-        'meta_missing_permissions',
-        [...missingFacebookPermissions, ...missingInstagramPermissions].join(',')
-      );
-    }
+    const redirectUrl = getConnectResultUrl({
+      status: 'success',
+      returnTo: verifiedState.returnTo,
+      permissionWarning: missingPermissions.length > 0,
+      missingPermissions,
+    });
 
     return NextResponse.redirect(redirectUrl);
   } catch (error: any) {
-    const redirectUrl = new URL('/posts', getAppUrl());
+    const state = cleanText(request.nextUrl.searchParams.get('state'));
+    const returnTo = state ? getReturnToFromStateSafely(state) : '/settings';
 
-    redirectUrl.searchParams.set('meta_connected', 'false');
-    redirectUrl.searchParams.set('meta_error', error?.message || 'Meta connection failed.');
+    const redirectUrl = getConnectResultUrl({
+      status: 'error',
+      returnTo,
+      error: error?.message || 'Meta connection failed.',
+    });
 
     return NextResponse.redirect(redirectUrl);
   }
