@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -206,6 +206,10 @@ export default function DashboardPage() {
   const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(3);
   const [weeklyUploads, setWeeklyUploads] = useState<WeeklyUpload[]>([]);
   const [weeklyPostNote, setWeeklyPostNote] = useState("");
+
+  const mobilePhotoInputRef = useRef<HTMLInputElement | null>(null);
+  const mobileVideoInputRef = useRef<HTMLInputElement | null>(null);
+  const mobileFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [manualBusinessName, setManualBusinessName] = useState("");
   const [manualIndustry, setManualIndustry] = useState("");
@@ -1959,8 +1963,18 @@ If uploads are supplied:
         padding: "0 0 42px",
       }}
     >
-      <style jsx global>{`
-        @media (max-width: 760px) {
+      <style jsx global>{`        .dashboard-mobile-capture-actions,
+        .dashboard-mobile-capture-hidden-input {
+          display: none;
+        }
+
+        .dashboard-mobile-capture-actions,
+        .dashboard-mobile-capture-hidden-input {
+          display: none;
+        }
+
+
+        @media (max-width: 900px) {
           .dashboard-final-card {
             padding: 22px 24px 26px !important;
             border-radius: 30px !important;
@@ -1998,7 +2012,40 @@ If uploads are supplied:
             border-radius: 28px !important;
           }
 
-          .dashboard-upload-icon {
+          .dashboard-upload-dropzone .dashboard-mobile-capture-actions {
+            width: 100% !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            margin: 0 0 18px !important;
+          }
+
+          .dashboard-upload-dropzone .dashboard-mobile-capture-actions button {
+            width: 100% !important;
+            min-height: 56px !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(255, 212, 59, 0.32) !important;
+            background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
+            color: #101420 !important;
+            font-weight: 1000 !important;
+            font-size: 1rem !important;
+            box-shadow: 0 16px 34px rgba(255, 212, 59, 0.16) !important;
+            cursor: pointer !important;
+          }
+
+          .dashboard-upload-dropzone .dashboard-mobile-capture-actions button.secondary {
+            background: rgba(255,255,255,0.075) !important;
+            color: #ffffff !important;
+            border-color: rgba(255,255,255,0.14) !important;
+            box-shadow: none !important;
+          }
+
+          .dashboard-upload-dropzone .dashboard-mobile-capture-hidden-input {
+            display: none !important;
+          }
+
+
+.dashboard-upload-icon {
             width: 62px !important;
             height: 62px !important;
             border-radius: 22px !important;
@@ -2101,8 +2148,8 @@ If uploads are supplied:
               Get scheduled posts.
             </h1>
             <p className="page-description" style={{ margin: "0 auto", maxWidth: 680 }}>
-              Add this week’s photos, videos or flyers. FromOne creates the posts and suggested
-              times, then sends you to review everything before anything is published.
+              Add photos, videos or flyers. FromOne creates posts and sends you to review
+              before anything is published.
             </p>
 
             {addToCampaignId && (
@@ -2158,6 +2205,81 @@ If uploads are supplied:
               />
 
               <span style={{ display: "grid", gap: 10, justifyItems: "center" }}>
+                <span className="dashboard-mobile-capture-actions" aria-label="Mobile media options">
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      mobilePhotoInputRef.current?.click();
+                    }}
+                    disabled={scanning}
+                  >
+                    Take photo
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      mobileVideoInputRef.current?.click();
+                    }}
+                    disabled={scanning}
+                  >
+                    Record video
+                  </button>
+
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      mobileFileInputRef.current?.click();
+                    }}
+                    disabled={scanning}
+                  >
+                    Upload file
+                  </button>
+                </span>
+
+                <input
+                  ref={mobilePhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="dashboard-mobile-capture-hidden-input"
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    handleWeeklyUploadFiles(event.target.files);
+                    event.target.value = "";
+                  }}
+                />
+
+                <input
+                  ref={mobileVideoInputRef}
+                  type="file"
+                  accept="video/*"
+                  capture="environment"
+                  className="dashboard-mobile-capture-hidden-input"
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    handleWeeklyUploadFiles(event.target.files);
+                    event.target.value = "";
+                  }}
+                />
+
+                <input
+                  ref={mobileFileInputRef}
+                  type="file"
+                  accept="image/*,video/*,application/pdf"
+                  multiple
+                  className="dashboard-mobile-capture-hidden-input"
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    handleWeeklyUploadFiles(event.target.files);
+                    event.target.value = "";
+                  }}
+                />
+
                 <span
                   className="dashboard-upload-icon"
                   style={{
@@ -2455,8 +2577,8 @@ If uploads are supplied:
                 : weeklyUploads.length > 0
                   ? addToCampaignId
                     ? "Add posts to this set"
-                    : "Create posts and review"
-                  : "Upload media to start"}
+                    : "Create and review posts"
+                  : "Create and review posts"}
             </button>
 
             {weeklyUploads.length > 0 && (
