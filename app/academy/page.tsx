@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 
 const academyLessons = [
@@ -81,19 +80,19 @@ const academyLessons = [
   },
   {
     step: "03A",
-    title: "Use the FromOne mobile app",
+    title: "Create posts on mobile",
     group: "Create posts",
     time: "4 minutes",
-    keywords: ["mobile", "phone", "android", "app", "apk", "camera", "photo", "video", "quick description", "download"],
+    keywords: ["mobile", "phone", "camera", "photo", "video", "quick description", "upload"],
     intro:
-      "The FromOne Android beta app is designed for quick posting from your phone. Take a photo or video, add a short description, then review the post before anything goes live.",
+      "FromOne is designed to work well on a phone. Use it when you have a real business moment to capture, then review the post before anything goes live.",
     before: [
-      "Download the Android beta from the sign-in page or from /download/FromOne-beta-v1.apk.",
-      "Sign in with your FromOne account.",
+      "Sign in to FromOne on your phone.",
+      "Have a photo, video or flyer ready, or use the camera option if available.",
       "Allow camera or file permissions when your phone asks.",
     ],
     steps: [
-      "Open the FromOne app on your phone.",
+      "Open FromOne on your phone.",
       "Go to Dashboard.",
       "Tap Take photo, Record video or Upload file.",
       "Add a quick description in the “What is this about?” box.",
@@ -901,8 +900,8 @@ export default function FromOneAcademyPage() {
             One clear step.
           </h1>
           <p className="page-description">
-            Learn FromOne slowly and simply. Choose a lesson, follow the steps, then move to
-            the next one when you are ready.
+            A simple built-in guide for getting up and running. Choose a lesson, follow the
+            steps, then move to the next one when you are ready.
           </p>
         </div>
 
@@ -912,15 +911,14 @@ export default function FromOneAcademyPage() {
             <span>Best if you are new to FromOne.</span>
           </div>
           <div className="academy-help-card">
-            <strong>Use the mobile app</strong>
-            <span>Take photos or videos and create posts faster from your phone.</span>
+            <strong>Create on mobile</strong>
+            <span>Take photos or videos and turn them into posts from your phone.</span>
           </div>
           <div className="academy-help-card">
             <strong>Stay in control</strong>
             <span>Nothing publishes until the post is ready.</span>
           </div>
         </div>
-
 
         <div className="academy-search-card">
           <input
