@@ -235,11 +235,11 @@ const academyLessons = [
     time: "5 minutes",
     keywords: ["facebook", "instagram", "meta", "connect", "reconnect", "token", "page"],
     intro:
-      "Facebook and Instagram need to be connected before FromOne can attempt autopublishing.",
+      "Facebook and Instagram can be used in two ways. Personal accounts can still use FromOne to create, edit and prepare posts for manual posting. Direct publishing and automatic scheduling through Meta need connected business/professional accounts.",
     before: [
-      "Make sure you have access to the Facebook Page.",
-      "For Instagram, use a professional account linked to the Facebook Page.",
-      "Have your Meta login ready.",
+      "For direct Facebook publishing, make sure you have access to the Facebook Page.",
+      "For direct Instagram publishing, use an Instagram professional account linked through Meta.",
+      "If you only use a personal account, you can still copy the caption and post manually.",
     ],
     steps: [
       "Open Settings.",
@@ -247,11 +247,12 @@ const academyLessons = [
       "Follow the Meta authorisation window.",
       "Select the correct Facebook Page if asked.",
       "Return to FromOne and check the connection status.",
+      "If you use a personal account, use manual posting instead.",
       "If FromOne says needs attention, reconnect Meta.",
     ],
     tip:
-      "Meta connections can expire. If that happens, reconnecting is normal.",
-    outcome: "FromOne can try Facebook and Instagram autopublishing when the connection is ready.",
+      "Meta connections can expire. If that happens, reconnecting is normal. Manual posting still works while a connection needs attention.",
+    outcome: "You know when FromOne can direct publish and when manual posting is the better option.",
   },
   {
     step: "10",

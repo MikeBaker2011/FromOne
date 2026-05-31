@@ -1278,6 +1278,25 @@ export default function SettingsPage() {
             </p>
 
             <div
+              className="settings-meta-account-note"
+              style={{
+                marginTop: 14,
+                padding: '13px 15px',
+                borderRadius: 20,
+                background: 'rgba(255, 212, 59, 0.085)',
+                border: '1px solid rgba(255, 212, 59, 0.16)',
+                color: '#ffe58a',
+                fontWeight: 850,
+                lineHeight: 1.45,
+              }}
+            >
+              Personal accounts can still use FromOne to create, edit and prepare posts.
+              Direct publishing and automatic scheduling through Meta are only available
+              for connected business/professional accounts, such as a Facebook Page or
+              Instagram professional account. Personal accounts can use manual posting.
+            </div>
+
+            <div
               className="card settings-publishing-rules-compact"
               style={{
                 padding: 18,
@@ -1358,7 +1377,7 @@ export default function SettingsPage() {
                     >
                       <strong>Facebook</strong>
                       <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
-                        Can autopost to a connected Facebook Page after Meta is connected. You can also copy posts manually.
+                        Can autopost to a connected Facebook Page after Meta is connected. Personal Facebook profiles can still use manual posting.
                       </p>
                     </div>
 
@@ -1372,7 +1391,7 @@ export default function SettingsPage() {
                     >
                       <strong>Instagram</strong>
                       <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
-                        Can autopost after Meta is connected, but needs an image or video. PDF flyers are not direct Instagram autopost media.
+                        Can autopost to an Instagram professional account connected through Meta, but needs an image or video. Personal Instagram accounts can still use manual posting.
                       </p>
                     </div>
 
@@ -1426,7 +1445,7 @@ export default function SettingsPage() {
                       lineHeight: 1.45,
                     }}
                   >
-                    You always review posts before publishing, copying or scheduling.
+                    You always review posts before publishing, copying or scheduling. Manual posting is available for personal accounts and any platform connection that needs attention.
                   </p>
                 </div>
               )}
@@ -1483,14 +1502,14 @@ export default function SettingsPage() {
                       <small>
                         {hasFacebookConnection
                           ? `Page ID: ${primaryMetaConnection?.page_id || 'Connected'}`
-                          : 'Connect Meta to publish Facebook posts after review.'}
+                          : 'Connect a Facebook Page through Meta to publish automatically after review. Personal profiles can post manually.'}
                       </small>
                     </div>
 
                     <p style={{ color: 'var(--muted)', minHeight: 72 }}>
                       {hasFacebookConnection
                         ? 'Ready for reviewed Facebook autoposting. You can still copy and post manually if preferred.'
-                        : 'Connect Meta to enable Facebook Page publishing.'}
+                        : 'Connect a Facebook Page through Meta to enable direct publishing.'}
                     </p>
                   </div>
 
@@ -1545,14 +1564,14 @@ export default function SettingsPage() {
                           ? 'Image and video posts can be autoposted after review.'
                           : hasMetaConnection
                             ? 'Meta is connected, but Instagram is not linked yet.'
-                            : 'Connect Meta to enable Instagram publishing.'}
+                            : 'Connect an Instagram professional account through Meta to enable direct publishing.'}
                       </small>
                     </div>
 
                     <p style={{ color: 'var(--muted)', minHeight: 72 }}>
                       {hasInstagramConnection
                         ? 'Instagram is ready. It needs an image or video; PDF flyers can still be rewritten for manual use.'
-                        : 'Instagram requires a professional Instagram account connected through Meta.'}
+                        : 'Instagram direct publishing requires a professional Instagram account connected through Meta. Personal accounts can post manually.'}
                     </p>
                   </div>
 
@@ -1715,8 +1734,9 @@ export default function SettingsPage() {
                 <p style={{ maxWidth: 820, margin: 0 }}>
                   Your Business Profile is saved. Upload photos, videos or flyers on the
                   Dashboard and FromOne will turn them into ready-to-review social posts.
-                  Facebook can use connected autoposting, Instagram needs image or video media,
-                  and TikTok is copy/open manually for now.
+                  Personal accounts can create and prepare posts. Direct publishing and automatic
+                  scheduling through Meta require a connected Facebook Page or Instagram professional
+                  account; TikTok stays copy/open manually for now.
                 </p>
               </div>
 
@@ -2106,6 +2126,10 @@ export default function SettingsPage() {
             margin-right: auto !important;
             border-radius: 26px !important;
             padding: 20px !important;
+          }
+
+          .settings-meta-account-note {
+            text-align: center !important;
           }
 
           .settings-profile-start-copy,
