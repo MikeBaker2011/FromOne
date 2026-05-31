@@ -1,12 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/app/components/ToastProvider';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 
 type SocialConnection = {
   id: string;
@@ -503,12 +499,22 @@ export default function SettingsPage() {
     setLoading(true);
 
     const { data: authData, error: authError } = await supabase.auth.getUser();
-    const authUserId = authData.user?.id || null;
+
+    let authUserId = authData.user?.id || null;
 
     if (authError) {
-      console.error('Auth error:', authError.message);
-      setLoading(false);
-      return;
+      const message = String(authError.message || '').toLowerCase();
+
+      const isMissingSession =
+        message.includes('auth session missing') ||
+        authError.name === 'AuthSessionMissingError';
+
+      if (!isMissingSession) {
+        console.error('Auth error:', authError.message);
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      authUserId = sessionData.session?.user?.id || null;
     }
 
     if (!authUserId) {
@@ -564,8 +570,7 @@ export default function SettingsPage() {
   };
 
   const buildPayload = async () => {
-    const { data: authData } = await supabase.auth.getUser();
-    const authUserId = authData.user?.id || userId || null;
+    const authUserId = await getFreshAuthUserId();
 
     return {
       user_id: authUserId,
@@ -657,6 +662,29 @@ export default function SettingsPage() {
     }
   };
 
+  const getFreshAuthUserId = async () => {
+    const { data, error } = await supabase.auth.getUser();
+
+    if (!error && data.user?.id) {
+      return data.user.id;
+    }
+
+    if (error) {
+      const message = String(error.message || '').toLowerCase();
+      const isMissingSession =
+        message.includes('auth session missing') ||
+        error.name === 'AuthSessionMissingError';
+
+      if (!isMissingSession) {
+        console.error('Auth refresh error:', error.message);
+      }
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    return sessionData.session?.user?.id || userId || null;
+  };
+
   const handleResetForm = () => {
     setWebsiteUrl('');
     setBusinessName('');
@@ -674,18 +702,30 @@ export default function SettingsPage() {
     setBrandLogoUrl('');
     setBrandSummary('');
     setScanMessage('');
-    setShowBusinessDetails(false);
+    setShowBusinessDetails(true);
     setShowBrandDetails(false);
+
+    window.setTimeout(() => {
+      profileEditorRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 80);
   };
 
   const handleDeleteProfile = async () => {
-    if (!profileId) {
-      handleResetForm();
+    const freshUserId = await getFreshAuthUserId();
+
+    if (!freshUserId) {
+      notify('Please sign in again before deleting this profile.', 'warning', 'Sign in needed');
       return;
     }
 
-    if (!userId) {
-      notify('Please sign in again before deleting this profile.', 'warning', 'Sign in needed');
+    setUserId(freshUserId);
+
+    if (!profileId) {
+      handleResetForm();
+      notify('There is no saved Business Profile to delete. The form has been cleared.', 'info', 'No saved profile');
       return;
     }
 
@@ -703,15 +743,19 @@ export default function SettingsPage() {
     if (!profileId) {
       handleResetForm();
       closeConfirmDialog();
+      notify('There is no saved Business Profile to delete. The form has been cleared.', 'info', 'No saved profile');
       return;
     }
 
-    if (!userId) {
+    const freshUserId = await getFreshAuthUserId();
+
+    if (!freshUserId) {
       notify('Please sign in again before deleting this profile.', 'warning', 'Sign in needed');
       closeConfirmDialog();
       return;
     }
 
+    setUserId(freshUserId);
     setSaving(true);
 
     try {
@@ -719,14 +763,14 @@ export default function SettingsPage() {
         .from('business_profiles')
         .delete()
         .eq('id', profileId)
-        .eq('user_id', userId);
+        .eq('user_id', freshUserId);
 
       if (error) throw error;
 
       setProfileId(null);
       handleResetForm();
       closeConfirmDialog();
-      notify('Business Profile deleted.', 'success', 'Profile deleted');
+      notify('Business Profile deleted. You can add new details now.', 'success', 'Profile deleted');
     } catch (error: any) {
       console.error('Error deleting business profile:', error?.message || error);
       notify(error?.message || 'Error deleting Business Profile.', 'error', 'Delete failed');
@@ -1465,7 +1509,7 @@ export default function SettingsPage() {
                 }}
               >
                 <section
-                  className="card settings-channel-card settings-channel-card-premium"
+                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-compact settings-channel-card-clean settings-channel-card-short"
                   style={{
                     padding: 20,
                     borderRadius: 24,
@@ -1487,13 +1531,11 @@ export default function SettingsPage() {
                         </h3>
                       </div>
 
-                      <span style={getConnectionStatusStyle(hasFacebookConnection)}>
-                        {getConnectionStatusLabel(hasFacebookConnection)}
-                      </span>
+
                     </div>
 
                     <div className="settings-connected-account-box">
-                      <span>Publishing destination</span>
+                      <span>Destination</span>
                       <strong>
                         {hasFacebookConnection
                           ? primaryMetaConnection?.page_name || 'Connected Facebook Page'
@@ -1502,15 +1544,11 @@ export default function SettingsPage() {
                       <small>
                         {hasFacebookConnection
                           ? `Page ID: ${primaryMetaConnection?.page_id || 'Connected'}`
-                          : 'Connect a Facebook Page through Meta to publish automatically after review. Personal profiles can post manually.'}
+                          : 'Connect Meta to enable direct publishing.'}
                       </small>
                     </div>
 
-                    <p style={{ color: 'var(--muted)', minHeight: 72 }}>
-                      {hasFacebookConnection
-                        ? 'Ready for reviewed Facebook autoposting. You can still copy and post manually if preferred.'
-                        : 'Connect a Facebook Page through Meta to enable direct publishing.'}
-                    </p>
+
                   </div>
 
                   <button
@@ -1518,14 +1556,14 @@ export default function SettingsPage() {
                     className={hasMetaConnection ? 'secondary-button' : undefined}
                     onClick={connectMetaAccount}
                     disabled={metaConnectionBusy}
-                    style={{ width: '100%', marginTop: 'auto' }}
+                    style={{ width: '100%' }}
                   >
                     {hasFacebookConnection ? 'Reconnect / manage' : 'Connect Facebook'}
                   </button>
                 </section>
 
                 <section
-                  className="card settings-channel-card settings-channel-card-premium"
+                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-compact settings-channel-card-clean settings-channel-card-short"
                   style={{
                     padding: 20,
                     borderRadius: 24,
@@ -1547,13 +1585,11 @@ export default function SettingsPage() {
                         </h3>
                       </div>
 
-                      <span style={getConnectionStatusStyle(hasInstagramConnection)}>
-                        {getConnectionStatusLabel(hasInstagramConnection)}
-                      </span>
+
                     </div>
 
                     <div className="settings-connected-account-box">
-                      <span>Publishing account</span>
+                      <span>Account</span>
                       <strong>
                         {hasInstagramConnection
                           ? `@${primaryMetaConnection?.instagram_username || 'Instagram'}`
@@ -1564,15 +1600,11 @@ export default function SettingsPage() {
                           ? 'Image and video posts can be autoposted after review.'
                           : hasMetaConnection
                             ? 'Meta is connected, but Instagram is not linked yet.'
-                            : 'Connect an Instagram professional account through Meta to enable direct publishing.'}
+                            : 'Connect through Meta for direct publishing.'}
                       </small>
                     </div>
 
-                    <p style={{ color: 'var(--muted)', minHeight: 72 }}>
-                      {hasInstagramConnection
-                        ? 'Instagram is ready. It needs an image or video; PDF flyers can still be rewritten for manual use.'
-                        : 'Instagram direct publishing requires a professional Instagram account connected through Meta. Personal accounts can post manually.'}
-                    </p>
+
                   </div>
 
                   <button
@@ -1580,14 +1612,14 @@ export default function SettingsPage() {
                     className={hasMetaConnection ? 'secondary-button' : undefined}
                     onClick={connectMetaAccount}
                     disabled={metaConnectionBusy}
-                    style={{ width: '100%', marginTop: 'auto' }}
+                    style={{ width: '100%' }}
                   >
                     {hasInstagramConnection ? 'Reconnect / manage' : 'Connect Instagram'}
                   </button>
                 </section>
 
                 <section
-                  className="card settings-channel-card settings-channel-card-premium"
+                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-compact settings-channel-card-clean settings-channel-card-short"
                   style={{
                     padding: 20,
                     borderRadius: 24,
@@ -1604,41 +1636,23 @@ export default function SettingsPage() {
                         </h3>
                       </div>
 
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          width: 'fit-content',
-                          minHeight: 30,
-                          padding: '6px 11px',
-                          borderRadius: 999,
-                          background: 'rgba(255, 212, 59, 0.1)',
-                          border: '1px solid rgba(255, 212, 59, 0.2)',
-                          color: '#ffe58a',
-                          fontSize: 12,
-                          fontWeight: 950,
-                        }}
-                      >
-                        Manual
-                      </span>
+
                     </div>
 
                     <div className="settings-connected-account-box">
-                      <span>Current method</span>
+                      <span>Method</span>
                       <strong>Copy and open TikTok</strong>
-                      <small>FromOne creates the wording; the user publishes manually.</small>
+                      <small>FromOne creates the caption. You publish manually.</small>
                     </div>
 
-                    <p style={{ color: 'var(--muted)', minHeight: 72 }}>
-                      TikTok stays simple for beta. Create the caption in FromOne, copy it, then open TikTok.
-                    </p>
+
                   </div>
 
                   <button
                     type="button"
                     className="secondary-button"
                     onClick={openTikTok}
-                    style={{ width: '100%', marginTop: 'auto' }}
+                    style={{ width: '100%' }}
                   >
                     Open TikTok
                   </button>
@@ -1791,18 +1805,21 @@ export default function SettingsPage() {
                   <div className="page-eyebrow">Advanced options</div>
                   <h2>Reset or delete profile data.</h2>
                   <p>
-                    Reset clears the form on this page. Delete removes the saved Business Profile
-                    from Supabase.
+                    Clear form only clears what you see on this screen. Delete saved profile removes
+                    the saved Business Profile from Supabase after confirmation.
                   </p>
 
                   <div className="button-row">
                     <button
                       type="button"
                       className="secondary-button"
-                      onClick={handleResetForm}
+                      onClick={() => {
+                        handleResetForm();
+                        notify('The form has been cleared on screen. Save only if you want to keep these changes.', 'info', 'Form cleared');
+                      }}
                       disabled={saving}
                     >
-                      Reset form
+                      Clear form
                     </button>
 
                     <button
@@ -2097,6 +2114,327 @@ export default function SettingsPage() {
           font-weight: 760;
         }
 
+        
+        .settings-channel-card-compact {
+          display: grid;
+          grid-template-rows: minmax(0, 1fr) auto;
+          gap: 14px;
+          min-height: 0 !important;
+        }
+
+        .settings-channel-card-compact .settings-channel-card-head {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+          gap: 10px;
+          align-items: start;
+        }
+
+        .settings-channel-card-compact .settings-channel-card-head h3 {
+          font-size: clamp(1.15rem, 2vw, 1.45rem) !important;
+          line-height: 1.05 !important;
+        }
+
+        .settings-channel-card-compact .settings-connected-account-box {
+          padding: 14px 16px !important;
+          border-radius: 22px !important;
+          min-height: 0 !important;
+        }
+
+        .settings-channel-card-compact .settings-connected-account-box span {
+          font-size: 0.74rem !important;
+          letter-spacing: 0.09em !important;
+        }
+
+        .settings-channel-card-compact .settings-connected-account-box strong {
+          display: block;
+          margin-top: 5px;
+          font-size: clamp(1rem, 1.8vw, 1.22rem) !important;
+          line-height: 1.12 !important;
+        }
+
+        .settings-channel-card-compact .settings-connected-account-box small {
+          display: block;
+          margin-top: 7px;
+          color: rgba(248, 250, 252, 0.62) !important;
+          font-size: 0.86rem !important;
+          line-height: 1.35 !important;
+        }
+
+        .settings-channel-compact-copy {
+          margin: 14px 0 0 !important;
+          color: var(--muted);
+          min-height: 0 !important;
+          line-height: 1.45 !important;
+          font-size: 0.95rem !important;
+        }
+
+        .settings-channel-card-compact > div:first-child {
+          display: grid;
+          align-content: start;
+        }
+
+        
+        .settings-channel-card-compact .settings-channel-card-head {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 12px !important;
+          align-items: start !important;
+        }
+
+        .settings-channel-card-compact .settings-channel-card-head > div {
+          min-width: 0 !important;
+        }
+
+        .settings-channel-card-compact .settings-channel-card-head .page-eyebrow {
+          display: block !important;
+          margin-bottom: 7px !important;
+          line-height: 1.1 !important;
+          white-space: normal !important;
+        }
+
+        .settings-channel-card-compact .settings-channel-card-head h3 {
+          margin: 0 !important;
+          font-size: clamp(1.18rem, 2vw, 1.45rem) !important;
+          line-height: 1.08 !important;
+          letter-spacing: -0.025em !important;
+        }
+
+        .settings-channel-card-compact .settings-channel-card-head > span {
+          justify-self: start !important;
+          position: static !important;
+          margin: 0 !important;
+          transform: none !important;
+        }
+
+        .settings-channel-card-compact .settings-connected-account-box {
+          margin-top: 14px !important;
+        }
+
+        @media (max-width: 1040px) {
+          .settings-channel-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-channel-card-compact {
+            min-height: auto !important;
+          }
+        }
+
+        
+        .settings-channel-card-clean {
+          display: grid;
+          grid-template-rows: minmax(0, 1fr) auto;
+          gap: 14px;
+          min-height: 0 !important;
+          overflow: hidden;
+        }
+
+        .settings-channel-card-clean .settings-channel-card-head {
+          display: block !important;
+          margin-bottom: 14px !important;
+        }
+
+        .settings-channel-card-clean .settings-channel-card-head .page-eyebrow {
+          display: block !important;
+          margin: 0 0 8px !important;
+          line-height: 1.1 !important;
+          white-space: normal !important;
+        }
+
+        .settings-channel-card-clean .settings-channel-card-head h3 {
+          margin: 0 !important;
+          font-size: clamp(1.18rem, 2vw, 1.45rem) !important;
+          line-height: 1.08 !important;
+          letter-spacing: -0.025em !important;
+        }
+
+        .settings-channel-card-clean .settings-connected-account-box {
+          position: relative !important;
+          margin-top: 0 !important;
+          padding: 16px 18px !important;
+          border-radius: 22px !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .settings-channel-card-clean .settings-connected-account-box span {
+          display: block !important;
+          width: fit-content !important;
+          margin: 0 0 8px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          color: rgba(248, 250, 252, 0.58) !important;
+          font-size: 0.76rem !important;
+          font-weight: 950 !important;
+          letter-spacing: 0.09em !important;
+          line-height: 1.1 !important;
+          text-transform: uppercase !important;
+          box-shadow: none !important;
+        }
+
+        .settings-channel-card-clean .settings-connected-account-box strong {
+          display: block !important;
+          margin: 0 0 8px !important;
+          color: #ffffff !important;
+          font-size: clamp(1.05rem, 1.8vw, 1.26rem) !important;
+          line-height: 1.12 !important;
+        }
+
+        .settings-channel-card-clean .settings-connected-account-box small {
+          display: block !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.62) !important;
+          font-size: 0.86rem !important;
+          line-height: 1.35 !important;
+        }
+
+        .settings-channel-card-clean .settings-channel-compact-copy {
+          margin: 14px 0 0 !important;
+          color: var(--muted);
+          min-height: 0 !important;
+          line-height: 1.45 !important;
+          font-size: 0.95rem !important;
+        }
+
+        @media (max-width: 1040px) {
+          .settings-channel-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        
+        .settings-channel-card-clean {
+          display: grid;
+          grid-template-rows: minmax(0, 1fr) auto;
+          gap: 14px;
+          min-height: 0 !important;
+          overflow: hidden;
+        }
+
+        .settings-channel-card-clean > div:first-child {
+          display: grid;
+          align-content: start;
+          gap: 0;
+        }
+
+        .settings-channel-card-clean .settings-channel-card-head {
+          display: block !important;
+          margin-bottom: 14px !important;
+        }
+
+        .settings-channel-card-clean .settings-channel-card-head .page-eyebrow {
+          display: block !important;
+          margin: 0 0 8px !important;
+          line-height: 1.1 !important;
+          white-space: normal !important;
+        }
+
+        .settings-channel-card-clean .settings-channel-card-head h3 {
+          margin: 0 !important;
+          font-size: clamp(1.18rem, 2vw, 1.45rem) !important;
+          line-height: 1.08 !important;
+          letter-spacing: -0.025em !important;
+        }
+
+        .settings-channel-card-clean .settings-connected-account-box {
+          position: relative !important;
+          margin-top: 0 !important;
+          padding: 16px 18px !important;
+          border-radius: 22px !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .settings-channel-card-clean .settings-connected-account-box span {
+          display: block !important;
+          width: fit-content !important;
+          margin: 0 0 8px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          color: rgba(248, 250, 252, 0.58) !important;
+          font-size: 0.76rem !important;
+          font-weight: 950 !important;
+          letter-spacing: 0.09em !important;
+          line-height: 1.1 !important;
+          text-transform: uppercase !important;
+          box-shadow: none !important;
+        }
+
+        .settings-channel-card-clean .settings-connected-account-box strong {
+          display: block !important;
+          margin: 0 0 8px !important;
+          color: #ffffff !important;
+          font-size: clamp(1.05rem, 1.8vw, 1.26rem) !important;
+          line-height: 1.12 !important;
+        }
+
+        .settings-channel-card-clean .settings-connected-account-box small {
+          display: block !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.62) !important;
+          font-size: 0.86rem !important;
+          line-height: 1.35 !important;
+        }
+
+        @media (max-width: 1040px) {
+          .settings-channel-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        
+        .settings-channel-card-short {
+          min-height: 0 !important;
+          max-height: none !important;
+          padding: 20px !important;
+          display: grid !important;
+          grid-template-rows: auto auto !important;
+          align-content: start !important;
+          gap: 16px !important;
+        }
+
+        .settings-channel-card-short > div:first-child {
+          display: grid !important;
+          gap: 14px !important;
+          align-content: start !important;
+        }
+
+        .settings-channel-card-short .settings-channel-card-head {
+          margin: 0 !important;
+        }
+
+        .settings-channel-card-short .settings-connected-account-box {
+          margin: 0 !important;
+        }
+
+        .settings-channel-card-short button {
+          margin-top: 0 !important;
+          align-self: start !important;
+        }
+
+        .settings-channel-card-short .settings-channel-compact-copy {
+          display: none !important;
+        }
+
+        @media (min-width: 1041px) {
+          .settings-channel-grid {
+            align-items: start !important;
+          }
+
+          .settings-channel-card-short {
+            height: auto !important;
+            min-height: 0 !important;
+          }
+        }
+
+        @media (max-width: 1040px) {
+          .settings-channel-card-short {
+            min-height: 0 !important;
+          }
+        }
+
         @media (max-width: 900px) {
           .settings-profile-start-layout,
           .settings-profile-wizard-head,
@@ -2155,6 +2493,49 @@ export default function SettingsPage() {
             justify-items: center;
           }
         }
+
+        /* Fix publishing cards height final */
+
+        .settings-channel-grid {
+          align-items: start !important;
+        }
+
+        .settings-channel-card,
+        .settings-channel-card-premium,
+        .settings-channel-card-clean,
+        .settings-channel-card-short {
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+        }
+
+        .settings-channel-card-short {
+          padding: 20px !important;
+          display: grid !important;
+          grid-template-rows: auto auto !important;
+          align-content: start !important;
+          gap: 16px !important;
+        }
+
+        .settings-channel-card-short > div:first-child {
+          display: grid !important;
+          gap: 14px !important;
+          align-content: start !important;
+        }
+
+        .settings-channel-card-short .settings-channel-card-head {
+          margin: 0 !important;
+        }
+
+        .settings-channel-card-short .settings-connected-account-box {
+          margin: 0 !important;
+        }
+
+        .settings-channel-card-short button {
+          margin-top: 0 !important;
+          align-self: start !important;
+        }
+
       `}</style>
 
 
@@ -2836,6 +3217,86 @@ export default function SettingsPage() {
             width: 100% !important;
           }
         }
+
+        /* Final override: compact publishing destination cards */
+        .settings-channel-grid {
+          align-items: start !important;
+        }
+
+        .settings-channel-grid > .settings-channel-card,
+        .settings-channel-grid > .settings-channel-card-premium,
+        .settings-channel-grid > .settings-channel-card-clean,
+        .settings-channel-grid > .settings-channel-card-short {
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          display: grid !important;
+          grid-template-rows: auto auto !important;
+          align-content: start !important;
+          align-self: start !important;
+          gap: 16px !important;
+          padding: 20px !important;
+        }
+
+        .settings-channel-grid > .settings-channel-card > div:first-child,
+        .settings-channel-grid > .settings-channel-card-premium > div:first-child,
+        .settings-channel-grid > .settings-channel-card-clean > div:first-child,
+        .settings-channel-grid > .settings-channel-card-short > div:first-child {
+          display: grid !important;
+          grid-template-rows: none !important;
+          gap: 14px !important;
+          align-content: start !important;
+          min-height: 0 !important;
+        }
+
+        .settings-channel-grid .settings-channel-card-head {
+          min-height: 0 !important;
+          margin: 0 !important;
+          display: block !important;
+          align-items: initial !important;
+        }
+
+        .settings-channel-grid .settings-channel-card-head h3 {
+          min-height: 0 !important;
+          margin: 4px 0 0 !important;
+        }
+
+        .settings-channel-grid .settings-connected-account-box {
+          min-height: 0 !important;
+          margin: 0 !important;
+        }
+
+        .settings-channel-grid > .settings-channel-card > div:first-child > p,
+        .settings-channel-grid > .settings-channel-card-premium > div:first-child > p {
+          display: none !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+        }
+
+        .settings-channel-grid > .settings-channel-card > button,
+        .settings-channel-grid > .settings-channel-card-premium > button {
+          margin-top: 0 !important;
+          align-self: start !important;
+          min-height: 52px !important;
+        }
+
+
+        .settings-confirm-actions button {
+          min-height: 48px !important;
+          border-radius: 16px !important;
+        }
+
+        @media (max-width: 560px) {
+          .settings-confirm-actions {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-confirm-actions button {
+            width: 100% !important;
+          }
+        }
+
       `}</style>
 
       {confirmDialog && (
@@ -2876,7 +3337,7 @@ export default function SettingsPage() {
             </p>
 
             <div
-              className="button-row"
+              className="button-row settings-confirm-actions"
               style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}
             >
               <button
