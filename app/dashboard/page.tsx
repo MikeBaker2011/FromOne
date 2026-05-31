@@ -82,6 +82,9 @@ type UploadedMediaItem = {
   media_prepare_status?: "ready" | "preparing" | "prepared" | "failed" | "needs_preparing";
   media_prepare_error?: string | null;
   media_prepared_at?: string | null;
+  flyer_to_wording?: boolean;
+  flyer_wording_instruction?: string;
+  flyer_extraction_focus?: string[];
 };
 
 type PlatformOption = {
@@ -1464,6 +1467,33 @@ Core FromOne rule:
     });
   };
 
+
+  const buildFlyerWordingInstruction = (
+    upload: WeeklyUpload,
+    convertedFromPdf: boolean,
+    conversionWarning: string,
+  ) => {
+    const note = String(upload.note || "").trim();
+
+    return [
+      "FLYER_TO_WORDING_ENABLED",
+      `Original flyer filename: ${upload.file.name}`,
+      convertedFromPdf
+        ? "The PDF flyer has been converted into a social-ready image. Read the visible flyer artwork/image before writing."
+        : "Use the original flyer/PDF context and any available visual text.",
+      note ? `Client note: ${note}` : "Client note: not supplied.",
+      conversionWarning
+        ? `Preparation warning: ${conversionWarning}`
+        : "Preparation warning: none.",
+      "Extract and use only details visible on the flyer or supplied by the client.",
+      "Look for: offer/event/service/product, date, time, price, discount, address/location, booking/contact details, website/social handle, deadline, terms, audience and urgency.",
+      "Turn the flyer into a social caption that sounds natural, not like OCR text.",
+      "Use the flyer as the main source of truth. The business profile should only improve tone, local relevance and CTA.",
+      "Do not invent missing details. If a detail is not visible, leave it out.",
+    ].join("\\n");
+  };
+
+
   const buildUploadAnalysisContext = (
     upload: WeeklyUpload,
     mediaType: "image" | "flyer" | "video",
@@ -1489,7 +1519,7 @@ const baseContext = [
     }
 
     if (mediaType === "flyer") {
-      return `${baseContext}. This is a flyer/poster/PDF-led post. Use extracted text if available and the quick description to identify the offer, event, date, price, service, location and CTA. Rewrite it as a natural social post.`;
+      return `${baseContext}. This is a flyer/poster/PDF-led post. Read the visible flyer text and design if available. Extract the practical details first: offer, event name, service, product, date, time, price, location, contact method, booking instruction, deadline and terms. Then rewrite those details as a natural social caption with a clear CTA. Do not just describe the flyer. Do not invent missing dates, prices or contact details. If key details are unreadable, create a useful caption from the readable details and say the user should check the final wording.`;
     }
 
     return `${baseContext}. This is an image-led post. Analyse the image if available and make the visible subject the topic. Use the quick description as supporting context and the business profile for tone, CTA and local relevance.`;
@@ -1678,11 +1708,23 @@ const baseContext = [
 
       const uploadNote = String(upload.note || "").trim();
       const uploadContext = buildUploadAnalysisContext(upload, mediaType, uploadNote, index);
-      const finalUploadContext = convertedFromPdf
-        ? `${uploadContext}. This PDF flyer was automatically prepared as a JPEG image for the selected social platforms. Use the visible flyer artwork/image as the media for the generated post.`
-        : conversionWarning
-          ? `${uploadContext}. The app tried to prepare this PDF automatically for posting, but conversion failed. Use the original flyer/PDF context and warn the user later that the flyer may need manual preparation before publishing.`
-          : uploadContext;
+      const flyerWordingInstruction =
+        mediaType === "flyer"
+          ? buildFlyerWordingInstruction(upload, convertedFromPdf, conversionWarning)
+          : "";
+
+      const finalUploadContext =
+        mediaType === "flyer"
+          ? `${uploadContext}
+
+${flyerWordingInstruction}
+
+Important flyer-to-wording rule: the generated caption, CTA and hashtags must be based on the flyer details. Extract the flyer message and turn it into wording the customer can post.`
+          : convertedFromPdf
+            ? `${uploadContext}. This PDF flyer was automatically prepared as a JPEG image for the selected social platforms. Use the visible flyer artwork/image as the media for the generated post.`
+            : conversionWarning
+              ? `${uploadContext}. The app tried to prepare this PDF automatically for posting, but conversion failed. Use the original flyer/PDF context and warn the user later that the flyer may need manual preparation before publishing.`
+              : uploadContext;
 
       uploadedItems.push({
         upload_id: upload.id,
@@ -1707,6 +1749,23 @@ const baseContext = [
         media_prepare_status: mediaPrepareStatus,
         media_prepare_error: mediaPrepareError,
         media_prepared_at: mediaPreparedAt,
+        flyer_to_wording: mediaType === "flyer",
+        flyer_wording_instruction: flyerWordingInstruction || undefined,
+        flyer_extraction_focus:
+          mediaType === "flyer"
+            ? [
+                "offer",
+                "event",
+                "service",
+                "date",
+                "time",
+                "price",
+                "location",
+                "booking",
+                "contact",
+                "CTA",
+              ]
+            : undefined,
       });
       }
 
@@ -1976,7 +2035,11 @@ const baseContext = [
     const uploadedMediaItems =
       weeklyUploads.length > 0 ? await uploadWeeklyMediaToStorage(userId) : [];
 
-    updateCreationProgress("Creating your post wording...");
+    updateCreationProgress(
+      weeklyUploads.some((upload) => getWeeklyUploadMediaType(upload.file) === "flyer")
+        ? "Reading flyer details and creating post wording..."
+        : "Creating your post wording..."
+    );
 
     const response = await axios.post("/api/generatePosts", {
       website: source === "website_scan" ? activeClient.website_url : "",
@@ -2012,7 +2075,8 @@ If uploads are supplied:
         selected_platforms: selectedPlatforms,
         market_reach: marketReachContext,
         uploaded_media: uploadedMediaItems,
-        media_analysis_rule: "Use each upload context. For video uploads, analyse the footage when available and write about the visible video moment. If footage cannot be inspected, use the quick description cautiously.",
+        media_analysis_rule: "Use each upload context. For flyer/PDF uploads, read visible text/artwork and turn the flyer details into natural caption wording, CTA and hashtags. For video uploads, analyse the footage when available and write about the visible video moment. If footage cannot be inspected, use the quick description cautiously.",
+        flyer_to_wording_rule: "When a media item has flyer_to_wording=true, the generated post must be based on details from the flyer: offer/event/service, date, time, price, location, booking/contact, deadline and CTA. Do not invent missing information.",
         business_name: "detected business name",
         industry: "detected industry",
         location: "detected location",
@@ -3508,8 +3572,22 @@ If uploads are supplied:
                           fontWeight: 900,
                         }}
                       >
-                        What is this {upload.mediaType === "video" ? "video" : upload.mediaType === "flyer" ? "flyer" : "image"} about?
+                        {upload.mediaType === "flyer"
+                          ? "Optional note for this flyer"
+                          : `What is this ${upload.mediaType === "video" ? "video" : "image"} about?`}
                       </span>
+
+                      {upload.mediaType === "flyer" && (
+                        <small
+                          style={{
+                            color: "rgba(248,250,252,0.62)",
+                            lineHeight: 1.35,
+                            fontWeight: 760,
+                          }}
+                        >
+                          FromOne can read the flyer. Add a note only if you want to guide the wording.
+                        </small>
+                      )}
 
                       <textarea
                         value={upload.note}
@@ -3517,11 +3595,15 @@ If uploads are supplied:
                           updateWeeklyUploadNote(upload.id, event.target.value)
                         }
                         disabled={scanning}
-                        rows={3}
-                        placeholder="Example: Finished garden job in Sale today"
+                        rows={upload.mediaType === "flyer" ? 2 : 3}
+                        placeholder={
+                          upload.mediaType === "flyer"
+                            ? "Optional: mention a tone, audience or extra detail"
+                            : "Example: Finished garden job in Sale today"
+                        }
                         style={{
                           width: "100%",
-                          minHeight: 76,
+                          minHeight: upload.mediaType === "flyer" ? 58 : 76,
                           resize: "vertical",
                           borderRadius: 14,
                           border: "1px solid rgba(255,255,255,0.12)",
