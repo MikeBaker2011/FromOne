@@ -322,6 +322,108 @@ async function urlToFile(url: string, filename: string) {
   return new File([blob], `${filename}.${extension}`, { type });
 }
 
+
+function PdfFirstPagePreview({ url }: { url: string }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [previewStatus, setPreviewStatus] = useState("Loading PDF preview...");
+  const [previewFailed, setPreviewFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let loadingTask: any = null;
+
+    const renderPreview = async () => {
+      if (!url) return;
+
+      setPreviewStatus("Loading PDF preview...");
+      setPreviewFailed(false);
+
+      try {
+        const pdfjs = await import("pdfjs-dist");
+
+        if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+          pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+        }
+
+        loadingTask = pdfjs.getDocument({
+          url,
+          withCredentials: false,
+        });
+
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+
+        if (cancelled) return;
+
+        const baseViewport = page.getViewport({ scale: 1 });
+        const targetWidth = 900;
+        const scale = clampNumber(targetWidth / baseViewport.width, 0.75, 2);
+        const viewport = page.getViewport({ scale });
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext("2d");
+
+        if (!canvas || !context) {
+          throw new Error("PDF preview canvas is unavailable.");
+        }
+
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+
+        await page.render({ canvasContext: context, viewport }).promise;
+
+        if (!cancelled) {
+          setPreviewStatus("");
+          setPreviewFailed(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setPreviewStatus("PDF preview is unavailable. You can still view, download, or convert this PDF.");
+          setPreviewFailed(true);
+        }
+      }
+    };
+
+    renderPreview();
+
+    return () => {
+      cancelled = true;
+      loadingTask?.destroy?.();
+    };
+  }, [url]);
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        display: "grid",
+        placeItems: "center",
+        gap: 10,
+        padding: 12,
+      }}
+    >
+      <canvas
+        ref={canvasRef}
+        aria-label="PDF first page preview"
+        style={{
+          display: previewFailed ? "none" : "block",
+          width: "100%",
+          maxWidth: 520,
+          height: "auto",
+          borderRadius: 16,
+          background: "#ffffff",
+          boxShadow: "0 18px 45px rgba(0,0,0,0.28)",
+        }}
+      />
+
+      {previewStatus && (
+        <p style={{ margin: 0, textAlign: "center", fontSize: 14, opacity: 0.84 }}>
+          {previewStatus}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function PostReviewPage() {
   const router = useRouter();
   const params = useParams();
