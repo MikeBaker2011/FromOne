@@ -67,14 +67,17 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
 
-    const postId = cleanText(body.postId || body.campaignPostId);
+    const conversionId = cleanText(
+      body.postId || body.campaignPostId || body.uploadId || body.conversionId
+    );
     const mediaUrl = cleanText(body.mediaUrl || body.media_url);
+    const skipPostUpdate = body.skipPostUpdate === true;
     const outputWidth = Number(body.outputWidth || body.width || 1080);
     const outputHeight = Number(body.outputHeight || body.height || 1350);
 
-    if (!postId || !mediaUrl) {
+    if (!conversionId || !mediaUrl) {
       return NextResponse.json(
-        { error: "Missing postId or mediaUrl." },
+        { error: "Missing conversionId/postId or mediaUrl." },
         { status: 400 },
       );
     }
@@ -230,7 +233,7 @@ export async function POST(request: NextRequest) {
 
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const storagePath = `prepared/${postId}/${Date.now()}-${getSafeFileName(postId)}.jpg`;
+    const storagePath = `prepared/${conversionId}/${Date.now()}-${getSafeFileName(conversionId)}.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from(MEDIA_BUCKET)
@@ -263,16 +266,18 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    const { error: updateError } = await supabase
-      .from("campaign_posts")
-      .update(updates)
-      .eq("id", postId);
+    if (!skipPostUpdate) {
+      const { error: updateError } = await supabase
+        .from("campaign_posts")
+        .update(updates)
+        .eq("id", conversionId);
 
-    if (updateError) {
-      return NextResponse.json(
-        { error: updateError.message || "Converted image saved, but the post was not updated." },
-        { status: 500 },
-      );
+      if (updateError) {
+        return NextResponse.json(
+          { error: updateError.message || "Converted image saved, but the post was not updated." },
+          { status: 500 },
+        );
+      }
     }
 
     return NextResponse.json({

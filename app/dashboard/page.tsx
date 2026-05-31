@@ -62,6 +62,10 @@ type UploadedMediaItem = {
   context: string;
   topic_hint: string;
   note: string;
+  original_media_url?: string;
+  original_media_path?: string;
+  original_media_type?: string;
+  converted_from_pdf?: boolean;
 };
 
 type PlatformOption = {
@@ -1429,6 +1433,59 @@ const baseContext = [
     return `${baseContext}. This is an image-led post. Analyse the image if available and make the visible subject the topic. Use the quick description as supporting context and the business profile for tone, CTA and local relevance.`;
   };
 
+  const convertUploadedPdfForInstagram = async ({
+    upload,
+    publicPdfUrl,
+    originalPath,
+  }: {
+    upload: WeeklyUpload;
+    publicPdfUrl: string;
+    originalPath: string;
+  }) => {
+    const response = await fetch("/api/media/pdf-to-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        conversionId: upload.id,
+        uploadId: upload.id,
+        mediaUrl: publicPdfUrl,
+        originalMediaPath: originalPath,
+        outputWidth: 1080,
+        outputHeight: 1350,
+        skipPostUpdate: true,
+      }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error ||
+          result?.message ||
+          result?.details ||
+          `Could not prepare ${upload.file.name} for Instagram.`,
+      );
+    }
+
+    const imageUrl =
+      result?.url ||
+      result?.publicUrl ||
+      result?.public_url ||
+      result?.preparedUrl ||
+      result?.prepared_media_url;
+
+    if (!imageUrl) {
+      throw new Error(`${upload.file.name} was converted but no image URL was returned.`);
+    }
+
+    return {
+      mediaUrl: String(imageUrl),
+      mediaPath: String(result?.storage_path || result?.media_path || ""),
+      width: Number(result?.width || 1080),
+      height: Number(result?.height || 1350),
+    };
+  };
+
   const uploadWeeklyMediaToStorage = async (userId: string): Promise<UploadedMediaItem[]> => {
     if (weeklyUploads.length === 0) return [];
 
@@ -1454,24 +1511,57 @@ const baseContext = [
 
       const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
 
+      const shouldPreparePdfForInstagram =
+        mediaType === "flyer" &&
+        selectedPlatforms.some((platform) =>
+          String(platform || "").toLowerCase().includes("instagram")
+        );
+
+      let effectiveMediaUrl = publicUrlData.publicUrl;
+      let effectiveMediaPath = path;
+      let effectiveMediaType: "image" | "flyer" | "video" = mediaType;
+      let effectiveContentType = upload.file.type || mediaType;
+      let convertedFromPdf = false;
+
+      if (shouldPreparePdfForInstagram) {
+        const converted = await convertUploadedPdfForInstagram({
+          upload,
+          publicPdfUrl: publicUrlData.publicUrl,
+          originalPath: path,
+        });
+
+        effectiveMediaUrl = converted.mediaUrl;
+        effectiveMediaPath = converted.mediaPath || path;
+        effectiveMediaType = "image";
+        effectiveContentType = "image/jpeg";
+        convertedFromPdf = true;
+      }
+
       const uploadNote = String(upload.note || "").trim();
       const uploadContext = buildUploadAnalysisContext(upload, mediaType, uploadNote, index);
+      const finalUploadContext = convertedFromPdf
+        ? `${uploadContext}. This PDF flyer was automatically prepared as a JPEG image because Instagram was selected. Use the visible flyer artwork/image as the media for the generated post.`
+        : uploadContext;
 
       uploadedItems.push({
         upload_id: upload.id,
         position: index + 1,
         file_name: upload.file.name,
-        media_url: publicUrlData.publicUrl,
-        media_path: path,
-        media_type: mediaType,
-        content_type: upload.file.type,
+        media_url: effectiveMediaUrl,
+        media_path: effectiveMediaPath,
+        media_type: effectiveMediaType,
+        content_type: effectiveContentType,
         file_size: upload.file.size,
-        type: upload.file.type || mediaType,
-        mimeType: upload.file.type || mediaType,
+        type: effectiveContentType || effectiveMediaType,
+        mimeType: effectiveContentType || effectiveMediaType,
         description: uploadNote,
-        context: uploadContext,
+        context: finalUploadContext,
         note: uploadNote,
-        topic_hint: uploadContext,
+        topic_hint: finalUploadContext,
+        original_media_url: convertedFromPdf ? publicUrlData.publicUrl : undefined,
+        original_media_path: convertedFromPdf ? path : undefined,
+        original_media_type: convertedFromPdf ? "application/pdf" : undefined,
+        converted_from_pdf: convertedFromPdf,
       });
     }
 
@@ -1718,6 +1808,18 @@ const baseContext = [
         "Large videos can still create posts, but the AI may rely more on your quick description. For the best scan, use short clips under 20MB.",
         "info",
         "Video scan note"
+      );
+    }
+
+    const hasInstagramPdfUploads =
+      selectedPlatforms.some((platform) => String(platform || "").toLowerCase().includes("instagram")) &&
+      weeklyUploads.some((upload) => getWeeklyUploadMediaType(upload.file) === "flyer");
+
+    if (hasInstagramPdfUploads) {
+      notify(
+        "Preparing PDF flyer as an Instagram-ready image before creating posts.",
+        "info",
+        "Preparing flyer"
       );
     }
 
@@ -2773,7 +2875,7 @@ If uploads are supplied:
 
                 <span style={{ color: "var(--muted)", maxWidth: 560 }}>
                   Upload up to 7 items. Photos and videos can be used for Facebook and Instagram.
-                  PDF flyers can create post wording and can be converted into an image for Instagram.
+                  PDF flyers can create post wording and are automatically prepared as images when Instagram is selected.
                 </span>
               </span>
             </label>
