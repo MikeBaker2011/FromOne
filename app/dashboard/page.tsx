@@ -6,25 +6,86 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { useToast } from "@/app/components/ToastProvider";
-import type {
-  AccessInfo,
-  GeneratedPost,
-  PlatformOption,
-  UploadedMediaItem,
-  WeeklyProgress,
-  WeeklyUpload,
-} from "@/types/dashboard";
-import {
-  MAX_PDF_FLYER_BYTES,
-  MAX_VIDEO_SCAN_BYTES,
-  buildUploadAnalysisContext,
-  formatFileSize,
-  getSafeFileName,
-  getWeeklyUploadMediaType,
-  getWeeklyUploadUnsupportedReason,
-} from "@/lib/dashboard/media";
 
 const MEDIA_BUCKET = "campaign-assets";
+const MAX_PDF_FLYER_BYTES = 10 * 1024 * 1024;
+const MAX_VIDEO_SCAN_BYTES = 20 * 1024 * 1024;
+
+const SUPPORTED_WEEKLY_UPLOAD_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/quicktime",
+  "video/x-m4v",
+  "application/pdf",
+];
+
+type GeneratedPost = {
+  day?: string;
+  platform?: string;
+  title?: string;
+  caption?: string;
+  cta?: string;
+  hashtags?: string[];
+  image_prompt?: string;
+};
+
+type AccessInfo = {
+  id: string;
+  user_id: string;
+  access_status: string;
+  trial_started_at: string | null;
+  trial_ends_at: string | null;
+  extension_ends_at: string | null;
+  subscription_status: string | null;
+};
+
+type WeeklyProgress = {
+  total: number;
+  posted: number;
+  remaining: number;
+  nextPost: any | null;
+};
+
+type WeeklyUpload = {
+  id: string;
+  file: File;
+  previewUrl: string;
+  mediaUrl?: string;
+  mediaPath?: string;
+  mediaType?: "image" | "flyer" | "video";
+  note: string;
+};
+
+type UploadedMediaItem = {
+  upload_id: string;
+  position: number;
+  file_name: string;
+  media_url: string;
+  media_path: string;
+  media_type: "image" | "flyer" | "video";
+  content_type: string;
+  file_size: number;
+  type: string;
+  mimeType: string;
+  description: string;
+  context: string;
+  topic_hint: string;
+  note: string;
+  conversion_warning?: string;
+  original_media_url?: string;
+  original_media_path?: string;
+  original_media_type?: "image" | "flyer" | "video";
+  converted_from_pdf?: boolean;
+};
+
+type PlatformOption = {
+  name: string;
+  shortName: string;
+  description: string;
+};
 
 const availablePlatforms: PlatformOption[] = [
   {
@@ -1329,65 +1390,176 @@ Core FromOne rule:
     setClient(data);
   };
 
+  const getSafeFileName = (fileName: string) => {
+    const cleanName = fileName
+      .toLowerCase()
+      .replace(/[^a-z0-9.\-_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    return cleanName || "media";
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (!Number.isFinite(bytes) || bytes <= 0) return "0MB";
+
+    const mb = bytes / (1024 * 1024);
+
+    if (mb >= 1) return `${mb.toFixed(mb >= 10 ? 0 : 1)}MB`;
+
+    return `${Math.max(bytes / 1024, 1).toFixed(0)}KB`;
+  };
+
+  const getWeeklyUploadMediaType = (file: File): "image" | "flyer" | "video" => {
+    if (file.type === "application/pdf") return "flyer";
+    if (file.type.startsWith("video/")) return "video";
+    return "image";
+  };
+
+  const isSupportedWeeklyUploadFile = (file: File) => {
+    return (
+      SUPPORTED_WEEKLY_UPLOAD_TYPES.includes(file.type) ||
+      file.name.toLowerCase().endsWith(".pdf")
+    );
+  };
+
+  const getWeeklyUploadUnsupportedReason = (file: File) => {
+    const fileName = file.name || "This file";
+
+    if (!isSupportedWeeklyUploadFile(file)) {
+      return `${fileName} is not supported. Please upload JPG, PNG, WEBP, MP4, MOV, or PDF.`;
+    }
+
+    if (file.type === "application/pdf" && file.size > MAX_PDF_FLYER_BYTES) {
+      return `${fileName} is ${formatFileSize(file.size)}. PDF flyers need to be under 10MB. Try exporting a smaller PDF or upload a JPG/PNG version.`;
+    }
+
+    if (file.type.startsWith("video/") && file.size > MAX_VIDEO_SCAN_BYTES) {
+      return `${fileName} is ${formatFileSize(file.size)}. Short videos under 20MB work best for scanning. Please upload a shorter clip or add a clear quick description.`;
+    }
+
+    return "";
+  };
+
   const hasInstagramSelected = () => {
     return selectedPlatforms.some((platform) =>
       String(platform || "").toLowerCase().includes("instagram")
     );
   };
 
-  const convertUploadedPdfForInstagram = async ({
-    upload,
-    publicPdfUrl,
-    originalPath,
-  }: {
-    upload: WeeklyUpload;
-    publicPdfUrl: string;
-    originalPath: string;
-  }) => {
-    const response = await fetch("/api/media/pdf-to-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        conversionId: upload.id,
-        uploadId: upload.id,
-        mediaUrl: publicPdfUrl,
-        originalMediaPath: originalPath,
-        contentType: upload.file.type,
-        fileName: upload.file.name,
-        fileSize: upload.file.size,
-        outputWidth: 1080,
-        outputHeight: 1350,
-        skipPostUpdate: true,
-      }),
-    });
-
-    const result = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
+  const buildUploadAnalysisContext = (
+    upload: WeeklyUpload,
+    mediaType: "image" | "flyer" | "video",
+    uploadNote: string,
+    index: number
+  ) => {
+        if (mediaType === "flyer" && upload.file.size > MAX_PDF_FLYER_BYTES) {
       throw new Error(
-        result?.error ||
-          result?.message ||
-          result?.details ||
-          `Could not prepare ${upload.file.name} for Instagram.`,
+        `${upload.file.name} is ${formatFileSize(upload.file.size)}. PDF flyers need to be under 10MB. Try exporting a smaller PDF or an image from Canva.`
       );
     }
 
-    const imageUrl =
-      result?.url ||
-      result?.publicUrl ||
-      result?.public_url ||
-      result?.preparedUrl ||
-      result?.prepared_media_url;
+const baseContext = [
+      `Upload ${index + 1}`,
+      `Original filename: ${upload.file.name}`,
+      `MIME type: ${upload.file.type || "unknown"}`,
+      `File size: ${upload.file.size} bytes`,
+      uploadNote ? `Client quick description: ${uploadNote}` : "Client quick description: not supplied",
+    ].join(". ");
 
-    if (!imageUrl) {
-      throw new Error(`${upload.file.name} was converted but no image URL was returned.`);
+    if (mediaType === "video") {
+      return `${baseContext}. This is a video-led post. Analyse the actual video footage if available. The post must relate to what the clip shows: the scene, action, movement, atmosphere, product, service, event, job progress, result, behind-the-scenes moment, offer or booking/enquiry opportunity. Use the quick description as supporting context. Do not write a generic business post. If the video cannot be inspected because it is too large or unsupported, use the quick description and filename carefully without pretending to have seen exact details.`;
+    }
+
+    if (mediaType === "flyer") {
+      return `${baseContext}. This is a flyer/poster/PDF-led post. Use extracted text if available and the quick description to identify the offer, event, date, price, service, location and CTA. Rewrite it as a natural social post.`;
+    }
+
+    return `${baseContext}. This is an image-led post. Analyse the image if available and make the visible subject the topic. Use the quick description as supporting context and the business profile for tone, CTA and local relevance.`;
+  };
+
+  const renderPdfFileToJpegBlob = async (file: File) => {
+    const pdfjsLib: any = await import("pdfjs-dist");
+
+    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+    }
+
+    const pdfData = await file.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+    const pdfDocument = await loadingTask.promise;
+    const page = await pdfDocument.getPage(1);
+
+    const baseViewport = page.getViewport({ scale: 1 });
+    const targetWidth = 1080;
+    const scale = targetWidth / baseViewport.width;
+    const viewport = page.getViewport({ scale });
+
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d", { alpha: false });
+
+    if (!context) {
+      throw new Error("FromOne could not create a flyer image from this PDF.");
+    }
+
+    canvas.width = Math.max(1, Math.floor(viewport.width));
+    canvas.height = Math.max(1, Math.floor(viewport.height));
+
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    await page.render({
+      canvasContext: context,
+      viewport,
+    }).promise;
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", 0.92);
+    });
+
+    if (!blob) {
+      throw new Error("FromOne could not create a JPEG from this PDF preview.");
     }
 
     return {
-      mediaUrl: String(imageUrl),
-      mediaPath: String(result?.storage_path || result?.media_path || ""),
-      width: Number(result?.width || 1080),
-      height: Number(result?.height || 1350),
+      blob,
+      width: canvas.width,
+      height: canvas.height,
+    };
+  };
+
+  const convertUploadedPdfForInstagram = async ({
+    upload,
+    userId,
+  }: {
+    upload: WeeklyUpload;
+    userId: string;
+  }) => {
+    const rendered = await renderPdfFileToJpegBlob(upload.file);
+    const safeFileName = getSafeFileName(upload.file.name).replace(/\.pdf$/i, "");
+    const imagePath = `${userId}/weekly-uploads/prepared/${Date.now()}-${upload.id}-${safeFileName || "flyer"}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(MEDIA_BUCKET)
+      .upload(imagePath, rendered.blob, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: "image/jpeg",
+      });
+
+    if (uploadError) {
+      throw new Error(uploadError.message || "FromOne could not save the prepared flyer image.");
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(MEDIA_BUCKET)
+      .getPublicUrl(imagePath);
+
+    return {
+      mediaUrl: publicUrlData.publicUrl,
+      mediaPath: imagePath,
+      width: rendered.width,
+      height: rendered.height,
     };
   };
 
@@ -1438,8 +1610,7 @@ Core FromOne rule:
         try {
           const converted = await convertUploadedPdfForInstagram({
             upload,
-            publicPdfUrl: publicUrlData.publicUrl,
-            originalPath: path,
+            userId,
           });
 
           effectiveMediaUrl = converted.mediaUrl;
@@ -1731,7 +1902,7 @@ Core FromOne rule:
 
 
     const largeVideoUploads = weeklyUploads.filter(
-      (upload) => getWeeklyUploadMediaType(upload.file) === "video" && upload.file.size > MAX_VIDEO_SCAN_BYTES
+      (upload) => getWeeklyUploadMediaType(upload.file) === "video" && upload.file.size > 20 * 1024 * 1024
     );
 
     if (largeVideoUploads.length > 0) {
