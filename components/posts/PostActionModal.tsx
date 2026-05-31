@@ -2162,138 +2162,57 @@ export default function PostActionModal({
           }
         }
 
-        /* Final media preview override: keep video as a real full card */
-        .f1-post-modal-body {
-          align-items: start;
-        }
 
-        .f1-post-media-panel {
-          width: 100% !important;
-          min-width: 0 !important;
-        }
-
-        .f1-post-media-frame {
-          width: 100% !important;
-          min-height: clamp(320px, 42vw, 620px) !important;
+        /* Portrait-first phone video preview */
+        .f1-post-media-panel:has(.f1-post-media-frame.is-video-media) {
           display: grid !important;
-          place-items: stretch !important;
-          overflow: hidden !important;
-          border-radius: 28px !important;
-          background:
-            radial-gradient(circle at top, rgba(255, 212, 59, 0.09), transparent 38%),
-            #020617 !important;
-          border: 1px solid rgba(255,255,255,0.12) !important;
-        }
-
-        .f1-post-media-frame img,
-        .f1-post-media-frame video {
-          width: 100% !important;
-          height: 100% !important;
-          max-width: none !important;
-          max-height: none !important;
-          min-width: 100% !important;
-          min-height: 100% !important;
-          display: block !important;
-          border-radius: 0 !important;
-        }
-
-        .f1-post-media-frame img {
-          object-fit: contain !important;
-          background: #020617 !important;
+          justify-items: center !important;
         }
 
         .f1-post-media-frame.is-video-media {
-          aspect-ratio: 16 / 10 !important;
-          min-height: clamp(360px, 44vw, 640px) !important;
+          width: min(100%, 520px) !important;
+          max-width: 520px !important;
+          margin: 0 auto !important;
+          aspect-ratio: 9 / 16 !important;
+          min-height: 560px !important;
+          max-height: 78vh !important;
+          display: grid !important;
           place-items: stretch !important;
+          overflow: hidden !important;
+          border-radius: 30px !important;
+          background: #020617 !important;
+          border: 1px solid rgba(255,255,255,0.12) !important;
           padding: 0 !important;
         }
 
         .f1-post-media-frame.is-video-media video {
+          width: 100% !important;
+          height: 100% !important;
+          min-width: 100% !important;
+          min-height: 100% !important;
+          max-width: none !important;
+          max-height: none !important;
+          display: block !important;
           object-fit: cover !important;
           object-position: center center !important;
           background: #020617 !important;
-        }
-
-        .f1-post-media-frame.is-flyer-media {
-          min-height: clamp(280px, 34vw, 480px) !important;
-          padding: clamp(18px, 3vw, 30px) !important;
-          place-items: center !important;
-        }
-
-        .f1-post-pdf-preview {
-          width: 100% !important;
-          min-height: 230px !important;
-          display: grid !important;
-          place-items: center !important;
-          align-content: center !important;
-          gap: 10px !important;
-          text-align: center !important;
-          border-radius: 22px !important;
-          background:
-            radial-gradient(circle at top, rgba(255, 212, 59, 0.1), transparent 38%),
-            rgba(255,255,255,0.045) !important;
-          border: 1px solid rgba(255, 212, 59, 0.14) !important;
-          padding: 24px !important;
-        }
-
-        .f1-post-pdf-icon {
-          width: 72px !important;
-          height: 72px !important;
-          display: inline-grid !important;
-          place-items: center !important;
-          border-radius: 22px !important;
-          background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-          color: #101420 !important;
-          font-weight: 1000 !important;
-          letter-spacing: -0.04em !important;
-          box-shadow: 0 18px 42px rgba(255, 212, 59, 0.18) !important;
-        }
-
-        .f1-post-pdf-preview strong {
-          color: #ffffff !important;
-          font-size: 1.15rem !important;
-        }
-
-        .f1-post-pdf-preview p {
-          max-width: 420px !important;
-          margin: 0 !important;
-          color: rgba(248,250,252,0.68) !important;
-          line-height: 1.55 !important;
-          font-weight: 760 !important;
+          border-radius: 0 !important;
         }
 
         @media (min-width: 961px) {
           .f1-post-modal-body:has(.f1-post-media-frame.is-video-media) {
-            grid-template-columns: minmax(460px, 1.08fr) minmax(420px, 0.92fr) !important;
-          }
-        }
-
-        @media (max-width: 960px) {
-          .f1-post-media-frame.is-video-media {
-            aspect-ratio: 16 / 10 !important;
-            min-height: 320px !important;
+            grid-template-columns: minmax(360px, 0.72fr) minmax(460px, 1.28fr) !important;
+            align-items: start !important;
           }
         }
 
         @media (max-width: 760px) {
-          .f1-post-media-frame {
-            min-height: 260px !important;
-            border-radius: 24px !important;
-          }
-
           .f1-post-media-frame.is-video-media {
-            aspect-ratio: 4 / 5 !important;
-            min-height: 420px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 460px !important;
             max-height: 74vh !important;
-          }
-
-          .f1-post-media-frame.is-video-media video {
-            object-fit: cover !important;
-          }
-
-          .f1-post-media-frame.is-flyer-media {
-            min-height: 240px !important;
+            border-radius: 24px !important;
           }
         }
 
