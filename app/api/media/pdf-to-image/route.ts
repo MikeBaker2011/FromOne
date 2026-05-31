@@ -19,6 +19,29 @@ function getSafeFileName(value?: string | null) {
   );
 }
 
+function clampDimension(value: number, fallback: number) {
+  if (!Number.isFinite(value) || value <= 0) return fallback;
+  return Math.min(Math.max(Math.round(value), 320), 3000);
+}
+
+function isProbablyPdf({
+  mediaUrl,
+  contentType,
+  fileName,
+}: {
+  mediaUrl: string;
+  contentType: string;
+  fileName: string;
+}) {
+  const lowerContentType = contentType.toLowerCase();
+  const lowerFileName = fileName.toLowerCase();
+  const lowerUrl = mediaUrl.toLowerCase();
+
+  if (lowerContentType) return lowerContentType.includes("pdf");
+  if (lowerFileName) return lowerFileName.endsWith(".pdf");
+  return lowerUrl.includes(".pdf");
+}
+
 async function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -71,9 +94,11 @@ export async function POST(request: NextRequest) {
       body.postId || body.campaignPostId || body.uploadId || body.conversionId
     );
     const mediaUrl = cleanText(body.mediaUrl || body.media_url);
+    const contentType = cleanText(body.contentType || body.mimeType || body.type);
+    const fileName = cleanText(body.fileName || body.name || body.originalFileName);
     const skipPostUpdate = body.skipPostUpdate === true;
-    const outputWidth = Number(body.outputWidth || body.width || 1080);
-    const outputHeight = Number(body.outputHeight || body.height || 1350);
+    const outputWidth = clampDimension(Number(body.outputWidth || body.width || 1080), 1080);
+    const outputHeight = clampDimension(Number(body.outputHeight || body.height || 1350), 1350);
 
     if (!conversionId || !mediaUrl) {
       return NextResponse.json(
@@ -85,6 +110,13 @@ export async function POST(request: NextRequest) {
     if (!/^https?:\/\//i.test(mediaUrl)) {
       return NextResponse.json(
         { error: "The PDF must have a public URL before it can be converted." },
+        { status: 400 },
+      );
+    }
+
+    if (!isProbablyPdf({ mediaUrl, contentType, fileName })) {
+      return NextResponse.json(
+        { error: "This file does not look like a PDF flyer. Please upload a PDF, JPG, PNG, or WEBP file." },
         { status: 400 },
       );
     }
@@ -295,7 +327,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     return NextResponse.json(
-      { error: error?.message || "Could not convert PDF to JPEG." },
+      { error: error?.message || "Could not convert PDF to image." },
       { status: 500 },
     );
   }

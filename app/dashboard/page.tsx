@@ -9,6 +9,18 @@ import { useToast } from "@/app/components/ToastProvider";
 
 const MEDIA_BUCKET = "campaign-assets";
 const MAX_PDF_FLYER_BYTES = 10 * 1024 * 1024;
+const MAX_VIDEO_SCAN_BYTES = 20 * 1024 * 1024;
+
+const SUPPORTED_WEEKLY_UPLOAD_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/quicktime",
+  "video/x-m4v",
+  "application/pdf",
+];
 
 type GeneratedPost = {
   day?: string;
@@ -62,9 +74,10 @@ type UploadedMediaItem = {
   context: string;
   topic_hint: string;
   note: string;
+  conversion_warning?: string;
   original_media_url?: string;
   original_media_path?: string;
-  original_media_type?: string;
+  original_media_type?: "image" | "flyer" | "video";
   converted_from_pdf?: boolean;
 };
 
@@ -320,6 +333,7 @@ export default function DashboardPage() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
+  const [preparingFlyers, setPreparingFlyers] = useState(false);
   const [savingWebsite, setSavingWebsite] = useState(false);
   const [showManualProfile, setShowManualProfile] = useState(false);
   const [savingManualProfile, setSavingManualProfile] = useState(false);
@@ -1402,6 +1416,37 @@ Core FromOne rule:
     return "image";
   };
 
+  const isSupportedWeeklyUploadFile = (file: File) => {
+    return (
+      SUPPORTED_WEEKLY_UPLOAD_TYPES.includes(file.type) ||
+      file.name.toLowerCase().endsWith(".pdf")
+    );
+  };
+
+  const getWeeklyUploadUnsupportedReason = (file: File) => {
+    const fileName = file.name || "This file";
+
+    if (!isSupportedWeeklyUploadFile(file)) {
+      return `${fileName} is not supported. Please upload JPG, PNG, WEBP, MP4, MOV, or PDF.`;
+    }
+
+    if (file.type === "application/pdf" && file.size > MAX_PDF_FLYER_BYTES) {
+      return `${fileName} is ${formatFileSize(file.size)}. PDF flyers need to be under 10MB. Try exporting a smaller PDF or upload a JPG/PNG version.`;
+    }
+
+    if (file.type.startsWith("video/") && file.size > MAX_VIDEO_SCAN_BYTES) {
+      return `${fileName} is ${formatFileSize(file.size)}. Short videos under 20MB work best for scanning. Please upload a shorter clip or add a clear quick description.`;
+    }
+
+    return "";
+  };
+
+  const hasInstagramSelected = () => {
+    return selectedPlatforms.some((platform) =>
+      String(platform || "").toLowerCase().includes("instagram")
+    );
+  };
+
   const buildUploadAnalysisContext = (
     upload: WeeklyUpload,
     mediaType: "image" | "flyer" | "video",
@@ -1450,6 +1495,9 @@ const baseContext = [
         uploadId: upload.id,
         mediaUrl: publicPdfUrl,
         originalMediaPath: originalPath,
+        contentType: upload.file.type,
+        fileName: upload.file.name,
+        fileSize: upload.file.size,
         outputWidth: 1080,
         outputHeight: 1350,
         skipPostUpdate: true,
@@ -1490,8 +1538,16 @@ const baseContext = [
     if (weeklyUploads.length === 0) return [];
 
     const uploadedItems: UploadedMediaItem[] = [];
+    const shouldPrepareAnyFlyers =
+      hasInstagramSelected() &&
+      weeklyUploads.some((upload) => getWeeklyUploadMediaType(upload.file) === "flyer");
 
-    for (let index = 0; index < weeklyUploads.length; index++) {
+    if (shouldPrepareAnyFlyers) {
+      setPreparingFlyers(true);
+    }
+
+    try {
+      for (let index = 0; index < weeklyUploads.length; index++) {
       const upload = weeklyUploads[index];
       const safeFileName = getSafeFileName(upload.file.name);
       const mediaType = getWeeklyUploadMediaType(upload.file);
@@ -1511,11 +1567,7 @@ const baseContext = [
 
       const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
 
-      const shouldPreparePdfForInstagram =
-        mediaType === "flyer" &&
-        selectedPlatforms.some((platform) =>
-          String(platform || "").toLowerCase().includes("instagram")
-        );
+      const shouldPreparePdfForInstagram = mediaType === "flyer" && hasInstagramSelected();
 
       let effectiveMediaUrl = publicUrlData.publicUrl;
       let effectiveMediaPath = path;
@@ -1523,25 +1575,41 @@ const baseContext = [
       let effectiveContentType = upload.file.type || mediaType;
       let convertedFromPdf = false;
 
-      if (shouldPreparePdfForInstagram) {
-        const converted = await convertUploadedPdfForInstagram({
-          upload,
-          publicPdfUrl: publicUrlData.publicUrl,
-          originalPath: path,
-        });
+      let conversionWarning = "";
 
-        effectiveMediaUrl = converted.mediaUrl;
-        effectiveMediaPath = converted.mediaPath || path;
-        effectiveMediaType = "image";
-        effectiveContentType = "image/jpeg";
-        convertedFromPdf = true;
+      if (shouldPreparePdfForInstagram) {
+        try {
+          const converted = await convertUploadedPdfForInstagram({
+            upload,
+            publicPdfUrl: publicUrlData.publicUrl,
+            originalPath: path,
+          });
+
+          effectiveMediaUrl = converted.mediaUrl;
+          effectiveMediaPath = converted.mediaPath || path;
+          effectiveMediaType = "image";
+          effectiveContentType = "image/jpeg";
+          convertedFromPdf = true;
+        } catch (conversionError: any) {
+          conversionWarning =
+            conversionError?.message ||
+            `${upload.file.name} could not be prepared automatically for Instagram.`;
+
+          notify(
+            `${conversionWarning} We still created the post using the original PDF. You can prepare the flyer later from the post review screen or upload a JPG/PNG version.`,
+            "warning",
+            "Flyer needs manual preparation"
+          );
+        }
       }
 
       const uploadNote = String(upload.note || "").trim();
       const uploadContext = buildUploadAnalysisContext(upload, mediaType, uploadNote, index);
       const finalUploadContext = convertedFromPdf
         ? `${uploadContext}. This PDF flyer was automatically prepared as a JPEG image because Instagram was selected. Use the visible flyer artwork/image as the media for the generated post.`
-        : uploadContext;
+        : conversionWarning
+          ? `${uploadContext}. The app tried to prepare this PDF for Instagram automatically, but conversion failed. Use the original flyer/PDF context and warn the user later that the flyer may need manual preparation before Instagram publishing.`
+          : uploadContext;
 
       uploadedItems.push({
         upload_id: upload.id,
@@ -1560,12 +1628,18 @@ const baseContext = [
         topic_hint: finalUploadContext,
         original_media_url: convertedFromPdf ? publicUrlData.publicUrl : undefined,
         original_media_path: convertedFromPdf ? path : undefined,
-        original_media_type: convertedFromPdf ? "application/pdf" : undefined,
+        original_media_type: convertedFromPdf ? mediaType : undefined,
         converted_from_pdf: convertedFromPdf,
+        conversion_warning: conversionWarning || undefined,
       });
-    }
+      }
 
-    return uploadedItems;
+      return uploadedItems;
+    } finally {
+      if (shouldPrepareAnyFlyers) {
+        setPreparingFlyers(false);
+      }
+    }
   };
 
   const buildCampaignName = (businessName: string) => {
@@ -2161,6 +2235,7 @@ If uploads are supplied:
 
       notify(message, "error");
     } finally {
+      setPreparingFlyers(false);
       setScanning(false);
     }
   };
@@ -2168,29 +2243,42 @@ If uploads are supplied:
   const handleWeeklyUploadFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    const acceptedFiles = Array.from(files).filter(
-      (file) =>
-        file.type.startsWith("image/") ||
-        file.type.startsWith("video/") ||
-        file.type === "application/pdf"
-    );
+    const selectedFiles = Array.from(files);
+    const invalidFile = selectedFiles.find((file) => getWeeklyUploadUnsupportedReason(file));
 
-    if (acceptedFiles.length === 0) {
-      notify("Please upload photos, videos, flyers, posters or offer graphics.", "warning", "Media needed");
+    if (invalidFile) {
+      notify(getWeeklyUploadUnsupportedReason(invalidFile), "warning", "Unsupported file");
       return;
     }
 
     setWeeklyUploads((currentUploads) => {
+      const remainingSlots = Math.max(7 - currentUploads.length, 0);
+
+      if (remainingSlots <= 0) {
+        notify("You can upload up to 7 items for one weekly post set.", "warning", "Upload limit reached");
+        return currentUploads;
+      }
+
+      const filesToAdd = selectedFiles.slice(0, remainingSlots);
+
+      if (selectedFiles.length > remainingSlots) {
+        notify(
+          `Only ${remainingSlots} more upload${remainingSlots === 1 ? "" : "s"} can be added to this weekly set.`,
+          "warning",
+          "Upload limit reached"
+        );
+      }
+
       const nextUploads = [
         ...currentUploads,
-        ...acceptedFiles.map((file) => ({
+        ...filesToAdd.map((file) => ({
           id: `${file.name}-${file.size}-${crypto.randomUUID()}`,
           file,
           previewUrl: URL.createObjectURL(file),
           mediaType: getWeeklyUploadMediaType(file),
           note: "",
         })),
-      ].slice(0, 7);
+      ];
 
       setSelectedPostingFrequency(Math.max(1, nextUploads.length));
       return nextUploads;
@@ -2300,7 +2388,7 @@ If uploads are supplied:
   const weeklyVideoScansRemaining = Math.max(weeklyVideoScanLimit - weeklyVideoScansUsed, 0);
 
   const businessProfileReady = hasManualProfile;
-  const canCreatePosts = businessProfileReady && weeklyUploads.length > 0 && selectedPlatforms.length > 0 && !accessLocked && !scanning;
+  const canCreatePosts = businessProfileReady && weeklyUploads.length > 0 && selectedPlatforms.length > 0 && !accessLocked && !scanning && !preparingFlyers;
 
   return (
     <main
@@ -3248,9 +3336,11 @@ If uploads are supplied:
                 boxShadow: canCreatePosts ? "0 20px 48px rgba(255, 212, 59, 0.22)" : "none",
               }}
             >
-              {scanning
-                ? "Creating your posts..."
-                : weeklyUploads.length > 0
+              {preparingFlyers
+                ? "Preparing flyers for Instagram..."
+                : scanning
+                  ? "Creating your posts..."
+                  : weeklyUploads.length > 0
                   ? addToCampaignId
                     ? "Add posts to this set"
                     : "Create and review posts"
@@ -3285,14 +3375,15 @@ If uploads are supplied:
             </div>
 
             <div className="page-eyebrow">Creating posts</div>
-            <h2>Turning your uploads into posts.</h2>
+            <h2>{preparingFlyers ? "Preparing flyers for Instagram." : "Turning your uploads into posts."}</h2>
             <p>
-              FromOne is using the Business Profile and uploaded media to create posts, choose
-              times and prepare the weekly calendar.
+              {preparingFlyers
+                ? "FromOne is converting PDF flyers into image-ready media before creating Instagram posts."
+                : "FromOne is using the Business Profile and uploaded media to create posts, choose times and prepare the weekly calendar."}
             </p>
 
             <div className="fromone-loading-steps">
-              <span>Saving uploads</span>
+              <span>{preparingFlyers ? "Preparing PDF flyers" : "Saving uploads"}</span>
               <span>Reading Business Profile</span>
               <span>Writing posts</span>
               <span>Choosing times</span>
