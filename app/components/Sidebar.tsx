@@ -165,6 +165,11 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </span>
           </Link>
 
+          <Link className="sidebar-link" href="/reports" onClick={closeMenu}>
+            <span className="sidebar-link-icon">◌</span>
+            Reports
+          </Link>
+
           <Link className="sidebar-link" href="/academy" onClick={closeMenu}>
             <span className="sidebar-link-icon">★</span>
             FromOne Academy
