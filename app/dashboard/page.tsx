@@ -147,6 +147,142 @@ const MAX_SAVED_CAMPAIGNS = 4;
 const WEBSITE_SCAN_EVENT_TYPES = ["website_scan", "campaign_regenerate"];
 const VIDEO_SCAN_EVENT_TYPES = ["video_scan"];
 
+
+function PdfUploadPreview({
+  file,
+  label,
+}: {
+  file: File;
+  label: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [previewMessage, setPreviewMessage] = useState("Loading PDF preview...");
+
+  useEffect(() => {
+    let cancelled = false;
+    let renderTask: any = null;
+
+    const renderPdfPreview = async () => {
+      const canvas = canvasRef.current;
+
+      if (!canvas) return;
+
+      try {
+        setPreviewMessage("Loading PDF preview...");
+
+        const pdfjsLib: any = await import("pdfjs-dist");
+
+        if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+        }
+
+        const pdfData = await file.arrayBuffer();
+
+        if (cancelled) return;
+
+        const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+        const pdfDocument = await loadingTask.promise;
+        const page = await pdfDocument.getPage(1);
+
+        if (cancelled) return;
+
+        const baseViewport = page.getViewport({ scale: 1 });
+        const parentWidth = canvas.parentElement?.clientWidth || 720;
+        const targetWidth = Math.min(Math.max(parentWidth, 320), 920);
+        const scale = targetWidth / baseViewport.width;
+        const viewport = page.getViewport({ scale });
+
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          throw new Error("Could not create PDF preview.");
+        }
+
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        renderTask = page.render({
+          canvasContext: context,
+          viewport,
+        });
+
+        await renderTask.promise;
+
+        if (!cancelled) {
+          setPreviewMessage("");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setPreviewMessage("PDF preview unavailable. You can still create posts or convert it later.");
+        }
+      }
+    };
+
+    renderPdfPreview();
+
+    return () => {
+      cancelled = true;
+
+      try {
+        renderTask?.cancel?.();
+      } catch {
+        // Ignore render cancellation errors.
+      }
+    };
+  }, [file]);
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "grid",
+        placeItems: "center",
+        background: "#020617",
+        overflow: "hidden",
+      }}
+    >
+      <canvas
+        ref={canvasRef}
+        aria-label={label}
+        style={{
+          width: "100%",
+          maxWidth: "100%",
+          height: "auto",
+          maxHeight: "100%",
+          objectFit: "contain",
+          display: previewMessage ? "none" : "block",
+          background: "#ffffff",
+        }}
+      />
+
+      {previewMessage && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: 18,
+            color: "#ffffff",
+          }}
+        >
+          <strong>PDF flyer</strong>
+          <p
+            style={{
+              margin: "8px 0 0",
+              color: "rgba(248,250,252,0.7)",
+              fontSize: 13,
+              lineHeight: 1.45,
+            }}
+          >
+            {previewMessage}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -2670,8 +2806,14 @@ If uploads are supplied:
                     <div
                       style={{
                         position: "relative",
-                        minHeight: upload.file.type.startsWith("image/") ? 260 : 140,
-                        aspectRatio: upload.file.type.startsWith("image/") ? "4 / 3" : "16 / 9",
+                        minHeight:
+                          upload.file.type.startsWith("image/") || upload.file.type === "application/pdf"
+                            ? 260
+                            : 140,
+                        aspectRatio:
+                          upload.file.type.startsWith("image/") || upload.file.type === "application/pdf"
+                            ? "4 / 3"
+                            : "16 / 9",
                         borderRadius: 16,
                         overflow: "hidden",
                         background: "#020617",
@@ -2731,6 +2873,11 @@ If uploads are supplied:
                             objectPosition: "center",
                             background: "#020617",
                           }}
+                        />
+                      ) : upload.file.type === "application/pdf" ? (
+                        <PdfUploadPreview
+                          file={upload.file}
+                          label={`PDF flyer preview for upload ${index + 1}`}
                         />
                       ) : (
                         <strong>PDF flyer</strong>
