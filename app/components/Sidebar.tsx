@@ -17,6 +17,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [showPostsDot, setShowPostsDot] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -61,6 +62,32 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     closeMenu();
   };
 
+  const checkAdminAccess = async (userId?: string | null) => {
+    if (!userId) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Admin access check failed:', error.message);
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(Boolean(data));
+    } catch (error) {
+      console.warn('Admin access check crashed:', error);
+      setIsAdmin(false);
+    }
+  };
+
   const checkUser = async () => {
     try {
       const { data, error } = await supabase.auth.getUser();
@@ -69,14 +96,17 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         console.warn('Auth check failed:', error.message);
         await supabase.auth.signOut();
         setIsSignedIn(false);
+        setIsAdmin(false);
         return;
       }
 
       setIsSignedIn(Boolean(data.user));
+      await checkAdminAccess(data.user?.id);
     } catch (error) {
       console.warn('Auth check crashed:', error);
       await supabase.auth.signOut();
       setIsSignedIn(false);
+      setIsAdmin(false);
     } finally {
       setCheckingAuth(false);
     }
@@ -90,6 +120,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     }
 
     setIsSignedIn(false);
+    setIsAdmin(false);
     closeMenu();
     router.push('/signin');
   };
@@ -148,6 +179,13 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             <span className="sidebar-link-icon">£</span>
             Subscription
           </Link>
+
+          {isAdmin && (
+            <Link className="sidebar-link sidebar-admin-link" href="/admin" onClick={closeMenu}>
+              <span className="sidebar-link-icon">◎</span>
+              Admin
+            </Link>
+          )}
         </div>
 
         <div className="sidebar-nav-bottom">

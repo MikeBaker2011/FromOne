@@ -3,6 +3,7 @@
 import './admin.css';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/app/components/ToastProvider';
 
@@ -460,6 +461,20 @@ export default function AdminPage() {
         </div>
       </section>
 
+      <section className="premium-card admin-health-link-card">
+        <div>
+          <div className="page-eyebrow">System health</div>
+          <h2>Check FromOne health.</h2>
+          <p>
+            See failed media preparations, publish issues, warnings and recent usage events from one place.
+          </p>
+        </div>
+
+        <Link href="/admin/health" className="admin-health-link-button">
+          Open health dashboard →
+        </Link>
+      </section>
+
       <section className="admin-live-sections">
         <article className="premium-card admin-live-card">
           <div className="admin-live-card-header">
@@ -707,6 +722,337 @@ export default function AdminPage() {
           </section>
         </div>
       )}
+
+      <style jsx>{`
+        .admin-results {
+          display: grid;
+          gap: 22px;
+          margin-top: 22px;
+        }
+
+        .admin-customer-card {
+          padding: clamp(22px, 3vw, 34px) !important;
+          border-radius: 30px !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+            rgba(15, 23, 42, 0.88) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28) !important;
+        }
+
+        .admin-customer-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 20px;
+          margin-bottom: 22px;
+        }
+
+        .admin-customer-top h2 {
+          margin: 8px 0 8px;
+          font-size: clamp(1.8rem, 4vw, 3rem);
+          line-height: 0.98;
+          letter-spacing: -0.055em;
+        }
+
+        .admin-customer-top p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.66);
+          line-height: 1.55;
+        }
+
+        .admin-customer-top code {
+          color: rgba(248, 250, 252, 0.82);
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 3px 7px;
+          border-radius: 9px;
+          font-size: 0.82rem;
+          word-break: break-all;
+        }
+
+        .admin-customer-top-actions {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 10px;
+          flex-wrap: wrap;
+          min-width: 220px;
+        }
+
+        .admin-customer-badge,
+        .admin-bug-pill {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 30px;
+          padding: 6px 11px;
+          border-radius: 999px;
+          background: rgba(255, 212, 59, 0.14);
+          color: #fef08a;
+          border: 1px solid rgba(255, 212, 59, 0.34);
+          font-size: 0.74rem;
+          font-weight: 950;
+          white-space: nowrap;
+          text-transform: capitalize;
+        }
+
+        .admin-bug-pill.is-muted {
+          background: rgba(148, 163, 184, 0.12);
+          color: rgba(248, 250, 252, 0.72);
+          border-color: rgba(148, 163, 184, 0.22);
+        }
+
+        .admin-status-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 14px;
+          margin: 18px 0;
+        }
+
+        .admin-mini-card {
+          min-width: 0;
+          padding: 18px;
+          border-radius: 22px;
+          background: rgba(2, 6, 23, 0.34);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .admin-mini-card span {
+          display: block;
+          color: rgba(255, 212, 59, 0.92);
+          font-size: 0.74rem;
+          font-weight: 950;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          margin-bottom: 8px;
+        }
+
+        .admin-mini-card strong {
+          display: block;
+          color: #ffffff;
+          font-size: 1rem;
+          line-height: 1.3;
+          margin-bottom: 10px;
+          word-break: break-word;
+        }
+
+        .admin-mini-card p {
+          margin: 5px 0 0;
+          color: rgba(248, 250, 252, 0.68);
+          line-height: 1.45;
+          font-size: 0.88rem;
+          word-break: break-word;
+        }
+
+        .admin-notes-card {
+          margin-top: 18px;
+          padding: 18px;
+          border-radius: 24px;
+          background: rgba(2, 6, 23, 0.36);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .admin-notes-card label {
+          display: grid;
+          gap: 4px;
+          margin-bottom: 10px;
+        }
+
+        .admin-notes-card label strong {
+          color: #ffffff;
+          font-size: 1rem;
+        }
+
+        .admin-notes-card label span {
+          color: rgba(248, 250, 252, 0.62);
+          line-height: 1.45;
+        }
+
+        .admin-notes-card textarea {
+          width: 100%;
+          min-height: 96px;
+          resize: vertical;
+          margin-bottom: 12px;
+        }
+
+        .admin-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          align-items: center;
+          margin-top: 18px;
+        }
+
+        .admin-actions button,
+        .admin-customer-top-actions button,
+        .admin-notes-card button,
+        .admin-action-buttons button {
+          min-height: 42px;
+          padding: 0 14px;
+          border-radius: 14px;
+          font-weight: 950;
+        }
+
+        .admin-actions .secondary-button,
+        .admin-customer-top-actions .secondary-button,
+        .admin-notes-card .secondary-button {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          color: rgba(248, 250, 252, 0.92);
+        }
+
+        .danger-button {
+          background: rgba(127, 29, 29, 0.28) !important;
+          border-color: rgba(248, 113, 113, 0.38) !important;
+          color: #fecaca !important;
+        }
+
+        .admin-working {
+          margin: 14px 0 0;
+          color: #fef08a;
+          font-weight: 900;
+        }
+
+        .admin-bug-summary-list {
+          display: grid;
+          gap: 12px;
+        }
+
+        .admin-bug-summary-item {
+          padding: 16px;
+          border-radius: 20px;
+          background: rgba(2, 6, 23, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          overflow: hidden;
+        }
+
+        .admin-bug-summary-item h3 {
+          margin: 10px 0 8px;
+          color: #ffffff;
+          font-size: 1.05rem;
+          line-height: 1.25;
+        }
+
+        .admin-bug-summary-item p {
+          margin: 0 0 10px;
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.5;
+          overflow-wrap: anywhere;
+        }
+
+        .admin-bug-summary-item small {
+          color: rgba(248, 250, 252, 0.54);
+          line-height: 1.45;
+          overflow-wrap: anywhere;
+        }
+
+        .admin-confirm-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 80;
+          display: grid;
+          place-items: center;
+          padding: 20px;
+          background: rgba(2, 6, 23, 0.78);
+          backdrop-filter: blur(12px);
+        }
+
+        .admin-confirm-card {
+          width: min(100%, 560px);
+          padding: 26px !important;
+        }
+
+        .admin-confirm-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-top: 18px;
+        }
+
+
+        .admin-health-link-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 18px;
+          margin: 18px 0 22px;
+          padding: clamp(22px, 3vw, 30px) !important;
+        }
+
+        .admin-health-link-card p {
+          margin-bottom: 0;
+        }
+
+        .admin-health-link-card h2 {
+          margin: 8px 0 8px;
+        }
+
+        .admin-health-link-button {
+          min-height: 54px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 20px;
+          border-radius: 18px;
+          background: linear-gradient(135deg, #ffd43b, #f7b733);
+          color: #101420;
+          font-weight: 950;
+          text-decoration: none;
+          white-space: nowrap;
+          box-shadow: 0 18px 42px rgba(255, 212, 59, 0.2);
+          transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .admin-health-link-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 22px 52px rgba(255, 212, 59, 0.26);
+        }
+
+        @media (max-width: 1080px) {
+          .admin-status-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 760px) {
+          .admin-customer-top {
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+
+          .admin-customer-top-actions {
+            justify-content: stretch;
+            min-width: 0;
+          }
+
+          .admin-customer-top-actions button,
+          .admin-customer-top-actions .admin-customer-badge {
+            width: 100%;
+          }
+
+          .admin-status-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .admin-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+
+          .admin-actions button,
+          .admin-confirm-actions button,
+          .admin-health-link-button {
+            width: 100%;
+          }
+
+          .admin-health-link-card {
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </main>
   );
 }
