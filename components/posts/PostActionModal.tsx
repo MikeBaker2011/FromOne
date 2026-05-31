@@ -558,9 +558,9 @@ export default function PostActionModal({
         : `Autopost to ${autoPublishPlatformName}`;
 
   const autopostHelpText = autopostNeedsAttention
-    ? 'Autoposting needs a connected Facebook Page or Instagram professional account. Manual posting still works.'
+    ? 'Autoposting and automatic scheduling through Meta need a connected Facebook Page or Instagram professional account. Personal accounts can still use manual posting.'
     : canAutoPublish
-      ? 'Autopost sends the caption and media automatically when the business account connection is healthy.'
+      ? 'Autopost sends the caption and media automatically when the connected business/professional account is healthy.'
       : 'Autopost is not available for this platform.';
 
   const publishNowLabel = posted
@@ -1306,6 +1306,14 @@ export default function PostActionModal({
               </button>
             )}
           </div>
+
+          <div className="f1-post-account-rule-note">
+            <strong>Personal accounts can still use manual posting.</strong>
+            <span>
+              Direct publishing and automatic scheduling through Meta are only available for connected
+              Facebook Pages and Instagram professional accounts.
+            </span>
+          </div>
         </section>
 
         <div className="f1-post-modal-body">
@@ -1843,6 +1851,14 @@ export default function PostActionModal({
                 </div>
               )}
 
+              <div className="f1-post-account-rule-inline">
+                <strong>Account note</strong>
+                <p>
+                  Personal accounts can create, prepare and manually post. Meta direct publishing and
+                  automatic scheduling need a connected Facebook Page or Instagram professional account.
+                </p>
+              </div>
+
               <div className="f1-post-primary-publish-card">
                 <div>
                   <strong>Manual post</strong>
@@ -2073,6 +2089,41 @@ export default function PostActionModal({
           opacity: 0.52;
           cursor: not-allowed;
           transform: none;
+        }
+
+        .f1-post-account-rule-note,
+        .f1-post-account-rule-inline {
+          padding: 12px 14px;
+          border-radius: 18px;
+          background: rgba(255, 212, 59, 0.085);
+          border: 1px solid rgba(255, 212, 59, 0.15);
+          color: #ffe58a;
+          line-height: 1.45;
+        }
+
+        .f1-post-account-rule-note {
+          grid-column: 1 / -1;
+          display: grid;
+          gap: 4px;
+          margin-top: 2px;
+        }
+
+        .f1-post-account-rule-note strong,
+        .f1-post-account-rule-inline strong {
+          color: #ffffff;
+          font-size: 0.92rem;
+        }
+
+        .f1-post-account-rule-note span,
+        .f1-post-account-rule-inline p {
+          margin: 0;
+          color: rgba(255, 229, 138, 0.9);
+          font-size: 0.86rem;
+          font-weight: 800;
+        }
+
+        .f1-post-account-rule-inline {
+          margin-bottom: 14px;
         }
 
         @media (max-width: 900px) {
