@@ -1545,15 +1545,24 @@ export default function PostsPage() {
   const getPostMediaKind = (post: any) => {
     const mediaType = String(post?.media_type || "").toLowerCase();
     const mediaUrl = String(post?.media_url || "").toLowerCase();
+    const mediaUrlWithoutQuery = mediaUrl.split("?")[0];
 
-    if (mediaType === "video" || mediaUrl.match(/\.(mp4|mov|webm|m4v)(\?|$)/))
+    if (mediaType === "video" || mediaUrl.match(/\.(mp4|mov|webm|m4v)(\?|$)/)) {
       return "video";
+    }
+
+    if (mediaType === "image" || mediaType.startsWith("image/")) {
+      return "image";
+    }
+
     if (
       mediaType === "flyer" ||
       mediaType === "pdf" ||
-      mediaUrl.includes(".pdf")
-    )
+      (!mediaType && mediaUrlWithoutQuery.endsWith(".pdf"))
+    ) {
       return "flyer";
+    }
+
     return "image";
   };
 
@@ -3329,6 +3338,7 @@ Important:
                   const isFailed = status === "Failed";
                   const isPlanned = status === "Reminder set";
                   const mediaType = String(post.media_type || "").toLowerCase();
+                  const mediaKind = getPostMediaKind(post);
                   const statusLabel = isPlanned ? "Planned" : status;
 
                   return (
@@ -3337,9 +3347,9 @@ Important:
                       className="fromone-premium-calendar-review-card"
                       style={{
                         position: "relative",
-                        minHeight: 520,
+                        minHeight: 720,
                         display: "grid",
-                        gridTemplateRows: "188px minmax(0, 1fr)",
+                        gridTemplateRows: "minmax(380px, 56vw) minmax(0, 1fr)",
                         overflow: "hidden",
                         borderRadius: 30,
                         background: isPosted
@@ -3406,15 +3416,16 @@ Important:
 
                       <div
                         style={{
-                          background: "rgba(15,23,42,0.72)",
+                          background: "#020617",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           overflow: "hidden",
+                          padding: 14,
                         }}
                       >
                         {post.media_url ? (
-                          mediaType === "video" ? (
+                          mediaKind === "video" ? (
                             <video
                               src={post.media_url}
                               muted
@@ -3425,7 +3436,7 @@ Important:
                                 objectFit: "cover",
                               }}
                             />
-                          ) : mediaType === "flyer" || mediaType === "pdf" ? (
+                          ) : mediaKind === "flyer" ? (
                             <div style={{ textAlign: "center", padding: 20 }}>
                               <strong style={{ color: "#fff" }}>
                                 PDF flyer
@@ -3446,7 +3457,9 @@ Important:
                               style={{
                                 width: "100%",
                                 height: "100%",
-                                objectFit: "cover",
+                                objectFit: "contain",
+                                objectPosition: "center",
+                                background: "#020617",
                               }}
                             />
                           )

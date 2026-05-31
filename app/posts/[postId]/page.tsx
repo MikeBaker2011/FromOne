@@ -423,7 +423,7 @@ async function getPdfBytesFromUrl(url: string) {
 
   if (!looksLikePdf(data)) {
     throw new Error(
-      "This stored file is not returning valid PDF data. Please re-upload the flyer, or upload a JPG/PNG version.",
+      "This older flyer needs to be re-uploaded so FromOne can prepare it automatically.",
     );
   }
 
@@ -485,7 +485,8 @@ function PdfFirstPagePreview({ url }: { url: string }) {
         context.fillStyle = "#ffffff";
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        await page.render({ canvasContext: context, viewport }).promise;
+        await page.render({ canvas,
+    canvasContext: context, viewport }).promise;
 
         if (!cancelled) {
           setPreviewStatus("");
@@ -599,7 +600,8 @@ export default function PostReviewPage() {
         post?.preparedMediaUrl ||
         post?.prepared_url ||
         post?.resized_media_url ||
-        post?.resizedMediaUrl,
+        post?.resizedMediaUrl ||
+        (cleanText(post?.media_type).toLowerCase() === "image" ? post?.media_url : ""),
     );
 
     if (!savedUrl) return null;
@@ -623,12 +625,17 @@ export default function PostReviewPage() {
   const mediaUrl = cleanText(post?.media_url);
   const mediaType = cleanText(post?.media_type).toLowerCase();
   const isVideo = mediaType === "video";
+  const isImage = mediaType === "image";
+  const mediaUrlWithoutQuery = mediaUrl.split("?")[0].toLowerCase();
+  const mediaUrlLooksPdf = mediaUrlWithoutQuery.endsWith(".pdf") || mediaUrlWithoutQuery.includes(".pdf");
   const isFlyer =
-    mediaType === "flyer" ||
-    mediaType === "pdf" ||
-    mediaUrl.toLowerCase().includes(".pdf");
-  const canPrepareImage = Boolean(mediaUrl) && !isVideo && !isFlyer;
+    !isImage &&
+    !isVideo &&
+    (mediaType === "flyer" || mediaType === "pdf" || (!mediaType && mediaUrlLooksPdf));
+  const canPrepareImage = Boolean(mediaUrl) && isImage && !isVideo;
   const canConvertFlyer = Boolean(mediaUrl) && isFlyer && !isVideo;
+
+  const isShowingPreparedImage = Boolean(preparedDisplayMedia?.url) && !isVideo && !isFlyer;
 
   const isFacebookPost = platformName.toLowerCase().includes("facebook");
   const isInstagramPost = platformName.toLowerCase().includes("instagram");
@@ -911,7 +918,8 @@ export default function PostReviewPage() {
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, canvas.width, canvas.height);
 
-      await page.render({ canvasContext: context, viewport }).promise;
+      await page.render({ canvas,
+    canvasContext: context, viewport }).promise;
 
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
@@ -1717,7 +1725,7 @@ export default function PostReviewPage() {
                   </h1>
                 </div>
 
-                {canPrepareImage && activePanel !== "prepare" && (
+                {canPrepareImage && !isShowingPreparedImage && activePanel !== "prepare" && (
                   <button
                     type="button"
                     className="pr2-btn pr2-btn-primary"
@@ -2018,7 +2026,7 @@ export default function PostReviewPage() {
                 <>
                   {preparedDisplayMedia?.url && activePanel !== "prepare" && (
                     <div className="pr2-media-current-label">
-                      Showing prepared image
+                      Prepared image ready
                     </div>
                   )}
 
@@ -2033,12 +2041,9 @@ export default function PostReviewPage() {
                         />
                       ) : isFlyer ? (
                         <div className="pr2-empty">
-                          <strong>Flyer attached</strong>
+                          <strong>Flyer needs preparing</strong>
                           <PdfFirstPagePreview url={mediaUrl} />
-                          <p>
-                            Upload the flyer again to prepare it automatically, or upload a JPG/PNG version.
-                          </p>
-                        </div>
+                          <p>This older flyer needs to be re-uploaded so FromOne can prepare it automatically.</p></div>
                       ) : (
                         <img
                           src={preparedDisplayMedia?.url || mediaUrl}

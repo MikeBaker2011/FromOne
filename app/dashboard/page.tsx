@@ -190,7 +190,10 @@ function PdfUploadPreview({
         const pdfjsLib: any = await import("pdfjs-dist");
 
         if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+          pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+            "pdfjs-dist/build/pdf.worker.min.mjs",
+            import.meta.url,
+          ).toString();
         }
 
         const pdfData = await file.arrayBuffer();
@@ -221,6 +224,7 @@ function PdfUploadPreview({
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         renderTask = page.render({
+          canvas,
           canvasContext: context,
           viewport,
         });
@@ -1441,10 +1445,15 @@ Core FromOne rule:
     return "";
   };
 
-  const hasInstagramSelected = () => {
-    return selectedPlatforms.some((platform) =>
-      String(platform || "").toLowerCase().includes("instagram")
-    );
+  const hasSelectedSocialPlatform = () => {
+    return selectedPlatforms.some((platform) => {
+      const cleanPlatform = String(platform || "").toLowerCase();
+      return (
+        cleanPlatform.includes("facebook") ||
+        cleanPlatform.includes("instagram") ||
+        cleanPlatform.includes("tiktok")
+      );
+    });
   };
 
   const buildUploadAnalysisContext = (
@@ -1482,7 +1491,10 @@ const baseContext = [
     const pdfjsLib: any = await import("pdfjs-dist");
 
     if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/build/pdf.worker.min.mjs",
+        import.meta.url,
+      ).toString();
     }
 
     const pdfData = await file.arrayBuffer();
@@ -1509,9 +1521,10 @@ const baseContext = [
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     await page.render({
-      canvasContext: context,
-      viewport,
-    }).promise;
+    canvas,
+    canvasContext: context,
+    viewport,
+  }).promise;
 
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, "image/jpeg", 0.92);
@@ -1528,7 +1541,7 @@ const baseContext = [
     };
   };
 
-  const convertUploadedPdfForInstagram = async ({
+  const prepareUploadedPdfForSocialPlatforms = async ({
     upload,
     userId,
   }: {
@@ -1568,7 +1581,7 @@ const baseContext = [
 
     const uploadedItems: UploadedMediaItem[] = [];
     const shouldPrepareAnyFlyers =
-      hasInstagramSelected() &&
+      hasSelectedSocialPlatform() &&
       weeklyUploads.some((upload) => getWeeklyUploadMediaType(upload.file) === "flyer");
 
     if (shouldPrepareAnyFlyers) {
@@ -1596,7 +1609,7 @@ const baseContext = [
 
       const { data: publicUrlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
 
-      const shouldPreparePdfForInstagram = mediaType === "flyer" && hasInstagramSelected();
+      const shouldPreparePdfForSocial = mediaType === "flyer" && hasSelectedSocialPlatform();
 
       let effectiveMediaUrl = publicUrlData.publicUrl;
       let effectiveMediaPath = path;
@@ -1606,9 +1619,9 @@ const baseContext = [
 
       let conversionWarning = "";
 
-      if (shouldPreparePdfForInstagram) {
+      if (shouldPreparePdfForSocial) {
         try {
-          const converted = await convertUploadedPdfForInstagram({
+          const converted = await prepareUploadedPdfForSocialPlatforms({
             upload,
             userId,
           });
@@ -1621,7 +1634,7 @@ const baseContext = [
         } catch (conversionError: any) {
           conversionWarning =
             conversionError?.message ||
-            `${upload.file.name} could not be prepared automatically for Instagram.`;
+            `${upload.file.name} could not be prepared automatically for posting.`;
 
           notify(
             `${conversionWarning} We still created the post using the original PDF. You can prepare the flyer later from the post review screen or upload a JPG/PNG version.`,
@@ -1634,9 +1647,9 @@ const baseContext = [
       const uploadNote = String(upload.note || "").trim();
       const uploadContext = buildUploadAnalysisContext(upload, mediaType, uploadNote, index);
       const finalUploadContext = convertedFromPdf
-        ? `${uploadContext}. This PDF flyer was automatically prepared as a JPEG image because Instagram was selected. Use the visible flyer artwork/image as the media for the generated post.`
+        ? `${uploadContext}. This PDF flyer was automatically prepared as a JPEG image for the selected social platforms. Use the visible flyer artwork/image as the media for the generated post.`
         : conversionWarning
-          ? `${uploadContext}. The app tried to prepare this PDF for Instagram automatically, but conversion failed. Use the original flyer/PDF context and warn the user later that the flyer may need manual preparation before Instagram publishing.`
+          ? `${uploadContext}. The app tried to prepare this PDF automatically for posting, but conversion failed. Use the original flyer/PDF context and warn the user later that the flyer may need manual preparation before publishing.`
           : uploadContext;
 
       uploadedItems.push({
@@ -1913,13 +1926,13 @@ const baseContext = [
       );
     }
 
-    const hasInstagramPdfUploads =
-      selectedPlatforms.some((platform) => String(platform || "").toLowerCase().includes("instagram")) &&
+    const hasPdfUploadsToPrepare =
+      hasSelectedSocialPlatform() &&
       weeklyUploads.some((upload) => getWeeklyUploadMediaType(upload.file) === "flyer");
 
-    if (hasInstagramPdfUploads) {
+    if (hasPdfUploadsToPrepare) {
       notify(
-        "Preparing PDF flyer as an Instagram-ready image before creating posts.",
+        "Preparing PDF flyer as a social-ready image before creating posts.",
         "info",
         "Preparing flyer"
       );
@@ -2151,6 +2164,14 @@ If uploads are supplied:
             media_url: mediaItem?.media_url || null,
             media_path: mediaItem?.media_path || null,
             media_type: mediaItem?.media_type || null,
+            prepared_media_url: mediaItem?.converted_from_pdf ? mediaItem?.media_url || null : null,
+            prepared_media_width: null,
+            prepared_media_height: null,
+            original_media_url: mediaItem?.original_media_url || null,
+            original_media_path: mediaItem?.original_media_path || null,
+            original_media_type: mediaItem?.original_media_type || null,
+            converted_from_pdf: Boolean(mediaItem?.converted_from_pdf),
+            conversion_warning: mediaItem?.conversion_warning || null,
             reach: 0,
             clicks: 0,
             likes: 0,
@@ -2991,7 +3012,7 @@ If uploads are supplied:
 
                 <span style={{ color: "var(--muted)", maxWidth: 560 }}>
                   Upload up to 7 items. Photos and videos can be used for Facebook and Instagram.
-                  PDF flyers can create post wording and are automatically prepared as images when Instagram is selected.
+                  PDF flyers can create post wording and are automatically prepared as images for Facebook and Instagram.
                 </span>
               </span>
             </label>
@@ -3365,7 +3386,7 @@ If uploads are supplied:
               }}
             >
               {preparingFlyers
-                ? "Preparing flyers for Instagram..."
+                ? "Preparing flyers for posting..."
                 : scanning
                   ? "Creating your posts..."
                   : weeklyUploads.length > 0

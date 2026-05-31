@@ -425,6 +425,7 @@ export default function PostActionModal({
 }: PostActionModalProps) {
   const [showImprovePanel, setShowImprovePanel] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [playInlineVideoPreview, setPlayInlineVideoPreview] = useState(false);
   const [showPrepareMediaModal, setShowPrepareMediaModal] = useState(false);
   const [prepareShellMode, setPrepareShellMode] = useState<PrepareShellMode>('inline');
   const [resizePresetValue, setResizePresetValue] = useState<ResizePresetValue>('instagram-portrait');
@@ -438,6 +439,8 @@ export default function PostActionModal({
   const [sharingMedia, setSharingMedia] = useState(false);
   const [resizedMedia, setResizedMedia] = useState<ResizedMedia | null>(null);
   const [resizeError, setResizeError] = useState('');
+  const [convertingFlyerToImage, setConvertingFlyerToImage] = useState(false);
+  const [convertedFlyerMessage, setConvertedFlyerMessage] = useState('');
   const cropStageRef = useRef<HTMLDivElement | null>(null);
   const transformFrameRef = useRef<HTMLDivElement | null>(null);
   const activeTransformPointersRef = useRef<Map<number, ActiveTransformPointer>>(new Map());
@@ -488,6 +491,7 @@ export default function PostActionModal({
   const autoPublishPlatformName = isInstagramPost ? 'Instagram' : 'Facebook';
   const rescanUsageLabel = isVideoMedia ? videoRescanUsageLabel : mediaRescanUsageLabel;
   const statusLabel = getPostStatus(selectedPost) === 'Reminder set' ? 'Scheduled' : getPostStatus(selectedPost);
+
 
   const publishErrorNeedsReconnect = isMetaReconnectError(selectedPost.publish_error);
   const autopostNeedsAttention = canAutoPublish && (needsMetaConnection || publishErrorNeedsReconnect);
@@ -987,6 +991,48 @@ export default function PostActionModal({
     }
   };
 
+  const handleConvertFlyerToImage = async () => {
+    if (!selectedPost?.id || !isFlyerMedia || !selectedPost.media_url) return;
+
+    setConvertingFlyerToImage(true);
+    setConvertedFlyerMessage('');
+    setResizeError('');
+
+    try {
+      const response = await fetch('/api/media/pdf-to-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          postId: selectedPost.id,
+          mediaUrl: selectedPost.media_url,
+          preset: 'instagram-portrait',
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          result?.error || result?.message || 'Could not convert this flyer to an image.',
+        );
+      }
+
+      setConvertedFlyerMessage('Flyer converted to an image. Refreshing the post preview...');
+      window.setTimeout(() => {
+        window.location.reload();
+      }, 850);
+    } catch (error: any) {
+      setResizeError(
+        error?.message ||
+          'Could not convert this flyer. You can still open or download the PDF and post manually.',
+      );
+    } finally {
+      setConvertingFlyerToImage(false);
+    }
+  };
+
   const handleResizeMedia = async () => {
     if (!selectedPost.media_url || !canResizeImageMedia) return;
 
@@ -1333,12 +1379,35 @@ export default function PostActionModal({
                 >
                   {selectedPost.media_url ? (
                     isVideoMedia ? (
-                      <video
-                        src={selectedPost.media_url}
-                        controls
-                        playsInline
-                        preload="metadata"
-                      />
+                      <div className="f1-post-video-shell">
+                        {playInlineVideoPreview ? (
+                          <video
+                            src={selectedPost.media_url}
+                            controls
+                            autoPlay
+                            playsInline
+                            preload="metadata"
+                            className="f1-post-video-preview"
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            className="f1-post-video-poster"
+                            onClick={() => setPlayInlineVideoPreview(true)}
+                            aria-label="Play video preview"
+                          >
+                            <video
+                              src={selectedPost.media_url}
+                              muted
+                              playsInline
+                              preload="metadata"
+                              className="f1-post-video-preview"
+                            />
+                            <span className="f1-post-video-play-button">▶</span>
+                            <span className="f1-post-video-poster-label">Play video</span>
+                          </button>
+                        )}
+                      </div>
                     ) : isFlyerMedia ? (
                       <div className="f1-post-file-preview f1-post-pdf-preview">
                         <span className="f1-post-pdf-icon">PDF</span>
@@ -1404,6 +1473,26 @@ export default function PostActionModal({
                           {removingMediaPostId === selectedPost.id ? 'Removing...' : 'Remove'}
                         </button>
                       </div>
+
+                      {isFlyerMedia && (
+                        <div className="f1-post-resize-card f1-post-prepare-card f1-post-pdf-convert-card">
+                          <div>
+                            <strong>Convert flyer to image</strong>
+                            <p>Create a JPG version of this PDF flyer for Instagram, Facebook and manual posting. First page only. PDFs must be under 10MB.</p>
+                            {convertedFlyerMessage && <small>{convertedFlyerMessage}</small>}
+                            {resizeError && <small className="f1-post-resize-error">{resizeError}</small>}
+                          </div>
+
+                          <button
+                            type="button"
+                            className="f1-post-yellow-action"
+                            onClick={handleConvertFlyerToImage}
+                            disabled={convertingFlyerToImage || isRescanning || accessLocked}
+                          >
+                            {convertingFlyerToImage ? 'Converting...' : 'Convert flyer to image'}
+                          </button>
+                        </div>
+                      )}
 
                       {canResizeImageMedia && (
                         <div className="f1-post-resize-card f1-post-prepare-card">
@@ -2214,6 +2303,143 @@ export default function PostActionModal({
             max-height: 74vh !important;
             border-radius: 24px !important;
           }
+        }
+
+
+        /* Inline-backed portrait video layout */
+        @media (min-width: 961px) {
+          .f1-post-modal-body:has(.f1-post-media-frame.is-video-media) {
+            grid-template-columns: minmax(320px, 0.62fr) minmax(520px, 1.38fr) !important;
+            align-items: start !important;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .f1-post-media-frame.is-video-media {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 460px !important;
+            max-height: 74vh !important;
+          }
+        }
+
+
+        /* Custom portrait video preview shell */
+        .f1-post-media-frame.is-video-media {
+          width: 100% !important;
+          min-height: auto !important;
+          display: grid !important;
+          place-items: center !important;
+          overflow: visible !important;
+          border-radius: 30px !important;
+          background:
+            radial-gradient(circle at top, rgba(255, 212, 59, 0.08), transparent 38%),
+            rgba(2, 6, 23, 0.74) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          padding: clamp(14px, 2vw, 20px) !important;
+        }
+
+        .f1-post-video-shell,
+        .f1-post-video-poster {
+          width: min(100%, 420px) !important;
+          aspect-ratio: 9 / 16 !important;
+          max-height: 76vh !important;
+          display: grid !important;
+          place-items: stretch !important;
+          position: relative !important;
+          overflow: hidden !important;
+          border-radius: 26px !important;
+          background: #020617 !important;
+          border: 1px solid rgba(255,255,255,0.14) !important;
+          box-shadow: 0 22px 70px rgba(0,0,0,0.28) !important;
+        }
+
+        .f1-post-video-poster {
+          appearance: none !important;
+          padding: 0 !important;
+          cursor: pointer !important;
+        }
+
+        .f1-post-video-preview {
+          width: 100% !important;
+          height: 100% !important;
+          min-width: 100% !important;
+          min-height: 100% !important;
+          max-width: none !important;
+          max-height: none !important;
+          display: block !important;
+          object-fit: cover !important;
+          object-position: center center !important;
+          background: #020617 !important;
+          border-radius: 0 !important;
+        }
+
+        .f1-post-video-play-button {
+          position: absolute !important;
+          inset: 0 !important;
+          margin: auto !important;
+          width: 74px !important;
+          height: 74px !important;
+          display: grid !important;
+          place-items: center !important;
+          border-radius: 999px !important;
+          background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
+          color: #101420 !important;
+          font-size: 1.8rem !important;
+          font-weight: 1000 !important;
+          box-shadow: 0 18px 44px rgba(255, 212, 59, 0.28) !important;
+          transform: translateX(2px) !important;
+        }
+
+        .f1-post-video-poster-label {
+          position: absolute !important;
+          left: 14px !important;
+          right: 14px !important;
+          bottom: 14px !important;
+          padding: 10px 12px !important;
+          border-radius: 16px !important;
+          background: rgba(2, 6, 23, 0.72) !important;
+          color: #ffffff !important;
+          font-weight: 900 !important;
+          text-align: center !important;
+          backdrop-filter: blur(10px) !important;
+        }
+
+        @media (min-width: 961px) {
+          .f1-post-modal-body:has(.f1-post-media-frame.is-video-media) {
+            grid-template-columns: minmax(360px, 0.72fr) minmax(500px, 1.28fr) !important;
+            align-items: start !important;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .f1-post-media-frame.is-video-media {
+            padding: 12px !important;
+            border-radius: 24px !important;
+          }
+
+          .f1-post-video-shell,
+          .f1-post-video-poster {
+            width: min(100%, 390px) !important;
+            max-height: 74vh !important;
+            border-radius: 24px !important;
+          }
+        }
+
+
+        .f1-post-pdf-convert-card {
+          border-color: rgba(255, 212, 59, 0.18) !important;
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.08), transparent 36%),
+            rgba(255,255,255,0.045) !important;
+        }
+
+        .f1-post-pdf-convert-card small {
+          display: block;
+          margin-top: 8px;
+          color: rgba(255, 229, 138, 0.92);
+          font-weight: 850;
+          line-height: 1.45;
         }
 
       `}</style>

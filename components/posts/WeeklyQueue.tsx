@@ -42,10 +42,7 @@ export default function WeeklyQueue({
   const getMediaType = (post: any) => {
     const mediaType = String(post?.media_type || '').toLowerCase();
     const mediaUrl = String(getMediaUrl(post) || '').toLowerCase();
-
-    if (mediaType === 'flyer' || mediaType === 'pdf' || mediaUrl.includes('.pdf')) {
-      return 'flyer';
-    }
+    const mediaUrlWithoutQuery = mediaUrl.split('?')[0];
 
     if (mediaType.includes('video')) {
       return 'video';
@@ -53,6 +50,14 @@ export default function WeeklyQueue({
 
     if (mediaType.includes('image')) {
       return 'image';
+    }
+
+    if (
+      mediaType === 'flyer' ||
+      mediaType === 'pdf' ||
+      (!mediaType && mediaUrlWithoutQuery.endsWith('.pdf'))
+    ) {
+      return 'flyer';
     }
 
     return mediaType || 'image';
@@ -149,7 +154,7 @@ export default function WeeklyQueue({
                       aspectRatio: '4 / 3',
                       borderRadius: 18,
                       overflow: 'hidden',
-                      background: 'rgba(255,255,255,0.06)',
+                      background: '#020617',
                       border: '1px solid rgba(255,255,255,0.1)',
                       margin: '10px 0 12px',
                       position: 'relative',
@@ -218,8 +223,9 @@ export default function WeeklyQueue({
                         style={{
                           width: '100%',
                           height: '100%',
-                          objectFit: 'cover',
+                          objectFit: 'contain',
                           display: 'block',
+                          background: '#020617',
                         }}
                       />
                     )}
