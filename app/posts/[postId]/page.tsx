@@ -641,7 +641,7 @@ export default function PostReviewPage() {
       throw new Error("Missing PDF media details.");
     }
 
-    const response = await fetch("/api/media/pdf-to-jpeg", {
+    const response = await fetch("/api/media/pdf-to-image", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
