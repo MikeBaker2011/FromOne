@@ -636,6 +636,18 @@ export default function PostReviewPage() {
   const canConvertFlyer = Boolean(mediaUrl) && isFlyer && !isVideo;
 
   const isShowingPreparedImage = Boolean(preparedDisplayMedia?.url) && !isVideo && !isFlyer;
+  const mediaPrepareStatus = cleanText(post?.media_prepare_status).toLowerCase();
+  const mediaPrepareError = cleanText(post?.media_prepare_error);
+  const mediaPrepareLabel =
+    mediaPrepareStatus === "preparing"
+      ? "Preparing flyer..."
+      : mediaPrepareStatus === "failed"
+        ? "Needs attention"
+        : mediaPrepareStatus === "prepared" || isShowingPreparedImage
+          ? "Prepared image ready"
+          : isFlyer
+            ? "Flyer needs preparing"
+            : "Ready";
 
   const isFacebookPost = platformName.toLowerCase().includes("facebook");
   const isInstagramPost = platformName.toLowerCase().includes("instagram");
@@ -957,6 +969,7 @@ export default function PostReviewPage() {
       const convertedWidth = canvas.width;
       const convertedHeight = canvas.height;
 
+      const preparedAt = new Date().toISOString();
       const updates = {
         media_url: url,
         media_path: storagePath,
@@ -964,8 +977,11 @@ export default function PostReviewPage() {
         prepared_media_url: url,
         prepared_media_width: convertedWidth,
         prepared_media_height: convertedHeight,
+        media_prepare_status: "prepared",
+        media_prepare_error: null,
+        media_prepared_at: preparedAt,
         publish_error: null,
-        updated_at: new Date().toISOString(),
+        updated_at: preparedAt,
       };
 
       const { error } = await supabase
@@ -1057,14 +1073,24 @@ export default function PostReviewPage() {
           ? "pdf"
           : "image";
 
+      const uploadedAt = new Date().toISOString();
       const uploadedUpdates = {
         media_url: uploadedUrl,
+        media_path: path,
         media_type: nextMediaType,
         prepared_media_url: null,
         prepared_media_width: null,
         prepared_media_height: null,
+        media_prepare_status:
+          nextMediaType === "pdf"
+            ? "preparing"
+            : nextMediaType === "image"
+              ? "prepared"
+              : "ready",
+        media_prepare_error: null,
+        media_prepared_at: nextMediaType === "image" ? uploadedAt : null,
         publish_error: null,
-        updated_at: new Date().toISOString(),
+        updated_at: uploadedAt,
       };
 
       const { error: updateError } = await supabase
@@ -1092,7 +1118,30 @@ export default function PostReviewPage() {
 
       setMessage("Media updated.");
     } catch (error: any) {
-      setMessage(error?.message || "Could not upload media.");
+      const message = error?.message || "Could not upload media.";
+
+      if (isPdfUpload && post?.id) {
+        await supabase
+          .from("campaign_posts")
+          .update({
+            media_prepare_status: "failed",
+            media_prepare_error: message,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", post.id);
+
+        setPost((current: any) =>
+          current
+            ? {
+                ...current,
+                media_prepare_status: "failed",
+                media_prepare_error: message,
+              }
+            : current,
+        );
+      }
+
+      setMessage(message);
     } finally {
       setSaving(false);
       event.target.value = "";
@@ -1109,7 +1158,14 @@ export default function PostReviewPage() {
       .from("campaign_posts")
       .update({
         media_url: null,
+        media_path: null,
         media_type: null,
+        prepared_media_url: null,
+        prepared_media_width: null,
+        prepared_media_height: null,
+        media_prepare_status: "ready",
+        media_prepare_error: null,
+        media_prepared_at: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", post.id);
@@ -1120,7 +1176,18 @@ export default function PostReviewPage() {
       return;
     }
 
-    setPost({ ...post, media_url: null, media_type: null });
+    setPost({
+      ...post,
+      media_url: null,
+      media_path: null,
+      media_type: null,
+      prepared_media_url: null,
+      prepared_media_width: null,
+      prepared_media_height: null,
+      media_prepare_status: "ready",
+      media_prepare_error: null,
+      media_prepared_at: null,
+    });
     setPreparedMedia(null);
     setLatestPdfFile(null);
     setMessage("Media removed.");
@@ -1136,7 +1203,26 @@ export default function PostReviewPage() {
     }
 
     setResizingMedia(true);
-    setMessage("Creating JPEG preview...");
+    setMessage("Preparing flyer...");
+
+    await supabase
+      .from("campaign_posts")
+      .update({
+        media_prepare_status: "preparing",
+        media_prepare_error: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", post.id);
+
+    setPost((current: any) =>
+      current
+        ? {
+            ...current,
+            media_prepare_status: "preparing",
+            media_prepare_error: null,
+          }
+        : current,
+    );
 
     try {
       const converted = latestPdfFile
@@ -1151,7 +1237,28 @@ export default function PostReviewPage() {
         "Flyer prepared for posting. Instagram can now use this image.",
       );
     } catch (error: any) {
-      setMessage(error?.message || "Could not convert this PDF to JPEG.");
+      const message = error?.message || "Could not prepare this flyer.";
+
+      await supabase
+        .from("campaign_posts")
+        .update({
+          media_prepare_status: "failed",
+          media_prepare_error: message,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", post.id);
+
+      setPost((current: any) =>
+        current
+          ? {
+              ...current,
+              media_prepare_status: "failed",
+              media_prepare_error: message,
+            }
+          : current,
+      );
+
+      setMessage(message);
     } finally {
       setResizingMedia(false);
     }
@@ -1438,6 +1545,9 @@ export default function PostReviewPage() {
               prepared_media_url: url,
               prepared_media_width: nextPreparedMedia.width,
               prepared_media_height: nextPreparedMedia.height,
+              media_prepare_status: "prepared",
+              media_prepare_error: null,
+              media_prepared_at: new Date().toISOString(),
             }
           : current,
       );
@@ -1994,7 +2104,7 @@ export default function PostReviewPage() {
                   {preparedDisplayMedia?.url && (
                     <div className="pr2-prepared-ready">
                       <div>
-                        <strong>Prepared image ready</strong>
+                        <strong>{mediaPrepareLabel}</strong>
                         <span>
                           {preparedDisplayMedia.width} ×{" "}
                           {preparedDisplayMedia.height}
@@ -2026,7 +2136,7 @@ export default function PostReviewPage() {
                 <>
                   {preparedDisplayMedia?.url && activePanel !== "prepare" && (
                     <div className="pr2-media-current-label">
-                      Prepared image ready
+                      {mediaPrepareLabel}
                     </div>
                   )}
 
@@ -2109,7 +2219,7 @@ export default function PostReviewPage() {
 
                   {preparedDisplayMedia?.url && (
                     <div className="pr2-prepared-strip">
-                      <strong>Prepared image ready</strong>
+                      <strong>{mediaPrepareLabel}</strong>
                       <span>
                         {preparedDisplayMedia.width} ×{" "}
                         {preparedDisplayMedia.height}

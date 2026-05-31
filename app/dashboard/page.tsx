@@ -79,6 +79,9 @@ type UploadedMediaItem = {
   original_media_path?: string;
   original_media_type?: "image" | "flyer" | "video";
   converted_from_pdf?: boolean;
+  media_prepare_status?: "ready" | "preparing" | "prepared" | "failed" | "needs_preparing";
+  media_prepare_error?: string | null;
+  media_prepared_at?: string | null;
 };
 
 type PlatformOption = {
@@ -1616,10 +1619,22 @@ const baseContext = [
       let effectiveMediaType: "image" | "flyer" | "video" = mediaType;
       let effectiveContentType = upload.file.type || mediaType;
       let convertedFromPdf = false;
+      let mediaPrepareStatus: "ready" | "preparing" | "prepared" | "failed" | "needs_preparing" =
+        mediaType === "image"
+          ? "prepared"
+          : mediaType === "flyer"
+            ? "needs_preparing"
+            : "ready";
+      let mediaPrepareError: string | null = null;
+      let mediaPreparedAt: string | null =
+        mediaType === "image" ? new Date().toISOString() : null;
 
       let conversionWarning = "";
 
       if (shouldPreparePdfForSocial) {
+        mediaPrepareStatus = "preparing";
+        mediaPrepareError = null;
+
         try {
           const converted = await prepareUploadedPdfForSocialPlatforms({
             upload,
@@ -1631,10 +1646,17 @@ const baseContext = [
           effectiveMediaType = "image";
           effectiveContentType = "image/jpeg";
           convertedFromPdf = true;
+          mediaPrepareStatus = "prepared";
+          mediaPrepareError = null;
+          mediaPreparedAt = new Date().toISOString();
         } catch (conversionError: any) {
           conversionWarning =
             conversionError?.message ||
             `${upload.file.name} could not be prepared automatically for posting.`;
+
+          mediaPrepareStatus = "failed";
+          mediaPrepareError = conversionWarning;
+          mediaPreparedAt = null;
 
           notify(
             `${conversionWarning} We still created the post using the original PDF. You can prepare the flyer later from the post review screen or upload a JPG/PNG version.`,
@@ -1672,6 +1694,9 @@ const baseContext = [
         original_media_type: convertedFromPdf ? mediaType : undefined,
         converted_from_pdf: convertedFromPdf,
         conversion_warning: conversionWarning || undefined,
+        media_prepare_status: mediaPrepareStatus,
+        media_prepare_error: mediaPrepareError,
+        media_prepared_at: mediaPreparedAt,
       });
       }
 
@@ -2172,6 +2197,11 @@ If uploads are supplied:
             original_media_type: mediaItem?.original_media_type || null,
             converted_from_pdf: Boolean(mediaItem?.converted_from_pdf),
             conversion_warning: mediaItem?.conversion_warning || null,
+            media_prepare_status:
+              mediaItem?.media_prepare_status ||
+              (mediaItem?.media_type === "image" ? "prepared" : "ready"),
+            media_prepare_error: mediaItem?.media_prepare_error || null,
+            media_prepared_at: mediaItem?.media_prepared_at || null,
             reach: 0,
             clicks: 0,
             likes: 0,
