@@ -731,10 +731,10 @@ export default function SettingsPage() {
 
     setConfirmDialog({
       type: 'deleteProfile',
-      title: 'Delete Business Profile?',
+      title: 'Delete saved profile?',
       message:
         'This removes the saved Business Profile from Supabase. Existing weekly posts will not be deleted.',
-      confirmLabel: 'Delete Business Profile',
+      confirmLabel: 'Delete saved profile',
       danger: true,
     });
   };
@@ -1509,7 +1509,7 @@ export default function SettingsPage() {
                 }}
               >
                 <section
-                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-compact settings-channel-card-clean settings-channel-card-short"
+                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-clean settings-channel-card-short"
                   style={{
                     padding: 20,
                     borderRadius: 24,
@@ -1563,7 +1563,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section
-                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-compact settings-channel-card-clean settings-channel-card-short"
+                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-clean settings-channel-card-short"
                   style={{
                     padding: 20,
                     borderRadius: 24,
@@ -1619,7 +1619,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section
-                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-compact settings-channel-card-clean settings-channel-card-short"
+                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-clean settings-channel-card-short"
                   style={{
                     padding: 20,
                     borderRadius: 24,
@@ -1828,7 +1828,7 @@ export default function SettingsPage() {
                       onClick={handleDeleteProfile}
                       disabled={saving}
                     >
-                      Delete Business Profile
+                      Delete saved profile
                     </button>
                   </div>
                 </div>
@@ -3297,6 +3297,271 @@ export default function SettingsPage() {
           }
         }
 
+
+        /* Settings final clean polish pass */
+        .settings-setup-guide,
+        .settings-profile-start-card,
+        .settings-profile-wizard-card,
+        .settings-connections-section,
+        .settings-create-posts-section,
+        .manual-collapse-card {
+          width: min(100%, 1120px) !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+
+        .settings-setup-guide,
+        .settings-profile-start-card,
+        .settings-profile-wizard-card,
+        .settings-connections-section,
+        .settings-create-posts-section {
+          overflow: hidden !important;
+        }
+
+        .settings-setup-guide .page-description,
+        .settings-profile-start-card p,
+        .settings-connections-section p,
+        .settings-create-posts-section p {
+          line-height: 1.55 !important;
+        }
+
+        .settings-profile-choice-card,
+        .settings-simple-setup-card,
+        .settings-form-panel,
+        .settings-channel-card,
+        .settings-connected-account-box,
+        .settings-meta-summary-card,
+        .settings-publishing-rules-compact {
+          min-width: 0 !important;
+        }
+
+        .settings-channel-grid {
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          align-items: start !important;
+          gap: 16px !important;
+        }
+
+        .settings-channel-grid > .settings-channel-card {
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          display: grid !important;
+          grid-template-rows: auto auto !important;
+          align-content: start !important;
+          align-self: start !important;
+          gap: 16px !important;
+          padding: 20px !important;
+          border-radius: 24px !important;
+        }
+
+        .settings-channel-grid > .settings-channel-card > div:first-child {
+          display: grid !important;
+          grid-template-rows: none !important;
+          gap: 14px !important;
+          min-height: 0 !important;
+          align-content: start !important;
+        }
+
+        .settings-channel-card-head {
+          display: block !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+        }
+
+        .settings-channel-card-head .page-eyebrow {
+          display: block !important;
+          margin: 0 0 8px !important;
+          line-height: 1.1 !important;
+        }
+
+        .settings-channel-card-head h3 {
+          min-height: 0 !important;
+          margin: 0 !important;
+          font-size: clamp(1.2rem, 2vw, 1.45rem) !important;
+          line-height: 1.08 !important;
+          letter-spacing: -0.025em !important;
+        }
+
+        .settings-connected-account-box {
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 16px 18px !important;
+          border-radius: 22px !important;
+          overflow: hidden !important;
+        }
+
+        .settings-connected-account-box span {
+          display: block !important;
+          width: fit-content !important;
+          margin: 0 0 8px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          color: rgba(248, 250, 252, 0.58) !important;
+          font-size: 0.76rem !important;
+          font-weight: 950 !important;
+          letter-spacing: 0.09em !important;
+          line-height: 1.1 !important;
+          text-transform: uppercase !important;
+          box-shadow: none !important;
+        }
+
+        .settings-connected-account-box strong {
+          display: block !important;
+          margin: 0 0 8px !important;
+          color: #ffffff !important;
+          font-size: clamp(1.05rem, 1.8vw, 1.26rem) !important;
+          line-height: 1.12 !important;
+          word-break: normal !important;
+          overflow-wrap: anywhere !important;
+        }
+
+        .settings-connected-account-box small {
+          display: block !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.62) !important;
+          font-size: 0.86rem !important;
+          line-height: 1.35 !important;
+          overflow-wrap: anywhere !important;
+        }
+
+        .settings-channel-grid > .settings-channel-card > div:first-child > p {
+          display: none !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+        }
+
+        .settings-channel-grid > .settings-channel-card > button {
+          width: 100% !important;
+          min-height: 52px !important;
+          margin-top: 0 !important;
+          align-self: start !important;
+          border-radius: 16px !important;
+        }
+
+        .manual-collapse-card {
+          padding: 18px !important;
+          border-radius: 28px !important;
+          background: rgba(15, 23, 42, 0.62) !important;
+          border: 1px solid rgba(255, 255, 255, 0.09) !important;
+        }
+
+        .manual-collapse-card .manual-collapse-content {
+          display: grid !important;
+          gap: 14px !important;
+        }
+
+        .manual-collapse-card .button-row {
+          display: flex !important;
+          gap: 10px !important;
+          flex-wrap: wrap !important;
+        }
+
+        .danger-button {
+          background: rgba(127, 29, 29, 0.32) !important;
+          border-color: rgba(248, 113, 113, 0.38) !important;
+          color: #fecaca !important;
+        }
+
+        .settings-confirm-actions button {
+          min-height: 48px !important;
+          border-radius: 16px !important;
+        }
+
+        @media (max-width: 1040px) {
+          .settings-channel-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .settings-setup-step-grid,
+          .settings-profile-start-layout,
+          .settings-simple-setup-grid,
+          .settings-simple-form-grid,
+          .settings-channel-grid,
+          .settings-create-posts-section > div,
+          .settings-meta-summary-card,
+          .settings-save-strip {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-profile-choice-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-profile-wizard-head,
+          .settings-save-strip {
+            text-align: center !important;
+            justify-items: center !important;
+          }
+
+          .settings-meta-summary-card .button-row,
+          .manual-collapse-card .button-row,
+          .settings-confirm-actions {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            width: 100% !important;
+          }
+
+          .settings-meta-summary-card button,
+          .manual-collapse-card button,
+          .settings-confirm-actions button {
+            width: 100% !important;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .settings-setup-guide,
+          .settings-profile-start-card,
+          .settings-profile-wizard-card,
+          .settings-connections-section,
+          .settings-create-posts-section,
+          .manual-collapse-card {
+            width: min(100%, calc(100vw - 24px)) !important;
+            border-radius: 26px !important;
+            padding: 20px !important;
+          }
+
+          .settings-setup-guide .page-title {
+            font-size: clamp(2.25rem, 13vw, 3.5rem) !important;
+          }
+
+          .settings-channel-card {
+            padding: 18px !important;
+            border-radius: 22px !important;
+          }
+        }
+
+
+        /* Final fix: channel card headers must not inherit card sizing */
+        .settings-channel-grid .settings-channel-card-head {
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          padding: 0 !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          display: block !important;
+          margin: 0 !important;
+        }
+
+        .settings-channel-grid .settings-channel-card-head > div {
+          height: auto !important;
+          min-height: 0 !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+        }
+
+        .settings-channel-grid > .settings-channel-card {
+          grid-template-rows: auto auto !important;
+          gap: 14px !important;
+        }
+
       `}</style>
 
       {confirmDialog && (
@@ -3375,6 +3640,10 @@ export default function SettingsPage() {
 }
 
 /*
-  NOTE: Final-release polish marker.
-  The active style overrides are injected above in the component global CSS blocks.
+  Settings final polish:
+  - shared Supabase browser auth
+  - quiet missing-session handling
+  - compact publishing channel cards
+  - clearer advanced actions
+  - mobile-safe final style override
 */
