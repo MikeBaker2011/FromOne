@@ -85,7 +85,8 @@ const fallbackColours: BrandColours = {
   accent: '#27ae60',
 };
 
-const MAX_INLINE_MEDIA_BYTES = 8 * 1024 * 1024;
+const MAX_INLINE_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_INLINE_VIDEO_BYTES = 20 * 1024 * 1024;
 
 function getPlatformCaptionLimit(platform: string) {
   return platformCaptionLimits[platform] || 700;
@@ -192,7 +193,7 @@ function buildMediaPurposeGuide(mediaItems: UploadedMediaContext[]) {
         .join(' | ');
 
       if (mediaKind === 'video') {
-        return `Post ${index + 1} must be built from Upload ${index + 1}, which is a VIDEO. Use the video as the topic. If the business is a bar, club, nightclub, restaurant, event venue, gym, salon, trades business, product business, or service business, write around what a business video usually captures: atmosphere, movement, result, proof, process, crowd, music, offer, booking, table/reservation, product demo, behind-the-scenes, job progress, or next event. Details: ${suppliedDetails || 'No extra video details supplied.'}`;
+        return `Post ${index + 1} must be built from Upload ${index + 1}, which is a VIDEO. If video bytes are attached to Gemini, analyse the actual visible footage first and make the caption about what is shown. Use the quick description/context only as supporting guidance. The post should mention the real scene, action, atmosphere, product, service, event, process, result, offer, booking moment, behind-the-scenes moment, or customer benefit visible or strongly supported by the footage. Do not write a generic business post. If the video cannot be inspected, do not pretend to have seen details; write a careful post from the supplied description/context and business profile. Details: ${suppliedDetails || 'No extra video details supplied.'}`;
       }
 
       if (mediaKind === 'flyer') {
@@ -218,7 +219,7 @@ function buildUploadDrivenPlatformPlan(platforms: string[], mediaItems: Uploaded
       platform,
       angle:
         mediaKind === 'video'
-          ? 'Video-led post: atmosphere, proof, process, event, product demo, or booking/enquiry driver'
+          ? 'Video-led post: analyse the footage and write about the specific scene, action, atmosphere, service, product, event, proof, result, or booking/enquiry driver shown'
           : mediaKind === 'flyer'
             ? 'Flyer-led post: offer, event, date, price, booking, or CTA made natural'
             : mediaKind === 'image'
@@ -757,44 +758,66 @@ async function getWebsiteHtml(website: string) {
   }
 }
 
-function isVisionSupportedMedia(item: UploadedMediaContext) {
-  const type = String(item.type || '').toLowerCase();
-  const url = String(item.url || '').toLowerCase();
-  const name = String(item.name || '').toLowerCase();
+function isGeminiInlineSupportedMedia(item: UploadedMediaContext) {
+  const mediaKind = normaliseMediaTypeLabel(item);
+  const source = `${item.type || ''} ${item.url || ''} ${item.name || ''}`.toLowerCase();
 
-  if (type.startsWith('image/')) return true;
-  if (url.match(/\.(jpg|jpeg|png|webp)(\?|$)/)) return true;
-  if (name.match(/\.(jpg|jpeg|png|webp)$/)) return true;
+  if (mediaKind === 'image') return true;
+
+  if (mediaKind === 'video') {
+    return (
+      source.includes('video/mp4') ||
+      source.includes('video/quicktime') ||
+      source.includes('video/webm') ||
+      source.includes('video/x-m4v') ||
+      source.match(/\.(mp4|mov|webm|m4v)(\?|$)/) !== null
+    );
+  }
 
   return false;
 }
 
 function inferMimeType(item: UploadedMediaContext, responseContentType?: string) {
   const explicitType = String(item.type || '').toLowerCase();
-  const contentType = String(responseContentType || '').toLowerCase();
+  const contentType = String(responseContentType || '').toLowerCase().split(';')[0];
   const source = `${item.url || ''} ${item.name || ''}`.toLowerCase();
 
   if (explicitType.startsWith('image/')) return explicitType;
-  if (contentType.startsWith('image/')) return contentType.split(';')[0];
+  if (explicitType.startsWith('video/')) return explicitType;
+  if (contentType.startsWith('image/')) return contentType;
+  if (contentType.startsWith('video/')) return contentType;
+
   if (source.includes('.png')) return 'image/png';
   if (source.includes('.webp')) return 'image/webp';
   if (source.includes('.jpg') || source.includes('.jpeg')) return 'image/jpeg';
+  if (source.includes('.webm')) return 'video/webm';
+  if (source.includes('.mov')) return 'video/quicktime';
+  if (source.includes('.m4v')) return 'video/x-m4v';
+  if (source.includes('.mp4')) return 'video/mp4';
 
   return 'image/jpeg';
 }
 
+function getInlineMediaByteLimit(item: UploadedMediaContext) {
+  return normaliseMediaTypeLabel(item) === 'video'
+    ? MAX_INLINE_VIDEO_BYTES
+    : MAX_INLINE_IMAGE_BYTES;
+}
+
 async function fetchInlineMediaParts(mediaItems: UploadedMediaContext[]) {
-  const visionItems = mediaItems
+  const supportedItems = mediaItems
     .map((item, index) => ({ item, index }))
-    .filter(({ item }) => item.url && isVisionSupportedMedia(item))
+    .filter(({ item }) => item.url && isGeminiInlineSupportedMedia(item))
     .slice(0, 7);
 
   const settled = await Promise.allSettled(
-    visionItems.map(async ({ item, index }) => {
+    supportedItems.map(async ({ item, index }) => {
+      const byteLimit = getInlineMediaByteLimit(item);
+
       const response = await axios.get(item.url as string, {
         responseType: 'arraybuffer',
-        timeout: 15000,
-        maxContentLength: MAX_INLINE_MEDIA_BYTES,
+        timeout: normaliseMediaTypeLabel(item) === 'video' ? 30000 : 15000,
+        maxContentLength: byteLimit,
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; FromOneBot/1.0; +https://fromone.app)',
         },
@@ -802,8 +825,10 @@ async function fetchInlineMediaParts(mediaItems: UploadedMediaContext[]) {
 
       const buffer = Buffer.from(response.data);
 
-      if (buffer.length > MAX_INLINE_MEDIA_BYTES) {
-        throw new Error(`Upload ${index + 1} is too large for inline vision.`);
+      if (buffer.length > byteLimit) {
+        throw new Error(
+          `Upload ${index + 1} is too large for inline ${normaliseMediaTypeLabel(item)} analysis.`
+        );
       }
 
       return {
@@ -857,9 +882,12 @@ function buildPrompt({
 
   const visualUploads = inlineMediaParts.length
     ? inlineMediaParts
-        .map((item) => `- Upload ${item.uploadIndex + 1}: visual image attached for direct analysis (${item.name}).`)
+        .map((item) => {
+          const mediaKind = item.mimeType.startsWith('video/') ? 'video footage' : 'visual image';
+          return `- Upload ${item.uploadIndex + 1}: ${mediaKind} attached for direct analysis (${item.name}).`;
+        })
         .join('\n')
-    : 'No image pixels were available to the AI. Use metadata and business details only.';
+    : 'No image or video bytes were available to the AI. Use metadata, quick description and business details only. Do not pretend to have seen the media.';
 
   const mediaContext = mediaItems.length
     ? mediaItems
@@ -895,8 +923,13 @@ CRITICAL VISION RULE:
 - If the visual image shows a shopfront, vehicle, sign, food, beauty result, building work, product, flyer, or anything else, the post must match what is actually visible.
 - If the image conflicts with the business profile, trust the visible image for the post subject.
 - Example: if the photo shows a restaurant shopfront, do not write about van graphics unless a van is actually visible.
-- Videos and PDFs may not have pixels attached to the model. For videos, use the provided context, filename, business profile and industry to write around the likely footage without pretending you saw exact details you did not receive.
-- For club, nightclub, bar, restaurant, event, venue or hospitality videos, write naturally around vibe, crowd, music, atmosphere, tickets, tables, bookings, offers, opening times, or the next event when relevant.
+- When video uploads are attached to Gemini in this request, analyse the actual visible footage and make the post about the specific video.
+- For every video: identify the likely scene, movement, people/activity, product/service, atmosphere, location, result, offer, or event shown. Use that as the reason the post exists.
+- Do not create a generic business post when a video is uploaded.
+- If a video cannot be inspected because it was too large, inaccessible, unsupported, or not attached, do not pretend you saw it. Use the supplied quick description/context, filename, business profile and industry carefully, and keep the wording specific but cautious.
+- For club, nightclub, bar, restaurant, event, venue or hospitality videos, write naturally around the visible vibe, crowd, music, atmosphere, food/drink, tickets, tables, bookings, offers, opening times, or next event when relevant.
+- For trade/service videos, write around the visible process, before/after, workmanship, job progress, equipment, result, or customer problem being solved.
+- For product videos, write around the visible product, demonstration, use case, detail, benefit, offer, or buying trigger.
 - For PDFs/flyers, use extracted text if supplied. If no extracted text is supplied, write a useful post from filename/context/business profile and make clear, natural CTA wording.
 
 The output must make a small business owner think:
@@ -977,10 +1010,11 @@ Core media quality rule:
 - Do not only describe the image.
 - Turn the upload into a professional business post.
 - For flyers, extract offer, date, price, service, location, contact details, and CTA where supplied, then rewrite them naturally as a social post.
-- For videos, turn the video context into a post about the scene, action, proof, process, atmosphere, result, product, service, booking, or event. Keep it specific to the business and platform.
+- For videos with inline video attached, analyse the footage and turn the actual scene/action into a post about the visible proof, process, atmosphere, result, product, service, booking, or event. For videos without inline analysis, use the quick description/context carefully and do not claim visual details that were not supplied.
 - For photos, identify what is visibly in the photo first, then write a useful, local, industry-specific caption around that visible subject.
 - If no uploaded media is supplied, use the website/business profile.
 - Never make every post sound like a generic weekly tip. Each upload should feel like the reason that post exists.
+- For a video-led post, the first sentence must clearly connect to the video moment, for example the atmosphere, job progress, demonstration, product, event, result, or behind-the-scenes action.
 
 Strict platform rule:
 - You must only use these selected platforms: ${selectedPlatforms.join(', ')}.
@@ -1116,8 +1150,12 @@ function buildGeminiParts(prompt: string, inlineMediaParts: InlineMediaPart[]) {
   ];
 
   for (const media of inlineMediaParts) {
+    const isVideo = media.mimeType.startsWith('video/');
+
     parts.push({
-      text: `Visual upload ${media.uploadIndex + 1}: ${media.name}. Analyse this exact image and use it as the subject for Post ${media.uploadIndex + 1}.`,
+      text: isVideo
+        ? `Video upload ${media.uploadIndex + 1}: ${media.name}. Analyse the actual footage. Post ${media.uploadIndex + 1} must be about what the video shows, not a generic business post.`
+        : `Visual upload ${media.uploadIndex + 1}: ${media.name}. Analyse this exact image and use it as the subject for Post ${media.uploadIndex + 1}.`,
     });
 
     parts.push({
@@ -1334,6 +1372,8 @@ export async function POST(req: NextRequest) {
     }
 
     const inlineMediaParts = provider === 'gemini' ? await fetchInlineMediaParts(mediaItems) : [];
+    const inlineVideoParts = inlineMediaParts.filter((part) => part.mimeType.startsWith('video/'));
+    const inlineImageParts = inlineMediaParts.filter((part) => part.mimeType.startsWith('image/'));
 
     const fallback = fallbackBusinessProfile({
       clientName,
@@ -1376,6 +1416,8 @@ export async function POST(req: NextRequest) {
           postCount,
           mediaItemsUsed: mediaItems.length,
           visionMediaUsed: inlineMediaParts.length,
+          inlineImageMediaUsed: inlineImageParts.length,
+          inlineVideoMediaUsed: inlineVideoParts.length,
           error: 'No posts were generated.',
         },
         { status: 500 }
@@ -1391,6 +1433,8 @@ export async function POST(req: NextRequest) {
       postCount,
       mediaItemsUsed: mediaItems.length,
       visionMediaUsed: inlineMediaParts.length,
+      inlineImageMediaUsed: inlineImageParts.length,
+      inlineVideoMediaUsed: inlineVideoParts.length,
       usedWebsiteScan: Boolean(website && websiteContent),
       detectedBrandColours: colours,
       platformCaptionLimits,
