@@ -19,104 +19,55 @@ function getSafeFileName(value?: string | null) {
   );
 }
 
-function clampDimension(value: number, fallback: number) {
-  if (!Number.isFinite(value) || value <= 0) return fallback;
-  return Math.min(Math.max(Math.round(value), 320), 3000);
-}
+function getCloudConvertError(result: any) {
+  const tasks = result?.data?.tasks || result?.tasks || [];
+  const failedTask = Array.isArray(tasks)
+    ? tasks.find((task: any) => task?.status === "error")
+    : null;
 
-function isProbablyPdf({
-  mediaUrl,
-  contentType,
-  fileName,
-}: {
-  mediaUrl: string;
-  contentType: string;
-  fileName: string;
-}) {
-  const lowerContentType = contentType.toLowerCase();
-  const lowerFileName = fileName.toLowerCase();
-  const lowerUrl = mediaUrl.toLowerCase();
-
-  if (lowerContentType) return lowerContentType.includes("pdf");
-  if (lowerFileName) return lowerFileName.endsWith(".pdf");
-  return lowerUrl.includes(".pdf");
-}
-
-async function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function readJsonResponse(response: Response) {
-  const text = await response.text();
-
-  try {
-    return text ? JSON.parse(text) : {};
-  } catch {
-    return { message: text };
-  }
-}
-
-function getCloudConvertError(payload: any, fallback: string) {
-  const firstError = Array.isArray(payload?.errors)
-    ? payload.errors
-        .map((item: any) => item?.message || item?.detail || item?.title || item?.code)
-        .filter(Boolean)
-        .join(" ")
-    : "";
-
-  return cleanText(
-    payload?.message ||
-      payload?.error ||
-      payload?.detail ||
-      payload?.title ||
-      firstError ||
-      fallback,
-  );
-}
-
-function getCloudConvertTaskError(job: any) {
-  const failedTask = job?.tasks?.find((task: any) => task?.status === "error");
-
-  return cleanText(
+  return (
     failedTask?.message ||
-      failedTask?.result?.message ||
-      failedTask?.result?.error ||
-      failedTask?.code ||
-      getCloudConvertError(job, "CloudConvert failed to convert this PDF."),
+    failedTask?.result?.message ||
+    result?.message ||
+    result?.error ||
+    result?.errors?.[0]?.message ||
+    ""
   );
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({}));
+    const body = await request.json();
 
-    const conversionId = cleanText(
-      body.postId || body.campaignPostId || body.uploadId || body.conversionId
-    );
-    const mediaUrl = cleanText(body.mediaUrl || body.media_url);
-    const contentType = cleanText(body.contentType || body.mimeType || body.type);
-    const fileName = cleanText(body.fileName || body.name || body.originalFileName);
-    const skipPostUpdate = body.skipPostUpdate === true;
-    const outputWidth = clampDimension(Number(body.outputWidth || body.width || 1080), 1080);
-    const outputHeight = clampDimension(Number(body.outputHeight || body.height || 1350), 1350);
+    const postId = cleanText(body.postId);
+    const mediaUrl = cleanText(body.mediaUrl);
+    const outputWidth = Number(body.outputWidth || 1080);
+    const outputHeight = Number(body.outputHeight || 1350);
 
-    if (!conversionId || !mediaUrl) {
+    if (!postId) {
       return NextResponse.json(
-        { error: "Missing conversionId/postId or mediaUrl." },
+        { error: "No post id was provided for this PDF conversion." },
         { status: 400 },
       );
     }
 
-    if (!/^https?:\/\//i.test(mediaUrl)) {
+    if (!mediaUrl) {
       return NextResponse.json(
-        { error: "The PDF must have a public URL before it can be converted." },
+        { error: "No PDF URL was provided." },
         { status: 400 },
       );
     }
 
-    if (!isProbablyPdf({ mediaUrl, contentType, fileName })) {
+    if (!Number.isFinite(outputWidth) || outputWidth < 100 || outputWidth > 5000) {
       return NextResponse.json(
-        { error: "This file does not look like a PDF flyer. Please upload a PDF, JPG, PNG, or WEBP file." },
+        { error: "The requested image width is not valid." },
+        { status: 400 },
+      );
+    }
+
+    if (!Number.isFinite(outputHeight) || outputHeight < 100 || outputHeight > 5000) {
+      return NextResponse.json(
+        { error: "The requested image height is not valid." },
         { status: 400 },
       );
     }
@@ -127,17 +78,14 @@ export async function POST(request: NextRequest) {
 
     if (!cloudConvertKey) {
       return NextResponse.json(
-        { error: "Missing CLOUDCONVERT_API_KEY in Render environment variables." },
+        { error: "PDF conversion is not configured yet. Missing CLOUDCONVERT_API_KEY." },
         { status: 500 },
       );
     }
 
     if (!supabaseUrl || !supabaseServiceKey) {
       return NextResponse.json(
-        {
-          error:
-            "Missing Supabase server environment variables. Check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Render.",
-        },
+        { error: "PDF conversion storage is not configured yet. Missing Supabase server environment variables." },
         { status: 500 },
       );
     }
@@ -159,11 +107,7 @@ export async function POST(request: NextRequest) {
             input: "import_pdf",
             input_format: "pdf",
             output_format: "jpg",
-            pages: "1",
-            width: outputWidth,
-            height: outputHeight,
-            fit: "max",
-            quality: 92,
+            page_range: "1",
           },
           export_jpg: {
             operation: "export/url",
@@ -173,15 +117,14 @@ export async function POST(request: NextRequest) {
       }),
     });
 
-    const createdJob = await readJsonResponse(createJobResponse);
+    const createdJob = await createJobResponse.json().catch(() => ({}));
 
     if (!createJobResponse.ok) {
       return NextResponse.json(
         {
-          error: getCloudConvertError(
-            createdJob,
-            `CloudConvert could not start the PDF conversion. Status ${createJobResponse.status}.`,
-          ),
+          error:
+            getCloudConvertError(createdJob) ||
+            "The PDF conversion could not be started. Please try a smaller PDF or upload a JPG/PNG version.",
         },
         { status: 500 },
       );
@@ -191,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     if (!jobId) {
       return NextResponse.json(
-        { error: "CloudConvert did not return a job id." },
+        { error: "The PDF conversion service did not return a job id." },
         { status: 500 },
       );
     }
@@ -199,7 +142,7 @@ export async function POST(request: NextRequest) {
     let completedJob: any = null;
 
     for (let attempt = 0; attempt < 45; attempt += 1) {
-      await wait(1000);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const pollResponse = await fetch(`https://api.cloudconvert.com/v2/jobs/${jobId}`, {
         headers: {
@@ -207,15 +150,14 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      const pollResult = await readJsonResponse(pollResponse);
+      const pollResult = await pollResponse.json().catch(() => ({}));
 
       if (!pollResponse.ok) {
         return NextResponse.json(
           {
-            error: getCloudConvertError(
-              pollResult,
-              `Could not check conversion status. Status ${pollResponse.status}.`,
-            ),
+            error:
+              getCloudConvertError(pollResult) ||
+              "The PDF conversion status could not be checked.",
           },
           { status: 500 },
         );
@@ -228,7 +170,11 @@ export async function POST(request: NextRequest) {
 
       if (pollResult?.data?.status === "error") {
         return NextResponse.json(
-          { error: getCloudConvertTaskError(pollResult.data) },
+          {
+            error:
+              getCloudConvertError(pollResult) ||
+              "The PDF could not be converted. Please try exporting it as JPG/PNG and upload that instead.",
+          },
           { status: 500 },
         );
       }
@@ -236,7 +182,7 @@ export async function POST(request: NextRequest) {
 
     if (!completedJob) {
       return NextResponse.json(
-        { error: "PDF conversion timed out. Please try again." },
+        { error: "PDF conversion timed out. Please try again, or upload a JPG/PNG version of the flyer." },
         { status: 504 },
       );
     }
@@ -249,7 +195,7 @@ export async function POST(request: NextRequest) {
 
     if (!convertedUrl) {
       return NextResponse.json(
-        { error: "Converted JPEG URL was not returned by CloudConvert." },
+        { error: "The converted image URL was not returned." },
         { status: 500 },
       );
     }
@@ -258,14 +204,14 @@ export async function POST(request: NextRequest) {
 
     if (!imageResponse.ok) {
       return NextResponse.json(
-        { error: `Could not download the converted JPEG. Status ${imageResponse.status}.` },
+        { error: "The converted image could not be downloaded." },
         { status: 500 },
       );
     }
 
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const storagePath = `prepared/${conversionId}/${Date.now()}-${getSafeFileName(conversionId)}.jpg`;
+    const storagePath = `prepared/${postId}/${Date.now()}-${getSafeFileName(postId)}.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from(MEDIA_BUCKET)
@@ -277,7 +223,7 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       return NextResponse.json(
-        { error: uploadError.message || "Could not save converted JPEG to Supabase Storage." },
+        { error: uploadError.message || "The converted image could not be saved." },
         { status: 500 },
       );
     }
@@ -288,46 +234,33 @@ export async function POST(request: NextRequest) {
 
     const publicUrl = publicUrlData.publicUrl;
 
-    const updates = {
-      media_url: publicUrl,
-      media_type: "image",
-      prepared_media_url: publicUrl,
-      prepared_media_width: outputWidth,
-      prepared_media_height: outputHeight,
-      publish_error: null,
-      updated_at: new Date().toISOString(),
-    };
-
-    if (!skipPostUpdate) {
-      const { error: updateError } = await supabase
-        .from("campaign_posts")
-        .update(updates)
-        .eq("id", conversionId);
-
-      if (updateError) {
-        return NextResponse.json(
-          { error: updateError.message || "Converted image saved, but the post was not updated." },
-          { status: 500 },
-        );
-      }
-    }
+    await supabase
+      .from("campaign_posts")
+      .update({
+        media_url: publicUrl,
+        media_type: "image",
+        prepared_media_url: publicUrl,
+        prepared_media_width: outputWidth,
+        prepared_media_height: outputHeight,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", postId);
 
     return NextResponse.json({
       url: publicUrl,
       publicUrl,
-      public_url: publicUrl,
-      preparedUrl: publicUrl,
-      prepared_url: publicUrl,
-      preparedMediaUrl: publicUrl,
       prepared_media_url: publicUrl,
       width: outputWidth,
       height: outputHeight,
       media_type: "image",
-      storage_path: storagePath,
     });
   } catch (error: any) {
     return NextResponse.json(
-      { error: error?.message || "Could not convert PDF to image." },
+      {
+        error:
+          error?.message ||
+          "The PDF could not be converted. Please try a smaller PDF or upload a JPG/PNG version.",
+      },
       { status: 500 },
     );
   }
