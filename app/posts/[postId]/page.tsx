@@ -68,14 +68,62 @@ type PreparedMedia = {
 };
 
 const resizePresets: ResizePreset[] = [
-  { value: "instagram-portrait", label: "Instagram portrait", size: "1080 × 1350", width: 1080, height: 1350 },
-  { value: "instagram-square", label: "Instagram square", size: "1080 × 1080", width: 1080, height: 1080 },
-  { value: "instagram-story", label: "Instagram story / reel", size: "1080 × 1920", width: 1080, height: 1920 },
-  { value: "facebook-feed", label: "Facebook feed", size: "1200 × 630", width: 1200, height: 630 },
-  { value: "facebook-square", label: "Facebook square", size: "1080 × 1080", width: 1080, height: 1080 },
-  { value: "facebook-story", label: "Facebook story", size: "1080 × 1920", width: 1080, height: 1920 },
-  { value: "tiktok-vertical", label: "TikTok vertical", size: "1080 × 1920", width: 1080, height: 1920 },
-  { value: "tiktok-square", label: "TikTok square cover", size: "1080 × 1080", width: 1080, height: 1080 },
+  {
+    value: "instagram-portrait",
+    label: "Instagram portrait",
+    size: "1080 × 1350",
+    width: 1080,
+    height: 1350,
+  },
+  {
+    value: "instagram-square",
+    label: "Instagram square",
+    size: "1080 × 1080",
+    width: 1080,
+    height: 1080,
+  },
+  {
+    value: "instagram-story",
+    label: "Instagram story / reel",
+    size: "1080 × 1920",
+    width: 1080,
+    height: 1920,
+  },
+  {
+    value: "facebook-feed",
+    label: "Facebook feed",
+    size: "1200 × 630",
+    width: 1200,
+    height: 630,
+  },
+  {
+    value: "facebook-square",
+    label: "Facebook square",
+    size: "1080 × 1080",
+    width: 1080,
+    height: 1080,
+  },
+  {
+    value: "facebook-story",
+    label: "Facebook story",
+    size: "1080 × 1920",
+    width: 1080,
+    height: 1920,
+  },
+  {
+    value: "tiktok-vertical",
+    label: "TikTok vertical",
+    size: "1080 × 1920",
+    width: 1080,
+    height: 1920,
+  },
+  {
+    value: "tiktok-square",
+    label: "TikTok square cover",
+    size: "1080 × 1080",
+    width: 1080,
+    height: 1080,
+  },
 ];
 
 const quickImproveActions = [
@@ -112,7 +160,6 @@ const toneOptions = [
   "Bold and confident",
 ];
 
-
 function cleanText(value: unknown) {
   return String(value || "").trim();
 }
@@ -122,7 +169,10 @@ function clampNumber(value: number, min: number, max: number) {
 }
 
 function getPointerDistance(first: ActivePointer, second: ActivePointer) {
-  return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+  return Math.hypot(
+    first.clientX - second.clientX,
+    first.clientY - second.clientY,
+  );
 }
 
 function getPointerCenter(first: ActivePointer, second: ActivePointer) {
@@ -194,7 +244,12 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
   const publishError = cleanText(post?.publish_error);
   const scheduleValue = getScheduleValue(post);
 
-  if (isPosted || publishStatus === "posted" || publishStatus === "published" || status === "posted") {
+  if (
+    isPosted ||
+    publishStatus === "posted" ||
+    publishStatus === "published" ||
+    status === "posted"
+  ) {
     return {
       label: "Published",
       tone: "success",
@@ -216,8 +271,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
     return {
       label: "Not scheduled",
       tone: "neutral",
-      description:
-        "Choose a time or publish manually.",
+      description: "Choose a time or publish manually.",
     };
   }
 
@@ -256,7 +310,9 @@ function getRecommendedPresets(platformName: string) {
 
   if (platform.includes("instagram")) {
     return resizePresets.filter((preset) =>
-      ["instagram-portrait", "instagram-square", "instagram-story"].includes(preset.value),
+      ["instagram-portrait", "instagram-square", "instagram-story"].includes(
+        preset.value,
+      ),
     );
   }
 
@@ -267,7 +323,9 @@ function getRecommendedPresets(platformName: string) {
   }
 
   return resizePresets.filter((preset) =>
-    ["facebook-feed", "facebook-square", "facebook-story"].includes(preset.value),
+    ["facebook-feed", "facebook-square", "facebook-story"].includes(
+      preset.value,
+    ),
   );
 }
 
@@ -300,7 +358,6 @@ function triggerDownload(url: string, filename: string) {
   document.body.removeChild(link);
 }
 
-
 function withCacheBust(url: string) {
   if (!url) return url;
 
@@ -317,11 +374,14 @@ async function urlToFile(url: string, filename: string) {
 
   const blob = await response.blob();
   const type = blob.type || "image/jpeg";
-  const extension = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
+  const extension = type.includes("png")
+    ? "png"
+    : type.includes("webp")
+      ? "webp"
+      : "jpg";
 
   return new File([blob], `${filename}.${extension}`, { type });
 }
-
 
 function PdfFirstPagePreview({ url }: { url: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -377,7 +437,9 @@ function PdfFirstPagePreview({ url }: { url: string }) {
         }
       } catch {
         if (!cancelled) {
-          setPreviewStatus("PDF preview is unavailable. You can still view, download, or convert this PDF.");
+          setPreviewStatus(
+            "PDF preview is unavailable. You can still view, download, or convert this PDF.",
+          );
           setPreviewFailed(true);
         }
       }
@@ -416,7 +478,14 @@ function PdfFirstPagePreview({ url }: { url: string }) {
       />
 
       {previewStatus && (
-        <p style={{ margin: 0, textAlign: "center", fontSize: 14, opacity: 0.84 }}>
+        <p
+          style={{
+            margin: 0,
+            textAlign: "center",
+            fontSize: 14,
+            opacity: 0.84,
+          }}
+        >
           {previewStatus}
         </p>
       )}
@@ -442,10 +511,13 @@ export default function PostReviewPage() {
   const [hashtags, setHashtags] = useState("");
 
   const [message, setMessage] = useState("");
-  const [activePanel, setActivePanel] = useState<"review" | "prepare" | "improve">("review");
+  const [activePanel, setActivePanel] = useState<
+    "review" | "prepare" | "improve"
+  >("review");
   const [isPositioningMedia, setIsPositioningMedia] = useState(false);
 
-  const [resizePresetValue, setResizePresetValue] = useState<ResizePresetValue>("facebook-feed");
+  const [resizePresetValue, setResizePresetValue] =
+    useState<ResizePresetValue>("facebook-feed");
   const [prepareFitMode, setPrepareFitMode] = useState<"fill" | "fit">("fill");
   const [editMode, setEditMode] = useState<EditMode>("crop");
   const [mediaZoom, setMediaZoom] = useState(1);
@@ -457,7 +529,9 @@ export default function PostReviewPage() {
   const [resizingMedia, setResizingMedia] = useState(false);
   const [sharingMedia, setSharingMedia] = useState(false);
   const [autoPublishing, setAutoPublishing] = useState(false);
-  const [preparedMedia, setPreparedMedia] = useState<PreparedMedia | null>(null);
+  const [preparedMedia, setPreparedMedia] = useState<PreparedMedia | null>(
+    null,
+  );
 
   const [rewriting, setRewriting] = useState("");
   const [audienceTarget, setAudienceTarget] = useState("Small business owners");
@@ -472,7 +546,10 @@ export default function PostReviewPage() {
   const pinchStateRef = useRef<PinchState | null>(null);
 
   const platformName = normalisePlatform(post?.platform);
-  const recommendedPresets = useMemo(() => getRecommendedPresets(platformName), [platformName]);
+  const recommendedPresets = useMemo(
+    () => getRecommendedPresets(platformName),
+    [platformName],
+  );
   const selectedPreset =
     recommendedPresets.find((preset) => preset.value === resizePresetValue) ||
     recommendedPresets[0] ||
@@ -494,15 +571,26 @@ export default function PostReviewPage() {
     return {
       url: savedUrl,
       label: selectedPreset.label,
-      width: Number(post?.prepared_media_width || post?.preparedWidth || selectedPreset.width),
-      height: Number(post?.prepared_media_height || post?.preparedHeight || selectedPreset.height),
+      width: Number(
+        post?.prepared_media_width ||
+          post?.preparedWidth ||
+          selectedPreset.width,
+      ),
+      height: Number(
+        post?.prepared_media_height ||
+          post?.preparedHeight ||
+          selectedPreset.height,
+      ),
     };
   }, [preparedMedia, post, selectedPreset]);
 
   const mediaUrl = cleanText(post?.media_url);
   const mediaType = cleanText(post?.media_type).toLowerCase();
   const isVideo = mediaType === "video";
-  const isFlyer = mediaType === "flyer" || mediaType === "pdf" || mediaUrl.toLowerCase().includes(".pdf");
+  const isFlyer =
+    mediaType === "flyer" ||
+    mediaType === "pdf" ||
+    mediaUrl.toLowerCase().includes(".pdf");
   const canPrepareImage = Boolean(mediaUrl) && !isVideo && !isFlyer;
   const canConvertFlyer = Boolean(mediaUrl) && isFlyer && !isVideo;
 
@@ -519,7 +607,8 @@ export default function PostReviewPage() {
   const scheduleValue = getScheduleValue(post);
   const scheduledLabel = formatScheduledDate(scheduleValue);
   const autopublishStatus = getAutopublishStatus(post, isPosted);
-  const canScheduledAutopublish = canAutopublish && Boolean(scheduleValue) && !isPosted;
+  const canScheduledAutopublish =
+    canAutopublish && Boolean(scheduleValue) && !isPosted;
 
   const fullCaption = useMemo(() => {
     return [caption, cta, hashtags].map(cleanText).filter(Boolean).join("\n\n");
@@ -585,7 +674,11 @@ export default function PostReviewPage() {
     setPost(data);
     setCaption(cleanText(data.caption));
     setCta(cleanText(data.cta));
-    setHashtags(Array.isArray(data.hashtags) ? data.hashtags.join(" ") : cleanText(data.hashtags));
+    setHashtags(
+      Array.isArray(data.hashtags)
+        ? data.hashtags.join(" ")
+        : cleanText(data.hashtags),
+    );
     setLoading(false);
   };
 
@@ -626,7 +719,9 @@ export default function PostReviewPage() {
       await navigator.clipboard.writeText(fullCaption);
       setMessage("Caption copied.");
     } catch {
-      setMessage("Could not copy automatically. Please copy the caption manually.");
+      setMessage(
+        "Could not copy automatically. Please copy the caption manually.",
+      );
     }
   };
 
@@ -705,7 +800,12 @@ export default function PostReviewPage() {
       return;
     }
 
-    setPost({ ...post, is_posted: true, status: "posted", publish_status: "posted" });
+    setPost({
+      ...post,
+      is_posted: true,
+      status: "posted",
+      publish_status: "posted",
+    });
     setMessage("Marked as posted.");
     setSaving(false);
   };
@@ -733,102 +833,125 @@ export default function PostReviewPage() {
       return;
     }
 
-    setPost({ ...post, is_posted: false, status: "ready", publish_status: "ready" });
+    setPost({
+      ...post,
+      is_posted: false,
+      status: "ready",
+      publish_status: "ready",
+    });
     setMessage("Post set back to ready.");
     setSaving(false);
   };
 
-  const convertPdfUrlToJpeg = async (sourcePost: any, sourceMediaUrl: string) => {
+  const convertPdfUrlToJpeg = async (
+    sourcePost: any,
+    sourceMediaUrl: string,
+  ) => {
     if (!sourcePost?.id || !sourceMediaUrl) {
       throw new Error("Missing PDF media details.");
     }
 
-    const response = await fetch("/api/media/pdf-to-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        postId: sourcePost.id,
-        mediaUrl: sourceMediaUrl,
-        preset: getPresetForApi(resizePresetValue),
-        outputWidth: selectedPreset.width,
-        outputHeight: selectedPreset.height,
-      }),
+    const pdfjs = await import("pdfjs-dist");
+
+    if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+    }
+
+    const loadingTask = pdfjs.getDocument({
+      url: sourceMediaUrl,
+      withCredentials: false,
     });
 
-    const responseText = await response.text();
-    let result: any = {};
+    let pdf: any = null;
 
     try {
-      result = responseText ? JSON.parse(responseText) : {};
-    } catch {
-      result = { error: responseText };
+      pdf = await loadingTask.promise;
+      const page = await pdf.getPage(1);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const targetWidth = selectedPreset.width || 1080;
+      const scale = clampNumber(targetWidth / baseViewport.width, 0.75, 3);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d", { alpha: false });
+
+      if (!context) {
+        throw new Error("Could not prepare this PDF in the browser.");
+      }
+
+      canvas.width = Math.max(1, Math.floor(viewport.width));
+      canvas.height = Math.max(1, Math.floor(viewport.height));
+
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      await page.render({ canvasContext: context, viewport }).promise;
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (createdBlob) => {
+            if (!createdBlob) {
+              reject(new Error("Could not create a JPEG from this PDF."));
+              return;
+            }
+
+            resolve(createdBlob);
+          },
+          "image/jpeg",
+          0.92,
+        );
+      });
+
+      const userId = cleanText(sourcePost.user_id) || "anonymous";
+      const storagePath = `${userId}/posts/${sourcePost.id}/prepared/${Date.now()}-pdf-preview.jpg`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("campaign-assets")
+        .upload(storagePath, blob, {
+          cacheControl: "3600",
+          upsert: true,
+          contentType: "image/jpeg",
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("campaign-assets")
+        .getPublicUrl(storagePath);
+
+      const url = withCacheBust(publicUrlData.publicUrl);
+      const convertedWidth = canvas.width;
+      const convertedHeight = canvas.height;
+
+      const updates = {
+        media_url: url,
+        media_path: storagePath,
+        media_type: "image",
+        prepared_media_url: url,
+        prepared_media_width: convertedWidth,
+        prepared_media_height: convertedHeight,
+        publish_error: null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("campaign_posts")
+        .update(updates)
+        .eq("id", sourcePost.id);
+
+      if (error) throw error;
+
+      return {
+        updates,
+        prepared: {
+          url,
+          label: "Prepared flyer image",
+          width: convertedWidth,
+          height: convertedHeight,
+        },
+      };
+    } finally {
+      loadingTask?.destroy?.();
     }
-
-    if (!response.ok) {
-      const backendError = cleanText(
-        result?.error ||
-          result?.message ||
-          result?.details ||
-          result?.detail ||
-          responseText,
-      );
-
-      throw new Error(
-        backendError ||
-          `PDF conversion failed with status ${response.status}.`,
-      );
-    }
-
-    const rawUrl =
-      result?.url ||
-      result?.publicUrl ||
-      result?.public_url ||
-      result?.preparedUrl ||
-      result?.prepared_url ||
-      result?.preparedMediaUrl ||
-      result?.prepared_media_url ||
-      result?.resizedUrl ||
-      result?.resized_url ||
-      result?.mediaUrl ||
-      result?.media_url ||
-      result?.data?.url ||
-      result?.data?.publicUrl ||
-      result?.data?.public_url;
-
-    if (!rawUrl) {
-      throw new Error("PDF was converted but no image URL was returned.");
-    }
-
-    const url = withCacheBust(String(rawUrl));
-    const convertedWidth = Number(result?.width || result?.outputWidth || selectedPreset.width);
-    const convertedHeight = Number(result?.height || result?.outputHeight || selectedPreset.height);
-
-    const updates = {
-      media_url: url,
-      media_type: "image",
-      prepared_media_url: url,
-      prepared_media_width: convertedWidth,
-      prepared_media_height: convertedHeight,
-      publish_error: null,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error } = await supabase
-      .from("campaign_posts")
-      .update(updates)
-      .eq("id", sourcePost.id);
-
-    if (error) throw error;
-
-    return {
-      updates,
-      prepared: {
-        url,
-        label: result?.label || "Converted JPEG",
-        width: convertedWidth,
-        height: convertedHeight,
-      },
-    };
   };
 
   const handleUploadMedia = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -854,7 +977,9 @@ export default function PostReviewPage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage.from("campaign-assets").getPublicUrl(path);
+      const { data: publicUrlData } = supabase.storage
+        .from("campaign-assets")
+        .getPublicUrl(path);
       const uploadedUrl = publicUrlData.publicUrl;
 
       const nextMediaType = file.type.startsWith("video/")
@@ -889,7 +1014,9 @@ export default function PostReviewPage() {
         const converted = await convertPdfUrlToJpeg(uploadedPost, uploadedUrl);
         setPost({ ...uploadedPost, ...converted.updates });
         setPreparedMedia(converted.prepared);
-        setMessage("PDF converted to JPEG preview. Instagram can now use this image.");
+        setMessage(
+          "PDF converted to JPEG preview. Instagram can now use this image.",
+        );
         return;
       }
 
@@ -910,7 +1037,11 @@ export default function PostReviewPage() {
 
     const { error } = await supabase
       .from("campaign_posts")
-      .update({ media_url: null, media_type: null, updated_at: new Date().toISOString() })
+      .update({
+        media_url: null,
+        media_type: null,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", post.id);
 
     if (error) {
@@ -937,7 +1068,9 @@ export default function PostReviewPage() {
       setPost({ ...post, ...converted.updates });
       setPreparedMedia(converted.prepared);
       setActivePanel("review");
-      setMessage("PDF converted to JPEG preview. Instagram can now use this image.");
+      setMessage(
+        "PDF converted to JPEG preview. Instagram can now use this image.",
+      );
     } catch (error: any) {
       setMessage(error?.message || "Could not convert this PDF to JPEG.");
     } finally {
@@ -949,7 +1082,10 @@ export default function PostReviewPage() {
     if (!mediaUrl) return;
 
     const extension = isVideo ? "mp4" : isFlyer ? "pdf" : "jpg";
-    triggerDownload(mediaUrl, `${getSafeFileName("fromone-post-media")}-original.${extension}`);
+    triggerDownload(
+      mediaUrl,
+      `${getSafeFileName("fromone-post-media")}-original.${extension}`,
+    );
   };
 
   const resetTransform = () => {
@@ -1092,7 +1228,15 @@ export default function PostReviewPage() {
       const center = getPointerCenter(first, second);
       const pinch = pinchStateRef.current;
 
-      setMediaZoom(clampNumber(Number((pinch.startZoom * (distance / pinch.startDistance)).toFixed(2)), 0.75, 3));
+      setMediaZoom(
+        clampNumber(
+          Number(
+            (pinch.startZoom * (distance / pinch.startDistance)).toFixed(2),
+          ),
+          0.75,
+          3,
+        ),
+      );
       setMediaOffset({
         x: pinch.startOffset.x + center.x - pinch.startCenterX,
         y: pinch.startOffset.y + center.y - pinch.startCenterY,
@@ -1135,7 +1279,9 @@ export default function PostReviewPage() {
     event.preventDefault();
 
     const direction = event.deltaY > 0 ? -0.05 : 0.05;
-    setMediaZoom((current) => clampNumber(Number((current + direction).toFixed(2)), 0.75, 3));
+    setMediaZoom((current) =>
+      clampNumber(Number((current + direction).toFixed(2)), 0.75, 3),
+    );
     setPreparedMedia(null);
   };
 
@@ -1168,7 +1314,10 @@ export default function PostReviewPage() {
 
       const result = await response.json().catch(() => ({}));
 
-      if (!response.ok) throw new Error(result?.error || result?.message || "Could not prepare this image.");
+      if (!response.ok)
+        throw new Error(
+          result?.error || result?.message || "Could not prepare this image.",
+        );
 
       const rawUrl =
         result?.url ||
@@ -1194,8 +1343,12 @@ export default function PostReviewPage() {
       const nextPreparedMedia = {
         url,
         label: result?.label || selectedPreset.label,
-        width: Number(result?.width || result?.outputWidth || selectedPreset.width),
-        height: Number(result?.height || result?.outputHeight || selectedPreset.height),
+        width: Number(
+          result?.width || result?.outputWidth || selectedPreset.width,
+        ),
+        height: Number(
+          result?.height || result?.outputHeight || selectedPreset.height,
+        ),
       };
 
       setPreparedMedia(nextPreparedMedia);
@@ -1220,7 +1373,10 @@ export default function PostReviewPage() {
   const downloadPreparedImage = () => {
     if (!preparedDisplayMedia?.url) return;
 
-    triggerDownload(preparedDisplayMedia.url, `fromone-post-${preparedDisplayMedia.width}x${preparedDisplayMedia.height}.jpg`);
+    triggerDownload(
+      preparedDisplayMedia.url,
+      `fromone-post-${preparedDisplayMedia.width}x${preparedDisplayMedia.height}.jpg`,
+    );
   };
 
   const sharePreparedImage = async () => {
@@ -1237,18 +1393,34 @@ export default function PostReviewPage() {
       const nav = navigator as any;
 
       if (nav.canShare?.({ files: [file] }) && nav.share) {
-        await nav.share({ title: "FromOne post", text: fullCaption, files: [file] });
+        await nav.share({
+          title: "FromOne post",
+          text: fullCaption,
+          files: [file],
+        });
         setMessage("Share sheet opened.");
         return;
       }
 
       downloadPreparedImage();
-      window.open(getPlatformUrl(platformName), "_blank", "noopener,noreferrer");
-      setMessage("Sharing is not supported here. Prepared image downloaded and platform opened.");
+      window.open(
+        getPlatformUrl(platformName),
+        "_blank",
+        "noopener,noreferrer",
+      );
+      setMessage(
+        "Sharing is not supported here. Prepared image downloaded and platform opened.",
+      );
     } catch {
       downloadPreparedImage();
-      window.open(getPlatformUrl(platformName), "_blank", "noopener,noreferrer");
-      setMessage("Sharing was not available. Prepared image downloaded and platform opened.");
+      window.open(
+        getPlatformUrl(platformName),
+        "_blank",
+        "noopener,noreferrer",
+      );
+      setMessage(
+        "Sharing was not available. Prepared image downloaded and platform opened.",
+      );
     } finally {
       setSharingMedia(false);
     }
@@ -1258,7 +1430,9 @@ export default function PostReviewPage() {
     if (!post?.id) return;
 
     if (!canAutopublish) {
-      setMessage("Autopublish is only available for connected Facebook and Instagram business accounts.");
+      setMessage(
+        "Autopublish is only available for connected Facebook and Instagram business accounts.",
+      );
       return;
     }
 
@@ -1268,7 +1442,9 @@ export default function PostReviewPage() {
     }
 
     if (isInstagramPost && isFlyer) {
-      setMessage("Instagram cannot autopublish a PDF or flyer file. Use Convert PDF to JPEG, then autopublish again.");
+      setMessage(
+        "Instagram cannot autopublish a PDF or flyer file. Use Convert PDF to JPEG, then autopublish again.",
+      );
       return;
     }
 
@@ -1283,7 +1459,9 @@ export default function PostReviewPage() {
     setMessage("");
 
     try {
-      const endpoint = isInstagramPost ? "/api/instagram/publish" : "/api/facebook/publish";
+      const endpoint = isInstagramPost
+        ? "/api/instagram/publish"
+        : "/api/facebook/publish";
       const publishMediaUrl = preparedDisplayMedia?.url || mediaUrl;
       const publishMediaType = preparedDisplayMedia?.url ? "image" : mediaType;
 
@@ -1321,11 +1499,15 @@ export default function PostReviewPage() {
           message.toLowerCase().includes("connection") ||
           message.toLowerCase().includes("permissions")
         ) {
-          setMessage("Autopublish needs attention. Reconnect Facebook/Instagram in Settings, or use manual posting.");
+          setMessage(
+            "Autopublish needs attention. Reconnect Facebook/Instagram in Settings, or use manual posting.",
+          );
           return;
         }
 
-        throw new Error(message || `Could not autopublish to ${autopublishPlatformLabel}.`);
+        throw new Error(
+          message || `Could not autopublish to ${autopublishPlatformLabel}.`,
+        );
       }
 
       setPost({
@@ -1337,7 +1519,10 @@ export default function PostReviewPage() {
       });
       setMessage(`Autopublished to ${autopublishPlatformLabel}.`);
     } catch (error: any) {
-      setMessage(error?.message || `Could not autopublish to ${autopublishPlatformLabel}.`);
+      setMessage(
+        error?.message ||
+          `Could not autopublish to ${autopublishPlatformLabel}.`,
+      );
     } finally {
       setAutoPublishing(false);
     }
@@ -1371,13 +1556,24 @@ export default function PostReviewPage() {
 
       const result = await response.json().catch(() => ({}));
 
-      if (!response.ok) throw new Error(result?.error || result?.message || "Could not improve this post.");
+      if (!response.ok)
+        throw new Error(
+          result?.error || result?.message || "Could not improve this post.",
+        );
 
-      const nextCaption = cleanText(result.caption || result.rewrittenCaption || result.post?.caption);
-      const nextCta = cleanText(result.cta || result.rewrittenCta || result.post?.cta);
+      const nextCaption = cleanText(
+        result.caption || result.rewrittenCaption || result.post?.caption,
+      );
+      const nextCta = cleanText(
+        result.cta || result.rewrittenCta || result.post?.cta,
+      );
       const nextHashtags = Array.isArray(result.hashtags)
         ? result.hashtags.join(" ")
-        : cleanText(result.hashtags || result.rewrittenHashtags || result.post?.hashtags);
+        : cleanText(
+            result.hashtags ||
+              result.rewrittenHashtags ||
+              result.post?.hashtags,
+          );
 
       if (nextCaption) setCaption(nextCaption);
       if (nextCta) setCta(nextCta);
@@ -1405,7 +1601,11 @@ export default function PostReviewPage() {
         <section className="pr2-loading">
           <h1>Post not found</h1>
           <p>{message || "This post could not be loaded."}</p>
-          <button type="button" className="pr2-btn pr2-btn-primary" onClick={() => router.push("/posts")}>
+          <button
+            type="button"
+            className="pr2-btn pr2-btn-primary"
+            onClick={() => router.push("/posts")}
+          >
             Back to posts
           </button>
         </section>
@@ -1415,10 +1615,13 @@ export default function PostReviewPage() {
 
   return (
     <main className="pr2-page" data-review-page="simple-mobile-tools-v1">
-
       <section className="pr2-shell">
         <div className="pr2-topbar">
-          <button type="button" className="pr2-back" onClick={() => router.push("/posts")}>
+          <button
+            type="button"
+            className="pr2-back"
+            onClick={() => router.push("/posts")}
+          >
             ← Back to posts
           </button>
 
@@ -1436,11 +1639,19 @@ export default function PostReviewPage() {
               <div className="pr2-card-head">
                 <div>
                   <span className="pr2-kicker">Media</span>
-                  <h1>{activePanel === "prepare" ? "Prepare media" : "Review media"}</h1>
+                  <h1>
+                    {activePanel === "prepare"
+                      ? "Prepare media"
+                      : "Review media"}
+                  </h1>
                 </div>
 
                 {canPrepareImage && activePanel !== "prepare" && (
-                  <button type="button" className="pr2-btn pr2-btn-primary" onClick={() => setActivePanel("prepare")}>
+                  <button
+                    type="button"
+                    className="pr2-btn pr2-btn-primary"
+                    onClick={() => setActivePanel("prepare")}
+                  >
                     Prepare media
                   </button>
                 )}
@@ -1473,7 +1684,11 @@ export default function PostReviewPage() {
               {activePanel === "prepare" && canPrepareImage ? (
                 <div className="pr2-prepare">
                   <div
-                    className={isPositioningMedia ? "pr2-stage is-positioning" : "pr2-stage"}
+                    className={
+                      isPositioningMedia
+                        ? "pr2-stage is-positioning"
+                        : "pr2-stage"
+                    }
                     onPointerDown={startTransform}
                     onPointerMove={moveTransform}
                     onPointerUp={stopTransform}
@@ -1486,7 +1701,9 @@ export default function PostReviewPage() {
                         src={mediaUrl}
                         alt="Prepared media preview"
                         draggable={false}
-                        className={prepareFitMode === "fit" ? "is-fit" : "is-fill"}
+                        className={
+                          prepareFitMode === "fit" ? "is-fit" : "is-fill"
+                        }
                         style={transformStyle}
                       />
                       <span className="pr2-grid" />
@@ -1498,7 +1715,11 @@ export default function PostReviewPage() {
                       <button
                         key={preset.value}
                         type="button"
-                        className={resizePresetValue === preset.value ? "pr2-preset is-active" : "pr2-preset"}
+                        className={
+                          resizePresetValue === preset.value
+                            ? "pr2-preset is-active"
+                            : "pr2-preset"
+                        }
                         onClick={() => selectPreset(preset.value)}
                       >
                         <strong>{preset.label}</strong>
@@ -1510,21 +1731,33 @@ export default function PostReviewPage() {
                   <div className="pr2-mode-row" aria-label="Media edit mode">
                     <button
                       type="button"
-                      className={editMode === "crop" ? "pr2-mode-btn is-active" : "pr2-mode-btn"}
+                      className={
+                        editMode === "crop"
+                          ? "pr2-mode-btn is-active"
+                          : "pr2-mode-btn"
+                      }
                       onClick={() => selectEditMode("crop")}
                     >
                       Crop
                     </button>
                     <button
                       type="button"
-                      className={editMode === "rotate" ? "pr2-mode-btn is-active" : "pr2-mode-btn"}
+                      className={
+                        editMode === "rotate"
+                          ? "pr2-mode-btn is-active"
+                          : "pr2-mode-btn"
+                      }
                       onClick={() => selectEditMode("rotate")}
                     >
                       Rotate
                     </button>
                     <button
                       type="button"
-                      className={editMode === "flip" ? "pr2-mode-btn is-active" : "pr2-mode-btn"}
+                      className={
+                        editMode === "flip"
+                          ? "pr2-mode-btn is-active"
+                          : "pr2-mode-btn"
+                      }
                       onClick={() => selectEditMode("flip")}
                     >
                       Flip
@@ -1535,12 +1768,17 @@ export default function PostReviewPage() {
                     {editMode === "crop" && (
                       <>
                         <p className="pr2-mode-panel-note">
-                          Tap Position image before dragging or pinching. Lock it again when you want to scroll.
+                          Tap Position image before dragging or pinching. Lock
+                          it again when you want to scroll.
                         </p>
 
                         <button
                           type="button"
-                          className={isPositioningMedia ? "pr2-btn pr2-btn-primary" : "pr2-btn pr2-position-btn"}
+                          className={
+                            isPositioningMedia
+                              ? "pr2-btn pr2-btn-primary"
+                              : "pr2-btn pr2-position-btn"
+                          }
                           onClick={togglePositioningMedia}
                         >
                           {isPositioningMedia ? "Lock image" : "Position image"}
@@ -1551,13 +1789,32 @@ export default function PostReviewPage() {
                     {editMode === "rotate" && (
                       <>
                         <p className="pr2-mode-panel-note">
-                          Rotate the image if it needs straightening for the selected frame.
+                          Rotate the image if it needs straightening for the
+                          selected frame.
                         </p>
 
                         <div className="pr2-actions">
-                          <button type="button" className="pr2-btn" onClick={rotateLeft}>Rotate left</button>
-                          <button type="button" className="pr2-btn" onClick={rotateRight}>Rotate right</button>
-                          <button type="button" className="pr2-btn" onClick={resetTransform}>Reset</button>
+                          <button
+                            type="button"
+                            className="pr2-btn"
+                            onClick={rotateLeft}
+                          >
+                            Rotate left
+                          </button>
+                          <button
+                            type="button"
+                            className="pr2-btn"
+                            onClick={rotateRight}
+                          >
+                            Rotate right
+                          </button>
+                          <button
+                            type="button"
+                            className="pr2-btn"
+                            onClick={resetTransform}
+                          >
+                            Reset
+                          </button>
                         </div>
                       </>
                     )}
@@ -1569,9 +1826,27 @@ export default function PostReviewPage() {
                         </p>
 
                         <div className="pr2-actions">
-                          <button type="button" className="pr2-btn" onClick={flipHorizontal}>Flip horizontal</button>
-                          <button type="button" className="pr2-btn" onClick={flipVertical}>Flip vertical</button>
-                          <button type="button" className="pr2-btn" onClick={resetTransform}>Reset</button>
+                          <button
+                            type="button"
+                            className="pr2-btn"
+                            onClick={flipHorizontal}
+                          >
+                            Flip horizontal
+                          </button>
+                          <button
+                            type="button"
+                            className="pr2-btn"
+                            onClick={flipVertical}
+                          >
+                            Flip vertical
+                          </button>
+                          <button
+                            type="button"
+                            className="pr2-btn"
+                            onClick={resetTransform}
+                          >
+                            Reset
+                          </button>
                         </div>
                       </>
                     )}
@@ -1581,18 +1856,65 @@ export default function PostReviewPage() {
                     <summary>More editing tools</summary>
 
                     <div className="pr2-mobile-tools-grid">
-                      <button type="button" className="pr2-btn" onClick={fitFullImage}>Fit image</button>
-                      <button type="button" className="pr2-btn" onClick={fillFrame}>Fill frame</button>
-                      <button type="button" className="pr2-btn" onClick={resetTransform}>Reset image</button>
-                      <button type="button" className="pr2-btn" onClick={rotateLeft}>Rotate left</button>
-                      <button type="button" className="pr2-btn" onClick={rotateRight}>Rotate right</button>
-                      <button type="button" className="pr2-btn" onClick={flipHorizontal}>Flip horizontal</button>
-                      <button type="button" className="pr2-btn" onClick={flipVertical}>Flip vertical</button>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={fitFullImage}
+                      >
+                        Fit image
+                      </button>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={fillFrame}
+                      >
+                        Fill frame
+                      </button>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={resetTransform}
+                      >
+                        Reset image
+                      </button>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={rotateLeft}
+                      >
+                        Rotate left
+                      </button>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={rotateRight}
+                      >
+                        Rotate right
+                      </button>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={flipHorizontal}
+                      >
+                        Flip horizontal
+                      </button>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={flipVertical}
+                      >
+                        Flip vertical
+                      </button>
                     </div>
                   </details>
 
                   <div className="pr2-actions pr2-create-actions">
-                    <button type="button" className="pr2-btn pr2-btn-primary" onClick={createPreparedImage} disabled={resizingMedia}>
+                    <button
+                      type="button"
+                      className="pr2-btn pr2-btn-primary"
+                      onClick={createPreparedImage}
+                      disabled={resizingMedia}
+                    >
                       {resizingMedia
                         ? "Creating..."
                         : preparedDisplayMedia?.url
@@ -1606,16 +1928,26 @@ export default function PostReviewPage() {
                       <div>
                         <strong>Prepared image ready</strong>
                         <span>
-                          {preparedDisplayMedia.width} × {preparedDisplayMedia.height}
+                          {preparedDisplayMedia.width} ×{" "}
+                          {preparedDisplayMedia.height}
                         </span>
                       </div>
 
                       <div className="pr2-prepared-ready-actions">
-                        <button type="button" className="pr2-btn pr2-btn-primary" onClick={sharePreparedImage} disabled={sharingMedia}>
+                        <button
+                          type="button"
+                          className="pr2-btn pr2-btn-primary"
+                          onClick={sharePreparedImage}
+                          disabled={sharingMedia}
+                        >
                           {sharingMedia ? "Opening..." : "Share to social app"}
                         </button>
 
-                        <button type="button" className="pr2-btn" onClick={downloadPreparedImage}>
+                        <button
+                          type="button"
+                          className="pr2-btn"
+                          onClick={downloadPreparedImage}
+                        >
                           Download
                         </button>
                       </div>
@@ -1625,7 +1957,9 @@ export default function PostReviewPage() {
               ) : (
                 <>
                   {preparedDisplayMedia?.url && activePanel !== "prepare" && (
-                    <div className="pr2-media-current-label">Showing prepared image</div>
+                    <div className="pr2-media-current-label">
+                      Showing prepared image
+                    </div>
                   )}
 
                   <div className="pr2-media-box">
@@ -1633,14 +1967,34 @@ export default function PostReviewPage() {
                       isVideo ? (
                         <video src={mediaUrl} controls />
                       ) : isFlyer && preparedDisplayMedia?.url ? (
-                        <img src={preparedDisplayMedia.url} alt="PDF preview image" />
+                        <img
+                          src={preparedDisplayMedia.url}
+                          alt="PDF preview image"
+                        />
                       ) : isFlyer ? (
                         <div className="pr2-empty">
                           <strong>PDF / flyer attached</strong>
-                          <p>No preview image is ready yet. Convert it to JPEG for Instagram autopublish, or open/download it for manual posting.</p>
+                          <PdfFirstPagePreview url={mediaUrl} />
+                          <p>
+                            Previewing page 1. Convert it to JPEG for Instagram
+                            autopublish, or open/download it for manual posting.
+                          </p>
+                          <button
+                            type="button"
+                            className="pr2-btn pr2-btn-primary"
+                            onClick={convertPdfToJpeg}
+                            disabled={resizingMedia}
+                          >
+                            {resizingMedia
+                              ? "Converting..."
+                              : "Convert PDF to JPEG"}
+                          </button>
                         </div>
                       ) : (
-                        <img src={preparedDisplayMedia?.url || mediaUrl} alt="Post media" />
+                        <img
+                          src={preparedDisplayMedia?.url || mediaUrl}
+                          alt="Post media"
+                        />
                       )
                     ) : (
                       <div className="pr2-empty">
@@ -1650,13 +2004,23 @@ export default function PostReviewPage() {
                     )}
                   </div>
 
-                  <input ref={fileInputRef} type="file" accept="image/*,video/*,.pdf" hidden onChange={handleUploadMedia} />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*,.pdf"
+                    hidden
+                    onChange={handleUploadMedia}
+                  />
 
                   <details className="pr2-details">
                     <summary>Media options</summary>
 
                     <div className="pr2-actions">
-                      <button type="button" className="pr2-btn" onClick={() => fileInputRef.current?.click()}>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
                         Upload / replace
                       </button>
 
@@ -1667,15 +2031,36 @@ export default function PostReviewPage() {
                           onClick={convertPdfToJpeg}
                           disabled={resizingMedia}
                         >
-                          {resizingMedia ? "Converting..." : "Convert PDF to JPEG"}
+                          {resizingMedia
+                            ? "Converting..."
+                            : "Convert PDF to JPEG"}
                         </button>
                       )}
 
                       {mediaUrl && (
                         <>
-                          <a className="pr2-btn" href={mediaUrl} target="_blank" rel="noreferrer">View media</a>
-                          <button type="button" className="pr2-btn" onClick={downloadMedia}>Download</button>
-                          <button type="button" className="pr2-btn pr2-btn-danger" onClick={removeMedia}>Remove</button>
+                          <a
+                            className="pr2-btn"
+                            href={mediaUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View media
+                          </a>
+                          <button
+                            type="button"
+                            className="pr2-btn"
+                            onClick={downloadMedia}
+                          >
+                            Download
+                          </button>
+                          <button
+                            type="button"
+                            className="pr2-btn pr2-btn-danger"
+                            onClick={removeMedia}
+                          >
+                            Remove
+                          </button>
                         </>
                       )}
                     </div>
@@ -1684,9 +2069,24 @@ export default function PostReviewPage() {
                   {preparedDisplayMedia?.url && (
                     <div className="pr2-prepared-strip">
                       <strong>Prepared image ready</strong>
-                      <span>{preparedDisplayMedia.width} × {preparedDisplayMedia.height}</span>
-                      <button type="button" className="pr2-btn" onClick={sharePreparedImage}>Share to social app</button>
-                      <button type="button" className="pr2-btn" onClick={downloadPreparedImage}>Download</button>
+                      <span>
+                        {preparedDisplayMedia.width} ×{" "}
+                        {preparedDisplayMedia.height}
+                      </span>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={sharePreparedImage}
+                      >
+                        Share to social app
+                      </button>
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={downloadPreparedImage}
+                      >
+                        Download
+                      </button>
                     </div>
                   )}
                 </>
@@ -1704,26 +2104,48 @@ export default function PostReviewPage() {
               <div className="pr2-wording">
                 <label className="is-caption">
                   <strong>Caption</strong>
-                  <textarea value={caption} onChange={(event) => setCaption(event.target.value)} />
+                  <textarea
+                    value={caption}
+                    onChange={(event) => setCaption(event.target.value)}
+                  />
                 </label>
 
                 <label>
                   <strong>CTA</strong>
-                  <input value={cta} onChange={(event) => setCta(event.target.value)} />
+                  <input
+                    value={cta}
+                    onChange={(event) => setCta(event.target.value)}
+                  />
                 </label>
 
                 <label>
                   <strong>Hashtags</strong>
-                  <input value={hashtags} onChange={(event) => setHashtags(event.target.value)} />
+                  <input
+                    value={hashtags}
+                    onChange={(event) => setHashtags(event.target.value)}
+                  />
                 </label>
               </div>
 
               <div className="pr2-actions">
-                <button type="button" className="pr2-btn pr2-btn-primary" onClick={saveWording} disabled={saving}>
+                <button
+                  type="button"
+                  className="pr2-btn pr2-btn-primary"
+                  onClick={saveWording}
+                  disabled={saving}
+                >
                   {saving ? "Saving..." : "Save wording"}
                 </button>
-                <button type="button" className="pr2-btn" onClick={copyCaption}>Copy caption</button>
-                <button type="button" className="pr2-btn" onClick={() => setActivePanel("improve")}>Improve wording</button>
+                <button type="button" className="pr2-btn" onClick={copyCaption}>
+                  Copy caption
+                </button>
+                <button
+                  type="button"
+                  className="pr2-btn"
+                  onClick={() => setActivePanel("improve")}
+                >
+                  Improve wording
+                </button>
               </div>
             </article>
 
@@ -1756,7 +2178,9 @@ export default function PostReviewPage() {
                       onClick={() => quickImprove(action.value)}
                       disabled={Boolean(rewriting)}
                     >
-                      {rewriting === action.value ? "Improving..." : action.label}
+                      {rewriting === action.value
+                        ? "Improving..."
+                        : action.label}
                     </button>
                   ))}
                 </div>
@@ -1764,22 +2188,39 @@ export default function PostReviewPage() {
                 <div className="pr2-select-row">
                   <label>
                     <strong>Audience</strong>
-                    <select value={audienceTarget} onChange={(event) => setAudienceTarget(event.target.value)}>
-                      {audienceOptions.map((option) => <option key={option}>{option}</option>)}
+                    <select
+                      value={audienceTarget}
+                      onChange={(event) =>
+                        setAudienceTarget(event.target.value)
+                      }
+                    >
+                      {audienceOptions.map((option) => (
+                        <option key={option}>{option}</option>
+                      ))}
                     </select>
                   </label>
 
                   <label>
                     <strong>Reach</strong>
-                    <select value={reachTarget} onChange={(event) => setReachTarget(event.target.value)}>
-                      {reachOptions.map((option) => <option key={option}>{option}</option>)}
+                    <select
+                      value={reachTarget}
+                      onChange={(event) => setReachTarget(event.target.value)}
+                    >
+                      {reachOptions.map((option) => (
+                        <option key={option}>{option}</option>
+                      ))}
                     </select>
                   </label>
 
                   <label>
                     <strong>Tone</strong>
-                    <select value={toneTarget} onChange={(event) => setToneTarget(event.target.value)}>
-                      {toneOptions.map((option) => <option key={option}>{option}</option>)}
+                    <select
+                      value={toneTarget}
+                      onChange={(event) => setToneTarget(event.target.value)}
+                    >
+                      {toneOptions.map((option) => (
+                        <option key={option}>{option}</option>
+                      ))}
                     </select>
                   </label>
                 </div>
@@ -1790,7 +2231,9 @@ export default function PostReviewPage() {
                   onClick={() => quickImprove("audience_targeted")}
                   disabled={Boolean(rewriting)}
                 >
-                  {rewriting === "audience_targeted" ? "Improving..." : "Improve for selected audience"}
+                  {rewriting === "audience_targeted"
+                    ? "Improving..."
+                    : "Improve for selected audience"}
                 </button>
               </article>
             )}
@@ -1811,9 +2254,7 @@ export default function PostReviewPage() {
               >
                 <div>
                   <h2 style={{ marginBottom: 6 }}>{platformName}</h2>
-                  <p>
-                    Schedule autopublish, publish now, or post manually.
-                  </p>
+                  <p>Schedule autopublish, publish now, or post manually.</p>
                 </div>
 
                 <span
@@ -1871,7 +2312,9 @@ export default function PostReviewPage() {
                   <input
                     type="datetime-local"
                     value={scheduleInputValue}
-                    onChange={(event) => setScheduleInputValue(event.target.value)}
+                    onChange={(event) =>
+                      setScheduleInputValue(event.target.value)
+                    }
                     disabled={savingSchedule || isPosted}
                     style={{
                       width: "100%",
@@ -1953,7 +2396,10 @@ export default function PostReviewPage() {
                 )}
               </div>
 
-              <details className="pr2-details is-tight" style={{ marginTop: 12 }}>
+              <details
+                className="pr2-details is-tight"
+                style={{ marginTop: 12 }}
+              >
                 <summary>More options</summary>
 
                 <div className="pr2-side-options">
@@ -1980,7 +2426,8 @@ export default function PostReviewPage() {
               </details>
 
               <p style={{ marginTop: 12, fontSize: 13, opacity: 0.78 }}>
-                Facebook and Instagram can autopublish when connected. TikTok stays manual.
+                Facebook and Instagram can autopublish when connected. TikTok
+                stays manual.
               </p>
             </article>
           </aside>
