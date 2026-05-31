@@ -8,6 +8,7 @@ import axios from "axios";
 import { useToast } from "@/app/components/ToastProvider";
 
 const MEDIA_BUCKET = "campaign-assets";
+const MAX_PDF_FLYER_BYTES = 10 * 1024 * 1024;
 
 type GeneratedPost = {
   day?: string;
@@ -1245,6 +1246,16 @@ Core FromOne rule:
     return cleanName || "media";
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (!Number.isFinite(bytes) || bytes <= 0) return "0MB";
+
+    const mb = bytes / (1024 * 1024);
+
+    if (mb >= 1) return `${mb.toFixed(mb >= 10 ? 0 : 1)}MB`;
+
+    return `${Math.max(bytes / 1024, 1).toFixed(0)}KB`;
+  };
+
   const getWeeklyUploadMediaType = (file: File): "image" | "flyer" | "video" => {
     if (file.type === "application/pdf") return "flyer";
     if (file.type.startsWith("video/")) return "video";
@@ -1257,7 +1268,13 @@ Core FromOne rule:
     uploadNote: string,
     index: number
   ) => {
-    const baseContext = [
+        if (mediaType === "flyer" && upload.file.size > MAX_PDF_FLYER_BYTES) {
+      throw new Error(
+        `${upload.file.name} is ${formatFileSize(upload.file.size)}. PDF flyers need to be under 10MB. Try exporting a smaller PDF or an image from Canva.`
+      );
+    }
+
+const baseContext = [
       `Upload ${index + 1}`,
       `Original filename: ${upload.file.name}`,
       `MIME type: ${upload.file.type || "unknown"}`,
@@ -1541,6 +1558,20 @@ Core FromOne rule:
     const videoLimitAllowed = await checkWeeklyVideoScanLimit(userId);
 
     if (!videoLimitAllowed) return;
+
+    const oversizedPdfUpload = weeklyUploads.find(
+      (upload) => getWeeklyUploadMediaType(upload.file) === "flyer" && upload.file.size > MAX_PDF_FLYER_BYTES
+    );
+
+    if (oversizedPdfUpload) {
+      notify(
+        `${oversizedPdfUpload.file.name} is ${formatFileSize(oversizedPdfUpload.file.size)}. PDF flyers need to be under 10MB. Try exporting a smaller PDF or an image from Canva.`,
+        "warning",
+        "PDF too large"
+      );
+      return;
+    }
+
 
     const largeVideoUploads = weeklyUploads.filter(
       (upload) => getWeeklyUploadMediaType(upload.file) === "video" && upload.file.size > 20 * 1024 * 1024
@@ -2198,6 +2229,223 @@ If uploads are supplied:
 
 
         }
+
+
+/* Uploaded media preview: show full image instead of cropped banner */
+.f1-weekly-upload-preview,
+.f1-weekly-upload-media,
+.f1-uploaded-media-preview,
+.f1-upload-card-preview,
+.f1-generated-post-media,
+.f1-post-preview-media {
+  background: #020617 !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+}
+
+.f1-weekly-upload-preview img,
+.f1-weekly-upload-media img,
+.f1-uploaded-media-preview img,
+.f1-upload-card-preview img,
+.f1-generated-post-media img,
+.f1-post-preview-media img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 360px !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  display: block !important;
+  background: #020617 !important;
+}
+
+.f1-weekly-upload-preview video,
+.f1-weekly-upload-media video,
+.f1-uploaded-media-preview video,
+.f1-upload-card-preview video,
+.f1-generated-post-media video,
+.f1-post-preview-media video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #020617 !important;
+}
+
+@media (max-width: 760px) {
+  .f1-weekly-upload-preview img,
+  .f1-weekly-upload-media img,
+  .f1-uploaded-media-preview img,
+  .f1-upload-card-preview img,
+  .f1-generated-post-media img,
+  .f1-post-preview-media img {
+    max-height: 300px !important;
+  }
+}
+
+
+
+/* Weekly upload cards: image previews should not be cropped into a thin banner */
+.weekly-upload-item img,
+.weekly-upload-card img,
+.weekly-media-card img,
+.weekly-upload-preview img,
+.upload-preview-card img,
+.upload-media-preview img,
+.post-upload-preview img,
+.post-media-preview img {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  display: block !important;
+  background: #020617 !important;
+}
+
+.weekly-upload-item:has(img),
+.weekly-upload-card:has(img),
+.weekly-media-card:has(img),
+.weekly-upload-preview:has(img),
+.upload-preview-card:has(img),
+.upload-media-preview:has(img),
+.post-upload-preview:has(img),
+.post-media-preview:has(img) {
+  min-height: 260px !important;
+  aspect-ratio: 4 / 3 !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  background: #020617 !important;
+}
+
+.weekly-upload-item video,
+.weekly-upload-card video,
+.weekly-media-card video,
+.weekly-upload-preview video,
+.upload-preview-card video,
+.upload-media-preview video,
+.post-upload-preview video,
+.post-media-preview video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #020617 !important;
+}
+
+.weekly-upload-item:has(video),
+.weekly-upload-card:has(video),
+.weekly-media-card:has(video),
+.weekly-upload-preview:has(video),
+.upload-preview-card:has(video),
+.upload-media-preview:has(video),
+.post-upload-preview:has(video),
+.post-media-preview:has(video) {
+  min-height: 320px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  background: #020617 !important;
+}
+
+@media (max-width: 760px) {
+  .weekly-upload-item:has(img),
+  .weekly-upload-card:has(img),
+  .weekly-media-card:has(img),
+  .weekly-upload-preview:has(img),
+  .upload-preview-card:has(img),
+  .upload-media-preview:has(img),
+  .post-upload-preview:has(img),
+  .post-media-preview:has(img) {
+    min-height: 220px !important;
+  }
+}
+
+
+
+/* Mobile upload cards: stack previews full width */
+@media (max-width: 760px) {
+  .weekly-upload-list,
+  .weekly-upload-grid,
+  .f1-weekly-upload-list,
+  .f1-weekly-upload-grid,
+  .upload-preview-list,
+  .upload-preview-grid,
+  .f1-upload-preview-list,
+  .f1-upload-preview-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .weekly-upload-item,
+  .weekly-upload-card,
+  .weekly-media-card,
+  .upload-preview-card,
+  .upload-media-preview,
+  .post-upload-preview {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-inline: 0 !important;
+  }
+
+  .weekly-upload-item > div:first-child,
+  .weekly-upload-card > div:first-child,
+  .weekly-media-card > div:first-child,
+  .upload-preview-card > div:first-child,
+  .upload-media-preview > div:first-child,
+  .post-upload-preview > div:first-child {
+    min-height: 220px !important;
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  .weekly-upload-item img,
+  .weekly-upload-card img,
+  .weekly-media-card img,
+  .upload-preview-card img,
+  .upload-media-preview img,
+  .post-upload-preview img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    background: #020617 !important;
+  }
+
+  .weekly-upload-item textarea,
+  .weekly-upload-card textarea,
+  .weekly-media-card textarea,
+  .upload-preview-card textarea,
+  .upload-media-preview textarea,
+  .post-upload-preview textarea {
+    min-height: 88px !important;
+  }
+}
+
+
+
+/* Exact mobile weekly upload stack and overlay pill */
+@media (max-width: 760px) {
+  .dashboard-weekly-upload-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-weekly-upload-grid > .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .dashboard-upload-post-pill {
+    left: 10px !important;
+    top: 10px !important;
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+  }
+}
+
       `}</style>
       {loading ? (
         <section className="premium-card" style={{ width: "100%" }}>
@@ -2389,16 +2637,20 @@ If uploads are supplied:
 
                 <span style={{ color: "var(--muted)", maxWidth: 560 }}>
                   Upload up to 7 items. Photos and videos can be used for Facebook and Instagram.
-                  PDF flyers are turned into post wording, but Instagram needs image or video media.
+                  PDF flyers can create post wording and can be converted into an image for Instagram.
                 </span>
               </span>
             </label>
 
             {weeklyUploads.length > 0 && (
               <div
+                className="dashboard-weekly-upload-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                  gridTemplateColumns:
+                    typeof window !== "undefined" && window.innerWidth <= 760
+                      ? "1fr"
+                      : "repeat(auto-fit, minmax(150px, 1fr))",
                   gap: 12,
                 }}
               >
@@ -2407,6 +2659,9 @@ If uploads are supplied:
                     key={upload.id}
                     className="card"
                     style={{
+                      width: "100%",
+                      minWidth: 0,
+                      position: "relative",
                       padding: 10,
                       borderRadius: 20,
                       background: "rgba(255,255,255,0.055)",
@@ -2414,16 +2669,44 @@ If uploads are supplied:
                   >
                     <div
                       style={{
-                        height: 118,
+                        position: "relative",
+                        minHeight: upload.file.type.startsWith("image/") ? 260 : 140,
+                        aspectRatio: upload.file.type.startsWith("image/") ? "4 / 3" : "16 / 9",
                         borderRadius: 16,
                         overflow: "hidden",
-                        background: "rgba(255, 255, 255, 0.06)",
+                        background: "#020617",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         marginBottom: 10,
                       }}
                     >
+                      <span
+                        className="dashboard-upload-post-pill"
+                        style={{
+                          position: "absolute",
+                          left: 12,
+                          top: 12,
+                          zIndex: 2,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "7px 11px",
+                          borderRadius: 999,
+                          background: "rgba(2, 6, 23, 0.76)",
+                          border: "1px solid rgba(255, 212, 59, 0.28)",
+                          color: "#ffe58a",
+                          fontSize: 12,
+                          fontWeight: 1000,
+                          letterSpacing: "0.04em",
+                          textTransform: "uppercase",
+                          backdropFilter: "blur(10px)",
+                          boxShadow: "0 10px 26px rgba(0,0,0,0.24)",
+                        }}
+                      >
+                        Post {index + 1}
+                      </span>
+
                       {upload.file.type.startsWith("image/") ? (
                         <img
                           src={upload.previewUrl}
@@ -2431,7 +2714,9 @@ If uploads are supplied:
                           style={{
                             width: "100%",
                             height: "100%",
-                            objectFit: "cover",
+                            objectFit: "contain",
+                            objectPosition: "center",
+                            background: "#020617",
                           }}
                         />
                       ) : upload.file.type.startsWith("video/") ? (
@@ -2442,7 +2727,9 @@ If uploads are supplied:
                           style={{
                             width: "100%",
                             height: "100%",
-                            objectFit: "cover",
+                            objectFit: "contain",
+                            objectPosition: "center",
+                            background: "#020617",
                           }}
                         />
                       ) : (
@@ -2454,20 +2741,19 @@ If uploads are supplied:
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "space-between",
+                        justifyContent: "stretch",
                         gap: 10,
                       }}
                     >
-                      <strong>Post {index + 1}</strong>
-
                       <button
                         type="button"
                         onClick={() => removeWeeklyUpload(upload.id)}
                         disabled={scanning}
                         aria-label={`Delete upload ${index + 1}`}
                         style={{
+                          width: "100%",
                           minWidth: 78,
-                          minHeight: 34,
+                          minHeight: 42,
                           borderRadius: 999,
                           border: "1px solid rgba(248,113,113,0.32)",
                           background: "rgba(248,113,113,0.1)",
