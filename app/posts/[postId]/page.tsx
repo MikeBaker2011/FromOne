@@ -238,6 +238,71 @@ function getDateTimeLocalValue(value?: string | null) {
   return localDate.toISOString().slice(0, 16);
 }
 
+
+function getApprovalStatus(post: any, isPosted: boolean) {
+  const approvalStatus = cleanText(post?.approval_status).toLowerCase();
+  const publishStatus = cleanText(post?.publish_status).toLowerCase();
+  const status = cleanText(post?.status).toLowerCase();
+  const publishError = cleanText(post?.publish_error);
+
+  if (
+    isPosted ||
+    approvalStatus === "posted" ||
+    publishStatus === "posted" ||
+    publishStatus === "published" ||
+    status === "posted"
+  ) {
+    return {
+      label: "Posted",
+      tone: "success",
+      description: "This post has already been published.",
+    };
+  }
+
+  if (
+    approvalStatus === "failed" ||
+    publishStatus === "failed" ||
+    status === "failed" ||
+    publishError
+  ) {
+    return {
+      label: "Failed",
+      tone: "error",
+      description: publishError || "This post needs attention before it can be published.",
+    };
+  }
+
+  if (approvalStatus === "scheduled" || publishStatus === "scheduled" || status === "scheduled") {
+    return {
+      label: "Scheduled",
+      tone: "warning",
+      description: "This post has a scheduled time. Check it before it goes live.",
+    };
+  }
+
+  if (approvalStatus === "approved" || status === "approved") {
+    return {
+      label: "Approved",
+      tone: "success",
+      description: "This post has been approved and is ready to publish or schedule.",
+    };
+  }
+
+  if (approvalStatus === "draft" || status === "draft") {
+    return {
+      label: "Draft",
+      tone: "neutral",
+      description: "This post is still being worked on.",
+    };
+  }
+
+  return {
+    label: "Needs review",
+    tone: "warning",
+    description: "Review the wording and media, then approve when ready.",
+  };
+}
+
 function getAutopublishStatus(post: any, isPosted: boolean) {
   const publishStatus = cleanText(post?.publish_status).toLowerCase();
   const status = cleanText(post?.status).toLowerCase();
@@ -662,6 +727,11 @@ export default function PostReviewPage() {
   const scheduleValue = getScheduleValue(post);
   const scheduledLabel = formatScheduledDate(scheduleValue);
   const autopublishStatus = getAutopublishStatus(post, isPosted);
+  const approvalStatus = getApprovalStatus(post, isPosted);
+  const isApprovedForPublishing =
+    approvalStatus.label === "Approved" ||
+    approvalStatus.label === "Scheduled" ||
+    approvalStatus.label === "Posted";
   const canScheduledAutopublish =
     canAutopublish && Boolean(scheduleValue) && !isPosted;
 
@@ -755,6 +825,8 @@ export default function PostReviewPage() {
         caption,
         cta,
         hashtags: cleanHashtags,
+        approval_status: "needs_review",
+        approved_at: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", post.id);
@@ -765,8 +837,15 @@ export default function PostReviewPage() {
       return;
     }
 
-    setPost({ ...post, caption, cta, hashtags: cleanHashtags });
-    setMessage("Wording saved.");
+    setPost({
+      ...post,
+      caption,
+      cta,
+      hashtags: cleanHashtags,
+      approval_status: "needs_review",
+      approved_at: null,
+    });
+    setMessage("Wording saved. Mark it approved when you are happy.");
     setSaving(false);
   };
 
@@ -785,6 +864,75 @@ export default function PostReviewPage() {
     await copyCaption();
     window.open(getPlatformUrl(platformName), "_blank", "noopener,noreferrer");
   };
+
+
+  const markApproved = async () => {
+    if (!post?.id) return;
+
+    setSaving(true);
+    setMessage("");
+
+    const approvedAt = new Date().toISOString();
+
+    const updates = {
+      approval_status: "approved",
+      approved_at: approvedAt,
+      status:
+        cleanText(post?.status).toLowerCase() === "posted" ||
+        cleanText(post?.status).toLowerCase() === "scheduled"
+          ? post.status
+          : "approved",
+      updated_at: approvedAt,
+    };
+
+    const { error } = await supabase
+      .from("campaign_posts")
+      .update(updates)
+      .eq("id", post.id);
+
+    if (error) {
+      setMessage(error.message || "Could not approve this post.");
+      setSaving(false);
+      return;
+    }
+
+    setPost({ ...post, ...updates });
+    setMessage("Post approved. It is ready to publish or schedule.");
+    setSaving(false);
+  };
+
+  const markNeedsReview = async () => {
+    if (!post?.id) return;
+
+    setSaving(true);
+    setMessage("");
+
+    const updates = {
+      approval_status: "needs_review",
+      approved_at: null,
+      status:
+        cleanText(post?.status).toLowerCase() === "posted"
+          ? post.status
+          : "needs_review",
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from("campaign_posts")
+      .update(updates)
+      .eq("id", post.id);
+
+    if (error) {
+      setMessage(error.message || "Could not update this post.");
+      setSaving(false);
+      return;
+    }
+
+    setPost({ ...post, ...updates });
+    setMessage("Post marked as needs review.");
+    setSaving(false);
+  };
+
 
   const saveSchedule = async () => {
     if (!post?.id) return;
@@ -811,6 +959,7 @@ export default function PostReviewPage() {
       scheduled_publish_at: scheduledIso,
       status: "scheduled",
       publish_status: "scheduled",
+      approval_status: "scheduled",
       publish_error: null,
       is_posted: false,
       updated_at: new Date().toISOString(),
@@ -844,6 +993,8 @@ export default function PostReviewPage() {
         is_posted: true,
         status: "posted",
         publish_status: "posted",
+        approval_status: "posted",
+        approved_at: post?.approved_at || new Date().toISOString(),
         posted_at: new Date().toISOString(),
         publish_error: null,
         updated_at: new Date().toISOString(),
@@ -861,6 +1012,8 @@ export default function PostReviewPage() {
       is_posted: true,
       status: "posted",
       publish_status: "posted",
+      approval_status: "posted",
+      approved_at: post?.approved_at || new Date().toISOString(),
     });
     setMessage("Marked as posted.");
     setSaving(false);
@@ -876,8 +1029,10 @@ export default function PostReviewPage() {
       .from("campaign_posts")
       .update({
         is_posted: false,
-        status: "ready",
+        status: "needs_review",
         publish_status: "ready",
+        approval_status: "needs_review",
+        approved_at: null,
         posted_at: null,
         updated_at: new Date().toISOString(),
       })
@@ -892,10 +1047,12 @@ export default function PostReviewPage() {
     setPost({
       ...post,
       is_posted: false,
-      status: "ready",
+      status: "needs_review",
       publish_status: "ready",
+      approval_status: "needs_review",
+      approved_at: null,
     });
-    setMessage("Post set back to ready.");
+    setMessage("Post set back to needs review.");
     setSaving(false);
   };
 
@@ -1704,6 +1861,8 @@ export default function PostReviewPage() {
         is_posted: true,
         status: "posted",
         publish_status: "published",
+        approval_status: "posted",
+        approved_at: post?.approved_at || new Date().toISOString(),
         publish_error: null,
       });
       setMessage(`Autopublished to ${autopublishPlatformLabel}.`);
@@ -1814,9 +1973,9 @@ export default function PostReviewPage() {
             ← Back to posts
           </button>
 
-          <div className="pr2-status">
+          <div className={`pr2-status pr2-approval-status is-${approvalStatus.tone}`}>
             <span>{platformName}</span>
-            <strong>{isPosted ? "Posted" : "Ready"}</strong>
+            <strong>{approvalStatus.label}</strong>
           </div>
         </div>
 
@@ -2391,6 +2550,41 @@ export default function PostReviewPage() {
           </section>
 
           <aside className="pr2-side">
+
+            <article className="pr2-publish-card pr2-approval-card">
+              <span className="pr2-kicker">Approval</span>
+              <div className="pr2-approval-head">
+                <div>
+                  <h2>{approvalStatus.label}</h2>
+                  <p>{approvalStatus.description}</p>
+                </div>
+
+                <span className={`pr2-approval-pill is-${approvalStatus.tone}`}>
+                  {approvalStatus.label}
+                </span>
+              </div>
+
+              <div className="pr2-publish-actions" style={{ display: "grid", gap: 10 }}>
+                <button
+                  type="button"
+                  className="pr2-btn pr2-btn-primary"
+                  onClick={markApproved}
+                  disabled={saving || isPosted || isApprovedForPublishing}
+                >
+                  {saving ? "Saving..." : "Approve post"}
+                </button>
+
+                <button
+                  type="button"
+                  className="pr2-btn"
+                  onClick={markNeedsReview}
+                  disabled={saving || isPosted || approvalStatus.label === "Needs review"}
+                >
+                  Mark needs review
+                </button>
+              </div>
+            </article>
+
             <article className="pr2-publish-card">
               <span className="pr2-kicker">Publish</span>
 
