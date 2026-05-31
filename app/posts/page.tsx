@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
+import { supabaseBrowser as supabase } from "../../lib/supabase/browser";
 import axios from "axios";
 import { useToast } from "@/app/components/ToastProvider";
 
@@ -1557,6 +1557,60 @@ export default function PostsPage() {
     return "image";
   };
 
+  const getPostMediaMimeType = (post: any, mediaKind: string) => {
+    const mediaType = String(post?.media_type || "").toLowerCase();
+    const mediaUrl = String(post?.media_url || post?.media_path || "").toLowerCase();
+
+    if (mediaType.startsWith("video/")) return mediaType;
+    if (mediaType.startsWith("image/")) return mediaType;
+    if (mediaType === "application/pdf") return "application/pdf";
+
+    if (mediaKind === "video") {
+      if (mediaUrl.includes(".webm")) return "video/webm";
+      if (mediaUrl.includes(".mov")) return "video/quicktime";
+      if (mediaUrl.includes(".m4v")) return "video/x-m4v";
+      return "video/mp4";
+    }
+
+    if (mediaKind === "flyer") return "application/pdf";
+
+    if (mediaUrl.includes(".png")) return "image/png";
+    if (mediaUrl.includes(".webp")) return "image/webp";
+
+    return "image/jpeg";
+  };
+
+  const buildPostMediaRescanContext = (post: any, mediaKind: string) => {
+    const platform = post.platform || "Facebook";
+    const businessName = profile?.business_name || campaign?.business_name || "the business";
+    const industry = profile?.industry || campaign?.business_type || "general business";
+    const currentCaption = String(post.caption || "").trim();
+    const currentTitle = String(post.title || "").trim();
+    const mediaName = post.media_path || post.title || "Post media";
+
+    const baseContext = [
+      `Existing post media rescan`,
+      `Business: ${businessName}`,
+      `Industry: ${industry}`,
+      `Platform: ${platform}`,
+      `Media name/path: ${mediaName}`,
+      currentTitle ? `Current title: ${currentTitle}` : "",
+      currentCaption ? `Current caption: ${currentCaption}` : "",
+    ]
+      .filter(Boolean)
+      .join(". ");
+
+    if (mediaKind === "video") {
+      return `${baseContext}. This is a video-led rewrite. Analyse the actual video footage if it is available to Gemini. The new caption must relate to what the clip shows: the scene, action, movement, atmosphere, people/activity, product, service, event, job progress, result, behind-the-scenes moment, offer, or booking/enquiry opportunity. Use the current caption only as background. Do not write a generic business post. If the video cannot be inspected because it is too large, inaccessible or unsupported, use the current caption, media name and business profile carefully without pretending to have seen exact details.`;
+    }
+
+    if (mediaKind === "flyer") {
+      return `${baseContext}. This is a flyer/PDF rewrite. Rescan the flyer where possible and rebuild the post around the event, offer, date, price, service, location, booking instruction or CTA. Make it natural for social media, not a copied flyer transcript.`;
+    }
+
+    return `${baseContext}. This is an image-led rewrite. Analyse the image where possible and rebuild the post around the visible subject. Use the business profile for tone, local relevance and CTA.`;
+  };
+
   const getSafeFileName = (fileName: string) => {
     const cleanName = fileName
       .toLowerCase()
@@ -1985,6 +2039,8 @@ export default function PostsPage() {
     }
 
     const mediaKind = getPostMediaKind(post);
+    const mediaMimeType = getPostMediaMimeType(post, mediaKind);
+    const mediaRescanContext = buildPostMediaRescanContext(post, mediaKind);
     const allowed = await checkMediaRescanLimit(userId, mediaKind);
 
     if (!allowed) return;
@@ -2026,10 +2082,14 @@ Hashtags: ${Array.isArray(post.hashtags) ? post.hashtags.join(" ") : ""}
 Important:
 - Create one improved post only.
 - Use the attached media as the main topic.
-- If this is a club night, event, venue, restaurant, bar, product demo, job photo, flyer, or live video, write around what that media is likely showing.
+- If the media is a video and Gemini can inspect the footage, the caption must be about what the video actually shows.
+- For video, connect the first sentence to the visible moment: scene, action, atmosphere, event, product, service, job progress, result, offer or behind-the-scenes activity.
+- If the video cannot be inspected, do not pretend to have seen it. Use the current caption, media path/name and business details cautiously.
+- If this is a club night, event, venue, restaurant, bar, product demo, job photo, flyer, or live video, write around what that media shows or strongly supports.
 - Make the post more useful and more likely to generate enquiries, bookings, visits, orders, or messages.
 - Keep the same platform unless there is a strong reason not to.
 - Do not mention that AI rescanned the media.
+- Do not use generic filler.
 - If the existing post was previously marked as posted, still create a fresh editable version for the app.
 `,
         platforms: [post.platform || "Facebook"],
@@ -2044,14 +2104,13 @@ Important:
           {
             id: post.id,
             name: post.media_path || post.title || "Post media",
-            type: mediaKind,
+            type: mediaMimeType,
+            mimeType: mediaMimeType,
+            media_type: mediaKind,
             url: post.media_url,
-            context:
-              mediaKind === "video"
-                ? "Video attached to an existing post. Rescan it and rewrite the caption around the live footage, activity, atmosphere, event, offer, or product shown."
-                : mediaKind === "flyer"
-                  ? "Flyer or PDF attached to an existing post. Rescan it and rewrite the caption around the event, offer, date, service, price, or call to action."
-                  : "Image attached to an existing post. Rescan it and rewrite the caption around the subject shown.",
+            description: String(post.caption || ""),
+            context: mediaRescanContext,
+            topic_hint: mediaRescanContext,
             extractedText: "",
           },
         ],
@@ -2059,20 +2118,28 @@ Important:
           {
             id: post.id,
             name: post.media_path || post.title || "Post media",
-            type: mediaKind,
+            type: mediaMimeType,
+            mimeType: mediaMimeType,
+            media_type: mediaKind,
             url: post.media_url,
-            context:
-              mediaKind === "video"
-                ? "Video attached to an existing post. Rescan it and rewrite the caption around the live footage, activity, atmosphere, event, offer, or product shown."
-                : mediaKind === "flyer"
-                  ? "Flyer or PDF attached to an existing post. Rescan it and rewrite the caption around the event, offer, date, service, price, or call to action."
-                  : "Image attached to an existing post. Rescan it and rewrite the caption around the subject shown.",
+            description: String(post.caption || ""),
+            context: mediaRescanContext,
+            topic_hint: mediaRescanContext,
             extractedText: "",
           },
         ],
+        requestedOutput: {
+          posts: "Return exactly one improved post. If this is video, analyse the footage when possible and make the post about the visible video moment.",
+          media_analysis_rule:
+            mediaKind === "video"
+              ? "Video rescan must be specific to the footage. Do not write a generic business caption."
+              : "Rescan the attached media and make the post specific to the visible/supplied media.",
+        },
       });
 
       const rewrittenPost = response.data?.posts?.[0];
+      const inlineVideoMediaUsed = Number(response.data?.inlineVideoMediaUsed || 0);
+      const inlineImageMediaUsed = Number(response.data?.inlineImageMediaUsed || response.data?.visionMediaUsed || 0);
 
       if (!rewrittenPost?.caption) {
         notify(
@@ -2108,7 +2175,12 @@ Important:
           post_id: post.id,
           campaign_id: post.campaign_id,
           media_type: mediaKind,
+          media_mime_type: mediaMimeType,
           platform: post.platform || null,
+          inlineVideoMediaUsed,
+          inlineImageMediaUsed,
+          media_url: post.media_url || null,
+          media_path: post.media_path || null,
         });
       }
 
@@ -2128,7 +2200,15 @@ Important:
               : "The post wording has been rebuilt around the attached image.",
       });
 
-      notify("Post rescanned and rewritten.", "success", "Post improved");
+      if (mediaKind === "video" && inlineVideoMediaUsed === 0) {
+        notify(
+          "Post rewritten. This video may have been too large or unsupported for full footage analysis, so FromOne used the available context carefully.",
+          "info",
+          "Video rewritten"
+        );
+      } else {
+        notify("Post rescanned and rewritten.", "success", "Post improved");
+      }
     } catch (error: any) {
       const message = getReadableError(error, "Error rescanning media.");
       console.error("Media rescan error:", error);
