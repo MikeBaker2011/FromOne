@@ -1320,14 +1320,30 @@ export default function PostActionModal({
           <aside ref={mediaRef} className={`f1-post-media-panel ${showPrepareMediaModal ? 'is-preparing-media' : ''}`}>
             {!showPrepareMediaModal && (
               <>
-                <div className="f1-post-media-frame">
+                <div
+                  className={`f1-post-media-frame ${
+                    isVideoMedia
+                      ? 'is-video-media'
+                      : isFlyerMedia
+                        ? 'is-flyer-media'
+                        : hasMedia
+                          ? 'is-image-media'
+                          : 'is-empty-media'
+                  }`}
+                >
                   {selectedPost.media_url ? (
                     isVideoMedia ? (
-                      <video src={selectedPost.media_url} controls />
+                      <video
+                        src={selectedPost.media_url}
+                        controls
+                        playsInline
+                        preload="metadata"
+                      />
                     ) : isFlyerMedia ? (
-                      <div className="f1-post-file-preview">
-                        <strong>PDF flyer</strong>
-                        <p>Open the flyer to check the details.</p>
+                      <div className="f1-post-file-preview f1-post-pdf-preview">
+                        <span className="f1-post-pdf-icon">PDF</span>
+                        <strong>PDF flyer attached</strong>
+                        <p>Flyers can be uploaded as PDFs. Open it to check the offer, event details, price, date or call to action before posting.</p>
                       </div>
                     ) : (
                       <img src={selectedPost.media_url} alt="Uploaded post media" />
@@ -2145,6 +2161,118 @@ export default function PostActionModal({
             justify-items: center;
           }
         }
+
+        .f1-post-media-frame {
+          width: 100%;
+          min-height: clamp(280px, 42vw, 560px);
+          display: grid;
+          place-items: center;
+          overflow: hidden;
+          border-radius: 26px;
+          background:
+            radial-gradient(circle at top, rgba(255, 212, 59, 0.08), transparent 36%),
+            rgba(2, 6, 23, 0.7);
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .f1-post-media-frame img,
+        .f1-post-media-frame video {
+          width: 100%;
+          max-width: 100%;
+          height: 100%;
+          max-height: 560px;
+          display: block;
+          border-radius: 22px;
+        }
+
+        .f1-post-media-frame img {
+          object-fit: contain;
+        }
+
+        .f1-post-media-frame video {
+          object-fit: contain;
+          background: #020617;
+        }
+
+        .f1-post-media-frame.is-video-media {
+          aspect-ratio: 16 / 9;
+          min-height: clamp(260px, 38vw, 520px);
+          padding: 0;
+        }
+
+        .f1-post-media-frame.is-video-media video {
+          height: 100%;
+          min-height: inherit;
+        }
+
+        .f1-post-media-frame.is-flyer-media {
+          min-height: clamp(260px, 34vw, 460px);
+          padding: clamp(18px, 3vw, 30px);
+        }
+
+        .f1-post-pdf-preview {
+          width: 100%;
+          min-height: 220px;
+          display: grid;
+          place-items: center;
+          align-content: center;
+          gap: 10px;
+          text-align: center;
+          border-radius: 22px;
+          background:
+            radial-gradient(circle at top, rgba(255, 212, 59, 0.1), transparent 38%),
+            rgba(255,255,255,0.045);
+          border: 1px solid rgba(255, 212, 59, 0.14);
+          padding: 24px;
+        }
+
+        .f1-post-pdf-icon {
+          width: 72px;
+          height: 72px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 22px;
+          background: linear-gradient(135deg, #ffd43b, #f7b733);
+          color: #101420;
+          font-weight: 1000;
+          letter-spacing: -0.04em;
+          box-shadow: 0 18px 42px rgba(255, 212, 59, 0.18);
+        }
+
+        .f1-post-pdf-preview strong {
+          color: #ffffff;
+          font-size: 1.15rem;
+        }
+
+        .f1-post-pdf-preview p {
+          max-width: 420px;
+          margin: 0;
+          color: rgba(248,250,252,0.68);
+          line-height: 1.55;
+          font-weight: 760;
+        }
+
+        @media (max-width: 760px) {
+          .f1-post-media-frame {
+            min-height: 260px;
+            border-radius: 22px;
+          }
+
+          .f1-post-media-frame.is-video-media {
+            aspect-ratio: 9 / 16;
+            max-height: 72vh;
+          }
+
+          .f1-post-media-frame.is-video-media video {
+            max-height: 72vh;
+          }
+
+          .f1-post-media-frame.is-flyer-media {
+            min-height: 240px;
+          }
+        }
+
+
       `}</style>
     </div>
   );
