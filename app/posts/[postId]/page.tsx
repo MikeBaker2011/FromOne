@@ -402,6 +402,7 @@ export default function PostReviewPage() {
   const isVideo = mediaType === "video";
   const isFlyer = mediaType === "flyer" || mediaType === "pdf" || mediaUrl.toLowerCase().includes(".pdf");
   const canPrepareImage = Boolean(mediaUrl) && !isVideo && !isFlyer;
+  const canConvertFlyer = Boolean(mediaUrl) && isFlyer && !isVideo;
 
   const isFacebookPost = platformName.toLowerCase().includes("facebook");
   const isInstagramPost = platformName.toLowerCase().includes("instagram");
@@ -635,6 +636,99 @@ export default function PostReviewPage() {
     setSaving(false);
   };
 
+  const convertPdfUrlToJpeg = async (sourcePost: any, sourceMediaUrl: string) => {
+    if (!sourcePost?.id || !sourceMediaUrl) {
+      throw new Error("Missing PDF media details.");
+    }
+
+    const response = await fetch("/api/media/pdf-to-jpeg", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        postId: sourcePost.id,
+        mediaUrl: sourceMediaUrl,
+        preset: getPresetForApi(resizePresetValue),
+        outputWidth: selectedPreset.width,
+        outputHeight: selectedPreset.height,
+      }),
+    });
+
+    const responseText = await response.text();
+    let result: any = {};
+
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      result = { error: responseText };
+    }
+
+    if (!response.ok) {
+      const backendError = cleanText(
+        result?.error ||
+          result?.message ||
+          result?.details ||
+          result?.detail ||
+          responseText,
+      );
+
+      throw new Error(
+        backendError ||
+          `PDF conversion failed with status ${response.status}.`,
+      );
+    }
+
+    const rawUrl =
+      result?.url ||
+      result?.publicUrl ||
+      result?.public_url ||
+      result?.preparedUrl ||
+      result?.prepared_url ||
+      result?.preparedMediaUrl ||
+      result?.prepared_media_url ||
+      result?.resizedUrl ||
+      result?.resized_url ||
+      result?.mediaUrl ||
+      result?.media_url ||
+      result?.data?.url ||
+      result?.data?.publicUrl ||
+      result?.data?.public_url;
+
+    if (!rawUrl) {
+      throw new Error("PDF was converted but no image URL was returned.");
+    }
+
+    const url = withCacheBust(String(rawUrl));
+    const convertedWidth = Number(result?.width || result?.outputWidth || selectedPreset.width);
+    const convertedHeight = Number(result?.height || result?.outputHeight || selectedPreset.height);
+
+    const updates = {
+      media_url: url,
+      media_type: "image",
+      prepared_media_url: url,
+      prepared_media_width: convertedWidth,
+      prepared_media_height: convertedHeight,
+      publish_error: null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from("campaign_posts")
+      .update(updates)
+      .eq("id", sourcePost.id);
+
+    if (error) throw error;
+
+    return {
+      updates,
+      prepared: {
+        url,
+        label: result?.label || "Converted JPEG",
+        width: convertedWidth,
+        height: convertedHeight,
+      },
+    };
+  };
+
   const handleUploadMedia = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -659,26 +753,44 @@ export default function PostReviewPage() {
       if (uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabase.storage.from("campaign-assets").getPublicUrl(path);
+      const uploadedUrl = publicUrlData.publicUrl;
 
       const nextMediaType = file.type.startsWith("video/")
         ? "video"
-        : file.type.includes("pdf")
+        : file.type.includes("pdf") || file.name.toLowerCase().endsWith(".pdf")
           ? "pdf"
           : "image";
 
+      const uploadedUpdates = {
+        media_url: uploadedUrl,
+        media_type: nextMediaType,
+        prepared_media_url: null,
+        prepared_media_width: null,
+        prepared_media_height: null,
+        publish_error: null,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error: updateError } = await supabase
         .from("campaign_posts")
-        .update({
-          media_url: publicUrlData.publicUrl,
-          media_type: nextMediaType,
-          updated_at: new Date().toISOString(),
-        })
+        .update(uploadedUpdates)
         .eq("id", post.id);
 
       if (updateError) throw updateError;
 
-      setPost({ ...post, media_url: publicUrlData.publicUrl, media_type: nextMediaType });
+      const uploadedPost = { ...post, ...uploadedUpdates };
+      setPost(uploadedPost);
       setPreparedMedia(null);
+
+      if (nextMediaType === "pdf") {
+        setMessage("PDF uploaded. Creating JPEG preview...");
+        const converted = await convertPdfUrlToJpeg(uploadedPost, uploadedUrl);
+        setPost({ ...uploadedPost, ...converted.updates });
+        setPreparedMedia(converted.prepared);
+        setMessage("PDF converted to JPEG preview. Instagram can now use this image.");
+        return;
+      }
+
       setMessage("Media updated.");
     } catch (error: any) {
       setMessage(error?.message || "Could not upload media.");
@@ -709,6 +821,26 @@ export default function PostReviewPage() {
     setPreparedMedia(null);
     setMessage("Media removed.");
     setSaving(false);
+  };
+
+  const convertPdfToJpeg = async () => {
+    if (!post?.id || !mediaUrl || !isFlyer) return;
+
+    setResizingMedia(true);
+    setMessage("Creating JPEG preview...");
+
+    try {
+      const converted = await convertPdfUrlToJpeg(post, mediaUrl);
+
+      setPost({ ...post, ...converted.updates });
+      setPreparedMedia(converted.prepared);
+      setActivePanel("review");
+      setMessage("PDF converted to JPEG preview. Instagram can now use this image.");
+    } catch (error: any) {
+      setMessage(error?.message || "Could not convert this PDF to JPEG.");
+    } finally {
+      setResizingMedia(false);
+    }
   };
 
   const downloadMedia = () => {
@@ -1034,7 +1166,7 @@ export default function PostReviewPage() {
     }
 
     if (isInstagramPost && isFlyer) {
-      setMessage("Instagram cannot autopublish a PDF or flyer file. Use Prepare media or manual posting.");
+      setMessage("Instagram cannot autopublish a PDF or flyer file. Use Convert PDF to JPEG, then autopublish again.");
       return;
     }
 
@@ -1208,6 +1340,17 @@ export default function PostReviewPage() {
                 {canPrepareImage && activePanel !== "prepare" && (
                   <button type="button" className="pr2-btn pr2-btn-primary" onClick={() => setActivePanel("prepare")}>
                     Prepare media
+                  </button>
+                )}
+
+                {canConvertFlyer && activePanel !== "prepare" && (
+                  <button
+                    type="button"
+                    className="pr2-btn pr2-btn-primary"
+                    onClick={convertPdfToJpeg}
+                    disabled={resizingMedia}
+                  >
+                    {resizingMedia ? "Converting..." : "Convert PDF to JPEG"}
                   </button>
                 )}
 
@@ -1387,10 +1530,12 @@ export default function PostReviewPage() {
                     {mediaUrl ? (
                       isVideo ? (
                         <video src={mediaUrl} controls />
+                      ) : isFlyer && preparedDisplayMedia?.url ? (
+                        <img src={preparedDisplayMedia.url} alt="PDF preview image" />
                       ) : isFlyer ? (
                         <div className="pr2-empty">
                           <strong>PDF / flyer attached</strong>
-                          <p>Open or download the file before posting.</p>
+                          <p>No preview image is ready yet. Convert it to JPEG for Instagram autopublish, or open/download it for manual posting.</p>
                         </div>
                       ) : (
                         <img src={preparedDisplayMedia?.url || mediaUrl} alt="Post media" />
@@ -1412,6 +1557,17 @@ export default function PostReviewPage() {
                       <button type="button" className="pr2-btn" onClick={() => fileInputRef.current?.click()}>
                         Upload / replace
                       </button>
+
+                      {canConvertFlyer && (
+                        <button
+                          type="button"
+                          className="pr2-btn pr2-btn-primary"
+                          onClick={convertPdfToJpeg}
+                          disabled={resizingMedia}
+                        >
+                          {resizingMedia ? "Converting..." : "Convert PDF to JPEG"}
+                        </button>
+                      )}
 
                       {mediaUrl && (
                         <>
