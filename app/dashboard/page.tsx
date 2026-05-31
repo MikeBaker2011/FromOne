@@ -335,12 +335,17 @@ export default function DashboardPage() {
     });
   };
 
+  const updateCreationProgress = (message: string) => {
+    setCreationProgressMessage(message);
+  };
+
   const [addToCampaignId, setAddToCampaignId] = useState<string | null>(null);
   const [client, setClient] = useState<any>(null);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [preparingFlyers, setPreparingFlyers] = useState(false);
+  const [creationProgressMessage, setCreationProgressMessage] = useState("");
   const [savingWebsite, setSavingWebsite] = useState(false);
   const [showManualProfile, setShowManualProfile] = useState(false);
   const [savingManualProfile, setSavingManualProfile] = useState(false);
@@ -1582,6 +1587,8 @@ const baseContext = [
   const uploadWeeklyMediaToStorage = async (userId: string): Promise<UploadedMediaItem[]> => {
     if (weeklyUploads.length === 0) return [];
 
+    updateCreationProgress("Uploading your media...");
+
     const uploadedItems: UploadedMediaItem[] = [];
     const shouldPrepareAnyFlyers =
       hasSelectedSocialPlatform() &&
@@ -1589,11 +1596,13 @@ const baseContext = [
 
     if (shouldPrepareAnyFlyers) {
       setPreparingFlyers(true);
+      updateCreationProgress("Preparing flyers for posting...");
     }
 
     try {
       for (let index = 0; index < weeklyUploads.length; index++) {
       const upload = weeklyUploads[index];
+      updateCreationProgress(`Uploading ${index + 1} of ${weeklyUploads.length}...`);
       const safeFileName = getSafeFileName(upload.file.name);
       const mediaType = getWeeklyUploadMediaType(upload.file);
       const path = `${userId}/weekly-uploads/${Date.now()}-${index + 1}-${safeFileName}`;
@@ -1634,6 +1643,7 @@ const baseContext = [
       if (shouldPreparePdfForSocial) {
         mediaPrepareStatus = "preparing";
         mediaPrepareError = null;
+        updateCreationProgress(`Preparing flyer ${index + 1} of ${weeklyUploads.length}...`);
 
         try {
           const converted = await prepareUploadedPdfForSocialPlatforms({
@@ -1966,6 +1976,8 @@ const baseContext = [
     const uploadedMediaItems =
       weeklyUploads.length > 0 ? await uploadWeeklyMediaToStorage(userId) : [];
 
+    updateCreationProgress("Creating your post wording...");
+
     const response = await axios.post("/api/generatePosts", {
       website: source === "website_scan" ? activeClient.website_url : "",
       clientName: activeClient.business_name,
@@ -2017,6 +2029,8 @@ If uploads are supplied:
         brand_summary: "short brand style summary",
       },
     });
+
+    updateCreationProgress("Building your review board...");
 
     const posts: GeneratedPost[] = (response.data.posts || []).slice(0, postCount);
     const inlineVideoMediaUsed = Number(response.data.inlineVideoMediaUsed || 0);
@@ -2113,6 +2127,8 @@ If uploads are supplied:
     }
 
     const suggestedScheduleSummary: string[] = [];
+
+    updateCreationProgress("Saving your weekly posts...");
 
     try {
       let createdPostIndex = 0;
@@ -2270,6 +2286,8 @@ If uploads are supplied:
       });
     }
 
+    updateCreationProgress("Opening your review board...");
+
     localStorage.setItem("fromone_has_new_posts", "true");
     window.dispatchEvent(new Event("fromone-new-posts-updated"));
 
@@ -2283,6 +2301,7 @@ If uploads are supplied:
   };
 
   const handleGeneratePosts = async () => {
+    setCreationProgressMessage("Getting things ready...");
     setScanning(true);
 
     if (!ensureAccessAllowed()) {
@@ -2316,6 +2335,7 @@ If uploads are supplied:
     } finally {
       setPreparingFlyers(false);
       setScanning(false);
+      setCreationProgressMessage("");
     }
   };
 
@@ -3415,11 +3435,13 @@ If uploads are supplied:
                 boxShadow: canCreatePosts ? "0 20px 48px rgba(255, 212, 59, 0.22)" : "none",
               }}
             >
-              {preparingFlyers
-                ? "Preparing flyers for posting..."
-                : scanning
-                  ? "Creating your posts..."
-                  : weeklyUploads.length > 0
+              {creationProgressMessage
+                ? creationProgressMessage
+                : preparingFlyers
+                  ? "Preparing flyers for posting..."
+                  : scanning
+                    ? "Creating your posts..."
+                    : weeklyUploads.length > 0
                   ? addToCampaignId
                     ? "Add posts to this set"
                     : "Create and review posts"
@@ -3454,19 +3476,28 @@ If uploads are supplied:
             </div>
 
             <div className="page-eyebrow">Creating posts</div>
-            <h2>{preparingFlyers ? "Preparing flyers for Instagram." : "Turning your uploads into posts."}</h2>
+            <h2>{creationProgressMessage || "Turning your uploads into posts."}</h2>
             <p>
-              {preparingFlyers
-                ? "FromOne is converting PDF flyers into image-ready media before creating Instagram posts."
-                : "FromOne is using the Business Profile and uploaded media to create posts, choose times and prepare the weekly calendar."}
+              FromOne is preparing your media, using the Business Profile, writing the posts,
+              choosing times and building your review board.
             </p>
 
             <div className="fromone-loading-steps">
-              <span>{preparingFlyers ? "Preparing PDF flyers" : "Saving uploads"}</span>
-              <span>Reading Business Profile</span>
-              <span>Writing posts</span>
-              <span>Choosing times</span>
-              <span>Opening calendar</span>
+              <span className={creationProgressMessage.includes("Uploading") ? "is-active" : ""}>
+                Uploading media
+              </span>
+              <span className={creationProgressMessage.includes("Preparing") ? "is-active" : ""}>
+                Preparing flyers
+              </span>
+              <span className={creationProgressMessage.includes("wording") ? "is-active" : ""}>
+                Writing posts
+              </span>
+              <span className={creationProgressMessage.includes("Saving") ? "is-active" : ""}>
+                Saving posts
+              </span>
+              <span className={creationProgressMessage.includes("Opening") ? "is-active" : ""}>
+                Opening review board
+              </span>
             </div>
           </section>
         </div>
