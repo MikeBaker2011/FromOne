@@ -2218,6 +2218,8 @@ If uploads are supplied:
               (mediaItem?.media_type === "image" ? "prepared" : "ready"),
             media_prepare_error: mediaItem?.media_prepare_error || null,
             media_prepared_at: mediaItem?.media_prepared_at || null,
+            approval_status: "needs_review",
+            approved_at: null,
             reach: 0,
             clicks: 0,
             likes: 0,
@@ -2910,45 +2912,43 @@ If uploads are supplied:
 
 
   .fromone-onboarding-card {
-    margin: 0 0 4px;
-    padding: clamp(18px, 2.6vw, 26px);
-    border-radius: 30px;
+    margin: 0;
+    padding: clamp(16px, 2.2vw, 22px);
+    border-radius: 28px;
     background:
-      radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%),
-      rgba(15, 23, 42, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 24px 68px rgba(0, 0, 0, 0.22);
+      radial-gradient(circle at top right, rgba(255, 212, 59, 0.11), transparent 34%),
+      rgba(15, 23, 42, 0.68);
+    border: 1px solid rgba(255, 212, 59, 0.18);
   }
 
   .fromone-onboarding-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 18px;
-    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: start;
+    margin-bottom: 14px;
   }
 
   .fromone-onboarding-head h2 {
-    margin: 8px 0 8px;
-    font-size: clamp(1.55rem, 3vw, 2.4rem);
+    margin: 6px 0 6px;
+    font-size: clamp(1.35rem, 2.7vw, 2.1rem);
     line-height: 1;
-    letter-spacing: -0.05em;
+    letter-spacing: -0.045em;
   }
 
   .fromone-onboarding-head p {
     margin: 0;
-    max-width: 660px;
     color: var(--muted);
-    line-height: 1.55;
+    line-height: 1.45;
   }
 
   .fromone-onboarding-score {
-    min-width: 88px;
-    min-height: 88px;
+    min-width: 78px;
+    min-height: 68px;
     display: grid;
     place-items: center;
     align-content: center;
-    border-radius: 24px;
+    border-radius: 22px;
     background: rgba(255, 212, 59, 0.12);
     border: 1px solid rgba(255, 212, 59, 0.28);
     color: #ffd43b;
@@ -2956,52 +2956,42 @@ If uploads are supplied:
 
   .fromone-onboarding-score strong {
     display: block;
-    font-size: 2.25rem;
+    font-size: 2rem;
     line-height: 0.9;
     letter-spacing: -0.06em;
   }
 
   .fromone-onboarding-score span {
     display: block;
-    margin-top: 5px;
-    color: rgba(248, 250, 252, 0.74);
-    font-size: 0.78rem;
+    margin-top: 4px;
+    color: rgba(248, 250, 252, 0.72);
+    font-size: 0.76rem;
     font-weight: 900;
   }
 
   .fromone-onboarding-steps {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 10px;
+    gap: 9px;
   }
 
   .fromone-onboarding-steps a {
     min-width: 0;
     display: grid;
-    grid-template-columns: 34px minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 9px;
     align-items: center;
-    padding: 13px;
-    border-radius: 19px;
+    padding: 11px;
+    border-radius: 17px;
     background: rgba(255, 255, 255, 0.055);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: inherit;
     text-decoration: none;
-    transition:
-      transform 160ms ease,
-      border-color 160ms ease,
-      background 160ms ease;
-  }
-
-  .fromone-onboarding-steps a:hover {
-    transform: translateY(-1px);
-    border-color: rgba(255, 212, 59, 0.34);
-    background: rgba(255, 255, 255, 0.075);
   }
 
   .fromone-onboarding-steps a > span {
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3022,17 +3012,60 @@ If uploads are supplied:
   .fromone-onboarding-steps strong {
     display: block;
     color: #ffffff;
-    font-size: 0.88rem;
-    line-height: 1.15;
-    overflow-wrap: anywhere;
+    font-size: 0.82rem;
+    line-height: 1.12;
   }
 
   .fromone-onboarding-steps small {
     display: block;
-    margin-top: 5px;
+    margin-top: 4px;
     color: rgba(248, 250, 252, 0.62);
-    line-height: 1.35;
-    font-size: 0.74rem;
+    line-height: 1.3;
+    font-size: 0.72rem;
+  }
+
+  .dashboard-profile-needed-card {
+    padding: 16px;
+    border-radius: 22px;
+    background: rgba(255, 212, 59, 0.1);
+    border: 1px solid rgba(255, 212, 59, 0.24);
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-profile-needed-card strong {
+    color: #ffffff;
+  }
+
+  .dashboard-profile-needed-card p {
+    margin: 5px 0 0;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .dashboard-profile-setup-button {
+    min-height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(248, 250, 252, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    font-weight: 950;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .dashboard-profile-setup-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 212, 59, 0.34);
+    color: #ffffff;
   }
 
   @media (max-width: 1100px) {
@@ -3043,17 +3076,26 @@ If uploads are supplied:
 
   @media (max-width: 680px) {
     .fromone-onboarding-head {
-      display: grid;
       grid-template-columns: 1fr;
     }
 
     .fromone-onboarding-score {
       width: 100%;
-      min-height: 72px;
+      min-height: 64px;
     }
 
     .fromone-onboarding-steps {
       grid-template-columns: 1fr;
+    }
+
+    .dashboard-profile-needed-card {
+      display: grid;
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+
+    .dashboard-profile-setup-button {
+      width: 100%;
     }
   }
 
@@ -3115,50 +3157,52 @@ If uploads are supplied:
             )}
           </div>
 
-          <section className="fromone-onboarding-card">
-            <div className="fromone-onboarding-head">
-              <div>
-                <div className="page-eyebrow">Getting started</div>
-                <h2>{onboardingIsComplete ? "You're ready to create posts." : "Your quick setup checklist."}</h2>
-                <p>
-                  Complete these steps once and FromOne will feel much easier every time you come back.
-                </p>
+          {!onboardingIsComplete && (
+            <section className="fromone-onboarding-card">
+              <div className="fromone-onboarding-head">
+                <div>
+                  <div className="page-eyebrow">Getting started</div>
+                  <h2>Quick setup checklist</h2>
+                  <p>
+                    Finish the basics once, then FromOne can create cleaner weekly posts.
+                  </p>
+                </div>
+
+                <div className="fromone-onboarding-score" aria-label={`${onboardingCompleteCount} of ${onboardingSteps.length} setup steps complete`}>
+                  <strong>{onboardingCompleteCount}</strong>
+                  <span>of {onboardingSteps.length}</span>
+                </div>
               </div>
 
-              <div className="fromone-onboarding-score" aria-label={`${onboardingCompleteCount} of ${onboardingSteps.length} setup steps complete`}>
-                <strong>{onboardingCompleteCount}</strong>
-                <span>of {onboardingSteps.length}</span>
+              <div className="fromone-onboarding-steps">
+                {onboardingSteps.map((step, index) => {
+                  const isHashLink = step.href.startsWith("#");
+
+                  const content = (
+                    <>
+                      <span className={step.complete ? "is-complete" : ""}>
+                        {step.complete ? "✓" : index + 1}
+                      </span>
+                      <div>
+                        <strong>{step.label}</strong>
+                        <small>{step.helper}</small>
+                      </div>
+                    </>
+                  );
+
+                  return isHashLink ? (
+                    <a key={step.label} href={step.href} className={step.complete ? "is-complete" : ""}>
+                      {content}
+                    </a>
+                  ) : (
+                    <Link key={step.label} href={step.href} className={step.complete ? "is-complete" : ""}>
+                      {content}
+                    </Link>
+                  );
+                })}
               </div>
-            </div>
-
-            <div className="fromone-onboarding-steps">
-              {onboardingSteps.map((step, index) => {
-                const isHashLink = step.href.startsWith("#");
-
-                const content = (
-                  <>
-                    <span className={step.complete ? "is-complete" : ""}>
-                      {step.complete ? "✓" : index + 1}
-                    </span>
-                    <div>
-                      <strong>{step.label}</strong>
-                      <small>{step.helper}</small>
-                    </div>
-                  </>
-                );
-
-                return isHashLink ? (
-                  <a key={step.label} href={step.href} className={step.complete ? "is-complete" : ""}>
-                    {content}
-                  </a>
-                ) : (
-                  <Link key={step.label} href={step.href} className={step.complete ? "is-complete" : ""}>
-                    {content}
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
+            </section>
+          )}
 
           <div
             style={{
@@ -3609,27 +3653,15 @@ If uploads are supplied:
             )}
 
             {!businessProfileReady && (
-              <div
-                style={{
-                  padding: 16,
-                  borderRadius: 20,
-                  background: "rgba(255, 212, 59, 0.1)",
-                  border: "1px solid rgba(255, 212, 59, 0.24)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 14,
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
-              >
+              <div className="dashboard-profile-needed-card">
                 <div>
                   <strong>Business Profile needed</strong>
-                  <p style={{ margin: "5px 0 0", color: "var(--muted)" }}>
+                  <p>
                     Set this up once so FromOne knows the business.
                   </p>
                 </div>
 
-                <Link href="/settings" className="secondary-button">
+                <Link href="/settings?setup=business" className="dashboard-profile-setup-button">
                   Set up profile
                 </Link>
               </div>
