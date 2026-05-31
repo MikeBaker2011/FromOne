@@ -383,6 +383,65 @@ async function urlToFile(url: string, filename: string) {
   return new File([blob], `${filename}.${extension}`, { type });
 }
 
+async function setupPdfJs() {
+  const pdfjs = await import("pdfjs-dist");
+
+  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/build/pdf.worker.min.mjs",
+      import.meta.url,
+    ).toString();
+  }
+
+  return pdfjs;
+}
+
+function looksLikePdf(data: ArrayBuffer) {
+  if (!data || data.byteLength < 5) return false;
+
+  const header = new TextDecoder("ascii")
+    .decode(new Uint8Array(data.slice(0, 5)))
+    .trim();
+
+  return header.startsWith("%PDF");
+}
+
+async function getPdfBytesFromUrl(url: string) {
+  const response = await fetch(url, {
+    method: "GET",
+    cache: "no-store",
+    credentials: "omit",
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      "This stored PDF could not be loaded. Please re-upload the flyer or upload a JPG/PNG version.",
+    );
+  }
+
+  const data = await response.arrayBuffer();
+
+  if (!looksLikePdf(data)) {
+    throw new Error(
+      "This stored file is not returning valid PDF data. Please re-upload the flyer, or upload a JPG/PNG version.",
+    );
+  }
+
+  return data;
+}
+
+async function getPdfBytesFromFile(file: File) {
+  const data = await file.arrayBuffer();
+
+  if (!looksLikePdf(data)) {
+    throw new Error(
+      "This file does not look like a valid PDF. Please export it again or upload a JPG/PNG version.",
+    );
+  }
+
+  return data;
+}
+
 function PdfFirstPagePreview({ url }: { url: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [previewStatus, setPreviewStatus] = useState("Loading PDF preview...");
@@ -399,16 +458,10 @@ function PdfFirstPagePreview({ url }: { url: string }) {
       setPreviewFailed(false);
 
       try {
-        const pdfjs = await import("pdfjs-dist");
+        const pdfjs = await setupPdfJs();
+        const pdfBytes = await getPdfBytesFromUrl(url);
 
-        if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-          pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
-        }
-
-        loadingTask = pdfjs.getDocument({
-          url,
-          withCredentials: false,
-        });
+        loadingTask = pdfjs.getDocument({ data: pdfBytes });
 
         const pdf = await loadingTask.promise;
         const page = await pdf.getPage(1);
@@ -429,16 +482,20 @@ function PdfFirstPagePreview({ url }: { url: string }) {
         canvas.width = Math.floor(viewport.width);
         canvas.height = Math.floor(viewport.height);
 
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
         await page.render({ canvasContext: context, viewport }).promise;
 
         if (!cancelled) {
           setPreviewStatus("");
           setPreviewFailed(false);
         }
-      } catch {
+      } catch (error: any) {
         if (!cancelled) {
           setPreviewStatus(
-            "PDF preview is unavailable. You can still view, download, or convert this PDF.",
+            error?.message ||
+              "PDF preview is unavailable. You can still view, download, or re-upload this PDF.",
           );
           setPreviewFailed(true);
         }
@@ -454,41 +511,19 @@ function PdfFirstPagePreview({ url }: { url: string }) {
   }, [url]);
 
   return (
-    <div
-      style={{
-        width: "100%",
-        display: "grid",
-        placeItems: "center",
-        gap: 10,
-        padding: 12,
-      }}
-    >
+    <div className="pr2-pdf-preview">
       <canvas
         ref={canvasRef}
-        aria-label="PDF first page preview"
         style={{
           display: previewFailed ? "none" : "block",
+          maxWidth: "100%",
           width: "100%",
-          maxWidth: 520,
           height: "auto",
-          borderRadius: 16,
+          borderRadius: 18,
           background: "#ffffff",
-          boxShadow: "0 18px 45px rgba(0,0,0,0.28)",
         }}
       />
-
-      {previewStatus && (
-        <p
-          style={{
-            margin: 0,
-            textAlign: "center",
-            fontSize: 14,
-            opacity: 0.84,
-          }}
-        >
-          {previewStatus}
-        </p>
-      )}
+      {previewStatus && <p>{previewStatus}</p>}
     </div>
   );
 }
@@ -532,6 +567,7 @@ export default function PostReviewPage() {
   const [preparedMedia, setPreparedMedia] = useState<PreparedMedia | null>(
     null,
   );
+  const [latestPdfFile, setLatestPdfFile] = useState<File | null>(null);
 
   const [rewriting, setRewriting] = useState("");
   const [audienceTarget, setAudienceTarget] = useState("Small business owners");
@@ -672,6 +708,7 @@ export default function PostReviewPage() {
     }
 
     setPost(data);
+    setLatestPdfFile(null);
     setCaption(cleanText(data.caption));
     setCta(cleanText(data.cta));
     setHashtags(
@@ -843,29 +880,19 @@ export default function PostReviewPage() {
     setSaving(false);
   };
 
-  const convertPdfUrlToJpeg = async (
+  const convertPdfBytesToJpeg = async (
     sourcePost: any,
-    sourceMediaUrl: string,
+    pdfBytes: ArrayBuffer,
   ) => {
-    if (!sourcePost?.id || !sourceMediaUrl) {
+    if (!sourcePost?.id || !pdfBytes) {
       throw new Error("Missing PDF media details.");
     }
 
-    const pdfjs = await import("pdfjs-dist");
-
-    if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
-    }
-
-    const loadingTask = pdfjs.getDocument({
-      url: sourceMediaUrl,
-      withCredentials: false,
-    });
-
-    let pdf: any = null;
+    const pdfjs = await setupPdfJs();
+    const loadingTask = pdfjs.getDocument({ data: pdfBytes });
 
     try {
-      pdf = await loadingTask.promise;
+      const pdf = await loadingTask.promise;
       const page = await pdf.getPage(1);
       const baseViewport = page.getViewport({ scale: 1 });
       const targetWidth = selectedPreset.width || 1080;
@@ -949,15 +976,49 @@ export default function PostReviewPage() {
           height: convertedHeight,
         },
       };
+    } catch (error: any) {
+      const message = String(error?.message || "");
+
+      if (message.toLowerCase().includes("invalid pdf structure")) {
+        throw new Error(
+          "This PDF could not be read by the browser. Please re-upload the flyer, export it again, or upload a JPG/PNG version.",
+        );
+      }
+
+      throw error;
     } finally {
       loadingTask?.destroy?.();
     }
   };
 
+  const convertPdfUrlToJpeg = async (
+    sourcePost: any,
+    sourceMediaUrl: string,
+  ) => {
+    const pdfBytes = await getPdfBytesFromUrl(sourceMediaUrl);
+    return convertPdfBytesToJpeg(sourcePost, pdfBytes);
+  };
+
+  const convertPdfFileToJpeg = async (sourcePost: any, file: File) => {
+    const pdfBytes = await getPdfBytesFromFile(file);
+    return convertPdfBytesToJpeg(sourcePost, pdfBytes);
+  };
+
+  // Images and videos upload normally. PDFs are automatically rendered in the
+  // browser and saved as JPEG images, so Instagram-ready media appears straight away.
   const handleUploadMedia = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file || !post?.id) return;
+
+    const isPdfUpload =
+      file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+    if (isPdfUpload) {
+      setLatestPdfFile(file);
+    } else {
+      setLatestPdfFile(null);
+    }
 
     setSaving(true);
     setMessage("");
@@ -984,7 +1045,7 @@ export default function PostReviewPage() {
 
       const nextMediaType = file.type.startsWith("video/")
         ? "video"
-        : file.type.includes("pdf") || file.name.toLowerCase().endsWith(".pdf")
+        : isPdfUpload
           ? "pdf"
           : "image";
 
@@ -1010,12 +1071,13 @@ export default function PostReviewPage() {
       setPreparedMedia(null);
 
       if (nextMediaType === "pdf") {
-        setMessage("PDF uploaded. Creating JPEG preview...");
-        const converted = await convertPdfUrlToJpeg(uploadedPost, uploadedUrl);
+        setMessage("Preparing flyer for posting...");
+        const converted = await convertPdfFileToJpeg(uploadedPost, file);
         setPost({ ...uploadedPost, ...converted.updates });
         setPreparedMedia(converted.prepared);
+        setLatestPdfFile(null);
         setMessage(
-          "PDF converted to JPEG preview. Instagram can now use this image.",
+          "Flyer prepared for posting. Instagram can now use this image.",
         );
         return;
       }
@@ -1052,24 +1114,33 @@ export default function PostReviewPage() {
 
     setPost({ ...post, media_url: null, media_type: null });
     setPreparedMedia(null);
+    setLatestPdfFile(null);
     setMessage("Media removed.");
     setSaving(false);
   };
 
   const convertPdfToJpeg = async () => {
-    if (!post?.id || !mediaUrl || !isFlyer) return;
+    if (!post?.id || !isFlyer) return;
+
+    if (!latestPdfFile && !mediaUrl) {
+      setMessage("Please upload or replace the PDF flyer first.");
+      return;
+    }
 
     setResizingMedia(true);
     setMessage("Creating JPEG preview...");
 
     try {
-      const converted = await convertPdfUrlToJpeg(post, mediaUrl);
+      const converted = latestPdfFile
+        ? await convertPdfFileToJpeg(post, latestPdfFile)
+        : await convertPdfUrlToJpeg(post, mediaUrl);
 
       setPost({ ...post, ...converted.updates });
       setPreparedMedia(converted.prepared);
+      setLatestPdfFile(null);
       setActivePanel("review");
       setMessage(
-        "PDF converted to JPEG preview. Instagram can now use this image.",
+        "Flyer prepared for posting. Instagram can now use this image.",
       );
     } catch (error: any) {
       setMessage(error?.message || "Could not convert this PDF to JPEG.");
@@ -1443,7 +1514,7 @@ export default function PostReviewPage() {
 
     if (isInstagramPost && isFlyer) {
       setMessage(
-        "Instagram cannot autopublish a PDF or flyer file. Use Convert PDF to JPEG, then autopublish again.",
+        "Instagram cannot autopublish a PDF or flyer file. Use Prepare flyer, then autopublish again.",
       );
       return;
     }
@@ -1653,17 +1724,6 @@ export default function PostReviewPage() {
                     onClick={() => setActivePanel("prepare")}
                   >
                     Prepare media
-                  </button>
-                )}
-
-                {canConvertFlyer && activePanel !== "prepare" && (
-                  <button
-                    type="button"
-                    className="pr2-btn pr2-btn-primary"
-                    onClick={convertPdfToJpeg}
-                    disabled={resizingMedia}
-                  >
-                    {resizingMedia ? "Converting..." : "Convert PDF to JPEG"}
                   </button>
                 )}
 
@@ -1973,22 +2033,11 @@ export default function PostReviewPage() {
                         />
                       ) : isFlyer ? (
                         <div className="pr2-empty">
-                          <strong>PDF / flyer attached</strong>
+                          <strong>Flyer attached</strong>
                           <PdfFirstPagePreview url={mediaUrl} />
                           <p>
-                            Previewing page 1. Convert it to JPEG for Instagram
-                            autopublish, or open/download it for manual posting.
+                            Upload the flyer again to prepare it automatically, or upload a JPG/PNG version.
                           </p>
-                          <button
-                            type="button"
-                            className="pr2-btn pr2-btn-primary"
-                            onClick={convertPdfToJpeg}
-                            disabled={resizingMedia}
-                          >
-                            {resizingMedia
-                              ? "Converting..."
-                              : "Convert PDF to JPEG"}
-                          </button>
                         </div>
                       ) : (
                         <img
@@ -2023,19 +2072,6 @@ export default function PostReviewPage() {
                       >
                         Upload / replace
                       </button>
-
-                      {canConvertFlyer && (
-                        <button
-                          type="button"
-                          className="pr2-btn pr2-btn-primary"
-                          onClick={convertPdfToJpeg}
-                          disabled={resizingMedia}
-                        >
-                          {resizingMedia
-                            ? "Converting..."
-                            : "Convert PDF to JPEG"}
-                        </button>
-                      )}
 
                       {mediaUrl && (
                         <>
