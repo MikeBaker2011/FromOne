@@ -4606,6 +4606,31 @@ If uploads are supplied:
     }
   }
 
+
+  /* Stack mobile upload action buttons */
+  @media (max-width: 760px) {
+    .dashboard-mobile-capture-actions {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      width: 100% !important;
+      max-width: 320px !important;
+      margin: 0 auto !important;
+      justify-self: center !important;
+      visibility: visible !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 50px !important;
+      border-radius: 17px !important;
+      padding: 0 16px !important;
+      text-align: center !important;
+      justify-content: center !important;
+    }
+  }
+
       `}</style>
       {(
         <section
