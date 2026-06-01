@@ -2859,56 +2859,7 @@ Important:
       className="campaign-brand-shell simplified-posts-page"
       style={brandStyle}
     >
-      {loading ? (
-        <section
-          className="premium-card"
-          style={{
-            textAlign: "center",
-            padding: "clamp(28px, 5vw, 56px)",
-            borderRadius: 34,
-            border: "1px solid rgba(255, 212, 59, 0.24)",
-            background:
-              "radial-gradient(circle at top, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032))",
-            boxShadow: "0 30px 96px rgba(0,0,0,0.34)",
-          }}
-        >
-          <div className="page-eyebrow">Posts</div>
-          <h1 className="page-title" style={{ margin: "8px 0 12px" }}>
-            This week’s posts.
-          </h1>
-          <p
-            className="page-description"
-            style={{ margin: "0 auto 22px", maxWidth: 760 }}
-          >
-            Review each post, then publish Facebook and Instagram or copy/open
-            TikTok.
-          </p>
-          <div
-            aria-label="Posts loading"
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                typeof window !== "undefined" && window.innerWidth <= 760
-                  ? "1fr"
-                  : "repeat(3, minmax(0, 1fr))",
-              gap: 12,
-              marginTop: 18,
-            }}
-          >
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                style={{
-                  minHeight: 220,
-                  borderRadius: 24,
-                  background: "rgba(255,255,255,0.055)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-              />
-            ))}
-          </div>
-        </section>
-      ) : campaigns.length === 0 ? (
+      {loading ? null : campaigns.length === 0 ? (
         <section
           className="premium-card"
           style={{

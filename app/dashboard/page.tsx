@@ -2598,75 +2598,7 @@ If uploads are supplied:
   const canCreatePosts = businessProfileReady && weeklyUploads.length > 0 && selectedPlatforms.length > 0 && !accessLocked && !scanning && !preparingFlyers;
 
   if (!dashboardMounted || loading) {
-    return (
-      <main
-        style={{
-          width: "min(1120px, calc(100vw - 28px))",
-          minHeight: "calc(100vh - 120px)",
-          margin: "0 auto 56px",
-          padding: "0 0 42px",
-        }}
-      >
-        <section
-          className="premium-card"
-          aria-label="Dashboard loading"
-          style={{
-            width: "100%",
-            padding: "clamp(22px, 3.5vw, 38px)",
-            borderRadius: 36,
-            border: "1px solid rgba(255, 212, 59, 0.24)",
-            background:
-              "radial-gradient(circle at top, rgba(255, 212, 59, 0.12), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.028))",
-            boxShadow: "0 30px 96px rgba(0,0,0,0.28)",
-          }}
-        >
-          <div className="page-eyebrow">Dashboard</div>
-
-          <div
-            style={{
-              width: "min(520px, 100%)",
-              height: 42,
-              borderRadius: 18,
-              background: "rgba(255,255,255,0.08)",
-              margin: "10px 0 18px",
-            }}
-          />
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                typeof window !== "undefined" && window.innerWidth <= 760
-                  ? "1fr"
-                  : "repeat(3, minmax(0, 1fr))",
-              gap: 12,
-              marginBottom: 18,
-            }}
-          >
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                style={{
-                  minHeight: 112,
-                  borderRadius: 24,
-                  background: "rgba(255,255,255,0.055)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-              />
-            ))}
-          </div>
-
-          <div
-            style={{
-              minHeight: 190,
-              borderRadius: 30,
-              border: "1px dashed rgba(255, 212, 59, 0.24)",
-              background: "rgba(15, 23, 42, 0.46)",
-            }}
-          />
-        </section>
-      </main>
-    );
+    return null;
   }
 
   return (
