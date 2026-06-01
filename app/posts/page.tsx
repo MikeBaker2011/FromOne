@@ -3302,9 +3302,10 @@ Important:
                 style={{
                   display: "grid",
                   gridTemplateColumns:
-                    "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-                  gap: 18,
+                    "repeat(auto-fill, minmax(250px, 320px))",
+                  gap: 16,
                   alignItems: "stretch",
+                  justifyContent: "start",
                 }}
               >
                 {sortedPosts.map((post: any, index: number) => {
@@ -3347,9 +3348,10 @@ Important:
                       className="fromone-premium-calendar-review-card"
                       style={{
                         position: "relative",
-                        minHeight: 720,
+                        minHeight: 520,
+                        maxWidth: 320,
                         display: "grid",
-                        gridTemplateRows: "minmax(380px, 56vw) minmax(0, 1fr)",
+                        gridTemplateRows: "220px minmax(0, 1fr)",
                         overflow: "hidden",
                         borderRadius: 30,
                         background: isPosted
@@ -3433,7 +3435,9 @@ Important:
                               style={{
                                 width: "100%",
                                 height: "100%",
-                                objectFit: "cover",
+                                objectFit: "contain",
+                                objectPosition: "center",
+                                background: "#020617",
                               }}
                             />
                           ) : mediaKind === "flyer" ? (
@@ -3482,10 +3486,10 @@ Important:
 
                       <div
                         style={{
-                          padding: 18,
+                          padding: 16,
                           display: "grid",
-                          gridTemplateRows: "auto auto minmax(64px, 1fr) auto",
-                          gap: 13,
+                          gridTemplateRows: "auto auto minmax(58px, 1fr) auto",
+                          gap: 12,
                         }}
                       >
                         <div
@@ -3573,7 +3577,7 @@ Important:
                             style={{
                               margin: 0,
                               color: "#fff",
-                              fontSize: "1.18rem",
+                              fontSize: "1.05rem",
                               lineHeight: 1.12,
                               letterSpacing: "-0.02em",
                             }}
@@ -3600,9 +3604,12 @@ Important:
                         </p>
 
                         <div
+                          className="fromone-post-card-actions"
                           style={{
+                            width: "100%",
+                            minWidth: 0,
                             display: "grid",
-                            gridTemplateColumns: "1fr auto",
+                            gridTemplateColumns: "1fr",
                             gap: 10,
                             marginTop: 4,
                           }}
@@ -3613,8 +3620,9 @@ Important:
                             className="dashboard-platform-create-button"
                             style={{
                               width: "100%",
-                              minHeight: 52,
-                              borderRadius: 18,
+                              minWidth: 0,
+                              minHeight: 46,
+                              borderRadius: 16,
                               display: "inline-flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -3630,9 +3638,10 @@ Important:
                             disabled={deletingPostId === post.id}
                             aria-label={`Delete ${getPostPositionLabel(post)}`}
                             style={{
-                              minWidth: 94,
-                              minHeight: 52,
-                              borderRadius: 18,
+                              width: "100%",
+                              minWidth: 0,
+                              minHeight: 46,
+                              borderRadius: 16,
                               border: "1px solid rgba(248, 113, 113, 0.3)",
                               background: "rgba(248, 113, 113, 0.1)",
                               color: "#fecaca",
@@ -3811,6 +3820,28 @@ Important:
           </div>
         </div>
       )}
+
+
+      <style jsx global>{`
+        .fromone-post-card-actions {
+          grid-template-columns: 1fr !important;
+        }
+
+        .fromone-post-card-actions button {
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+
+        .fromone-premium-calendar-review-card {
+          max-width: 320px !important;
+        }
+
+        @media (max-width: 760px) {
+          .fromone-premium-calendar-review-card {
+            max-width: 100% !important;
+          }
+        }
+      `}</style>
 
       {confirmDialog && (
         <div

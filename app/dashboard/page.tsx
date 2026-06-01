@@ -3209,6 +3209,1246 @@ If uploads are supplied:
   }
 
 
+
+  .dashboard-quick-start-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+  }
+
+  .dashboard-quick-start-card {
+    min-width: 0;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    padding: 18px;
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 36%),
+      rgba(15, 23, 42, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dashboard-quick-start-card.is-active {
+    border-color: rgba(255, 212, 59, 0.28);
+    box-shadow: 0 18px 48px rgba(255, 212, 59, 0.06);
+  }
+
+  .dashboard-quick-start-card.is-complete {
+    background:
+      radial-gradient(circle at top right, rgba(61, 220, 151, 0.1), transparent 36%),
+      rgba(15, 23, 42, 0.62);
+    border-color: rgba(61, 220, 151, 0.2);
+  }
+
+  .dashboard-quick-start-card > span {
+    width: 38px;
+    height: 38px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 14px;
+    background: rgba(255, 212, 59, 0.12);
+    color: #ffd43b;
+    font-size: 0.8rem;
+    font-weight: 1000;
+  }
+
+  .dashboard-quick-start-card.is-complete > span {
+    background: rgba(61, 220, 151, 0.13);
+    color: #bbf7d0;
+  }
+
+  .dashboard-quick-start-card strong {
+    color: #ffffff;
+    font-size: 1.04rem;
+    line-height: 1.12;
+  }
+
+  .dashboard-quick-start-card p {
+    margin: 0;
+    color: rgba(248, 250, 252, 0.66);
+    line-height: 1.38;
+    font-size: 0.92rem;
+    font-weight: 760;
+  }
+
+  .dashboard-quick-start-link {
+    width: fit-content;
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.065);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    color: #ffe58a;
+    font-size: 0.78rem;
+    font-weight: 950;
+    text-decoration: none;
+  }
+
+  .dashboard-quick-start-link:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 212, 59, 0.25);
+  }
+
+  @media (max-width: 920px) {
+    .dashboard-quick-start-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+
+
+  .dashboard-quick-start-card.is-active {
+    animation: dashboardQuickCardPulse 1.9s ease-in-out infinite;
+  }
+
+  @keyframes dashboardQuickCardPulse {
+    0%, 100% {
+      border-color: rgba(255, 212, 59, 0.22);
+      box-shadow: 0 18px 48px rgba(255, 212, 59, 0.04);
+    }
+
+    50% {
+      border-color: rgba(255, 212, 59, 0.42);
+      box-shadow:
+        0 20px 54px rgba(255, 212, 59, 0.08),
+        0 0 0 5px rgba(255, 212, 59, 0.045);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-quick-start-card.is-active {
+      animation: none !important;
+    }
+  }
+
+
+  /* Compact dashboard uploaded media cards */
+  .dashboard-weekly-upload-grid {
+    justify-content: center !important;
+    align-items: start !important;
+  }
+
+  .dashboard-weekly-upload-grid > .card {
+    max-width: 260px !important;
+  }
+
+  .dashboard-weekly-upload-grid > .card > div:first-child {
+    min-height: 0 !important;
+    height: 170px !important;
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  .dashboard-weekly-upload-grid > .card img,
+  .dashboard-weekly-upload-grid > .card video,
+  .dashboard-weekly-upload-grid > .card canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 170px !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    background: #020617 !important;
+  }
+
+  .dashboard-weekly-upload-grid textarea {
+    min-height: 68px !important;
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-weekly-upload-grid > .card {
+      max-width: 100% !important;
+    }
+
+    .dashboard-weekly-upload-grid > .card > div:first-child {
+      height: 220px !important;
+    }
+
+    .dashboard-weekly-upload-grid > .card img,
+    .dashboard-weekly-upload-grid > .card video,
+    .dashboard-weekly-upload-grid > .card canvas {
+      max-height: 220px !important;
+    }
+  }
+
+
+  /* Left align uploaded media cards */
+  .dashboard-weekly-upload-grid {
+    justify-content: start !important;
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-weekly-upload-grid {
+      justify-content: stretch !important;
+    }
+  }
+
+
+  /* Cleaner upload plus button */
+  .dashboard-upload-dropzone > span > span:first-child {
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    min-height: 58px !important;
+    max-width: 58px !important;
+    max-height: 58px !important;
+    padding: 0 !important;
+    border-radius: 18px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    font-size: 1.75rem !important;
+    line-height: 1 !important;
+    box-shadow: 0 14px 34px rgba(255, 212, 59, 0.18) !important;
+  }
+
+  .dashboard-upload-dropzone {
+    min-height: 210px !important;
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-upload-dropzone > span > span:first-child {
+      width: 54px !important;
+      height: 54px !important;
+      min-width: 54px !important;
+      min-height: 54px !important;
+      max-width: 54px !important;
+      max-height: 54px !important;
+      border-radius: 17px !important;
+      font-size: 1.6rem !important;
+    }
+
+    .dashboard-upload-dropzone {
+      min-height: 190px !important;
+    }
+  }
+
+
+  /* Clean upload dropzone camera controls */
+  .dashboard-mobile-capture-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .dashboard-mobile-capture-actions button {
+    min-width: 104px !important;
+    min-height: 42px !important;
+    padding: 0 14px !important;
+    border-radius: 16px !important;
+    font-size: 0.9rem !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+  }
+
+  .dashboard-upload-dropzone > span {
+    display: grid !important;
+    justify-items: center !important;
+    gap: 10px !important;
+  }
+
+  .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions) {
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    min-height: 58px !important;
+    max-width: 58px !important;
+    max-height: 58px !important;
+    padding: 0 !important;
+    border-radius: 18px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    font-size: 1.75rem !important;
+    line-height: 1 !important;
+  }
+
+  @media (min-width: 761px) {
+    .dashboard-mobile-capture-actions {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-mobile-capture-actions {
+      display: flex !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      min-width: 96px !important;
+      min-height: 40px !important;
+      border-radius: 15px !important;
+      font-size: 0.84rem !important;
+    }
+  }
+
+
+  /* Hide mobile capture buttons on desktop */
+  .dashboard-mobile-capture-actions {
+    display: none !important;
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-mobile-capture-actions {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      align-items: center !important;
+      gap: 10px !important;
+      margin-bottom: 12px !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      min-width: 96px !important;
+      min-height: 40px !important;
+      padding: 0 14px !important;
+      border-radius: 15px !important;
+      font-size: 0.84rem !important;
+      line-height: 1.05 !important;
+      white-space: nowrap !important;
+    }
+  }
+
+
+  /* Premium upload dropzone redesign */
+  .dashboard-upload-dropzone {
+    min-height: 190px !important;
+    border-radius: 30px !important;
+    border: 1px dashed rgba(255, 212, 59, 0.34) !important;
+    background:
+      radial-gradient(circle at top, rgba(255, 212, 59, 0.11), transparent 36%),
+      rgba(15, 23, 42, 0.58) !important;
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      background 160ms ease,
+      box-shadow 160ms ease !important;
+  }
+
+  .dashboard-upload-dropzone:hover {
+    transform: translateY(-1px) !important;
+    border-color: rgba(255, 212, 59, 0.58) !important;
+    background:
+      radial-gradient(circle at top, rgba(255, 212, 59, 0.16), transparent 38%),
+      rgba(15, 23, 42, 0.66) !important;
+    box-shadow: 0 22px 60px rgba(255, 212, 59, 0.075) !important;
+  }
+
+  .dashboard-upload-dropzone > span {
+    display: grid !important;
+    justify-items: center !important;
+    gap: 12px !important;
+  }
+
+  .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions) {
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #ffd43b !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+
+  .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
+    content: "Click here to upload";
+    min-height: 54px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 22px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #ffd43b, #f7b733);
+    color: #101420;
+    font-size: 1rem;
+    line-height: 1;
+    font-weight: 1000;
+    letter-spacing: -0.01em;
+    box-shadow: 0 16px 38px rgba(255, 212, 59, 0.18);
+  }
+
+  .dashboard-upload-dropzone > span > strong,
+  .dashboard-upload-dropzone h2,
+  .dashboard-upload-dropzone h3 {
+    margin-top: 2px !important;
+  }
+
+  .dashboard-mobile-capture-actions {
+    display: none !important;
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-upload-dropzone {
+      min-height: 220px !important;
+      border-radius: 26px !important;
+    }
+
+    .dashboard-mobile-capture-actions {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      align-items: center !important;
+      gap: 10px !important;
+      margin-bottom: 10px !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      min-width: 96px !important;
+      min-height: 40px !important;
+      padding: 0 14px !important;
+      border-radius: 15px !important;
+      font-size: 0.84rem !important;
+      line-height: 1.05 !important;
+      white-space: nowrap !important;
+    }
+
+    .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
+      content: "+";
+      width: 54px;
+      height: 54px;
+      min-height: 54px;
+      padding: 0;
+      border-radius: 17px;
+      font-size: 1.6rem;
+    }
+  }
+
+
+  /* Agency-standard dashboard redesign */
+  .dashboard-shell,
+  main.dashboard-shell,
+  main[data-dashboard-page],
+  .dashboard-page {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.075), transparent 34%),
+      radial-gradient(circle at 84% 12%, rgba(61, 220, 151, 0.055), transparent 30%),
+      #050914 !important;
+  }
+
+  .dashboard-hero-card,
+  .dashboard-main-card,
+  .dashboard-create-card {
+    border-radius: 34px !important;
+  }
+
+  .dashboard-quick-start-cards {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    margin: 22px 0 18px !important;
+  }
+
+  .dashboard-quick-start-card {
+    min-height: 132px !important;
+    display: grid !important;
+    align-content: start !important;
+    gap: 9px !important;
+    padding: 18px !important;
+    border-radius: 24px !important;
+    background:
+      radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 38%),
+      rgba(15, 23, 42, 0.66) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.16) !important;
+  }
+
+  .dashboard-quick-start-card.is-active {
+    border-color: rgba(255, 212, 59, 0.34) !important;
+    box-shadow:
+      0 20px 54px rgba(0, 0, 0, 0.2),
+      0 0 0 1px rgba(255, 212, 59, 0.08) inset !important;
+  }
+
+  .dashboard-quick-start-card.is-complete {
+    background:
+      radial-gradient(circle at top right, rgba(61, 220, 151, 0.10), transparent 38%),
+      rgba(15, 23, 42, 0.66) !important;
+    border-color: rgba(61, 220, 151, 0.22) !important;
+  }
+
+  .dashboard-quick-start-card > span {
+    width: 34px !important;
+    height: 34px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    border-radius: 13px !important;
+    background: rgba(255, 212, 59, 0.12) !important;
+    color: #ffd43b !important;
+    font-size: 0.74rem !important;
+    font-weight: 1000 !important;
+  }
+
+  .dashboard-quick-start-card.is-complete > span {
+    background: rgba(61, 220, 151, 0.14) !important;
+    color: #bbf7d0 !important;
+  }
+
+  .dashboard-quick-start-card strong {
+    color: #ffffff !important;
+    font-size: 1.04rem !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .dashboard-quick-start-card p {
+    margin: 0 !important;
+    color: rgba(248, 250, 252, 0.66) !important;
+    line-height: 1.38 !important;
+    font-size: 0.9rem !important;
+    font-weight: 760 !important;
+  }
+
+  .dashboard-quick-start-link {
+    width: fit-content !important;
+    min-height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: 2px !important;
+    padding: 0 12px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.065) !important;
+    border: 1px solid rgba(255, 255, 255, 0.11) !important;
+    color: #ffe58a !important;
+    font-size: 0.76rem !important;
+    font-weight: 950 !important;
+    text-decoration: none !important;
+  }
+
+  .dashboard-upload-dropzone {
+    min-height: 260px !important;
+    border-radius: 32px !important;
+    border: 1px dashed rgba(255, 212, 59, 0.36) !important;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+      radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.14), transparent 38%),
+      rgba(15, 23, 42, 0.62) !important;
+    box-shadow:
+      0 22px 70px rgba(0, 0, 0, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.025) inset !important;
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      background 160ms ease,
+      box-shadow 160ms ease !important;
+  }
+
+  .dashboard-upload-dropzone:hover {
+    transform: translateY(-2px) !important;
+    border-color: rgba(255, 212, 59, 0.62) !important;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.018)),
+      radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.19), transparent 40%),
+      rgba(15, 23, 42, 0.70) !important;
+    box-shadow:
+      0 26px 80px rgba(0, 0, 0, 0.24),
+      0 0 0 1px rgba(255, 212, 59, 0.08) inset !important;
+  }
+
+  .dashboard-upload-dropzone > span {
+    display: grid !important;
+    justify-items: center !important;
+    gap: 12px !important;
+  }
+
+  .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions) {
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: transparent !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+
+  .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
+    content: "Click here to upload";
+    min-height: 58px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 26px !important;
+    border-radius: 19px !important;
+    background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
+    color: #101420 !important;
+    font-size: 1.02rem !important;
+    line-height: 1 !important;
+    font-weight: 1000 !important;
+    letter-spacing: -0.01em !important;
+    box-shadow: 0 18px 44px rgba(255, 212, 59, 0.18) !important;
+  }
+
+  .dashboard-mobile-capture-actions {
+    display: none !important;
+  }
+
+  .dashboard-weekly-upload-grid {
+    justify-content: start !important;
+    align-items: start !important;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 260px)) !important;
+  }
+
+  .dashboard-weekly-upload-grid > .card {
+    max-width: 260px !important;
+    border-radius: 24px !important;
+    background:
+      radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 36%),
+      rgba(255, 255, 255, 0.058) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16) !important;
+  }
+
+  .dashboard-weekly-upload-grid > .card > div:first-child {
+    min-height: 0 !important;
+    height: 170px !important;
+    aspect-ratio: 4 / 3 !important;
+    border-radius: 18px !important;
+  }
+
+  .dashboard-weekly-upload-grid > .card img,
+  .dashboard-weekly-upload-grid > .card video,
+  .dashboard-weekly-upload-grid > .card canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 170px !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    background: #020617 !important;
+  }
+
+  .dashboard-weekly-upload-grid textarea {
+    min-height: 68px !important;
+    border-radius: 15px !important;
+  }
+
+  @media (max-width: 920px) {
+    .dashboard-quick-start-cards {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-upload-dropzone {
+      min-height: 230px !important;
+      border-radius: 28px !important;
+    }
+
+    .dashboard-mobile-capture-actions {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      align-items: center !important;
+      gap: 10px !important;
+      margin-bottom: 10px !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      min-width: 96px !important;
+      min-height: 40px !important;
+      padding: 0 14px !important;
+      border-radius: 15px !important;
+      font-size: 0.84rem !important;
+      line-height: 1.05 !important;
+      white-space: nowrap !important;
+    }
+
+    .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
+      content: "+";
+      width: 54px !important;
+      height: 54px !important;
+      min-height: 54px !important;
+      padding: 0 !important;
+      border-radius: 17px !important;
+      font-size: 1.6rem !important;
+    }
+
+    .dashboard-weekly-upload-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .dashboard-weekly-upload-grid > .card {
+      max-width: 100% !important;
+    }
+
+    .dashboard-weekly-upload-grid > .card > div:first-child {
+      height: 220px !important;
+    }
+
+    .dashboard-weekly-upload-grid > .card img,
+    .dashboard-weekly-upload-grid > .card video,
+    .dashboard-weekly-upload-grid > .card canvas {
+      max-height: 220px !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-upload-dropzone,
+    .dashboard-quick-start-card.is-active {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+
+
+  /* Centre the upload plus icon */
+  .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
+    display: inline-grid !important;
+    place-items: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
+      display: inline-grid !important;
+      place-items: center !important;
+      text-align: center !important;
+      line-height: 1 !important;
+    }
+  }
+
+
+  /* Final upload icon and mobile button fix */
+  .dashboard-upload-icon {
+    display: inline-grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+  }
+
+  .dashboard-mobile-capture-actions {
+    display: none !important;
+  }
+
+  .dashboard-mobile-capture-hidden-input {
+    display: none !important;
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-mobile-capture-actions {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      width: 100% !important;
+      margin: 0 0 16px !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      width: 100% !important;
+      min-height: 52px !important;
+      border-radius: 18px !important;
+    }
+
+    .dashboard-upload-icon {
+      width: 62px !important;
+      height: 62px !important;
+      border-radius: 22px !important;
+      font-size: 30px !important;
+    }
+  }
+
+
+  /* Final: mobile capture buttons only on real mobile/touch devices */
+  .dashboard-mobile-capture-actions {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .dashboard-mobile-capture-hidden-input {
+    display: none !important;
+  }
+
+  @media (hover: none) and (pointer: coarse) and (max-width: 760px) {
+    .dashboard-mobile-capture-actions {
+      display: grid !important;
+      visibility: visible !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      width: 100% !important;
+      margin: 0 0 16px !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      width: 100% !important;
+      min-height: 52px !important;
+      border-radius: 18px !important;
+    }
+  }
+
+  .dashboard-upload-icon {
+    display: inline-grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+  }
+
+
+  /* Final responsive capture controls */
+  .dashboard-mobile-capture-actions {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .dashboard-mobile-capture-hidden-input {
+    display: none !important;
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-mobile-capture-actions {
+      display: grid !important;
+      visibility: visible !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      width: 100% !important;
+      margin: 0 0 16px !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      width: 100% !important;
+      min-height: 52px !important;
+      border-radius: 18px !important;
+      padding: 0 14px !important;
+      font-size: 0.95rem !important;
+      line-height: 1.05 !important;
+      white-space: nowrap !important;
+    }
+  }
+
+  @media (min-width: 761px) {
+    .dashboard-mobile-capture-actions {
+      display: none !important;
+      visibility: hidden !important;
+    }
+  }
+
+  .dashboard-upload-icon {
+    display: inline-grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+  }
+
+
+  /* Final clean mobile upload area */
+  .dashboard-mobile-capture-actions {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .dashboard-mobile-capture-hidden-input {
+    display: none !important;
+  }
+
+  .dashboard-upload-icon {
+    display: inline-grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+  }
+
+  @media (min-width: 761px) {
+    .dashboard-mobile-capture-actions {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    .dashboard-upload-icon {
+      display: inline-grid !important;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-upload-dropzone {
+      min-height: 0 !important;
+      padding: 22px 18px !important;
+      border-radius: 28px !important;
+    }
+
+    .dashboard-upload-dropzone > span {
+      width: 100% !important;
+      max-width: 420px !important;
+      display: grid !important;
+      gap: 14px !important;
+      justify-items: stretch !important;
+    }
+
+    .dashboard-mobile-capture-actions {
+      display: grid !important;
+      visibility: visible !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      width: 100% !important;
+      margin: 0 !important;
+      order: 1 !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      width: 100% !important;
+      min-height: 52px !important;
+      padding: 0 16px !important;
+      border-radius: 18px !important;
+      border: 1px solid rgba(255, 212, 59, 0.34) !important;
+      background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
+      color: #101420 !important;
+      font-size: 0.98rem !important;
+      line-height: 1.05 !important;
+      font-weight: 1000 !important;
+      white-space: nowrap !important;
+      box-shadow: 0 16px 34px rgba(255, 212, 59, 0.14) !important;
+    }
+
+    .dashboard-mobile-capture-actions button.secondary {
+      background: rgba(255, 255, 255, 0.075) !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.14) !important;
+      box-shadow: none !important;
+    }
+
+    .dashboard-upload-icon {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    .dashboard-upload-dropzone strong {
+      order: 2 !important;
+      display: block !important;
+      margin: 0 !important;
+      font-size: clamp(1.32rem, 7vw, 1.8rem) !important;
+      line-height: 1.05 !important;
+      text-align: center !important;
+    }
+
+    .dashboard-upload-dropzone strong::after {
+      content: "";
+    }
+
+    .dashboard-upload-dropzone > span > span:last-child {
+      order: 3 !important;
+      display: block !important;
+      max-width: 100% !important;
+      color: rgba(248, 250, 252, 0.66) !important;
+      font-size: 0.94rem !important;
+      line-height: 1.45 !important;
+      text-align: center !important;
+    }
+  }
+
+
+  /* Final mobile upload card layout */
+  @media (max-width: 760px) {
+    .dashboard-upload-dropzone {
+      min-height: 360px !important;
+      padding: 24px 18px !important;
+      border-radius: 30px !important;
+      display: grid !important;
+      place-items: center !important;
+    }
+
+    .dashboard-upload-dropzone > span {
+      width: 100% !important;
+      max-width: 390px !important;
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      justify-items: center !important;
+      align-items: center !important;
+      gap: 16px !important;
+    }
+
+    .dashboard-mobile-capture-actions {
+      order: 1 !important;
+      width: 100% !important;
+      max-width: 330px !important;
+      display: grid !important;
+      visibility: visible !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      margin: 0 auto !important;
+      justify-self: center !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      width: 100% !important;
+      min-height: 54px !important;
+      padding: 0 16px !important;
+      border-radius: 18px !important;
+      font-size: 1rem !important;
+      font-weight: 1000 !important;
+      line-height: 1 !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+    }
+
+    .dashboard-mobile-capture-actions button.secondary {
+      background: rgba(255, 255, 255, 0.085) !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.16) !important;
+      box-shadow: none !important;
+    }
+
+    .dashboard-upload-icon {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    .dashboard-upload-dropzone strong {
+      order: 2 !important;
+      display: block !important;
+      margin: 0 !important;
+      max-width: 330px !important;
+      text-align: center !important;
+      font-size: clamp(1.55rem, 7vw, 2rem) !important;
+      line-height: 1.05 !important;
+    }
+
+    .dashboard-upload-dropzone > span > span:last-child {
+      order: 3 !important;
+      display: block !important;
+      max-width: 340px !important;
+      margin: 0 auto !important;
+      text-align: center !important;
+      color: rgba(248, 250, 252, 0.66) !important;
+      font-size: 0.96rem !important;
+      line-height: 1.48 !important;
+    }
+  }
+
+  @media (min-width: 761px) {
+    .dashboard-mobile-capture-actions {
+      display: none !important;
+      visibility: hidden !important;
+    }
+  }
+
+
+  /* Final simple mobile upload actions */
+  @media (max-width: 760px) {
+    .dashboard-upload-dropzone {
+      min-height: 300px !important;
+      padding: 24px 18px !important;
+      border-radius: 30px !important;
+      display: grid !important;
+      place-items: center !important;
+    }
+
+    .dashboard-upload-dropzone > span {
+      width: 100% !important;
+      max-width: 380px !important;
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      justify-items: center !important;
+      gap: 12px !important;
+    }
+
+    .dashboard-mobile-capture-actions {
+      order: 1 !important;
+      width: 100% !important;
+      max-width: 360px !important;
+      display: grid !important;
+      visibility: visible !important;
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+      margin: 0 auto !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 58px !important;
+      padding: 0 18px !important;
+      border-radius: 19px !important;
+      font-size: 1.02rem !important;
+      font-weight: 1000 !important;
+      line-height: 1 !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+    }
+
+    .dashboard-mobile-capture-actions button.secondary {
+      background: rgba(255, 255, 255, 0.085) !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.16) !important;
+      box-shadow: none !important;
+    }
+
+    .dashboard-upload-icon {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    .dashboard-upload-dropzone strong {
+      order: 2 !important;
+      display: block !important;
+      margin: 2px 0 0 !important;
+      max-width: 360px !important;
+      text-align: center !important;
+      font-size: 1.08rem !important;
+      line-height: 1.2 !important;
+      color: rgba(248, 250, 252, 0.78) !important;
+    }
+
+    .dashboard-upload-dropzone strong {
+      font-size: 0 !important;
+      line-height: 0 !important;
+    }
+
+    .dashboard-upload-dropzone strong::before {
+      content: "Choose how to add media";
+      display: block !important;
+      font-size: 1.08rem !important;
+      line-height: 1.2 !important;
+      color: rgba(248, 250, 252, 0.78) !important;
+    }
+
+    .dashboard-upload-dropzone > span > span:last-child {
+      display: none !important;
+    }
+  }
+
+  @media (min-width: 761px) {
+    .dashboard-mobile-capture-actions {
+      display: none !important;
+      visibility: hidden !important;
+    }
+  }
+
+
+  /* Final premium mobile upload redesign */
+  .dashboard-mobile-upload-title {
+    display: none !important;
+  }
+
+  @media (min-width: 761px) {
+    .dashboard-mobile-capture-actions,
+    .dashboard-mobile-upload-title {
+      display: none !important;
+      visibility: hidden !important;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-upload-dropzone {
+      min-height: 340px !important;
+      padding: 24px 18px !important;
+      border-radius: 30px !important;
+      display: grid !important;
+      place-items: center !important;
+    }
+
+    .dashboard-upload-dropzone > span {
+      width: 100% !important;
+      max-width: 360px !important;
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 14px !important;
+      justify-items: stretch !important;
+      align-items: stretch !important;
+      margin: 0 auto !important;
+    }
+
+    .dashboard-mobile-upload-title {
+      order: 1 !important;
+      display: block !important;
+      visibility: visible !important;
+      width: 100% !important;
+      text-align: center !important;
+      color: #ffffff !important;
+      font-size: 1.45rem !important;
+      line-height: 1.05 !important;
+      font-weight: 1000 !important;
+      letter-spacing: -0.035em !important;
+      margin: 0 0 2px !important;
+    }
+
+    .dashboard-mobile-capture-actions {
+      order: 2 !important;
+      display: grid !important;
+      visibility: visible !important;
+      grid-template-columns: 1fr !important;
+      gap: 11px !important;
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      justify-self: stretch !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      min-height: 56px !important;
+      padding: 0 18px !important;
+      border-radius: 19px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      font-size: 1rem !important;
+      font-weight: 1000 !important;
+      line-height: 1 !important;
+      white-space: nowrap !important;
+    }
+
+    .dashboard-mobile-capture-actions button.secondary {
+      background: rgba(255, 255, 255, 0.085) !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.16) !important;
+      box-shadow: none !important;
+    }
+
+    .dashboard-upload-icon {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    .dashboard-upload-dropzone strong {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    .dashboard-upload-dropzone > span > span:last-child {
+      order: 3 !important;
+      display: block !important;
+      width: 100% !important;
+      max-width: 320px !important;
+      justify-self: center !important;
+      margin: 0 !important;
+      text-align: center !important;
+      color: rgba(248, 250, 252, 0.62) !important;
+      font-size: 0.9rem !important;
+      line-height: 1.38 !important;
+    }
+  }
+
       `}</style>
       {(
         <section
@@ -3263,49 +4503,63 @@ If uploads are supplied:
           </div>
 
           {!onboardingIsComplete && (
-            <section className="fromone-onboarding-card">
-              <div className="fromone-onboarding-head">
-                <div>
-                  <div className="page-eyebrow">Getting started</div>
-                  <h2>Quick setup checklist</h2>
-                  <p>
-                    Finish the basics once, then FromOne can create cleaner weekly posts.
-                  </p>
-                </div>
+            <section className="dashboard-quick-start-cards" aria-label="Dashboard quick start">
+              <article
+                className={
+                  weeklyUploads.length > 0
+                    ? "dashboard-quick-start-card is-complete"
+                    : "dashboard-quick-start-card is-active"
+                }
+              >
+                <span>01</span>
+                <strong>Upload media</strong>
+                <p>
+                  {weeklyUploads.length > 0
+                    ? `${weeklyUploads.length} file${weeklyUploads.length === 1 ? "" : "s"} added.`
+                    : "Add photos, videos or flyers."}
+                </p>
+                <a href="#upload-media" className="dashboard-quick-start-link">
+                  Upload
+                </a>
+              </article>
 
-                <div className="fromone-onboarding-score" aria-label={`${onboardingCompleteCount} of ${onboardingSteps.length} setup steps complete`}>
-                  <strong>{onboardingCompleteCount}</strong>
-                  <span>of {onboardingSteps.length}</span>
-                </div>
-              </div>
+              <article
+                className={
+                  selectedPlatforms.length > 0
+                    ? "dashboard-quick-start-card is-complete"
+                    : "dashboard-quick-start-card"
+                }
+              >
+                <span>02</span>
+                <strong>Choose platforms</strong>
+                <p>
+                  {selectedPlatforms.length > 0
+                    ? `${selectedPlatforms.length} platform${selectedPlatforms.length === 1 ? "" : "s"} selected.`
+                    : "Pick Facebook, Instagram or TikTok."}
+                </p>
+                <a href="#platforms" className="dashboard-quick-start-link">
+                  Choose
+                </a>
+              </article>
 
-              <div className="fromone-onboarding-steps">
-                {onboardingSteps.map((step, index) => {
-                  const isHashLink = step.href.startsWith("#");
-
-                  const content = (
-                    <>
-                      <span className={step.complete ? "is-complete" : ""}>
-                        {step.complete ? "✓" : index + 1}
-                      </span>
-                      <div>
-                        <strong>{step.label}</strong>
-                        <small>{step.helper}</small>
-                      </div>
-                    </>
-                  );
-
-                  return isHashLink ? (
-                    <a key={step.label} href={step.href} className={step.complete ? "is-complete" : ""}>
-                      {content}
-                    </a>
-                  ) : (
-                    <Link key={step.label} href={step.href} className={step.complete ? "is-complete" : ""}>
-                      {content}
-                    </Link>
-                  );
-                })}
-              </div>
+              <article
+                className={
+                  weeklyProgress.total > 0 || hasScheduledPost
+                    ? "dashboard-quick-start-card is-complete"
+                    : "dashboard-quick-start-card"
+                }
+              >
+                <span>03</span>
+                <strong>Create posts</strong>
+                <p>
+                  {weeklyProgress.total > 0 || hasScheduledPost
+                    ? "Posts are ready to review."
+                    : "Generate the review board."}
+                </p>
+                <a href="#create-posts" className="dashboard-quick-start-link">
+                  Create
+                </a>
+              </article>
             </section>
           )}
 
@@ -3345,6 +4599,8 @@ If uploads are supplied:
               />
 
               <span style={{ display: "grid", gap: 10, justifyItems: "center" }}>
+                <span className="dashboard-mobile-upload-title">Add media</span>
+
                 <span className="dashboard-mobile-capture-actions" aria-label="Mobile media options">
                   <button
                     type="button"
@@ -3440,7 +4696,7 @@ If uploads are supplied:
                 </span>
 
                 <strong style={{ fontSize: "clamp(1.35rem, 3vw, 2rem)" }}>
-                  Upload photos, videos or flyers
+                  Click here to upload
                 </strong>
 
                 <span style={{ color: "var(--muted)", maxWidth: 560 }}>
@@ -3458,7 +4714,8 @@ If uploads are supplied:
                   gridTemplateColumns:
                     typeof window !== "undefined" && window.innerWidth <= 760
                       ? "1fr"
-                      : "repeat(auto-fit, minmax(150px, 1fr))",
+                      : "repeat(auto-fill, minmax(220px, 260px))",
+                  justifyContent: "center",
                   gap: 12,
                 }}
               >
@@ -3468,6 +4725,7 @@ If uploads are supplied:
                     className="card"
                     style={{
                       width: "100%",
+                      maxWidth: 260,
                       minWidth: 0,
                       position: "relative",
                       padding: 10,
@@ -3478,10 +4736,11 @@ If uploads are supplied:
                     <div
                       style={{
                         position: "relative",
-                        minHeight:
+                        height:
                           upload.file.type.startsWith("image/") || upload.file.type === "application/pdf"
-                            ? 260
-                            : 140,
+                            ? 170
+                            : 150,
+                        minHeight: 0,
                         aspectRatio:
                           upload.file.type.startsWith("image/") || upload.file.type === "application/pdf"
                             ? "4 / 3"
@@ -3636,7 +4895,7 @@ If uploads are supplied:
                           updateWeeklyUploadNote(upload.id, event.target.value)
                         }
                         disabled={scanning}
-                        rows={upload.mediaType === "flyer" ? 2 : 3}
+                        rows={2}
                         placeholder={
                           upload.mediaType === "flyer"
                             ? "Optional: mention a tone, audience or extra detail"

@@ -105,6 +105,7 @@ export default function SettingsPage() {
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
   const [showBrandDetails, setShowBrandDetails] = useState(false);
   const [showPublishingRules, setShowPublishingRules] = useState(false);
+  const [showOptionalProfileModal, setShowOptionalProfileModal] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
   const [isOnboardingSetup, setIsOnboardingSetup] = useState(false);
 
@@ -250,6 +251,23 @@ export default function SettingsPage() {
   const profileCompletionPercent = profileHasStarted
     ? Math.round((completedProfileItems / profileCompletionItems.length) * 100)
     : 0;
+
+  const simpleProfileSteps = useMemo(
+    () => [
+      { label: 'Business name', ready: Boolean(businessName.trim()) },
+      { label: 'Business type', ready: Boolean(industry.trim()) },
+      { label: 'Location', ready: Boolean(location.trim()) },
+      { label: 'Services', ready: Boolean(services.trim()) },
+    ],
+    [businessName, industry, location, services]
+  );
+
+  const completedSimpleSteps = simpleProfileSteps.filter((item) => item.ready).length;
+  const totalSimpleSteps = simpleProfileSteps.length;
+  const simpleProfilePercent = Math.round((completedSimpleSteps / totalSimpleSteps) * 100);
+  const simpleProfileComplete = completedSimpleSteps === totalSimpleSteps;
+  const currentSimpleStep = Math.min(totalSimpleSteps, completedSimpleSteps + 1);
+
 
   useEffect(() => {
     loadBusinessProfile();
@@ -624,6 +642,15 @@ export default function SettingsPage() {
     return data.id;
   };
 
+
+  const saveProfileAndContinue = async () => {
+    await handleSaveProfile();
+
+    window.setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 450);
+  };
+
   const handleSaveProfile = async () => {
     const hasWebsite = Boolean(websiteUrl.trim());
     const hasBusinessDetails = Boolean(businessName.trim() && industry.trim());
@@ -892,109 +919,115 @@ export default function SettingsPage() {
           </section>
 
           <section
-            className="premium-card settings-numbered-section settings-profile-start-card"
+            className="premium-card settings-numbered-section settings-quick-profile-card"
             style={{
               maxWidth: 1120,
               margin: '0 auto 22px',
               borderRadius: 34,
-              border: '1px solid rgba(255, 212, 59, 0.24)',
+              border: '1px solid rgba(255, 212, 59, 0.22)',
               background:
-                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))',
+                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035))',
               boxShadow: '0 26px 84px rgba(0,0,0,0.28)',
+              padding: 28,
             }}
           >
-            <div className="settings-profile-start-layout">
-              <div className="settings-profile-start-copy">
+            <div className="settings-quick-profile-layout">
+              <div className="settings-quick-profile-copy">
                 <div className="settings-live-step-label">
                   <span>1</span>
                   <strong>Business Profile</strong>
                 </div>
 
                 <h2>
-                  {businessName ? `${businessName} is ready to improve.` : 'Tell FromOne about the business.'}
+                  {simpleProfileComplete
+                    ? `${businessName || 'Your business'} is ready.`
+                    : 'Set up your business in one minute.'}
                 </h2>
 
                 <p>
-                  This is the most important setup step. FromOne uses these details to write posts
-                  that sound relevant to the business, the services, the location and the customer.
+                  {simpleProfileComplete
+                    ? 'Your profile is complete. Head straight to the Dashboard and create posts.'
+                    : 'Add the basics once so FromOne can create better captions, calls to action and post ideas.'}
                 </p>
 
-                <div className="settings-profile-choice-grid">
-                  <button
-                    type="button"
-                    className="settings-profile-choice-card"
-                    onClick={() => {
-                      setShowBusinessDetails(true);
-                      window.setTimeout(() => {
-                        document.getElementById('website-setup-card')?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'start',
-                        });
-                      }, 80);
-                    }}
-                  >
-                    <span>Fastest</span>
-                    <strong>Scan a website</strong>
-                    <small>Add the website and FromOne will try to fill the profile for you.</small>
-                  </button>
+                <div className="settings-quick-profile-actions">
+                  {simpleProfileComplete ? (
+                    <>
+                      <a href="/dashboard" className="primary-button">
+                        Go to Dashboard
+                      </a>
 
-                  <button
-                    type="button"
-                    className={
-                      !showBusinessDetails && profileCompletionPercent < 100
-                        ? 'settings-profile-choice-card settings-setup-profile-button-pulse'
-                        : 'settings-profile-choice-card'
-                    }
-                    onClick={openProfileEditor}
-                  >
-                    <span>No website?</span>
-                    <strong>Enter details manually</strong>
-                    <small>Add the business name, services, customers and tone yourself.</small>
-                  </button>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={openProfileEditor}
+                      >
+                        Edit profile
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className={
+                          !simpleProfileComplete
+                            ? 'primary-button settings-setup-profile-button-pulse'
+                            : 'primary-button'
+                        }
+                        onClick={openProfileEditor}
+                      >
+                        {completedSimpleSteps > 0 ? 'Continue setup' : 'Set up profile'}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => {
+                          setShowBusinessDetails(true);
+                          window.setTimeout(() => {
+                            document.getElementById('website-scan-optional')?.scrollIntoView({
+                              behavior: 'smooth',
+                              block: 'start',
+                            });
+                          }, 80);
+                        }}
+                      >
+                        Scan website instead
+                      </button>
+                    </>
+                  )}
                 </div>
-
-                {profileCompletionPercent < 100 && !showBusinessDetails && (
-                  <p className="settings-profile-incomplete-hint settings-profile-soft-hint">
-                    Finish the Business Profile first so FromOne can create better posts.
-                  </p>
-                )}
               </div>
 
-              <div className="settings-profile-strength-card settings-profile-simple-progress">
-                <div className="page-eyebrow">Profile progress</div>
-
-                <div className="settings-profile-progress-head">
-                  <h3>{profileCompletionPercent}%</h3>
-                  <span className="status-pill">
-                    {profileCompletionPercent >= 100
-                      ? 'Complete'
-                      : profileCompletionPercent >= 80
-                        ? 'Nearly there'
-                        : 'Needs details'}
-                  </span>
+              <div className="settings-quick-profile-progress">
+                <div className="settings-quick-progress-topline">
+                  <span className="page-eyebrow">Step {currentSimpleStep} of {totalSimpleSteps}</span>
+                  <strong>{simpleProfilePercent}%</strong>
                 </div>
 
-                <div className="settings-profile-progress-bar" aria-hidden="true">
-                  <span style={{ width: `${profileCompletionPercent}%` }} />
+                <div className="settings-quick-progress-bar" aria-hidden="true">
+                  <span
+                    style={{
+                      width: `${Math.max(simpleProfilePercent, completedSimpleSteps ? 12 : 0)}%`,
+                    }}
+                  />
                 </div>
 
-                <p>
-                  Complete the simple checklist below. More detail helps FromOne create more useful
-                  captions, calls to action and post ideas.
-                </p>
-
-                <div className="settings-profile-checklist">
-                  {profileCompletionItems.map((item) => (
-                    <span key={item.label} className={item.ready ? 'is-ready' : undefined}>
-                      <strong>{item.ready ? '✓' : '•'}</strong>
-                      {item.label}
-                    </span>
+                <div className="settings-quick-step-list">
+                  {simpleProfileSteps.map((item, index) => (
+                    <div
+                      key={item.label}
+                      className={item.ready ? 'is-ready' : undefined}
+                    >
+                      <span>{index + 1}</span>
+                      <strong>{item.label}</strong>
+                      <small>{item.ready ? 'Done' : 'Next'}</small>
+                    </div>
                   ))}
                 </div>
               </div>
             </div>
           </section>
-
           {showBusinessDetails && (
             <section
               ref={profileEditorRef}
@@ -1013,11 +1046,10 @@ export default function SettingsPage() {
             >
               <div className="settings-profile-wizard-head">
                 <div>
-                  <div className="page-eyebrow">Business Profile setup</div>
-                  <h2>Start simple. You can improve it later.</h2>
+                  <div className="page-eyebrow">Quick setup</div>
+                  <h2>One simple card.</h2>
                   <p>
-                    Use the website scan if you have a website, or fill in the simple fields manually.
-                    The required fields are marked clearly.
+                    Add the basics, scan a website if helpful, then continue straight to the Dashboard.
                   </p>
                 </div>
 
@@ -1030,43 +1062,51 @@ export default function SettingsPage() {
                 </button>
               </div>
 
-              <div id="website-setup-card" className="settings-simple-setup-grid">
-                <section className="settings-simple-setup-card">
-                  <span className="settings-simple-step">Option 1</span>
-                  <h3>Scan the website</h3>
-                  <p>
-                    Add the website URL and FromOne will try to detect the business name, services,
-                    tone and useful profile details. You can edit anything before saving.
-                  </p>
-
-                  <label>
-                    <strong>Website URL</strong>
-                    <span>Example: https://yourbusiness.co.uk</span>
-                  </label>
-
-                  <input
-                    className="input"
-                    value={websiteUrl}
-                    onChange={(event) => setWebsiteUrl(event.target.value)}
-                    placeholder="https://example.com"
-                  />
-
-                  <div className="button-row settings-simple-button-row">
-                    <button
-                      type="button"
-                      onClick={handleScanWebsite}
-                      disabled={scanningWebsite || saving}
-                    >
-                      {scanningWebsite ? 'Scanning...' : 'Scan website'}
-                    </button>
+              <div id="website-setup-card" className="settings-client-simple-profile">
+                <section
+                  className={
+                    !simpleProfileComplete
+                      ? 'settings-one-card-setup settings-profile-card-pulse'
+                      : 'settings-one-card-setup'
+                  }
+                >
+                  <div className="settings-one-card-head">
+                    <div>
+                      <span className="settings-simple-step">Quick setup</span>
+                      <h3>Business details</h3>
+                      <p>
+                        Fill in the basics yourself, or paste a website and let FromOne try to help.
+                      </p>
+                    </div>
 
                     <button
                       type="button"
                       className="secondary-button"
-                      onClick={handleSaveProfile}
-                      disabled={saving}
+                      onClick={() => setShowOptionalProfileModal(true)}
                     >
-                      {saving ? 'Saving...' : 'Save profile'}
+                      Add more details
+                    </button>
+                  </div>
+
+                  <div className="settings-one-card-website">
+                    <label>
+                      <strong>Website <em>optional</em></strong>
+                      <span>Use this only if you want FromOne to scan the site.</span>
+                      <input
+                        className="input"
+                        value={websiteUrl}
+                        onChange={(event) => setWebsiteUrl(event.target.value)}
+                        placeholder="https://example.com"
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={handleScanWebsite}
+                      disabled={scanningWebsite || saving}
+                    >
+                      {scanningWebsite ? 'Scanning...' : 'Scan website'}
                     </button>
                   </div>
 
@@ -1075,188 +1115,201 @@ export default function SettingsPage() {
                       {scanMessage}
                     </p>
                   )}
-                </section>
 
-                <section className="settings-simple-setup-card">
-                  <span className="settings-simple-step">Option 2</span>
-                  <h3>Enter the basics manually</h3>
-                  <p>
-                    No website? No problem. Add the main business details below. Simple, clear
-                    answers are enough to get started.
-                  </p>
+                  <div className="settings-one-card-fields">
+                    <label>
+                      <strong>Business name *</strong>
+                      <span>What customers call the business.</span>
+                      <input
+                        className="input"
+                        value={businessName}
+                        onChange={(event) => setBusinessName(event.target.value)}
+                        placeholder="Example: Baker Roofing"
+                      />
+                    </label>
 
-                  <div className="settings-required-note">
-                    Required to start: <strong>Business name</strong> and <strong>Industry</strong>.
-                    The rest makes the posts better.
-                  </div>
-                </section>
-              </div>
+                    <label>
+                      <strong>Type of business *</strong>
+                      <span>What does the business do?</span>
+                      <input
+                        className="input settings-mobile-editable-input"
+                        value={industry}
+                        onChange={(event) => setIndustry(event.target.value)}
+                        autoComplete="organization-title"
+                        inputMode="text"
+                        placeholder="Example: Roofing, Beauty, Fitness"
+                      />
+                    </label>
 
-              <div className="settings-simple-form-grid">
-                <section className="settings-form-panel">
-                  <div className="settings-form-panel-head">
-                    <span>Required basics</span>
-                    <strong>Who is the business?</strong>
-                  </div>
+                    <label>
+                      <strong>Location</strong>
+                      <span>Town, city or service area.</span>
+                      <input
+                        className="input settings-mobile-editable-input"
+                        value={location}
+                        onChange={(event) => setLocation(event.target.value)}
+                        autoComplete="address-level2"
+                        inputMode="text"
+                        placeholder="Example: Manchester"
+                      />
+                    </label>
 
-                  <label>
-                    <strong>Business name *</strong>
-                    <span>The name customers know.</span>
-                  </label>
-                  <input
-                    className="input"
-                    value={businessName}
-                    onChange={(event) => setBusinessName(event.target.value)}
-                    placeholder="Example: Baker Roofing"
-                  />
-
-                  <label>
-                    <strong>Industry *</strong>
-                    <span>What type of business is it?</span>
-                  </label>
-                  <input
-                    className="input settings-mobile-editable-input"
-                    value={industry}
-                    onChange={(event) => setIndustry(event.target.value)}
-                    autoComplete="organization-title"
-                    inputMode="text"
-                    placeholder="Example: Roofing, Beauty, Fitness"
-                  />
-
-                  <label>
-                    <strong>Location or service area</strong>
-                    <span>Where does the business operate?</span>
-                  </label>
-                  <input
-                    className="input settings-mobile-editable-input"
-                    value={location}
-                    onChange={(event) => setLocation(event.target.value)}
-                    autoComplete="address-level2"
-                    inputMode="text"
-                    placeholder="Example: Manchester, UK"
-                  />
-
-                  <label>
-                    <strong>Services</strong>
-                    <span>Separate each service with a comma.</span>
-                  </label>
-                  <textarea
-                    className="input"
-                    value={services}
-                    onChange={(event) => setServices(event.target.value)}
-                    placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
-                    rows={5}
-                  />
-                </section>
-
-                <section className="settings-form-panel">
-                  <div className="settings-form-panel-head">
-                    <span>Helpful details</span>
-                    <strong>Who should the posts speak to?</strong>
+                    <label>
+                      <strong>What do they sell or offer?</strong>
+                      <span>A few words is enough.</span>
+                      <textarea
+                        className="input"
+                        value={services}
+                        onChange={(event) => setServices(event.target.value)}
+                        placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
+                        rows={3}
+                      />
+                    </label>
                   </div>
 
-                  <label>
-                    <strong>Target customers</strong>
-                    <span>Who should the posts be written for?</span>
-                  </label>
-                  <textarea
-                    className="input"
-                    value={targetAudience}
-                    onChange={(event) => setTargetAudience(event.target.value)}
-                    placeholder="Example: Homeowners, landlords, local businesses"
-                    rows={5}
-                  />
-
-                  <label>
-                    <strong>Tone of voice</strong>
-                    <span>How should the content sound?</span>
-                  </label>
-                  <select
-                    className="input"
-                    value={toneOfVoice}
-                    onChange={(event) => setToneOfVoice(event.target.value)}
-                  >
-                    {toneOptions.map((tone) => (
-                      <option key={tone} value={tone}>
-                        {tone}
-                      </option>
-                    ))}
-                  </select>
-
-                  <label>
-                    <strong>Main offer or CTA</strong>
-                    <span>Optional offer, service, or action to promote.</span>
-                  </label>
-                  <textarea
-                    className="input"
-                    value={mainOffer}
-                    onChange={(event) => setMainOffer(event.target.value)}
-                    placeholder="Example: Book a free quote this month"
-                    rows={4}
-                  />
-
-                  <div className="settings-optional-details">
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => setShowBrandDetails((current) => !current)}
-                    >
-                      {showBrandDetails ? 'Hide extra details' : 'Add content themes'}
+                  <div className="settings-client-quick-save settings-one-card-save">
+                    <button type="button" onClick={saveProfileAndContinue} disabled={saving}>
+                      {saving ? 'Saving...' : 'Save & go to Dashboard'}
                     </button>
+
+                    <span>
+                      That’s enough to start creating posts. Extra tone and customer details are optional.
+                    </span>
                   </div>
                 </section>
               </div>
-
-              {showBrandDetails && (
-                <section className="settings-extra-details-card">
-                  <div>
-                    <div className="page-eyebrow">Optional extras</div>
-                    <h3>Content themes and goals</h3>
-                    <p>
-                      These are optional. Add them if you want FromOne to understand what the
-                      business talks about and what results you want from the posts.
-                    </p>
-                  </div>
-
-                  <div className="settings-simple-form-grid settings-content-themes-grid">
-                    <label>
-                      <strong>Content themes</strong>
-                      <span>Separate each theme with a comma.</span>
-                      <textarea
-                        className="input"
-                        value={contentPillars}
-                        onChange={(event) => setContentPillars(event.target.value)}
-                        placeholder="Example: Tips, reviews, offers, before and afters"
-                        rows={4}
-                      />
-                    </label>
-
-                    <label>
-                      <strong>Business goals</strong>
-                      <span>Separate each goal with a comma.</span>
-                      <textarea
-                        className="input"
-                        value={businessGoals}
-                        onChange={(event) => setBusinessGoals(event.target.value)}
-                        placeholder="Example: More calls, more bookings, more enquiries"
-                        rows={4}
-                      />
-                    </label>
-                  </div>
-                </section>
-              )}
 
               <div className="settings-save-strip">
                 <div>
                   <strong>Ready?</strong>
-                  <span>Save the Business Profile before creating posts.</span>
+                  <span>Save and continue to the Dashboard.</span>
                 </div>
 
-                <button type="button" onClick={handleSaveProfile} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Business Profile'}
+                <button type="button" onClick={saveProfileAndContinue} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save & go to Dashboard'}
                 </button>
               </div>
             </section>
+          )}
+
+          {showOptionalProfileModal && (
+            <div
+              className="settings-profile-modal-backdrop"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Optional profile details"
+              onClick={() => setShowOptionalProfileModal(false)}
+            >
+              <section
+                className="settings-profile-modal"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="settings-profile-modal-head">
+                  <div>
+                    <div className="page-eyebrow">Optional details</div>
+                    <h3>Improve the wording</h3>
+                    <p>
+                      These are optional. Add them only if you want FromOne to better understand tone, customers and goals.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setShowOptionalProfileModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="settings-profile-modal-grid">
+                  <label>
+                    <strong>Target customers</strong>
+                    <span>Who should the posts speak to?</span>
+                    <textarea
+                      className="input"
+                      value={targetAudience}
+                      onChange={(event) => setTargetAudience(event.target.value)}
+                      placeholder="Example: Homeowners, landlords, local businesses"
+                      rows={3}
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Tone of voice</strong>
+                    <span>How should the content sound?</span>
+                    <select
+                      className="input"
+                      value={toneOfVoice}
+                      onChange={(event) => setToneOfVoice(event.target.value)}
+                    >
+                      {toneOptions.map((tone) => (
+                        <option key={tone} value={tone}>
+                          {tone}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <strong>Main offer or CTA</strong>
+                    <span>Optional service, offer or action to promote.</span>
+                    <textarea
+                      className="input"
+                      value={mainOffer}
+                      onChange={(event) => setMainOffer(event.target.value)}
+                      placeholder="Example: Book a free quote this month"
+                      rows={3}
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Content themes</strong>
+                    <span>Optional topics, separated with commas.</span>
+                    <textarea
+                      className="input"
+                      value={contentPillars}
+                      onChange={(event) => setContentPillars(event.target.value)}
+                      placeholder="Example: Tips, reviews, offers, before and afters"
+                      rows={3}
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Business goals</strong>
+                    <span>Optional goals, separated with commas.</span>
+                    <textarea
+                      className="input"
+                      value={businessGoals}
+                      onChange={(event) => setBusinessGoals(event.target.value)}
+                      placeholder="Example: More calls, more bookings, more enquiries"
+                      rows={3}
+                    />
+                  </label>
+                </div>
+
+                <div className="settings-profile-modal-actions">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await handleSaveProfile();
+                      setShowOptionalProfileModal(false);
+                    }}
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving...' : 'Save details'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setShowOptionalProfileModal(false)}
+                  >
+                    Done
+                  </button>
+                </div>
+              </section>
+            </div>
           )}
 
           {showOnboardingNextStep && (
@@ -1303,411 +1356,123 @@ export default function SettingsPage() {
           <section
             ref={socialConnectionsRef}
             id="publishing-connections"
-            className={`premium-card settings-numbered-section settings-connections-section`}
+            className="premium-card settings-numbered-section settings-social-simple-section"
             style={{
               scrollMarginTop: 96,
               maxWidth: 1120,
               margin: '0 auto 22px',
               borderRadius: 34,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 212, 59, 0.18)',
+              background:
+                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.032))',
+              boxShadow: '0 26px 84px rgba(0,0,0,0.24)',
             }}
           >
-            <div className="settings-live-step-label">
-              <span>2</span>
-              <strong>Connect publishing channels</strong>
-            </div>
-            <h2 style={{ marginTop: 0 }}>Connect publishing channels</h2>
-            <p style={{ maxWidth: 820 }}>
-              Connect Meta once for Facebook and Instagram autoposting. TikTok stays simple with copy/open manual posting.
-            </p>
+            <div className="settings-social-simple-head">
+              <div>
+                <div className="settings-live-step-label">
+                  <span>2</span>
+                  <strong>Social media</strong>
+                </div>
 
-            <div
-              className="settings-meta-account-note"
-              style={{
-                marginTop: 14,
-                padding: '13px 15px',
-                borderRadius: 20,
-                background: 'rgba(255, 212, 59, 0.085)',
-                border: '1px solid rgba(255, 212, 59, 0.16)',
-                color: '#ffe58a',
-                fontWeight: 850,
-                lineHeight: 1.45,
-              }}
-            >
-              Personal accounts can still use FromOne to create, edit and prepare posts.
-              Direct publishing and automatic scheduling through Meta are only available
-              for connected business/professional accounts, such as a Facebook Page or
-              Instagram professional account. Personal accounts can use manual posting.
-            </div>
+                <h2>Connect social media.</h2>
+                <p>
+                  Optional. Connect Meta for Facebook and Instagram autoposting, or skip this and post manually.
+                </p>
+              </div>
 
-            <div
-              className="card settings-publishing-rules-compact"
-              style={{
-                padding: 18,
-                borderRadius: 24,
-                marginTop: 18,
-                background:
-                  'linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))',
-                border: '1px solid rgba(255, 212, 59, 0.14)',
-              }}
-            >
               <button
                 type="button"
-                className="secondary-button"
+                className="settings-social-info-button"
                 onClick={() => setShowPublishingRules((current) => !current)}
-                aria-expanded={showPublishingRules}
-                aria-controls="publishing-rules-panel"
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 14,
-                  padding: '16px 18px',
-                  borderRadius: 20,
-                  textAlign: 'left',
-                  background: 'rgba(255,255,255,0.045)',
-                }}
               >
-                <span style={{ display: 'grid', gap: 4 }}>
-                  <span className="page-eyebrow" style={{ margin: 0 }}>Publishing rules</span>
-                  <strong style={{ color: '#fff', fontSize: 18 }}>
-                    What can autopost, what needs media, and what is manual
-                  </strong>
-                </span>
-                <span
-                  aria-hidden="true"
-                  style={{
-                    flex: '0 0 auto',
-                    width: 34,
-                    height: 34,
-                    display: 'grid',
-                    placeItems: 'center',
-                    borderRadius: 999,
-                    background: 'rgba(255, 212, 59, 0.12)',
-                    color: '#ffe58a',
-                    fontSize: 22,
-                    lineHeight: 1,
-                  }}
-                >
-                  {showPublishingRules ? '−' : '+'}
-                </span>
+                {showPublishingRules ? 'Hide info' : 'What can connect?'}
               </button>
-
-              {showPublishingRules && (
-                <div
-                  id="publishing-rules-panel"
-                  style={{
-                    display: 'grid',
-                    gap: 14,
-                    marginTop: 16,
-                    padding: '2px 2px 0',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-                      gap: 12,
-                    }}
-                  >
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      <strong>Facebook</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
-                        Can autopost to a connected Facebook Page after Meta is connected. Personal Facebook profiles can still use manual posting.
-                      </p>
-                    </div>
-
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      <strong>Instagram</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
-                        Can autopost to an Instagram professional account connected through Meta, but needs an image or video. Personal Instagram accounts can still use manual posting.
-                      </p>
-                    </div>
-
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      <strong>TikTok</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
-                        Manual for now. FromOne creates the caption, then you copy it and open TikTok yourself.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-                      gap: 12,
-                      paddingTop: 2,
-                    }}
-                  >
-                    <div>
-                      <strong>Split platforms</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
-                        Posts are divided across the platforms you choose.
-                      </p>
-                    </div>
-
-                    <div>
-                      <strong>Every platform</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: 1.45 }}>
-                        Each upload gets versions for every selected platform.
-                      </p>
-                    </div>
-                  </div>
-
-                  <p
-                    style={{
-                      margin: 0,
-                      padding: '12px 14px',
-                      borderRadius: 18,
-                      background: 'rgba(255, 212, 59, 0.09)',
-                      border: '1px solid rgba(255, 212, 59, 0.14)',
-                      color: '#ffe58a',
-                      fontWeight: 850,
-                      lineHeight: 1.45,
-                    }}
-                  >
-                    You always review posts before publishing, copying or scheduling. Manual posting is available for personal accounts and any platform connection that needs attention.
-                  </p>
-                </div>
-              )}
             </div>
 
-            {loadingConnections ? (
-              <p>Checking connected accounts...</p>
-            ) : (
-              <div
-                className="settings-channel-grid"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 16,
-                  marginTop: 20,
-                  alignItems: 'stretch',
-                }}
-              >
-                <section
-                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-clean settings-channel-card-short"
-                  style={{
-                    padding: 20,
-                    borderRadius: 24,
-                    background:
-                      hasFacebookConnection
-                        ? 'radial-gradient(circle at top right, rgba(61, 220, 151, 0.13), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))'
-                        : 'linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))',
-                    border: hasFacebookConnection
-                      ? '1px solid rgba(61, 220, 151, 0.24)'
-                      : '1px solid rgba(255,255,255,0.1)',
-                  }}
-                >
-                  <div>
-                    <div className="settings-channel-card-head">
-                      <div>
-                        <div className="page-eyebrow">Facebook</div>
-                        <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
-                          Facebook Page
-                        </h3>
-                      </div>
-
-
-                    </div>
-
-                    <div className="settings-connected-account-box">
-                      <span>Destination</span>
-                      <strong>
-                        {hasFacebookConnection
-                          ? primaryMetaConnection?.page_name || 'Connected Facebook Page'
-                          : 'Facebook not connected'}
-                      </strong>
-                      <small>
-                        {hasFacebookConnection
-                          ? `Page ID: ${primaryMetaConnection?.page_id || 'Connected'}`
-                          : 'Connect Meta to enable direct publishing.'}
-                      </small>
-                    </div>
-
-
-                  </div>
-
-                  <button
-                    type="button"
-                    className={hasMetaConnection ? 'secondary-button' : undefined}
-                    onClick={connectMetaAccount}
-                    disabled={metaConnectionBusy}
-                    style={{ width: '100%' }}
-                  >
-                    {hasFacebookConnection ? 'Reconnect / manage' : 'Connect Facebook'}
-                  </button>
-                </section>
-
-                <section
-                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-clean settings-channel-card-short"
-                  style={{
-                    padding: 20,
-                    borderRadius: 24,
-                    background:
-                      hasInstagramConnection
-                        ? 'radial-gradient(circle at top right, rgba(61, 220, 151, 0.13), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))'
-                        : 'linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))',
-                    border: hasInstagramConnection
-                      ? '1px solid rgba(61, 220, 151, 0.24)'
-                      : '1px solid rgba(255,255,255,0.1)',
-                  }}
-                >
-                  <div>
-                    <div className="settings-channel-card-head">
-                      <div>
-                        <div className="page-eyebrow">Instagram</div>
-                        <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
-                          Instagram Account
-                        </h3>
-                      </div>
-
-
-                    </div>
-
-                    <div className="settings-connected-account-box">
-                      <span>Account</span>
-                      <strong>
-                        {hasInstagramConnection
-                          ? `@${primaryMetaConnection?.instagram_username || 'Instagram'}`
-                          : 'Instagram not connected'}
-                      </strong>
-                      <small>
-                        {hasInstagramConnection
-                          ? 'Image and video posts can be autoposted after review.'
-                          : hasMetaConnection
-                            ? 'Meta is connected, but Instagram is not linked yet.'
-                            : 'Connect through Meta for direct publishing.'}
-                      </small>
-                    </div>
-
-
-                  </div>
-
-                  <button
-                    type="button"
-                    className={hasMetaConnection ? 'secondary-button' : undefined}
-                    onClick={connectMetaAccount}
-                    disabled={metaConnectionBusy}
-                    style={{ width: '100%' }}
-                  >
-                    {hasInstagramConnection ? 'Reconnect / manage' : 'Connect Instagram'}
-                  </button>
-                </section>
-
-                <section
-                  className="card settings-channel-card settings-channel-card-premium settings-channel-card-clean settings-channel-card-short"
-                  style={{
-                    padding: 20,
-                    borderRadius: 24,
-                    background: 'linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                  }}
-                >
-                  <div>
-                    <div className="settings-channel-card-head">
-                      <div>
-                        <div className="page-eyebrow">TikTok</div>
-                        <h3 style={{ margin: '6px 0 8px', fontSize: 24 }}>
-                          Manual posting
-                        </h3>
-                      </div>
-
-
-                    </div>
-
-                    <div className="settings-connected-account-box">
-                      <span>Method</span>
-                      <strong>Copy and open TikTok</strong>
-                      <small>FromOne creates the caption. You publish manually.</small>
-                    </div>
-
-
-                  </div>
-
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={openTikTok}
-                    style={{ width: '100%' }}
-                  >
-                    Open TikTok
-                  </button>
-                </section>
+            {showPublishingRules && (
+              <div className="settings-social-info-popover">
+                <strong>Quick note</strong>
+                <p>
+                  Facebook and Instagram direct publishing need a connected business/professional Meta account.
+                  Personal accounts can still use FromOne to create, edit, copy and manually publish posts.
+                  TikTok stays manual for beta.
+                </p>
               </div>
             )}
 
-            {hasMetaConnection && (
-              <div
-                className="settings-meta-summary-card"
-                style={{
-                  marginTop: 18,
-                  padding: 18,
-                  borderRadius: 24,
-                  background:
-                    'radial-gradient(circle at top left, rgba(61, 220, 151, 0.12), transparent 34%), rgba(255,255,255,0.055)',
-                  border: '1px solid rgba(61, 220, 151, 0.18)',
-                  display: 'grid',
-                  gridTemplateColumns: 'minmax(0, 1fr) auto',
-                  gap: 14,
-                  alignItems: 'center',
-                }}
-              >
+            <div className="settings-social-simple-grid">
+              <article className="settings-social-connect-card">
                 <div>
-                  <div className="page-eyebrow">Meta connection</div>
-                  <h3 style={{ margin: '6px 0 8px', color: '#fff' }}>
-                    Facebook and Instagram are managed through Meta.
+                  <span className="page-eyebrow">Facebook & Instagram</span>
+                  <h3>
+                    {hasMetaConnection ? 'Meta connected' : 'Connect Meta'}
                   </h3>
-                  <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.5 }}>
-                    Last checked: {getMetaUpdatedLabel()} · Token expiry: {getMetaExpiryLabel()}
+                  <p>
+                    {hasMetaConnection
+                      ? 'Autoposting is available for connected Facebook and Instagram accounts.'
+                      : 'Connect once if you want FromOne to autopost to Facebook or Instagram.'}
                   </p>
                 </div>
 
-                <div className="button-row" style={{ justifyContent: 'flex-end' }}>
+                {hasMetaConnection && (
+                  <div className="settings-social-account-summary">
+                    <div>
+                      <strong>Facebook</strong>
+                      <span>{primaryMetaConnection?.page_name || 'Page connected'}</span>
+                    </div>
+
+                    <div>
+                      <strong>Instagram</strong>
+                      <span>
+                        {primaryMetaConnection?.instagram_username
+                          ? `@${primaryMetaConnection.instagram_username}`
+                          : hasInstagramConnection
+                            ? 'Account connected'
+                            : 'Not connected'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="settings-social-button-row">
                   <button
                     type="button"
-                    className="secondary-button"
                     onClick={connectMetaAccount}
-                    disabled={metaConnectionBusy}
+                    disabled={loadingConnections || metaConnectionBusy}
                   >
-                    Reconnect
+                    {hasMetaConnection ? 'Reconnect / manage' : 'Connect Meta'}
                   </button>
 
-                  <button
-                    type="button"
-                    className="secondary-button danger-button"
-                    onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
-                    disabled={metaConnectionBusy}
-                  >
-                    {metaConnectionBusy ? 'Disconnecting...' : 'Disconnect'}
-                  </button>
+                  {hasMetaConnection && (
+                    <button
+                      type="button"
+                      className="secondary-button danger-button"
+                      onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
+                      disabled={metaConnectionBusy}
+                    >
+                      {metaConnectionBusy ? 'Disconnecting...' : 'Disconnect'}
+                    </button>
+                  )}
                 </div>
-              </div>
-            )}
+              </article>
 
+              <article className="settings-social-connect-card is-manual">
+                <div>
+                  <span className="page-eyebrow">Manual option</span>
+                  <h3>TikTok and personal accounts</h3>
+                  <p>
+                    FromOne still creates the caption and prepared media. The client copies/opens the social app and posts manually.
+                  </p>
+                </div>
+
+                <div className="settings-social-button-row">
+                  <a href="/dashboard" className="secondary-button">
+                    Continue to Dashboard
+                  </a>
+                </div>
+              </article>
+            </div>
           </section>
 
           <section
@@ -3560,6 +3325,808 @@ export default function SettingsPage() {
         .settings-channel-grid > .settings-channel-card {
           grid-template-rows: auto auto !important;
           gap: 14px !important;
+        }
+
+
+        /* Client-friendly simple manual profile input */
+        .settings-client-simple-profile {
+          display: grid;
+          gap: 14px;
+        }
+
+        .settings-client-simple-card,
+        .settings-client-optional-card {
+          padding: clamp(18px, 2vw, 24px);
+          border-radius: 26px;
+          background: rgba(15, 23, 42, 0.62);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-client-simple-card {
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%),
+            rgba(15, 23, 42, 0.68);
+          border-color: rgba(255, 212, 59, 0.18);
+        }
+
+        .settings-client-simple-head {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 16px;
+          align-items: start;
+          margin-bottom: 18px;
+        }
+
+        .settings-client-simple-head h3 {
+          margin: 8px 0 6px;
+          color: #ffffff;
+          font-size: clamp(1.65rem, 3vw, 2.35rem);
+          line-height: 0.98;
+          letter-spacing: -0.05em;
+        }
+
+        .settings-client-simple-head p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.68);
+          line-height: 1.48;
+        }
+
+        .settings-client-simple-grid,
+        .settings-client-optional-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .settings-client-simple-grid label,
+        .settings-client-optional-grid label,
+        .settings-client-website-scan label {
+          display: grid;
+          gap: 7px;
+          margin: 0;
+        }
+
+        .settings-client-simple-grid label strong,
+        .settings-client-optional-grid label strong,
+        .settings-client-website-scan label strong {
+          color: #ffffff;
+          font-size: 0.94rem;
+        }
+
+        .settings-client-simple-grid label span,
+        .settings-client-optional-grid label span,
+        .settings-client-website-scan label span {
+          color: rgba(248, 250, 252, 0.58);
+          font-size: 0.84rem;
+          line-height: 1.35;
+        }
+
+        .settings-client-quick-save {
+          margin-top: 16px;
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          gap: 12px;
+          align-items: center;
+          padding: 14px;
+          border-radius: 20px;
+          background: rgba(255, 212, 59, 0.08);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+        }
+
+        .settings-client-quick-save span {
+          color: rgba(248, 250, 252, 0.66);
+          line-height: 1.4;
+          font-weight: 800;
+        }
+
+        .settings-client-optional-card {
+          padding: 0;
+          overflow: hidden;
+        }
+
+        .settings-client-optional-card summary {
+          cursor: pointer;
+          list-style: none;
+          padding: 18px 20px;
+        }
+
+        .settings-client-optional-card summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .settings-client-optional-card summary span {
+          display: grid;
+          gap: 4px;
+        }
+
+        .settings-client-optional-card summary strong {
+          color: #ffffff;
+          font-size: 1rem;
+        }
+
+        .settings-client-optional-card summary small {
+          color: rgba(248, 250, 252, 0.62);
+          line-height: 1.35;
+          font-weight: 760;
+        }
+
+        .settings-client-optional-card[open] summary {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .settings-client-optional-grid,
+        .settings-client-website-scan {
+          padding: 18px 20px 20px;
+        }
+
+        .settings-client-website-scan {
+          display: grid;
+          gap: 14px;
+        }
+
+        @media (max-width: 900px) {
+          .settings-client-simple-head,
+          .settings-client-simple-grid,
+          .settings-client-optional-grid,
+          .settings-client-quick-save {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-client-simple-head button,
+          .settings-client-quick-save button {
+            width: 100%;
+          }
+        }
+
+
+        /* Ultra-simple client setup polish */
+        .settings-simple-entry-actions {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 12px;
+          align-items: stretch;
+          margin-top: 18px;
+        }
+
+        .settings-simple-entry-primary,
+        .settings-simple-entry-secondary {
+          appearance: none;
+          border: 0;
+          cursor: pointer;
+          text-align: left;
+          text-decoration: none;
+        }
+
+        .settings-simple-entry-primary {
+          min-height: 74px;
+          display: grid;
+          gap: 5px;
+          align-content: center;
+          padding: 16px 18px;
+          border-radius: 22px;
+          background: linear-gradient(135deg, #ffd43b, #f7b733);
+          color: #101420;
+          box-shadow: 0 18px 42px rgba(255, 212, 59, 0.18);
+        }
+
+        .settings-simple-entry-primary strong {
+          font-size: 1.06rem;
+          line-height: 1.1;
+        }
+
+        .settings-simple-entry-primary small {
+          color: rgba(16, 20, 32, 0.74);
+          font-weight: 900;
+          line-height: 1.3;
+        }
+
+        .settings-simple-entry-secondary {
+          min-height: 74px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 16px;
+          border-radius: 22px;
+          background: rgba(255, 255, 255, 0.065);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: rgba(248, 250, 252, 0.86);
+          font-weight: 950;
+          white-space: nowrap;
+        }
+
+        .settings-profile-progress-card {
+          margin-top: 16px !important;
+          padding: 14px !important;
+          border-radius: 22px !important;
+          background: rgba(255, 255, 255, 0.045) !important;
+        }
+
+        .settings-profile-progress-card p {
+          display: none !important;
+        }
+
+        .settings-profile-checklist {
+          gap: 8px !important;
+        }
+
+        .settings-client-simple-card {
+          border-radius: 30px !important;
+        }
+
+        .settings-client-simple-grid {
+          gap: 12px !important;
+        }
+
+        .settings-client-simple-grid textarea {
+          min-height: 92px !important;
+        }
+
+        @media (max-width: 900px) {
+          .settings-simple-entry-actions {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-simple-entry-secondary {
+            width: 100%;
+          }
+        }
+
+
+        /* Dead-simple business profile start */
+        .settings-quick-profile-card {
+          overflow: hidden;
+        }
+
+        .settings-quick-profile-layout {
+          display: grid;
+          grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
+          gap: clamp(18px, 3vw, 30px);
+          align-items: start;
+        }
+
+        .settings-quick-profile-copy .settings-live-step-label {
+          margin-bottom: 16px;
+        }
+
+        .settings-quick-profile-copy h2 {
+          margin: 0 0 12px;
+          color: #ffffff;
+          font-size: clamp(2.25rem, 5vw, 4.4rem);
+          line-height: 0.93;
+          letter-spacing: -0.07em;
+        }
+
+        .settings-quick-profile-copy p {
+          max-width: 690px;
+          margin: 0;
+          color: rgba(248, 250, 252, 0.7);
+          font-size: 1.08rem;
+          line-height: 1.5;
+          font-weight: 760;
+        }
+
+        .settings-quick-profile-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-top: 24px;
+        }
+
+        .settings-quick-profile-actions .primary-button,
+        .settings-quick-profile-actions .secondary-button {
+          min-height: 52px;
+          border-radius: 17px;
+          padding: 0 20px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none;
+          font-weight: 1000;
+        }
+
+        .settings-quick-profile-progress {
+          padding: 20px;
+          border-radius: 26px;
+          background: rgba(10, 18, 32, 0.58);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-quick-progress-topline {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+
+        .settings-quick-progress-topline strong {
+          color: #ffffff;
+          font-size: 1.35rem;
+          line-height: 1;
+          letter-spacing: -0.04em;
+        }
+
+        .settings-quick-progress-bar {
+          height: 12px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.08);
+          overflow: hidden;
+          margin-bottom: 16px;
+        }
+
+        .settings-quick-progress-bar span {
+          display: block;
+          height: 100%;
+          border-radius: 999px;
+          background: linear-gradient(90deg, #ffd43b, #f6c72f);
+          box-shadow: 0 0 24px rgba(255, 212, 59, 0.24);
+          transition: width 180ms ease;
+        }
+
+        .settings-quick-step-list {
+          display: grid;
+          gap: 8px;
+        }
+
+        .settings-quick-step-list div {
+          display: grid;
+          grid-template-columns: 30px minmax(0, 1fr) auto;
+          gap: 10px;
+          align-items: center;
+          padding: 10px 12px;
+          border-radius: 15px;
+          background: rgba(255, 255, 255, 0.045);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .settings-quick-step-list div.is-ready {
+          background: linear-gradient(135deg, rgba(61, 220, 151, 0.14), rgba(61, 220, 151, 0.07));
+          border-color: rgba(61, 220, 151, 0.22);
+        }
+
+        .settings-quick-step-list span {
+          width: 30px;
+          height: 30px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.07);
+          color: rgba(248, 250, 252, 0.78);
+          font-weight: 1000;
+        }
+
+        .settings-quick-step-list .is-ready span {
+          background: rgba(61, 220, 151, 0.16);
+          color: #bbf7d0;
+        }
+
+        .settings-quick-step-list strong {
+          color: #ffffff;
+          line-height: 1.1;
+        }
+
+        .settings-quick-step-list small {
+          color: rgba(248, 250, 252, 0.58);
+          font-weight: 950;
+          text-transform: uppercase;
+          letter-spacing: 0.055em;
+          font-size: 0.72rem;
+        }
+
+        .settings-quick-step-list .is-ready small {
+          color: #86efac;
+        }
+
+        @media (max-width: 920px) {
+          .settings-quick-profile-layout {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-quick-profile-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+
+          .settings-quick-profile-actions .primary-button,
+          .settings-quick-profile-actions .secondary-button {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 620px) {
+          .settings-quick-profile-card {
+            padding: 22px !important;
+            border-radius: 28px !important;
+          }
+
+          .settings-quick-profile-progress {
+            padding: 16px;
+            border-radius: 22px;
+          }
+
+          .settings-quick-step-list div {
+            grid-template-columns: 28px minmax(0, 1fr);
+          }
+
+          .settings-quick-step-list small {
+            grid-column: 2;
+          }
+        }
+
+
+        /* Dead-simple social connection section */
+        .settings-social-simple-section {
+          padding: clamp(22px, 3vw, 32px) !important;
+        }
+
+        .settings-social-simple-head {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 18px;
+          align-items: start;
+          margin-bottom: 18px;
+        }
+
+        .settings-social-simple-head h2 {
+          margin: 14px 0 10px;
+          color: #ffffff;
+          font-size: clamp(2rem, 4vw, 3.55rem);
+          line-height: 0.94;
+          letter-spacing: -0.065em;
+        }
+
+        .settings-social-simple-head p {
+          max-width: 720px;
+          margin: 0;
+          color: rgba(248, 250, 252, 0.7);
+          font-size: 1.04rem;
+          line-height: 1.5;
+          font-weight: 760;
+        }
+
+        .settings-social-info-button {
+          min-height: 46px;
+          padding: 0 16px;
+          border-radius: 15px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.065);
+          color: rgba(248, 250, 252, 0.9);
+          font-weight: 950;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+
+        .settings-social-info-popover {
+          margin-bottom: 16px;
+          padding: 15px 16px;
+          border-radius: 20px;
+          background: rgba(255, 212, 59, 0.08);
+          border: 1px solid rgba(255, 212, 59, 0.18);
+        }
+
+        .settings-social-info-popover strong {
+          display: block;
+          color: #ffe58a;
+          margin-bottom: 5px;
+        }
+
+        .settings-social-info-popover p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.48;
+          font-weight: 760;
+        }
+
+        .settings-social-simple-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+          gap: 14px;
+        }
+
+        .settings-social-connect-card {
+          min-width: 0;
+          display: grid;
+          gap: 16px;
+          align-content: start;
+          padding: 20px;
+          border-radius: 26px;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 35%),
+            rgba(15, 23, 42, 0.68);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-social-connect-card.is-manual {
+          background: rgba(15, 23, 42, 0.56);
+        }
+
+        .settings-social-connect-card h3 {
+          margin: 8px 0 8px;
+          color: #ffffff;
+          font-size: clamp(1.35rem, 2.4vw, 2rem);
+          line-height: 1.02;
+          letter-spacing: -0.045em;
+        }
+
+        .settings-social-connect-card p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.66);
+          line-height: 1.45;
+          font-weight: 760;
+        }
+
+        .settings-social-account-summary {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .settings-social-account-summary div {
+          min-width: 0;
+          display: grid;
+          gap: 4px;
+          padding: 13px;
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.055);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .settings-social-account-summary strong {
+          color: #ffffff;
+          font-size: 0.86rem;
+        }
+
+        .settings-social-account-summary span {
+          color: rgba(248, 250, 252, 0.66);
+          font-weight: 800;
+          line-height: 1.25;
+          overflow-wrap: anywhere;
+        }
+
+        .settings-social-button-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .settings-social-button-row button,
+        .settings-social-button-row a {
+          min-height: 50px;
+          border-radius: 16px;
+          padding: 0 18px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none;
+          font-weight: 1000;
+        }
+
+        @media (max-width: 900px) {
+          .settings-social-simple-head,
+          .settings-social-simple-grid,
+          .settings-social-account-summary {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-social-info-button,
+          .settings-social-button-row button,
+          .settings-social-button-row a {
+            width: 100%;
+          }
+
+          .settings-social-button-row {
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+        }
+
+
+        /* One-card business setup with optional details modal */
+        .settings-one-card-setup {
+          padding: clamp(18px, 2vw, 24px);
+          border-radius: 30px;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%),
+            rgba(15, 23, 42, 0.68);
+          border: 1px solid rgba(255, 212, 59, 0.18);
+        }
+
+        .settings-one-card-head {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 16px;
+          align-items: start;
+          margin-bottom: 18px;
+        }
+
+        .settings-one-card-head h3 {
+          margin: 8px 0 6px;
+          color: #ffffff;
+          font-size: clamp(1.65rem, 3vw, 2.35rem);
+          line-height: 0.98;
+          letter-spacing: -0.05em;
+        }
+
+        .settings-one-card-head p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.68);
+          line-height: 1.48;
+        }
+
+        .settings-one-card-website {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 12px;
+          align-items: end;
+          padding: 14px;
+          border-radius: 22px;
+          background: rgba(255, 255, 255, 0.045);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          margin-bottom: 14px;
+        }
+
+        .settings-one-card-website label,
+        .settings-one-card-fields label,
+        .settings-profile-modal-grid label {
+          display: grid;
+          gap: 7px;
+          margin: 0;
+        }
+
+        .settings-one-card-website label strong,
+        .settings-one-card-fields label strong,
+        .settings-profile-modal-grid label strong {
+          color: #ffffff;
+          font-size: 0.94rem;
+        }
+
+        .settings-one-card-website label em {
+          color: rgba(248, 250, 252, 0.54);
+          font-style: normal;
+          font-size: 0.78rem;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.055em;
+        }
+
+        .settings-one-card-website label span,
+        .settings-one-card-fields label span,
+        .settings-profile-modal-grid label span {
+          color: rgba(248, 250, 252, 0.58);
+          font-size: 0.84rem;
+          line-height: 1.35;
+        }
+
+        .settings-one-card-fields {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .settings-one-card-fields textarea {
+          min-height: 92px;
+        }
+
+        .settings-one-card-save {
+          margin-top: 16px !important;
+        }
+
+        .settings-profile-modal-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          display: grid;
+          place-items: center;
+          padding: 18px;
+          background: rgba(2, 6, 23, 0.72);
+          backdrop-filter: blur(10px);
+        }
+
+        .settings-profile-modal {
+          width: min(760px, 100%);
+          max-height: min(86vh, 780px);
+          overflow: auto;
+          padding: clamp(20px, 3vw, 28px);
+          border-radius: 30px;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%),
+            #101722;
+          border: 1px solid rgba(255, 212, 59, 0.2);
+          box-shadow: 0 34px 100px rgba(0, 0, 0, 0.42);
+        }
+
+        .settings-profile-modal-head {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 16px;
+          align-items: start;
+          margin-bottom: 18px;
+        }
+
+        .settings-profile-modal-head h3 {
+          margin: 8px 0 8px;
+          color: #ffffff;
+          font-size: clamp(1.8rem, 4vw, 2.7rem);
+          line-height: 0.96;
+          letter-spacing: -0.055em;
+        }
+
+        .settings-profile-modal-head p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.68);
+          line-height: 1.45;
+        }
+
+        .settings-profile-modal-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .settings-profile-modal-grid label:first-child,
+        .settings-profile-modal-grid label:nth-child(3),
+        .settings-profile-modal-grid label:nth-child(5) {
+          grid-column: 1 / -1;
+        }
+
+        .settings-profile-modal-actions {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          margin-top: 18px;
+        }
+
+        @media (max-width: 860px) {
+          .settings-one-card-head,
+          .settings-one-card-website,
+          .settings-one-card-fields,
+          .settings-profile-modal-head,
+          .settings-profile-modal-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-one-card-head button,
+          .settings-one-card-website button,
+          .settings-profile-modal-actions button {
+            width: 100%;
+          }
+
+          .settings-profile-modal-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+        }
+
+
+        /* Flash the setup card/action until Business Profile is complete */
+        @keyframes settingsProfileSoftPulse {
+          0%, 100% {
+            box-shadow:
+              0 26px 84px rgba(0, 0, 0, 0.22),
+              0 0 0 0 rgba(255, 212, 59, 0.0);
+            border-color: rgba(255, 212, 59, 0.18);
+          }
+
+          50% {
+            box-shadow:
+              0 30px 92px rgba(0, 0, 0, 0.28),
+              0 0 0 6px rgba(255, 212, 59, 0.07),
+              0 0 34px rgba(255, 212, 59, 0.14);
+            border-color: rgba(255, 212, 59, 0.34);
+          }
+        }
+
+        .settings-profile-card-pulse {
+          animation: settingsProfileSoftPulse 1.9s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .settings-profile-card-pulse,
+          .settings-setup-profile-button-pulse {
+            animation: none !important;
+          }
         }
 
       `}</style>
