@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
 
@@ -12,12 +12,20 @@ type SidebarProps = {
   onClose?: () => void;
 };
 
-export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const router = useRouter();
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [showPostsDot, setShowPostsDot] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  function checkNewPosts() {
+    if (typeof window === 'undefined') return;
+
+    const hasNewPosts = localStorage.getItem(NEW_POSTS_KEY) === 'true';
+    setShowPostsDot(hasNewPosts);
+  }
+
 
   useEffect(() => {
     checkUser();
@@ -45,22 +53,16 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const checkNewPosts = () => {
-    const hasNewPosts = localStorage.getItem(NEW_POSTS_KEY) === 'true';
-    setShowPostsDot(hasNewPosts);
-  };
 
-  const closeMenu = () => {
-    if (onClose) {
-      onClose();
-    }
-  };
+  const closeMenu = useCallback(() => {
+    onClose?.();
+  }, [onClose]);
 
-  const handlePostsClick = () => {
+  const handlePostsClick = useCallback(() => {
     localStorage.removeItem(NEW_POSTS_KEY);
     window.dispatchEvent(new Event('fromone-new-posts-updated'));
     closeMenu();
-  };
+  }, [closeMenu]);
 
   const checkAdminAccess = async (userId?: string | null) => {
     if (!userId) {
@@ -126,7 +128,57 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   };
 
   return (
-    <aside className={isOpen ? 'sidebar sidebar-open' : 'sidebar'}>
+    <aside
+      className={isOpen ? 'sidebar sidebar-open' : 'sidebar'}
+      data-mobile-menu-open={isOpen ? 'true' : 'false'}
+    >
+      <style jsx global>{`
+        /* Sidebar hamburger performance pass */
+        .sidebar {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          transform: translate3d(0, 0, 0);
+          will-change: transform;
+          contain: layout paint;
+        }
+
+        .sidebar * {
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        .sidebar-link,
+        .mobile-menu-close {
+          touch-action: manipulation;
+        }
+
+        @media (max-width: 900px) {
+          .sidebar {
+            transform: translate3d(-104%, 0, 0) !important;
+            transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+            will-change: transform;
+            pointer-events: none;
+            visibility: hidden;
+          }
+
+          .sidebar.sidebar-open {
+            transform: translate3d(0, 0, 0) !important;
+            pointer-events: auto;
+            visibility: visible;
+          }
+
+          .sidebar::before,
+          .sidebar::after {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .sidebar {
+            transition: none !important;
+          }
+        }
+      `}</style>
       <div className="sidebar-mobile-top">
         <div className="sidebar-brand">
           <img
@@ -141,7 +193,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           </div>
         </div>
 
-        <button className="mobile-menu-close" onClick={onClose} aria-label="Close menu">
+        <button type="button" className="mobile-menu-close" onClick={onClose} aria-label="Close menu">
           ×
         </button>
       </div>
@@ -224,3 +276,5 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     </aside>
   );
 }
+
+export default memo(Sidebar);
