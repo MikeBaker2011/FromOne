@@ -327,18 +327,62 @@ const academyLessons = [
   },
 ];
 
-const groups = ["All", "Start here", "Create posts", "Review", "Media prep", "Publishing", "Connections", "Troubleshooting", "Account", "Workflow"];
+const quickFlow = [
+  {
+    step: "1",
+    title: "Add media",
+    text: "Upload a photo, video or flyer from the Dashboard.",
+  },
+  {
+    step: "2",
+    title: "Check post",
+    text: "Open the post, check the media and read the wording.",
+  },
+  {
+    step: "3",
+    title: "Send or schedule",
+    text: "Approve the post, then publish, schedule or post manually.",
+  },
+];
+
+const simpleGroups = ["Start here", "Create posts", "Review", "Publishing"];
+
+const popularHelp = [
+  "Create your first posts",
+  "Create posts on mobile",
+  "Review a post",
+  "Schedule a post",
+  "Publish now or manually",
+  "Connect Facebook and Instagram",
+];
 
 export default function FromOneAcademyPage() {
   const [query, setQuery] = useState("");
-  const [group, setGroup] = useState("All");
-  const [selectedStep, setSelectedStep] = useState("01");
+  const [selectedStep, setSelectedStep] = useState("03");
+
+  const simplifiedLessons = useMemo(() => {
+    const importantTitles = new Set([
+      "Create your account",
+      "Set up your business profile",
+      "Create your first posts",
+      "Create posts on mobile",
+      "Review a post",
+      "Edit captions and wording",
+      "Schedule a post",
+      "Publish now or manually",
+      "Connect Facebook and Instagram",
+      "Fix publish errors",
+    ]);
+
+    return academyLessons.filter((lesson) => importantTitles.has(lesson.title));
+  }, []);
 
   const filteredLessons = useMemo(() => {
     const cleanQuery = query.trim().toLowerCase();
 
+    if (!cleanQuery) return simplifiedLessons;
+
     return academyLessons.filter((lesson) => {
-      const matchesGroup = group === "All" || lesson.group === group;
       const searchable = [
         lesson.step,
         lesson.title,
@@ -353,21 +397,15 @@ export default function FromOneAcademyPage() {
         .join(" ")
         .toLowerCase();
 
-      return matchesGroup && (!cleanQuery || searchable.includes(cleanQuery));
+      return searchable.includes(cleanQuery);
     });
-  }, [group, query]);
+  }, [query, simplifiedLessons]);
 
   const selectedLesson =
     filteredLessons.find((lesson) => lesson.step === selectedStep) ||
+    academyLessons.find((lesson) => lesson.step === selectedStep) ||
     filteredLessons[0] ||
-    academyLessons[0];
-
-  const selectedIndex = academyLessons.findIndex((lesson) => lesson.step === selectedLesson.step);
-  const previousLesson = selectedIndex > 0 ? academyLessons[selectedIndex - 1] : null;
-  const nextLesson =
-    selectedIndex >= 0 && selectedIndex < academyLessons.length - 1
-      ? academyLessons[selectedIndex + 1]
-      : null;
+    academyLessons[2];
 
   const chooseLesson = (step: string) => {
     setSelectedStep(step);
@@ -376,7 +414,12 @@ export default function FromOneAcademyPage() {
       document
         .getElementById("academy-selected-lesson")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
+    }, 60);
+  };
+
+  const choosePopularLesson = (title: string) => {
+    const match = academyLessons.find((lesson) => lesson.title === title);
+    if (match) chooseLesson(match.step);
   };
 
   return (
@@ -390,415 +433,416 @@ export default function FromOneAcademyPage() {
       }}
     >
       <style jsx global>{`
-        .academy-shell-card {
+        .academy-clean-shell {
           width: 100%;
           padding: clamp(22px, 3.5vw, 38px);
           border-radius: 36px;
-          border: 1px solid rgba(255, 212, 59, 0.28);
+          border: 1px solid rgba(255, 212, 59, 0.22);
           background:
-            radial-gradient(circle at top, rgba(255, 212, 59, 0.16), transparent 34%),
-            linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032));
+            radial-gradient(circle at top, rgba(255, 212, 59, 0.14), transparent 34%),
+            linear-gradient(145deg, rgba(255,255,255,0.078), rgba(255,255,255,0.03));
           box-shadow: 0 30px 96px rgba(0, 0, 0, 0.34);
         }
 
-        .academy-hero {
-          text-align: center;
-          max-width: 780px;
-          margin: 0 auto 22px;
+        .academy-clean-hero {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 22px;
+          align-items: end;
+          margin-bottom: 22px;
         }
 
-        .academy-hero h1 {
+        .academy-clean-hero h1 {
           margin: 8px 0 12px;
-          font-size: clamp(2.25rem, 5.4vw, 4.8rem);
+          font-size: clamp(2.35rem, 5.3vw, 4.7rem);
           line-height: 0.92;
-          letter-spacing: -0.06em;
+          letter-spacing: -0.065em;
           color: #ffffff;
         }
 
-        .academy-hero p {
-          margin: 0 auto;
+        .academy-clean-hero p {
+          margin: 0;
           max-width: 700px;
-          color: var(--muted);
-          line-height: 1.7;
+          color: rgba(248, 250, 252, 0.7);
+          line-height: 1.6;
+          font-weight: 760;
         }
 
-        .academy-help-row {
+        .academy-clean-search {
+          width: min(320px, 100%);
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 12px;
-          margin-bottom: 18px;
+          gap: 8px;
         }
 
-        .academy-help-card {
-          padding: 14px 15px;
-          border-radius: 20px;
-          background: rgba(255,255,255,0.055);
-          border: 1px solid rgba(255,255,255,0.08);
-          text-align: center;
+        .academy-clean-search label {
+          color: #ffd43b;
+          font-size: 0.76rem;
+          font-weight: 1000;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
         }
 
-        .academy-help-card strong {
-          display: block;
-          color: #ffffff;
-          margin-bottom: 5px;
-        }
-
-        .academy-help-card span {
-          color: var(--muted);
-          font-size: 0.9rem;
-          line-height: 1.45;
-        }
-
-        .academy-search-card {
-          display: grid;
-          gap: 12px;
-          margin-bottom: 18px;
-          padding: 14px;
-          border-radius: 24px;
-          background: rgba(15, 23, 42, 0.56);
-          border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .academy-search-input {
+        .academy-clean-search input {
           width: 100%;
           min-height: 48px;
           border-radius: 999px;
           border: 1px solid rgba(255,255,255,0.14);
           background: rgba(2, 6, 23, 0.44);
           color: #ffffff;
-          padding: 0 18px;
+          padding: 0 17px;
           font-weight: 850;
           outline: none;
         }
 
-        .academy-search-input::placeholder {
+        .academy-clean-search input::placeholder {
           color: rgba(248,250,252,0.48);
         }
 
-        .academy-filter-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          justify-content: center;
-        }
-
-        .academy-filter-button {
-          min-height: 38px;
-          border-radius: 999px;
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.07);
-          color: rgba(255,255,255,0.82);
-          padding: 0 12px;
-          font-weight: 900;
-          cursor: pointer;
-        }
-
-        .academy-filter-button.is-active {
-          background: #ffd43b;
-          color: #101420;
-          border-color: rgba(255,212,59,0.42);
-        }
-
-        .academy-layout {
+        .academy-flow-grid {
           display: grid;
-          grid-template-columns: minmax(250px, 310px) minmax(0, 1fr);
-          gap: 18px;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+
+        .academy-flow-card {
+          min-height: 132px;
+          display: grid;
+          align-content: start;
+          gap: 9px;
+          padding: 18px;
+          border-radius: 24px;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 38%),
+            rgba(15, 23, 42, 0.66);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 18px 44px rgba(0, 0, 0, 0.16);
+        }
+
+        .academy-flow-card span {
+          width: 34px;
+          height: 34px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 13px;
+          background: rgba(255, 212, 59, 0.12);
+          color: #ffd43b;
+          font-size: 0.78rem;
+          font-weight: 1000;
+        }
+
+        .academy-flow-card strong {
+          color: #ffffff;
+          font-size: 1.08rem;
+          line-height: 1.08;
+        }
+
+        .academy-flow-card p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.64);
+          line-height: 1.42;
+          font-size: 0.92rem;
+          font-weight: 760;
+        }
+
+        .academy-main-layout {
+          display: grid;
+          grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
+          gap: 16px;
           align-items: start;
         }
 
-        .academy-sidebar-card,
-        .academy-lesson-card {
+        .academy-clean-panel {
           border-radius: 28px;
           background: rgba(255,255,255,0.055);
           border: 1px solid rgba(255,255,255,0.09);
           box-shadow: 0 18px 55px rgba(0,0,0,0.16);
+          overflow: hidden;
         }
 
-        .academy-sidebar-card {
-          position: sticky;
-          top: 18px;
+        .academy-clean-panel-head {
+          padding: 18px 18px 14px;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          background: rgba(2, 6, 23, 0.16);
+        }
+
+        .academy-clean-panel-head h2 {
+          margin: 7px 0 0;
+          color: #ffffff;
+          font-size: clamp(1.25rem, 2vw, 1.65rem);
+          line-height: 1;
+          letter-spacing: -0.04em;
+        }
+
+        .academy-popular-list {
+          display: grid;
+          gap: 9px;
           padding: 14px;
         }
 
-        .academy-sidebar-card h2 {
-          margin: 4px 4px 12px;
-          color: #ffffff;
-          font-size: 1.08rem;
-        }
-
-        .academy-lesson-list {
+        .academy-popular-button {
+          width: 100%;
+          min-height: 52px;
           display: grid;
-          gap: 8px;
-        }
-
-        .academy-lesson-button {
-          display: grid;
-          grid-template-columns: 40px minmax(0, 1fr);
+          grid-template-columns: 34px minmax(0, 1fr);
           gap: 10px;
           align-items: center;
-          width: 100%;
-          padding: 10px;
-          border-radius: 16px;
-          border: 1px solid rgba(255,255,255,0.07);
+          padding: 10px 12px;
+          border-radius: 17px;
+          border: 1px solid rgba(255,255,255,0.08);
           background: rgba(2, 6, 23, 0.24);
           color: rgba(248,250,252,0.78);
           text-align: left;
-          font-weight: 850;
+          font-weight: 900;
           cursor: pointer;
         }
 
-        .academy-lesson-button.is-active {
+        .academy-popular-button.is-active {
           background: rgba(255, 212, 59, 0.14);
           border-color: rgba(255, 212, 59, 0.26);
           color: #ffffff;
         }
 
-        .academy-lesson-button span {
-          display: inline-flex;
-          width: 36px;
-          height: 36px;
-          align-items: center;
-          justify-content: center;
-          border-radius: 13px;
+        .academy-popular-button span {
+          width: 32px;
+          height: 32px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 12px;
           background: rgba(255, 212, 59, 0.12);
           color: #ffd43b;
           font-weight: 1000;
         }
 
-        .academy-lesson-button.is-active span {
+        .academy-popular-button.is-active span {
           background: #ffd43b;
           color: #101420;
         }
 
-        .academy-lesson-button small {
-          display: block;
-          margin-top: 3px;
-          color: rgba(248,250,252,0.52);
-          font-weight: 800;
+        .academy-search-results {
+          display: grid;
+          gap: 9px;
+          padding: 0 14px 14px;
         }
 
-        .academy-empty-message {
-          padding: 16px;
-          border-radius: 18px;
-          background: rgba(255,255,255,0.055);
-          border: 1px solid rgba(255,255,255,0.08);
-          color: var(--muted);
-          line-height: 1.5;
+        .academy-search-results-title {
+          margin: 4px 2px 2px;
+          color: rgba(248, 250, 252, 0.58);
+          font-size: 0.78rem;
+          font-weight: 1000;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
 
-        .academy-lesson-card {
-          overflow: hidden;
+        .academy-lesson-clean-card {
           scroll-margin-top: 12px;
         }
 
-        .academy-lesson-head {
-          display: grid;
-          grid-template-columns: 64px minmax(0, 1fr) auto;
-          gap: 14px;
-          align-items: center;
+        .academy-lesson-clean-head {
           padding: clamp(18px, 3vw, 26px);
           border-bottom: 1px solid rgba(255,255,255,0.08);
-          background: rgba(2, 6, 23, 0.18);
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.09), transparent 34%),
+            rgba(2, 6, 23, 0.18);
         }
 
-        .academy-step-badge {
-          display: inline-flex;
-          width: 56px;
-          height: 56px;
+        .academy-lesson-clean-head-row {
+          display: flex;
           align-items: center;
-          justify-content: center;
-          border-radius: 20px;
-          background: #ffd43b;
-          color: #101420;
-          font-weight: 1000;
-          box-shadow: 0 16px 36px rgba(255, 212, 59, 0.18);
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-bottom: 12px;
         }
 
-        .academy-group-pill {
+        .academy-step-chip {
           display: inline-flex;
-          width: fit-content;
-          margin-bottom: 8px;
-          padding: 7px 10px;
+          align-items: center;
+          gap: 9px;
+          min-height: 36px;
+          padding: 6px 11px;
           border-radius: 999px;
-          background: rgba(255, 212, 59, 0.1);
+          background: rgba(255, 212, 59, 0.11);
           border: 1px solid rgba(255, 212, 59, 0.2);
           color: #ffe58a;
-          font-size: 0.75rem;
-          font-weight: 950;
-        }
-
-        .academy-lesson-head h2 {
-          margin: 0;
-          color: #ffffff;
-          font-size: clamp(1.32rem, 2.1vw, 1.95rem);
-          line-height: 1.15;
-        }
-
-        .academy-time {
-          color: var(--muted);
-          font-weight: 900;
-          white-space: nowrap;
-        }
-
-        .academy-lesson-body {
-          display: grid;
-          gap: 18px;
-          padding: clamp(18px, 3vw, 26px);
-        }
-
-        .academy-intro {
-          margin: 0;
-          color: rgba(248,250,252,0.76);
-          line-height: 1.7;
-          font-size: 1.02rem;
-        }
-
-        .academy-two-col {
-          display: grid;
-          grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-          gap: 14px;
-        }
-
-        .academy-inner-card {
-          padding: 16px;
-          border-radius: 22px;
-          background: rgba(2, 6, 23, 0.32);
-          border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .academy-inner-card h3 {
-          margin: 0 0 12px;
-          color: #ffffff;
-          font-size: 1.05rem;
-        }
-
-        .academy-check-list {
-          display: grid;
-          gap: 10px;
-          margin: 0;
-          padding: 0;
-          list-style: none;
-        }
-
-        .academy-check-list li {
-          display: grid;
-          grid-template-columns: 28px minmax(0, 1fr);
-          gap: 10px;
-          align-items: start;
-          color: rgba(248,250,252,0.82);
-          line-height: 1.5;
-          font-weight: 760;
-        }
-
-        .academy-check-list span {
-          display: inline-flex;
-          width: 24px;
-          height: 24px;
-          align-items: center;
-          justify-content: center;
-          border-radius: 999px;
-          background: rgba(61, 220, 151, 0.12);
-          color: #a7f3d0;
           font-size: 0.78rem;
           font-weight: 1000;
         }
 
-        .academy-check-list.before span {
-          background: rgba(255, 212, 59, 0.12);
-          color: #ffd43b;
+        .academy-time-chip {
+          color: rgba(248,250,252,0.6);
+          font-weight: 900;
+          font-size: 0.9rem;
         }
 
-        .academy-bottom-row {
+        .academy-lesson-clean-head h2 {
+          margin: 0;
+          color: #ffffff;
+          font-size: clamp(1.85rem, 3.4vw, 2.8rem);
+          line-height: 0.98;
+          letter-spacing: -0.06em;
+        }
+
+        .academy-lesson-clean-head p {
+          margin: 12px 0 0;
+          color: rgba(248,250,252,0.72);
+          line-height: 1.55;
+          font-weight: 760;
+        }
+
+        .academy-lesson-clean-body {
+          display: grid;
+          gap: 14px;
+          padding: clamp(18px, 3vw, 26px);
+        }
+
+        .academy-do-this {
+          display: grid;
+          gap: 10px;
+        }
+
+        .academy-do-step {
+          display: grid;
+          grid-template-columns: 34px minmax(0, 1fr);
+          gap: 12px;
+          align-items: start;
+          padding: 13px;
+          border-radius: 18px;
+          background: rgba(2, 6, 23, 0.32);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .academy-do-step span {
+          width: 30px;
+          height: 30px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 999px;
+          background: rgba(61, 220, 151, 0.13);
+          color: #a7f3d0;
+          font-size: 0.8rem;
+          font-weight: 1000;
+        }
+
+        .academy-do-step p {
+          margin: 0;
+          color: rgba(248,250,252,0.82);
+          line-height: 1.46;
+          font-weight: 760;
+        }
+
+        .academy-clean-note-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 14px;
+          gap: 12px;
         }
 
-        .academy-tip,
-        .academy-outcome {
-          padding: 16px;
-          border-radius: 22px;
-          line-height: 1.58;
+        .academy-clean-note {
+          padding: 15px;
+          border-radius: 20px;
+          line-height: 1.52;
           font-weight: 800;
         }
 
-        .academy-tip {
+        .academy-clean-note.is-tip {
           background: rgba(61, 220, 151, 0.08);
           border: 1px solid rgba(61, 220, 151, 0.14);
           color: rgba(236, 253, 245, 0.88);
         }
 
-        .academy-outcome {
+        .academy-clean-note.is-outcome {
           background: rgba(255, 212, 59, 0.095);
           border: 1px solid rgba(255, 212, 59, 0.16);
           color: rgba(255,255,255,0.88);
         }
 
-        .academy-tip span,
-        .academy-outcome span {
+        .academy-clean-note strong {
           display: block;
-          margin-bottom: 6px;
+          margin-bottom: 5px;
+          color: #ffd43b;
           font-size: 0.76rem;
           letter-spacing: 0.1em;
           text-transform: uppercase;
           font-weight: 1000;
         }
 
-        .academy-tip span {
+        .academy-clean-note.is-tip strong {
           color: #a7f3d0;
         }
 
-        .academy-outcome span {
-          color: #ffd43b;
-        }
-
-        .academy-nav-row {
+        .academy-next-actions {
           display: flex;
-          justify-content: space-between;
-          gap: 12px;
           flex-wrap: wrap;
+          gap: 10px;
         }
 
-        .academy-nav-button {
-          min-height: 44px;
+        .academy-action-link,
+        .academy-action-button {
+          min-height: 46px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 16px;
+          border-radius: 16px;
           border: 1px solid rgba(255,255,255,0.12);
-          border-radius: 999px;
           background: rgba(255,255,255,0.075);
           color: #ffffff;
-          padding: 0 15px;
           font-weight: 950;
+          text-decoration: none;
           cursor: pointer;
         }
 
-        .academy-nav-button.primary {
+        .academy-action-link.is-primary {
           background: #ffd43b;
           color: #101420;
           border-color: rgba(255,212,59,0.44);
         }
 
-        .academy-nav-button:disabled {
-          opacity: 0.42;
-          cursor: not-allowed;
+        .academy-mini-faq {
+          margin-top: 16px;
+          display: grid;
+          gap: 9px;
         }
 
-        @media (max-width: 900px) {
+        .academy-mini-faq details {
+          border-radius: 18px;
+          background: rgba(2, 6, 23, 0.24);
+          border: 1px solid rgba(255,255,255,0.08);
+          overflow: hidden;
+        }
+
+        .academy-mini-faq summary {
+          cursor: pointer;
+          padding: 14px 15px;
+          color: #ffffff;
+          font-weight: 950;
+        }
+
+        .academy-mini-faq p {
+          margin: 0;
+          padding: 0 15px 15px;
+          color: rgba(248,250,252,0.68);
+          line-height: 1.5;
+          font-weight: 760;
+        }
+
+        @media (max-width: 920px) {
           .fromone-academy-page {
             width: min(100% - 24px, 720px) !important;
           }
 
-          .academy-help-row,
-          .academy-layout,
-          .academy-two-col,
-          .academy-bottom-row {
+          .academy-clean-hero,
+          .academy-main-layout,
+          .academy-clean-note-grid {
             grid-template-columns: 1fr !important;
           }
 
-          .academy-sidebar-card {
-            position: static;
+          .academy-clean-search {
+            width: 100%;
           }
 
-          .academy-lesson-list {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+          .academy-flow-grid {
+            grid-template-columns: 1fr !important;
           }
         }
 
@@ -808,258 +852,227 @@ export default function FromOneAcademyPage() {
             margin-bottom: 42px !important;
           }
 
-          .academy-shell-card {
-            padding: 22px 24px 26px !important;
+          .academy-clean-shell {
+            padding: 22px 20px 24px !important;
             border-radius: 30px !important;
           }
 
-          .academy-hero {
-            margin-bottom: 16px !important;
+          .academy-clean-hero {
+            text-align: center;
           }
 
-          .academy-hero .page-eyebrow {
+          .academy-clean-hero .page-eyebrow {
             font-size: 0.72rem !important;
             letter-spacing: 0.13em !important;
           }
 
-          .academy-hero h1 {
+          .academy-clean-hero h1 {
             font-size: clamp(2.1rem, 11vw, 3.1rem) !important;
             line-height: 0.92 !important;
             margin: 7px 0 10px !important;
           }
 
-          .academy-hero p {
+          .academy-clean-hero p {
             font-size: 0.98rem !important;
             line-height: 1.55 !important;
           }
 
-          .academy-help-row {
-            gap: 10px !important;
-          }
-
-          .academy-search-card,
-          .academy-sidebar-card,
-          .academy-lesson-card {
-            border-radius: 22px !important;
-          }
-
-          .academy-search-input {
+          .academy-popular-button,
+          .academy-do-step {
+            grid-template-columns: 1fr;
+            justify-items: center;
             text-align: center;
           }
 
-          .academy-filter-row {
+          .academy-lesson-clean-head,
+          .academy-lesson-clean-body,
+          .academy-clean-note {
+            text-align: center;
+          }
+
+          .academy-lesson-clean-head-row,
+          .academy-next-actions {
             justify-content: center;
           }
 
-          .academy-lesson-list {
-            grid-template-columns: 1fr;
-          }
-
-          .academy-lesson-button {
-            grid-template-columns: 1fr;
-            justify-items: center;
-            text-align: center;
-          }
-
-          .academy-lesson-head {
-            grid-template-columns: 1fr;
-            justify-items: center;
-            text-align: center;
-          }
-
-          .academy-group-pill {
-            margin-left: auto;
-            margin-right: auto;
-          }
-
-          .academy-lesson-body,
-          .academy-inner-card,
-          .academy-tip,
-          .academy-outcome {
-            text-align: center;
-          }
-
-          .academy-check-list li {
-            grid-template-columns: 1fr;
-            justify-items: center;
-            text-align: center;
-          }
-
-          .academy-nav-row {
-            display: grid;
-            grid-template-columns: 1fr;
+          .academy-action-link,
+          .academy-action-button {
+            width: 100%;
           }
         }
       `}</style>
 
-      <section className="premium-card academy-shell-card">
-        <div className="academy-hero">
-          <div className="page-eyebrow">FromOne Academy</div>
-          <h1 className="page-title">
-            One lesson.
-            <br />
-            One clear step.
-          </h1>
-          <p className="page-description">
-            A simple built-in guide for getting up and running. Choose a lesson, follow the
-            steps, then move to the next one when you are ready.
-          </p>
-        </div>
+      <section className="premium-card academy-clean-shell">
+        <div className="academy-clean-hero">
+          <div>
+            <div className="page-eyebrow">FromOne Academy</div>
+            <h1 className="page-title">
+              Learn FromOne
+              <br />
+              in minutes.
+            </h1>
+            <p className="page-description">
+              Simple help for creating posts, checking the wording and sending or scheduling
+              content without overthinking it.
+            </p>
+          </div>
 
-        <div className="academy-help-row">
-          <div className="academy-help-card">
-            <strong>Start at step 1</strong>
-            <span>Best if you are new to FromOne.</span>
-          </div>
-          <div className="academy-help-card">
-            <strong>Create on mobile</strong>
-            <span>Take photos or videos and turn them into posts from your phone.</span>
-          </div>
-          <div className="academy-help-card">
-            <strong>Stay in control</strong>
-            <span>Nothing publishes until the post is ready.</span>
+          <div className="academy-clean-search">
+            <label htmlFor="academy-search">Need help?</label>
+            <input
+              id="academy-search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search: schedule, media, Facebook..."
+            />
           </div>
         </div>
 
-        <div className="academy-search-card">
-          <input
-            className="academy-search-input"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search the Academy, for example: schedule, media, Facebook, reset password..."
-          />
-
-          <div className="academy-filter-row">
-            {groups.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={
-                  group === item
-                    ? "academy-filter-button is-active"
-                    : "academy-filter-button"
-                }
-                onClick={() => {
-                  setGroup(item);
-                  const firstMatch = academyLessons.find(
-                    (lesson) => item === "All" || lesson.group === item
-                  );
-                  if (firstMatch) setSelectedStep(firstMatch.step);
-                }}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
+        <div className="academy-flow-grid" aria-label="Simple FromOne flow">
+          {quickFlow.map((item) => (
+            <article key={item.step} className="academy-flow-card">
+              <span>{item.step}</span>
+              <strong>{item.title}</strong>
+              <p>{item.text}</p>
+            </article>
+          ))}
         </div>
 
-        <div className="academy-layout">
-          <aside className="academy-sidebar-card">
-            <h2>Choose a lesson</h2>
+        <div className="academy-main-layout">
+          <aside className="academy-clean-panel">
+            <div className="academy-clean-panel-head">
+              <div className="page-eyebrow">Quick help</div>
+              <h2>{query.trim() ? "Search results" : "Most useful guides"}</h2>
+            </div>
 
-            {filteredLessons.length === 0 ? (
-              <div className="academy-empty-message">
-                No lessons matched your search. Try another word.
+            {query.trim() ? (
+              <div className="academy-search-results">
+                <div className="academy-search-results-title">
+                  {filteredLessons.length} result{filteredLessons.length === 1 ? "" : "s"}
+                </div>
+
+                {filteredLessons.length === 0 ? (
+                  <div className="academy-popular-button">
+                    <span>?</span>
+                    <strong>No matching guide found</strong>
+                  </div>
+                ) : (
+                  filteredLessons.slice(0, 8).map((lesson) => (
+                    <button
+                      key={lesson.step}
+                      type="button"
+                      className={
+                        lesson.step === selectedLesson.step
+                          ? "academy-popular-button is-active"
+                          : "academy-popular-button"
+                      }
+                      onClick={() => chooseLesson(lesson.step)}
+                    >
+                      <span>{lesson.step}</span>
+                      <strong>{lesson.title}</strong>
+                    </button>
+                  ))
+                )}
               </div>
             ) : (
-              <div className="academy-lesson-list">
-                {filteredLessons.map((lesson) => (
-                  <button
-                    key={lesson.step}
-                    type="button"
-                    className={
-                      lesson.step === selectedLesson.step
-                        ? "academy-lesson-button is-active"
-                        : "academy-lesson-button"
-                    }
-                    onClick={() => chooseLesson(lesson.step)}
-                  >
-                    <span>{lesson.step}</span>
-                    <strong>
-                      {lesson.title}
-                      <small>{lesson.group}</small>
-                    </strong>
-                  </button>
-                ))}
+              <div className="academy-popular-list">
+                {popularHelp.map((title) => {
+                  const lesson = academyLessons.find((item) => item.title === title);
+
+                  return (
+                    <button
+                      key={title}
+                      type="button"
+                      className={
+                        lesson?.step === selectedLesson.step
+                          ? "academy-popular-button is-active"
+                          : "academy-popular-button"
+                      }
+                      onClick={() => choosePopularLesson(title)}
+                    >
+                      <span>{lesson?.step || "•"}</span>
+                      <strong>{title}</strong>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </aside>
 
           <article
             id="academy-selected-lesson"
-            className="academy-lesson-card"
-            aria-label="Selected Academy lesson"
+            className="academy-clean-panel academy-lesson-clean-card"
+            aria-label="Selected Academy guide"
           >
-            <div className="academy-lesson-head">
-              <span className="academy-step-badge">{selectedLesson.step}</span>
-
-              <div>
-                <span className="academy-group-pill">{selectedLesson.group}</span>
-                <h2>{selectedLesson.title}</h2>
+            <div className="academy-lesson-clean-head">
+              <div className="academy-lesson-clean-head-row">
+                <span className="academy-step-chip">
+                  Step {selectedLesson.step} · {selectedLesson.group}
+                </span>
+                <span className="academy-time-chip">{selectedLesson.time}</span>
               </div>
 
-              <span className="academy-time">{selectedLesson.time}</span>
+              <h2>{selectedLesson.title}</h2>
+              <p>{selectedLesson.intro}</p>
             </div>
 
-            <div className="academy-lesson-body">
-              <p className="academy-intro">{selectedLesson.intro}</p>
-
-              <div className="academy-two-col">
-                <div className="academy-inner-card">
-                  <h3>Before you start</h3>
-                  <ul className="academy-check-list before">
-                    {selectedLesson.before.map((item, index) => (
-                      <li key={item}>
-                        <span>{index + 1}</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="academy-inner-card">
-                  <h3>Step by step</h3>
-                  <ul className="academy-check-list">
-                    {selectedLesson.steps.map((item, index) => (
-                      <li key={item}>
-                        <span>{index + 1}</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+            <div className="academy-lesson-clean-body">
+              <div className="academy-do-this">
+                {selectedLesson.steps.slice(0, 6).map((item, index) => (
+                  <div key={item} className="academy-do-step">
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </div>
+                ))}
               </div>
 
-              <div className="academy-bottom-row">
-                <div className="academy-tip">
-                  <span>Helpful tip</span>
+              <div className="academy-clean-note-grid">
+                <div className="academy-clean-note is-tip">
+                  <strong>Tip</strong>
                   {selectedLesson.tip}
                 </div>
 
-                <div className="academy-outcome">
-                  <span>Outcome</span>
+                <div className="academy-clean-note is-outcome">
+                  <strong>Goal</strong>
                   {selectedLesson.outcome}
                 </div>
               </div>
 
-              <div className="academy-nav-row">
-                <button
-                  type="button"
-                  className="academy-nav-button"
-                  disabled={!previousLesson}
-                  onClick={() => previousLesson && chooseLesson(previousLesson.step)}
-                >
-                  ← Previous lesson
-                </button>
+              <div className="academy-next-actions">
+                <a href="/dashboard" className="academy-action-link is-primary">
+                  Go to Dashboard
+                </a>
+                <a href="/posts" className="academy-action-link">
+                  View Posts
+                </a>
+                <a href="/settings" className="academy-action-link">
+                  Settings
+                </a>
+              </div>
 
-                <button
-                  type="button"
-                  className="academy-nav-button primary"
-                  disabled={!nextLesson}
-                  onClick={() => nextLesson && chooseLesson(nextLesson.step)}
-                >
-                  Next lesson →
-                </button>
+              <div className="academy-mini-faq">
+                <details>
+                  <summary>What should I upload?</summary>
+                  <p>
+                    Use real photos, videos or flyers from the business. Real media usually creates
+                    more specific and useful posts.
+                  </p>
+                </details>
+
+                <details>
+                  <summary>Does anything publish automatically?</summary>
+                  <p>
+                    No. You check and approve posts first. Publishing options appear after approval.
+                  </p>
+                </details>
+
+                <details>
+                  <summary>What if Facebook or Instagram is not connected?</summary>
+                  <p>
+                    You can still create content, copy captions and post manually. Connect Meta only
+                    if you want supported autopublishing.
+                  </p>
+                </details>
               </div>
             </div>
           </article>

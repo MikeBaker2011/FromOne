@@ -4449,6 +4449,163 @@ If uploads are supplied:
     }
   }
 
+
+  /* Final compact mobile upload card */
+  @media (max-width: 760px) {
+    .dashboard-upload-dropzone {
+      min-height: 220px !important;
+      padding: 20px 16px !important;
+      border-radius: 28px !important;
+      display: grid !important;
+      place-items: center !important;
+    }
+
+    .dashboard-upload-dropzone > span {
+      width: 100% !important;
+      max-width: 360px !important;
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+      justify-items: stretch !important;
+      align-items: center !important;
+      margin: 0 auto !important;
+    }
+
+    .dashboard-mobile-upload-title {
+      order: 1 !important;
+      display: block !important;
+      visibility: visible !important;
+      width: 100% !important;
+      margin: 0 !important;
+      text-align: center !important;
+      color: #ffffff !important;
+      font-size: 1.28rem !important;
+      line-height: 1.05 !important;
+      font-weight: 1000 !important;
+      letter-spacing: -0.035em !important;
+    }
+
+    .dashboard-mobile-capture-actions {
+      order: 2 !important;
+      display: grid !important;
+      visibility: visible !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 8px !important;
+      width: 100% !important;
+      margin: 0 !important;
+      justify-self: stretch !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 46px !important;
+      padding: 0 8px !important;
+      border-radius: 16px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      font-size: 0.86rem !important;
+      font-weight: 1000 !important;
+      line-height: 1 !important;
+      white-space: nowrap !important;
+      box-shadow: 0 14px 28px rgba(255, 212, 59, 0.12) !important;
+    }
+
+    .dashboard-mobile-capture-actions button.secondary {
+      background: rgba(255, 255, 255, 0.085) !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.16) !important;
+      box-shadow: none !important;
+    }
+
+    .dashboard-upload-icon {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    .dashboard-upload-dropzone strong {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    .dashboard-upload-dropzone > span > span:last-child {
+      order: 3 !important;
+      display: block !important;
+      width: 100% !important;
+      max-width: 310px !important;
+      justify-self: center !important;
+      margin: 0 !important;
+      text-align: center !important;
+      color: rgba(248, 250, 252, 0.58) !important;
+      font-size: 0.82rem !important;
+      line-height: 1.35 !important;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .dashboard-mobile-capture-actions {
+      grid-template-columns: 1fr !important;
+      max-width: 280px !important;
+      justify-self: center !important;
+    }
+
+    .dashboard-mobile-capture-actions button {
+      min-height: 44px !important;
+    }
+  }
+
+  @media (min-width: 761px) {
+    .dashboard-mobile-capture-actions,
+    .dashboard-mobile-upload-title {
+      display: none !important;
+      visibility: hidden !important;
+    }
+  }
+
+
+  /* Full-width uploaded media cards on mobile */
+  @media (max-width: 760px) {
+    .dashboard-weekly-upload-grid {
+      width: 100% !important;
+      grid-template-columns: 1fr !important;
+      justify-content: stretch !important;
+      align-items: stretch !important;
+    }
+
+    .dashboard-weekly-upload-grid > .card {
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      justify-self: stretch !important;
+    }
+
+    .dashboard-weekly-upload-grid > .card > div:first-child {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 220px !important;
+      min-height: 220px !important;
+      aspect-ratio: auto !important;
+    }
+
+    .dashboard-weekly-upload-grid > .card img,
+    .dashboard-weekly-upload-grid > .card video,
+    .dashboard-weekly-upload-grid > .card canvas {
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 220px !important;
+      object-fit: contain !important;
+      object-position: center !important;
+      background: #020617 !important;
+    }
+
+    .dashboard-weekly-upload-grid textarea {
+      width: 100% !important;
+      min-height: 78px !important;
+    }
+  }
+
       `}</style>
       {(
         <section
