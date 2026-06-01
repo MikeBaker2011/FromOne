@@ -2883,7 +2883,30 @@ Important:
             Review each post, then publish Facebook and Instagram or copy/open
             TikTok.
           </p>
-          <p>Loading posts...</p>
+          <div
+            aria-label="Posts loading"
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                typeof window !== "undefined" && window.innerWidth <= 760
+                  ? "1fr"
+                  : "repeat(3, minmax(0, 1fr))",
+              gap: 12,
+              marginTop: 18,
+            }}
+          >
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                style={{
+                  minHeight: 220,
+                  borderRadius: 24,
+                  background: "rgba(255,255,255,0.055)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              />
+            ))}
+          </div>
         </section>
       ) : campaigns.length === 0 ? (
         <section

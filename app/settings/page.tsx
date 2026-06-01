@@ -809,8 +809,52 @@ export default function SettingsPage() {
   return (
     <>
       {loading ? (
-        <div className="premium-card">
-          <p>Loading Business Profile...</p>
+        <div
+          className="premium-card"
+          aria-label="Settings loading"
+          style={{
+            maxWidth: 1120,
+            margin: '0 auto 22px',
+            borderRadius: 34,
+            border: '1px solid rgba(255, 212, 59, 0.22)',
+            background:
+              'radial-gradient(circle at top, rgba(255, 212, 59, 0.12), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.028))',
+            boxShadow: '0 30px 96px rgba(0,0,0,0.28)',
+            padding: 'clamp(22px, 3.5vw, 38px)',
+          }}
+        >
+          <div className="page-eyebrow">Settings</div>
+          <div
+            style={{
+              width: 'min(520px, 100%)',
+              height: 42,
+              borderRadius: 18,
+              background: 'rgba(255,255,255,0.08)',
+              margin: '10px 0 18px',
+            }}
+          />
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                typeof window !== 'undefined' && window.innerWidth <= 760
+                  ? '1fr'
+                  : 'repeat(2, minmax(0, 1fr))',
+              gap: 12,
+            }}
+          >
+            {[1, 2].map((item) => (
+              <div
+                key={item}
+                style={{
+                  minHeight: 150,
+                  borderRadius: 24,
+                  background: 'rgba(255,255,255,0.055)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
+              />
+            ))}
+          </div>
         </div>
       ) : (
         <>

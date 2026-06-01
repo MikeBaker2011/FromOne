@@ -1938,7 +1938,51 @@ export default function PostReviewPage() {
   if (loading) {
     return (
       <main className="pr2-page" data-review-page="simple-mobile-tools-v1">
-        <section className="pr2-loading">Loading post...</section>
+        <section
+          className="pr2-loading"
+          aria-label="Post loading"
+          style={{
+            display: "grid",
+            gap: 14,
+            width: "min(920px, 100%)",
+            margin: "0 auto",
+          }}
+        >
+          <div
+            style={{
+              height: 44,
+              borderRadius: 18,
+              background: "rgba(255,255,255,0.08)",
+            }}
+          />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                typeof window !== "undefined" && window.innerWidth <= 760
+                  ? "1fr"
+                  : "minmax(0, 1fr) 320px",
+              gap: 14,
+            }}
+          >
+            <div
+              style={{
+                minHeight: 320,
+                borderRadius: 28,
+                background: "rgba(255,255,255,0.055)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            />
+            <div
+              style={{
+                minHeight: 260,
+                borderRadius: 28,
+                background: "rgba(255,255,255,0.055)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            />
+          </div>
+        </section>
       </main>
     );
   }
