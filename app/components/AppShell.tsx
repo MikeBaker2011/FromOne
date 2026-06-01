@@ -74,12 +74,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   const checkAccess = async () => {
-    setCheckingAccess(true);
-
     if (!isProtectedRoute()) {
       setCheckingAccess(false);
       return;
     }
+
+    setCheckingAccess(true);
 
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
@@ -235,15 +235,52 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
         <main className="main-content">
-          {checkingAccess && isProtectedRoute() ? (
-            <div className="premium-card">
-              <div className="page-eyebrow">Checking Access</div>
-              <h2 style={{ marginTop: 0 }}>Loading your FromOne workspace...</h2>
-              <p>Please wait while we check your demo or subscription access.</p>
+          {checkingAccess && isProtectedRoute() && (
+            <div
+              aria-label="Checking access"
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 9999,
+                height: 3,
+                overflow: 'hidden',
+                background: 'rgba(255, 212, 59, 0.08)',
+                pointerEvents: 'none',
+              }}
+            >
+              <div
+                style={{
+                  width: '42%',
+                  height: '100%',
+                  borderRadius: 999,
+                  background: 'linear-gradient(90deg, transparent, #ffd43b, transparent)',
+                  animation: 'fromoneAccessBar 1.05s ease-in-out infinite',
+                }}
+              />
             </div>
-          ) : (
-            children
           )}
+
+          <style jsx global>{`
+            @keyframes fromoneAccessBar {
+              0% {
+                transform: translateX(-120%);
+              }
+
+              100% {
+                transform: translateX(260%);
+              }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+              [aria-label="Checking access"] > div {
+                animation: none !important;
+              }
+            }
+          `}</style>
+
+          {children}
         </main>
       </div>
     </>
