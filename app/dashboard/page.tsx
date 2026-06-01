@@ -346,6 +346,7 @@ export default function DashboardPage() {
   const [client, setClient] = useState<any>(null);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [loading, setLoading] = useState(true);
+  const [dashboardMounted, setDashboardMounted] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [preparingFlyers, setPreparingFlyers] = useState(false);
   const [creationProgressMessage, setCreationProgressMessage] = useState("");
@@ -397,6 +398,10 @@ export default function DashboardPage() {
   const [manualMainOffer, setManualMainOffer] = useState("");
   const [manualGoals, setManualGoals] = useState("");
   const [manualContentPillars, setManualContentPillars] = useState("");
+
+  useEffect(() => {
+    setDashboardMounted(true);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1500,13 +1505,13 @@ Core FromOne rule:
     uploadNote: string,
     index: number
   ) => {
-        if (mediaType === "flyer" && upload.file.size > MAX_PDF_FLYER_BYTES) {
+    if (mediaType === "flyer" && upload.file.size > MAX_PDF_FLYER_BYTES) {
       throw new Error(
         `${upload.file.name} is ${formatFileSize(upload.file.size)}. PDF flyers need to be under 10MB. Try exporting a smaller PDF or an image from Canva.`
       );
     }
 
-const baseContext = [
+    const baseContext = [
       `Upload ${index + 1}`,
       `Original filename: ${upload.file.name}`,
       `MIME type: ${upload.file.type || "unknown"}`,
@@ -2592,6 +2597,46 @@ If uploads are supplied:
   const businessProfileReady = hasManualProfile;
   const canCreatePosts = businessProfileReady && weeklyUploads.length > 0 && selectedPlatforms.length > 0 && !accessLocked && !scanning && !preparingFlyers;
 
+  if (!dashboardMounted || loading) {
+    return (
+      <main
+        style={{
+          width: "min(1120px, calc(100vw - 28px))",
+          minHeight: "calc(100vh - 120px)",
+          margin: "0 auto 56px",
+          padding: "0 0 42px",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        <section
+          className="premium-card"
+          style={{
+            width: "min(100%, 560px)",
+            padding: 28,
+            borderRadius: 28,
+            textAlign: "center",
+          }}
+        >
+          <div className="page-eyebrow">FromOne</div>
+          <h1
+            className="page-title"
+            style={{
+              margin: "8px 0 10px",
+              fontSize: "clamp(2rem, 6vw, 3rem)",
+              lineHeight: 0.95,
+            }}
+          >
+            Loading dashboard
+          </h1>
+          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.5 }}>
+            Getting your posts ready...
+          </p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main
       style={{
@@ -3165,11 +3210,7 @@ If uploads are supplied:
 
 
       `}</style>
-      {loading ? (
-        <section className="premium-card" style={{ width: "100%" }}>
-          <p>Loading...</p>
-        </section>
-      ) : (
+      {(
         <section
           className="premium-card dashboard-final-card"
           style={{
