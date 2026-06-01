@@ -272,23 +272,23 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     };
   }
 
-  if (approvalStatus === "scheduled" || publishStatus === "scheduled" || status === "scheduled") {
-    return {
-      label: "Scheduled",
-      tone: "warning",
-      description: "This post has a scheduled time. Check it before it goes live.",
-    };
-  }
-
-  if (approvalStatus === "approved" || status === "approved") {
+  if (approvalStatus === "approved") {
     return {
       label: "Approved",
       tone: "success",
-      description: "This post has been approved and is ready to publish or schedule.",
+      description: "This post has been approved and is ready to schedule or publish.",
     };
   }
 
-  if (approvalStatus === "draft" || status === "draft") {
+  if (approvalStatus === "scheduled") {
+    return {
+      label: "Scheduled",
+      tone: "warning",
+      description: "This post has been approved and scheduled.",
+    };
+  }
+
+  if (approvalStatus === "draft") {
     return {
       label: "Draft",
       tone: "neutral",
@@ -2550,183 +2550,129 @@ export default function PostReviewPage() {
           </section>
 
           <aside className="pr2-side">
-
-            <article className="pr2-publish-card pr2-approval-card">
-              <span className="pr2-kicker">Approval</span>
-              <div className="pr2-approval-head">
-                <div>
-                  <h2>{approvalStatus.label}</h2>
-                  <p>{approvalStatus.description}</p>
-                </div>
-
-                <span className={`pr2-approval-pill is-${approvalStatus.tone}`}>
-                  {approvalStatus.label}
-                </span>
-              </div>
-
-              <div className="pr2-publish-actions" style={{ display: "grid", gap: 10 }}>
-                <button
-                  type="button"
-                  className="pr2-btn pr2-btn-primary"
-                  onClick={markApproved}
-                  disabled={saving || isPosted || isApprovedForPublishing}
-                >
-                  {saving ? "Saving..." : "Approve post"}
-                </button>
-
-                <button
-                  type="button"
-                  className="pr2-btn"
-                  onClick={markNeedsReview}
-                  disabled={saving || isPosted || approvalStatus.label === "Needs review"}
-                >
-                  Mark needs review
-                </button>
-              </div>
-            </article>
-
-            <article className="pr2-publish-card">
-              <span className="pr2-kicker">Publish</span>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  marginBottom: 12,
-                }}
-              >
-                <div>
-                  <h2 style={{ marginBottom: 6 }}>{platformName}</h2>
-                  <p>Schedule autopublish, publish now, or post manually.</p>
-                </div>
-
-                <span
-                  style={{
-                    flex: "0 0 auto",
-                    borderRadius: 999,
-                    padding: "7px 10px",
-                    fontSize: 11,
-                    fontWeight: 950,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color:
-                      autopublishStatus.tone === "error"
-                        ? "#fecaca"
-                        : autopublishStatus.tone === "success"
-                          ? "#bbf7d0"
-                          : autopublishStatus.tone === "warning"
-                            ? "#fde68a"
-                            : "#f8fafc",
-                    background:
-                      autopublishStatus.tone === "error"
-                        ? "rgba(239, 68, 68, 0.16)"
-                        : autopublishStatus.tone === "success"
-                          ? "rgba(34, 197, 94, 0.15)"
-                          : autopublishStatus.tone === "warning"
-                            ? "rgba(245, 158, 11, 0.14)"
-                            : "rgba(255,255,255,0.08)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                  }}
-                >
-                  {autopublishStatus.label}
-                </span>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                  margin: "14px 0 16px",
-                  padding: 14,
-                  borderRadius: 18,
-                  background: "rgba(255,255,255,0.055)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                <p style={{ margin: 0, fontSize: 14, opacity: 0.86 }}>
-                  {autopublishStatus.description}
+            <article className="pr2-flow-card">
+              <div className="pr2-flow-head">
+                <span className="pr2-kicker">Post approval</span>
+                <h2>
+                  {approvalStatus.label === "Needs review"
+                    ? "Approve this post"
+                    : approvalStatus.label === "Approved"
+                      ? "Ready to publish"
+                      : approvalStatus.label}
+                </h2>
+                <p>
+                  {approvalStatus.label === "Needs review"
+                    ? "Check the post, then approve it. Publishing options unlock after approval."
+                    : approvalStatus.label === "Approved"
+                      ? "Choose automatic publishing or post it manually."
+                      : approvalStatus.label === "Scheduled"
+                        ? "Automatic publishing is scheduled."
+                        : approvalStatus.description}
                 </p>
-
-                <label style={{ display: "grid", gap: 7 }}>
-                  <span className="pr2-kicker" style={{ margin: 0 }}>
-                    Scheduled time
-                  </span>
-
-                  <input
-                    type="datetime-local"
-                    value={scheduleInputValue}
-                    onChange={(event) =>
-                      setScheduleInputValue(event.target.value)
-                    }
-                    disabled={savingSchedule || isPosted}
-                    style={{
-                      width: "100%",
-                      minHeight: 46,
-                      borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.14)",
-                      background: "rgba(15, 23, 42, 0.72)",
-                      color: "#ffffff",
-                      padding: "0 12px",
-                      fontWeight: 800,
-                    }}
-                  />
-                </label>
-
-                <div
-                  style={{
-                    padding: 10,
-                    borderRadius: 14,
-                    background: "rgba(15, 23, 42, 0.55)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <span className="pr2-kicker" style={{ margin: 0 }}>
-                    Method
-                  </span>
-                  <strong style={{ display: "block", marginTop: 4 }}>
-                    {canAutopublish ? "Auto + manual" : "Manual only"}
-                  </strong>
-                </div>
               </div>
 
-              {post?.publish_error && (
-                <div className="pr2-message" style={{ marginBottom: 12 }}>
-                  {cleanText(post.publish_error)}
+              <div className={`pr2-flow-status is-${approvalStatus.tone}`}>
+                {approvalStatus.label}
+              </div>
+
+              {approvalStatus.label === "Needs review" || approvalStatus.label === "Draft" ? (
+                <>
+                  <button
+                    type="button"
+                    className="pr2-btn pr2-btn-primary pr2-flow-main-button"
+                    onClick={markApproved}
+                    disabled={saving || isPosted}
+                  >
+                    {saving ? "Approving..." : "Approve post"}
+                  </button>
+
+                  <div className="pr2-flow-locked-panel">
+                    <span className="pr2-kicker">After approval</span>
+                    <div className="pr2-flow-option-grid">
+                      <div className="pr2-flow-option-card is-locked">
+                        <strong>Auto schedule</strong>
+                        <p>Pick a time for FromOne to publish.</p>
+                      </div>
+
+                      {canAutopublish && (
+                        <div className="pr2-flow-option-card is-locked">
+                          <strong>Autopublish now</strong>
+                          <p>Send it automatically after approval.</p>
+                        </div>
+                      )}
+
+                      <div className="pr2-flow-option-card is-locked">
+                        <strong>Post manually</strong>
+                        <p>Open {platformName} and paste the caption.</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="pr2-flow-publish-panel">
+                  <section className="pr2-flow-publish-card is-primary">
+                    <div>
+                      <span className="pr2-kicker">Automatic publishing</span>
+                      <h3>Schedule post</h3>
+                      <p>Choose when FromOne should publish this approved post.</p>
+                    </div>
+
+                    <label className="pr2-flow-schedule-label">
+                      <span>Publishing time</span>
+                      <input
+                        type="datetime-local"
+                        value={scheduleInputValue}
+                        onChange={(event) => setScheduleInputValue(event.target.value)}
+                        disabled={savingSchedule || isPosted}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      className="pr2-btn pr2-btn-primary"
+                      onClick={saveSchedule}
+                      disabled={savingSchedule || isPosted}
+                    >
+                      {savingSchedule ? "Saving..." : "Save schedule"}
+                    </button>
+                  </section>
+
+                  {canAutopublish && (
+                    <section className="pr2-flow-publish-card">
+                      <div>
+                        <span className="pr2-kicker">Now</span>
+                        <h3>Autopublish now</h3>
+                        <p>Publish this approved post automatically now.</p>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="pr2-btn"
+                        onClick={autopublishNow}
+                        disabled={autoPublishing || isPosted}
+                      >
+                        {autoPublishing ? "Publishing..." : "Autopublish now"}
+                      </button>
+                    </section>
+                  )}
+
+                  <section className="pr2-flow-publish-card">
+                    <div>
+                      <span className="pr2-kicker">Manual</span>
+                      <h3>Post manually</h3>
+                      <p>Open {platformName}, then paste or share the post yourself.</p>
+                    </div>
+
+                    <button type="button" className="pr2-btn" onClick={openPlatform}>
+                      Open {platformName}
+                    </button>
+                  </section>
                 </div>
               )}
 
-              <div
-                className="pr2-publish-actions"
-                style={{ display: "grid", gap: 10 }}
-              >
-                <button
-                  type="button"
-                  className="pr2-btn"
-                  onClick={saveSchedule}
-                  disabled={savingSchedule || isPosted}
-                >
-                  {savingSchedule ? "Saving..." : "Save schedule"}
-                </button>
-
-                {canAutopublish && (
-                  <button
-                    type="button"
-                    className="pr2-btn pr2-btn-primary"
-                    onClick={autopublishNow}
-                    disabled={autoPublishing || isPosted}
-                  >
-                    {autoPublishing ? "Autopublishing..." : "Autopublish now"}
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  className="pr2-btn"
-                  onClick={openPlatform}
-                >
-                  Post manually
+              <div className="pr2-flow-helper-row">
+                <button type="button" className="pr2-btn" onClick={copyCaption}>
+                  Copy caption
                 </button>
 
                 {preparedDisplayMedia?.url && (
@@ -2736,18 +2682,30 @@ export default function PostReviewPage() {
                     onClick={sharePreparedImage}
                     disabled={sharingMedia}
                   >
-                    {sharingMedia ? "Opening..." : "Share prepared media"}
+                    {sharingMedia ? "Opening..." : "Share media"}
                   </button>
                 )}
               </div>
 
-              <details
-                className="pr2-details is-tight"
-                style={{ marginTop: 12 }}
-              >
+              {post?.publish_error && (
+                <div className="pr2-message">
+                  {cleanText(post.publish_error)}
+                </div>
+              )}
+
+              <details className="pr2-details is-tight pr2-flow-more">
                 <summary>More options</summary>
 
                 <div className="pr2-side-options">
+                  <button
+                    type="button"
+                    className="pr2-btn"
+                    onClick={markNeedsReview}
+                    disabled={saving || isPosted || approvalStatus.label === "Needs review"}
+                  >
+                    Send back to review
+                  </button>
+
                   <button
                     type="button"
                     className="pr2-btn"
@@ -2769,15 +2727,299 @@ export default function PostReviewPage() {
                   )}
                 </div>
               </details>
-
-              <p style={{ marginTop: 12, fontSize: 13, opacity: 0.78 }}>
-                Facebook and Instagram can autopublish when connected. TikTok
-                stays manual.
-              </p>
             </article>
           </aside>
         </section>
       </section>
+
+      <style jsx global>{`
+        .pr2-simple-next-card,
+        .pr2-simple-publish-card {
+          padding: clamp(18px, 2vw, 24px);
+          border-radius: 28px;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%),
+            rgba(15, 23, 42, 0.78);
+          border: 1px solid rgba(255, 212, 59, 0.18);
+          box-shadow: 0 22px 62px rgba(0, 0, 0, 0.24);
+        }
+
+        .pr2-simple-next-card {
+          margin-bottom: 14px;
+        }
+
+        .pr2-simple-status-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 12px;
+          align-items: start;
+          margin: 10px 0 16px;
+        }
+
+        .pr2-simple-status-row h2,
+        .pr2-simple-publish-card h2 {
+          margin: 0 0 7px;
+          font-size: clamp(1.65rem, 3vw, 2.15rem);
+          line-height: 0.98;
+          letter-spacing: -0.045em;
+        }
+
+        .pr2-simple-status-row p,
+        .pr2-simple-help,
+        .pr2-simple-footnote {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.48;
+        }
+
+        .pr2-big-action {
+          width: 100%;
+          min-height: 58px;
+          font-size: 1rem;
+          margin-top: 4px;
+        }
+
+        .pr2-approved-note {
+          display: grid;
+          gap: 4px;
+          padding: 14px;
+          border-radius: 18px;
+          background: rgba(34, 197, 94, 0.12);
+          border: 1px solid rgba(34, 197, 94, 0.24);
+          color: #bbf7d0;
+        }
+
+        .pr2-approved-note span {
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.4;
+        }
+
+        .pr2-simple-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-top: 12px;
+        }
+
+        .pr2-simple-publish-card {
+          display: grid;
+          gap: 12px;
+        }
+
+        .pr2-simple-schedule-label {
+          display: grid;
+          gap: 7px;
+          margin-top: 2px;
+        }
+
+        .pr2-simple-schedule-label span {
+          color: #ffd43b;
+          font-size: 0.78rem;
+          font-weight: 950;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .pr2-simple-schedule-label input {
+          width: 100%;
+          min-height: 48px;
+          border-radius: 14px;
+          border: 1px solid rgba(255,255,255,0.14);
+          background: rgba(15, 23, 42, 0.72);
+          color: #ffffff;
+          padding: 0 12px;
+          font-weight: 850;
+        }
+
+        .pr2-advanced-publishing {
+          margin-top: 4px;
+        }
+
+        .pr2-advanced-publishing summary {
+          color: rgba(248, 250, 252, 0.72);
+        }
+
+        .pr2-simple-footnote {
+          font-size: 0.86rem;
+          opacity: 0.78;
+        }
+
+        @media (max-width: 720px) {
+          .pr2-simple-status-row,
+          .pr2-simple-actions {
+            grid-template-columns: 1fr;
+          }
+
+          .pr2-approval-pill {
+            width: fit-content;
+          }
+        }
+      `}</style>
+
+
+      <style jsx global>{`
+        /* Final customer publishing flow layout */
+        .pr2-flow-card {
+          padding: clamp(18px, 2vw, 24px);
+          border-radius: 30px;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%),
+            rgba(15, 23, 42, 0.80);
+          border: 1px solid rgba(255, 212, 59, 0.18);
+          box-shadow: 0 22px 62px rgba(0, 0, 0, 0.24);
+          display: grid;
+          gap: 14px;
+        }
+
+        .pr2-flow-head h2 {
+          margin: 8px 0 8px;
+          font-size: clamp(1.65rem, 3vw, 2.18rem);
+          line-height: 0.98;
+          letter-spacing: -0.05em;
+        }
+
+        .pr2-flow-head p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.72);
+          line-height: 1.46;
+        }
+
+        .pr2-flow-status {
+          display: inline-flex;
+          width: fit-content;
+          align-items: center;
+          justify-content: center;
+          min-height: 32px;
+          padding: 7px 12px;
+          border-radius: 999px;
+          background: rgba(245, 158, 11, 0.14);
+          border: 1px solid rgba(245, 158, 11, 0.26);
+          color: #fde68a;
+          font-size: 0.8rem;
+          font-weight: 950;
+        }
+
+        .pr2-flow-status.is-success {
+          background: rgba(34, 197, 94, 0.14);
+          border-color: rgba(34, 197, 94, 0.26);
+          color: #bbf7d0;
+        }
+
+        .pr2-flow-status.is-error {
+          background: rgba(239, 68, 68, 0.16);
+          border-color: rgba(239, 68, 68, 0.28);
+          color: #fecaca;
+        }
+
+        .pr2-flow-main-button {
+          width: 100%;
+          min-height: 58px;
+          font-size: 1rem;
+        }
+
+        .pr2-flow-locked-panel,
+        .pr2-flow-publish-panel {
+          display: grid;
+          gap: 10px;
+        }
+
+        .pr2-flow-option-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+
+        .pr2-flow-option-card,
+        .pr2-flow-publish-card {
+          display: grid;
+          gap: 8px;
+          padding: 15px;
+          border-radius: 22px;
+          background: rgba(255, 255, 255, 0.055);
+          border: 1px solid rgba(255, 255, 255, 0.09);
+        }
+
+        .pr2-flow-option-card.is-locked {
+          opacity: 0.78;
+        }
+
+        .pr2-flow-publish-card.is-primary {
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 38%),
+            rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 212, 59, 0.20);
+        }
+
+        .pr2-flow-option-card strong,
+        .pr2-flow-publish-card h3 {
+          margin: 0;
+          color: #ffffff;
+          font-size: 1.08rem;
+          line-height: 1.1;
+        }
+
+        .pr2-flow-option-card p,
+        .pr2-flow-publish-card p {
+          margin: 0;
+          color: rgba(248, 250, 252, 0.66);
+          line-height: 1.38;
+          font-size: 0.92rem;
+        }
+
+        .pr2-flow-schedule-label {
+          display: grid;
+          gap: 7px;
+        }
+
+        .pr2-flow-schedule-label span {
+          color: #ffd43b;
+          font-size: 0.78rem;
+          font-weight: 950;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .pr2-flow-schedule-label input {
+          width: 100%;
+          min-height: 48px;
+          border-radius: 14px;
+          border: 1px solid rgba(255,255,255,0.14);
+          background: rgba(15, 23, 42, 0.72);
+          color: #ffffff;
+          padding: 0 12px;
+          font-weight: 850;
+        }
+
+        .pr2-flow-helper-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+
+        .pr2-flow-more {
+          margin-top: 0 !important;
+        }
+
+        .pr2-flow-more summary {
+          color: rgba(248, 250, 252, 0.68);
+        }
+
+        .pr2-calm-action-card,
+        .pr2-customer-action-card,
+        .pr2-one-step-card,
+        .pr2-simple-next-card,
+        .pr2-simple-publish-card,
+        .pr2-simple-post-card {
+          display: none !important;
+        }
+
+        @media (max-width: 720px) {
+          .pr2-flow-helper-row {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+
     </main>
   );
 }
