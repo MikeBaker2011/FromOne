@@ -421,59 +421,7 @@ export default function SignInPage() {
   };
 
   if (!pageMounted || checkingSession) {
-    return (
-      <main
-        style={{
-          width: 'min(1040px, calc(100vw - 28px))',
-          minHeight: 'calc(100vh - 48px)',
-          margin: '0 auto',
-          padding: 'clamp(18px, 3vw, 34px) 0',
-          display: 'grid',
-          placeItems: 'center',
-        }}
-      >
-        <section
-          className="signin-card"
-          style={{
-            width: 'min(100%, 430px)',
-            padding: 26,
-            borderRadius: 30,
-            textAlign: 'center',
-            background: 'rgba(5, 10, 24, 0.55)',
-            border: '1px solid rgba(255,255,255,0.11)',
-            boxShadow: '0 24px 80px rgba(0,0,0,0.28)',
-          }}
-        >
-          <img
-            src="/fromone-logo.png"
-            alt="FromOne logo"
-            className="signin-logo-img"
-            style={{
-              maxWidth: 150,
-              margin: '0 auto 14px',
-              display: 'block',
-            }}
-          />
-
-          <div className="page-eyebrow">FromOne</div>
-
-          <h1
-            className="page-title"
-            style={{
-              margin: '8px 0 10px',
-              fontSize: 'clamp(2rem, 6vw, 3rem)',
-              lineHeight: 0.95,
-            }}
-          >
-            Loading sign in
-          </h1>
-
-          <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.5 }}>
-            Checking your session...
-          </p>
-        </section>
-      </main>
-    );
+    return null;
   }
 
   return (
