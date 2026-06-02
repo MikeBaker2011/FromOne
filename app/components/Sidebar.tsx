@@ -173,6 +173,67 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           }
         }
 
+
+        /* Keep Support / Sign out visible on mobile */
+        .sidebar {
+          min-height: 100dvh;
+          max-height: 100dvh;
+          overflow: hidden;
+        }
+
+        .sidebar-nav {
+          min-height: 0;
+          height: 100%;
+          display: grid;
+          grid-template-rows: minmax(0, 1fr) auto;
+          gap: 12px;
+          overflow: hidden;
+        }
+
+        .sidebar-nav-main {
+          min-height: 0;
+          overflow-y: auto;
+          overscroll-behavior: contain;
+          padding-bottom: 8px;
+        }
+
+        .sidebar-nav-bottom {
+          flex-shrink: 0;
+          position: sticky;
+          bottom: 0;
+          z-index: 4;
+          padding-top: 10px;
+          background:
+            linear-gradient(180deg, rgba(5, 9, 20, 0), rgba(5, 9, 20, 0.94) 18%),
+            rgba(5, 9, 20, 0.94);
+        }
+
+        @media (max-width: 900px) {
+          .sidebar {
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            overflow: hidden !important;
+            padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+          }
+
+          .sidebar-mobile-top {
+            flex-shrink: 0;
+          }
+
+          .sidebar-nav {
+            height: calc(100dvh - 96px - max(16px, env(safe-area-inset-bottom))) !important;
+          }
+
+          .sidebar-nav-bottom {
+            padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+          }
+
+          .sidebar-link-button {
+            width: 100% !important;
+          }
+        }
+
+
         @media (prefers-reduced-motion: reduce) {
           .sidebar {
             transition: none !important;
@@ -193,7 +254,7 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           </div>
         </div>
 
-        <button type="button" className="mobile-menu-close" onClick={onClose} aria-label="Close menu">
+        <button type="button" className="mobile-menu-close" onClick={closeMenu} aria-label="Close menu">
           ×
         </button>
       </div>
