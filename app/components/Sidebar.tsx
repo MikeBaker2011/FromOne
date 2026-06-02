@@ -174,62 +174,77 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         }
 
 
-        /* Keep Support / Sign out visible on mobile */
+        /* Sidebar fixed layout: no horizontal scroll, logout visible */
         .sidebar {
-          min-height: 100dvh;
-          max-height: 100dvh;
-          overflow: hidden;
+          box-sizing: border-box;
+          overflow-x: hidden !important;
+        }
+
+        .sidebar,
+        .sidebar * {
+          max-width: 100%;
+          box-sizing: border-box;
         }
 
         .sidebar-nav {
           min-height: 0;
-          height: 100%;
-          display: grid;
-          grid-template-rows: minmax(0, 1fr) auto;
-          gap: 12px;
+          display: flex;
+          flex-direction: column;
           overflow: hidden;
         }
 
         .sidebar-nav-main {
           min-height: 0;
           overflow-y: auto;
+          overflow-x: hidden;
           overscroll-behavior: contain;
-          padding-bottom: 8px;
+          padding-right: 2px;
         }
 
         .sidebar-nav-bottom {
-          flex-shrink: 0;
-          position: sticky;
-          bottom: 0;
-          z-index: 4;
-          padding-top: 10px;
-          background:
-            linear-gradient(180deg, rgba(5, 9, 20, 0), rgba(5, 9, 20, 0.94) 18%),
-            rgba(5, 9, 20, 0.94);
+          flex: 0 0 auto;
+          margin-top: auto;
+          overflow-x: hidden;
+        }
+
+        .sidebar-link,
+        .sidebar-link-button {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          overflow: hidden;
+        }
+
+        .sidebar-link-button {
+          text-align: left;
         }
 
         @media (max-width: 900px) {
           .sidebar {
+            width: min(82vw, 320px) !important;
             height: 100dvh !important;
             max-height: 100dvh !important;
-            overflow: hidden !important;
-            padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+            overflow-x: hidden !important;
+            overflow-y: hidden !important;
+            padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
           }
 
           .sidebar-mobile-top {
-            flex-shrink: 0;
+            flex: 0 0 auto;
           }
 
           .sidebar-nav {
-            height: calc(100dvh - 96px - max(16px, env(safe-area-inset-bottom))) !important;
+            height: auto !important;
+            max-height: calc(100dvh - 104px - max(14px, env(safe-area-inset-bottom))) !important;
+          }
+
+          .sidebar-nav-main {
+            flex: 1 1 auto;
           }
 
           .sidebar-nav-bottom {
-            padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
-          }
-
-          .sidebar-link-button {
-            width: 100% !important;
+            flex: 0 0 auto;
+            padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
           }
         }
 
