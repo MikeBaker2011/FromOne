@@ -678,102 +678,65 @@ export default function SubscriptionPage() {
 
           <div style={{ width: '100%', marginBottom: '24px' }}>
             <section
-              className="hero-card subscription-hero-card"
+              className="subscription-clean-hero subscription-hero-card"
               style={{
                 width: '100%',
-                border: '1px solid rgba(255, 212, 59, 0.28)',
+                border: '1px solid rgba(255, 212, 59, 0.24)',
                 background:
-                  'radial-gradient(circle at top, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032))',
-                boxShadow: '0 30px 96px rgba(0,0,0,0.34)',
+                  'radial-gradient(circle at top right, rgba(255, 212, 59, 0.13), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.078), rgba(255,255,255,0.03))',
+                boxShadow: '0 30px 96px rgba(0,0,0,0.32)',
               }}
             >
-              <div style={{ textAlign: 'center', maxWidth: 860, margin: '0 auto 28px' }}>
-                <div className="page-eyebrow">Subscription</div>
-                <h1
-                  className="page-title"
-                  style={{
-                    margin: '8px 0 12px',
-                    fontSize: 'clamp(2.4rem, 5.2vw, 4.8rem)',
-                    lineHeight: 0.92,
-                    letterSpacing: '-0.06em',
-                  }}
-                >
-                  {isDemoExpired ? (
-                    'Your demo has ended.'
-                  ) : (
-                    <>
-                      Start free.
-                      <br />
-                      Keep posting.
-                    </>
-                  )}
-                </h1>
-                <p className="page-description" style={{ margin: '0 auto', maxWidth: 760 }}>
-                  Try FromOne with a 7-day demo, then continue with Starter for £39.99/month.
-                  Upload photos, videos or flyers, review every post, then autopost Facebook and
-                  Instagram or copy/open TikTok manually.
-                </p>
-              </div>
+              <div className="subscription-clean-hero-grid">
+                <div className="subscription-clean-hero-copy">
+                  <div className="page-eyebrow">Subscription</div>
 
-              <div
-                className="subscription-status-grid"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: '12px',
-                  padding: '16px',
-                  borderRadius: 24,
-                  background: 'rgba(5, 10, 24, 0.34)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
-                <div className="card" style={{ padding: '16px' }}>
-                  <div className="page-eyebrow">Current access</div>
-                  <h2 style={{ margin: '6px 0 0', fontSize: 'clamp(1.8rem, 4vw, 2.6rem)' }}>
-                    {getAccessTitle()}
-                  </h2>
-                </div>
+                  <h1 className="page-title">
+                    {isDemoExpired ? 'Choose your plan.' : 'Simple plans for simple posting.'}
+                  </h1>
 
-                <div className="card" style={{ padding: '16px' }}>
-                  <strong>Plan</strong>
-                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
-                    {currentPlan === 'starter' ? 'Starter' : 'Demo'}
+                  <p className="page-description">
+                    Start with the 7-day demo. When you are ready, continue with Starter to keep
+                    creating, reviewing and publishing posts every week.
                   </p>
-                </div>
 
-                <div className="card" style={{ padding: '16px' }}>
-                  <strong>Status</strong>
-                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
-                    {status}
-                  </p>
-                </div>
-
-                {currentPlan === 'demo' && (
-                  <>
-                    <div className="card" style={{ padding: '16px' }}>
-                      <strong>Demo started</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
-                        {formatDate(trialStartedAt)}
-                      </p>
-                    </div>
-
-                    <div className="card" style={{ padding: '16px' }}>
-                      <strong>Demo ends</strong>
-                      <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
-                        {formatDate(trialEndsAt)}
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                {cancelledAt && (
-                  <div className="card" style={{ padding: '16px' }}>
-                    <strong>Cancelled</strong>
-                    <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontWeight: 850 }}>
-                      {formatDate(cancelledAt)}
-                    </p>
+                  <div className="subscription-clean-flow" aria-label="Subscription workflow">
+                    <span>Upload media</span>
+                    <span>Check posts</span>
+                    <span>Send or schedule</span>
                   </div>
-                )}
+                </div>
+
+                <aside className="subscription-access-card" aria-label="Current subscription status">
+                  <div>
+                    <span className="subscription-access-label">Current access</span>
+                    <strong>{getAccessTitle()}</strong>
+                  </div>
+
+                  <div className="subscription-access-row">
+                    <span>Plan</span>
+                    <b>{currentPlan === 'starter' ? 'Starter' : 'Demo'}</b>
+                  </div>
+
+                  <div className="subscription-access-row">
+                    <span>Status</span>
+                    <b>{status.replace(/_/g, ' ')}</b>
+                  </div>
+
+                  {currentPlan === 'demo' && (
+                    <div className="subscription-access-row">
+                      <span>Demo ends</span>
+                      <b>{formatDate(trialEndsAt)}</b>
+                    </div>
+                  )}
+
+                  {cancelledAt && (
+                    <div className="subscription-access-row">
+                      <span>Cancelled</span>
+                      <b>{formatDate(cancelledAt)}</b>
+                    </div>
+                  )}
+                </aside>
               </div>
             </section>
           </div>
@@ -1004,6 +967,128 @@ export default function SubscriptionPage() {
 
 
       <style jsx global>{`
+
+        .subscription-clean-hero {
+          border-radius: 36px !important;
+          padding: clamp(24px, 4vw, 42px) !important;
+          overflow: hidden !important;
+        }
+
+        .subscription-clean-hero-grid {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 360px) !important;
+          gap: clamp(18px, 3vw, 34px) !important;
+          align-items: stretch !important;
+        }
+
+        .subscription-clean-hero-copy {
+          min-height: 300px !important;
+          display: grid !important;
+          align-content: center !important;
+        }
+
+        .subscription-clean-hero-copy .page-title {
+          max-width: 760px !important;
+          margin: 8px 0 14px !important;
+          font-size: clamp(2.55rem, 5vw, 4.75rem) !important;
+          line-height: 0.92 !important;
+          letter-spacing: -0.065em !important;
+        }
+
+        .subscription-clean-hero-copy .page-description {
+          max-width: 660px !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.72) !important;
+          line-height: 1.58 !important;
+          font-weight: 760 !important;
+        }
+
+        .subscription-clean-flow {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          gap: 10px !important;
+          margin-top: 22px !important;
+        }
+
+        .subscription-clean-flow span {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-height: 38px !important;
+          padding: 0 13px !important;
+          border-radius: 999px !important;
+          background: rgba(255, 212, 59, 0.1) !important;
+          border: 1px solid rgba(255, 212, 59, 0.18) !important;
+          color: #ffe58a !important;
+          font-size: 0.8rem !important;
+          font-weight: 1000 !important;
+        }
+
+        .subscription-access-card {
+          display: grid !important;
+          align-content: start !important;
+          gap: 12px !important;
+          padding: 18px !important;
+          border-radius: 28px !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.11), transparent 42%),
+            rgba(5, 10, 24, 0.42) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.05) !important;
+        }
+
+        .subscription-access-card > div:first-child {
+          padding: 16px !important;
+          border-radius: 22px !important;
+          background: rgba(255, 212, 59, 0.1) !important;
+          border: 1px solid rgba(255, 212, 59, 0.18) !important;
+        }
+
+        .subscription-access-label {
+          display: block !important;
+          color: #ffd43b !important;
+          font-size: 0.76rem !important;
+          font-weight: 1000 !important;
+          letter-spacing: 0.09em !important;
+          text-transform: uppercase !important;
+          margin-bottom: 8px !important;
+        }
+
+        .subscription-access-card strong {
+          display: block !important;
+          color: #ffffff !important;
+          font-size: clamp(1.55rem, 3vw, 2.2rem) !important;
+          line-height: 1 !important;
+          letter-spacing: -0.045em !important;
+        }
+
+        .subscription-access-row {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          gap: 12px !important;
+          min-height: 48px !important;
+          padding: 12px 14px !important;
+          border-radius: 18px !important;
+          background: rgba(255, 255, 255, 0.055) !important;
+          border: 1px solid rgba(255, 255, 255, 0.075) !important;
+        }
+
+        .subscription-access-row span {
+          color: rgba(248, 250, 252, 0.58) !important;
+          font-size: 0.86rem !important;
+          font-weight: 850 !important;
+        }
+
+        .subscription-access-row b {
+          color: rgba(248, 250, 252, 0.92) !important;
+          font-size: 0.88rem !important;
+          font-weight: 1000 !important;
+          text-align: right !important;
+          text-transform: capitalize !important;
+        }
+
+
         .subscription-hero-card {
           border-radius: 36px !important;
           padding: clamp(24px, 4vw, 42px) !important;
@@ -1097,6 +1182,38 @@ export default function SubscriptionPage() {
         }
 
         @media (max-width: 720px) {
+
+          .subscription-clean-hero-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .subscription-clean-hero-copy {
+            min-height: auto !important;
+            text-align: center !important;
+          }
+
+          .subscription-clean-hero-copy .page-title {
+            font-size: clamp(2.15rem, 11vw, 3.15rem) !important;
+            line-height: 0.92 !important;
+          }
+
+          .subscription-clean-hero-copy .page-description {
+            margin: 0 auto !important;
+          }
+
+          .subscription-clean-flow {
+            justify-content: center !important;
+          }
+
+          .subscription-access-card {
+            border-radius: 22px !important;
+            padding: 14px !important;
+          }
+
+          .subscription-access-row {
+            min-height: 44px !important;
+          }
+
           main {
             width: min(100%, calc(100vw - 24px)) !important;
             margin-bottom: 36px !important;
