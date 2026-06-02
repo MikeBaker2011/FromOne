@@ -133,6 +133,56 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       data-mobile-menu-open={isOpen ? 'true' : 'false'}
     >
       <style jsx global>{`
+
+        /* Remove curved active border around sidebar item */
+        .sidebar-link,
+        .sidebar-link-button {
+          border-color: transparent !important;
+          outline: none !important;
+          box-shadow: none !important;
+          background-clip: padding-box !important;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link:active,
+        .sidebar-link:focus,
+        .sidebar-link:focus-visible,
+        .sidebar-link-button:hover,
+        .sidebar-link-button:active,
+        .sidebar-link-button:focus,
+        .sidebar-link-button:focus-visible {
+          outline: none !important;
+          box-shadow: none !important;
+        }
+
+        .sidebar-link[aria-current='page'],
+        .sidebar-link.active,
+        .sidebar-link.is-active,
+        .sidebar-link.sidebar-active {
+          border-color: transparent !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+
+        .sidebar-link[aria-current='page']::before,
+        .sidebar-link[aria-current='page']::after,
+        .sidebar-link.active::before,
+        .sidebar-link.active::after,
+        .sidebar-link.is-active::before,
+        .sidebar-link.is-active::after,
+        .sidebar-link.sidebar-active::before,
+        .sidebar-link.sidebar-active::after {
+          display: none !important;
+          content: none !important;
+        }
+
+        .sidebar-link:focus-visible .sidebar-link-icon,
+        .sidebar-link-button:focus-visible .sidebar-link-icon,
+        .mobile-menu-close:focus-visible {
+          box-shadow: 0 0 0 2px rgba(255, 212, 59, 0.36) !important;
+        }
+
+
         /* Sidebar hamburger performance pass */
         .sidebar {
           backface-visibility: hidden;
