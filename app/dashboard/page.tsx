@@ -1099,6 +1099,10 @@ Core FromOne rule:
 - The business profile provides the quality, local angle, industry relevance, tone, CTA and sales angle.
 - Do not only describe a photo, flyer or video.
 - Turn each upload into a useful post that sounds like the business.
+- Do not invent product claims from an image.
+- Never guess ingredients, materials, preparation methods, health benefits, prices, offers, guarantees, safety claims, sizes, dates or technical specifications unless they are clearly visible in the uploaded media or supplied by the user.
+- If the image is unclear or the product is ambiguous, write cautiously and generally. Use phrases like "available now", "new in", "ask us for details" or "message us to check availability" instead of making specific claims.
+- If the user adds a quick description, treat that description as the main source of truth for what the item is.
 `;
   };
 
@@ -1529,7 +1533,7 @@ Core FromOne rule:
       return `${baseContext}. This is a flyer/poster/PDF-led post. Read the visible flyer text and design if available. Extract the practical details first: offer, event name, service, product, date, time, price, location, contact method, booking instruction, deadline and terms. Then rewrite those details as a natural social caption with a clear CTA. Do not just describe the flyer. Do not invent missing dates, prices or contact details. If key details are unreadable, create a useful caption from the readable details and say the user should check the final wording.`;
     }
 
-    return `${baseContext}. This is an image-led post. Analyse the image if available and make the visible subject the topic. Use the quick description as supporting context and the business profile for tone, CTA and local relevance.`;
+    return `${baseContext}. This is an image-led post. Analyse the image if available and make the visible subject the topic. Use the quick description as the main source of truth when it is supplied. If the image is unclear, partial, close-up, ambiguous, unlabelled, or the exact product/material/ingredient/preparation method cannot be confidently identified, do not guess. Do not invent product claims, ingredients, materials, preparation methods, health benefits, prices, guarantees, safety claims, sizes, dates or technical specifications. Use cautious wording and create a useful general post that invites the customer to ask for details or check availability. The business profile may improve tone, CTA and local relevance, but it must not be used to invent specifics not visible or supplied.`;
   };
 
   const renderPdfFileToJpegBlob = async (file: File) => {
@@ -2063,12 +2067,16 @@ If uploads are supplied:
 - Post 2 must use Upload 2 as the topic.
 - Continue one base post per upload.
 - Use each upload's note/context/description field as the most important user context for that specific post.
+- For image uploads, only write specific product claims when they are clearly visible in the image or supplied in the user's quick description.
+- For unclear image uploads, do not guess the exact product type, ingredients, materials, preparation method, health benefit, price, size, offer, date, guarantee, safety claim or technical specification.
+- Never turn an ambiguous image into confident claims such as "air-baked", "100% natural", "no fillers", "handmade", "organic", "safe", "premium", "discounted" or similar unless those details are supplied by the user or clearly visible.
+- If the image is ambiguous, use careful wording and invite enquiries, for example "available now", "ask us for details", "message us to check availability" or "pop in to see what is in stock".
 - For videos, the API will try to send the actual video to Gemini. If available, the generated post must be about the visible footage itself, not a generic business message.
 - For videos, write about the specific scene, action, atmosphere, event, product, service, job progress, result, behind-the-scenes moment, offer or booking/enquiry angle shown or strongly supported.
 - If the model cannot inspect a video, it must use the quick description and filename carefully without pretending it saw exact details.
 - Platform distribution mode: ${platformDistributionMode === "every_platform" ? "create each base post for every selected platform" : "split base posts across selected platforms"}.
 - Do not only describe the image, flyer or video.
-- Use the business profile to add quality, local angle, industry relevance, tone, CTA and sales angle.`,
+- Use the business profile to add quality, local angle, industry relevance, tone, CTA and sales angle, but never to invent product specifics.`,
       provider: "gemini",
       platforms: selectedPlatforms,
       postingFrequency: postCount,
@@ -2082,7 +2090,7 @@ If uploads are supplied:
         selected_platforms: selectedPlatforms,
         market_reach: marketReachContext,
         uploaded_media: uploadedMediaItems,
-        media_analysis_rule: "Use each upload context. For flyer/PDF uploads, read visible text/artwork and turn the flyer details into natural caption wording, CTA and hashtags. For video uploads, analyse the footage when available and write about the visible video moment. If footage cannot be inspected, use the quick description cautiously.",
+        media_analysis_rule: "Use each upload context. For image uploads, do not invent product claims, ingredients, materials, preparation methods, health benefits, prices, guarantees, safety claims, dates, sizes or technical details unless clearly visible or supplied by the user's quick description. If the image is unclear or ambiguous, write cautiously and generally, and invite the customer to ask for details or check availability. For flyer/PDF uploads, read visible text/artwork and turn the flyer details into natural caption wording, CTA and hashtags. For video uploads, analyse the footage when available and write about the visible video moment. If footage cannot be inspected, use the quick description cautiously.",
         flyer_to_wording_rule: "When a media item has flyer_to_wording=true, the generated post must be based on details from the flyer: offer/event/service, date, time, price, location, booking/contact, deadline and CTA. Do not invent missing information.",
         business_name: "detected business name",
         industry: "detected industry",
