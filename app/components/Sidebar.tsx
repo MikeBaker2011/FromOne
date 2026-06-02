@@ -174,41 +174,147 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         }
 
 
-        /* Hide sidebar scrollbars without removing scroll behaviour */
+        /* Keep all sidebar actions in one visible list */
+        .sidebar {
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+        }
+
+        .sidebar,
+        .sidebar * {
+          box-sizing: border-box !important;
+          max-width: 100% !important;
+        }
+
+        .sidebar-nav {
+          display: block !important;
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .sidebar-nav-main {
+          display: grid !important;
+          align-content: start !important;
+          overflow: visible !important;
+        }
+
+        .sidebar-link,
+        .sidebar-link-button {
+          width: 100% !important;
+          min-width: 0 !important;
+          max-width: 100% !important;
+          overflow: hidden !important;
+        }
+
+        .sidebar-link-button {
+          text-align: left !important;
+        }
+
+        .sidebar-support-link {
+          margin-top: 10px !important;
+        }
+
         .sidebar,
         .sidebar-nav,
-        .sidebar-nav-main,
-        .sidebar-nav-bottom {
+        .sidebar-nav-main {
           scrollbar-width: none !important;
           -ms-overflow-style: none !important;
         }
 
         .sidebar::-webkit-scrollbar,
         .sidebar-nav::-webkit-scrollbar,
-        .sidebar-nav-main::-webkit-scrollbar,
-        .sidebar-nav-bottom::-webkit-scrollbar {
+        .sidebar-nav-main::-webkit-scrollbar {
           width: 0 !important;
           height: 0 !important;
           display: none !important;
         }
 
-        .sidebar {
-          overflow-x: hidden !important;
-        }
-
-        .sidebar-nav,
-        .sidebar-nav-main {
-          overflow-x: hidden !important;
-        }
-
         @media (max-width: 900px) {
           .sidebar {
-            overflow-x: hidden !important;
+            width: min(82vw, 310px) !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            padding: 14px 14px max(14px, env(safe-area-inset-bottom)) !important;
+            overflow: hidden !important;
+          }
+
+          .sidebar-mobile-top {
+            margin-bottom: 12px !important;
+          }
+
+          .sidebar-subtitle {
+            font-size: 0.72rem !important;
           }
 
           .sidebar-nav-main {
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
+            gap: 7px !important;
+          }
+
+          .sidebar-link,
+          .sidebar-link-button {
+            min-height: 40px !important;
+            padding: 5px 9px !important;
+            gap: 10px !important;
+            border-radius: 16px !important;
+            font-size: 0.9rem !important;
+            line-height: 1 !important;
+          }
+
+          .sidebar-link-icon {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border-radius: 12px !important;
+            font-size: 0.74rem !important;
+          }
+
+          .sidebar-support-link {
+            margin-top: 6px !important;
+          }
+
+          .mobile-menu-close {
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+          }
+        }
+
+        @media (max-width: 900px) and (max-height: 700px) {
+          .sidebar {
+            padding-top: 10px !important;
+            padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+          }
+
+          .sidebar-mobile-top {
+            margin-bottom: 8px !important;
+          }
+
+          .sidebar-subtitle {
+            display: none !important;
+          }
+
+          .sidebar-nav-main {
+            gap: 4px !important;
+          }
+
+          .sidebar-link,
+          .sidebar-link-button {
+            min-height: 36px !important;
+            padding: 4px 8px !important;
+            font-size: 0.84rem !important;
+          }
+
+          .sidebar-link-icon {
+            width: 29px !important;
+            height: 29px !important;
+            min-width: 29px !important;
+            border-radius: 11px !important;
+            font-size: 0.7rem !important;
+          }
+
+          .sidebar-support-link {
+            margin-top: 4px !important;
           }
         }
 
@@ -283,30 +389,28 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               Admin
             </Link>
           )}
-        </div>
 
-        <div className="sidebar-nav-bottom">
-          <Link className="sidebar-link" href="/bugreport" onClick={closeMenu}>
+          <Link className="sidebar-link sidebar-support-link" href="/bugreport" onClick={closeMenu}>
             <span className="sidebar-link-icon">✉</span>
             Support
           </Link>
 
           {checkingAuth ? (
-            <div className="sidebar-link">
+            <div className="sidebar-link sidebar-auth-link">
               <span className="sidebar-link-icon">…</span>
               Checking
             </div>
           ) : isSignedIn ? (
             <button
               type="button"
-              className="sidebar-link sidebar-link-button"
+              className="sidebar-link sidebar-link-button sidebar-signout-link"
               onClick={handleSignOut}
             >
               <span className="sidebar-link-icon">×</span>
               Sign out
             </button>
           ) : (
-            <Link className="sidebar-link" href="/signin" onClick={closeMenu}>
+            <Link className="sidebar-link sidebar-auth-link" href="/signin" onClick={closeMenu}>
               <span className="sidebar-link-icon">→</span>
               Sign in
             </Link>
