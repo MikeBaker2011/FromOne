@@ -388,6 +388,7 @@ export default function DashboardPage() {
   const mobilePhotoInputRef = useRef<HTMLInputElement | null>(null);
   const mobileVideoInputRef = useRef<HTMLInputElement | null>(null);
   const mobileFileInputRef = useRef<HTMLInputElement | null>(null);
+  const navigatingToPostsRef = useRef(false);
 
   const [manualBusinessName, setManualBusinessName] = useState("");
   const [manualIndustry, setManualIndustry] = useState("");
@@ -401,7 +402,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setDashboardMounted(true);
-  }, []);
+    router.prefetch("/posts");
+  }, [router]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2368,10 +2370,12 @@ If uploads are supplied:
       loadScheduledPostStatus(userId),
     ]);
 
+    navigatingToPostsRef.current = true;
     router.push(`/posts?created=true&campaign=${campaign.id}`);
   };
 
   const handleGeneratePosts = async () => {
+    navigatingToPostsRef.current = false;
     setCreationProgressMessage("Getting things ready...");
     setScanning(true);
 
@@ -2404,9 +2408,11 @@ If uploads are supplied:
 
       notify(message, "error");
     } finally {
-      setPreparingFlyers(false);
-      setScanning(false);
-      setCreationProgressMessage("");
+      if (!navigatingToPostsRef.current) {
+        setPreparingFlyers(false);
+        setScanning(false);
+        setCreationProgressMessage("");
+      }
     }
   };
 
