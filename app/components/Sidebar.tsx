@@ -174,77 +174,41 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         }
 
 
-        /* Sidebar fixed layout: no horizontal scroll, logout visible */
+        /* Hide sidebar scrollbars without removing scroll behaviour */
+        .sidebar,
+        .sidebar-nav,
+        .sidebar-nav-main,
+        .sidebar-nav-bottom {
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+
+        .sidebar::-webkit-scrollbar,
+        .sidebar-nav::-webkit-scrollbar,
+        .sidebar-nav-main::-webkit-scrollbar,
+        .sidebar-nav-bottom::-webkit-scrollbar {
+          width: 0 !important;
+          height: 0 !important;
+          display: none !important;
+        }
+
         .sidebar {
-          box-sizing: border-box;
           overflow-x: hidden !important;
         }
 
-        .sidebar,
-        .sidebar * {
-          max-width: 100%;
-          box-sizing: border-box;
-        }
-
-        .sidebar-nav {
-          min-height: 0;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-
+        .sidebar-nav,
         .sidebar-nav-main {
-          min-height: 0;
-          overflow-y: auto;
-          overflow-x: hidden;
-          overscroll-behavior: contain;
-          padding-right: 2px;
-        }
-
-        .sidebar-nav-bottom {
-          flex: 0 0 auto;
-          margin-top: auto;
-          overflow-x: hidden;
-        }
-
-        .sidebar-link,
-        .sidebar-link-button {
-          width: 100%;
-          max-width: 100%;
-          min-width: 0;
-          overflow: hidden;
-        }
-
-        .sidebar-link-button {
-          text-align: left;
+          overflow-x: hidden !important;
         }
 
         @media (max-width: 900px) {
           .sidebar {
-            width: min(82vw, 320px) !important;
-            height: 100dvh !important;
-            max-height: 100dvh !important;
             overflow-x: hidden !important;
-            overflow-y: hidden !important;
-            padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
-          }
-
-          .sidebar-mobile-top {
-            flex: 0 0 auto;
-          }
-
-          .sidebar-nav {
-            height: auto !important;
-            max-height: calc(100dvh - 104px - max(14px, env(safe-area-inset-bottom))) !important;
           }
 
           .sidebar-nav-main {
-            flex: 1 1 auto;
-          }
-
-          .sidebar-nav-bottom {
-            flex: 0 0 auto;
-            padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
           }
         }
 
