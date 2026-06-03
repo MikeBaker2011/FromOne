@@ -637,7 +637,7 @@ export default function PostReviewPage() {
 
   const [rewriting, setRewriting] = useState("");
   const [audienceTarget, setAudienceTarget] = useState("Small business owners");
-  const [reachTarget, setAudienceTarget] = useState("Local customers");
+  const [reachTarget, setReachTarget] = useState("Local customers");
   const [toneTarget, setToneTarget] = useState("Use current tone");
 
   const [scheduleInputValue, setScheduleInputValue] = useState("");
@@ -2480,7 +2480,7 @@ export default function PostReviewPage() {
                           ? "pr2-reach-pill is-active"
                           : "pr2-reach-pill"
                       }
-                      onClick={() => setAudienceTarget(option)}
+                      onClick={() => setReachTarget(option)}
                     >
                       {option.replace(" customers", "")}
                     </button>
