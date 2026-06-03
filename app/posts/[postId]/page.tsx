@@ -255,7 +255,7 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     return {
       label: "Posted",
       tone: "success",
-      description: "This post has already been published.",
+      description: "This post has already been posted.",
     };
   }
 
@@ -268,7 +268,7 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     return {
       label: "Failed",
       tone: "error",
-      description: publishError || "This post needs attention before it can be published.",
+      description: publishError || "This post needs checking before it can be scheduled.",
     };
   }
 
@@ -276,7 +276,7 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     return {
       label: "Approved",
       tone: "success",
-      description: "This post has been approved and is ready to schedule or publish.",
+      description: "This post is approved and ready to schedule.",
     };
   }
 
@@ -284,7 +284,7 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     return {
       label: "Scheduled",
       tone: "warning",
-      description: "This post has been approved and scheduled.",
+      description: "This post has been scheduled.",
     };
   }
 
@@ -292,14 +292,14 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     return {
       label: "Draft",
       tone: "neutral",
-      description: "This post is still being worked on.",
+      description: "This post is not approved yet.",
     };
   }
 
   return {
     label: "Needs review",
     tone: "warning",
-    description: "Review the wording and media, then approve when ready.",
+    description: "Check the post, then approve it when ready.",
   };
 }
 
@@ -328,7 +328,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
       tone: "error",
       description:
         publishError ||
-        "Autopublish did not complete. Reconnect Meta or post manually.",
+        "Posting did not complete. Check the connection in Settings.",
     };
   }
 
@@ -336,7 +336,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
     return {
       label: "Not scheduled",
       tone: "neutral",
-      description: "Choose a time or publish manually.",
+      description: "Choose a time to schedule it.",
     };
   }
 
@@ -348,7 +348,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
       label: "Due now",
       tone: "warning",
       description:
-        "This post is due. The scheduler will try to publish it, or you can publish now.",
+        "This post is due now.",
     };
   }
 
@@ -356,7 +356,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
     label: "Planned",
     tone: "planned",
     description:
-      "FromOne will try to publish this automatically at the planned time.",
+      "FromOne will use this scheduled time.",
   };
 }
 
@@ -488,7 +488,7 @@ async function getPdfBytesFromUrl(url: string) {
 
   if (!looksLikePdf(data)) {
     throw new Error(
-      "This older flyer needs to be re-uploaded so FromOne can prepare it automatically.",
+      "This flyer needs re-uploading so FromOne can use it properly.",
     );
   }
 
@@ -637,7 +637,7 @@ export default function PostReviewPage() {
 
   const [rewriting, setRewriting] = useState("");
   const [audienceTarget, setAudienceTarget] = useState("Small business owners");
-  const [reachTarget, setReachTarget] = useState("Local customers");
+  const [reachTarget, setAudienceTarget] = useState("Local customers");
   const [toneTarget, setToneTarget] = useState("Use current tone");
 
   const [scheduleInputValue, setScheduleInputValue] = useState("");
@@ -709,9 +709,9 @@ export default function PostReviewPage() {
       : mediaPrepareStatus === "failed"
         ? "Needs attention"
         : mediaPrepareStatus === "prepared" || isShowingPreparedImage
-          ? "Prepared image ready"
+          ? "Image ready"
           : isFlyer
-            ? "Flyer needs preparing"
+            ? "Flyer needs checking"
             : "Ready";
 
   const isFacebookPost = platformName.toLowerCase().includes("facebook");
@@ -845,7 +845,7 @@ export default function PostReviewPage() {
       approval_status: "needs_review",
       approved_at: null,
     });
-    setMessage("Wording saved. Mark it approved when you are happy.");
+    setMessage("Changes saved. Approve the post when you are happy.");
     setSaving(false);
   };
 
@@ -897,7 +897,7 @@ export default function PostReviewPage() {
     }
 
     setPost({ ...post, ...updates });
-    setMessage("Post approved. It is ready to publish or schedule.");
+    setMessage("Post approved. You can now schedule it.");
     setSaving(false);
   };
 
@@ -929,7 +929,7 @@ export default function PostReviewPage() {
     }
 
     setPost({ ...post, ...updates });
-    setMessage("Post marked as needs review.");
+    setMessage("Post sent back to review.");
     setSaving(false);
   };
 
@@ -938,14 +938,14 @@ export default function PostReviewPage() {
     if (!post?.id) return;
 
     if (!scheduleInputValue) {
-      setMessage("Choose a scheduled publish time first.");
+      setMessage("Choose a schedule time first.");
       return;
     }
 
     const nextDate = new Date(scheduleInputValue);
 
     if (Number.isNaN(nextDate.getTime())) {
-      setMessage("Choose a valid scheduled publish time.");
+      setMessage("Choose a valid schedule time.");
       return;
     }
 
@@ -977,7 +977,7 @@ export default function PostReviewPage() {
     }
 
     setPost({ ...post, ...updates });
-    setMessage("Scheduled autopublish time saved.");
+    setMessage("Schedule saved.");
     setSavingSchedule(false);
   };
 
@@ -1052,7 +1052,7 @@ export default function PostReviewPage() {
       approval_status: "needs_review",
       approved_at: null,
     });
-    setMessage("Post set back to needs review.");
+    setMessage("Post sent back to review.");
     setSaving(false);
   };
 
@@ -1152,7 +1152,7 @@ export default function PostReviewPage() {
         updates,
         prepared: {
           url,
-          label: "Prepared flyer image",
+          label: "Flyer image",
           width: convertedWidth,
           height: convertedHeight,
         },
@@ -1262,13 +1262,13 @@ export default function PostReviewPage() {
       setPreparedMedia(null);
 
       if (nextMediaType === "pdf") {
-        setMessage("Preparing flyer for posting...");
+        setMessage("Preparing flyer...");
         const converted = await convertPdfFileToJpeg(uploadedPost, file);
         setPost({ ...uploadedPost, ...converted.updates });
         setPreparedMedia(converted.prepared);
         setLatestPdfFile(null);
         setMessage(
-          "Flyer prepared for posting. Instagram can now use this image.",
+          "Flyer image ready.",
         );
         return;
       }
@@ -1391,7 +1391,7 @@ export default function PostReviewPage() {
       setLatestPdfFile(null);
       setActivePanel("review");
       setMessage(
-        "Flyer prepared for posting. Instagram can now use this image.",
+        "Flyer image ready.",
       );
     } catch (error: any) {
       const message = error?.message || "Could not prepare this flyer.";
@@ -1708,7 +1708,7 @@ export default function PostReviewPage() {
             }
           : current,
       );
-      setMessage("Prepared image ready. You can now share or download it.");
+      setMessage("Image ready.");
     } catch (error: any) {
       setMessage(error?.message || "Could not prepare this image.");
     } finally {
@@ -1777,19 +1777,19 @@ export default function PostReviewPage() {
 
     if (!canAutopublish) {
       setMessage(
-        "Autopublish is only available for connected Facebook and Instagram business accounts.",
+        "Direct posting is only available for connected Facebook and Instagram business accounts.",
       );
       return;
     }
 
     if (isInstagramPost && !mediaUrl) {
-      setMessage("Instagram autopublish needs an image or video attached.");
+      setMessage("Instagram needs an image or video attached.");
       return;
     }
 
     if (isInstagramPost && isFlyer) {
       setMessage(
-        "Instagram cannot autopublish a PDF or flyer file. Use Prepare flyer, then autopublish again.",
+        "Instagram cannot use a PDF directly. Re-upload the flyer or use an image version.",
       );
       return;
     }
@@ -1797,7 +1797,7 @@ export default function PostReviewPage() {
     const text = fullCaption;
 
     if (!cleanText(text)) {
-      setMessage("Add wording before autopublishing.");
+      setMessage("Add wording before posting.");
       return;
     }
 
@@ -1846,13 +1846,13 @@ export default function PostReviewPage() {
           message.toLowerCase().includes("permissions")
         ) {
           setMessage(
-            "Autopublish needs attention. Reconnect Facebook/Instagram in Settings, or use manual posting.",
+            "Posting needs attention. Reconnect Facebook/Instagram in Settings.",
           );
           return;
         }
 
         throw new Error(
-          message || `Could not autopublish to ${autopublishPlatformLabel}.`,
+          message || `Could not post to ${autopublishPlatformLabel}.`,
         );
       }
 
@@ -1865,11 +1865,11 @@ export default function PostReviewPage() {
         approved_at: post?.approved_at || new Date().toISOString(),
         publish_error: null,
       });
-      setMessage(`Autopublished to ${autopublishPlatformLabel}.`);
+      setMessage(`Posted to ${autopublishPlatformLabel}.`);
     } catch (error: any) {
       setMessage(
         error?.message ||
-          `Could not autopublish to ${autopublishPlatformLabel}.`,
+          `Could not post to ${autopublishPlatformLabel}.`,
       );
     } finally {
       setAutoPublishing(false);
@@ -1891,7 +1891,7 @@ export default function PostReviewPage() {
           action,
           improvementAction: action,
           audienceTarget,
-          marketReach: reachTarget,
+          marketAudience: reachTarget,
           tone: toneTarget,
           platform: post.platform,
           caption,
@@ -1977,27 +1977,25 @@ export default function PostReviewPage() {
 
         {message && <div className="pr2-message">{message}</div>}
 
-        <section className="pr2-simple-steps" aria-label="Post review steps">
-          <span className="is-active"><strong>1</strong> Check media</span>
-          <span><strong>2</strong> Check wording</span>
-          <span><strong>3</strong> Approve</span>
-          <span><strong>4</strong> Send or schedule</span>
+        <section className="pr2-simple-steps pr2-simple-steps-merged pr2-hidden-steps" aria-label="Post review steps">
+          <span className="is-active"><strong>1</strong> Review post</span>
+          <span><strong>2</strong> Publish</span>
         </section>
 
         <section className="pr2-layout">
           <section className="pr2-main">
-            <article className="pr2-card pr2-compact-media-card">
-              <div className="pr2-card-head pr2-compact-media-head">
+            <article className="pr2-card pr2-review-post-card pr2-compact-media-card">
+              <div className="pr2-card-head pr2-compact-media-head pr2-review-post-head">
                 <div>
-                  <span className="pr2-kicker">Step 1</span>
+                  <span className="pr2-kicker">FromOne post</span>
                   <h1>
                     {activePanel === "prepare"
-                      ? "Prepare media"
-                      : "Check media"}
+                      ? "Adjust media"
+                      : "Review this post"}
                   </h1>
                   {activePanel !== "prepare" && (
                     <p className="pr2-compact-media-subtitle">
-                      Make sure the image or video looks right.
+                      Edit the wording if needed, then approve and schedule.
                     </p>
                   )}
                 </div>
@@ -2008,7 +2006,7 @@ export default function PostReviewPage() {
                     className="pr2-btn pr2-btn-primary"
                     onClick={() => setActivePanel("prepare")}
                   >
-                    Prepare media
+                    Adjust image
                   </button>
                 )}
 
@@ -2021,7 +2019,7 @@ export default function PostReviewPage() {
                       setActivePanel("review");
                     }}
                   >
-                    Done
+                    Back to post
                   </button>
                 )}
               </div>
@@ -2044,7 +2042,7 @@ export default function PostReviewPage() {
                     <div className={frameClassName}>
                       <img
                         src={mediaUrl}
-                        alt="Prepared media preview"
+                        alt="Post image preview"
                         draggable={false}
                         className={
                           prepareFitMode === "fit" ? "is-fit" : "is-fill"
@@ -2073,7 +2071,7 @@ export default function PostReviewPage() {
                     ))}
                   </div>
 
-                  <div className="pr2-mode-row" aria-label="Media edit mode">
+                  <div className="pr2-mode-row" aria-label="Image edit mode">
                     <button
                       type="button"
                       className={
@@ -2198,7 +2196,7 @@ export default function PostReviewPage() {
                   </div>
 
                   <details className="pr2-mobile-editing-tools">
-                    <summary>More editing tools</summary>
+                    <summary>More image tools</summary>
 
                     <div className="pr2-mobile-tools-grid">
                       <button
@@ -2263,8 +2261,8 @@ export default function PostReviewPage() {
                       {resizingMedia
                         ? "Creating..."
                         : preparedDisplayMedia?.url
-                          ? "Update prepared image"
-                          : "Create prepared image"}
+                          ? "Update image"
+                          : "Create image"}
                     </button>
                   </div>
 
@@ -2285,7 +2283,7 @@ export default function PostReviewPage() {
                           onClick={sharePreparedImage}
                           disabled={sharingMedia}
                         >
-                          {sharingMedia ? "Opening..." : "Share to social app"}
+                          {sharingMedia ? "Opening..." : "Share media"}
                         </button>
 
                         <button
@@ -2314,13 +2312,13 @@ export default function PostReviewPage() {
                       ) : isFlyer && preparedDisplayMedia?.url ? (
                         <img
                           src={preparedDisplayMedia.url}
-                          alt="PDF preview image"
+                          alt="Flyer image"
                         />
                       ) : isFlyer ? (
                         <div className="pr2-empty">
-                          <strong>Flyer needs preparing</strong>
+                          <strong>Flyer needs checking</strong>
                           <PdfFirstPagePreview url={mediaUrl} />
-                          <p>This older flyer needs to be re-uploaded so FromOne can prepare it automatically.</p></div>
+                          <p>This flyer needs re-uploading so FromOne can use it properly.</p></div>
                       ) : (
                         <img
                           src={preparedDisplayMedia?.url || mediaUrl}
@@ -2329,8 +2327,8 @@ export default function PostReviewPage() {
                       )
                     ) : (
                       <div className="pr2-empty">
-                        <strong>No media attached</strong>
-                        <p>Upload an image, flyer or video before posting.</p>
+                        <strong>No image or video attached</strong>
+                        <p>Add an image, flyer or video before scheduling.</p>
                       </div>
                     )}
                   </div>
@@ -2342,47 +2340,6 @@ export default function PostReviewPage() {
                     hidden
                     onChange={handleUploadMedia}
                   />
-
-                  <details className="pr2-details">
-                    <summary>Media options</summary>
-
-                    <div className="pr2-actions">
-                      <button
-                        type="button"
-                        className="pr2-btn"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        Upload / replace
-                      </button>
-
-                      {mediaUrl && (
-                        <>
-                          <a
-                            className="pr2-btn"
-                            href={mediaUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            View media
-                          </a>
-                          <button
-                            type="button"
-                            className="pr2-btn"
-                            onClick={downloadMedia}
-                          >
-                            Download
-                          </button>
-                          <button
-                            type="button"
-                            className="pr2-btn pr2-btn-danger"
-                            onClick={removeMedia}
-                          >
-                            Remove
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </details>
 
                   {preparedDisplayMedia?.url && (
                     <div className="pr2-prepared-strip">
@@ -2396,7 +2353,7 @@ export default function PostReviewPage() {
                         className="pr2-btn"
                         onClick={sharePreparedImage}
                       >
-                        Share to social app
+                        Share media
                       </button>
                       <button
                         type="button"
@@ -2409,14 +2366,15 @@ export default function PostReviewPage() {
                   )}
                 </>
               )}
-            </article>
 
-            <article className="pr2-card">
-              <div className="pr2-card-head">
+              <div className="pr2-review-wording-divider" />
+
+              <div className="pr2-review-wording-head">
                 <div>
-                  <span className="pr2-kicker">Step 2</span>
-                  <h2>Check wording</h2>
+                  <span className="pr2-kicker">Caption</span>
+                  <h2>Edit if needed</h2>
                 </div>
+                <p>FromOne has written the post. Change anything that does not feel right.</p>
               </div>
 
               <div className="pr2-wording">
@@ -2429,7 +2387,7 @@ export default function PostReviewPage() {
                 </label>
 
                 <label>
-                  <strong>CTA</strong>
+                  <strong>Call to action</strong>
                   <input
                     value={cta}
                     onChange={(event) => setCta(event.target.value)}
@@ -2445,24 +2403,31 @@ export default function PostReviewPage() {
                 </label>
               </div>
 
-              <div className="pr2-actions">
+              <div className="pr2-actions pr2-main-review-actions pr2-tidy-edit-actions">
                 <button
                   type="button"
-                  className="pr2-btn pr2-btn-primary"
+                  className="pr2-btn"
                   onClick={saveWording}
                   disabled={saving}
                 >
                   {saving ? "Saving..." : "Save changes"}
                 </button>
-                <button type="button" className="pr2-btn" onClick={copyCaption}>
-                  Copy caption
+
+                <button
+                  type="button"
+                  className="pr2-btn pr2-btn-primary"
+                  onClick={markApproved}
+                  disabled={saving || isPosted}
+                >
+                  {saving ? "Approving..." : approvalStatus.label === "Approved" || approvalStatus.label === "Scheduled" || approvalStatus.label === "Posted" ? "Approved" : "Approve post"}
                 </button>
+
                 <button
                   type="button"
                   className="pr2-btn"
                   onClick={() => setActivePanel("improve")}
                 >
-                  Improve
+                  Improve wording
                 </button>
               </div>
             </article>
@@ -2471,8 +2436,8 @@ export default function PostReviewPage() {
               <article className="pr2-card">
                 <div className="pr2-card-head">
                   <div>
-                    <span className="pr2-kicker">Improve</span>
-                    <h2>Make it stronger</h2>
+                    <span className="pr2-kicker">Improve wording</span>
+                    <h2>Improve the wording</h2>
                   </div>
 
                   <button
@@ -2483,7 +2448,7 @@ export default function PostReviewPage() {
                       setActivePanel("review");
                     }}
                   >
-                    Done
+                    Back to post
                   </button>
                 </div>
 
@@ -2503,44 +2468,23 @@ export default function PostReviewPage() {
                   ))}
                 </div>
 
-                <div className="pr2-select-row">
-                  <label>
-                    <strong>Audience</strong>
-                    <select
-                      value={audienceTarget}
-                      onChange={(event) =>
-                        setAudienceTarget(event.target.value)
+                <div className="pr2-simple-reach-row" aria-label="Choose post reach">
+                  <span>Audience</span>
+
+                  {reachOptions.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={
+                        reachTarget === option
+                          ? "pr2-reach-pill is-active"
+                          : "pr2-reach-pill"
                       }
+                      onClick={() => setAudienceTarget(option)}
                     >
-                      {audienceOptions.map((option) => (
-                        <option key={option}>{option}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    <strong>Reach</strong>
-                    <select
-                      value={reachTarget}
-                      onChange={(event) => setReachTarget(event.target.value)}
-                    >
-                      {reachOptions.map((option) => (
-                        <option key={option}>{option}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    <strong>Tone</strong>
-                    <select
-                      value={toneTarget}
-                      onChange={(event) => setToneTarget(event.target.value)}
-                    >
-                      {toneOptions.map((option) => (
-                        <option key={option}>{option}</option>
-                      ))}
-                    </select>
-                  </label>
+                      {option.replace(" customers", "")}
+                    </button>
+                  ))}
                 </div>
 
                 <button
@@ -2551,50 +2495,51 @@ export default function PostReviewPage() {
                 >
                   {rewriting === "audience_targeted"
                     ? "Improving..."
-                    : "Improve for selected audience"}
+                    : `Improve for ${reachTarget.replace(" customers", "").toLowerCase()} reach`}
                 </button>
               </article>
             )}
           </section>
 
-          <aside className="pr2-side">
-            <article className="pr2-simple-action-card">
-              <div className="pr2-simple-action-head">
-                <span className="pr2-kicker">Step 3</span>
+          <aside className="pr2-side pr2-approval-side">
+            <article className="pr2-card pr2-approval-card-simple">
+              <div className="pr2-approval-simple-head">
+                <span className="pr2-kicker">Approve</span>
                 <h2>
                   {approvalStatus.label === "Needs review" || approvalStatus.label === "Draft"
-                    ? "Approve when ready"
+                    ? "Approve post"
                     : "Approved"}
                 </h2>
                 <p>
                   {approvalStatus.label === "Needs review" || approvalStatus.label === "Draft"
-                    ? "Nothing publishes until you approve this post."
-                    : "Now choose how you want to publish it."}
+                    ? "Check the post, then approve it when ready."
+                    : "This post is approved. Choose a time if you want to schedule it."}
                 </p>
               </div>
 
-              <div className={`pr2-simple-status is-${approvalStatus.tone}`}>
+              <div className={`pr2-approval-simple-status is-${approvalStatus.tone}`}>
                 {approvalStatus.label}
               </div>
+
+              {post?.publish_error && (
+                <div className="pr2-message pr2-action-error">
+                  {cleanText(post.publish_error)}
+                </div>
+              )}
 
               {approvalStatus.label === "Needs review" || approvalStatus.label === "Draft" ? (
                 <button
                   type="button"
-                  className="pr2-btn pr2-btn-primary pr2-simple-main-action"
+                  className="pr2-btn pr2-btn-primary pr2-approval-main-button"
                   onClick={markApproved}
                   disabled={saving || isPosted}
                 >
                   {saving ? "Approving..." : "Approve post"}
                 </button>
               ) : (
-                <div className="pr2-send-section">
-                  <div className="pr2-send-head">
-                    <span className="pr2-kicker">Step 4</span>
-                    <h3>Send or schedule</h3>
-                  </div>
-
+                <div className="pr2-approval-schedule-only">
                   <label className="pr2-simple-schedule">
-                    <span>Schedule time</span>
+                    <span>Schedule</span>
                     <input
                       type="datetime-local"
                       value={scheduleInputValue}
@@ -2605,87 +2550,25 @@ export default function PostReviewPage() {
 
                   <button
                     type="button"
-                    className="pr2-btn pr2-btn-primary"
+                    className="pr2-btn pr2-btn-primary pr2-approval-main-button"
                     onClick={saveSchedule}
                     disabled={savingSchedule || isPosted}
                   >
-                    {savingSchedule ? "Saving..." : "Schedule post"}
-                  </button>
-
-                  {canAutopublish && (
-                    <button
-                      type="button"
-                      className="pr2-btn"
-                      onClick={autopublishNow}
-                      disabled={autoPublishing || isPosted}
-                    >
-                      {autoPublishing ? "Sending..." : "Send now"}
-                    </button>
-                  )}
-
-                  <button type="button" className="pr2-btn" onClick={openPlatform}>
-                    Post manually
+                    {savingSchedule ? "Saving..." : "Save schedule"}
                   </button>
                 </div>
               )}
 
-              <div className="pr2-simple-helper-actions">
-                <button type="button" className="pr2-btn" onClick={copyCaption}>
-                  Copy caption
+              {preparedDisplayMedia?.url && (
+                <button
+                  type="button"
+                  className="pr2-btn pr2-approval-share-media"
+                  onClick={sharePreparedImage}
+                  disabled={sharingMedia}
+                >
+                  {sharingMedia ? "Opening..." : "Share media"}
                 </button>
-
-                {preparedDisplayMedia?.url && (
-                  <button
-                    type="button"
-                    className="pr2-btn"
-                    onClick={sharePreparedImage}
-                    disabled={sharingMedia}
-                  >
-                    {sharingMedia ? "Opening..." : "Share media"}
-                  </button>
-                )}
-              </div>
-
-              {post?.publish_error && (
-                <div className="pr2-message">
-                  {cleanText(post.publish_error)}
-                </div>
               )}
-
-              <details className="pr2-details is-tight pr2-simple-more">
-                <summary>More options</summary>
-
-                <div className="pr2-side-options">
-                  <button
-                    type="button"
-                    className="pr2-btn"
-                    onClick={markNeedsReview}
-                    disabled={saving || isPosted || approvalStatus.label === "Needs review"}
-                  >
-                    Send back to review
-                  </button>
-
-                  <button
-                    type="button"
-                    className="pr2-btn"
-                    onClick={markAsPosted}
-                    disabled={saving || isPosted}
-                  >
-                    Mark as posted
-                  </button>
-
-                  {isPosted && (
-                    <button
-                      type="button"
-                      className="pr2-btn"
-                      onClick={markAsNotPosted}
-                      disabled={saving}
-                    >
-                      Mark as not posted
-                    </button>
-                  )}
-                </div>
-              </details>
             </article>
           </aside>
         </section>
@@ -3252,6 +3135,740 @@ export default function PostReviewPage() {
             grid-template-columns: 1fr;
           }
         }
+
+        /* Phase 4 merged post review card */
+        .pr2-review-post-card {
+          overflow: hidden;
+          border-color: rgba(255, 212, 59, 0.2) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 34%),
+            rgba(255,255,255,0.055) !important;
+        }
+
+        .pr2-review-post-head {
+          align-items: flex-start !important;
+          padding-bottom: 10px;
+        }
+
+        .pr2-review-wording-divider {
+          height: 1px;
+          margin: 18px 0;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 212, 59, 0.22),
+            rgba(255,255,255,0.08),
+            transparent
+          );
+        }
+
+        .pr2-review-wording-head {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 14px;
+        }
+
+        .pr2-review-wording-head h2 {
+          margin: 4px 0 0;
+          color: #ffffff;
+          font-size: clamp(1.55rem, 3vw, 2.25rem);
+          line-height: 0.98;
+          letter-spacing: -0.045em;
+        }
+
+        .pr2-review-wording-head p {
+          max-width: 340px;
+          margin: 0;
+          color: rgba(248,250,252,0.62);
+          line-height: 1.42;
+          font-weight: 760;
+          text-align: right;
+        }
+
+        .pr2-review-post-card .pr2-wording {
+          padding: 14px;
+          border-radius: 24px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(2, 6, 23, 0.28);
+        }
+
+        .pr2-review-post-card .pr2-wording textarea,
+        .pr2-review-post-card .pr2-wording input {
+          background: rgba(2, 6, 23, 0.42) !important;
+        }
+
+        .pr2-review-post-card > .pr2-actions {
+          margin-top: 14px;
+          padding-top: 2px;
+        }
+
+        .pr2-simple-steps-merged {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+
+        @media (max-width: 760px) {
+          .pr2-review-wording-head {
+            display: grid;
+            gap: 8px;
+          }
+
+          .pr2-review-wording-head p {
+            max-width: none;
+            text-align: left;
+          }
+
+          .pr2-review-post-card .pr2-wording {
+            padding: 12px;
+            border-radius: 20px;
+          }
+
+          .pr2-simple-steps-merged {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+
+        /* Phase 4 simplified post review action panel */
+        .pr2-action-side {
+          align-self: start;
+        }
+
+        .pr2-action-panel {
+          position: sticky;
+          top: 18px;
+          display: grid;
+          gap: 14px;
+          border-color: rgba(255, 212, 59, 0.18) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%),
+            rgba(255,255,255,0.055) !important;
+        }
+
+        .pr2-action-panel-head h2 {
+          margin: 5px 0 8px;
+          color: #ffffff;
+          font-size: clamp(1.9rem, 3.2vw, 2.65rem);
+          line-height: 0.95;
+          letter-spacing: -0.06em;
+        }
+
+        .pr2-action-panel-head p {
+          margin: 0;
+          color: rgba(248,250,252,0.66);
+          line-height: 1.48;
+          font-weight: 760;
+        }
+
+        .pr2-action-status {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          min-height: 46px;
+          padding: 10px 12px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.09);
+        }
+
+        .pr2-action-status span {
+          color: rgba(248,250,252,0.55);
+          font-size: 0.75rem;
+          font-weight: 1000;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .pr2-action-status strong {
+          color: #ffffff;
+          font-size: 0.95rem;
+        }
+
+        .pr2-action-status.is-success {
+          background: rgba(34, 197, 94, 0.12);
+          border-color: rgba(34, 197, 94, 0.24);
+        }
+
+        .pr2-action-status.is-warning,
+        .pr2-action-status.is-planned {
+          background: rgba(255, 212, 59, 0.1);
+          border-color: rgba(255, 212, 59, 0.22);
+        }
+
+        .pr2-action-status.is-error {
+          background: rgba(248, 113, 113, 0.12);
+          border-color: rgba(248, 113, 113, 0.24);
+        }
+
+        .pr2-action-stack {
+          display: grid;
+          gap: 10px;
+        }
+
+        .pr2-action-main-button {
+          min-height: 58px;
+          font-size: 1rem;
+        }
+
+        .pr2-action-schedule-card {
+          display: grid;
+          gap: 10px;
+          padding: 12px;
+          border-radius: 20px;
+          background: rgba(2, 6, 23, 0.24);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .pr2-action-more {
+          margin-top: 0 !important;
+        }
+
+        .pr2-action-more summary {
+          color: rgba(248, 250, 252, 0.66);
+        }
+
+        .pr2-action-error {
+          margin: 0 !important;
+        }
+
+        .pr2-action-panel .pr2-side-options {
+          display: grid;
+          gap: 10px;
+          margin-top: 12px;
+        }
+
+        @media (max-width: 960px) {
+          .pr2-action-panel {
+            position: static;
+          }
+        }
+
+
+        /* Phase 4 radical client simplification */
+        .pr2-hidden-steps {
+          display: none !important;
+        }
+
+        .pr2-page[data-review-page] .pr2-layout {
+          align-items: start;
+        }
+
+        .pr2-review-post-card {
+          border-color: rgba(255, 212, 59, 0.18) !important;
+        }
+
+        .pr2-review-post-card .pr2-card-head {
+          margin-bottom: 12px;
+        }
+
+        .pr2-review-post-card .pr2-card-head > button,
+        .pr2-review-post-card .pr2-media-current-label,
+        .pr2-review-post-card .pr2-prepared-strip {
+          display: none !important;
+        }
+
+        .pr2-review-post-card .pr2-details {
+          margin-top: 10px;
+        }
+
+        .pr2-review-post-card .pr2-details summary {
+          color: rgba(248,250,252,0.56);
+          font-size: 0.9rem;
+        }
+
+        .pr2-review-post-card .pr2-actions {
+          grid-template-columns: 1fr !important;
+        }
+
+        .pr2-review-post-card .pr2-actions .pr2-btn {
+          min-height: 50px;
+        }
+
+        .pr2-review-post-card .pr2-actions .pr2-btn:not(.pr2-btn-primary) {
+          background: rgba(255,255,255,0.055);
+        }
+
+        .pr2-review-post-card .pr2-actions .pr2-btn:nth-child(2),
+        .pr2-review-post-card .pr2-actions .pr2-btn:nth-child(3) {
+          display: none !important;
+        }
+
+        .pr2-client-action-side {
+          align-self: start;
+        }
+
+        .pr2-client-action-card {
+          position: sticky;
+          top: 18px;
+          display: grid;
+          gap: 14px;
+          border-color: rgba(255, 212, 59, 0.2) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 36%),
+            rgba(255,255,255,0.055) !important;
+        }
+
+        .pr2-client-action-head h2 {
+          margin: 5px 0 8px;
+          color: #ffffff;
+          font-size: clamp(2rem, 3.5vw, 2.8rem);
+          line-height: 0.93;
+          letter-spacing: -0.065em;
+        }
+
+        .pr2-client-action-head p {
+          margin: 0;
+          color: rgba(248,250,252,0.66);
+          line-height: 1.48;
+          font-weight: 760;
+        }
+
+        .pr2-client-big-button {
+          width: 100%;
+          min-height: 62px;
+          border-radius: 20px;
+          font-size: 1.03rem;
+        }
+
+        .pr2-client-publish-flow {
+          display: grid;
+          gap: 10px;
+        }
+
+        .pr2-client-schedule-details,
+        .pr2-client-more-details {
+          margin-top: 0 !important;
+        }
+
+        .pr2-client-schedule-details summary,
+        .pr2-client-more-details summary {
+          color: rgba(248,250,252,0.62);
+          font-weight: 900;
+        }
+
+        .pr2-client-more-details .pr2-side-options {
+          display: grid;
+          gap: 10px;
+          margin-top: 12px;
+        }
+
+        .pr2-action-schedule-card {
+          display: grid;
+          gap: 10px;
+          margin-top: 12px;
+          padding: 12px;
+          border-radius: 20px;
+          background: rgba(2, 6, 23, 0.24);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        @media (max-width: 960px) {
+          .pr2-client-action-card {
+            position: static;
+          }
+        }
+
+
+        /* Less crowded publish panel + approve button back */
+        .pr2-main-review-actions {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 10px !important;
+        }
+
+        .pr2-main-review-actions > .pr2-btn {
+          min-height: 56px !important;
+        }
+
+        .pr2-main-more-actions {
+          grid-column: 1 / -1;
+          margin-top: 0 !important;
+        }
+
+        .pr2-main-more-actions summary {
+          color: rgba(248,250,252,0.58);
+          font-weight: 900;
+        }
+
+        .pr2-review-post-card .pr2-actions .pr2-btn:nth-child(2),
+        .pr2-review-post-card .pr2-actions .pr2-btn:nth-child(3) {
+          display: inline-flex !important;
+        }
+
+        .pr2-publish-side {
+          align-self: start;
+        }
+
+        .pr2-publish-card-simple {
+          position: sticky;
+          top: 18px;
+          display: grid;
+          gap: 12px;
+          border-color: rgba(255, 212, 59, 0.18) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 34%),
+            rgba(255,255,255,0.052) !important;
+        }
+
+        .pr2-publish-simple-head h2 {
+          margin: 5px 0 7px;
+          color: #ffffff;
+          font-size: clamp(1.7rem, 3vw, 2.35rem);
+          line-height: 0.96;
+          letter-spacing: -0.06em;
+        }
+
+        .pr2-publish-simple-head p {
+          margin: 0;
+          color: rgba(248,250,252,0.62);
+          line-height: 1.45;
+          font-weight: 760;
+        }
+
+        .pr2-publish-simple-status {
+          display: inline-flex;
+          width: fit-content;
+          min-height: 34px;
+          align-items: center;
+          padding: 7px 12px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: rgba(248,250,252,0.78);
+          font-size: 0.84rem;
+          font-weight: 1000;
+        }
+
+        .pr2-publish-simple-status.is-success {
+          background: rgba(34,197,94,0.12);
+          border-color: rgba(34,197,94,0.24);
+          color: #bbf7d0;
+        }
+
+        .pr2-publish-simple-status.is-warning,
+        .pr2-publish-simple-status.is-planned {
+          background: rgba(255, 212, 59, 0.1);
+          border-color: rgba(255, 212, 59, 0.22);
+          color: #ffe58a;
+        }
+
+        .pr2-publish-simple-button {
+          min-height: 58px;
+        }
+
+        .pr2-publish-options,
+        .pr2-publish-more,
+        .pr2-schedule-collapsed {
+          margin-top: 0 !important;
+        }
+
+        .pr2-publish-options summary,
+        .pr2-publish-more summary,
+        .pr2-schedule-collapsed summary {
+          color: rgba(248,250,252,0.66);
+          font-weight: 950;
+        }
+
+        .pr2-publish-option-stack {
+          display: grid;
+          gap: 10px;
+          margin-top: 12px;
+        }
+
+        .pr2-publish-option-stack > .pr2-btn {
+          min-height: 52px;
+        }
+
+        .pr2-publish-more .pr2-side-options {
+          display: grid;
+          gap: 10px;
+          margin-top: 12px;
+        }
+
+        @media (max-width: 960px) {
+          .pr2-publish-card-simple {
+            position: static;
+          }
+        }
+
+        @media (max-width: 620px) {
+          .pr2-main-review-actions {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+
+        /* Client-simple approval + tidy editing */
+        .pr2-approval-side {
+          align-self: start;
+        }
+
+        .pr2-approval-card-simple {
+          position: sticky;
+          top: 18px;
+          display: grid;
+          gap: 12px;
+          border-color: rgba(255, 212, 59, 0.18) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 34%),
+            rgba(255,255,255,0.052) !important;
+        }
+
+        .pr2-approval-simple-head h2 {
+          margin: 5px 0 7px;
+          color: #ffffff;
+          font-size: clamp(1.75rem, 3vw, 2.35rem);
+          line-height: 0.96;
+          letter-spacing: -0.06em;
+        }
+
+        .pr2-approval-simple-head p {
+          margin: 0;
+          color: rgba(248,250,252,0.62);
+          line-height: 1.45;
+          font-weight: 760;
+        }
+
+        .pr2-approval-simple-status {
+          display: inline-flex;
+          width: fit-content;
+          min-height: 34px;
+          align-items: center;
+          padding: 7px 12px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: rgba(248,250,252,0.78);
+          font-size: 0.84rem;
+          font-weight: 1000;
+        }
+
+        .pr2-approval-simple-status.is-success {
+          background: rgba(34,197,94,0.12);
+          border-color: rgba(34,197,94,0.24);
+          color: #bbf7d0;
+        }
+
+        .pr2-approval-simple-status.is-warning,
+        .pr2-approval-simple-status.is-planned {
+          background: rgba(255, 212, 59, 0.1);
+          border-color: rgba(255, 212, 59, 0.22);
+          color: #ffe58a;
+        }
+
+        .pr2-approval-simple-status.is-error {
+          background: rgba(248, 113, 113, 0.12);
+          border-color: rgba(248, 113, 113, 0.24);
+          color: #fecaca;
+        }
+
+        .pr2-approval-main-button,
+        .pr2-approval-share-media {
+          width: 100%;
+          min-height: 56px;
+          border-radius: 18px;
+        }
+
+        .pr2-approval-schedule-only {
+          display: grid;
+          gap: 10px;
+          padding: 12px;
+          border-radius: 20px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(2, 6, 23, 0.24);
+        }
+
+        .pr2-tidy-edit-actions {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr 1fr !important;
+          gap: 10px !important;
+        }
+
+        .pr2-tidy-edit-actions > .pr2-btn {
+          min-height: 54px !important;
+        }
+
+        .pr2-review-post-card .pr2-actions .pr2-btn,
+        .pr2-review-post-card .pr2-actions .pr2-btn:nth-child(2),
+        .pr2-review-post-card .pr2-actions .pr2-btn:nth-child(3) {
+          display: inline-flex !important;
+        }
+
+        .pr2-main-more-actions,
+        .pr2-publish-more,
+        .pr2-publish-options,
+        .pr2-client-more-details,
+        .pr2-client-schedule-details,
+        .pr2-action-more {
+          display: none !important;
+        }
+
+        .pr2-improve-grid {
+          grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        }
+
+        .pr2-select-row {
+          display: none !important;
+        }
+
+        @media (max-width: 960px) {
+          .pr2-approval-card-simple {
+            position: static;
+          }
+
+          .pr2-tidy-edit-actions {
+            grid-template-columns: 1fr !important;
+          }
+
+          .pr2-improve-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+
+        @media (max-width: 560px) {
+          .pr2-improve-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+
+        /* Remove visible media options from client review flow */
+        .pr2-review-post-card .pr2-details:has(summary),
+        .pr2-review-post-card .pr2-media-current-label,
+        .pr2-review-post-card .pr2-prepared-strip {
+          display: none !important;
+        }
+
+        .pr2-review-post-card .pr2-card-head > button {
+          display: none !important;
+        }
+
+        .pr2-media-box {
+          margin-bottom: 0 !important;
+        }
+
+
+        /* Improve wording spacing + simple reach selector */
+        .pr2-main .pr2-card:has(.pr2-improve-grid) {
+          display: grid;
+          gap: 18px;
+        }
+
+        .pr2-main .pr2-card:has(.pr2-improve-grid) .pr2-card-head {
+          align-items: flex-start;
+          gap: 16px;
+          margin-bottom: 0;
+        }
+
+        .pr2-main .pr2-card:has(.pr2-improve-grid) .pr2-card-head h2 {
+          max-width: 720px;
+          line-height: 0.96;
+        }
+
+        .pr2-improve-grid {
+          display: grid !important;
+          grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)) !important;
+          gap: 12px !important;
+          align-items: stretch;
+        }
+
+        .pr2-improve-grid .pr2-btn {
+          min-height: 58px;
+          white-space: normal;
+          line-height: 1.12;
+          padding: 12px 14px;
+        }
+
+        .pr2-simple-reach-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+          padding: 12px;
+          border-radius: 20px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(2, 6, 23, 0.24);
+        }
+
+        .pr2-simple-reach-row > span {
+          color: #ffd43b;
+          font-size: 0.76rem;
+          font-weight: 1000;
+          letter-spacing: 0.085em;
+          text-transform: uppercase;
+          margin-right: 2px;
+        }
+
+        .pr2-reach-pill {
+          appearance: none;
+          min-height: 40px;
+          padding: 9px 13px;
+          border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.06);
+          color: rgba(248,250,252,0.74);
+          font-weight: 950;
+          cursor: pointer;
+        }
+
+        .pr2-reach-pill.is-active {
+          border-color: rgba(255, 212, 59, 0.42);
+          background: rgba(255, 212, 59, 0.14);
+          color: #ffe58a;
+        }
+
+        .pr2-select-row {
+          display: none !important;
+        }
+
+        @media (max-width: 620px) {
+          .pr2-improve-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .pr2-simple-reach-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .pr2-simple-reach-row > span {
+            grid-column: 1 / -1;
+          }
+        }
+
+
+        /* Phase 4 post review wording audit */
+        .pr2-review-post-card .pr2-card-head > button,
+        .pr2-media-current-label,
+        .pr2-prepared-strip,
+        .pr2-mobile-editing-tools,
+        .pr2-create-actions,
+        .pr2-prepared-ready {
+          display: none !important;
+        }
+
+        .pr2-review-wording-head p {
+          max-width: 360px;
+        }
+
+        .pr2-simple-reach-row > span {
+          min-width: 72px;
+        }
+
+        .pr2-approval-card-simple {
+          gap: 14px !important;
+        }
+
+        .pr2-approval-simple-head p {
+          max-width: 340px;
+        }
+
+        .pr2-approval-share-media {
+          order: 5;
+        }
+
       `}</style>
 
     </main>
