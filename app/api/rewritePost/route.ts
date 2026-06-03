@@ -12,6 +12,8 @@ type RewriteResult = {
 const improvementActionLabels: Record<string, string> = {
   make_shorter: 'Make shorter',
   make_more_local: 'Make more local',
+  make_more_premium: 'Make more premium',
+  location_rewrite: 'Rewrite for selected location',
   make_sales_focused: 'Make more sales-focused',
   make_less_generic: 'Make less generic',
   different_version: 'Try a different version',
@@ -20,6 +22,8 @@ const improvementActionLabels: Record<string, string> = {
 const improvementSummaries: Record<string, string> = {
   make_shorter: 'Shortened the post and removed extra wording.',
   make_more_local: 'Added more local relevance and customer context.',
+  make_more_premium: 'Made the wording more polished and premium.',
+  location_rewrite: 'Rewritten for the selected location.',
   make_sales_focused: 'Made the benefit and call to action stronger.',
   make_less_generic: 'Made the wording more specific to the business and industry.',
   different_version: 'Created a fresh alternative version of the post.',
@@ -181,15 +185,7 @@ function buildFallbackRewriteFromText({
     .replace(/^improved caption\s*[:\-]\s*/i, '')
     .trim();
 
-  const reachTag = String(marketReach || audienceTarget || '').toLowerCase();
-  const reachHashtags =
-    reachTag.includes('nationwide') || reachTag.includes('uk')
-      ? ['#UKBusiness', '#NationwideService']
-      : reachTag.includes('online')
-        ? ['#OnlineBusiness', '#ShopOnline']
-        : reachTag.includes('regional')
-          ? ['#RegionalBusiness', '#LocalService']
-          : ['#LocalBusiness', '#SmallBusiness'];
+  const reachHashtags = getReachHashtags(marketReach || audienceTarget, '');
 
   return {
     caption: enforcePlatformCaptionLimit(caption || originalCaption, platform),
@@ -300,6 +296,23 @@ function getPlatformGuidance(platform: string) {
 }
 
 function getImprovementGuidance(action: string, audienceTarget: string) {
+
+  if (action === 'location_rewrite') {
+    return `
+Improvement action:
+Rewrite the post for the selected location/reach.
+
+Specific instructions:
+- This must be a true AI rewrite, not the same caption repeated.
+- Keep the business and offer aligned with the original caption.
+- Change the angle and wording to match the selected location/reach.
+- If the selected reach is Nationwide UK, make it clearly UK-wide and remove local-only wording.
+- If the selected reach is Online, make it clearly online/enquiry/website focused.
+- If the selected reach is Regional, make it wider than one town but not fully national.
+- If the selected reach is Local, make it naturally local.
+`;
+  }
+
   if (action === 'make_shorter') {
     return `
 Improvement action:
@@ -324,6 +337,21 @@ Specific instructions:
 - Do not invent a town unless one is clearly supplied.
 - If no exact location is supplied, use wording like "local customers", "nearby homes", "in your area", or "the local community".
 - Keep it natural, not forced.
+`;
+  }
+
+
+  if (action === 'make_more_premium') {
+    return `
+Improvement action:
+Make the post more premium.
+
+Specific instructions:
+- Make the wording more polished, confident, and professional.
+- Keep it clear and natural, not luxury clichés.
+- Avoid cheap-sounding sales language.
+- Focus on quality, trust, presentation, finish, reliability, and brand impression.
+- Keep the selected market reach guidance stronger than the original caption.
 `;
   }
 
@@ -407,9 +435,11 @@ Nationwide / UK-wide.
 MANDATORY wording direction:
 - The rewritten caption must clearly sound UK-wide or nationwide.
 - Include one natural phrase such as "across the UK", "UK-wide", "nationwide", "wherever you are in the UK", or "for customers across the country".
-- Do not use neighbourhood-only language such as "nearby", "local area", "pop in", or "around the corner" unless it still makes sense.
-- Focus on trust, convenience, delivery, remote service, online booking, online ordering, courier/postage, or nationwide availability.
-- Do not invent delivery promises, locations, prices, or coverage details that were not supplied.
+- Do not use local-only wording such as "local customers", "nearby customers", "nearby areas", "local area", "pop in", "around the corner", or "in your area".
+- Do not mention a specific town, city, village, borough, county, or neighbourhood unless the original post explicitly requires it as part of the business name or legal address.
+- If the original caption mentions a town such as Altrincham, Manchester, Sale, Stockport, Trafford or similar, remove that local focus and rewrite it as UK-wide.
+- Focus on trust, convenience, delivery, remote service, online booking, online ordering, courier/postage, or nationwide availability only when those are supported by the business context.
+- Do not invent delivery promises, prices, offers, or exact coverage details that were not supplied.
 - The CTA should suit a nationwide customer, such as enquiring online, ordering online, booking online, or messaging for details.
 `;
   }
@@ -429,7 +459,8 @@ Online customers / ecommerce.
 MANDATORY wording direction:
 - The rewritten caption must clearly sound suitable for online customers.
 - Include one natural phrase such as "order online", "book online", "browse online", "shop from home", "visit the website", or "send an online enquiry" where appropriate.
-- Avoid location-heavy wording unless a location was supplied.
+- Do not use local-only wording such as "local customers", "nearby areas", "pop in", "visit us locally", or town-focused wording unless the original post specifically needs it.
+- If the original caption mentions a town or nearby areas, remove that local focus and rewrite it for online customers.
 - Focus on convenience, speed, browsing, ordering, booking, delivery, remote service, or online enquiries.
 - The CTA must be suitable for online action.
 `;
@@ -443,7 +474,7 @@ MANDATORY wording direction:
   ) {
     return `
 Market reach:
-Regional customers.
+Regional and local customers.
 
 MANDATORY wording direction:
 - The rewritten caption must sound suitable for a wider regional service area.
@@ -463,6 +494,492 @@ MANDATORY wording direction:
 - Use natural phrases like "local customers", "nearby homes", "in your area", or "the local community" if no exact location is supplied.
 - Do not invent town names.
 `;
+}
+
+
+function getReachKind(marketReach: string) {
+  const cleanReach = String(marketReach || '').toLowerCase();
+
+  if (
+    cleanReach.includes('nationwide') ||
+    cleanReach.includes('national') ||
+    cleanReach.includes('uk wide') ||
+    cleanReach.includes('across the uk')
+  ) {
+    return 'nationwide';
+  }
+
+  if (
+    cleanReach.includes('online') ||
+    cleanReach.includes('ecommerce') ||
+    cleanReach.includes('e-commerce') ||
+    cleanReach.includes('webshop') ||
+    cleanReach.includes('website')
+  ) {
+    return 'online';
+  }
+
+  if (
+    cleanReach.includes('regional and local') ||
+    cleanReach.includes('local and regional') ||
+    cleanReach.includes('regional') ||
+    cleanReach.includes('county') ||
+    cleanReach.includes('surrounding')
+  ) {
+    return 'regional';
+  }
+
+  return 'local';
+}
+
+function getReachHashtags(marketReach: string, industry: string) {
+  const reachKind = getReachKind(marketReach);
+  const cleanIndustry = String(industry || 'Business')
+    .replace(/\s+/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '');
+
+  if (reachKind === 'nationwide') {
+    return ['#UKBusiness', '#NationwideService', '#BusinessMarketing', cleanIndustry ? `#${cleanIndustry}` : '#SmallBusiness'];
+  }
+
+  if (reachKind === 'online') {
+    return ['#OnlineBusiness', '#ShopOnline', '#OnlineService', cleanIndustry ? `#${cleanIndustry}` : '#SmallBusiness'];
+  }
+
+  if (reachKind === 'regional') {
+    return ['#RegionalBusiness', '#BusinessGrowth', '#SmallBusiness', cleanIndustry ? `#${cleanIndustry}` : '#LocalBusiness'];
+  }
+
+  return ['#LocalBusiness', '#SmallBusiness', '#SupportLocal', cleanIndustry ? `#${cleanIndustry}` : '#CommunityBusiness'];
+}
+
+function hasBannedLocalWordingForReach(caption: string, marketReach: string) {
+  const reachKind = getReachKind(marketReach);
+  const cleanCaption = String(caption || '').toLowerCase();
+
+  if (reachKind !== 'nationwide' && reachKind !== 'online') {
+    return false;
+  }
+
+  const bannedLocalPatterns = [
+    /\blocal customers?\b/i,
+    /\blocal businesses?\b/i,
+    /\blocal small business owner\b/i,
+    /\blocal small business owners\b/i,
+    /\blocal business owner\b/i,
+    /\blocal business owners\b/i,
+    /\blocal area\b/i,
+    /\blocal community\b/i,
+    /\blocal visibility\b/i,
+    /\bnearby areas?\b/i,
+    /\bnearby customers?\b/i,
+    /\bnearby homes?\b/i,
+    /\bin your area\b/i,
+    /\bstand out in your area\b/i,
+    /\bin and around\b/i,
+    /\baround the corner\b/i,
+    /\bfoot traffic\b/i,
+    /\bpassersby\b/i,
+    /\bpassers-by\b/i,
+    /\bpop in\b/i,
+    /\bwalk in\b/i,
+    /\bAltrincham\b/i,
+    /\bManchester\b/i,
+    /\bSale\b/i,
+    /\bStockport\b/i,
+    /\bTrafford\b/i,
+  ];
+
+  return bannedLocalPatterns.some((pattern) => pattern.test(cleanCaption));
+}
+
+function lacksRequiredReachWording(caption: string, marketReach: string) {
+  const reachKind = getReachKind(marketReach);
+  const cleanCaption = String(caption || '').toLowerCase();
+
+  if (reachKind === 'nationwide') {
+    return !(
+      cleanCaption.includes('across the uk') ||
+      cleanCaption.includes('uk-wide') ||
+      cleanCaption.includes('uk wide') ||
+      cleanCaption.includes('nationwide') ||
+      cleanCaption.includes('across the country') ||
+      cleanCaption.includes('wherever you are in the uk')
+    );
+  }
+
+  if (reachKind === 'online') {
+    return !(
+      cleanCaption.includes('online') ||
+      cleanCaption.includes('website') ||
+      cleanCaption.includes('online enquiry') ||
+      cleanCaption.includes('order online') ||
+      cleanCaption.includes('book online') ||
+      cleanCaption.includes('browse online') ||
+      cleanCaption.includes('shop from home')
+    );
+  }
+
+  if (reachKind === 'regional') {
+    return !(
+      cleanCaption.includes('across the region') ||
+      cleanCaption.includes('across the area') ||
+      cleanCaption.includes('surrounding areas') ||
+      cleanCaption.includes('nearby towns') ||
+      cleanCaption.includes('throughout the county') ||
+      cleanCaption.includes('regional')
+    );
+  }
+
+  return false;
+}
+
+function getReachComplianceIssues(result: RewriteResult, marketReach: string) {
+  const caption = result?.caption || '';
+  const reachKind = getReachKind(marketReach);
+  const issues: string[] = [];
+
+  if (hasBannedLocalWordingForReach(caption, marketReach)) {
+    issues.push('Caption still contains local-only wording that conflicts with the selected reach.');
+  }
+
+  if (lacksRequiredReachWording(caption, marketReach)) {
+    if (reachKind === 'nationwide') {
+      issues.push('Caption does not clearly sound nationwide or UK-wide.');
+    }
+
+    if (reachKind === 'online') {
+      issues.push('Caption does not clearly sound suitable for online customers.');
+    }
+
+    if (reachKind === 'regional') {
+      issues.push('Caption does not clearly sound regional.');
+    }
+  }
+
+  return issues;
+}
+
+async function correctReachWithGemini({
+  result,
+  marketReach,
+  reachInstruction,
+  platform,
+  platformLimit,
+  industry,
+}: {
+  result: RewriteResult;
+  marketReach: string;
+  reachInstruction: string;
+  platform: string;
+  platformLimit: number;
+  industry: string;
+}) {
+  const reachGuidance = getMarketReachGuidance(marketReach, marketReach);
+  const reachHashtags = getReachHashtags(marketReach, industry);
+
+  const correctionPrompt = `
+Correct this social post so it fully follows the selected reach.
+
+Return ONLY valid JSON:
+{
+  "caption": "corrected caption",
+  "cta": "short CTA",
+  "hashtags": ["#Example"],
+  "image_prompt": "specific image idea",
+  "improvement_summary": "one short sentence explaining what changed"
+}
+
+Selected reach:
+${marketReach}
+
+Reach instruction:
+${reachInstruction || 'No extra instruction supplied'}
+
+${reachGuidance}
+
+Current caption:
+${result.caption}
+
+Current CTA:
+${result.cta}
+
+Current hashtags:
+${Array.isArray(result.hashtags) ? result.hashtags.join(' ') : ''}
+
+Rules:
+- Keep the same business meaning.
+- Keep the caption under ${platformLimit} characters.
+- If Nationwide UK is selected, remove all local-only phrases such as local customers, local small business owner, nearby areas, in Altrincham, in Manchester, in Sale, in your area, local visibility, local community, foot traffic, passersby, or pop in.
+- If Nationwide UK is selected, make it clearly UK-wide using natural wording such as across the UK, UK-wide, nationwide, or for customers across the country.
+- If Online is selected, remove local walk-in wording and make the CTA suitable for online action.
+- If Regional is selected, make it wider than one town but not fully national.
+- Use these reach-appropriate hashtags where useful: ${reachHashtags.join(' ')}.
+- Do not add markdown or explanations.
+`;
+
+  const rawCorrection = await rewriteWithGemini(correctionPrompt);
+  return normaliseRewrite(rawCorrection, 'Corrected the reach wording.', platform);
+}
+
+async function correctReachWithOpenAI({
+  result,
+  marketReach,
+  reachInstruction,
+  platform,
+  platformLimit,
+  industry,
+}: {
+  result: RewriteResult;
+  marketReach: string;
+  reachInstruction: string;
+  platform: string;
+  platformLimit: number;
+  industry: string;
+}) {
+  const reachGuidance = getMarketReachGuidance(marketReach, marketReach);
+  const reachHashtags = getReachHashtags(marketReach, industry);
+
+  const correctionPrompt = `
+Correct this social post so it fully follows the selected reach.
+
+Return ONLY valid JSON:
+{
+  "caption": "corrected caption",
+  "cta": "short CTA",
+  "hashtags": ["#Example"],
+  "image_prompt": "specific image idea",
+  "improvement_summary": "one short sentence explaining what changed"
+}
+
+Selected reach:
+${marketReach}
+
+Reach instruction:
+${reachInstruction || 'No extra instruction supplied'}
+
+${reachGuidance}
+
+Current caption:
+${result.caption}
+
+Current CTA:
+${result.cta}
+
+Current hashtags:
+${Array.isArray(result.hashtags) ? result.hashtags.join(' ') : ''}
+
+Rules:
+- Keep the same business meaning.
+- Keep the caption under ${platformLimit} characters.
+- If Nationwide UK is selected, remove all local-only phrases such as local customers, local small business owner, nearby areas, in Altrincham, in Manchester, in Sale, in your area, local visibility, local community, foot traffic, passersby, or pop in.
+- If Nationwide UK is selected, make it clearly UK-wide using natural wording such as across the UK, UK-wide, nationwide, or for customers across the country.
+- If Online is selected, remove local walk-in wording and make the CTA suitable for online action.
+- If Regional is selected, make it wider than one town but not fully national.
+- Use these reach-appropriate hashtags where useful: ${reachHashtags.join(' ')}.
+- Do not add markdown or explanations.
+`;
+
+  const rawCorrection = await rewriteWithOpenAI(correctionPrompt);
+  return normaliseRewrite(rawCorrection, 'Corrected the reach wording.', platform);
+}
+
+function applyReachHashtagSafety(result: RewriteResult, marketReach: string, industry: string) {
+  if (getReachKind(marketReach) === 'local') {
+    return result;
+  }
+
+  const reachHashtags = getReachHashtags(marketReach, industry);
+  const existing = ensureArray(result.hashtags).map(ensureHashtag).filter(Boolean);
+  const merged = [...reachHashtags, ...existing]
+    .filter(Boolean)
+    .filter((tag, index, array) => array.findIndex((item) => item.toLowerCase() === tag.toLowerCase()) === index)
+    .slice(0, 8);
+
+  return {
+    ...result,
+    hashtags: merged,
+  };
+}
+
+
+function stripQuotedTheBusiness(value: string, businessName: string) {
+  const cleanBusinessName = cleanText(businessName);
+  const hasRealBusinessName =
+    cleanBusinessName &&
+    cleanBusinessName.toLowerCase() !== 'the business' &&
+    cleanBusinessName.toLowerCase() !== 'business';
+
+  return String(value || '')
+    .replace(/\bAt\s+["“”']?the business["“”']?,?\s+we\b/gi, hasRealBusinessName ? `At ${cleanBusinessName}, we` : 'We')
+    .replace(/\bAt\s+["“”']?the business["“”']?,?\s+/gi, hasRealBusinessName ? `At ${cleanBusinessName}, ` : '')
+    .replace(/\b["“”']the business["“”']\b/gi, hasRealBusinessName ? cleanBusinessName : 'we');
+}
+
+function finalReachSafeCaption({
+  caption,
+  marketReach,
+  businessName,
+  industry,
+  platform,
+}: {
+  caption: string;
+  marketReach: string;
+  businessName: string;
+  industry: string;
+  platform: string;
+}) {
+  const reachKind = getReachKind(marketReach);
+  let nextCaption = stripQuotedTheBusiness(cleanText(caption), businessName);
+
+  if (reachKind === 'nationwide') {
+    nextCaption = nextCaption
+      .replace(/\blocal small business owners?\b/gi, 'business owners across the UK')
+      .replace(/\blocal business owners?\b/gi, 'business owners across the UK')
+      .replace(/\blocal customers?\b/gi, 'customers across the UK')
+      .replace(/\blocal businesses?\b/gi, 'businesses across the UK')
+      .replace(/\blocal area\b/gi, 'the UK')
+      .replace(/\blocal community\b/gi, 'customers across the UK')
+      .replace(/\blocal visibility\b/gi, 'nationwide visibility')
+      .replace(/\bnearby areas?\b/gi, 'the UK')
+      .replace(/\bnearby customers?\b/gi, 'customers across the UK')
+      .replace(/\bnearby homes?\b/gi, 'homes across the UK')
+      .replace(/\bin your area\b/gi, 'across the UK')
+      .replace(/\bstand out in your area\b/gi, 'stand out across the UK')
+      .replace(/\bin and around\s+[A-Z][A-Za-z\s-]+/g, 'across the UK')
+      .replace(/\bin\s+(Altrincham|Manchester|Sale|Stockport|Trafford)\b(?:\s+and\s+nearby\s+areas)?/gi, 'across the UK')
+      .replace(/\baround\s+(Altrincham|Manchester|Sale|Stockport|Trafford)\b/gi, 'across the UK')
+      .replace(/\bturning passersby into foot traffic\b/gi, 'turning attention into enquiries')
+      .replace(/\bturning passers-by into foot traffic\b/gi, 'turning attention into enquiries')
+      .replace(/\bpassersby\b/gi, 'potential customers')
+      .replace(/\bpassers-by\b/gi, 'potential customers')
+      .replace(/\bfoot traffic\b/gi, 'enquiries')
+      .replace(/\bpop in\b/gi, 'get in touch')
+      .replace(/\bwalk in\b/gi, 'enquire');
+
+    if (lacksRequiredReachWording(nextCaption, marketReach)) {
+      nextCaption = `For businesses across the UK, ${nextCaption.replace(/^\s*(As a small business owner,?\s*)/i, '').trim()}`;
+    }
+  }
+
+  if (reachKind === 'online') {
+    nextCaption = nextCaption
+      .replace(/\blocal customers?\b/gi, 'online customers')
+      .replace(/\blocal businesses?\b/gi, 'online businesses')
+      .replace(/\blocal area\b/gi, 'online')
+      .replace(/\bnearby areas?\b/gi, 'online')
+      .replace(/\bin your area\b/gi, 'online')
+      .replace(/\bin\s+(Altrincham|Manchester|Sale|Stockport|Trafford)\b(?:\s+and\s+nearby\s+areas)?/gi, 'online')
+      .replace(/\bpop in\b/gi, 'visit the website')
+      .replace(/\bwalk in\b/gi, 'send an online enquiry');
+
+    if (lacksRequiredReachWording(nextCaption, marketReach)) {
+      nextCaption = `${nextCaption} Send an online enquiry to find out more.`;
+    }
+  }
+
+  if (reachKind === 'regional') {
+    nextCaption = nextCaption
+      .replace(/\blocal customers?\b/gi, 'customers across the region')
+      .replace(/\blocal businesses?\b/gi, 'businesses across the region')
+      .replace(/\bin your area\b/gi, 'across the region');
+
+    if (lacksRequiredReachWording(nextCaption, marketReach)) {
+      nextCaption = `${nextCaption} Available across the region.`;
+    }
+  }
+
+  return enforcePlatformCaptionLimit(nextCaption, platform);
+}
+
+function forceReachCompliance({
+  result,
+  marketReach,
+  businessName,
+  industry,
+  platform,
+}: {
+  result: RewriteResult;
+  marketReach: string;
+  businessName: string;
+  industry: string;
+  platform: string;
+}) {
+  const reachIssues = getReachComplianceIssues(result, marketReach);
+
+  if (reachIssues.length === 0) {
+    return result;
+  }
+
+  const safeCaption = finalReachSafeCaption({
+    caption: result.caption,
+    marketReach,
+    businessName,
+    industry,
+    platform,
+  });
+
+  const safeResult = {
+    ...result,
+    caption: safeCaption,
+    hashtags: getReachKind(marketReach) === 'local'
+      ? result.hashtags
+      : getReachHashtags(marketReach, industry),
+    improvement_summary: 'Updated the reach wording.',
+  };
+
+  const remainingIssues = getReachComplianceIssues(safeResult, marketReach);
+
+  if (remainingIssues.length === 0) {
+    return safeResult;
+  }
+
+  const reachKind = getReachKind(marketReach);
+  const cleanBusinessName = cleanText(businessName);
+  const displayName =
+    cleanBusinessName &&
+    cleanBusinessName.toLowerCase() !== 'the business' &&
+    cleanBusinessName.toLowerCase() !== 'business'
+      ? cleanBusinessName
+      : 'we';
+
+  if (reachKind === 'nationwide') {
+    return {
+      ...safeResult,
+      caption: enforcePlatformCaptionLimit(
+        `${displayName === 'we' ? 'We help' : `${displayName} helps`} businesses across the UK create clear, professional visuals that make their brand easier to notice and remember. From signage and large format print to branded displays and promotional materials, we support businesses that want a stronger presence beyond one local area. Message us to discuss your next project.`,
+        platform,
+      ),
+      hashtags: getReachHashtags(marketReach, industry),
+      improvement_summary: 'Rewritten for nationwide reach.',
+    };
+  }
+
+  if (reachKind === 'online') {
+    return {
+      ...safeResult,
+      caption: enforcePlatformCaptionLimit(
+        `${displayName === 'we' ? 'We help' : `${displayName} helps`} customers online with clear, professional support that makes it easier to choose, enquire or order from wherever they are. Browse online or send an enquiry to find out more.`,
+        platform,
+      ),
+      hashtags: getReachHashtags(marketReach, industry),
+      improvement_summary: 'Rewritten for online reach.',
+    };
+  }
+
+  if (reachKind === 'regional') {
+    return {
+      ...safeResult,
+      caption: enforcePlatformCaptionLimit(
+        `${displayName === 'we' ? 'We help' : `${displayName} helps`} customers across the region with clear, professional support that makes it easier to get noticed, make a strong impression and take the next step. Message us to discuss what you need.`,
+        platform,
+      ),
+      hashtags: getReachHashtags(marketReach, industry),
+      improvement_summary: 'Rewritten for regional reach.',
+    };
+  }
+
+  return safeResult;
 }
 
 async function rewriteWithGemini(prompt: string) {
@@ -620,7 +1137,16 @@ export async function POST(req: NextRequest) {
       improvementActionLabels[improvementAction] || improvementAction || 'Improve post';
 
     const audienceTarget = String(body.audienceTarget || '').trim();
-    const marketReach = String(body.marketReach || body.reach || '').trim();
+    const selectedReach = String(
+      body.selectedReach ||
+        body.locationScope ||
+        body.marketReach ||
+        body.reach ||
+        'Regional and local customers'
+    ).trim();
+    const marketReach = selectedReach || 'Regional and local customers';
+    const reachInstruction = String(body.reachInstruction || '').trim();
+    const forceRewrite = Boolean(body.forceRewrite);
 
     const fallbackSummary =
       improvementSummaries[improvementAction] ||
@@ -688,6 +1214,23 @@ ${audienceTarget || 'No specific audience supplied'}
 
 ${marketReachGuidance}
 
+Selected reach from the app:
+${marketReach || 'No reach selected'}
+
+Force rewrite:
+${forceRewrite ? 'Yes. The caption must materially change.' : 'No.'}
+
+Additional reach instruction from the app:
+${reachInstruction || 'No extra reach instruction supplied'}
+
+Hard reach rule:
+- The selected reach from the app overrides the original caption if they conflict.
+- If selected reach is Nationwide UK customers, remove local-only wording from the original caption.
+- If selected reach is Nationwide UK customers, do not mention local customers, local business owners, nearby areas, local visibility, local community, foot traffic, passersby, or any specific town/city from the original caption.
+- If selected reach is Online customers, avoid local walk-in wording and make the CTA suitable for online action.
+- If selected reach is Regional and local customers, make the wording wider than one town but not fully national.
+- Only use local/town wording when selected reach is Local customers.
+
 Business:
 ${businessName}
 
@@ -732,10 +1275,13 @@ Rewrite rules:
 - Do not use bullet-heavy formatting.
 - Do not exaggerate or overpromise.
 - Do not repeat the exact original caption.
+- If forceRewrite is true, the caption must materially change from the supplied caption.
 - Use natural, human wording.
 - Use no emojis unless the brand clearly suits them.
 - Caption should usually be 45 to 120 words only if the platform limit allows it.
-- The market reach instruction is important. If Nationwide, Regional, or Online is selected, the caption must visibly reflect that.
+- The market reach instruction is mandatory. If Nationwide, Regional, or Online is selected, the caption must visibly reflect that.
+- Do not preserve local phrases from the original caption when they conflict with the selected reach.
+- For Nationwide UK customers, banned phrases include "local customers", "local small business owner", "nearby areas", "in Altrincham", "in Manchester", "in Sale", "local area", "local visibility", "local community", "foot traffic", "passersby", and similar town-only wording.
 - If the selected improvement action asks for shorter copy, make it shorter.
 - TikTok, YouTube Shorts, and X / Twitter should be especially short.
 - CTA should be specific and natural.
@@ -771,7 +1317,52 @@ Rewrite rules:
       });
     }
 
-    const result = normaliseRewrite(rawResult, fallbackSummary, platform);
+    let result = normaliseRewrite(rawResult, fallbackSummary, platform);
+    let reachComplianceIssues = getReachComplianceIssues(result, marketReach);
+    let reachCorrectionApplied = false;
+
+    if (reachComplianceIssues.length > 0) {
+      try {
+        const corrected =
+          provider === 'openai'
+            ? await correctReachWithOpenAI({
+                result,
+                marketReach,
+                reachInstruction,
+                platform,
+                platformLimit,
+                industry,
+              })
+            : await correctReachWithGemini({
+                result,
+                marketReach,
+                reachInstruction,
+                platform,
+                platformLimit,
+                industry,
+              });
+
+        const correctedIssues = getReachComplianceIssues(corrected, marketReach);
+
+        if (corrected.caption) {
+          result = corrected;
+          reachComplianceIssues = correctedIssues;
+          reachCorrectionApplied = true;
+        }
+      } catch (correctionError: any) {
+        console.warn('Reach correction failed:', correctionError?.message || correctionError);
+      }
+    }
+
+    result = applyReachHashtagSafety(result, marketReach, industry);
+    result = forceReachCompliance({
+      result,
+      marketReach,
+      businessName,
+      industry,
+      platform,
+    });
+    reachComplianceIssues = getReachComplianceIssues(result, marketReach);
 
     if (!result.caption) {
       return NextResponse.json(
@@ -790,6 +1381,12 @@ Rewrite rules:
       improvement_summary: result.improvement_summary,
       audience_target: audienceTarget,
       market_reach: marketReach,
+      selected_reach: selectedReach,
+      location_scope: selectedReach,
+      reach_instruction: reachInstruction,
+      reach_kind: getReachKind(marketReach),
+      reach_correction_applied: reachCorrectionApplied,
+      reach_compliance_issues: reachComplianceIssues,
       improvement_action: improvementAction,
       provider,
       platform_caption_limit: platformLimit,

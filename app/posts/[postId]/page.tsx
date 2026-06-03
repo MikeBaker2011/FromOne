@@ -127,11 +127,11 @@ const resizePresets: ResizePreset[] = [
 ];
 
 const quickImproveActions = [
-  { value: "shorter", label: "Make shorter" },
-  { value: "premium", label: "More premium" },
-  { value: "sales", label: "Sales focused" },
-  { value: "less_generic", label: "Less generic" },
-  { value: "different", label: "Different version" },
+  { value: "make_shorter", label: "Make shorter" },
+  { value: "make_more_premium", label: "More premium" },
+  { value: "make_sales_focused", label: "Sales focused" },
+  { value: "make_less_generic", label: "Less generic" },
+  { value: "different_version", label: "Different version" },
 ];
 
 const audienceOptions = [
@@ -594,6 +594,242 @@ function PdfFirstPagePreview({ url }: { url: string }) {
   );
 }
 
+
+function normaliseForCompare(value: string) {
+  return cleanText(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isVerySimilarText(first: string, second: string) {
+  const a = normaliseForCompare(first);
+  const b = normaliseForCompare(second);
+
+  if (!a || !b) return false;
+  if (a === b) return true;
+
+  const shorter = a.length < b.length ? a : b;
+  const longer = a.length < b.length ? b : a;
+
+  if (shorter.length < 60) return false;
+
+  return longer.includes(shorter) || shorter.includes(longer);
+}
+
+function removeLocalOnlyWording(value: string) {
+  return cleanText(value)
+    .replace(/\blocal small business owners?\b/gi, "business owners across the UK")
+    .replace(/\blocal business owners?\b/gi, "business owners across the UK")
+    .replace(/\blocal customers?\b/gi, "customers across the UK")
+    .replace(/\blocal businesses?\b/gi, "businesses across the UK")
+    .replace(/\blocal area\b/gi, "the UK")
+    .replace(/\blocal community\b/gi, "customers across the UK")
+    .replace(/\blocal visibility\b/gi, "nationwide visibility")
+    .replace(/\bnearby areas?\b/gi, "the UK")
+    .replace(/\bnearby customers?\b/gi, "customers across the UK")
+    .replace(/\bnearby homes?\b/gi, "homes across the UK")
+    .replace(/\bin your area\b/gi, "across the UK")
+    .replace(/\bstand out in your area\b/gi, "stand out across the UK")
+    .replace(/\bin\s+(Altrincham|Manchester|Sale|Stockport|Trafford)\b(?:\s+and\s+nearby\s+areas)?/gi, "across the UK")
+    .replace(/\baround\s+(Altrincham|Manchester|Sale|Stockport|Trafford)\b/gi, "across the UK")
+    .replace(/\bturning passersby into foot traffic\b/gi, "turning attention into enquiries")
+    .replace(/\bturning passers-by into foot traffic\b/gi, "turning attention into enquiries")
+    .replace(/\bpassersby\b/gi, "potential customers")
+    .replace(/\bpassers-by\b/gi, "potential customers")
+    .replace(/\bfoot traffic\b/gi, "enquiries")
+    .replace(/\bpop in\b/gi, "get in touch")
+    .replace(/\bwalk in\b/gi, "enquire")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildLocationFallbackCaption({
+  currentCaption,
+  reach,
+  businessName,
+  industry,
+}: {
+  currentCaption: string;
+  reach: string;
+  businessName: string;
+  industry: string;
+}) {
+  const cleanReach = cleanText(reach).toLowerCase();
+  const cleanBusinessName = cleanText(businessName);
+  const displayName =
+    cleanBusinessName &&
+    !["the business", "business"].includes(cleanBusinessName.toLowerCase())
+      ? cleanBusinessName
+      : "We";
+
+  const cleanIndustry = cleanText(industry).toLowerCase();
+  const isSignage =
+    cleanIndustry.includes("sign") ||
+    cleanIndustry.includes("print") ||
+    currentCaption.toLowerCase().includes("signage") ||
+    currentCaption.toLowerCase().includes("large format") ||
+    currentCaption.toLowerCase().includes("graphics");
+
+  if (cleanReach.includes("nationwide")) {
+    if (isSignage) {
+      return `${displayName === "We" ? "We help" : `${displayName} helps`} businesses across the UK create clear, professional visuals that make their brand easier to notice and remember. From signage and large format print to branded displays and promotional materials, we support businesses that want a stronger presence beyond one local area. Message us to discuss your next project.`;
+    }
+
+    return `${displayName === "We" ? "We help" : `${displayName} helps`} customers across the UK with clear, professional support that makes it easier to choose, enquire and take the next step. Message us to discuss what you need.`;
+  }
+
+  if (cleanReach.includes("online")) {
+    return `${displayName === "We" ? "We help" : `${displayName} helps`} customers online with clear, professional support that makes it easier to browse, enquire or book from wherever they are. Visit the website or send an online enquiry to find out more.`;
+  }
+
+  if (cleanReach.includes("regional")) {
+    return `${displayName === "We" ? "We help" : `${displayName} helps`} customers across the region with clear, professional support that helps them get noticed, make a strong impression and take the next step. Message us to discuss what you need.`;
+  }
+
+  return `${displayName === "We" ? "We help" : `${displayName} helps`} local customers with clear, professional support that makes it easier to get noticed and take action. Message us to discuss what you need.`;
+}
+
+function getLocationHashtags(reach: string, industry: string) {
+  const cleanReach = cleanText(reach).toLowerCase();
+  const industryTag = cleanText(industry)
+    .replace(/\s+/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "");
+
+  const extra = industryTag ? `#${industryTag}` : "#SmallBusiness";
+
+  if (cleanReach.includes("nationwide")) {
+    return ["#UKBusiness", "#NationwideService", "#BusinessMarketing", extra].join(" ");
+  }
+
+  if (cleanReach.includes("online")) {
+    return ["#OnlineBusiness", "#ShopOnline", "#OnlineService", extra].join(" ");
+  }
+
+  if (cleanReach.includes("regional")) {
+    return ["#RegionalBusiness", "#BusinessGrowth", "#SmallBusiness", extra].join(" ");
+  }
+
+  return ["#LocalBusiness", "#SmallBusiness", "#SupportLocal", extra].join(" ");
+}
+
+
+
+function getLocationLabel(value: string) {
+  return cleanText(value).replace(" customers", "");
+}
+
+function getBusinessDisplayNameForLocation(post: any) {
+  const value =
+    post?.business_name ||
+    post?.company_name ||
+    post?.client_name ||
+    post?.clientName ||
+    post?.campaign_business_name ||
+    post?.brand_name ||
+    "";
+
+  const clean = cleanText(value);
+
+  if (!clean || clean.toLowerCase() === "the business" || clean.toLowerCase() === "business") {
+    return "We";
+  }
+
+  return clean;
+}
+
+function getIndustryForLocation(post: any) {
+  return cleanText(
+    post?.industry ||
+      post?.business_type ||
+      post?.campaign_industry ||
+      post?.category ||
+      "",
+  );
+}
+
+function buildLocationCaption(post: any, reach: string, currentCaption: string) {
+  const label = cleanText(reach).toLowerCase();
+  const businessName = getBusinessDisplayNameForLocation(post);
+  const industry = getIndustryForLocation(post).toLowerCase();
+  const caption = cleanText(currentCaption).toLowerCase();
+
+  const namePrefix =
+    businessName === "We" ? "We help" : `${businessName} helps`;
+
+  const isSignage =
+    industry.includes("sign") ||
+    industry.includes("print") ||
+    caption.includes("signage") ||
+    caption.includes("large format") ||
+    caption.includes("graphics") ||
+    caption.includes("vehicle wrap") ||
+    caption.includes("banner");
+
+  if (label.includes("nationwide")) {
+    if (isSignage) {
+      return `${namePrefix} businesses across the UK create clear, professional visuals that make their brand easier to notice and remember. From signage and large format print to branded displays, vehicle graphics and promotional materials, we support businesses that want a stronger presence beyond one local area. Message us to discuss your next project.`;
+    }
+
+    return `${namePrefix} customers across the UK with clear, professional support that makes it easier to get noticed, build trust and take the next step. Message us to discuss what you need.`;
+  }
+
+  if (label.includes("online")) {
+    if (isSignage) {
+      return `${namePrefix} businesses create professional visual marketing that can be planned, discussed and started online. From signage and large format print to branded displays and promotional materials, send an online enquiry and we can help you choose the right option.`;
+    }
+
+    return `${namePrefix} customers online with clear, professional support that makes it easier to browse, enquire or book from wherever they are. Visit the website or send an online enquiry to find out more.`;
+  }
+
+  if (label.includes("regional")) {
+    if (isSignage) {
+      return `${namePrefix} businesses across the region create signage, large format print and branded displays that help them stand out in busy spaces, events and customer-facing locations. Message us to discuss your next project.`;
+    }
+
+    return `${namePrefix} customers across the region with clear, professional support that helps them get noticed, make a strong impression and take the next step. Message us to discuss what you need.`;
+  }
+
+  if (isSignage) {
+    return `${namePrefix} local businesses create signage, large format print and branded displays that help them stand out in the places their customers see most. From shopfronts and vehicles to events and promotions, we help make your brand easier to notice. Message us to discuss your next project.`;
+  }
+
+  return `${namePrefix} local customers with clear, professional support that makes it easier to get noticed and take action. Message us to discuss what you need.`;
+}
+
+function buildLocationCta(reach: string) {
+  const label = cleanText(reach).toLowerCase();
+
+  if (label.includes("online")) return "Send an online enquiry.";
+  if (label.includes("nationwide")) return "Message us to discuss your UK-wide project.";
+  if (label.includes("regional")) return "Message us to discuss your regional project.";
+
+  return "Message us to discuss your project.";
+}
+
+function buildLocationHashtagText(post: any, reach: string) {
+  const label = cleanText(reach).toLowerCase();
+  const industry = getIndustryForLocation(post)
+    .replace(/\s+/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "");
+  const industryTag = industry ? `#${industry}` : "#SmallBusiness";
+
+  if (label.includes("nationwide")) {
+    return ["#UKBusiness", "#NationwideService", "#BusinessMarketing", industryTag].join(" ");
+  }
+
+  if (label.includes("online")) {
+    return ["#OnlineBusiness", "#OnlineService", "#ShopOnline", industryTag].join(" ");
+  }
+
+  if (label.includes("regional")) {
+    return ["#RegionalBusiness", "#BusinessGrowth", "#SmallBusiness", industryTag].join(" ");
+  }
+
+  return ["#LocalBusiness", "#SmallBusiness", "#SupportLocal", industryTag].join(" ");
+}
+
 export default function PostReviewPage() {
   const router = useRouter();
   const params = useParams();
@@ -637,7 +873,8 @@ export default function PostReviewPage() {
 
   const [rewriting, setRewriting] = useState("");
   const [audienceTarget, setAudienceTarget] = useState("Small business owners");
-  const [reachTarget, setReachTarget] = useState("Local customers");
+  const [reachTarget, setReachTarget] = useState("Regional and local customers");
+  const [applyingReach, setApplyingReach] = useState("");
   const [toneTarget, setToneTarget] = useState("Use current tone");
 
   const [scheduleInputValue, setScheduleInputValue] = useState("");
@@ -1657,6 +1894,17 @@ export default function PostReviewPage() {
 
       const result = await response.json().catch(() => ({}));
 
+      if (process.env.NODE_ENV !== "production") {
+        console.log("FromOne rewrite debug", {
+          action,
+          selectedReach: result?.selected_reach,
+          marketReach: result?.market_reach,
+          reachKind: result?.reach_kind,
+          correctionApplied: result?.reach_correction_applied,
+          issues: result?.reach_compliance_issues,
+        });
+      }
+
       if (!response.ok)
         throw new Error(
           result?.error || result?.message || "Could not prepare this image.",
@@ -1876,11 +2124,34 @@ export default function PostReviewPage() {
     }
   };
 
-  const quickImprove = async (action: string) => {
+
+
+  const quickImprove = async (action: string, reachOverride?: string) => {
     if (!post?.id) return;
 
+    const effectiveReach = reachOverride || reachTarget || "Regional and local customers";
+    const cleanReachLabel = effectiveReach.replace(" customers", "");
+    const isReachRewrite = action === "audience_targeted";
+    const reachInstruction =
+      effectiveReach === "Nationwide UK customers"
+        ? "Write this for customers across the UK. Do not make the post sound local to one town or city unless the business name/location is essential."
+        : effectiveReach === "Regional customers"
+          ? "Write this for regional customers. Keep the wording wider than one town, but not fully national."
+          : effectiveReach === "Online customers"
+            ? "Write this for online customers. Avoid local walk-in wording unless the post clearly needs it."
+            : "Write this for local customers near the business location.";
+
+    if (reachOverride) {
+      setReachTarget(reachOverride);
+    }
+
+    setApplyingReach(isReachRewrite ? effectiveReach : "");
     setRewriting(action);
-    setMessage("");
+    setMessage(
+      isReachRewrite
+        ? `Applying ${cleanReachLabel.toLowerCase()} location...`
+        : "Improving wording..."
+    );
 
     try {
       const response = await fetch("/api/rewritePost", {
@@ -1890,15 +2161,77 @@ export default function PostReviewPage() {
           postId: post.id,
           action,
           improvementAction: action,
-          audienceTarget,
-          marketAudience: reachTarget,
+
+          audienceTarget:
+            action === "audience_targeted"
+              ? effectiveReach
+              : audienceTarget,
+          marketReach: effectiveReach,
+          selectedReach: effectiveReach,
+          locationScope: effectiveReach,
+          reachInstruction,
+
+          forceRewrite: true,
+          rewriteNonce: Date.now(),
+
           tone: toneTarget,
-          platform: post.platform,
+          platform: post.platform || platformName,
+
           caption,
+          originalCaption: caption,
           cta,
           hashtags,
-          businessName: post.business_name || post.company_name || "",
-          businessDescription: post.business_description || "",
+
+          businessName:
+            post.business_name ||
+            post.company_name ||
+            post.client_name ||
+            post.clientName ||
+            post.campaign_business_name ||
+            post.brand_name ||
+            "",
+
+          industry:
+            post.industry ||
+            post.business_type ||
+            post.campaign_industry ||
+            post.category ||
+            "",
+
+          businessLocation:
+            post.location ||
+            post.business_location ||
+            post.campaign_area ||
+            post.town ||
+            post.city ||
+            "",
+
+          businessDescription: `${
+            effectiveReach === "Nationwide UK customers" ||
+            effectiveReach === "Online customers"
+              ? ""
+              : post.business_description || ""
+          }
+
+Selected reach: ${effectiveReach}
+Reach instruction: ${reachInstruction}
+
+Hard instruction:
+Rewrite the current caption using the selected reach.
+The selected reach must control the rewrite.
+If selected reach is Local customers:
+- make it locally relevant
+- local wording is allowed
+If selected reach is Nationwide UK customers:
+- write for customers/businesses across the UK
+- do not say local customers, nearby areas, local community, foot traffic, local visibility, in your area, or pop in
+- do not mention the saved business location unless it is part of the brand name
+If selected reach is Online customers:
+- write for online customers
+- use wording such as online enquiry, website, order online, book online, browse online or shop from home where suitable
+- avoid walk-in, local area, nearby, foot traffic or shopfront-only wording
+If selected reach is Regional customers:
+- write wider than one town, but not fully national.`,
         }),
       });
 
@@ -1923,15 +2256,95 @@ export default function PostReviewPage() {
               result.post?.hashtags,
           );
 
-      if (nextCaption) setCaption(nextCaption);
-      if (nextCta) setCta(nextCta);
-      if (nextHashtags) setHashtags(nextHashtags);
+      if (!nextCaption) {
+        throw new Error(result?.error || "No improved caption was returned.");
+      }
 
-      setMessage("Improved wording ready. Save it when you are happy.");
+      const apiCaptionWasSimilar = isVerySimilarText(nextCaption, caption);
+      const shouldForceLocationCaption =
+        isReachRewrite &&
+        (apiCaptionWasSimilar || cleanText(result?.reach_compliance_issues?.join(" ")));
+
+      const finalCaption = shouldForceLocationCaption
+        ? buildLocationFallbackCaption({
+            currentCaption: caption,
+            reach: effectiveReach,
+            businessName:
+              post.business_name ||
+              post.company_name ||
+              post.client_name ||
+              post.clientName ||
+              post.campaign_business_name ||
+              post.brand_name ||
+              "",
+            industry:
+              post.industry ||
+              post.business_type ||
+              post.campaign_industry ||
+              post.category ||
+              "",
+          })
+        : effectiveReach === "Nationwide UK customers"
+          ? removeLocalOnlyWording(nextCaption)
+          : nextCaption;
+
+      const finalHashtags = shouldForceLocationCaption
+        ? getLocationHashtags(
+            effectiveReach,
+            post.industry ||
+              post.business_type ||
+              post.campaign_industry ||
+              post.category ||
+              "",
+          )
+        : nextHashtags;
+
+      const captionChanged = finalCaption.trim() !== caption.trim();
+      const nextHashtagArray = finalHashtags
+        .split(/\s+/)
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
+      const updates = {
+        caption: finalCaption,
+        cta: nextCta,
+        hashtags: nextHashtagArray,
+        approval_status: "needs_review",
+        approved_at: null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: saveRewriteError } = await supabase
+        .from("campaign_posts")
+        .update(updates)
+        .eq("id", post.id);
+
+      if (saveRewriteError) {
+        throw new Error(saveRewriteError.message || "The improved wording could not be saved.");
+      }
+
+      setCaption(finalCaption);
+      setCta(nextCta);
+      setHashtags(finalHashtags);
+      setPost({
+        ...post,
+        ...updates,
+      });
+
+      setMessage(
+        shouldForceLocationCaption
+          ? `${cleanReachLabel} location applied and saved. FromOne forced a clearer location rewrite.`
+          : captionChanged
+            ? isReachRewrite
+              ? `${cleanReachLabel} location applied and saved.`
+              : "Improved wording saved."
+            : `${cleanReachLabel} location was applied and saved, but the wording came back very similar. Try another improvement if needed.`
+      );
     } catch (error: any) {
       setMessage(error?.message || "Could not improve this post.");
     } finally {
       setRewriting("");
+      setApplyingReach("");
     }
   };
 
@@ -2438,6 +2851,9 @@ export default function PostReviewPage() {
                   <div>
                     <span className="pr2-kicker">Improve wording</span>
                     <h2>Improve the wording</h2>
+                    <p className="pr2-improve-default-note">
+                      FromOne will write for local and surrounding-area customers by default.
+                    </p>
                   </div>
 
                   <button
@@ -2458,7 +2874,7 @@ export default function PostReviewPage() {
                       key={action.value}
                       type="button"
                       className="pr2-btn"
-                      onClick={() => quickImprove(action.value)}
+                      onClick={() => quickImprove(action.value, reachTarget)}
                       disabled={Boolean(rewriting)}
                     >
                       {rewriting === action.value
@@ -2468,35 +2884,6 @@ export default function PostReviewPage() {
                   ))}
                 </div>
 
-                <div className="pr2-simple-reach-row" aria-label="Choose post reach">
-                  <span>Audience</span>
-
-                  {reachOptions.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={
-                        reachTarget === option
-                          ? "pr2-reach-pill is-active"
-                          : "pr2-reach-pill"
-                      }
-                      onClick={() => setReachTarget(option)}
-                    >
-                      {option.replace(" customers", "")}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  className="pr2-btn pr2-btn-primary"
-                  onClick={() => quickImprove("audience_targeted")}
-                  disabled={Boolean(rewriting)}
-                >
-                  {rewriting === "audience_targeted"
-                    ? "Improving..."
-                    : `Improve for ${reachTarget.replace(" customers", "").toLowerCase()} reach`}
-                </button>
               </article>
             )}
           </section>
@@ -3867,6 +4254,164 @@ export default function PostReviewPage() {
 
         .pr2-approval-share-media {
           order: 5;
+        }
+
+
+        /* Make reach/location selection clear */
+        .pr2-reach-helper {
+          margin: -4px 0 0;
+          color: rgba(248,250,252,0.62);
+          font-size: 0.92rem;
+          line-height: 1.42;
+          font-weight: 760;
+        }
+
+
+        /* Reach selector hard-guidance helper */
+        .pr2-reach-helper {
+          margin: -4px 0 0;
+          color: rgba(248,250,252,0.62);
+          font-size: 0.92rem;
+          line-height: 1.42;
+          font-weight: 760;
+        }
+
+
+        /* Reach applying state */
+        .pr2-reach-pill:disabled {
+          cursor: wait;
+          opacity: 0.72;
+        }
+
+        .pr2-reach-pill.is-active:disabled {
+          opacity: 1;
+          border-color: rgba(255, 212, 59, 0.56);
+          background: rgba(255, 212, 59, 0.18);
+          color: #ffe58a;
+        }
+
+
+        /* Location selector UX */
+        .pr2-location-selected {
+          margin: -2px 0 0;
+          color: rgba(248,250,252,0.64);
+          font-size: 0.92rem;
+          line-height: 1.4;
+          font-weight: 760;
+        }
+
+        .pr2-location-selected strong {
+          color: #ffe58a;
+          font-weight: 1000;
+        }
+
+        .pr2-reach-pill:disabled {
+          cursor: wait;
+          opacity: 0.72;
+        }
+
+        .pr2-reach-pill.is-active:disabled {
+          opacity: 1;
+          border-color: rgba(255, 212, 59, 0.56);
+          background: rgba(255, 212, 59, 0.18);
+          color: #ffe58a;
+        }
+
+
+        /* Location selector saved rewrite UX */
+        .pr2-location-selected {
+          margin: -2px 0 0;
+          color: rgba(248,250,252,0.64);
+          font-size: 0.92rem;
+          line-height: 1.4;
+          font-weight: 760;
+        }
+
+        .pr2-location-selected strong {
+          color: #ffe58a;
+          font-weight: 1000;
+        }
+
+        .pr2-reach-pill:disabled {
+          cursor: wait;
+          opacity: 0.72;
+        }
+
+        .pr2-reach-pill.is-active:disabled {
+          opacity: 1;
+          border-color: rgba(255, 212, 59, 0.56);
+          background: rgba(255, 212, 59, 0.18);
+          color: #ffe58a;
+        }
+
+
+        /* Deterministic location apply */
+        .pr2-location-selected {
+          margin: -2px 0 0;
+          color: rgba(248,250,252,0.64);
+          font-size: 0.92rem;
+          line-height: 1.4;
+          font-weight: 760;
+        }
+
+        .pr2-location-selected strong {
+          color: #ffe58a;
+          font-weight: 1000;
+        }
+
+        .pr2-reach-pill:disabled {
+          cursor: wait;
+          opacity: 0.72;
+        }
+
+        .pr2-reach-pill.is-active:disabled {
+          opacity: 1;
+          border-color: rgba(255, 212, 59, 0.56);
+          background: rgba(255, 212, 59, 0.18);
+          color: #ffe58a;
+        }
+
+
+        /* AI location selector */
+        .pr2-location-selected {
+          margin: -2px 0 0;
+          color: rgba(248,250,252,0.64);
+          font-size: 0.92rem;
+          line-height: 1.4;
+          font-weight: 760;
+        }
+
+        .pr2-location-selected strong {
+          color: #ffe58a;
+          font-weight: 1000;
+        }
+
+        .pr2-reach-pill:disabled {
+          cursor: wait;
+          opacity: 0.72;
+        }
+
+        .pr2-reach-pill.is-active:disabled {
+          opacity: 1;
+          border-color: rgba(255, 212, 59, 0.56);
+          background: rgba(255, 212, 59, 0.18);
+          color: #ffe58a;
+        }
+
+
+        /* Remove Location selector from review flow */
+        .pr2-simple-reach-row,
+        .pr2-reach-helper,
+        .pr2-location-selected {
+          display: none !important;
+        }
+
+        .pr2-improve-default-note {
+          margin: 6px 0 0;
+          color: rgba(248,250,252,0.62);
+          line-height: 1.45;
+          font-weight: 760;
+          max-width: 620px;
         }
 
       `}</style>
