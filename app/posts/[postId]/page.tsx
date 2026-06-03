@@ -1053,7 +1053,7 @@ export default function PostReviewPage() {
 
     const cleanHashtags = hashtags
       .split(/\s+/)
-      .map((tag) => tag.trim())
+      .map((tag: string) => tag.trim())
       .filter(Boolean);
 
     const { error } = await supabase
@@ -1894,17 +1894,6 @@ export default function PostReviewPage() {
 
       const result = await response.json().catch(() => ({}));
 
-      if (process.env.NODE_ENV !== "production") {
-        console.log("FromOne rewrite debug", {
-          action,
-          selectedReach: result?.selected_reach,
-          marketReach: result?.market_reach,
-          reachKind: result?.reach_kind,
-          correctionApplied: result?.reach_correction_applied,
-          issues: result?.reach_compliance_issues,
-        });
-      }
-
       if (!response.ok)
         throw new Error(
           result?.error || result?.message || "Could not prepare this image.",
@@ -2073,7 +2062,7 @@ export default function PostReviewPage() {
           cta,
           hashtags: hashtags
             .split(/\s+/)
-            .map((tag) => tag.trim())
+            .map((tag: string) => tag.trim())
             .filter(Boolean),
           media_url: publishMediaUrl || null,
           mediaUrl: publishMediaUrl || null,
@@ -2162,10 +2151,7 @@ export default function PostReviewPage() {
           action,
           improvementAction: action,
 
-          audienceTarget:
-            action === "audience_targeted"
-              ? effectiveReach
-              : audienceTarget,
+          audienceTarget,
           marketReach: effectiveReach,
           selectedReach: effectiveReach,
           locationScope: effectiveReach,
@@ -2206,32 +2192,14 @@ export default function PostReviewPage() {
             post.city ||
             "",
 
-          businessDescription: `${
-            effectiveReach === "Nationwide UK customers" ||
-            effectiveReach === "Online customers"
-              ? ""
-              : post.business_description || ""
-          }
+          businessDescription: `${post.business_description || ""}
 
-Selected reach: ${effectiveReach}
+Default reach: Regional and local customers.
 Reach instruction: ${reachInstruction}
 
-Hard instruction:
-Rewrite the current caption using the selected reach.
-The selected reach must control the rewrite.
-If selected reach is Local customers:
-- make it locally relevant
-- local wording is allowed
-If selected reach is Nationwide UK customers:
-- write for customers/businesses across the UK
-- do not say local customers, nearby areas, local community, foot traffic, local visibility, in your area, or pop in
-- do not mention the saved business location unless it is part of the brand name
-If selected reach is Online customers:
-- write for online customers
-- use wording such as online enquiry, website, order online, book online, browse online or shop from home where suitable
-- avoid walk-in, local area, nearby, foot traffic or shopfront-only wording
-If selected reach is Regional customers:
-- write wider than one town, but not fully national.`,
+Important:
+Rewrite the current caption using a regional and local customer focus by default.
+Do not return the same caption.`,
         }),
       });
 
@@ -2302,7 +2270,7 @@ If selected reach is Regional customers:
       const captionChanged = finalCaption.trim() !== caption.trim();
       const nextHashtagArray = finalHashtags
         .split(/\s+/)
-        .map((tag) => tag.trim())
+        .map((tag: string) => tag.trim())
         .filter(Boolean);
 
       const updates = {
