@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FromOne</string>
+    <string name="title_activity_main">FromOne</string>
+    <string name="package_name">co.uk.fromone.app</string>
+    <string name="custom_url_scheme">co.uk.fromone.app</string>
+</resources>
