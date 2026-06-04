@@ -3391,11 +3391,11 @@ Important:
                       </div>
 
                       <div
+                        className="fromone-premium-calendar-media-frame"
                         style={{
                           background: "#020617",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
+                          display: "grid",
+                          placeItems: "center",
                           overflow: "hidden",
                           padding: 14,
                         }}
@@ -3407,11 +3407,15 @@ Important:
                               muted
                               playsInline
                               style={{
-                                width: "100%",
-                                height: "100%",
+                                display: "block",
+                                width: "auto",
+                                height: "auto",
+                                maxWidth: "100%",
+                                maxHeight: "100%",
                                 objectFit: "contain",
-                                objectPosition: "center",
+                                objectPosition: "center center",
                                 background: "#020617",
+                                margin: "0 auto",
                               }}
                             />
                           ) : mediaKind === "flyer" ? (
@@ -3433,11 +3437,15 @@ Important:
                               src={post.media_url}
                               alt={getDisplayPostTitle(post, index) || "Post media"}
                               style={{
-                                width: "100%",
-                                height: "100%",
+                                display: "block",
+                                width: "auto",
+                                height: "auto",
+                                maxWidth: "100%",
+                                maxHeight: "100%",
                                 objectFit: "contain",
-                                objectPosition: "center",
+                                objectPosition: "center center",
                                 background: "#020617",
+                                margin: "0 auto",
                               }}
                             />
                           )
@@ -3894,6 +3902,80 @@ Important:
         </div>
       )}
       <style jsx global>{`
+        /* Premium post card media centering fix */
+        .fromone-premium-calendar-media-frame {
+          width: 100% !important;
+          height: 100% !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
+          display: grid !important;
+          place-items: center !important;
+          text-align: center !important;
+          overflow: hidden !important;
+          isolation: isolate !important;
+        }
+
+        .fromone-premium-calendar-media-frame img,
+        .fromone-premium-calendar-media-frame video {
+          display: block !important;
+          width: auto !important;
+          height: auto !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
+          object-fit: contain !important;
+          object-position: center center !important;
+          margin: auto !important;
+          flex: none !important;
+          transform: none !important;
+        }
+
+        .fromone-premium-calendar-media-frame > img,
+        .fromone-premium-calendar-media-frame > video {
+          justify-self: center !important;
+          align-self: center !important;
+        }
+
+        .posts-media-preview,
+        .post-media,
+        .weekly-post-media,
+        .queue-post-media,
+        .fromone-upload-preview,
+        .upload-preview,
+        .media-preview,
+        .post-media-preview {
+          display: grid !important;
+          place-items: center !important;
+          text-align: center !important;
+        }
+
+        .posts-media-preview img,
+        .posts-media-preview video,
+        .post-media img,
+        .post-media video,
+        .weekly-post-media img,
+        .weekly-post-media video,
+        .queue-post-media img,
+        .queue-post-media video,
+        .fromone-upload-preview img,
+        .fromone-upload-preview video,
+        .upload-preview img,
+        .upload-preview video,
+        .media-preview img,
+        .media-preview video,
+        .post-media-preview img,
+        .post-media-preview video {
+          display: block !important;
+          width: auto !important;
+          height: auto !important;
+          max-width: 100% !important;
+          max-height: 260px !important;
+          object-fit: contain !important;
+          object-position: center center !important;
+          margin: auto !important;
+          transform: none !important;
+        }
+
+
         /* Phase 9 UI polish — Posts list */
         .posts-page,
         .posts-shell,
