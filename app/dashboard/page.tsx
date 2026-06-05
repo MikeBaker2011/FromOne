@@ -378,7 +378,7 @@ export default function DashboardPage() {
   );
   const [platformDistributionMode, setPlatformDistributionMode] = useState<
     "split" | "every_platform"
-  >("split");
+  >("every_platform");
   const [selectedMarketReach, setSelectedMarketReach] =
     useState("Local customers");
   const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(3);
@@ -1984,6 +1984,8 @@ Important flyer-to-wording rule: the generated caption, CTA and hashtags must be
     }
 
     const postCount = contentDayCount;
+    // In every_platform mode, each uploaded media item/base idea becomes one post per selected platform.
+    // Example: Facebook + Instagram selected = one Facebook post and one Instagram post.
     const totalPlatformPostsToCreate =
       platformDistributionMode === "every_platform"
         ? contentDayCount * selectedPlatforms.length
