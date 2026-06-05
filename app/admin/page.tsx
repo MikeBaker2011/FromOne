@@ -876,6 +876,115 @@ export default function AdminPage() {
 
 
       <style jsx global>{`
+        /* Final admin customer row fix — remove oversized yellow customer pills */
+        .admin-action-list {
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+
+        .admin-action-list .admin-action-item {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 14px !important;
+          align-items: stretch !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .admin-page .admin-action-list .admin-action-main,
+        .admin-page button.admin-action-main,
+        .admin-action-list button.admin-action-main {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: auto !important;
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 6px !important;
+          align-items: start !important;
+          justify-content: stretch !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          background: transparent !important;
+          background-image: none !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          color: inherit !important;
+          text-align: left !important;
+          cursor: pointer !important;
+          appearance: none !important;
+        }
+
+        .admin-page .admin-action-list .admin-action-main:hover,
+        .admin-page button.admin-action-main:hover {
+          transform: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
+        }
+
+        .admin-action-list .admin-customer-email-text {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          color: #ffffff !important;
+          font-size: clamp(0.86rem, 1.1vw, 0.96rem) !important;
+          line-height: 1.25 !important;
+          font-weight: 900 !important;
+          letter-spacing: -0.012em !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+
+        .admin-action-list .admin-action-main span {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.58) !important;
+          font-size: 0.76rem !important;
+          line-height: 1.35 !important;
+          font-weight: 760 !important;
+          letter-spacing: -0.006em !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+
+        .admin-action-list .admin-action-buttons {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 10px !important;
+          align-items: center !important;
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+
+        .admin-action-list .admin-action-buttons button {
+          width: 100% !important;
+          min-width: 0 !important;
+          max-width: 100% !important;
+          white-space: normal !important;
+        }
+
+        @media (max-width: 760px) {
+          .admin-action-list .admin-customer-email-text,
+          .admin-action-list .admin-action-main span {
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+            text-overflow: clip !important;
+          }
+
+          .admin-action-list .admin-action-buttons {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+
         /* Phase 9 UI polish — Admin */
         .admin-page {
           width: min(100%, 1180px) !important;
