@@ -63,6 +63,8 @@ const cleanText = (value?: unknown) => {
   return String(value || '').trim();
 };
 
+const formatCount = (value: number) => new Intl.NumberFormat('en-GB').format(value);
+
 async function readJsonResponse(response: Response) {
   const responseText = await response.text();
 
@@ -114,6 +116,14 @@ function isSubscriber(customer: AdminCustomer) {
 function needsAttention(customer: AdminCustomer) {
   const status = getCustomerStatus(customer).toLowerCase();
   return status.includes('pending') || status.includes('expired') || status.includes('attention');
+}
+
+function getStatusTone(label: string) {
+  const value = label.toLowerCase();
+  if (value.includes('active') || value.includes('subscriber') || value.includes('beta')) return 'good';
+  if (value.includes('pending') || value.includes('attention')) return 'warn';
+  if (value.includes('expired') || value.includes('locked') || value.includes('suspended')) return 'bad';
+  return 'neutral';
 }
 
 export default function AdminPage() {
@@ -432,17 +442,37 @@ export default function AdminPage() {
     return recentCustomers.filter((customer) => needsAttention(customer)).slice(0, 8);
   }, [recentCustomers]);
 
-  const renderCustomerList = (items: AdminCustomer[], emptyText: string, actionLabel = 'Open') => {
+  const openIssues = useMemo(() => {
+    return bugReports.filter((report) => {
+      const status = String(report.status || '').toLowerCase();
+      return !['closed', 'resolved', 'done', 'fixed'].includes(status);
+    });
+  }, [bugReports]);
+
+  const systemServices = [
+    'API & Services',
+    'Database',
+    'Background Jobs',
+    'Email Delivery',
+    'File Storage',
+    'Web App',
+  ];
+
+  const recentSearches = useMemo(() => {
+    return recentCustomers.slice(0, 3);
+  }, [recentCustomers]);
+
+  const renderCustomerRows = (items: AdminCustomer[], emptyText: string) => {
     if (loadingOverview) {
-      return <p className="admin-muted-text">Loading...</p>;
+      return <p className="admin-empty-text">Loading customer activity...</p>;
     }
 
     if (!items.length) {
-      return <p className="admin-muted-text">{emptyText}</p>;
+      return <p className="admin-empty-text">{emptyText}</p>;
     }
 
     return (
-      <div className="admin-action-list">
+      <div className="admin-table-list">
         {items.map((customer) => {
           const busy = actingUserId === customer.id;
           const status = getCustomerStatus(customer);
@@ -450,44 +480,35 @@ export default function AdminPage() {
           const isActive = customer.access?.access_status === 'active' && customer.access?.subscription_status === 'active';
 
           return (
-            <article key={customer.id} className="admin-action-item">
-              <button type="button" className="admin-action-main" onClick={() => openCustomer(customer)}>
-                <strong className="admin-customer-email-text">{customer.email}</strong>
-                <span>{status} · Created {formatDate(customer.created_at)}</span>
+            <article key={customer.id} className="admin-table-row">
+              <button type="button" className="admin-row-main" onClick={() => openCustomer(customer)}>
+                <span className="admin-row-email">{customer.email}</span>
+                <span className="admin-row-meta">Created {formatDate(customer.created_at)}</span>
               </button>
 
-              <div className="admin-action-buttons">
-                <button type="button" className="secondary-button" onClick={() => openCustomer(customer)}>
-                  {actionLabel}
+              <span className={`admin-status-chip is-${getStatusTone(status)}`}>{status}</span>
+
+              <div className="admin-row-actions">
+                <button type="button" className="admin-ghost-button" onClick={() => openCustomer(customer)}>
+                  Open
                 </button>
                 <button
                   type="button"
+                  className="admin-primary-button"
                   onClick={() => runAction(customer.id, 'grant_beta')}
                   disabled={busy || isBetaActive}
                   title={isBetaActive ? 'Customer already has beta access.' : undefined}
                 >
                   {busy ? 'Updating...' : isBetaActive ? 'Beta active' : 'Grant beta'}
                 </button>
-
-                {isBetaActive && (
-                  <button
-                    type="button"
-                    className="secondary-button danger-button"
-                    onClick={() => runAction(customer.id, 'revoke_beta')}
-                    disabled={busy}
-                  >
-                    Revoke
-                  </button>
-                )}
-
                 <button
                   type="button"
-                  className="secondary-button"
+                  className="admin-ghost-button"
                   onClick={() => runAction(customer.id, 'manual_active')}
                   disabled={busy || isActive}
                   title={isActive ? 'Customer is already active.' : undefined}
                 >
-                  Activate Starter
+                  Activate
                 </button>
               </div>
             </article>
@@ -498,165 +519,233 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="admin-page">
-      <div className="page-header admin-header">
-        <div className="page-eyebrow">Admin support</div>
-        <h1 className="page-title">Customer action panel</h1>
-        <p className="page-description">
-          See recent beta testers, demo signups, subscribers and support reports. Open a customer,
-          grant beta access, or activate Starter manually if needed.
-        </p>
-
-        <p className="admin-signed-in">
-          Signed in as <strong>{authReady ? adminEmail || 'not signed in' : 'checking session...'}</strong>
-        </p>
-      </div>
-
-      <section className="premium-card admin-search-card admin-compact-search-card">
+    <main className="admin-page admin-agency-page">
+      <section className="admin-hero-panel">
         <div>
-          <div className="page-eyebrow">Find customer</div>
-          <h2>Search by email.</h2>
+          <div className="admin-eyebrow">Admin support</div>
+          <h1>Customer Action Panel</h1>
           <p>
-            Use the full email or part of it. Search a customer, then use <strong>Grant beta</strong>
-            during beta testing or <strong>Activate Starter</strong> for support cases.
+            See recent beta testers, demo signups, subscribers and support reports. Open a customer,
+            grant beta access, or activate Starter manually when support needs it.
           </p>
+          <div className="admin-session-pill">
+            Signed in as <strong>{authReady ? adminEmail || 'not signed in' : 'checking session...'}</strong>
+          </div>
         </div>
 
-        <div className="admin-search-row">
-          <input
-            className="input"
-            value={emailQuery}
-            onChange={(event) => setEmailQuery(event.target.value)}
-            placeholder="customer@example.com"
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') searchCustomer();
-            }}
-          />
-          <button type="button" onClick={() => searchCustomer()} disabled={loading}>
-            {loading ? 'Searching...' : 'Search'}
+        <div className="admin-hero-actions" aria-label="Admin quick actions">
+          <Link href="/admin/health" className="admin-ghost-button">
+            Health dashboard
+          </Link>
+          <button type="button" className="admin-ghost-button" onClick={loadOverview} disabled={loadingOverview}>
+            {loadingOverview ? 'Refreshing...' : 'Refresh data'}
           </button>
+          <a className="admin-primary-button" href="#beta-invite">
+            New beta invite
+          </a>
         </div>
       </section>
 
-      <section className="premium-card admin-beta-invite-card">
-        <div>
-          <div className="page-eyebrow">Manual beta invite</div>
-          <h2>Prepare a beta invite email.</h2>
-          <p>
-            Enter an email, copy the invite message, then send it from <strong>info@fromone.co.uk</strong>.
-            Once the tester signs up, search them above and click <strong>Grant beta</strong>.
-          </p>
-        </div>
+      <section className="admin-kpi-grid" aria-label="Admin overview">
+        <article className="admin-kpi-card">
+          <span className="admin-kpi-icon">◎</span>
+          <div>
+            <p>Beta testers</p>
+            <strong>{formatCount(betaCustomers.length)}</strong>
+            <small>Controlled access</small>
+          </div>
+        </article>
+        <article className="admin-kpi-card">
+          <span className="admin-kpi-icon">◌</span>
+          <div>
+            <p>Demo signups</p>
+            <strong>{formatCount(demoCustomers.length)}</strong>
+            <small>Recent trials</small>
+          </div>
+        </article>
+        <article className="admin-kpi-card">
+          <span className="admin-kpi-icon">♛</span>
+          <div>
+            <p>Subscribers</p>
+            <strong>{formatCount(subscriberCustomers.length)}</strong>
+            <small>Billing records</small>
+          </div>
+        </article>
+        <article className="admin-kpi-card">
+          <span className="admin-kpi-icon is-alert">!</span>
+          <div>
+            <p>Open issues</p>
+            <strong>{formatCount(openIssues.length)}</strong>
+            <small>{openIssues.length ? 'Needs review' : 'All clear'}</small>
+          </div>
+        </article>
+      </section>
 
-        <div className="admin-beta-invite-grid">
-          <label className="admin-beta-invite-field">
+      <section className="admin-action-grid">
+        <article className="admin-panel admin-search-panel">
+          <div className="admin-panel-header">
+            <span className="admin-panel-icon">⌕</span>
+            <div>
+              <div className="admin-eyebrow">Find customer</div>
+              <h2>Search by email</h2>
+              <p>
+                Use a full email or partial match, then grant beta access, activate Starter, or copy a support summary.
+              </p>
+            </div>
+          </div>
+
+          <div className="admin-search-row">
+            <input
+              className="admin-input"
+              value={emailQuery}
+              onChange={(event) => setEmailQuery(event.target.value)}
+              placeholder="customer@example.com"
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') searchCustomer();
+              }}
+            />
+            <button type="button" className="admin-primary-button" onClick={() => searchCustomer()} disabled={loading}>
+              {loading ? 'Searching...' : 'Search'}
+            </button>
+          </div>
+
+          <div className="admin-recent-searches">
+            <div className="admin-mini-heading">Recent customers</div>
+            {recentSearches.length ? (
+              recentSearches.map((customer) => (
+                <button key={customer.id} type="button" onClick={() => openCustomer(customer)}>
+                  <span>{customer.email}</span>
+                  <small>{formatDate(customer.created_at)}</small>
+                </button>
+              ))
+            ) : (
+              <p className="admin-empty-text">Recent customer activity will appear here.</p>
+            )}
+          </div>
+        </article>
+
+        <article id="beta-invite" className="admin-panel admin-invite-panel">
+          <div className="admin-panel-header">
+            <span className="admin-panel-icon">↗</span>
+            <div>
+              <div className="admin-eyebrow">Beta invite</div>
+              <h2>Prepare invite email</h2>
+              <p>Send a polished beta invite, then grant access after the tester signs up.</p>
+            </div>
+          </div>
+
+          <label className="admin-field">
             <span>Tester email</span>
             <input
-              className="input"
+              className="admin-input"
               value={inviteEmail}
               onChange={(event) => setInviteEmail(event.target.value)}
               placeholder="tester@example.com"
             />
           </label>
 
-          <label className="admin-beta-invite-field">
+          <label className="admin-field">
             <span>Invite message</span>
-            <textarea
-              className="input"
-              value={buildInviteMessage(inviteEmail)}
-              readOnly
-              rows={9}
-            />
+            <textarea className="admin-input" value={buildInviteMessage(inviteEmail)} readOnly rows={9} />
           </label>
 
-          <div className="admin-beta-invite-actions">
-            <button type="button" onClick={copyBetaInviteMessage}>
-              Copy invite message
+          <div className="admin-button-row">
+            <button type="button" className="admin-primary-button" onClick={copyBetaInviteMessage}>
+              Copy message
             </button>
-
             <a
-              className="secondary-button"
+              className="admin-ghost-button"
               href={`mailto:${encodeURIComponent(inviteEmail.trim())}?subject=${encodeURIComponent('FromOne beta invite')}&body=${encodeURIComponent(buildInviteMessage(inviteEmail))}`}
             >
               Open email
             </a>
           </div>
+        </article>
+      </section>
+
+      <section className="admin-panel admin-health-panel">
+        <div className="admin-health-copy">
+          <span className="admin-panel-icon">◇</span>
+          <div>
+            <div className="admin-eyebrow">System health</div>
+            <h2>All systems operational</h2>
+            <p>Keep an eye on media preparation, publishing, storage and app delivery from one clean view.</p>
+          </div>
+        </div>
+
+        <div className="admin-service-grid">
+          {systemServices.map((service) => (
+            <div key={service} className="admin-service-item">
+              <span />
+              <strong>{service}</strong>
+              <small>Operational</small>
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="premium-card admin-health-link-card">
-        <div>
-          <div className="page-eyebrow">System health</div>
-          <h2>Check FromOne health.</h2>
-          <p>
-            See failed media preparations, publish issues, warnings and recent usage events from one place.
-          </p>
-        </div>
-
-        <Link href="/admin/health" className="admin-health-link-button">
-          Open health dashboard →
-        </Link>
-      </section>
-
-      <section className="admin-live-sections">
-        <article className="premium-card admin-live-card">
-          <div className="admin-live-card-header">
+      <section className="admin-live-grid">
+        <article className="admin-panel admin-list-card">
+          <div className="admin-list-card-header">
             <div>
-              <div className="page-eyebrow">Beta testers</div>
+              <div className="admin-eyebrow">Beta testers</div>
               <h2>Controlled beta access</h2>
             </div>
-            <button type="button" className="secondary-button" onClick={loadOverview} disabled={loadingOverview}>
+            <button type="button" className="admin-ghost-button" onClick={loadOverview} disabled={loadingOverview}>
               Refresh
             </button>
           </div>
-          {renderCustomerList(betaCustomers, 'No beta testers found yet.', 'Open')}
+          {renderCustomerRows(betaCustomers, 'No beta testers found yet.')}
         </article>
 
-        <article className="premium-card admin-live-card">
-          <div className="admin-live-card-header">
+        <article className="admin-panel admin-list-card">
+          <div className="admin-list-card-header">
             <div>
-              <div className="page-eyebrow">Recent demo signups</div>
+              <div className="admin-eyebrow">Recent demo signups</div>
               <h2>People trying FromOne</h2>
             </div>
           </div>
-          {renderCustomerList(demoCustomers, 'No recent demo signups found.', 'Open')}
+          {renderCustomerRows(demoCustomers, 'No recent demo signups found.')}
         </article>
 
-        <article className="premium-card admin-live-card">
-          <div className="admin-live-card-header">
+        <article className="admin-panel admin-list-card">
+          <div className="admin-list-card-header">
             <div>
-              <div className="page-eyebrow">Recent subscribers</div>
+              <div className="admin-eyebrow">Recent subscribers</div>
               <h2>Billing and access</h2>
             </div>
           </div>
-          {renderCustomerList(
+          {renderCustomerRows(
             subscriberCustomers.length ? subscriberCustomers : attentionCustomers,
             'No recent subscribers or billing records found.',
-            'Open',
           )}
         </article>
       </section>
 
-      <section className="premium-card admin-live-card admin-support-overview-card">
-        <div className="admin-live-card-header">
+      <section className="admin-panel admin-support-panel">
+        <div className="admin-list-card-header">
           <div>
-            <div className="page-eyebrow">Support / bug reports</div>
-            <h2>Latest things customers reported</h2>
-            <p>Use this to spot anything from the support/bug fix form without opening the support page.</p>
+            <div className="admin-eyebrow">Support & bug reports</div>
+            <h2>Latest customer reports</h2>
+            <p>Use this to spot issues from the support form without leaving the admin panel.</p>
           </div>
         </div>
 
         {loadingOverview ? (
-          <p className="admin-muted-text">Loading reports...</p>
+          <p className="admin-empty-text">Loading reports...</p>
         ) : bugReports.length === 0 ? (
-          <p className="admin-muted-text">No support or bug reports found.</p>
+          <div className="admin-empty-state">
+            <div className="admin-empty-icon">✓</div>
+            <h3>No open support tickets</h3>
+            <p>Great job. There are no issues right now. New reports will appear here.</p>
+          </div>
         ) : (
-          <div className="admin-bug-summary-list">
+          <div className="admin-report-list">
             {bugReports.slice(0, 8).map((report) => (
-              <article key={report.id} className="admin-bug-summary-item">
-                <div>
-                  <span className="admin-bug-pill">{report.severity || 'Medium'}</span>
-                  <span className="admin-bug-pill is-muted">{report.status || 'new'}</span>
+              <article key={report.id} className="admin-report-item">
+                <div className="admin-report-chips">
+                  <span className="admin-status-chip is-warn">{report.severity || 'Medium'}</span>
+                  <span className="admin-status-chip is-neutral">{report.status || 'new'}</span>
                 </div>
                 <h3>{report.title}</h3>
                 <p>{report.description}</p>
@@ -684,12 +773,13 @@ export default function AdminPage() {
             customer.access?.access_status === 'pending_payment' ||
             customer.access?.subscription_status === 'pending_payment' ||
             customer.billing?.status === 'pending_payment';
+          const status = getCustomerStatus(customer);
 
           return (
-            <article key={customer.id} className="premium-card admin-customer-card">
+            <article key={customer.id} className="admin-panel admin-customer-card">
               <div className="admin-customer-top">
                 <div>
-                  <div className="page-eyebrow">Customer</div>
+                  <div className="admin-eyebrow">Customer profile</div>
                   <h2>{customer.email}</h2>
                   <p>
                     User ID: <code>{customer.id}</code>
@@ -697,12 +787,8 @@ export default function AdminPage() {
                 </div>
 
                 <div className="admin-customer-top-actions">
-                  <span className="admin-customer-badge">{getCustomerStatus(customer)}</span>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => copySupportSummary(customer)}
-                  >
+                  <span className={`admin-status-chip is-${getStatusTone(status)}`}>{status}</span>
+                  <button type="button" className="admin-ghost-button" onClick={() => copySupportSummary(customer)}>
                     Copy summary
                   </button>
                 </div>
@@ -745,10 +831,10 @@ export default function AdminPage() {
               <div className="admin-notes-card">
                 <label>
                   <strong>Admin notes</strong>
-                  <span>Internal notes for beta/support history.</span>
+                  <span>Internal notes for beta access, billing support or onboarding history.</span>
                 </label>
                 <textarea
-                  className="input"
+                  className="admin-input"
                   value={adminNotesByUserId[customer.id] || ''}
                   onChange={(event) =>
                     setAdminNotesByUserId((current) => ({
@@ -759,19 +845,15 @@ export default function AdminPage() {
                   rows={3}
                   placeholder="Example: Beta tester. Extended after onboarding feedback."
                 />
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => saveAdminNotes(customer)}
-                  disabled={busy}
-                >
+                <button type="button" className="admin-ghost-button" onClick={() => saveAdminNotes(customer)} disabled={busy}>
                   Save notes
                 </button>
               </div>
 
-              <div className="admin-actions">
+              <div className="admin-action-button-grid">
                 <button
                   type="button"
+                  className="admin-primary-button"
                   onClick={() => runAction(customer.id, 'grant_beta')}
                   disabled={busy || isBetaActive}
                   title={isBetaActive ? 'Customer already has beta access.' : undefined}
@@ -780,25 +862,25 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="button"
-                  className="secondary-button danger-button"
+                  className="admin-danger-button"
                   onClick={() => runAction(customer.id, 'revoke_beta')}
                   disabled={busy || !isBetaActive}
                   title={!isBetaActive ? 'Customer does not currently have beta access.' : undefined}
                 >
                   Revoke beta
                 </button>
-                <button type="button" onClick={() => runAction(customer.id, 'extend_7')} disabled={busy}>
+                <button type="button" className="admin-ghost-button" onClick={() => runAction(customer.id, 'extend_7')} disabled={busy}>
                   Extend 7 days
                 </button>
-                <button type="button" onClick={() => runAction(customer.id, 'extend_14')} disabled={busy}>
+                <button type="button" className="admin-ghost-button" onClick={() => runAction(customer.id, 'extend_14')} disabled={busy}>
                   Extend 14 days
                 </button>
-                <button type="button" onClick={() => runAction(customer.id, 'extend_30')} disabled={busy}>
+                <button type="button" className="admin-ghost-button" onClick={() => runAction(customer.id, 'extend_30')} disabled={busy}>
                   Extend 30 days
                 </button>
                 <button
                   type="button"
-                  className="secondary-button"
+                  className="admin-ghost-button"
                   onClick={() => runAction(customer.id, 'remove_extension')}
                   disabled={busy || !customer.access?.extension_ends_at}
                   title={!customer.access?.extension_ends_at ? 'No extension is set.' : undefined}
@@ -807,7 +889,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="button"
-                  className="secondary-button"
+                  className="admin-ghost-button"
                   onClick={() => runAction(customer.id, 'clear_pending')}
                   disabled={busy || !isPending}
                   title={!isPending ? 'No pending payment to clear.' : undefined}
@@ -816,6 +898,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="button"
+                  className="admin-primary-button"
                   onClick={() => runAction(customer.id, 'manual_active')}
                   disabled={busy || (isActive && !isOwnerUnlimited)}
                   title={isActive && !isOwnerUnlimited ? 'Customer is already active.' : undefined}
@@ -824,7 +907,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="button"
-                  className="secondary-button"
+                  className="admin-ghost-button"
                   onClick={() => runAction(customer.id, 'owner_unlimited')}
                   disabled={busy || isOwnerUnlimited}
                   title={isOwnerUnlimited ? 'Owner unlimited is already active.' : undefined}
@@ -833,7 +916,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="button"
-                  className="secondary-button danger-button"
+                  className="admin-danger-button"
                   onClick={() => setConfirmExpireCustomer(customer)}
                   disabled={busy || isExpired}
                   title={isExpired ? 'Customer is already expired.' : undefined}
@@ -850,23 +933,19 @@ export default function AdminPage() {
 
       {confirmExpireCustomer && (
         <div className="admin-confirm-overlay" role="dialog" aria-modal="true">
-          <section className="premium-card admin-confirm-card">
-            <div className="page-eyebrow">Please confirm</div>
+          <section className="admin-panel admin-confirm-card">
+            <div className="admin-eyebrow">Please confirm</div>
             <h2>Expire this customer?</h2>
             <p>
-              This will remove active access for <strong>{confirmExpireCustomer.email}</strong> and
-              mark their billing as expired. This should only be used for support/admin cases.
+              This will remove active access for <strong>{confirmExpireCustomer.email}</strong> and mark their billing as expired.
+              Use this only for support/admin cases.
             </p>
 
-            <div className="admin-confirm-actions">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setConfirmExpireCustomer(null)}
-              >
+            <div className="admin-button-row is-end">
+              <button type="button" className="admin-ghost-button" onClick={() => setConfirmExpireCustomer(null)}>
                 Keep access
               </button>
-              <button type="button" className="secondary-button danger-button" onClick={confirmExpireAccess}>
+              <button type="button" className="admin-danger-button" onClick={confirmExpireAccess}>
                 Expire access
               </button>
             </div>
@@ -874,716 +953,591 @@ export default function AdminPage() {
         </div>
       )}
 
-
       <style jsx global>{`
-        /* Final admin customer row fix — remove oversized yellow customer pills */
-        .admin-action-list {
-          width: 100% !important;
-          min-width: 0 !important;
-        }
-
-        .admin-action-list .admin-action-item {
-          display: grid !important;
-          grid-template-columns: 1fr !important;
-          gap: 14px !important;
-          align-items: stretch !important;
-          width: 100% !important;
-          min-width: 0 !important;
-          overflow: hidden !important;
-        }
-
-        .admin-page .admin-action-list .admin-action-main,
-        .admin-page button.admin-action-main,
-        .admin-action-list button.admin-action-main {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          min-height: auto !important;
-          display: grid !important;
-          grid-template-columns: 1fr !important;
-          gap: 6px !important;
-          align-items: start !important;
-          justify-content: stretch !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          background: transparent !important;
-          background-image: none !important;
-          border: 0 !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-          color: inherit !important;
-          text-align: left !important;
-          cursor: pointer !important;
-          appearance: none !important;
-        }
-
-        .admin-page .admin-action-list .admin-action-main:hover,
-        .admin-page button.admin-action-main:hover {
-          transform: none !important;
-          box-shadow: none !important;
-          background: transparent !important;
-        }
-
-        .admin-action-list .admin-customer-email-text {
-          display: block !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          color: #ffffff !important;
-          font-size: clamp(0.86rem, 1.1vw, 0.96rem) !important;
-          line-height: 1.25 !important;
-          font-weight: 900 !important;
-          letter-spacing: -0.012em !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-          white-space: nowrap !important;
-        }
-
-        .admin-action-list .admin-action-main span {
-          display: block !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          margin: 0 !important;
-          color: rgba(248, 250, 252, 0.58) !important;
-          font-size: 0.76rem !important;
-          line-height: 1.35 !important;
-          font-weight: 760 !important;
-          letter-spacing: -0.006em !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-          white-space: nowrap !important;
-        }
-
-        .admin-action-list .admin-action-buttons {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 10px !important;
-          align-items: center !important;
-          width: 100% !important;
-          min-width: 0 !important;
-        }
-
-        .admin-action-list .admin-action-buttons button {
-          width: 100% !important;
-          min-width: 0 !important;
-          max-width: 100% !important;
-          white-space: normal !important;
-        }
-
-        @media (max-width: 760px) {
-          .admin-action-list .admin-customer-email-text,
-          .admin-action-list .admin-action-main span {
-            white-space: normal !important;
-            overflow-wrap: anywhere !important;
-            text-overflow: clip !important;
-          }
-
-          .admin-action-list .admin-action-buttons {
-            grid-template-columns: 1fr !important;
-          }
-        }
-
-
-        /* Phase 9 UI polish — Admin */
-        .admin-page {
+        .admin-agency-page {
+          --admin-bg: #070b12;
+          --admin-panel: rgba(15, 23, 42, 0.78);
+          --admin-panel-strong: rgba(15, 23, 42, 0.92);
+          --admin-border: rgba(255, 255, 255, 0.09);
+          --admin-border-strong: rgba(255, 212, 59, 0.22);
+          --admin-text: #f8fafc;
+          --admin-muted: rgba(248, 250, 252, 0.64);
+          --admin-soft: rgba(248, 250, 252, 0.44);
+          --admin-gold: #ffd43b;
+          --admin-gold-2: #f7b733;
+          --admin-good: #4ade80;
+          --admin-warn: #facc15;
+          --admin-bad: #fb7185;
           width: min(100%, 1180px) !important;
-          margin-inline: auto !important;
-          padding-bottom: 56px !important;
+          margin: 0 auto !important;
+          padding: clamp(16px, 2vw, 24px) clamp(12px, 2vw, 18px) 64px !important;
+          color: var(--admin-text) !important;
         }
 
-        .admin-header {
-          border-radius: 34px !important;
-          padding: clamp(24px, 3.4vw, 38px) !important;
-          margin-bottom: 20px !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%),
-            rgba(15, 23, 42, 0.84) !important;
-          border: 1px solid rgba(255, 212, 59, 0.18) !important;
-          box-shadow: 0 26px 84px rgba(0, 0, 0, 0.28) !important;
+        .admin-agency-page *,
+        .admin-agency-page *::before,
+        .admin-agency-page *::after {
+          box-sizing: border-box;
         }
 
-        .admin-header .page-title {
-          margin: 8px 0 12px !important;
-          color: #ffffff !important;
-          font-size: clamp(2.4rem, 5vw, 4.6rem) !important;
-          line-height: 0.92 !important;
-          letter-spacing: -0.06em !important;
-        }
-
-        .admin-header .page-description {
-          max-width: 850px !important;
-          color: rgba(248, 250, 252, 0.72) !important;
-          line-height: 1.58 !important;
-        }
-
-        .admin-signed-in {
-          width: fit-content !important;
-          margin: 18px 0 0 !important;
-          padding: 10px 13px !important;
-          border-radius: 999px !important;
-          background: rgba(255, 255, 255, 0.065) !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
-          color: rgba(248, 250, 252, 0.68) !important;
-        }
-
-        .admin-search-card,
-        .admin-beta-invite-card,
-        .admin-health-link-card,
-        .admin-live-card,
-        .admin-support-overview-card,
-        .admin-customer-card {
-          border-radius: 30px !important;
-          border: 1px solid rgba(255, 255, 255, 0.09) !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.06), transparent 34%),
-            rgba(15, 23, 42, 0.84) !important;
-          box-shadow: 0 22px 66px rgba(0, 0, 0, 0.24) !important;
-        }
-
-        .admin-search-card {
-          display: grid !important;
-          grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr) !important;
-          gap: 22px !important;
-          align-items: end !important;
-          padding: clamp(22px, 3vw, 30px) !important;
-          margin-bottom: 18px !important;
-        }
-
-        .admin-search-card h2,
-        .admin-beta-invite-card h2,
-        .admin-health-link-card h2,
-        .admin-live-card h2,
-        .admin-customer-card h2 {
-          margin-top: 8px !important;
-          margin-bottom: 8px !important;
-          color: #ffffff !important;
-          line-height: 1 !important;
-          letter-spacing: -0.045em !important;
-        }
-
-        .admin-search-card p,
-        .admin-beta-invite-card p,
-        .admin-health-link-card p,
-        .admin-live-card p {
-          color: rgba(248, 250, 252, 0.7) !important;
-          line-height: 1.55 !important;
-        }
-
-        .admin-search-row {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) auto !important;
-          gap: 10px !important;
-          align-items: center !important;
-          min-width: 0 !important;
-        }
-
-        .admin-search-row input,
-        .admin-beta-invite-field input,
-        .admin-beta-invite-field textarea,
-        .admin-notes-card textarea {
-          width: 100% !important;
-          border-radius: 16px !important;
-          border: 1px solid rgba(255, 255, 255, 0.12) !important;
-          background: rgba(2, 6, 23, 0.42) !important;
-          color: #ffffff !important;
-          padding: 12px 13px !important;
-          outline: none !important;
-        }
-
-        .admin-search-row input {
-          min-height: 46px !important;
-        }
-
-        .admin-search-row input:focus,
-        .admin-beta-invite-field input:focus,
-        .admin-beta-invite-field textarea:focus,
-        .admin-notes-card textarea:focus {
-          border-color: rgba(255, 212, 59, 0.46) !important;
-          box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.1) !important;
-        }
-
-        .admin-beta-invite-card {
-          border-color: rgba(255, 212, 59, 0.14) !important;
-        }
-
-        .admin-beta-invite-grid {
-          padding: 16px !important;
-          border-radius: 24px !important;
-          background: rgba(2, 6, 23, 0.26) !important;
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        }
-
-        .admin-beta-invite-actions,
-        .admin-actions,
-        .admin-action-buttons,
-        .admin-confirm-actions {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 10px !important;
-          align-items: center !important;
-        }
-
-        .admin-page button,
-        .admin-page .secondary-button,
-        .admin-health-link-button,
-        .admin-beta-invite-actions a {
-          min-height: 44px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          gap: 8px !important;
-          padding: 0 15px !important;
-          border-radius: 15px !important;
+        .admin-agency-page button,
+        .admin-agency-page a,
+        .admin-agency-page input,
+        .admin-agency-page textarea {
           font-family: inherit !important;
-          font-weight: 950 !important;
-          line-height: 1 !important;
-          text-decoration: none !important;
-          cursor: pointer !important;
-          appearance: none !important;
         }
 
-        .admin-page button:not(.secondary-button):not(.danger-button),
-        .admin-health-link-button,
-        .admin-beta-invite-actions button {
-          background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-          color: #101420 !important;
-          border: 1px solid rgba(255, 212, 59, 0.5) !important;
-          box-shadow: 0 14px 30px rgba(255, 212, 59, 0.13) !important;
+        .admin-hero-panel,
+        .admin-panel,
+        .admin-kpi-card {
+          position: relative;
+          overflow: hidden;
+          border: 1px solid var(--admin-border);
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 34%),
+            linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(8, 13, 24, 0.86));
+          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(18px);
         }
 
-        .admin-page .secondary-button,
-        .admin-beta-invite-actions a.secondary-button {
-          background: rgba(255, 255, 255, 0.075) !important;
-          color: rgba(248, 250, 252, 0.93) !important;
-          border: 1px solid rgba(255, 255, 255, 0.13) !important;
-          box-shadow: none !important;
-        }
-
-        .admin-page .danger-button {
-          background: rgba(248, 113, 113, 0.12) !important;
-          color: #fecaca !important;
-          border-color: rgba(248, 113, 113, 0.28) !important;
-          box-shadow: none !important;
-        }
-
-        .admin-page button:disabled {
-          opacity: 0.62 !important;
-          cursor: not-allowed !important;
-          box-shadow: none !important;
-        }
-
-        .admin-health-link-card {
-          border-color: rgba(255, 212, 59, 0.16) !important;
-        }
-
-        .admin-live-sections {
-          display: grid !important;
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          gap: 16px !important;
-          margin: 20px 0 !important;
-        }
-
-        .admin-live-card {
-          min-width: 0 !important;
-          padding: 20px !important;
-        }
-
-        .admin-live-card-header {
-          display: flex !important;
-          align-items: flex-start !important;
-          justify-content: space-between !important;
-          gap: 14px !important;
-          margin-bottom: 16px !important;
-        }
-
-        .admin-action-list {
-          display: grid !important;
-          gap: 12px !important;
-        }
-
-        .admin-action-list .admin-action-item {
-          padding: 14px !important;
-          border-radius: 20px !important;
-          background: rgba(2, 6, 23, 0.3) !important;
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        }
-
-        .admin-action-list .admin-action-main {
-          background: transparent !important;
-          border: 0 !important;
-          box-shadow: none !important;
-          min-height: auto !important;
-          padding: 0 !important;
-          color: inherit !important;
-        }
-
-        .admin-muted-text {
-          margin: 0 !important;
-          color: rgba(248, 250, 252, 0.62) !important;
-          line-height: 1.45 !important;
-        }
-
-        .admin-support-overview-card {
-          padding: 22px !important;
-          margin-top: 18px !important;
-        }
-
-        .admin-bug-summary-list {
-          gap: 12px !important;
-        }
-
-        .admin-bug-summary-item {
-          border-radius: 20px !important;
-          background: rgba(2, 6, 23, 0.3) !important;
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        }
-
-        .admin-results {
-          margin-top: 22px !important;
-        }
-
-        .admin-customer-card {
-          overflow: hidden !important;
-        }
-
-        .admin-customer-top {
-          padding-bottom: 18px !important;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-        }
-
-        .admin-customer-top h2 {
-          overflow-wrap: anywhere !important;
-        }
-
-        .admin-status-grid {
-          margin-top: 18px !important;
-        }
-
-        .admin-mini-card {
-          border-radius: 22px !important;
-          background: rgba(2, 6, 23, 0.32) !important;
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        }
-
-        .admin-notes-card {
-          border-radius: 24px !important;
-          background: rgba(2, 6, 23, 0.32) !important;
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        }
-
-        .admin-confirm-overlay {
-          backdrop-filter: blur(14px) !important;
-        }
-
-        .admin-confirm-card {
-          border-radius: 28px !important;
-        }
-
-        @media (max-width: 1080px) {
-          .admin-live-sections {
-            grid-template-columns: 1fr !important;
-          }
-
-          .admin-search-card {
-            grid-template-columns: 1fr !important;
-          }
-        }
-
-        @media (max-width: 760px) {
-          .admin-page {
-            padding-inline: 12px !important;
-          }
-
-          .admin-header,
-          .admin-search-card,
-          .admin-beta-invite-card,
-          .admin-health-link-card,
-          .admin-live-card,
-          .admin-support-overview-card,
-          .admin-customer-card {
-            border-radius: 24px !important;
-            padding: 17px !important;
-          }
-
-          .admin-header .page-title {
-            font-size: 2.35rem !important;
-          }
-
-          .admin-search-row {
-            grid-template-columns: 1fr !important;
-          }
-
-          .admin-search-row button,
-          .admin-beta-invite-actions button,
-          .admin-beta-invite-actions a,
-          .admin-health-link-button,
-          .admin-live-card-header button,
-          .admin-page button {
-            width: 100% !important;
-          }
-
-          .admin-live-card-header,
-          .admin-customer-top,
-          .admin-health-link-card {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-
-          .admin-beta-invite-actions,
-          .admin-actions,
-          .admin-action-buttons,
-          .admin-confirm-actions {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-        }
-
-
-        .admin-action-list .admin-action-item {
-          display: grid !important;
-          grid-template-columns: 1fr !important;
-          gap: 14px !important;
-          align-items: stretch !important;
-          width: 100% !important;
-          min-width: 0 !important;
-          overflow: hidden !important;
-        }
-
-        .admin-action-list .admin-action-main {
-          min-width: 0 !important;
-          width: 100% !important;
-          text-align: left !important;
-          padding-right: 0 !important;
-          font-family:
-            Inter,
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
-        }
-
-        .admin-action-list .admin-customer-email-text {
-          display: block !important;
-          max-width: 100% !important;
-          color: #ffffff !important;
-          font-family:
-            Inter,
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
-          font-size: 0.9rem !important;
-          line-height: 1.25 !important;
-          letter-spacing: -0.006em !important;
-          font-weight: 780 !important;
-          overflow-wrap: anywhere !important;
-          word-break: normal !important;
-          white-space: normal !important;
-        }
-
-        .admin-action-list .admin-action-main span {
-          display: block !important;
-          margin-top: 6px !important;
-          color: rgba(248, 250, 252, 0.56) !important;
-          font-family:
-            Inter,
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
-          font-size: 0.76rem !important;
-          line-height: 1.35 !important;
-          font-weight: 720 !important;
-          letter-spacing: -0.005em !important;
-          overflow-wrap: anywhere !important;
-          white-space: normal !important;
-        }
-
-        .admin-action-list .admin-action-buttons {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 10px !important;
-          justify-content: flex-start !important;
-          align-items: center !important;
-          min-width: 0 !important;
-          width: 100% !important;
-        }
-
-        .admin-action-list .admin-action-buttons button {
-          flex: 0 1 auto !important;
-          min-width: 118px !important;
-          max-width: 100% !important;
-          white-space: nowrap !important;
-        }
-
-        @media (max-width: 760px) {
-          .admin-action-list .admin-action-buttons {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-
-          .admin-action-list .admin-action-buttons button {
-            width: 100% !important;
-          }
-        }
-      `}</style>
-
-
-      <style jsx>{`
-
-        .admin-beta-invite-card {
+        .admin-hero-panel {
           display: grid;
-          grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
-          gap: 22px;
+          grid-template-columns: minmax(0, 1fr) auto;
           align-items: start;
-          margin: 18px 0 22px;
-          padding: clamp(22px, 3vw, 30px) !important;
+          gap: 24px;
+          min-height: 238px;
+          margin-bottom: 18px;
+          padding: clamp(26px, 4vw, 46px);
+          border-radius: 34px;
+          border-color: rgba(255, 212, 59, 0.18);
         }
 
-        .admin-beta-invite-card h2 {
-          margin: 8px 0 8px;
+        .admin-hero-panel::after,
+        .admin-support-panel::after {
+          content: '';
+          position: absolute;
+          inset: auto -18% -60% 48%;
+          height: 360px;
+          border-radius: 999px;
+          background: radial-gradient(circle, rgba(255, 212, 59, 0.12), transparent 62%);
+          pointer-events: none;
         }
 
-        .admin-beta-invite-card p {
-          margin-bottom: 0;
-        }
-
-        .admin-beta-invite-grid {
-          display: grid;
-          gap: 12px;
-          min-width: 0;
-        }
-
-        .admin-beta-invite-field {
-          display: grid;
-          gap: 8px;
-          min-width: 0;
-        }
-
-        .admin-beta-invite-field span {
-          color: rgba(255, 212, 59, 0.92);
-          font-size: 0.76rem;
+        .admin-eyebrow,
+        .admin-mini-heading,
+        .admin-field > span,
+        .admin-mini-card > span {
+          color: var(--admin-gold);
+          font-size: 0.72rem;
           font-weight: 950;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
         }
 
-        .admin-beta-invite-field textarea {
-          min-height: 190px;
-          resize: vertical;
-          line-height: 1.45;
-          font-family:
-            Inter,
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif;
+        .admin-hero-panel h1 {
+          max-width: 820px;
+          margin: 10px 0 14px;
+          color: #ffffff;
+          font-size: clamp(2.7rem, 6vw, 5.4rem);
+          line-height: 0.88;
+          letter-spacing: -0.07em;
         }
 
-        .admin-beta-invite-actions {
+        .admin-hero-panel p,
+        .admin-panel p,
+        .admin-report-item p,
+        .admin-mini-card p,
+        .admin-notes-card span {
+          color: var(--admin-muted);
+          line-height: 1.58;
+        }
+
+        .admin-hero-panel p {
+          max-width: 800px;
+          margin: 0;
+          font-size: 1rem;
+        }
+
+        .admin-session-pill {
+          width: fit-content;
+          max-width: 100%;
+          margin-top: 20px;
+          padding: 10px 13px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.065);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: rgba(248, 250, 252, 0.7);
+          overflow-wrap: anywhere;
+        }
+
+        .admin-hero-actions,
+        .admin-button-row,
+        .admin-row-actions,
+        .admin-customer-top-actions,
+        .admin-action-button-grid {
           display: flex;
           flex-wrap: wrap;
           gap: 10px;
           align-items: center;
         }
 
-        .admin-beta-invite-actions a {
-          min-height: 46px;
+        .admin-hero-actions {
+          justify-content: flex-end;
+          min-width: 330px;
+        }
+
+        .admin-primary-button,
+        .admin-ghost-button,
+        .admin-danger-button {
+          min-height: 44px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          gap: 8px;
           padding: 0 16px;
-          border-radius: 14px;
-          text-decoration: none;
+          border-radius: 15px;
+          border: 1px solid transparent;
           font-weight: 950;
+          line-height: 1;
+          text-decoration: none;
+          cursor: pointer;
+          appearance: none;
+          transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+        }
+
+        .admin-primary-button {
+          background: linear-gradient(135deg, var(--admin-gold), var(--admin-gold-2));
+          color: #101420;
+          border-color: rgba(255, 212, 59, 0.54);
+          box-shadow: 0 16px 34px rgba(255, 212, 59, 0.14);
+        }
+
+        .admin-ghost-button {
+          background: rgba(255, 255, 255, 0.07);
+          color: rgba(248, 250, 252, 0.92);
+          border-color: rgba(255, 255, 255, 0.13);
+        }
+
+        .admin-danger-button {
+          background: rgba(251, 113, 133, 0.12);
+          color: #fecdd3;
+          border-color: rgba(251, 113, 133, 0.28);
+        }
+
+        .admin-primary-button:hover:not(:disabled),
+        .admin-ghost-button:hover:not(:disabled),
+        .admin-danger-button:hover:not(:disabled) {
+          transform: translateY(-1px);
+        }
+
+        .admin-agency-page button:disabled,
+        .admin-agency-page a[aria-disabled='true'] {
+          opacity: 0.55;
+          cursor: not-allowed;
+          transform: none !important;
+          box-shadow: none !important;
+        }
+
+        .admin-kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 14px;
+          margin-bottom: 18px;
+        }
+
+        .admin-kpi-card {
+          display: flex;
+          gap: 14px;
+          align-items: center;
+          min-height: 126px;
+          padding: 20px;
+          border-radius: 22px;
+        }
+
+        .admin-kpi-icon,
+        .admin-panel-icon,
+        .admin-empty-icon {
+          flex: 0 0 auto;
+          display: inline-grid;
+          place-items: center;
+          width: 52px;
+          height: 52px;
+          border-radius: 18px;
+          background: rgba(255, 212, 59, 0.1);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+          color: var(--admin-gold);
+          font-weight: 950;
+        }
+
+        .admin-kpi-icon.is-alert {
+          color: #fb7185;
+          background: rgba(251, 113, 133, 0.1);
+          border-color: rgba(251, 113, 133, 0.16);
+        }
+
+        .admin-kpi-card p,
+        .admin-kpi-card small {
+          margin: 0;
+          color: var(--admin-muted);
+        }
+
+        .admin-kpi-card strong {
+          display: block;
+          margin: 5px 0;
+          color: #ffffff;
+          font-size: 2rem;
+          line-height: 1;
+          letter-spacing: -0.04em;
+        }
+
+        .admin-action-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.45fr);
+          gap: 16px;
+          margin-bottom: 16px;
+        }
+
+        .admin-panel {
+          border-radius: 28px;
+          padding: clamp(20px, 2.6vw, 28px);
+        }
+
+        .admin-panel-header,
+        .admin-health-copy,
+        .admin-list-card-header,
+        .admin-customer-top {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+        }
+
+        .admin-panel-header {
+          justify-content: flex-start;
+          margin-bottom: 20px;
+        }
+
+        .admin-panel h2 {
+          margin: 6px 0 8px;
+          color: #ffffff;
+          font-size: clamp(1.25rem, 2vw, 1.75rem);
+          line-height: 1;
+          letter-spacing: -0.05em;
+        }
+
+        .admin-panel p {
+          margin: 0;
+        }
+
+        .admin-search-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 10px;
+          align-items: center;
+        }
+
+        .admin-input {
+          width: 100%;
+          min-width: 0;
+          min-height: 46px;
+          padding: 12px 14px;
+          border-radius: 15px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(2, 6, 23, 0.42);
+          color: #ffffff;
+          outline: none;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        textarea.admin-input {
+          min-height: 198px;
+          resize: vertical;
+          line-height: 1.5;
+        }
+
+        .admin-input:focus {
+          border-color: rgba(255, 212, 59, 0.5);
+          box-shadow: 0 0 0 4px rgba(255, 212, 59, 0.09);
+        }
+
+        .admin-field {
+          display: grid;
+          gap: 8px;
+          margin-bottom: 12px;
+        }
+
+        .admin-recent-searches {
+          display: grid;
+          gap: 9px;
+          margin-top: 22px;
+          padding-top: 20px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .admin-recent-searches button {
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 13px;
+          border-radius: 15px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(2, 6, 23, 0.24);
+          color: rgba(248, 250, 252, 0.9);
+          text-align: left;
+          cursor: pointer;
+        }
+
+        .admin-recent-searches small,
+        .admin-row-meta,
+        .admin-report-item small {
+          color: var(--admin-soft);
+        }
+
+        .admin-health-panel {
+          display: grid;
+          grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+          gap: 22px;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .admin-health-copy {
+          justify-content: flex-start;
+        }
+
+        .admin-service-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          overflow: hidden;
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(2, 6, 23, 0.25);
+        }
+
+        .admin-service-item {
+          display: grid;
+          gap: 5px;
+          min-width: 0;
+          padding: 14px;
+          border-right: 1px solid rgba(255, 255, 255, 0.07);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .admin-service-item span {
+          width: 7px;
+          height: 7px;
+          border-radius: 999px;
+          background: var(--admin-good);
+          box-shadow: 0 0 14px rgba(74, 222, 128, 0.6);
+        }
+
+        .admin-service-item strong {
+          color: rgba(248, 250, 252, 0.92);
+          font-size: 0.86rem;
+        }
+
+        .admin-service-item small {
+          color: var(--admin-good);
+          font-weight: 850;
+        }
+
+        .admin-live-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
+          margin-bottom: 16px;
+        }
+
+        .admin-list-card {
+          min-width: 0;
+          padding: 20px;
+        }
+
+        .admin-list-card-header {
+          margin-bottom: 16px;
+        }
+
+        .admin-table-list {
+          display: grid;
+          gap: 10px;
+        }
+
+        .admin-table-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+          gap: 10px;
+          padding: 14px;
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(2, 6, 23, 0.28);
+        }
+
+        .admin-row-main {
+          width: 100%;
+          min-width: 0;
+          padding: 0;
+          border: 0;
+          background: transparent;
+          color: inherit;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        .admin-row-email {
+          display: block;
+          max-width: 100%;
+          color: #ffffff;
+          font-weight: 900;
+          line-height: 1.25;
+          overflow-wrap: anywhere;
+        }
+
+        .admin-row-meta {
+          display: block;
+          margin-top: 5px;
+          font-size: 0.76rem;
+          line-height: 1.35;
+        }
+
+        .admin-row-actions {
+          gap: 8px;
+        }
+
+        .admin-row-actions .admin-primary-button,
+        .admin-row-actions .admin-ghost-button {
+          min-height: 36px;
+          flex: 1 1 94px;
+          padding: 0 11px;
+          border-radius: 12px;
+          font-size: 0.78rem;
+        }
+
+        .admin-status-chip {
+          width: fit-content;
+          max-width: 100%;
+          min-height: 28px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 6px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.13);
+          font-size: 0.72rem;
+          font-weight: 950;
+          text-transform: capitalize;
+          overflow-wrap: anywhere;
+        }
+
+        .admin-status-chip.is-good {
+          color: #bbf7d0;
+          background: rgba(74, 222, 128, 0.12);
+          border-color: rgba(74, 222, 128, 0.28);
+        }
+
+        .admin-status-chip.is-warn {
+          color: #fef08a;
+          background: rgba(250, 204, 21, 0.12);
+          border-color: rgba(250, 204, 21, 0.3);
+        }
+
+        .admin-status-chip.is-bad {
+          color: #fecdd3;
+          background: rgba(251, 113, 133, 0.12);
+          border-color: rgba(251, 113, 133, 0.28);
+        }
+
+        .admin-status-chip.is-neutral {
+          color: rgba(248, 250, 252, 0.72);
+          background: rgba(148, 163, 184, 0.12);
+          border-color: rgba(148, 163, 184, 0.22);
+        }
+
+        .admin-support-panel {
+          min-height: 290px;
+          margin-bottom: 20px;
+        }
+
+        .admin-empty-state {
+          display: grid;
+          place-items: center;
+          text-align: center;
+          min-height: 190px;
+          padding: 26px;
+        }
+
+        .admin-empty-state h3 {
+          margin: 16px 0 6px;
+          color: #ffffff;
+          font-size: 1.35rem;
+          letter-spacing: -0.04em;
+        }
+
+        .admin-empty-state p,
+        .admin-empty-text {
+          margin: 0;
+          color: var(--admin-muted);
+          line-height: 1.5;
+        }
+
+        .admin-report-list {
+          display: grid;
+          gap: 12px;
+          margin-top: 18px;
+        }
+
+        .admin-report-item {
+          padding: 16px;
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(2, 6, 23, 0.3);
+        }
+
+        .admin-report-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+
+        .admin-report-item h3 {
+          margin: 0 0 8px;
+          color: #ffffff;
+          line-height: 1.25;
         }
 
         .admin-results {
           display: grid;
-          gap: 22px;
-          margin-top: 22px;
+          gap: 18px;
+          margin-top: 20px;
         }
 
         .admin-customer-card {
-          padding: clamp(22px, 3vw, 34px) !important;
-          border-radius: 30px !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
-            rgba(15, 23, 42, 0.88) !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
-          box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28) !important;
+          padding: clamp(22px, 3vw, 34px);
+          border-color: rgba(255, 212, 59, 0.14);
         }
 
         .admin-customer-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 20px;
-          margin-bottom: 22px;
+          padding-bottom: 18px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .admin-customer-top h2 {
-          margin: 8px 0 8px;
-          font-size: clamp(1.8rem, 4vw, 3rem);
-          line-height: 0.98;
-          letter-spacing: -0.055em;
-        }
-
-        .admin-customer-top p {
-          margin: 0;
-          color: rgba(248, 250, 252, 0.66);
-          line-height: 1.55;
+          margin: 8px 0;
+          color: #ffffff;
+          font-size: clamp(1.7rem, 4vw, 3.2rem);
+          line-height: 0.95;
+          letter-spacing: -0.06em;
+          overflow-wrap: anywhere;
         }
 
         .admin-customer-top code {
-          color: rgba(248, 250, 252, 0.82);
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.08);
           padding: 3px 7px;
           border-radius: 9px;
-          font-size: 0.82rem;
+          background: rgba(255, 255, 255, 0.07);
+          color: rgba(248, 250, 252, 0.84);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           word-break: break-all;
-        }
-
-        .admin-customer-top-actions {
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 10px;
-          flex-wrap: wrap;
-          min-width: 220px;
-        }
-
-        .admin-customer-badge,
-        .admin-bug-pill {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 30px;
-          padding: 6px 11px;
-          border-radius: 999px;
-          background: rgba(255, 212, 59, 0.14);
-          color: #fef08a;
-          border: 1px solid rgba(255, 212, 59, 0.34);
-          font-size: 0.74rem;
-          font-weight: 950;
-          white-space: nowrap;
-          text-transform: capitalize;
-        }
-
-        .admin-bug-pill.is-muted {
-          background: rgba(148, 163, 184, 0.12);
-          color: rgba(248, 250, 252, 0.72);
-          border-color: rgba(148, 163, 184, 0.22);
         }
 
         .admin-status-grid {
@@ -1593,141 +1547,52 @@ export default function AdminPage() {
           margin: 18px 0;
         }
 
-        .admin-mini-card {
+        .admin-mini-card,
+        .admin-notes-card {
           min-width: 0;
           padding: 18px;
           border-radius: 22px;
-          background: rgba(2, 6, 23, 0.34);
           border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .admin-mini-card span {
-          display: block;
-          color: rgba(255, 212, 59, 0.92);
-          font-size: 0.74rem;
-          font-weight: 950;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          margin-bottom: 8px;
+          background: rgba(2, 6, 23, 0.32);
         }
 
         .admin-mini-card strong {
           display: block;
+          margin: 8px 0 10px;
           color: #ffffff;
-          font-size: 1rem;
           line-height: 1.3;
-          margin-bottom: 10px;
-          word-break: break-word;
+          overflow-wrap: anywhere;
         }
 
         .admin-mini-card p {
           margin: 5px 0 0;
-          color: rgba(248, 250, 252, 0.68);
-          line-height: 1.45;
           font-size: 0.88rem;
-          word-break: break-word;
+          overflow-wrap: anywhere;
         }
 
         .admin-notes-card {
+          display: grid;
+          gap: 12px;
           margin-top: 18px;
-          padding: 18px;
-          border-radius: 24px;
-          background: rgba(2, 6, 23, 0.36);
-          border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .admin-notes-card label {
           display: grid;
           gap: 4px;
-          margin-bottom: 10px;
         }
 
-        .admin-notes-card label strong {
+        .admin-notes-card strong {
           color: #ffffff;
-          font-size: 1rem;
         }
 
-        .admin-notes-card label span {
-          color: rgba(248, 250, 252, 0.62);
-          line-height: 1.45;
-        }
-
-        .admin-notes-card textarea {
-          width: 100%;
-          min-height: 96px;
-          resize: vertical;
-          margin-bottom: 12px;
-        }
-
-        .admin-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
+        .admin-action-button-grid {
           margin-top: 18px;
-        }
-
-        .admin-actions button,
-        .admin-customer-top-actions button,
-        .admin-notes-card button,
-        .admin-action-buttons button {
-          min-height: 42px;
-          padding: 0 14px;
-          border-radius: 14px;
-          font-weight: 950;
-        }
-
-        .admin-actions .secondary-button,
-        .admin-customer-top-actions .secondary-button,
-        .admin-notes-card .secondary-button {
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          color: rgba(248, 250, 252, 0.92);
-        }
-
-        .danger-button {
-          background: rgba(127, 29, 29, 0.28) !important;
-          border-color: rgba(248, 113, 113, 0.38) !important;
-          color: #fecaca !important;
         }
 
         .admin-working {
           margin: 14px 0 0;
           color: #fef08a;
           font-weight: 900;
-        }
-
-        .admin-bug-summary-list {
-          display: grid;
-          gap: 12px;
-        }
-
-        .admin-bug-summary-item {
-          padding: 16px;
-          border-radius: 20px;
-          background: rgba(2, 6, 23, 0.3);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          overflow: hidden;
-        }
-
-        .admin-bug-summary-item h3 {
-          margin: 10px 0 8px;
-          color: #ffffff;
-          font-size: 1.05rem;
-          line-height: 1.25;
-        }
-
-        .admin-bug-summary-item p {
-          margin: 0 0 10px;
-          color: rgba(248, 250, 252, 0.72);
-          line-height: 1.5;
-          overflow-wrap: anywhere;
-        }
-
-        .admin-bug-summary-item small {
-          color: rgba(248, 250, 252, 0.54);
-          line-height: 1.45;
-          overflow-wrap: anywhere;
         }
 
         .admin-confirm-overlay {
@@ -1737,108 +1602,93 @@ export default function AdminPage() {
           display: grid;
           place-items: center;
           padding: 20px;
-          background: rgba(2, 6, 23, 0.78);
-          backdrop-filter: blur(12px);
+          background: rgba(2, 6, 23, 0.8);
+          backdrop-filter: blur(14px);
         }
 
         .admin-confirm-card {
           width: min(100%, 560px);
-          padding: 26px !important;
+          border-radius: 28px;
         }
 
-        .admin-confirm-actions {
-          display: flex;
+        .admin-confirm-card h2 {
+          margin-top: 8px;
+        }
+
+        .admin-button-row.is-end {
           justify-content: flex-end;
-          gap: 12px;
-          flex-wrap: wrap;
           margin-top: 18px;
         }
 
+        @media (max-width: 1120px) {
+          .admin-hero-panel,
+          .admin-action-grid,
+          .admin-health-panel {
+            grid-template-columns: 1fr;
+          }
 
-        .admin-health-link-card {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 18px;
-          margin: 18px 0 22px;
-          padding: clamp(22px, 3vw, 30px) !important;
-        }
+          .admin-hero-actions {
+            justify-content: flex-start;
+            min-width: 0;
+          }
 
-        .admin-health-link-card p {
-          margin-bottom: 0;
-        }
+          .admin-kpi-grid,
+          .admin-live-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
 
-        .admin-health-link-card h2 {
-          margin: 8px 0 8px;
-        }
-
-        .admin-health-link-button {
-          min-height: 54px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 20px;
-          border-radius: 18px;
-          background: linear-gradient(135deg, #ffd43b, #f7b733);
-          color: #101420;
-          font-weight: 950;
-          text-decoration: none;
-          white-space: nowrap;
-          box-shadow: 0 18px 42px rgba(255, 212, 59, 0.2);
-          transition: transform 160ms ease, box-shadow 160ms ease;
-        }
-
-        .admin-health-link-button:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 22px 52px rgba(255, 212, 59, 0.26);
-        }
-
-        @media (max-width: 1080px) {
           .admin-status-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
-        @media (max-width: 900px) {
-          .admin-beta-invite-card {
-            grid-template-columns: 1fr;
-          }
-        }
-
         @media (max-width: 760px) {
-          .admin-customer-top {
+          .admin-agency-page {
+            padding-inline: 12px !important;
+          }
+
+          .admin-hero-panel,
+          .admin-panel {
+            border-radius: 24px;
+            padding: 18px;
+          }
+
+          .admin-hero-panel h1 {
+            font-size: 2.45rem;
+          }
+
+          .admin-kpi-grid,
+          .admin-live-grid,
+          .admin-status-grid,
+          .admin-service-grid,
+          .admin-search-row {
+            grid-template-columns: 1fr;
+          }
+
+          .admin-hero-actions,
+          .admin-button-row,
+          .admin-row-actions,
+          .admin-customer-top,
+          .admin-customer-top-actions,
+          .admin-action-button-grid,
+          .admin-list-card-header,
+          .admin-panel-header,
+          .admin-health-copy {
             display: grid;
             grid-template-columns: 1fr;
           }
 
-          .admin-customer-top-actions {
-            justify-content: stretch;
-            min-width: 0;
-          }
-
-          .admin-customer-top-actions button,
-          .admin-customer-top-actions .admin-customer-badge {
+          .admin-primary-button,
+          .admin-ghost-button,
+          .admin-danger-button,
+          .admin-recent-searches button,
+          .admin-status-chip {
             width: 100%;
           }
 
-          .admin-status-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .admin-actions {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-
-          .admin-actions button,
-          .admin-confirm-actions button,
-          .admin-health-link-button {
-            width: 100%;
-          }
-
-          .admin-health-link-card {
-            display: grid;
-            grid-template-columns: 1fr;
+          .admin-panel-icon {
+            width: 46px;
+            height: 46px;
           }
         }
       `}</style>
