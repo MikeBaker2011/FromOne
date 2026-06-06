@@ -2617,7 +2617,7 @@ If uploads are supplied:
     return (
       <main
         style={{
-          width: "min(1120px, calc(100vw - 28px))",
+          width: "min(1040px, 100%)",
           minHeight: "calc(100vh - 120px)",
           margin: "0 auto 56px",
           padding: "0 0 42px",
@@ -2688,13 +2688,35 @@ If uploads are supplied:
   return (
     <main
       style={{
-        width: "min(1120px, calc(100vw - 28px))",
+        width: "min(1040px, 100%)",
         minHeight: "calc(100vh - 120px)",
         margin: "0 auto 56px",
         padding: "0 0 42px",
       }}
     >
-      <style jsx global>{`        @media (max-width: 900px) {
+      <style jsx global>{`        /* Client feedback polish: keep dashboard inside the app content column */
+        .dashboard-final-page,
+        main:has(.dashboard-final-card),
+        main:has(.dashboard-upload-dropzone) {
+          max-width: min(1040px, 100%) !important;
+          box-sizing: border-box !important;
+        }
+
+        @media (max-width: 1180px) {
+          main:has(.dashboard-final-card),
+          main:has(.dashboard-upload-dropzone) {
+            width: min(980px, 100%) !important;
+          }
+        }
+
+        @media (max-width: 760px) {
+          main:has(.dashboard-final-card),
+          main:has(.dashboard-upload-dropzone) {
+            width: 100% !important;
+          }
+        }
+
+        @media (max-width: 900px) {
           .dashboard-upload-file-name {
             display: none !important;
           }

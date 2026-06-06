@@ -2398,6 +2398,7 @@ Do not return the same caption.`,
         ...post,
         ...updates,
       });
+      setActivePanel("review");
 
       setMessage(
         shouldForceLocationCaption
@@ -2454,6 +2455,27 @@ Do not return the same caption.`,
         </div>
 
         {message && <div className="pr2-message pr2-message-inline">{message}</div>}
+
+        {rewriting && (
+          <div className="pr2-ai-progress" role="status" aria-live="polite">
+            <div className="pr2-ai-progress-card">
+              <span className="pr2-kicker">FromOne is working</span>
+              <h2>{applyingReach ? "Applying location focus" : "Improving wording"}</h2>
+              <p>
+                We are rewriting the caption and saving the updated wording back to this post.
+                You will be returned to the review card when it is ready.
+              </p>
+              <div className="pr2-ai-progress-bar" aria-hidden="true">
+                <span />
+              </div>
+              <div className="pr2-ai-progress-steps">
+                <span>Reading current caption</span>
+                <span>Rewriting for the selected style</span>
+                <span>Saving improved wording</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <section className="pr2-simple-steps pr2-simple-steps-merged pr2-hidden-steps" aria-label="Post review steps">
           <span className="is-active"><strong>1</strong> Review post</span>
@@ -4807,6 +4829,100 @@ Do not return the same caption.`,
         .pr2-reach-helper,
         .pr2-location-selected {
           display: none !important;
+        }
+
+
+        /* Client feedback polish: visible AI wording progress state */
+        .pr2-ai-progress {
+          position: fixed !important;
+          inset: 0 !important;
+          z-index: 70 !important;
+          display: grid !important;
+          place-items: center !important;
+          padding: 20px !important;
+          background: rgba(2, 6, 23, 0.72) !important;
+          backdrop-filter: blur(14px) !important;
+        }
+
+        .pr2-ai-progress-card {
+          width: min(100%, 560px) !important;
+          border-radius: 30px !important;
+          padding: clamp(24px, 4vw, 34px) !important;
+          border: 1px solid rgba(255, 212, 59, 0.24) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 36%),
+            linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.96)) !important;
+          box-shadow: 0 34px 110px rgba(0, 0, 0, 0.48) !important;
+          text-align: left !important;
+        }
+
+        .pr2-ai-progress-card h2 {
+          margin: 8px 0 10px !important;
+          color: #ffffff !important;
+          font-size: clamp(2rem, 4vw, 3.2rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.055em !important;
+        }
+
+        .pr2-ai-progress-card p {
+          margin: 0 !important;
+          color: rgba(248,250,252,0.72) !important;
+          line-height: 1.55 !important;
+          font-weight: 760 !important;
+        }
+
+        .pr2-ai-progress-bar {
+          height: 10px !important;
+          margin: 22px 0 16px !important;
+          border-radius: 999px !important;
+          overflow: hidden !important;
+          background: rgba(255,255,255,0.08) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+        }
+
+        .pr2-ai-progress-bar span {
+          display: block !important;
+          width: 42% !important;
+          height: 100% !important;
+          border-radius: inherit !important;
+          background: linear-gradient(90deg, transparent, #ffd43b, #f7b733, transparent) !important;
+          animation: pr2AiProgressSlide 1.08s ease-in-out infinite !important;
+        }
+
+        .pr2-ai-progress-steps {
+          display: grid !important;
+          gap: 8px !important;
+        }
+
+        .pr2-ai-progress-steps span {
+          display: flex !important;
+          align-items: center !important;
+          gap: 9px !important;
+          color: rgba(248,250,252,0.72) !important;
+          font-size: 0.92rem !important;
+          font-weight: 850 !important;
+        }
+
+        .pr2-ai-progress-steps span::before {
+          content: "" !important;
+          width: 8px !important;
+          height: 8px !important;
+          flex: 0 0 auto !important;
+          border-radius: 999px !important;
+          background: #ffd43b !important;
+          box-shadow: 0 0 18px rgba(255, 212, 59, 0.72) !important;
+        }
+
+        @keyframes pr2AiProgressSlide {
+          0% { transform: translateX(-110%); }
+          100% { transform: translateX(260%); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .pr2-ai-progress-bar span {
+            animation: none !important;
+            width: 100% !important;
+          }
         }
 
         .pr2-improve-default-note {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Sidebar from './Sidebar';
 import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 import { usePathname, useRouter } from 'next/navigation';
@@ -26,6 +26,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
+  const accessCheckedOnceRef = useRef(false);
 
   useEffect(() => {
     checkAccess();
@@ -59,6 +60,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     };
   };
 
+  const finishAccessCheck = () => {
+    accessCheckedOnceRef.current = true;
+    finishAccessCheck();
+  };
+
   const handleInvalidSession = async () => {
     try {
       await supabase.auth.signOut();
@@ -66,7 +72,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       console.warn('Sign out after invalid session failed:', error);
     }
 
-    setCheckingAccess(false);
+    finishAccessCheck();
 
     if (isProtectedRoute()) {
       router.replace('/signin');
@@ -75,11 +81,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const checkAccess = async () => {
     if (!isProtectedRoute()) {
-      setCheckingAccess(false);
+      finishAccessCheck();
       return;
     }
 
-    setCheckingAccess(true);
+    if (!accessCheckedOnceRef.current) {
+      setCheckingAccess(true);
+    }
 
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
@@ -94,7 +102,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setCheckingAccess(false);
+      finishAccessCheck();
       router.replace('/signin');
       return;
     }
@@ -102,7 +110,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     const user = authData.user;
 
     if (!user) {
-      setCheckingAccess(false);
+      finishAccessCheck();
       router.replace('/signin');
       return;
     }
@@ -115,7 +123,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
     if (error) {
       console.error('Billing access check error:', error.message);
-      setCheckingAccess(false);
+      finishAccessCheck();
       router.replace('/subscription');
       return;
     }
@@ -138,12 +146,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       if (insertError) {
         console.error('Create trial error:', insertError.message);
-        setCheckingAccess(false);
+        finishAccessCheck();
         router.replace('/subscription');
         return;
       }
 
-      setCheckingAccess(false);
+      finishAccessCheck();
       return;
     }
 
@@ -191,7 +199,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           .eq('user_id', user.id);
       }
 
-      setCheckingAccess(false);
+      finishAccessCheck();
 
       if (!pathname.startsWith('/subscription')) {
         router.replace('/subscription');
@@ -200,7 +208,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setCheckingAccess(false);
+    finishAccessCheck();
   };
 
   if (!shouldShowAppShell()) {
