@@ -62,7 +62,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const finishAccessCheck = () => {
     accessCheckedOnceRef.current = true;
-    finishAccessCheck();
+    setCheckingAccess(false);
   };
 
   const handleInvalidSession = async () => {
@@ -246,50 +246,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
         <main className="main-content">
-          {checkingAccess && isProtectedRoute() && (
-            <div
-              aria-label="Checking access"
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                zIndex: 9999,
-                height: 3,
-                overflow: 'hidden',
-                background: 'rgba(255, 212, 59, 0.08)',
-                pointerEvents: 'none',
-              }}
-            >
-              <div
-                style={{
-                  width: '42%',
-                  height: '100%',
-                  borderRadius: 999,
-                  background: 'linear-gradient(90deg, transparent, #ffd43b, transparent)',
-                  animation: 'fromoneAccessBar 1.05s ease-in-out infinite',
-                }}
-              />
-            </div>
-          )}
-
-          <style jsx global>{`
-            @keyframes fromoneAccessBar {
-              0% {
-                transform: translateX(-120%);
-              }
-
-              100% {
-                transform: translateX(260%);
-              }
-            }
-
-            @media (prefers-reduced-motion: reduce) {
-              [aria-label="Checking access"] > div {
-                animation: none !important;
-              }
-            }
-          `}</style>
 
           {children}
         </main>
