@@ -342,7 +342,7 @@ const academyLessons = [
   }
 ];
 
-export default function FromOneAcademyPage() {
+export default function TutorialsPage() {
   const [selectedStep, setSelectedStep] = useState("01");
 
   const selectedLesson =
@@ -363,15 +363,15 @@ export default function FromOneAcademyPage() {
     <main className="academy-page">
       <section className="premium-card academy-shell">
         <header className="academy-hero">
-          <div className="page-eyebrow">FromOne Academy</div>
-          <h1 className="page-title">Learn FromOne faster.</h1>
+          <div className="page-eyebrow">Tutorials</div>
+          <h1 className="page-title">Tutorials.</h1>
           <p className="page-description">
-            Clear, practical tutorials for setting up your account, creating better posts,
+            Clear, practical guides for setting up your account, creating better posts,
             reviewing content and publishing with confidence.
           </p>
         </header>
 
-        <section className="academy-tutorials" aria-label="FromOne Academy tutorials">
+        <section className="academy-tutorials" aria-label="FromOne tutorials">
           <div className="academy-tutorials-head">
             <div>
               <div className="page-eyebrow">Tutorials</div>
@@ -403,7 +403,7 @@ export default function FromOneAcademyPage() {
         <article
           id="academy-selected-lesson"
           className="academy-lesson-card"
-          aria-label="Selected Academy tutorial"
+          aria-label="Selected tutorial"
         >
           <div className="academy-lesson-head">
             <div className="academy-lesson-meta">
@@ -873,6 +873,91 @@ export default function FromOneAcademyPage() {
           }
 
         }
+
+        /* Final responsive overflow fix for Tutorials at laptop/tablet widths */
+        html,
+        body {
+          max-width: 100% !important;
+          overflow-x: hidden !important;
+        }
+
+        .academy-page,
+        .academy-shell,
+        .academy-hero,
+        .academy-tutorials,
+        .academy-tutorials-head,
+        .academy-card-scroll,
+        .academy-lesson-card,
+        .academy-lesson-body,
+        .academy-before-card,
+        .academy-steps-card,
+        .academy-note-grid,
+        .academy-step-row,
+        .academy-subject-card {
+          box-sizing: border-box !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+        }
+
+        .academy-page {
+          width: min(100%, calc(100vw - 32px)) !important;
+          max-width: 1040px !important;
+          overflow-x: hidden !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+
+        .academy-shell {
+          overflow-x: hidden !important;
+        }
+
+        .academy-tutorials {
+          overflow: hidden !important;
+        }
+
+        .academy-card-scroll {
+          width: 100% !important;
+          max-width: 100% !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          overscroll-behavior-inline: contain !important;
+          -webkit-overflow-scrolling: touch !important;
+          contain: inline-size !important;
+        }
+
+        .academy-subject-card {
+          width: 100% !important;
+        }
+
+        @media (max-width: 1100px) {
+          .academy-page {
+            width: min(100%, calc(100vw - 32px)) !important;
+            max-width: calc(100vw - 32px) !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+          }
+
+          .academy-shell {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          .academy-tutorials-head {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .academy-page {
+            width: min(100%, calc(100vw - 22px)) !important;
+            max-width: calc(100vw - 22px) !important;
+          }
+
+          .academy-card-scroll {
+            grid-auto-columns: minmax(0, min(82vw, 260px)) !important;
+          }
+        }
+
       `}</style>
     </main>
   );
