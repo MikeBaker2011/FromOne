@@ -2968,31 +2968,8 @@ Important:
                     minWidth: 220,
                   }}
                 >
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() =>
-                      setShowSavedWeekControls((current) => !current)
-                    }
-                    style={{ minHeight: 52, borderRadius: 16, width: "100%" }}
-                  >
-                    {showSavedWeekControls ? "Hide weeks" : "Manage weeks"}
-                  </button>
 
-                  {sortedPosts.length > 0 && sortedPosts.length < 7 && (
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => {
-                        window.location.href = campaign?.id
-                          ? `/dashboard?addToCampaign=${encodeURIComponent(campaign.id)}`
-                          : "/dashboard";
-                      }}
-                      style={{ minHeight: 52, borderRadius: 16, width: "100%" }}
-                    >
-                      + Add media
-                    </button>
-                  )}
+                  
                 </div>
               </div>
 
