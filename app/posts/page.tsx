@@ -2880,8 +2880,7 @@ Important:
             className="page-description"
             style={{ margin: "0 auto 28px", maxWidth: 760 }}
           >
-            Review each post, then publish Facebook and Instagram or copy/open
-            TikTok.
+            Review each post before anything is published. Edit, schedule, publish or delete when ready.
           </p>
 
           <div className="page-eyebrow">No posts yet</div>
@@ -2952,8 +2951,7 @@ Important:
                     className="page-description"
                     style={{ margin: 0, maxWidth: 760 }}
                   >
-                    Review, edit or delete each post. Nothing publishes until
-                    you choose the next action.
+                    Review each post before anything is published. Open a post to edit the wording, image, date or platform.
                   </p>
                 </div>
 
@@ -3095,8 +3093,17 @@ Important:
             </section>
           )}
 
+          <section className="premium-card posts-onboarding-helper-card">
+            <div className="page-eyebrow">How this page works</div>
+            <h2>Review before anything goes live.</h2>
+            <p>
+              Open each post to check the wording, image, date and platform. You can edit,
+              publish, schedule or delete from the review screen.
+            </p>
+          </section>
+
           <section
-            className="premium-card"
+            className="premium-card posts-weekly-review-section"
             style={{
               display: "grid",
               gap: 20,
@@ -3128,8 +3135,7 @@ Important:
                   to review.
                 </h2>
                 <p style={{ margin: 0, color: "var(--muted)" }}>
-                  A clean review board for this week. The full editing tools
-                  open inside each post.
+                  Open each post to check the wording, image and schedule before anything is published.
                 </p>
               </div>
             </div>
@@ -3250,13 +3256,16 @@ Important:
 
             {sortedPosts.length > 0 && (
               <div
+                className="posts-weekly-card-grid"
                 style={{
                   display: "grid",
                   gridTemplateColumns:
                     "repeat(auto-fill, minmax(250px, 320px))",
                   gap: 16,
                   alignItems: "stretch",
-                  justifyContent: "start",
+                  justifyContent: "center",
+                  justifyItems: "center",
+                  width: "100%",
                 }}
               >
                 {sortedPosts.map((post: any, index: number) => {
@@ -3320,8 +3329,8 @@ Important:
                         style={{
                           position: "absolute",
                           zIndex: 3,
-                          top: 14,
-                          left: 14,
+                          top: 18,
+                          left: 18,
                           width: 68,
                           borderRadius: 20,
                           overflow: "hidden",
@@ -4416,7 +4425,127 @@ Important:
             max-width: 100% !important;
           }
         }
-      
+
+
+        /* Final posts onboarding polish */
+        .posts-onboarding-helper-card {
+          margin: 0 0 22px !important;
+          padding: clamp(20px, 3vw, 28px) !important;
+          border-radius: 28px !important;
+          border: 1px solid rgba(255, 212, 59, 0.16) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+            rgba(15, 23, 42, 0.84) !important;
+          box-shadow: 0 22px 66px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .posts-onboarding-helper-card h2 {
+          margin: 8px 0 10px !important;
+          color: #ffffff !important;
+          font-size: clamp(1.7rem, 3vw, 2.6rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.055em !important;
+        }
+
+        .posts-onboarding-helper-card p {
+          max-width: 780px !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.72) !important;
+          line-height: 1.58 !important;
+          font-weight: 760 !important;
+        }
+
+        .fromone-premium-calendar-media-frame {
+          border-radius: 20px 20px 0 0 !important;
+        }
+
+        @media (max-width: 640px) {
+          .posts-onboarding-helper-card {
+            border-radius: 24px !important;
+          }
+
+          .posts-onboarding-helper-card p {
+            font-size: 0.92rem !important;
+          }
+        }
+
+
+        /* Final posts true mobile centering */
+        .posts-weekly-card-grid {
+          justify-content: center !important;
+          justify-items: center !important;
+          width: 100% !important;
+        }
+
+        @media (max-width: 760px) {
+          .posts-weekly-review-section {
+            width: min(100%, calc(100vw - 24px)) !important;
+            max-width: calc(100vw - 24px) !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding-left: 18px !important;
+            padding-right: 18px !important;
+            text-align: center !important;
+            justify-items: center !important;
+            overflow: hidden !important;
+          }
+
+          .posts-weekly-review-section > div:first-child {
+            justify-content: center !important;
+            justify-items: center !important;
+            text-align: center !important;
+          }
+
+          .posts-weekly-review-section > div:first-child > div {
+            width: 100% !important;
+            text-align: center !important;
+          }
+
+          .posts-weekly-review-section .page-eyebrow,
+          .posts-weekly-review-section h2,
+          .posts-weekly-review-section p {
+            text-align: center !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+
+          .posts-weekly-card-grid {
+            grid-template-columns: minmax(0, min(100%, 380px)) !important;
+            justify-content: center !important;
+            justify-items: center !important;
+            align-items: stretch !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+
+          .posts-weekly-card-grid .fromone-premium-calendar-review-card {
+            width: 100% !important;
+            max-width: 380px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            text-align: left !important;
+          }
+        }
+
+        @media (max-width: 430px) {
+          .posts-weekly-review-section {
+            width: min(100%, calc(100vw - 20px)) !important;
+            max-width: calc(100vw - 20px) !important;
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+          }
+
+          .posts-weekly-card-grid {
+            grid-template-columns: minmax(0, min(100%, 360px)) !important;
+          }
+
+          .posts-weekly-card-grid .fromone-premium-calendar-review-card {
+            max-width: 360px !important;
+          }
+        }
+
       `}</style>
 
     </div>

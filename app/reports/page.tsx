@@ -303,7 +303,7 @@ export default function ReportsPage() {
         result?.message || "Draft post created from your best performer.",
       );
     } catch (error: any) {
-      console.warn("Create post from best performer unavailable:", error?.message || error);
+      console.warn("Create similar post unavailable:", error?.message || error);
       setRecommendationMessage(
         error?.message ||
           "Could not create a post from the best performer yet.",
@@ -506,7 +506,7 @@ export default function ReportsPage() {
         <section className="premium-card reports-hero-card">
           <div className="page-eyebrow">Reports</div>
           <h1 className="page-title">Loading reports...</h1>
-          <p className="page-description">Checking your weekly posts and publishing activity.</p>
+          <p className="page-description">Checking your posts, publishing activity and performance.</p>
         </section>
       </main>
     );
@@ -517,9 +517,9 @@ export default function ReportsPage() {
       <section className="premium-card reports-hero-card">
         <div>
           <div className="page-eyebrow">Reports</div>
-          <h1 className="page-title">Your social report.</h1>
+          <h1 className="page-title">See what FromOne has done.</h1>
           <p className="page-description">
-            Track your published posts, compare performance and create the next draft from your best performer.
+            See your post activity, scheduled content and Facebook or Instagram performance in one place.
           </p>
         </div>
 
@@ -542,10 +542,10 @@ export default function ReportsPage() {
 
       {(metricsMessage || syncingMetrics) && (
         <section className="premium-card reports-message-card reports-sync-message-card">
-          <strong>{syncingMetrics ? "Syncing metrics..." : "Latest sync result"}</strong>
+          <strong>{syncingMetrics ? "Refreshing report..." : "Latest report update"}</strong>
           <p>
             {syncingMetrics
-              ? "FromOne is checking saved Facebook and Instagram post IDs against Meta. This can take a few seconds."
+              ? "FromOne is checking Facebook and Instagram for the latest stats. This can take a few seconds."
               : metricsMessage}
           </p>
         </section>
@@ -553,36 +553,45 @@ export default function ReportsPage() {
 
       <section className="reports-metric-grid reports-summary-grid">
         <article className="reports-metric-card">
-          <span>Posted</span>
+          <span>Published</span>
           <strong>{report.posted.length}</strong>
-          <p>Posts marked as published.</p>
+          <p>Posts already marked as published.</p>
         </article>
 
         <article className="reports-metric-card">
-          <span>Tracked</span>
+          <span>Tracked posts</span>
           <strong>{trackedPerformancePosts.length}</strong>
-          <p>Facebook and Instagram posts connected to Reports.</p>
+          <p>Facebook and Instagram posts with report tracking.</p>
         </article>
 
         <article className="reports-metric-card">
-          <span>This week</span>
+          <span>Created this week</span>
           <strong>{report.postsThisWeek.length}</strong>
-          <p>Posts created this week.</p>
+          <p>Posts created during this week.</p>
         </article>
+      </section>
+
+      <section className="premium-card reports-guidance-card">
+        <div className="page-eyebrow">How to use Reports</div>
+        <h2>Keep an eye on what is working.</h2>
+        <p>
+          Use this page after posts have been reviewed, scheduled or published. Reports helps you see what has gone live,
+          what is being tracked and which Facebook or Instagram posts are performing best.
+        </p>
       </section>
 
       <section className="premium-card reports-panel reports-main-performance-card">
         <div className="reports-section-head reports-performance-head">
           <div>
             <div className="page-eyebrow">Performance</div>
-            <h2>Social engagement</h2>
+            <h2>Facebook & Instagram performance</h2>
             <p>
-              Automatic sync runs about once an hour. Use Sync metrics anytime to refresh Facebook and Instagram stats.
+              FromOne can check Meta for Facebook and Instagram stats. Use refresh when you want the latest numbers.
             </p>
           </div>
 
           <button type="button" className="reports-action-button reports-action-button-primary" onClick={() => syncMetaMetrics()} disabled={syncingMetrics}>
-            {syncingMetrics ? "Checking..." : "Sync metrics"}
+            {syncingMetrics ? "Refreshing..." : "Refresh metrics"}
           </button>
         </div>
 
@@ -642,9 +651,9 @@ export default function ReportsPage() {
 
         {filteredPerformancePosts.length === 0 ? (
           <div className="reports-note-box reports-empty-clean">
-            <strong>No tracked Meta posts yet</strong>
+            <strong>No tracked Facebook or Instagram posts yet</strong>
             <p>
-              Publish Facebook or Instagram posts through FromOne and each post will appear here with its individual stats.
+              Once Facebook or Instagram posts are published through FromOne, their stats will appear here.
             </p>
           </div>
         ) : (
@@ -700,8 +709,8 @@ export default function ReportsPage() {
       </section>
 
       <section className="premium-card reports-panel reports-recommendation-panel">
-        <div className="page-eyebrow">Best performer follow-up</div>
-        <h2>Create the next post</h2>
+        <div className="page-eyebrow">What to do next</div>
+        <h2>Create more of what works</h2>
 
         {recommendationSource ? (
           <div className="reports-recommendation-box">
@@ -711,13 +720,13 @@ export default function ReportsPage() {
                 : "Based on best performer"}
             </span>
             <h3>
-              Create another {recommendationSource.metric.platform} post in the style of{" "}
+              Create another {recommendationSource.metric.platform} post similar to{" "}
               {recommendationSource.post?.title || `${recommendationSource.metric.platform} post`}.
             </h3>
             <p>
               {recommendationSource.waitingForInsights
-                ? "FromOne has found the Meta post and is waiting for engagement data. Once real engagement appears, this recommendation can become more precise."
-                : "This post currently has the strongest engagement in your tracked reports. Reuse the same type of offer, visual style and call to action in next week’s content plan."}
+                ? "FromOne has found the post and is waiting for Meta to return activity. Once the stats arrive, this recommendation will become clearer."
+                : "This post currently has the strongest engagement. Use a similar offer, visual style or call to action in your next content plan."}
             </p>
 
             {recommendationMessage && (
@@ -735,7 +744,7 @@ export default function ReportsPage() {
 
             <div className="reports-recommendation-actions">
               <button type="button" className="reports-action-button reports-action-button-primary" onClick={createPostFromBestPerformer} disabled={creatingFromBest}>
-                {creatingFromBest ? "Creating..." : "Create post from best performer"}
+                {creatingFromBest ? "Creating..." : "Create similar post"}
               </button>
               <button
                 type="button"
@@ -744,14 +753,14 @@ export default function ReportsPage() {
               >
                 Review posts
               </button>
-              <button type="button" className="reports-action-button reports-action-button-primary" onClick={() => syncMetaMetrics()} disabled={syncingMetrics}>{syncingMetrics ? "Checking..." : "Refresh metrics"}</button>
+              <button type="button" className="reports-action-button reports-action-button-primary" onClick={() => syncMetaMetrics()} disabled={syncingMetrics}>{syncingMetrics ? "Refreshing..." : "Refresh metrics"}</button>
             </div>
           </div>
         ) : (
           <div className="reports-note-box">
             <strong>No recommendation yet</strong>
             <p>
-              Publish Facebook or Instagram posts through FromOne and this area will suggest what to create next based on the strongest performer.
+              After posts are published and tracked, FromOne will suggest what to create next based on the strongest performer.
             </p>
           </div>
         )}
@@ -1917,6 +1926,67 @@ export default function ReportsPage() {
 
           .reports-action-button {
             width: 100% !important;
+          }
+        }
+
+
+        /* Final reports onboarding polish */
+        .reports-guidance-card {
+          margin: 0 0 18px !important;
+          padding: clamp(20px, 3vw, 28px) !important;
+          border-radius: 28px !important;
+          border: 1px solid rgba(255, 212, 59, 0.16) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+            rgba(15, 23, 42, 0.84) !important;
+          box-shadow: 0 22px 66px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .reports-guidance-card h2 {
+          margin: 8px 0 10px !important;
+          color: #ffffff !important;
+          font-size: clamp(1.7rem, 3vw, 2.6rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.055em !important;
+        }
+
+        .reports-guidance-card p {
+          max-width: 780px !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.72) !important;
+          line-height: 1.58 !important;
+          font-weight: 760 !important;
+        }
+
+        .reports-action-button-primary,
+        .reports-hero-card .reports-hero-actions button,
+        .reports-recommendation-actions button {
+          background: #ffd43b !important;
+          background-image: none !important;
+          color: #101420 !important;
+          border-color: rgba(255, 212, 59, 0.5) !important;
+          box-shadow: none !important;
+        }
+
+        .reports-action-button-secondary {
+          box-shadow: none !important;
+        }
+
+        .reports-hero-card .page-description {
+          font-weight: 760 !important;
+        }
+
+        .reports-metric-card {
+          min-height: 150px !important;
+        }
+
+        @media (max-width: 640px) {
+          .reports-guidance-card {
+            border-radius: 24px !important;
+          }
+
+          .reports-guidance-card p {
+            font-size: 0.92rem !important;
           }
         }
 

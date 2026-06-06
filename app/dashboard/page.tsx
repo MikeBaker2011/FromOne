@@ -2398,7 +2398,7 @@ If uploads are supplied:
       const activeClient = client;
 
       if (!activeClient?.business_name || !activeClient?.industry) {
-        notify("Set up the Business Profile in Settings first. Then come back here to upload media and create posts.", "warning", "Business Profile needed");
+        notify("Set up the Business Profile in Settings first. Then come back here to upload media and create posts.", "warning", "Finish your business profile");
         setScanning(false);
         return;
       }
@@ -2695,6 +2695,41 @@ If uploads are supplied:
       }}
     >
       <style jsx global>{`
+        /* Onboarding polish: clearer first-time guidance */
+        .dashboard-first-upload-helper {
+          display: block !important;
+          width: min(100%, 640px) !important;
+          margin: 0 auto 18px !important;
+          color: rgba(248, 250, 252, 0.72) !important;
+          font-size: 0.95rem !important;
+          line-height: 1.45 !important;
+          font-weight: 800 !important;
+          text-align: center !important;
+        }
+
+        .dashboard-review-reassurance {
+          margin: 10px auto 0 !important;
+          color: rgba(248, 250, 252, 0.68) !important;
+          font-size: 0.9rem !important;
+          line-height: 1.4 !important;
+          font-weight: 850 !important;
+          text-align: center !important;
+        }
+
+        @media (max-width: 760px) {
+          .dashboard-first-upload-helper {
+            width: min(100%, 320px) !important;
+            margin-bottom: 14px !important;
+            font-size: 0.86rem !important;
+          }
+
+          .dashboard-review-reassurance {
+            font-size: 0.82rem !important;
+            padding: 0 8px !important;
+          }
+        }
+
+
         /* Dashboard upload icon layout refinement */
         .dashboard-upload-type-grid {
           width: min(100%, 680px) !important;
@@ -3857,7 +3892,8 @@ If uploads are supplied:
   }
 
   .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
-    content: "Click here to upload";
+    content: "<span className="dashboard-first-upload-helper">Start here: add a photo, video or flyer. FromOne will turn it into posts you can review.</span>
+                Click here to upload";
     min-height: 54px;
     display: inline-flex;
     align-items: center;
@@ -5898,9 +5934,9 @@ If uploads are supplied:
             {!businessProfileReady && (
               <div className="dashboard-profile-needed-card">
                 <div>
-                  <strong>Business Profile needed</strong>
+                  <strong>Finish your business profile</strong>
                   <p>
-                    Set this up once so FromOne knows the business.
+                    Add this once so FromOne knows what you offer, where you work and who you want to reach.
                   </p>
                 </div>
 
@@ -5957,6 +5993,9 @@ If uploads are supplied:
                     : "Create and review posts"
                   : "Create and review posts"}
             </button>
+                <p className="dashboard-review-reassurance">
+                  You’ll review everything before anything is published.
+                </p>
 
             {weeklyUploads.length > 0 && (
               <p

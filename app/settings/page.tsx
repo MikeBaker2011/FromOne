@@ -17,6 +17,15 @@ type SocialConnection = {
   updated_at: string | null;
 };
 
+type SavedWeeklySet = {
+  id: string;
+  name: string | null;
+  campaign_idea: string | null;
+  business_name: string | null;
+  created_at: string | null;
+  campaign_posts?: { id: string }[];
+};
+
 type ScannedBusinessProfile = {
   business_name?: string;
   industry?: string;
@@ -101,6 +110,10 @@ export default function SettingsPage() {
   const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
   const [disconnectingConnectionId, setDisconnectingConnectionId] = useState<string | null>(null);
+
+  const [savedWeeklySets, setSavedWeeklySets] = useState<SavedWeeklySet[]>([]);
+  const [loadingSavedWeeklySets, setLoadingSavedWeeklySets] = useState(false);
+  const [deletingWeeklySetId, setDeletingWeeklySetId] = useState<string | null>(null);
 
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
   const [showBrandDetails, setShowBrandDetails] = useState(false);
@@ -347,6 +360,127 @@ export default function SettingsPage() {
     return Array.isArray(value) ? value.join(', ') : '';
   };
 
+  const getSavedWeeklySetName = (set: SavedWeeklySet) => {
+    return (
+      String(set.name || set.campaign_idea || set.business_name || "Weekly posts")
+        .replace(/\s+—\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}.*$/g, "")
+        .replace(/\s+-\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}.*$/g, "")
+        .trim() || "Weekly posts"
+    );
+  };
+
+  const formatSavedWeeklySetDate = (value?: string | null) => {
+    if (!value) return "Date not shown";
+
+    try {
+      return new Date(value).toLocaleDateString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return "Date not shown";
+    }
+  };
+
+  const getSavedWeeklySetPostCount = (set: SavedWeeklySet) => {
+    return Array.isArray(set.campaign_posts) ? set.campaign_posts.length : 0;
+  };
+
+  const loadSavedWeeklySets = async (authUserId: string) => {
+    setLoadingSavedWeeklySets(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("id,name,campaign_idea,business_name,created_at,campaign_posts(id)")
+        .eq("user_id", authUserId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) {
+        throw error;
+      }
+
+      setSavedWeeklySets((data || []) as SavedWeeklySet[]);
+    } catch (error: any) {
+      console.error("Load saved weekly sets error:", error?.message || error);
+      setSavedWeeklySets([]);
+    } finally {
+      setLoadingSavedWeeklySets(false);
+    }
+  };
+
+  const deleteSavedWeeklySet = async (set: SavedWeeklySet) => {
+    if (!userId || !set?.id) {
+      notify("Please sign in again before deleting a saved weekly set.", "warning", "Sign in needed");
+      return;
+    }
+
+    const setName = getSavedWeeklySetName(set);
+    const confirmed = window.confirm(
+      `Delete "${setName}"?\n\nThis removes the saved weekly set and its posts. This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setDeletingWeeklySetId(set.id);
+
+    try {
+      const { data: campaignPosts, error: postsLoadError } = await supabase
+        .from("campaign_posts")
+        .select("id,image_path,media_path")
+        .eq("campaign_id", set.id);
+
+      if (postsLoadError) {
+        throw postsLoadError;
+      }
+
+      const storagePaths =
+        campaignPosts
+          ?.flatMap((post: any) => [post.image_path, post.media_path])
+          .filter(Boolean)
+          .filter((value: string, index: number, array: string[]) => array.indexOf(value) === index) || [];
+
+      if (storagePaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from("campaign-assets")
+          .remove(storagePaths);
+
+        if (storageError) {
+          console.error("Saved weekly set media delete error:", storageError.message);
+        }
+      }
+
+      const { error: postsDeleteError } = await supabase
+        .from("campaign_posts")
+        .delete()
+        .eq("campaign_id", set.id);
+
+      if (postsDeleteError) {
+        throw postsDeleteError;
+      }
+
+      const { error: campaignDeleteError } = await supabase
+        .from("campaigns")
+        .delete()
+        .eq("id", set.id)
+        .eq("user_id", userId);
+
+      if (campaignDeleteError) {
+        throw campaignDeleteError;
+      }
+
+      setSavedWeeklySets((current) => current.filter((item) => item.id !== set.id));
+      notify("Saved weekly set deleted. You can now create a new weekly post set.", "success", "Weekly set deleted");
+    } catch (error: any) {
+      console.error("Delete saved weekly set error:", error?.message || error);
+      notify(error?.message || "Could not delete this saved weekly set.", "error", "Delete failed");
+    } finally {
+      setDeletingWeeklySetId(null);
+    }
+  };
+
   const loadSocialConnections = async (authUserId: string) => {
     setLoadingConnections(true);
 
@@ -555,7 +689,7 @@ export default function SettingsPage() {
     }
 
     setUserId(authUserId);
-    await loadSocialConnections(authUserId);
+    await Promise.all([loadSocialConnections(authUserId), loadSavedWeeklySets(authUserId)]);
 
     const { data, error } = await supabase
       .from('business_profiles')
@@ -685,13 +819,13 @@ export default function SettingsPage() {
       setShowBrandDetails(false);
 
       if (setup === 'business') {
-        notify('You can now connect Facebook and Instagram, or continue to Dashboard.', 'success', 'Business Profile saved');
+        notify('Business Profile saved. You can connect Facebook and Instagram now, or go to Dashboard and create posts.', 'success', 'Business Profile saved');
         await loadBusinessProfile();
         scrollToSocialConnections();
         return;
       }
 
-      notify('Business Profile saved.', 'success', 'Profile saved');
+      notify('Business Profile saved. Next: go to Dashboard and upload your first photo, video or flyer.', 'success', 'Profile saved');
       await loadBusinessProfile();
       scrollToSocialConnections();
     } catch (error: any) {
@@ -897,7 +1031,7 @@ export default function SettingsPage() {
                 Business setup
               </h1>
               <p className="page-description" style={{ margin: '0 auto', maxWidth: 760 }}>
-                Set up the business profile, connect publishing channels, then create weekly posts from uploaded media.
+                Add your business details once, connect publishing when you are ready, then create posts from the Dashboard.
               </p>
             </div>
 
@@ -913,7 +1047,7 @@ export default function SettingsPage() {
               Set up FromOne in three steps.
             </h2>
             <p style={{ maxWidth: 850, margin: 0 }}>
-              Complete the profile once, connect Meta when you want autoposting, then create posts from Dashboard.
+              Complete your business profile, connect Meta when you want autoposting, then create posts from your Dashboard.
             </p>
 
             <div
@@ -996,7 +1130,7 @@ export default function SettingsPage() {
                 )}
                 <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Create posts</h3>
                 <p style={{ margin: 0, color: 'var(--muted)' }}>
-                  Go to Dashboard, upload photos, videos or flyers, and create the weekly post plan.
+                  Upload photos, videos or flyers from the Dashboard. You’ll review everything before publishing.
                 </p>
               </button>
             </div>
@@ -1025,13 +1159,13 @@ export default function SettingsPage() {
                 <h2>
                   {simpleProfileComplete
                     ? `${businessName || 'Your business'} is ready.`
-                    : 'Set up your business in one minute.'}
+                    : 'Set up your business profile.'}
                 </h2>
 
                 <p>
                   {simpleProfileComplete
-                    ? 'Your profile is complete. Head straight to the Dashboard and create posts.'
-                    : 'Add the basics once so FromOne can create better captions, calls to action and post ideas.'}
+                    ? 'Your business profile is saved. Go to the Dashboard to upload media and create posts.'
+                    : 'Add these details once so FromOne knows what you offer, where you work and who you want to reach.'}
                 </p>
 
                 <div className="settings-quick-profile-actions">
@@ -1105,7 +1239,7 @@ export default function SettingsPage() {
                     >
                       <span>{index + 1}</span>
                       <strong>{item.label}</strong>
-                      <small>{item.ready ? 'Done' : 'Next'}</small>
+                      <small>{item.ready ? 'Complete' : 'Next'}</small>
                     </div>
                   ))}
                 </div>
@@ -1414,7 +1548,7 @@ export default function SettingsPage() {
               </h2>
               <p style={{ maxWidth: 820 }}>
                 {hasMetaConnection
-                  ? 'Your Business Profile is saved and your publishing channels are connected. Continue to Dashboard to upload media and create your first scheduled posts.'
+                  ? 'Your Business Profile is saved and your publishing channels are connected. Go to Dashboard to upload media and create your first scheduled posts.'
                   : 'Your Business Profile is saved. Connect Facebook and Instagram using the cards below for autoposting, or continue to Dashboard and connect later.'}
               </p>
 
@@ -1425,7 +1559,7 @@ export default function SettingsPage() {
                     window.location.href = '/dashboard';
                   }}
                 >
-                  Continue to Dashboard
+                  Go to Dashboard
                 </button>
               </div>
 
@@ -1552,7 +1686,7 @@ export default function SettingsPage() {
 
                 <div className="settings-social-button-row">
                   <a href="/dashboard" className="secondary-button">
-                    Continue to Dashboard
+                    Go to Dashboard
                   </a>
                 </div>
               </article>
@@ -1594,14 +1728,10 @@ export default function SettingsPage() {
                     letterSpacing: '-0.06em',
                   }}
                 >
-                  Create weekly posts.
+                  Create your first posts.
                 </h2>
                 <p style={{ maxWidth: 820, margin: 0 }}>
-                  Your Business Profile is saved. Upload photos, videos or flyers on the
-                  Dashboard and FromOne will turn them into ready-to-review social posts.
-                  Personal accounts can create and prepare posts. Direct publishing and automatic
-                  scheduling through Meta require a connected Facebook Page or Instagram professional
-                  account; TikTok stays copy/open manually for now.
+                  Your business profile is saved. Go to Dashboard to upload photos, videos or flyers. FromOne will create posts for you to review before anything is published. You can connect or manage publishing channels later.
                 </p>
               </div>
 
@@ -1635,10 +1765,87 @@ export default function SettingsPage() {
                     textAlign: 'center',
                   }}
                 >
-                  You can connect or manage publishing channels later from this page.
+                  You’ll review everything before anything is published.
                 </p>
               </div>
             </div>
+          </section>
+
+          <section
+            className="premium-card settings-numbered-section settings-saved-weekly-sets-section"
+            style={{
+              maxWidth: 1120,
+              margin: '0 auto 22px',
+              borderRadius: 34,
+              border: '1px solid rgba(255, 212, 59, 0.18)',
+              background:
+                'radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.032))',
+              boxShadow: '0 26px 84px rgba(0,0,0,0.24)',
+            }}
+          >
+            <div className="settings-saved-sets-head">
+              <div>
+                <div className="settings-live-step-label">
+                  <span>4</span>
+                  <strong>Saved weekly sets</strong>
+                </div>
+
+                <h2>Manage saved weekly sets.</h2>
+                <p>
+                  FromOne keeps up to 4 saved weekly post sets. Delete old tests or empty sets here
+                  when you need space to create a new one.
+                </p>
+              </div>
+
+              <a href="/posts" className="secondary-button">
+                View Posts
+              </a>
+            </div>
+
+            <div className="settings-saved-sets-limit-card">
+              <strong>{savedWeeklySets.length} of 4 saved sets used</strong>
+              <span>
+                {savedWeeklySets.length >= 4
+                  ? 'Limit reached. Delete one old or empty set to create another.'
+                  : 'You still have space to create another weekly post set.'}
+              </span>
+            </div>
+
+            {loadingSavedWeeklySets ? (
+              <div className="settings-saved-sets-empty">
+                Checking saved weekly sets...
+              </div>
+            ) : savedWeeklySets.length === 0 ? (
+              <div className="settings-saved-sets-empty">
+                No saved weekly post sets yet.
+              </div>
+            ) : (
+              <div className="settings-saved-sets-list">
+                {savedWeeklySets.map((set) => {
+                  const postCount = getSavedWeeklySetPostCount(set);
+
+                  return (
+                    <article key={set.id} className="settings-saved-set-row">
+                      <div>
+                        <strong>{getSavedWeeklySetName(set)}</strong>
+                        <span>
+                          {formatSavedWeeklySetDate(set.created_at)} · {postCount} post{postCount === 1 ? '' : 's'}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="secondary-button danger-button"
+                        onClick={() => deleteSavedWeeklySet(set)}
+                        disabled={deletingWeeklySetId === set.id}
+                      >
+                        {deletingWeeklySetId === set.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           <section className="manual-collapse-card manual-open-card" style={{ maxWidth: 1120, margin: '0 auto 22px', opacity: showDangerZone ? 1 : 0.72 }}>
@@ -3198,6 +3405,282 @@ export default function SettingsPage() {
             -webkit-filter: none !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
+          }
+        }
+
+
+        /* Final onboarding polish for Settings */
+        .settings-setup-guide .page-description {
+          max-width: 720px !important;
+        }
+
+        .settings-setup-step-card p {
+          font-size: 0.92rem !important;
+        }
+
+        .settings-create-posts-section p {
+          max-width: 760px !important;
+        }
+
+        .settings-create-posts-section button,
+        .settings-client-quick-save button,
+        .settings-save-strip button,
+        .primary-button {
+          background: #ffd43b !important;
+          background-image: none !important;
+          color: #101420 !important;
+          box-shadow: none !important;
+          border-color: rgba(255, 212, 59, 0.48) !important;
+        }
+
+        .settings-setup-step-card .settings-step-complete-mark,
+        .settings-step-complete-mark {
+          all: unset !important;
+          display: block !important;
+          width: fit-content !important;
+          height: auto !important;
+          margin: 8px auto 0 !important;
+          padding: 0 !important;
+          color: #ffd43b !important;
+          background: transparent !important;
+          background-image: none !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          text-shadow: none !important;
+          filter: none !important;
+          -webkit-filter: none !important;
+          font-family: inherit !important;
+          font-size: 1.9rem !important;
+          font-weight: 1000 !important;
+          line-height: 1 !important;
+          text-align: center !important;
+        }
+
+        .settings-step-complete-mark::before,
+        .settings-step-complete-mark::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .settings-setup-step-card:not(.is-complete):not([data-complete="true"]) .settings-step-complete-mark {
+          display: none !important;
+        }
+
+        @media (max-width: 760px) {
+          .settings-setup-guide {
+            padding: 20px 16px !important;
+          }
+
+          .settings-setup-step-card .settings-step-complete-mark,
+          .settings-step-complete-mark {
+            all: unset !important;
+            display: block !important;
+            width: fit-content !important;
+            margin: 8px auto 0 !important;
+            color: #ffd43b !important;
+            background: transparent !important;
+            background-image: none !important;
+            border: 0 !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            filter: none !important;
+            font-size: 1.75rem !important;
+            font-weight: 1000 !important;
+            line-height: 1 !important;
+            text-align: center !important;
+          }
+        }
+
+
+        /* Final setup card completion badge: overlay tick, no layout shift */
+        .settings-setup-step-card {
+          position: relative !important;
+          overflow: hidden !important;
+          padding-top: 18px !important;
+        }
+
+        .settings-setup-step-card .settings-step-complete-mark,
+        .settings-step-complete-mark {
+          all: unset !important;
+          position: absolute !important;
+          top: 14px !important;
+          right: 14px !important;
+          z-index: 3 !important;
+          width: 34px !important;
+          height: 34px !important;
+          display: inline-grid !important;
+          place-items: center !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border-radius: 999px !important;
+          background: #ffd43b !important;
+          background-image: none !important;
+          color: #101420 !important;
+          border: 1px solid rgba(255, 212, 59, 0.5) !important;
+          box-shadow: none !important;
+          text-shadow: none !important;
+          filter: none !important;
+          -webkit-filter: none !important;
+          font-family: inherit !important;
+          font-size: 1.18rem !important;
+          font-weight: 1000 !important;
+          line-height: 1 !important;
+          text-align: center !important;
+        }
+
+        .settings-step-complete-mark::before,
+        .settings-step-complete-mark::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .settings-setup-step-card:not(.is-complete):not([data-complete="true"]) .settings-step-complete-mark {
+          display: none !important;
+        }
+
+        .settings-setup-step-card.is-complete h3,
+        .settings-setup-step-card.is-complete p {
+          transform: none !important;
+        }
+
+        @media (max-width: 760px) {
+          .settings-setup-step-card {
+            padding-top: 22px !important;
+          }
+
+          .settings-setup-step-card .settings-step-complete-mark,
+          .settings-step-complete-mark {
+            all: unset !important;
+            position: absolute !important;
+            top: 14px !important;
+            right: 14px !important;
+            z-index: 3 !important;
+            width: 32px !important;
+            height: 32px !important;
+            display: inline-grid !important;
+            place-items: center !important;
+            margin: 0 !important;
+            border-radius: 999px !important;
+            background: #ffd43b !important;
+            background-image: none !important;
+            color: #101420 !important;
+            border: 1px solid rgba(255, 212, 59, 0.5) !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            filter: none !important;
+            font-size: 1.1rem !important;
+            font-weight: 1000 !important;
+            line-height: 1 !important;
+            text-align: center !important;
+          }
+
+          .settings-setup-step-card .status-pill {
+            margin: 0 auto !important;
+          }
+        }
+
+
+        /* Saved weekly sets management */
+        .settings-saved-weekly-sets-section {
+          padding: clamp(22px, 3vw, 34px) !important;
+          border-radius: 34px !important;
+        }
+
+        .settings-saved-sets-head {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) auto !important;
+          gap: 18px !important;
+          align-items: start !important;
+          margin-bottom: 18px !important;
+        }
+
+        .settings-saved-sets-head h2 {
+          margin: 0 0 10px !important;
+          color: #ffffff !important;
+          font-size: clamp(2rem, 4vw, 3.2rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.06em !important;
+        }
+
+        .settings-saved-sets-head p {
+          max-width: 760px !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.72) !important;
+          line-height: 1.58 !important;
+          font-weight: 760 !important;
+        }
+
+        .settings-saved-sets-limit-card {
+          display: grid !important;
+          gap: 6px !important;
+          margin-bottom: 14px !important;
+          padding: 16px 18px !important;
+          border-radius: 20px !important;
+          background: rgba(255, 212, 59, 0.08) !important;
+          border: 1px solid rgba(255, 212, 59, 0.16) !important;
+        }
+
+        .settings-saved-sets-limit-card strong {
+          color: #ffffff !important;
+          font-size: 1rem !important;
+        }
+
+        .settings-saved-sets-limit-card span,
+        .settings-saved-sets-empty {
+          color: rgba(248, 250, 252, 0.68) !important;
+          line-height: 1.45 !important;
+          font-weight: 760 !important;
+        }
+
+        .settings-saved-sets-empty {
+          padding: 16px !important;
+          border-radius: 18px !important;
+          background: rgba(255, 255, 255, 0.055) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .settings-saved-sets-list {
+          display: grid !important;
+          gap: 10px !important;
+        }
+
+        .settings-saved-set-row {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) auto !important;
+          gap: 14px !important;
+          align-items: center !important;
+          padding: 14px !important;
+          border-radius: 20px !important;
+          background: rgba(2, 6, 23, 0.28) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .settings-saved-set-row strong {
+          display: block !important;
+          color: #ffffff !important;
+          font-size: 1rem !important;
+          line-height: 1.2 !important;
+        }
+
+        .settings-saved-set-row span {
+          display: block !important;
+          margin-top: 5px !important;
+          color: rgba(248, 250, 252, 0.58) !important;
+          font-size: 0.86rem !important;
+          font-weight: 800 !important;
+          line-height: 1.35 !important;
+        }
+
+        @media (max-width: 760px) {
+          .settings-saved-sets-head,
+          .settings-saved-set-row {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-saved-sets-head .secondary-button,
+          .settings-saved-set-row button {
+            width: 100% !important;
           }
         }
 

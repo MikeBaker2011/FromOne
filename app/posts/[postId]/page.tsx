@@ -276,7 +276,7 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     return {
       label: "Approved",
       tone: "success",
-      description: "This post is approved and ready to schedule.",
+      description: "This post is approved. You can publish now, autoschedule or copy it manually.",
     };
   }
 
@@ -292,14 +292,14 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     return {
       label: "Draft",
       tone: "neutral",
-      description: "This post is not approved yet.",
+      description: "Review the draft and approve it when you are happy.",
     };
   }
 
   return {
     label: "Needs review",
     tone: "warning",
-    description: "Check the post, then approve it when ready.",
+    description: "Check the wording, media and schedule. Nothing publishes until you approve it.",
   };
 }
 
@@ -1082,7 +1082,7 @@ export default function PostReviewPage() {
       approval_status: "needs_review",
       approved_at: null,
     });
-    setMessage("Changes saved. Approve the post when you are happy.");
+    setMessage("Changes saved. Review the post again, then approve it when you are happy.");
     setSaving(false);
   };
 
@@ -1134,7 +1134,7 @@ export default function PostReviewPage() {
     }
 
     setPost({ ...post, ...updates });
-    setMessage("Post approved. You can now schedule it.");
+    setMessage("Post approved. You can now publish, autoschedule or copy it manually.");
     setSaving(false);
   };
 
@@ -2239,7 +2239,7 @@ export default function PostReviewPage() {
     setMessage(
       isReachRewrite
         ? `Applying ${cleanReachLabel.toLowerCase()} location...`
-        : "Improving wording..."
+        : "Improving wording and saving the new draft..."
     );
 
     try {
@@ -2406,7 +2406,7 @@ Do not return the same caption.`,
           : captionChanged
             ? isReachRewrite
               ? `${cleanReachLabel} location applied and saved.`
-              : "Improved wording saved."
+              : "Improved wording saved. Review the updated draft before approving."
             : `${cleanReachLabel} location was applied and saved, but the wording came back very similar. Try another improvement if needed.`
       );
     } catch (error: any) {
@@ -2495,7 +2495,7 @@ Do not return the same caption.`,
                   </h1>
                   {activePanel !== "prepare" && (
                     <p className="pr2-compact-media-subtitle">
-                      Edit the wording if needed, then approve and schedule.
+                      Check the wording, media and schedule. Nothing publishes until you approve it.
                     </p>
                   )}
                 </div>
@@ -2874,7 +2874,7 @@ Do not return the same caption.`,
                   <span className="pr2-kicker">Caption</span>
                   <h2>Edit if needed</h2>
                 </div>
-                <p>FromOne has written the post. Change anything that does not feel right.</p>
+                <p>FromOne has written a draft. Edit anything that does not sound right.</p>
               </div>
 
               <div className="pr2-wording">
@@ -2920,6 +2920,12 @@ Do not return the same caption.`,
                 >
                   Improve wording
                 </button>
+              {rewriting && (
+                <div className="pr2-improving-progress-card">
+                  <strong>Improving wording...</strong>
+                  <span>FromOne is creating a new draft and will save it automatically.</span>
+                </div>
+              )}
               </div>
             </article>
 
@@ -2974,14 +2980,14 @@ Do not return the same caption.`,
                   {isPosted
                     ? "Posted"
                     : approvalStatus.label === "Needs review" || approvalStatus.label === "Draft"
-                      ? "Needs approval"
+                      ? "Approve when ready"
                       : "Ready to publish"}
                 </h2>
                 <p>
                   {isPosted
                     ? `This post has already been posted to ${autopublishPlatformLabel}.`
                     : approvalStatus.label === "Needs review" || approvalStatus.label === "Draft"
-                      ? "Approve the post, then publish now or save an autoschedule."
+                      ? "Once approved, you can publish now, autoschedule, or copy and post manually."
                       : "Publish now, save an autoschedule, or open the platform."}
                 </p>
               </div>
@@ -3049,6 +3055,12 @@ Do not return the same caption.`,
                   >
                     Copy caption and open platform
                   </button>
+                )}
+
+                {!isApprovedForPublishing && !isPosted && (
+                  <p className="pr2-publish-locked-help">
+                    Approve the post first to unlock direct publishing.
+                  </p>
                 )}
 
                 <label className="pr2-simple-schedule pr2-right-schedule">
@@ -3508,6 +3520,79 @@ Do not return the same caption.`,
             width: fit-content;
           }
         }
+
+        /* Final post review onboarding polish */
+        .pr2-review-helper-card {
+          display: grid !important;
+          gap: 5px !important;
+          margin-top: 16px !important;
+          padding: 14px 16px !important;
+          border-radius: 18px !important;
+          background: rgba(255, 212, 59, 0.08) !important;
+          border: 1px solid rgba(255, 212, 59, 0.16) !important;
+        }
+
+        .pr2-review-helper-card strong {
+          color: #ffd43b !important;
+          font-size: 0.76rem !important;
+          font-weight: 1000 !important;
+          letter-spacing: 0.09em !important;
+          text-transform: uppercase !important;
+        }
+
+        .pr2-review-helper-card span,
+        .pr2-publish-locked-help,
+        .pr2-improving-progress-card span {
+          color: rgba(248, 250, 252, 0.72) !important;
+          font-size: 0.88rem !important;
+          line-height: 1.45 !important;
+          font-weight: 800 !important;
+        }
+
+        .pr2-publish-locked-help {
+          margin: -4px 0 8px !important;
+          text-align: center !important;
+        }
+
+        .pr2-improving-progress-card {
+          display: grid !important;
+          gap: 5px !important;
+          margin-top: 10px !important;
+          padding: 13px 14px !important;
+          border-radius: 16px !important;
+          background: rgba(255, 212, 59, 0.08) !important;
+          border: 1px solid rgba(255, 212, 59, 0.16) !important;
+        }
+
+        .pr2-improving-progress-card strong {
+          color: #ffffff !important;
+          font-size: 0.92rem !important;
+          font-weight: 1000 !important;
+        }
+
+        .pr2-sidebar-card h2,
+        .pr2-sidebar-card h3 {
+          letter-spacing: -0.04em !important;
+        }
+
+        .pr2-primary-button,
+        .pr2-sidebar-card button:not(:disabled),
+        .pr2-back-button {
+          box-shadow: none !important;
+        }
+
+        @media (max-width: 760px) {
+          .pr2-review-helper-card {
+            text-align: center !important;
+          }
+
+          .pr2-review-helper-card span,
+          .pr2-publish-locked-help,
+          .pr2-improving-progress-card span {
+            font-size: 0.82rem !important;
+          }
+        }
+
       `}</style>
 
 
