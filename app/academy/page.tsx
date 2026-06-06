@@ -354,59 +354,61 @@ export default function TutorialsPage() {
 
     window.setTimeout(() => {
       document
-        .getElementById("academy-selected-lesson")
+        .getElementById("tutorial-selected-lesson")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 60);
   };
 
   return (
-    <main className="academy-page">
-      <section className="premium-card academy-shell">
-        <header className="academy-hero">
-          <div className="page-eyebrow">Tutorials</div>
-          <h1 className="page-title">Tutorials.</h1>
-          <p className="page-description">
+    <main className="tutorials-page">
+      <section className="tutorials-shell">
+        <header className="tutorials-hero">
+          <div className="tutorials-eyebrow">Tutorials</div>
+          <h1>Tutorials.</h1>
+          <p>
             Clear, practical guides for setting up your account, creating better posts,
             reviewing content and publishing with confidence.
           </p>
         </header>
 
-        <section className="academy-tutorials" aria-label="FromOne tutorials">
-          <div className="academy-tutorials-head">
+        <section className="tutorials-picker" aria-label="FromOne tutorials">
+          <div className="tutorials-picker-head">
             <div>
-              <div className="page-eyebrow">Tutorials</div>
-              <h2>Pick a lesson.</h2>
+              <div className="tutorials-eyebrow">Guides</div>
+              <h2>Choose a tutorial.</h2>
             </div>
-            <p>Scroll across the cards. Each card opens its full tutorial underneath.</p>
+            <p>Tap a guide below. The full tutorial opens underneath.</p>
           </div>
 
-          <div className="academy-card-scroll">
+          <div className="tutorials-list" aria-label="Tutorial lessons">
             {academyLessons.map((lesson) => (
               <button
                 key={lesson.step}
                 type="button"
                 className={
                   lesson.step === selectedLesson.step
-                    ? "academy-subject-card is-active"
-                    : "academy-subject-card"
+                    ? "tutorials-list-item is-active"
+                    : "tutorials-list-item"
                 }
                 onClick={() => chooseLesson(lesson.step)}
               >
-                <span>{lesson.step}</span>
-                <strong>{lesson.title}</strong>
-                <small>{lesson.group} · {lesson.time}</small>
+                <span className="tutorials-list-number">{lesson.step}</span>
+                <span className="tutorials-list-copy">
+                  <strong>{lesson.title}</strong>
+                  <small>{lesson.group} · {lesson.time}</small>
+                </span>
               </button>
             ))}
           </div>
         </section>
 
         <article
-          id="academy-selected-lesson"
-          className="academy-lesson-card"
+          id="tutorial-selected-lesson"
+          className="tutorials-lesson"
           aria-label="Selected tutorial"
         >
-          <div className="academy-lesson-head">
-            <div className="academy-lesson-meta">
+          <div className="tutorials-lesson-head">
+            <div className="tutorials-meta">
               <span>Step {selectedLesson.step}</span>
               <span>{selectedLesson.group}</span>
               <span>{selectedLesson.time}</span>
@@ -416,9 +418,9 @@ export default function TutorialsPage() {
             <p>{selectedLesson.intro}</p>
           </div>
 
-          <div className="academy-lesson-body">
-            <section className="academy-before-card">
-              <div className="page-eyebrow">Before you start</div>
+          <div className="tutorials-lesson-body">
+            <section className="tutorials-panel">
+              <div className="tutorials-eyebrow">Before you start</div>
               <ul>
                 {selectedLesson.before.map((item) => (
                   <li key={item}>{item}</li>
@@ -426,11 +428,11 @@ export default function TutorialsPage() {
               </ul>
             </section>
 
-            <section className="academy-steps-card">
-              <div className="page-eyebrow">Do this</div>
-              <div className="academy-step-list">
+            <section className="tutorials-panel">
+              <div className="tutorials-eyebrow">Do this</div>
+              <div className="tutorials-steps">
                 {selectedLesson.steps.map((item, index) => (
-                  <div key={item} className="academy-step-row">
+                  <div key={item} className="tutorials-step">
                     <span>{index + 1}</span>
                     <p>{item}</p>
                   </div>
@@ -438,13 +440,13 @@ export default function TutorialsPage() {
               </div>
             </section>
 
-            <section className="academy-note-grid">
-              <div className="academy-note-card is-tip">
+            <section className="tutorials-note-grid">
+              <div className="tutorials-note is-tip">
                 <strong>Tip</strong>
                 <p>{selectedLesson.tip}</p>
               </div>
 
-              <div className="academy-note-card is-goal">
+              <div className="tutorials-note is-goal">
                 <strong>Goal</strong>
                 <p>{selectedLesson.outcome}</p>
               </div>
@@ -454,43 +456,39 @@ export default function TutorialsPage() {
       </section>
 
       <style jsx global>{`
-        /* Removed media prep lesson */
-
-        /* Reports tutorial addition */
-        .academy-subject-card strong,
-        .academy-tutorial-card strong {
-          text-wrap: balance;
+        .tutorials-page,
+        .tutorials-page * {
+          box-sizing: border-box;
         }
 
-        .academy-card-scroll {
-          padding-bottom: 14px !important;
+        html,
+        body {
+          max-width: 100%;
+          overflow-x: hidden;
         }
 
-        .academy-subject-card small,
-        .academy-tutorial-card small {
-          text-transform: none !important;
-        }
-
-
-        .academy-page {
-          width: min(100%, 1040px);
+        .tutorials-page {
+          width: min(100%, calc(100vw - 32px));
           max-width: 1040px;
           margin: 0 auto 56px;
           padding: 0 0 48px;
+          overflow-x: hidden;
         }
 
-        .academy-shell {
+        .tutorials-shell {
           width: 100%;
-          padding: clamp(24px, 3.4vw, 38px) !important;
-          border-radius: 34px !important;
-          border: 1px solid rgba(255, 212, 59, 0.18) !important;
+          max-width: 100%;
+          padding: clamp(22px, 3.4vw, 38px);
+          border-radius: 34px;
+          border: 1px solid rgba(255, 212, 59, 0.18);
           background:
             radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%),
-            rgba(15, 23, 42, 0.84) !important;
-          box-shadow: 0 24px 72px rgba(0, 0, 0, 0.28) !important;
+            rgba(15, 23, 42, 0.84);
+          box-shadow: 0 24px 72px rgba(0, 0, 0, 0.28);
+          overflow-x: hidden;
         }
 
-        .academy-hero {
+        .tutorials-hero {
           max-width: 760px;
           margin: 0 auto 28px;
           padding-bottom: 26px;
@@ -498,13 +496,13 @@ export default function TutorialsPage() {
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .academy-hero .page-eyebrow {
+        .tutorials-eyebrow {
           width: fit-content;
-          margin: 0 auto 14px;
+          max-width: 100%;
+          min-height: 30px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-height: 30px;
           padding: 0 12px;
           border-radius: 999px;
           background: rgba(255, 212, 59, 0.1);
@@ -516,7 +514,11 @@ export default function TutorialsPage() {
           text-transform: uppercase;
         }
 
-        .academy-hero h1 {
+        .tutorials-hero .tutorials-eyebrow {
+          margin: 0 auto 14px;
+        }
+
+        .tutorials-hero h1 {
           margin: 0 0 12px;
           color: #ffffff;
           font-size: clamp(2.45rem, 5vw, 4.4rem);
@@ -524,7 +526,7 @@ export default function TutorialsPage() {
           letter-spacing: -0.06em;
         }
 
-        .academy-hero p {
+        .tutorials-hero p {
           max-width: 680px;
           margin: 0 auto;
           color: rgba(248, 250, 252, 0.72);
@@ -533,7 +535,9 @@ export default function TutorialsPage() {
           font-weight: 760;
         }
 
-        .academy-tutorials {
+        .tutorials-picker {
+          width: 100%;
+          max-width: 100%;
           margin-bottom: 26px;
           padding: clamp(18px, 2.4vw, 24px);
           border-radius: 28px;
@@ -541,9 +545,10 @@ export default function TutorialsPage() {
             radial-gradient(circle at top right, rgba(255, 212, 59, 0.07), transparent 34%),
             rgba(2, 6, 23, 0.22);
           border: 1px solid rgba(255, 255, 255, 0.08);
+          overflow: hidden;
         }
 
-        .academy-tutorials-head {
+        .tutorials-picker-head {
           display: grid;
           grid-template-columns: minmax(0, 1fr) minmax(220px, 360px);
           gap: 18px;
@@ -551,7 +556,7 @@ export default function TutorialsPage() {
           margin-bottom: 16px;
         }
 
-        .academy-tutorials-head h2 {
+        .tutorials-picker-head h2 {
           margin: 8px 0 0;
           color: #ffffff;
           font-size: clamp(1.65rem, 3vw, 2.5rem);
@@ -559,94 +564,103 @@ export default function TutorialsPage() {
           letter-spacing: -0.055em;
         }
 
-        .academy-tutorials-head p {
+        .tutorials-picker-head p {
           margin: 0;
           color: rgba(248, 250, 252, 0.64);
           line-height: 1.5;
           font-weight: 760;
         }
 
-        .academy-card-scroll {
+        .tutorials-list {
+          width: 100%;
+          max-width: 100%;
           display: grid;
-          grid-auto-flow: column;
-          grid-auto-columns: minmax(220px, 250px);
+          grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 12px;
-          overflow-x: auto;
-          overscroll-behavior-inline: contain;
-          scroll-snap-type: inline mandatory;
-          padding: 4px 4px 12px;
-          scrollbar-width: thin;
         }
 
-        .academy-subject-card {
-          scroll-snap-align: start;
-          min-height: 142px;
+        .tutorials-list-item {
+          appearance: none;
+          width: 100%;
+          min-width: 0;
           display: grid;
-          align-content: space-between;
-          gap: 12px;
-          padding: 18px;
-          border-radius: 24px;
+          grid-template-columns: 46px minmax(0, 1fr);
+          align-items: center;
+          gap: 13px;
+          padding: 14px;
+          border-radius: 20px;
           border: 1px solid rgba(255, 255, 255, 0.1);
           background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.07), transparent 42%),
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.06), transparent 38%),
             rgba(15, 23, 42, 0.68);
           color: rgba(248, 250, 252, 0.78);
           text-align: left;
           cursor: pointer;
           font-family: inherit;
-          box-shadow: 0 16px 42px rgba(0, 0, 0, 0.16);
-          transition:
-            transform 160ms ease,
-            border-color 160ms ease,
-            background 160ms ease;
+          overflow: hidden;
         }
 
-        .academy-subject-card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(255, 212, 59, 0.22);
-        }
-
-        .academy-subject-card.is-active {
+        .tutorials-list-item.is-active {
+          border-color: rgba(255, 212, 59, 0.38);
           background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.22), transparent 42%),
-            rgba(255, 212, 59, 0.1);
-          border-color: rgba(255, 212, 59, 0.34);
-          color: #ffffff;
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 42%),
+            rgba(255, 212, 59, 0.09);
         }
 
-        .academy-subject-card span {
-          width: 38px;
-          height: 38px;
+        .tutorials-list-number {
+          width: 42px;
+          height: 42px;
           display: inline-grid;
           place-items: center;
           border-radius: 15px;
           background: rgba(255, 212, 59, 0.12);
-          border: 1px solid rgba(255, 212, 59, 0.18);
+          border: 1px solid rgba(255, 212, 59, 0.2);
           color: #ffd43b;
-          font-weight: 1000;
           font-size: 0.78rem;
+          font-weight: 1000;
+          line-height: 1;
         }
 
-        .academy-subject-card.is-active span {
+        .tutorials-list-item.is-active .tutorials-list-number {
           background: #ffd43b;
           color: #101420;
         }
 
-        .academy-subject-card strong {
+        .tutorials-list-copy {
+          min-width: 0;
+          display: grid;
+          gap: 5px;
+        }
+
+        .tutorials-list-copy strong,
+        .tutorials-list-copy small {
+          display: block;
+          width: 100%;
+          min-width: 0;
+          white-space: normal;
+          overflow-wrap: anywhere;
+          word-break: normal;
+          text-align: left;
+        }
+
+        .tutorials-list-copy strong {
           color: #ffffff;
-          font-size: 1.08rem;
-          line-height: 1.1;
-          letter-spacing: -0.04em;
+          font-size: 0.98rem;
+          line-height: 1.15;
+          font-weight: 1000;
+          letter-spacing: -0.025em;
         }
 
-        .academy-subject-card small {
+        .tutorials-list-copy small {
           color: rgba(248, 250, 252, 0.58);
+          font-size: 0.76rem;
+          line-height: 1.25;
           font-weight: 850;
-          line-height: 1.35;
         }
 
-        .academy-lesson-card {
+        .tutorials-lesson {
           width: min(100%, 900px);
+          max-width: 100%;
           margin: 0 auto;
           overflow: hidden;
           border-radius: 30px;
@@ -657,7 +671,7 @@ export default function TutorialsPage() {
           box-shadow: 0 24px 72px rgba(0, 0, 0, 0.24);
         }
 
-        .academy-lesson-head {
+        .tutorials-lesson-head {
           padding: clamp(24px, 3.2vw, 34px);
           text-align: center;
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -666,7 +680,7 @@ export default function TutorialsPage() {
             rgba(2, 6, 23, 0.2);
         }
 
-        .academy-lesson-meta {
+        .tutorials-meta {
           display: flex;
           flex-wrap: wrap;
           justify-content: center;
@@ -674,7 +688,7 @@ export default function TutorialsPage() {
           margin-bottom: 18px;
         }
 
-        .academy-lesson-meta span {
+        .tutorials-meta span {
           min-height: 30px;
           display: inline-flex;
           align-items: center;
@@ -690,7 +704,7 @@ export default function TutorialsPage() {
           text-transform: uppercase;
         }
 
-        .academy-lesson-head h2 {
+        .tutorials-lesson-head h2 {
           max-width: 720px;
           margin: 0 auto 12px;
           color: #ffffff;
@@ -699,7 +713,7 @@ export default function TutorialsPage() {
           letter-spacing: -0.055em;
         }
 
-        .academy-lesson-head p {
+        .tutorials-lesson-head p {
           max-width: 680px;
           margin: 0 auto;
           color: rgba(248, 250, 252, 0.72);
@@ -707,15 +721,15 @@ export default function TutorialsPage() {
           font-weight: 760;
         }
 
-        .academy-lesson-body {
+        .tutorials-lesson-body {
           display: grid;
           gap: 18px;
           padding: clamp(22px, 3vw, 32px);
         }
 
-        .academy-before-card,
-        .academy-steps-card {
+        .tutorials-panel {
           width: min(100%, 720px);
+          max-width: 100%;
           margin-inline: auto;
           padding: 18px;
           border-radius: 22px;
@@ -723,7 +737,7 @@ export default function TutorialsPage() {
           border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .academy-before-card ul {
+        .tutorials-panel ul {
           margin: 12px 0 0;
           padding-left: 20px;
           color: rgba(248, 250, 252, 0.78);
@@ -731,17 +745,17 @@ export default function TutorialsPage() {
           font-weight: 760;
         }
 
-        .academy-before-card li + li {
+        .tutorials-panel li + li {
           margin-top: 6px;
         }
 
-        .academy-step-list {
+        .tutorials-steps {
           display: grid;
           gap: 10px;
           margin-top: 12px;
         }
 
-        .academy-step-row {
+        .tutorials-step {
           display: grid;
           grid-template-columns: 38px minmax(0, 1fr);
           gap: 13px;
@@ -752,7 +766,7 @@ export default function TutorialsPage() {
           border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .academy-step-row span {
+        .tutorials-step span {
           width: 32px;
           height: 32px;
           display: inline-grid;
@@ -765,28 +779,29 @@ export default function TutorialsPage() {
           font-weight: 1000;
         }
 
-        .academy-step-row p {
+        .tutorials-step p {
           margin: 0;
           color: rgba(248, 250, 252, 0.84);
           line-height: 1.5;
           font-weight: 760;
         }
 
-        .academy-note-grid {
+        .tutorials-note-grid {
           width: min(100%, 720px);
+          max-width: 100%;
           margin-inline: auto;
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 12px;
         }
 
-        .academy-note-card {
+        .tutorials-note {
           padding: 17px;
           border-radius: 20px;
           line-height: 1.55;
         }
 
-        .academy-note-card strong {
+        .tutorials-note strong {
           display: block;
           margin-bottom: 7px;
           font-size: 0.76rem;
@@ -795,169 +810,106 @@ export default function TutorialsPage() {
           font-weight: 1000;
         }
 
-        .academy-note-card p {
+        .tutorials-note p {
           margin: 0;
           color: rgba(248, 250, 252, 0.82);
           line-height: 1.55;
           font-weight: 760;
         }
 
-        .academy-note-card.is-tip {
+        .tutorials-note.is-tip {
           background: rgba(61, 220, 151, 0.08);
           border: 1px solid rgba(61, 220, 151, 0.14);
         }
 
-        .academy-note-card.is-tip strong {
+        .tutorials-note.is-tip strong {
           color: #a7f3d0;
         }
 
-        .academy-note-card.is-goal {
+        .tutorials-note.is-goal {
           background: rgba(255, 212, 59, 0.095);
           border: 1px solid rgba(255, 212, 59, 0.16);
         }
 
-        .academy-note-card.is-goal strong {
+        .tutorials-note.is-goal strong {
           color: #ffd43b;
         }
 
-        @media (max-width: 1100px) {
-          .academy-page {
-            width: min(100%, calc(100vw - 24px));
-          }
-        }
-
         @media (max-width: 760px) {
-          .academy-page {
-            width: min(100%, calc(100vw - 22px));
+          .tutorials-page {
+            width: min(100%, calc(100vw - 20px));
+            max-width: calc(100vw - 20px);
           }
 
-          .academy-shell {
-            padding: 20px 16px 22px !important;
-            border-radius: 28px !important;
+          .tutorials-shell {
+            padding: 18px 14px 20px;
+            border-radius: 26px;
           }
 
-          .academy-hero {
-            margin-bottom: 24px;
-            padding-bottom: 22px;
+          .tutorials-hero {
+            margin-bottom: 22px;
+            padding-bottom: 20px;
           }
 
-          .academy-hero h1 {
+          .tutorials-hero h1 {
             font-size: clamp(2.2rem, 11vw, 3.4rem);
           }
 
-          .academy-tutorials {
-            padding: 16px;
+          .tutorials-picker {
+            padding: 14px;
+            border-radius: 22px;
+          }
+
+          .tutorials-picker-head {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+          }
+
+          .tutorials-picker-head p {
+            font-size: 0.9rem;
+            line-height: 1.45;
+          }
+
+          .tutorials-list {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+
+          .tutorials-list-item {
+            min-height: 76px;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 12px;
+            padding: 12px;
+            border-radius: 18px;
+          }
+
+          .tutorials-list-number {
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+          }
+
+          .tutorials-lesson {
             border-radius: 24px;
           }
 
-          .academy-tutorials-head {
+          .tutorials-lesson-body,
+          .tutorials-lesson-head {
+            padding-left: 14px;
+            padding-right: 14px;
+          }
+
+          .tutorials-note-grid {
             grid-template-columns: 1fr;
           }
 
-          .academy-card-scroll {
-            grid-auto-columns: minmax(205px, 82vw);
-          }
-
-          .academy-lesson-card {
-            border-radius: 24px;
-          }
-
-          .academy-note-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .academy-step-row {
+          .tutorials-step {
             grid-template-columns: 1fr;
             justify-items: center;
             text-align: center;
           }
-
         }
-
-        /* Final responsive overflow fix for Tutorials at laptop/tablet widths */
-        html,
-        body {
-          max-width: 100% !important;
-          overflow-x: hidden !important;
-        }
-
-        .academy-page,
-        .academy-shell,
-        .academy-hero,
-        .academy-tutorials,
-        .academy-tutorials-head,
-        .academy-card-scroll,
-        .academy-lesson-card,
-        .academy-lesson-body,
-        .academy-before-card,
-        .academy-steps-card,
-        .academy-note-grid,
-        .academy-step-row,
-        .academy-subject-card {
-          box-sizing: border-box !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-        }
-
-        .academy-page {
-          width: min(100%, calc(100vw - 32px)) !important;
-          max-width: 1040px !important;
-          overflow-x: hidden !important;
-          margin-left: auto !important;
-          margin-right: auto !important;
-        }
-
-        .academy-shell {
-          overflow-x: hidden !important;
-        }
-
-        .academy-tutorials {
-          overflow: hidden !important;
-        }
-
-        .academy-card-scroll {
-          width: 100% !important;
-          max-width: 100% !important;
-          overflow-x: auto !important;
-          overflow-y: hidden !important;
-          overscroll-behavior-inline: contain !important;
-          -webkit-overflow-scrolling: touch !important;
-          contain: inline-size !important;
-        }
-
-        .academy-subject-card {
-          width: 100% !important;
-        }
-
-        @media (max-width: 1100px) {
-          .academy-page {
-            width: min(100%, calc(100vw - 32px)) !important;
-            max-width: calc(100vw - 32px) !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-          }
-
-          .academy-shell {
-            width: 100% !important;
-            max-width: 100% !important;
-          }
-
-          .academy-tutorials-head {
-            grid-template-columns: 1fr !important;
-          }
-        }
-
-        @media (max-width: 760px) {
-          .academy-page {
-            width: min(100%, calc(100vw - 22px)) !important;
-            max-width: calc(100vw - 22px) !important;
-          }
-
-          .academy-card-scroll {
-            grid-auto-columns: minmax(0, min(82vw, 260px)) !important;
-          }
-        }
-
       `}</style>
     </main>
   );
