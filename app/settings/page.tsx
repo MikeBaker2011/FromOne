@@ -125,6 +125,7 @@ export default function SettingsPage() {
 
   const profileEditorRef = useRef<HTMLElement | null>(null);
   const socialConnectionsRef = useRef<HTMLElement | null>(null);
+  const createPostsRef = useRef<HTMLElement | null>(null);
 
   const openProfileEditor = () => {
     setShowBusinessDetails(true);
@@ -144,6 +145,15 @@ export default function SettingsPage() {
         block: 'start',
       });
     }, 180);
+  };
+
+  const scrollToCreatePosts = () => {
+    window.setTimeout(() => {
+      createPostsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 120);
   };
 
   const metaConnections = socialConnections.filter((connection) => connection.provider === 'meta');
@@ -218,6 +228,9 @@ export default function SettingsPage() {
   const connectionsReady = businessProfileReady;
   const createPostsReady = businessProfileReady;
   const showOnboardingNextStep = isOnboardingSetup && businessProfileReady;
+  const setupProfileComplete = Boolean(businessName.trim() && industry.trim() && location.trim() && services.trim());
+  const setupChannelsComplete = hasMetaConnection;
+  const setupCreatePostsReady = businessProfileReady;
 
   const profileHasStarted = Boolean(
     websiteUrl.trim() ||
@@ -912,53 +925,80 @@ export default function SettingsPage() {
                 marginTop: 22,
               }}
             >
-              <article
-                className="card settings-setup-step-card"
+              <button
+                type="button"
+                className={`card settings-setup-step-card settings-setup-clickable-card ${
+                  setupProfileComplete ? 'is-complete' : ''
+                }`}
+                onClick={openProfileEditor}
+                aria-label="Go to Business Profile setup"
                 style={{
                   padding: 18,
                   borderRadius: 24,
-                  background:
-                    'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
+                  background: setupProfileComplete
+                    ? 'linear-gradient(145deg, rgba(61, 220, 151, 0.18), rgba(61, 220, 151, 0.07))'
+                    : 'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
                 }}
               >
-                <span className="status-pill">Step 1</span>
+                <span className="settings-setup-card-topline">
+                  <span className="status-pill">Step 1</span>
+                  {setupProfileComplete && <span className="settings-setup-check" aria-hidden="true">✓</span>}
+                </span>
                 <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Set up profile</h3>
                 <p style={{ margin: 0, color: 'var(--muted)' }}>
                   Add the business name, industry, location, services and customers.
                 </p>
-              </article>
+              </button>
 
-              <article
-                className="card settings-setup-step-card"
+              <button
+                type="button"
+                className={`card settings-setup-step-card settings-setup-clickable-card ${
+                  setupChannelsComplete ? 'is-complete' : ''
+                }`}
+                onClick={scrollToSocialConnections}
+                aria-label="Go to social media connection section"
                 style={{
                   padding: 18,
                   borderRadius: 24,
-                  background:
-                    'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
+                  background: setupChannelsComplete
+                    ? 'linear-gradient(145deg, rgba(61, 220, 151, 0.18), rgba(61, 220, 151, 0.07))'
+                    : 'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
                 }}
               >
-                <span className="status-pill">Step 2</span>
+                <span className="settings-setup-card-topline">
+                  <span className="status-pill">Step 2</span>
+                  {setupChannelsComplete && <span className="settings-setup-check" aria-hidden="true">✓</span>}
+                </span>
                 <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Connect channels</h3>
                 <p style={{ margin: 0, color: 'var(--muted)' }}>
                   Connect Facebook and Instagram for autoposting. TikTok can stay manual.
                 </p>
-              </article>
+              </button>
 
-              <article
-                className="card settings-setup-step-card"
+              <button
+                type="button"
+                className={`card settings-setup-step-card settings-setup-clickable-card ${
+                  setupCreatePostsReady ? 'is-complete' : ''
+                }`}
+                onClick={scrollToCreatePosts}
+                aria-label="Go to create posts section"
                 style={{
                   padding: 18,
                   borderRadius: 24,
-                  background:
-                    'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
+                  background: setupCreatePostsReady
+                    ? 'linear-gradient(145deg, rgba(61, 220, 151, 0.18), rgba(61, 220, 151, 0.07))'
+                    : 'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
                 }}
               >
-                <span className="status-pill">Step 3</span>
+                <span className="settings-setup-card-topline">
+                  <span className="status-pill">Step 3</span>
+                  {setupCreatePostsReady && <span className="settings-setup-check" aria-hidden="true">✓</span>}
+                </span>
                 <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Create posts</h3>
                 <p style={{ margin: 0, color: 'var(--muted)' }}>
                   Go to Dashboard, upload photos, videos or flyers, and create the weekly post plan.
                 </p>
-              </article>
+              </button>
             </div>
           </section>
 
@@ -1199,7 +1239,7 @@ export default function SettingsPage() {
                     </label>
 
                     <label>
-                      <strong>What do they sell or offer?</strong>
+                      <strong>What services do you offer?</strong>
                       <span>A few words is enough.</span>
                       <textarea
                         className="input"
@@ -1520,6 +1560,8 @@ export default function SettingsPage() {
           </section>
 
           <section
+            ref={createPostsRef}
+            id="create-posts-section"
             className={`premium-card settings-numbered-section settings-create-posts-section`}
             style={{
               maxWidth: 1120,
