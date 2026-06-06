@@ -2694,7 +2694,233 @@ If uploads are supplied:
         padding: "0 0 42px",
       }}
     >
-      <style jsx global>{`        /* Client feedback polish: keep dashboard inside the app content column */
+      <style jsx global>{`
+        /* Dashboard upload icon layout refinement */
+        .dashboard-upload-type-grid {
+          width: min(100%, 680px) !important;
+          max-width: 680px !important;
+          justify-content: center !important;
+          align-items: stretch !important;
+          margin: 18px auto 22px !important;
+          gap: 14px !important;
+        }
+
+        .dashboard-upload-type-card {
+          min-height: 126px !important;
+          padding: 17px 14px !important;
+          gap: 9px !important;
+        }
+
+        .dashboard-upload-type-card strong {
+          font-size: 0.98rem !important;
+          line-height: 1.05 !important;
+        }
+
+        .dashboard-upload-type-card small {
+          display: block !important;
+          margin-top: -2px !important;
+          color: rgba(248, 250, 252, 0.62) !important;
+          font-size: 0.72rem !important;
+          line-height: 1.2 !important;
+          font-weight: 800 !important;
+          letter-spacing: -0.005em !important;
+        }
+
+        .dashboard-upload-type-icon {
+          width: 52px !important;
+          height: 52px !important;
+          border-radius: 18px !important;
+        }
+
+        .dashboard-upload-type-icon svg {
+          width: 31px !important;
+          height: 31px !important;
+          stroke-width: 2.05 !important;
+        }
+
+        .dashboard-mobile-upload-title {
+          margin-bottom: 2px !important;
+        }
+
+        @media (max-width: 760px) {
+          .dashboard-upload-type-grid {
+            width: min(100%, 360px) !important;
+            max-width: 360px !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 11px !important;
+            margin: 16px auto 20px !important;
+          }
+
+          .dashboard-upload-type-card {
+            min-height: 116px !important;
+            padding: 15px 10px !important;
+            gap: 8px !important;
+          }
+
+          .dashboard-upload-type-icon {
+            width: 54px !important;
+            height: 54px !important;
+            border-radius: 18px !important;
+            background:
+              radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.22), transparent 30%),
+              rgba(255, 212, 59, 0.15) !important;
+          }
+
+          .dashboard-upload-type-icon svg {
+            width: 32px !important;
+            height: 32px !important;
+            stroke-width: 2.15 !important;
+          }
+
+          .dashboard-upload-type-card strong {
+            font-size: 0.95rem !important;
+          }
+
+          .dashboard-upload-type-card small {
+            font-size: 0.7rem !important;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            grid-template-columns: 1fr !important;
+            max-width: 280px !important;
+          }
+
+          .dashboard-upload-type-card {
+            min-height: 98px !important;
+            grid-template-columns: 58px minmax(0, 1fr) !important;
+            place-items: center start !important;
+            text-align: left !important;
+            align-content: center !important;
+            justify-content: start !important;
+          }
+
+          .dashboard-upload-type-card strong,
+          .dashboard-upload-type-card small {
+            width: 100% !important;
+            text-align: left !important;
+          }
+
+          .dashboard-upload-type-card small {
+            grid-column: 2 !important;
+          }
+        }
+
+
+        /* Premium upload media type icons */
+        .dashboard-upload-type-grid {
+          width: min(100%, 760px) !important;
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 10px !important;
+          margin: 6px auto 4px !important;
+        }
+
+        .dashboard-upload-type-card {
+          min-width: 0 !important;
+          min-height: 104px !important;
+          display: grid !important;
+          place-items: center !important;
+          align-content: center !important;
+          gap: 8px !important;
+          padding: 13px 12px !important;
+          border-radius: 22px !important;
+          background:
+            radial-gradient(circle at top, rgba(255, 212, 59, 0.12), transparent 42%),
+            rgba(2, 6, 23, 0.38) !important;
+          border: 1px solid rgba(255, 212, 59, 0.16) !important;
+          color: #ffffff !important;
+          text-align: center !important;
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.07),
+            0 16px 38px rgba(0, 0, 0, 0.18) !important;
+        }
+
+        .dashboard-upload-type-card strong {
+          margin: 0 !important;
+          color: #ffffff !important;
+          font-size: 0.9rem !important;
+          line-height: 1 !important;
+          font-weight: 950 !important;
+          letter-spacing: -0.01em !important;
+        }
+
+        .dashboard-upload-type-icon {
+          width: 44px !important;
+          height: 44px !important;
+          display: inline-grid !important;
+          place-items: center !important;
+          border-radius: 16px !important;
+          background: rgba(255, 212, 59, 0.12) !important;
+          border: 1px solid rgba(255, 212, 59, 0.24) !important;
+          box-shadow: 0 12px 28px rgba(255, 212, 59, 0.08) !important;
+        }
+
+        .dashboard-upload-type-icon svg {
+          width: 26px !important;
+          height: 26px !important;
+          display: block !important;
+          fill: none !important;
+          stroke: #ffd43b !important;
+          stroke-width: 1.8 !important;
+          stroke-linecap: round !important;
+          stroke-linejoin: round !important;
+        }
+
+        .dashboard-upload-capture-card {
+          appearance: none !important;
+          cursor: pointer !important;
+          font-family: inherit !important;
+        }
+
+        .dashboard-upload-capture-card:disabled {
+          opacity: 0.6 !important;
+          cursor: not-allowed !important;
+        }
+
+        .dashboard-upload-capture-card:hover {
+          transform: translateY(-1px) !important;
+          border-color: rgba(255, 212, 59, 0.34) !important;
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            0 20px 46px rgba(255, 212, 59, 0.08) !important;
+        }
+
+        .dashboard-upload-type-card.is-mobile-only {
+          display: none !important;
+        }
+
+        @media (max-width: 760px) {
+          .dashboard-upload-type-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 9px !important;
+          }
+
+          .dashboard-upload-type-card {
+            min-height: 92px !important;
+            border-radius: 19px !important;
+            padding: 12px 10px !important;
+          }
+
+          .dashboard-upload-type-card.is-mobile-only {
+            display: grid !important;
+          }
+
+          .dashboard-upload-type-icon {
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 14px !important;
+          }
+
+          .dashboard-upload-type-icon svg {
+            width: 23px !important;
+            height: 23px !important;
+          }
+        }
+
+        /* Client feedback polish: keep dashboard inside the app content column */
         .dashboard-final-page,
         main:has(.dashboard-final-card),
         main:has(.dashboard-upload-dropzone) {
@@ -5197,9 +5423,47 @@ If uploads are supplied:
               <span style={{ display: "grid", gap: 10, justifyItems: "center" }}>
                 <span className="dashboard-mobile-upload-title">Add media</span>
 
-                <span className="dashboard-mobile-capture-actions" aria-label="Mobile media options">
+                <span className="dashboard-upload-type-grid" aria-label="Supported upload types">
+                  <span className="dashboard-upload-type-card">
+                    <span className="dashboard-upload-type-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" role="presentation">
+                        <rect x="4" y="5" width="16" height="14" rx="3" />
+                        <path d="M7 16l3.4-3.4 2.6 2.6 2-2 2.9 2.8" />
+                        <circle cx="8.4" cy="8.8" r="1.1" />
+                      </svg>
+                    </span>
+                    <strong>Photos</strong>
+                    <small>Upload images</small>
+                  </span>
+
+                  <span className="dashboard-upload-type-card">
+                    <span className="dashboard-upload-type-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" role="presentation">
+                        <rect x="4" y="6" width="16" height="12" rx="3" />
+                        <path d="M10 9.5v5l4.4-2.5z" />
+                      </svg>
+                    </span>
+                    <strong>Videos</strong>
+                    <small>Upload clips</small>
+                  </span>
+
+                  <span className="dashboard-upload-type-card">
+                    <span className="dashboard-upload-type-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" role="presentation">
+                        <path d="M7 4h7l3 3v13H7z" />
+                        <path d="M14 4v4h4" />
+                        <path d="M9.5 11h5" />
+                        <path d="M9.5 14h5" />
+                        <path d="M9.5 17h3" />
+                      </svg>
+                    </span>
+                    <strong>Flyers</strong>
+                    <small>Upload PDFs</small>
+                  </span>
+
                   <button
                     type="button"
+                    className="dashboard-upload-type-card dashboard-upload-capture-card is-mobile-only"
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
@@ -5207,11 +5471,19 @@ If uploads are supplied:
                     }}
                     disabled={scanning}
                   >
-                    Take photo
+                    <span className="dashboard-upload-type-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" role="presentation">
+                        <path d="M8 7l1.2-2h5.6L16 7h2.5A2.5 2.5 0 0 1 21 9.5v7A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-7A2.5 2.5 0 0 1 5.5 7z" />
+                        <circle cx="12" cy="13" r="3.2" />
+                      </svg>
+                    </span>
+                    <strong>Take photo</strong>
+                    <small>Use camera</small>
                   </button>
 
                   <button
                     type="button"
+                    className="dashboard-upload-type-card dashboard-upload-capture-card is-mobile-only"
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
@@ -5219,20 +5491,14 @@ If uploads are supplied:
                     }}
                     disabled={scanning}
                   >
-                    Record video
-                  </button>
-
-                  <button
-                    type="button"
-                    className="secondary"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      mobileFileInputRef.current?.click();
-                    }}
-                    disabled={scanning}
-                  >
-                    Upload file
+                    <span className="dashboard-upload-type-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" role="presentation">
+                        <rect x="4" y="7" width="11" height="10" rx="2" />
+                        <path d="M15 10l5-2.5v9L15 14z" />
+                      </svg>
+                    </span>
+                    <strong>Take video</strong>
+                    <small>Record now</small>
                   </button>
                 </span>
 
@@ -5296,8 +5562,7 @@ If uploads are supplied:
                 </strong>
 
                 <span style={{ color: "var(--muted)", maxWidth: 560 }}>
-                  Upload up to 7 items. Photos and videos can be used for Facebook and Instagram.
-                  PDF flyers can create post wording and are automatically prepared as images for Facebook and Instagram.
+                  Upload up to 7 items. FromOne will turn them into ready-to-review posts.
                 </span>
               </span>
             </label>

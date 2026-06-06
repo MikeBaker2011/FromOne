@@ -940,10 +940,10 @@ export default function SettingsPage() {
                     : 'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
                 }}
               >
-                <span className="settings-setup-card-topline">
-                  <span className="status-pill">Step 1</span>
-                  {setupProfileComplete && <span className="settings-setup-check" aria-hidden="true">✓</span>}
-                </span>
+                <span className="status-pill">Step 1</span>
+                {setupProfileComplete && (
+                  <span className="settings-step-complete-mark" aria-hidden="true">✓</span>
+                )}
                 <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Set up profile</h3>
                 <p style={{ margin: 0, color: 'var(--muted)' }}>
                   Add the business name, industry, location, services and customers.
@@ -965,10 +965,10 @@ export default function SettingsPage() {
                     : 'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
                 }}
               >
-                <span className="settings-setup-card-topline">
-                  <span className="status-pill">Step 2</span>
-                  {setupChannelsComplete && <span className="settings-setup-check" aria-hidden="true">✓</span>}
-                </span>
+                <span className="status-pill">Step 2</span>
+                {setupChannelsComplete && (
+                  <span className="settings-step-complete-mark" aria-hidden="true">✓</span>
+                )}
                 <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Connect channels</h3>
                 <p style={{ margin: 0, color: 'var(--muted)' }}>
                   Connect Facebook and Instagram for autoposting. TikTok can stay manual.
@@ -990,10 +990,10 @@ export default function SettingsPage() {
                     : 'linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))',
                 }}
               >
-                <span className="settings-setup-card-topline">
-                  <span className="status-pill">Step 3</span>
-                  {setupCreatePostsReady && <span className="settings-setup-check" aria-hidden="true">✓</span>}
-                </span>
+                <span className="status-pill">Step 3</span>
+                {setupCreatePostsReady && (
+                  <span className="settings-step-complete-mark" aria-hidden="true">✓</span>
+                )}
                 <h3 style={{ margin: '14px 0 8px', fontSize: 24 }}>Create posts</h3>
                 <p style={{ margin: 0, color: 'var(--muted)' }}>
                   Go to Dashboard, upload photos, videos or flyers, and create the weekly post plan.
@@ -1690,6 +1690,195 @@ export default function SettingsPage() {
       )}
 
       <style jsx global>{`
+
+
+
+
+
+
+        /* Final mobile setup-card layout fix */
+        .settings-setup-step-card {
+          overflow: hidden !important;
+        }
+
+        .settings-step-complete-mark {
+          position: static !important;
+          inset: auto !important;
+          transform: none !important;
+          flex: none !important;
+          z-index: 1 !important;
+        }
+
+        @media (max-width: 760px) {
+          .settings-setup-step-grid {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+          }
+
+          .settings-setup-step-card,
+          .settings-setup-step-card.card,
+          button.settings-setup-step-card {
+            width: 100% !important;
+            min-height: auto !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            align-items: start !important;
+            align-content: start !important;
+            gap: 10px !important;
+            padding: 22px 18px !important;
+            text-align: center !important;
+            overflow: hidden !important;
+          }
+
+          .settings-setup-step-card .status-pill {
+            grid-column: 1 !important;
+            justify-self: center !important;
+            margin: 0 auto !important;
+          }
+
+          .settings-setup-step-card .settings-step-complete-mark {
+            grid-column: 1 !important;
+            justify-self: center !important;
+            margin: 8px auto 4px !important;
+            width: 50px !important;
+            height: 50px !important;
+            font-size: 1.45rem !important;
+          }
+
+          .settings-setup-step-card h3 {
+            grid-column: 1 !important;
+            width: 100% !important;
+            max-width: 280px !important;
+            margin: 6px auto 2px !important;
+            text-align: center !important;
+            font-size: clamp(1.25rem, 6vw, 1.65rem) !important;
+            line-height: 1.05 !important;
+            overflow-wrap: normal !important;
+          }
+
+          .settings-setup-step-card p {
+            grid-column: 1 !important;
+            width: 100% !important;
+            max-width: 320px !important;
+            margin: 0 auto !important;
+            text-align: center !important;
+            line-height: 1.45 !important;
+            overflow-wrap: normal !important;
+          }
+
+          .settings-setup-card-topline {
+            display: contents !important;
+          }
+
+          .settings-setup-check {
+            display: none !important;
+          }
+        }
+
+
+        /* Force completed setup ticks under the pill, not beside it */
+        .settings-setup-step-card {
+          text-align: center !important;
+          justify-items: center !important;
+          align-content: start !important;
+        }
+
+        .settings-setup-card-topline {
+          display: contents !important;
+        }
+
+        .settings-setup-check {
+          display: none !important;
+        }
+
+        .settings-setup-step-card .status-pill {
+          margin: 0 auto !important;
+        }
+
+        .settings-step-complete-mark {
+          width: 58px !important;
+          height: 58px !important;
+          display: inline-grid !important;
+          place-items: center !important;
+          margin: 13px auto 4px !important;
+          border-radius: 999px !important;
+          background:
+            radial-gradient(circle at 35% 24%, rgba(255, 255, 255, 0.55), transparent 25%),
+            linear-gradient(135deg, #ffd43b, #f7b733) !important;
+          color: #101420 !important;
+          border: 1px solid rgba(255, 212, 59, 0.58) !important;
+          box-shadow:
+            0 18px 42px rgba(255, 212, 59, 0.24),
+            inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+          font-size: 1.7rem !important;
+          font-weight: 1000 !important;
+          line-height: 1 !important;
+        }
+
+        .settings-setup-step-card:not(.is-complete) .settings-step-complete-mark {
+          display: none !important;
+        }
+
+
+        /* Final setup-card tick polish */
+        .settings-setup-step-card {
+          text-align: center !important;
+          justify-items: center !important;
+          position: relative !important;
+        }
+
+        .settings-setup-step-card .status-pill {
+          margin-inline: auto !important;
+        }
+
+        .settings-setup-step-card.is-complete .status-pill,
+        .settings-setup-step-card[data-complete="true"] .status-pill {
+          background: rgba(255, 212, 59, 0.14) !important;
+          border-color: rgba(255, 212, 59, 0.34) !important;
+          color: #ffe58a !important;
+          box-shadow: 0 12px 28px rgba(255, 212, 59, 0.1) !important;
+        }
+
+        .settings-setup-step-card.is-complete .status-pill::after,
+        .settings-setup-step-card[data-complete="true"] .status-pill::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .settings-setup-step-card .settings-step-complete-mark {
+          width: 54px !important;
+          height: 54px !important;
+          display: inline-grid !important;
+          place-items: center !important;
+          margin: 12px auto 2px !important;
+          border-radius: 999px !important;
+          background:
+            radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.52), transparent 24%),
+            linear-gradient(135deg, #ffd43b, #f7b733) !important;
+          color: #101420 !important;
+          border: 1px solid rgba(255, 212, 59, 0.55) !important;
+          box-shadow:
+            0 18px 42px rgba(255, 212, 59, 0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+          font-size: 1.55rem !important;
+          font-weight: 1000 !important;
+          line-height: 1 !important;
+        }
+
+        .settings-setup-step-card:not(.is-complete):not([data-complete="true"]) .settings-step-complete-mark {
+          display: none !important;
+        }
+
+        .settings-setup-step-card h3 {
+          text-align: center !important;
+        }
+
+        .settings-setup-step-card p {
+          text-align: center !important;
+        }
+
+
         /* Phase 9 UI polish — Settings / Connections */
         .settings-setup-guide,
         .settings-quick-profile-card,
@@ -2930,6 +3119,86 @@ export default function SettingsPage() {
         .settings-channel-card-short button {
           margin-top: 0 !important;
           align-self: start !important;
+        }
+
+
+        /* FINAL: flat FromOne-yellow setup completion tick */
+        .settings-setup-step-card .settings-step-complete-mark,
+        .settings-step-complete-mark {
+          all: unset !important;
+          display: block !important;
+          width: fit-content !important;
+          min-width: 0 !important;
+          height: auto !important;
+          min-height: 0 !important;
+          margin: 8px auto 0 !important;
+          padding: 0 !important;
+          color: #ffd43b !important;
+          font-family: inherit !important;
+          font-size: 1.9rem !important;
+          font-weight: 1000 !important;
+          line-height: 1 !important;
+          text-align: center !important;
+          background: transparent !important;
+          background-color: transparent !important;
+          background-image: none !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          outline: 0 !important;
+          box-shadow: none !important;
+          text-shadow: none !important;
+          filter: none !important;
+          -webkit-filter: none !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+          opacity: 1 !important;
+        }
+
+        .settings-setup-step-card .settings-step-complete-mark::before,
+        .settings-setup-step-card .settings-step-complete-mark::after,
+        .settings-step-complete-mark::before,
+        .settings-step-complete-mark::after {
+          content: none !important;
+          display: none !important;
+          background: transparent !important;
+          background-image: none !important;
+          border: 0 !important;
+          box-shadow: none !important;
+          text-shadow: none !important;
+          filter: none !important;
+        }
+
+        .settings-step-complete-mark > span,
+        .settings-step-complete-mark > strong {
+          display: none !important;
+        }
+
+        @media (max-width: 760px) {
+          .settings-setup-step-card .settings-step-complete-mark,
+          .settings-step-complete-mark {
+            all: unset !important;
+            display: block !important;
+            width: fit-content !important;
+            margin: 8px auto 0 !important;
+            padding: 0 !important;
+            color: #ffd43b !important;
+            font-family: inherit !important;
+            font-size: 1.8rem !important;
+            font-weight: 1000 !important;
+            line-height: 1 !important;
+            text-align: center !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            filter: none !important;
+            -webkit-filter: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+          }
         }
 
       `}</style>
