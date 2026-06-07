@@ -378,7 +378,7 @@ export default function DashboardPage() {
   );
   const [platformDistributionMode, setPlatformDistributionMode] = useState<
     "split" | "every_platform"
-  >("every_platform");
+  >("split");
   const [selectedMarketReach, setSelectedMarketReach] =
     useState("Local customers");
   const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(3);
@@ -999,7 +999,7 @@ export default function DashboardPage() {
 
     if (total >= MAX_SAVED_CAMPAIGNS) {
       notify(
-        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly post sets. Delete an old or empty test set from Posts before creating a new one.`,
+        `You already have ${MAX_SAVED_CAMPAIGNS} saved weekly post sets. Go to Settings to delete an old or empty test set before creating a new one.`,
         "warning",
         "Saved set limit reached"
       );
@@ -2049,9 +2049,9 @@ Important flyer-to-wording rule: the generated caption, CTA and hashtags must be
       weeklyUploads.length > 0 ? await uploadWeeklyMediaToStorage(userId) : [];
 
     updateCreationProgress(
-      weeklyUploads.some((upload) => getWeeklyUploadMediaType(upload.file) === "flyer")
-        ? "Reading flyer details and creating post wording..."
-        : "Creating your post wording..."
+      weeklyUploads.length > 0
+        ? "Creating one scheduled post for each upload..."
+        : "Creating scheduled posts from your business profile..."
     );
 
     const response = await axios.post("/api/generatePosts", {
@@ -2060,15 +2060,22 @@ Important flyer-to-wording rule: the generated caption, CTA and hashtags must be
       industry: activeClient.industry,
       description: `${buildBusinessDescription(activeClient)}
 
+Guided post creation mode:
+- If uploads are supplied, create one scheduled post for each upload.
+- If no uploads are supplied, create the requested number of profile-only draft posts.
+- Use the uploaded media as the main topic for each post.
+- If an upload is unclear, use the business profile and client note to create a safe useful post.
+- Nothing should imply publishing happens automatically before review.
+
 Weekly uploaded media count: ${uploadedMediaItems.length}.
 This week's note from the user:
 ${weeklyPostNote.trim() || "No extra note supplied."}
 
 If uploads are supplied:
-- Post 1 must use Upload 1 as the topic.
-- Post 2 must use Upload 2 as the topic.
-- Continue one base post per upload.
+- Treat uploads as the content the client has available.
+- Create one post per upload, in upload order.
 - Use each upload's note/context/description field as the most important user context for that specific post.
+- Do not add extra posts beyond the number of uploads unless there are no uploads.
 - For image uploads, only write specific product claims when they are clearly visible in the image or supplied in the user's quick description.
 - For unclear image uploads, do not guess the exact product type, ingredients, materials, preparation method, health benefit, price, size, offer, date, guarantee, safety claim or technical specification.
 - Never turn an ambiguous image into confident claims such as "air-baked", "100% natural", "no fillers", "handmade", "organic", "safe", "premium", "discounted" or similar unless those details are supplied by the user or clearly visible.
@@ -2088,11 +2095,11 @@ If uploads are supplied:
       weeklyUploads: uploadedMediaItems,
       uploads: uploadedMediaItems,
       requestedOutput: {
-        posts: `array of ${postCount} base post objects with day, platform, title, caption, cta, hashtags, image_prompt. Use only Facebook, Instagram and TikTok. If mediaItems are supplied, create one base post per media item in the same order. Platform distribution mode: ${platformDistributionMode}.`,
+        posts: `Return exactly ${postCount} scheduled post object${postCount === 1 ? "" : "s"} with day, platform, title, caption, cta, hashtags, image_prompt. Use only Facebook, Instagram and TikTok. If mediaItems are supplied, create exactly one post per uploaded item in the same order. Do not create 7 posts unless 7 items were uploaded or 7 profile-only posts were requested. If no mediaItems are supplied, create profile-led draft posts. Platform distribution mode: ${platformDistributionMode}.`,
         selected_platforms: selectedPlatforms,
         market_reach: marketReachContext,
         uploaded_media: uploadedMediaItems,
-        media_analysis_rule: "Use each upload context. For image uploads, do not invent product claims, ingredients, materials, preparation methods, health benefits, prices, guarantees, safety claims, dates, sizes or technical details unless clearly visible or supplied by the user's quick description. If the image is unclear or ambiguous, write cautiously and generally, and invite the customer to ask for details or check availability. For flyer/PDF uploads, read visible text/artwork and turn the flyer details into natural caption wording, CTA and hashtags. For video uploads, analyse the footage when available and write about the visible video moment. If footage cannot be inspected, use the quick description cautiously.",
+        media_analysis_rule: "Create one scheduled post per uploaded media item. For image uploads, do not invent product claims, ingredients, materials, preparation methods, health benefits, prices, guarantees, safety claims, dates, sizes or technical details unless clearly visible or supplied by the user's quick description. If the image is unclear or ambiguous, write cautiously and generally, and invite the customer to ask for details or check availability. For flyer/PDF uploads, read visible text/artwork and turn the flyer details into natural caption wording, CTA and hashtags. For video uploads, analyse the footage when available and write about the visible video moment. If footage cannot be inspected, use the quick description cautiously.",
         flyer_to_wording_rule: "When a media item has flyer_to_wording=true, the generated post must be based on details from the flyer: offer/event/service, date, time, price, location, booking/contact, deadline and CTA. Do not invent missing information.",
         business_name: "detected business name",
         industry: "detected industry",
@@ -2111,9 +2118,17 @@ If uploads are supplied:
       },
     });
 
-    updateCreationProgress("Building your review board...");
+    updateCreationProgress("Choosing dates and times...");
 
-    const posts: GeneratedPost[] = (response.data.posts || []).slice(0, postCount);
+    const returnedPosts = response.data.posts || [];
+
+    if (returnedPosts.length > postCount) {
+      console.warn(
+        `FromOne received ${returnedPosts.length} generated posts but only ${postCount} were requested. Extra posts were ignored.`
+      );
+    }
+
+    const posts: GeneratedPost[] = returnedPosts.slice(0, postCount);
     const inlineVideoMediaUsed = Number(response.data.inlineVideoMediaUsed || 0);
     const inlineImageMediaUsed = Number(response.data.inlineImageMediaUsed || response.data.visionMediaUsed || 0);
 
@@ -2209,7 +2224,7 @@ If uploads are supplied:
 
     const suggestedScheduleSummary: string[] = [];
 
-    updateCreationProgress("Saving your weekly posts...");
+    updateCreationProgress("Creating your review board...");
 
     try {
       let createdPostIndex = 0;
@@ -2386,7 +2401,7 @@ If uploads are supplied:
 
   const handleGeneratePosts = async () => {
     navigatingToPostsRef.current = false;
-    setCreationProgressMessage("Getting things ready...");
+    setCreationProgressMessage("Getting your posts ready...");
     setScanning(true);
 
     if (!ensureAccessAllowed()) {
@@ -2466,7 +2481,7 @@ If uploads are supplied:
         })),
       ];
 
-      setSelectedPostingFrequency(Math.max(1, nextUploads.length));
+      setSelectedPostingFrequency(Math.max(1, Math.min(nextUploads.length, 7)));
       return nextUploads;
     });
   };
@@ -2480,7 +2495,7 @@ If uploads are supplied:
       }
 
       const nextUploads = currentUploads.filter((upload) => upload.id !== uploadId);
-      setSelectedPostingFrequency(nextUploads.length > 0 ? nextUploads.length : 3);
+      setSelectedPostingFrequency(nextUploads.length > 0 ? Math.max(1, Math.min(nextUploads.length, 7)) : 3);
       return nextUploads;
     });
   };
@@ -2578,16 +2593,13 @@ If uploads are supplied:
       : effectivePostCount;
   const uploadLabel =
     weeklyUploads.length > 0
-      ? `${weeklyUploads.length} upload${weeklyUploads.length === 1 ? "" : "s"}`
-      : `${effectivePostCount} planned post${effectivePostCount === 1 ? "" : "s"}`;
-  const creationModeTitle =
-    platformDistributionMode === "every_platform"
-      ? "Every selected platform"
-      : "Spread across the week";
+      ? `${weeklyUploads.length} upload${weeklyUploads.length === 1 ? "" : "s"} added`
+      : "business profile only";
+  const creationModeTitle = "Guided post creation";
   const creationModeSummary =
-    platformDistributionMode === "every_platform"
-      ? `${uploadLabel} × ${selectedPlatforms.length} platform${selectedPlatforms.length === 1 ? "" : "s"} = ${createdPostTotal} scheduled post${createdPostTotal === 1 ? "" : "s"}.`
-      : `${uploadLabel} → ${createdPostTotal} scheduled post${createdPostTotal === 1 ? "" : "s"} spread across different days/platforms.`;
+    weeklyUploads.length > 0
+      ? `FromOne will create ${createdPostTotal} planned post${createdPostTotal === 1 ? "" : "s"} using your uploaded media where it fits.`
+      : `FromOne will create ${createdPostTotal} planned post${createdPostTotal === 1 ? "" : "s"} from your saved business profile.`;
 
   const selectedPlatformSummary =
     selectedPlatforms.length > 3
@@ -2611,7 +2623,7 @@ If uploads are supplied:
   const weeklyVideoScansRemaining = Math.max(weeklyVideoScanLimit - weeklyVideoScansUsed, 0);
 
   const businessProfileReady = hasManualProfile;
-  const canCreatePosts = businessProfileReady && weeklyUploads.length > 0 && selectedPlatforms.length > 0 && !accessLocked && !scanning && !preparingFlyers;
+  const canCreatePosts = businessProfileReady && selectedPlatforms.length > 0 && !accessLocked && !scanning && !preparingFlyers;
 
   if (!dashboardMounted || loading) {
     return (
@@ -5307,6 +5319,119 @@ If uploads are supplied:
           }
         }
 
+
+        /* Guided weekly creation flow */
+        .dashboard-guided-week-card {
+          margin: 16px 0 18px !important;
+          padding: 18px !important;
+          border-radius: 24px !important;
+          border: 1px solid rgba(255, 212, 59, 0.18) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.10), transparent 36%),
+            rgba(15, 23, 42, 0.64) !important;
+        }
+
+        .dashboard-guided-week-card span {
+          display: inline-flex !important;
+          width: fit-content !important;
+          min-height: 28px !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 11px !important;
+          border-radius: 999px !important;
+          background: rgba(255, 212, 59, 0.10) !important;
+          border: 1px solid rgba(255, 212, 59, 0.18) !important;
+          color: #ffe58a !important;
+          font-size: 0.7rem !important;
+          font-weight: 1000 !important;
+          letter-spacing: 0.1em !important;
+          text-transform: uppercase !important;
+        }
+
+        .dashboard-guided-week-card strong {
+          display: block !important;
+          margin: 10px 0 6px !important;
+          color: #ffffff !important;
+          font-size: clamp(1.3rem, 2.4vw, 2rem) !important;
+          line-height: 1 !important;
+          letter-spacing: -0.04em !important;
+        }
+
+        .dashboard-guided-week-card p {
+          max-width: 760px !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.70) !important;
+          line-height: 1.5 !important;
+          font-weight: 780 !important;
+        }
+
+        @media (max-width: 760px) {
+          .dashboard-guided-week-card {
+            text-align: center !important;
+          }
+
+          .dashboard-guided-week-card span {
+            margin-inline: auto !important;
+          }
+        }
+
+
+        /* Align guided dashboard step cards */
+        .dashboard-quick-start-grid {
+          align-items: stretch !important;
+        }
+
+        .dashboard-quick-start-card {
+          display: grid !important;
+          grid-template-rows: auto auto minmax(72px, 1fr) auto !important;
+          align-content: start !important;
+          gap: 12px !important;
+          height: 100% !important;
+        }
+
+        .dashboard-quick-start-card > span:first-child {
+          align-self: start !important;
+          justify-self: start !important;
+          margin: 0 0 2px !important;
+        }
+
+        .dashboard-quick-start-card strong {
+          display: block !important;
+          min-height: 28px !important;
+          margin: 0 !important;
+          line-height: 1.15 !important;
+        }
+
+        .dashboard-quick-start-card p {
+          min-height: 72px !important;
+          margin: 0 !important;
+          line-height: 1.45 !important;
+        }
+
+        .dashboard-quick-start-link {
+          align-self: end !important;
+          justify-self: start !important;
+          margin-top: 4px !important;
+        }
+
+        @media (max-width: 760px) {
+          .dashboard-quick-start-card {
+            grid-template-rows: auto auto auto auto !important;
+            text-align: center !important;
+            justify-items: center !important;
+          }
+
+          .dashboard-quick-start-card > span:first-child,
+          .dashboard-quick-start-link {
+            justify-self: center !important;
+          }
+
+          .dashboard-quick-start-card strong,
+          .dashboard-quick-start-card p {
+            min-height: 0 !important;
+          }
+        }
+
       `}</style>
       {(
         <section
@@ -5322,7 +5447,7 @@ If uploads are supplied:
           }}
         >
           <div className="dashboard-final-hero" style={{ textAlign: "center", maxWidth: 760, margin: "0 auto 22px" }}>
-            <div className="page-eyebrow">Create this week’s posts</div>
+            <div className="page-eyebrow">Create your week</div>
             <h1
               className="page-title"
               style={{
@@ -5332,13 +5457,12 @@ If uploads are supplied:
                 letterSpacing: "-0.06em",
               }}
             >
-              Upload media.
+              Create posts
               <br />
-              Get scheduled posts.
+              from what you have.
             </h1>
             <p className="page-description" style={{ margin: "0 auto", maxWidth: 680 }}>
-              Add photos, videos or flyers. FromOne creates posts and sends you to review
-              before anything is published.
+              Add photos, videos or flyers. FromOne creates one scheduled post for each item, then sends everything to review before anything is published.
             </p>
 
             {addToCampaignId && (
@@ -5370,14 +5494,14 @@ If uploads are supplied:
                 }
               >
                 <span>01</span>
-                <strong>Upload media</strong>
+                <strong>Add what you have</strong>
                 <p>
                   {weeklyUploads.length > 0
                     ? `${weeklyUploads.length} file${weeklyUploads.length === 1 ? "" : "s"} added.`
-                    : "Add photos, videos or flyers."}
+                    : "Upload photos, videos or flyers. If you do not have the perfect images, FromOne will still use what you have."}
                 </p>
                 <a href="#upload-media" className="dashboard-quick-start-link">
-                  Upload
+                  Add media
                 </a>
               </article>
 
@@ -5389,14 +5513,14 @@ If uploads are supplied:
                 }
               >
                 <span>02</span>
-                <strong>Choose platforms</strong>
+                <strong>Platforms are ready</strong>
                 <p>
                   {selectedPlatforms.length > 0
                     ? `${selectedPlatforms.length} platform${selectedPlatforms.length === 1 ? "" : "s"} selected.`
-                    : "Pick Facebook, Instagram or TikTok."}
+                    : "Facebook, Instagram and TikTok are selected. Change them if needed."}
                 </p>
                 <a href="#platforms" className="dashboard-quick-start-link">
-                  Choose
+                  Check
                 </a>
               </article>
 
@@ -5412,14 +5536,24 @@ If uploads are supplied:
                 <p>
                   {weeklyProgress.total > 0 || hasScheduledPost
                     ? "Posts are ready to review."
-                    : "Generate the review board."}
+                    : "FromOne creates one scheduled post for each upload."}
                 </p>
                 <a href="#create-posts" className="dashboard-quick-start-link">
-                  Create
+                  Create posts
                 </a>
               </article>
             </section>
           )}
+
+          <section className="dashboard-guided-week-card" aria-label="Guided weekly post creation">
+            <div>
+              <span>Simple weekly flow</span>
+              <strong>Create posts from what you have.</strong>
+              <p>
+                Add photos, videos or flyers. FromOne creates one scheduled post for each item. If you do not have media, it can still create a few profile-only draft posts for you to review.
+              </p>
+            </div>
+          </section>
 
           <div
             style={{
@@ -5457,7 +5591,7 @@ If uploads are supplied:
               />
 
               <span style={{ display: "grid", gap: 10, justifyItems: "center" }}>
-                <span className="dashboard-mobile-upload-title">Add media</span>
+                <span className="dashboard-mobile-upload-title">Add what you have</span>
 
                 <span className="dashboard-upload-type-grid" aria-label="Supported upload types">
                   <span className="dashboard-upload-type-card">
@@ -5598,7 +5732,7 @@ If uploads are supplied:
                 </strong>
 
                 <span style={{ color: "var(--muted)", maxWidth: 560 }}>
-                  Upload up to 7 items. FromOne will turn them into ready-to-review posts.
+                  Upload what you have. FromOne will create one scheduled post for each photo, video or flyer.
                 </span>
               </span>
             </label>
@@ -5927,7 +6061,7 @@ If uploads are supplied:
                   lineHeight: 1.5,
                 }}
               >
-                You’ll review every post before anything is published.
+                FromOne will create one scheduled post for each upload. FromOne will create one scheduled post for each upload. You’ll review every post before anything is published.
               </p>
             )}
 
@@ -5990,8 +6124,8 @@ If uploads are supplied:
                     : weeklyUploads.length > 0
                   ? addToCampaignId
                     ? "Add posts to this set"
-                    : "Create and review posts"
-                  : "Create and review posts"}
+                    : "Create posts from uploads"
+                  : "Create posts from uploads"}
             </button>
                 <p className="dashboard-review-reassurance">
                   You’ll review everything before anything is published.
@@ -6006,8 +6140,7 @@ If uploads are supplied:
                   lineHeight: 1.5,
                 }}
               >
-                Nothing is published from this screen. You will review and edit posts on the Posts
-                page before publishing, copying or scheduling.
+                Nothing is published from this screen. FromOne creates scheduled posts from what you uploaded and sends them to Posts so you can review, edit, approve and schedule.
               </p>
             )}
 
@@ -6024,25 +6157,24 @@ If uploads are supplied:
               <span />
             </div>
 
-            <div className="page-eyebrow">Creating posts</div>
-            <h2>{creationProgressMessage || "Turning your uploads into posts."}</h2>
+            <div className="page-eyebrow">Creating your week</div>
+            <h2>{creationProgressMessage || "Creating your scheduled posts."}</h2>
             <p>
-              FromOne is preparing your media, using the Business Profile, writing the posts,
-              choosing times and building your review board.
+              FromOne is using your Business Profile, creating one post per upload, choosing suggested times and building your review board.
             </p>
 
             <div className="fromone-loading-steps">
               <span className={creationProgressMessage.includes("Uploading") ? "is-active" : ""}>
-                Uploading media
+                Using media
               </span>
               <span className={creationProgressMessage.includes("Preparing") ? "is-active" : ""}>
                 Preparing flyers
               </span>
               <span className={creationProgressMessage.includes("wording") ? "is-active" : ""}>
-                Writing posts
+                Creating posts
               </span>
               <span className={creationProgressMessage.includes("Saving") ? "is-active" : ""}>
-                Saving posts
+                Setting schedule
               </span>
               <span className={creationProgressMessage.includes("Opening") ? "is-active" : ""}>
                 Opening review board

@@ -909,13 +909,13 @@ function buildPrompt({
     : 'No uploaded media supplied. Create posts from the business profile and website details.';
 
   const mediaModeRule = mediaItems.length
-    ? `There are ${mediaItems.length} uploaded item(s). Create exactly ${postCount} posts. One upload should become one post. Match Post 1 to Upload 1, Post 2 to Upload 2, and so on. Do not ignore an upload. Do not create extra generic posts unless there are more requested posts than uploads.`
-    : `No uploads were supplied. Create exactly ${postCount} posts from the website/business profile.`;
+    ? `There are ${mediaItems.length} uploaded item(s). Create exactly ${postCount} scheduled posts. One upload should become one post. Match Post 1 to Upload 1, Post 2 to Upload 2, and so on. Do not ignore an upload. Do not create extra profile-only posts when uploads are supplied.`
+    : `No uploads were supplied. Create exactly ${postCount} profile-led draft posts from the website/business profile. Each post must include a practical image_prompt telling the user what photo, video, flyer, or simple visual would work best.`;
 
   return `
 You are FromOne's premium social media strategist, website analyst, brand interpreter, visual media analyst, and local business copywriter.
 
-Your task is to create a simple weekly set of posts that feels like it was written by a skilled social media manager who understands the client's industry and can turn photos or flyers into strong business posts.
+Your task is to create simple scheduled posts from what the client has uploaded. It should feel like a skilled social media manager has turned each photo, video or flyer into one useful business post.
 
 CRITICAL VISION RULE:
 - When image uploads are attached in this request, visually inspect the actual image content.
@@ -933,7 +933,7 @@ CRITICAL VISION RULE:
 - For PDFs/flyers, use extracted text if supplied. If no extracted text is supplied, write a useful post from filename/context/business profile and make clear, natural CTA wording.
 
 The output must make a small business owner think:
-"That sounds like us. That is useful. I could post that today."
+"That sounds like us. FromOne used what I uploaded. I can review this before anything goes live."
 
 Return ONLY valid JSON. Do not use markdown. Do not explain anything.
 
@@ -964,7 +964,7 @@ Required JSON shape:
       "caption": "Ready-to-post caption.",
       "cta": "Short call to action",
       "hashtags": ["#Example", "#LocalBusiness"],
-      "image_prompt": "Specific image idea"
+      "image_prompt": "Specific media suggestion. Say what image, video, flyer, or simple visual should be used. If uploaded media is used, describe it."
     }
   ]
 }
@@ -992,6 +992,12 @@ Market reach rules:
 Weekly platform and content strategy:
 ${selectedPlatformPlan}
 
+Guided post creation rules:
+- If uploads are supplied, create one post for each upload.
+- Each post needs a clear purpose: trust, proof, offer, education, behind-the-scenes, reminder, customer action, or social proof.
+- Each post must include a practical media suggestion in image_prompt.
+- Keep it simple enough for a non-technical small business owner to understand.
+
 Uploaded media metadata:
 ${mediaContext}
 
@@ -1003,6 +1009,12 @@ ${visualUploads}
 
 Media matching rule:
 ${mediaModeRule}
+
+Use-what-you-have rule:
+- Small businesses will not always have perfect content.
+- If uploaded media exists, use each upload as the topic for one post.
+- If the uploaded media is unclear, create a safe useful post from the business profile, filename and any client note.
+- Do not make the user feel stuck because an upload is not perfect.
 
 Core media quality rule:
 - The uploaded image, flyer, poster, offer graphic, product photo, food image, salon result, job photo, shopfront, sign, van, or before/after image gives you the subject of the post.
@@ -1063,7 +1075,9 @@ Hashtag rules:
 - Hashtags must start with # and have no spaces.
 
 Image prompt rules:
-- Every image_prompt must describe the actual uploaded visual subject when an image is attached.
+- Every image_prompt must be useful to the client.
+- If an uploaded visual is used, describe the actual uploaded subject.
+- If no suitable upload is available, suggest a realistic photo/video/flyer the business could use later.
 - Include subject, setting, mood, and brand style where useful.
 - Avoid generic prompts like "professional image".
 
@@ -1305,7 +1319,7 @@ function normalisePostCount(value: any, mediaItems: UploadedMediaContext[]) {
     return Math.max(1, Math.min(Math.round(requested), 7));
   }
 
-  return 7;
+  return 3;
 }
 
 function normaliseMediaItems(value: any): UploadedMediaContext[] {

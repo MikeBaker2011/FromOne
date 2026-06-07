@@ -1455,6 +1455,36 @@ export default function PostsPage() {
     notify("Post copied.", "success", "Copied");
   };
 
+  const getCreatedFromUploadLabel = (post: any) => {
+    const mediaKind = getPostMediaKind(post);
+
+    if (post?.media_url) {
+      if (mediaKind === "video") return "Created from video";
+      if (mediaKind === "flyer") return "Created from flyer";
+      return "Created from image";
+    }
+
+    return "Profile-only draft";
+  };
+
+  const getPostScheduleLabel = (post: any) => {
+    const scheduleValue = post?.scheduled_at || post?.scheduled_publish_at;
+
+    if (!scheduleValue) return "Suggested time not set";
+
+    const date = new Date(scheduleValue);
+
+    if (Number.isNaN(date.getTime())) return "Suggested time not set";
+
+    return date.toLocaleString(undefined, {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const getImageGuidance = (post: any) => {
     if (post?.image_prompt?.trim()) {
       return post.image_prompt.trim();
@@ -3093,12 +3123,12 @@ Important:
             </section>
           )}
 
-          <section className="premium-card posts-onboarding-helper-card">
-            <div className="page-eyebrow">How this page works</div>
-            <h2>Review before anything goes live.</h2>
+                    <section className="premium-card posts-onboarding-helper-card posts-upload-flow-helper-card">
+            <div className="page-eyebrow">Created from your uploads</div>
+            <h2>Review your scheduled posts.</h2>
             <p>
-              Open each post to check the wording, image, date and platform. You can edit,
-              publish, schedule or delete from the review screen.
+              FromOne creates one scheduled post for each photo, video or flyer you uploaded.
+              Open each post to check the wording, media and suggested time before approving.
             </p>
           </section>
 
@@ -3135,7 +3165,7 @@ Important:
                   to review.
                 </h2>
                 <p style={{ margin: 0, color: "var(--muted)" }}>
-                  Open each post to check the wording, image and schedule before anything is published.
+                  Open each post to check the wording, media and suggested time before anything is published.
                 </p>
               </div>
             </div>
@@ -3597,7 +3627,7 @@ Important:
                               textAlign: "center",
                             }}
                           >
-                            Review / edit
+                            Review post
                           </button>
 
                           <button
@@ -4543,6 +4573,75 @@ Important:
 
           .posts-weekly-card-grid .fromone-premium-calendar-review-card {
             max-width: 360px !important;
+          }
+        }
+
+
+        /* Upload-count review flow polish */
+        .posts-upload-flow-helper-card {
+          margin: 0 0 22px !important;
+          padding: clamp(20px, 3vw, 28px) !important;
+          border-radius: 28px !important;
+          border: 1px solid rgba(255, 212, 59, 0.16) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+            rgba(15, 23, 42, 0.84) !important;
+          box-shadow: 0 22px 66px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .posts-upload-flow-helper-card h2 {
+          margin: 8px 0 10px !important;
+          color: #ffffff !important;
+          font-size: clamp(1.7rem, 3vw, 2.6rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.055em !important;
+        }
+
+        .posts-upload-flow-helper-card p {
+          max-width: 780px !important;
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.72) !important;
+          line-height: 1.58 !important;
+          font-weight: 760 !important;
+        }
+
+        .posts-created-from-upload-badge,
+        .posts-suggested-time-badge {
+          display: inline-flex !important;
+          width: fit-content !important;
+          min-height: 26px !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 10px !important;
+          border-radius: 999px !important;
+          font-size: 0.68rem !important;
+          font-weight: 1000 !important;
+          letter-spacing: 0.06em !important;
+          text-transform: uppercase !important;
+          line-height: 1 !important;
+          margin: 4px 5px 0 0 !important;
+        }
+
+        .posts-created-from-upload-badge {
+          background: rgba(255, 212, 59, 0.10) !important;
+          border: 1px solid rgba(255, 212, 59, 0.18) !important;
+          color: #ffe58a !important;
+        }
+
+        .posts-suggested-time-badge {
+          background: rgba(255, 255, 255, 0.07) !important;
+          border: 1px solid rgba(255, 255, 255, 0.10) !important;
+          color: rgba(248, 250, 252, 0.76) !important;
+        }
+
+        @media (max-width: 640px) {
+          .posts-upload-flow-helper-card {
+            text-align: center !important;
+            border-radius: 24px !important;
+          }
+
+          .posts-upload-flow-helper-card p {
+            font-size: 0.92rem !important;
           }
         }
 

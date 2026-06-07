@@ -223,6 +223,48 @@ function getScheduleValue(post: any) {
   return cleanText(post?.scheduled_publish_at || post?.scheduled_at);
 }
 
+
+function getCreatedFromUploadLabel(post: any) {
+  const mediaType = cleanText(post?.media_type).toLowerCase();
+  const mediaUrl = cleanText(post?.media_url).toLowerCase();
+
+  if (mediaType === "video" || mediaUrl.match(/\.(mp4|mov|webm|m4v)(\?|$)/)) {
+    return "Created from video";
+  }
+
+  if (
+    mediaType === "flyer" ||
+    mediaType === "pdf" ||
+    mediaUrl.includes(".pdf")
+  ) {
+    return "Created from flyer";
+  }
+
+  if (mediaType === "image" || mediaUrl) {
+    return "Created from image";
+  }
+
+  return "Profile-only draft";
+}
+
+function getCreatedFromUploadDescription(post: any) {
+  const label = getCreatedFromUploadLabel(post);
+
+  if (label === "Created from video") {
+    return "FromOne created this scheduled post from your uploaded video.";
+  }
+
+  if (label === "Created from flyer") {
+    return "FromOne created this scheduled post from your uploaded flyer.";
+  }
+
+  if (label === "Created from image") {
+    return "FromOne created this scheduled post from your uploaded image.";
+  }
+
+  return "This draft was created from your saved business profile. Add media here if you want.";
+}
+
 function getDateTimeLocalValue(value?: string | null) {
   const cleanValue = cleanText(value);
 
@@ -276,7 +318,7 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     return {
       label: "Approved",
       tone: "success",
-      description: "This post is approved. You can publish now, autoschedule or copy it manually.",
+      description: "This post is approved. You can publish now, keep the scheduled time, or copy it manually.",
     };
   }
 
@@ -292,14 +334,14 @@ function getApprovalStatus(post: any, isPosted: boolean) {
     return {
       label: "Draft",
       tone: "neutral",
-      description: "Review the draft and approve it when you are happy.",
+      description: "Check the wording, media and scheduled time, then approve it when you are happy.",
     };
   }
 
   return {
     label: "Needs review",
     tone: "warning",
-    description: "Check the wording, media and schedule. Nothing publishes until you approve it.",
+    description: "Check the wording, media and scheduled time. Nothing publishes until you approve it.",
   };
 }
 
@@ -336,7 +378,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
     return {
       label: "Not scheduled",
       tone: "neutral",
-      description: "Choose a time to schedule it.",
+      description: "Choose or confirm the scheduled time.",
     };
   }
 
@@ -356,7 +398,7 @@ function getAutopublishStatus(post: any, isPosted: boolean) {
     label: "Planned",
     tone: "planned",
     description:
-      "FromOne will use this scheduled time.",
+      "FromOne will use this scheduled time once approved.",
   };
 }
 
@@ -1134,7 +1176,7 @@ export default function PostReviewPage() {
     }
 
     setPost({ ...post, ...updates });
-    setMessage("Post approved. You can now publish, autoschedule or copy it manually.");
+    setMessage("Post approved. You can now publish, keep the scheduled time, or copy it manually.");
     setSaving(false);
   };
 
@@ -1310,7 +1352,7 @@ export default function PostReviewPage() {
     }
 
     setPost({ ...post, ...updates });
-    setMessage("Schedule saved.");
+    setMessage("Scheduled time saved. Nothing publishes until this post is approved.");
     setSavingSchedule(false);
   };
 
@@ -2424,6 +2466,7 @@ Do not return the same caption.`,
   if (!post) {
     return (
       <main className="pr2-page" data-review-page="simple-mobile-tools-v1">
+
         <section className="pr2-loading">
           <h1>Post not found</h1>
           <p>{message || "This post could not be loaded."}</p>
@@ -2491,12 +2534,20 @@ Do not return the same caption.`,
                   <h1>
                     {activePanel === "prepare"
                       ? "Adjust media"
-                      : "Review this post"}
+                      : "Review scheduled post"}
                   </h1>
                   {activePanel !== "prepare" && (
-                    <p className="pr2-compact-media-subtitle">
-                      Check the wording, media and schedule. Nothing publishes until you approve it.
-                    </p>
+                    <>
+                      <p className="pr2-compact-media-subtitle">
+                        Check the wording, media and scheduled time. Nothing publishes until you approve it.
+                      </p>
+
+                      <div className="pr2-created-upload-inline">
+                        <span>{getCreatedFromUploadLabel(post)}</span>
+                        <p>{getCreatedFromUploadDescription(post)}</p>
+                        {scheduledLabel && <small>Scheduled time: {scheduledLabel}</small>}
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -2872,7 +2923,7 @@ Do not return the same caption.`,
               <div className="pr2-review-wording-head">
                 <div>
                   <span className="pr2-kicker">Caption</span>
-                  <h2>Edit if needed</h2>
+                  <h2>Check and edit</h2>
                 </div>
                 <p>FromOne has written a draft. Edit anything that does not sound right.</p>
               </div>
@@ -3064,7 +3115,7 @@ Do not return the same caption.`,
                 )}
 
                 <label className="pr2-simple-schedule pr2-right-schedule">
-                  <span>Autoschedule</span>
+                  <span>Scheduled time</span>
                   <input
                     type="datetime-local"
                     value={scheduleInputValue}
@@ -3084,7 +3135,7 @@ Do not return the same caption.`,
                     approvalStatus.label === "Draft"
                   }
                 >
-                  {savingSchedule ? "Saving..." : "Save autoschedule"}
+                  {savingSchedule ? "Saving..." : "Save time"}
                 </button>
 
                 <button
@@ -3590,6 +3641,62 @@ Do not return the same caption.`,
           .pr2-publish-locked-help,
           .pr2-improving-progress-card span {
             font-size: 0.82rem !important;
+          }
+        }
+
+
+        /* Visible upload guidance inside review card */
+        .pr2-created-upload-inline {
+          display: grid !important;
+          gap: 8px !important;
+          width: min(100%, 640px) !important;
+          margin: 18px 0 0 !important;
+          padding: 14px 16px !important;
+          border-radius: 18px !important;
+          border: 1px solid rgba(255, 212, 59, 0.16) !important;
+          background: rgba(15, 23, 42, 0.72) !important;
+        }
+
+        .pr2-created-upload-inline span {
+          display: inline-flex !important;
+          width: fit-content !important;
+          min-height: 26px !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 10px !important;
+          border-radius: 999px !important;
+          background: rgba(255, 212, 59, 0.10) !important;
+          border: 1px solid rgba(255, 212, 59, 0.18) !important;
+          color: #ffe58a !important;
+          font-size: 0.68rem !important;
+          font-weight: 1000 !important;
+          letter-spacing: 0.09em !important;
+          text-transform: uppercase !important;
+        }
+
+        .pr2-created-upload-inline p {
+          margin: 0 !important;
+          color: rgba(248, 250, 252, 0.72) !important;
+          font-weight: 760 !important;
+          line-height: 1.45 !important;
+        }
+
+        .pr2-created-upload-inline small {
+          display: inline-flex !important;
+          width: fit-content !important;
+          padding: 7px 10px !important;
+          border-radius: 999px !important;
+          background: rgba(255, 255, 255, 0.07) !important;
+          border: 1px solid rgba(255, 255, 255, 0.10) !important;
+          color: rgba(248, 250, 252, 0.82) !important;
+          font-weight: 900 !important;
+        }
+
+        @media (max-width: 760px) {
+          .pr2-created-upload-inline {
+            text-align: center !important;
+            justify-items: center !important;
+            margin-inline: auto !important;
           }
         }
 
