@@ -6,6 +6,7 @@ import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
 import {
   BarChart3,
+  CalendarDays,
   CreditCard,
   HelpCircle,
   LogIn,
@@ -608,6 +609,13 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               Reports
             </Link>
 
+            <Link className="sidebar-link" href="/calendar" onClick={closeMenu}>
+              <span className="sidebar-link-icon">
+                <CalendarDays {...iconProps} />
+              </span>
+              Calendar
+            </Link>
+
             <Link className="sidebar-link" href="/settings" onClick={closeMenu}>
               <span className="sidebar-link-icon">
                 <Settings {...iconProps} />
@@ -718,13 +726,13 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
         <Link
           className="mobile-bottom-nav-link"
-          href="/reports"
+          href="/calendar"
           onClick={closeMenu}
         >
           <span className="mobile-bottom-nav-icon">
-            <BarChart3 {...iconProps} />
+            <CalendarDays {...iconProps} />
           </span>
-          <span>Reports</span>
+          <span>Calendar</span>
         </Link>
 
         <Link

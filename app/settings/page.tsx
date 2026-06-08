@@ -1164,17 +1164,13 @@ export default function SettingsPage() {
 
                 <p>
                   {simpleProfileComplete
-                    ? 'Your business profile is saved. Go to the Dashboard to upload media and create posts.'
+                    ? 'Your business profile is saved. You can edit it here whenever details change.'
                     : 'Add these details once so FromOne knows what you offer, where you work and who you want to reach.'}
                 </p>
 
                 <div className="settings-quick-profile-actions">
                   {simpleProfileComplete ? (
                     <>
-                      <a href="/dashboard" className="primary-button">
-                        Go to Dashboard
-                      </a>
-
                       <button
                         type="button"
                         className="secondary-button"
@@ -1384,28 +1380,16 @@ export default function SettingsPage() {
                       />
                     </label>
                   </div>
-
                   <div className="settings-client-quick-save settings-one-card-save">
-                    <button type="button" onClick={saveProfileAndContinue} disabled={saving}>
-                      {saving ? 'Saving...' : 'Save & go to Dashboard'}
+                    <button type="button" onClick={handleSaveProfile} disabled={saving}>
+                      {saving ? 'Saving...' : 'Save profile'}
                     </button>
 
                     <span>
-                      That’s enough to start creating posts. Extra tone and customer details are optional.
+                      Step 3 below will take you to the Dashboard when you are ready to create posts.
                     </span>
                   </div>
                 </section>
-              </div>
-
-              <div className="settings-save-strip">
-                <div>
-                  <strong>Ready?</strong>
-                  <span>Save and continue to the Dashboard.</span>
-                </div>
-
-                <button type="button" onClick={saveProfileAndContinue} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save & go to Dashboard'}
-                </button>
               </div>
             </section>
           )}
@@ -1530,47 +1514,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {showOnboardingNextStep && (
-            <section
-              className="premium-card"
-              style={{
-                maxWidth: 1120,
-                margin: '0 auto 22px',
-                borderRadius: 34,
-                border: '1px solid rgba(255, 212, 59, 0.26)',
-                background:
-                  'radial-gradient(circle at top right, rgba(255, 212, 59, 0.16), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.035))',
-              }}
-            >
-              <div className="page-eyebrow">Next step</div>
-              <h2 style={{ marginTop: 0 }}>
-                {hasMetaConnection ? 'Ready for the Dashboard.' : 'Ready for the Dashboard'}
-              </h2>
-              <p style={{ maxWidth: 820 }}>
-                {hasMetaConnection
-                  ? 'Your Business Profile is saved and your publishing channels are connected. Go to Dashboard to upload media and create your first scheduled posts.'
-                  : 'Your Business Profile is saved. Connect Facebook and Instagram using the cards below for autoposting, or continue to Dashboard and connect later.'}
-              </p>
-
-              <div className="button-row" style={{ marginTop: 18 }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.location.href = '/dashboard';
-                  }}
-                >
-                  Go to Dashboard
-                </button>
-              </div>
-
-              {!hasMetaConnection && (
-                <p style={{ margin: '14px 0 0', color: 'var(--muted)', fontSize: 14 }}>
-                  The Facebook and Instagram connection cards are directly below this section.
-                </p>
-              )}
-            </section>
-          )}
-
           <section
             ref={socialConnectionsRef}
             id="publishing-connections"
@@ -1683,12 +1626,6 @@ export default function SettingsPage() {
                     FromOne still creates the caption and prepared media. The client copies/opens the social app and posts manually.
                   </p>
                 </div>
-
-                <div className="settings-social-button-row">
-                  <a href="/dashboard" className="secondary-button">
-                    Go to Dashboard
-                  </a>
-                </div>
               </article>
             </div>
           </section>
@@ -1731,7 +1668,7 @@ export default function SettingsPage() {
                   Create your first posts.
                 </h2>
                 <p style={{ maxWidth: 820, margin: 0 }}>
-                  Your business profile is saved. Go to Dashboard to upload photos, videos or flyers. FromOne will create posts for you to review before anything is published. You can connect or manage publishing channels later.
+                  Go to Dashboard to upload photos, videos or flyers. FromOne will create posts for you to review before anything is published.
                 </p>
               </div>
 
@@ -1897,6 +1834,37 @@ export default function SettingsPage() {
       )}
 
       <style jsx global>{`
+
+        /* Mobile spacing polish: give Business details more breathing room */
+        @media (max-width: 760px) {
+          .settings-one-card-head {
+            gap: 18px !important;
+            margin-bottom: 22px !important;
+          }
+
+          .settings-one-card-head > div {
+            display: grid !important;
+            gap: 10px !important;
+          }
+
+          .settings-one-card-head h3 {
+            margin: 4px 0 2px !important;
+          }
+
+          .settings-one-card-head p {
+            margin: 0 0 6px !important;
+          }
+
+          .settings-one-card-head .secondary-button {
+            margin-top: 8px !important;
+          }
+
+          .settings-one-card-website {
+            margin-top: 22px !important;
+          }
+        }
+
+
 
 
 

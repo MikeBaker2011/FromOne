@@ -661,29 +661,6 @@ export default function SignInPage() {
           text-align: center !important;
         }
 
-        .signin-mobile-app-download-card {
-          display: none;
-        }
-
-        @keyframes signinMobileAppPulse {
-          0%, 100% {
-            box-shadow:
-              0 14px 38px rgba(0,0,0,0.18),
-              0 0 0 0 rgba(255, 212, 59, 0.2);
-          }
-          50% {
-            box-shadow:
-              0 18px 48px rgba(0,0,0,0.24),
-              0 0 0 7px rgba(255, 212, 59, 0.075),
-              0 0 38px rgba(255, 212, 59, 0.14);
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .signin-mobile-app-download-card {
-            animation: none !important;
-          }
-        }
 
 
         @media (max-width: 760px) {
@@ -700,11 +677,6 @@ export default function SignInPage() {
             display: none !important;
           }
 
-          .signin-app-download-card {
-            grid-template-columns: 1fr !important;
-            justify-items: center !important;
-            text-align: center !important;
-          }
 
           .signin-login-card-right {
             height: auto !important;
@@ -715,66 +687,6 @@ export default function SignInPage() {
             background: rgba(255,255,255,0.075) !important;
           }
 
-          .signin-mobile-app-download-card {
-            display: grid !important;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 12px;
-            align-items: center;
-            margin: 16px 0 18px;
-            padding: 14px 15px;
-            border-radius: 22px;
-            border: 1px solid rgba(255, 212, 59, 0.24);
-            background:
-              radial-gradient(circle at top left, rgba(255, 212, 59, 0.19), transparent 38%),
-              linear-gradient(145deg, rgba(255, 212, 59, 0.105), rgba(255,255,255,0.04));
-            color: inherit;
-            text-decoration: none;
-            text-align: left;
-            animation: signinMobileAppPulse 1.85s ease-in-out infinite;
-          }
-
-          .signin-mobile-app-download-card span {
-            display: inline-flex;
-            width: fit-content;
-            margin-bottom: 6px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(255, 212, 59, 0.14);
-            border: 1px solid rgba(255, 212, 59, 0.2);
-            color: #ffe58a;
-            font-size: 0.7rem;
-            font-weight: 1000;
-            text-transform: uppercase;
-            letter-spacing: 0.09em;
-          }
-
-          .signin-mobile-app-download-card strong {
-            display: block;
-            color: #ffffff;
-            font-size: 1.12rem;
-            line-height: 1.1;
-            margin-bottom: 4px;
-          }
-
-          .signin-mobile-app-download-card small {
-            display: block;
-            color: rgba(248,250,252,0.68);
-            line-height: 1.35;
-            font-weight: 760;
-          }
-
-          .signin-mobile-app-download-card b {
-            width: 44px;
-            height: 44px;
-            display: inline-grid;
-            place-items: center;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #ffd43b, #f7b733);
-            color: #101420;
-            font-size: 1.3rem;
-            font-weight: 1000;
-            box-shadow: 0 14px 32px rgba(255, 212, 59, 0.2);
-          }
         }
 
         @media (max-width: 520px) {
@@ -840,21 +752,6 @@ export default function SignInPage() {
               ? 'Sign in to continue to FromOne.'
               : 'Create your account to start your 7-day FromOne demo.'}
           </p>
-
-          <a
-            className="signin-mobile-app-download-card"
-            href="/download/FromOne-beta-v1.apk"
-            download
-            aria-label="Download the FromOne Android beta app"
-          >
-            <div>
-              <span>FromOne App</span>
-              <strong>Download Android beta</strong>
-              <small>Faster posting from your phone.</small>
-            </div>
-
-            <b aria-hidden="true">↓</b>
-          </a>
 
           <div ref={messageRef}>
             {authMessage && (
