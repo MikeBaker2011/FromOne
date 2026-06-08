@@ -341,7 +341,7 @@ function getApprovalStatus(post: any, isPosted: boolean) {
   return {
     label: "Needs review",
     tone: "warning",
-    description: "Check the wording, media and scheduled time. Nothing publishes until you approve it.",
+    description: "Check the wording, then publish or autoschedule.",
   };
 }
 
@@ -1352,8 +1352,9 @@ export default function PostReviewPage() {
     }
 
     setPost({ ...post, ...updates });
-    setMessage("Scheduled time saved. Nothing publishes until this post is approved.");
+    setMessage("Autoscheduled. Returning to your posts...");
     setSavingSchedule(false);
+    router.push("/posts");
   };
 
   const markAsPosted = async () => {
@@ -2244,7 +2245,8 @@ export default function PostReviewPage() {
         approved_at: post?.approved_at || new Date().toISOString(),
         publish_error: null,
       });
-      setMessage(`Posted to ${autopublishPlatformLabel}.`);
+      setMessage(`Posted to ${autopublishPlatformLabel}. Returning to your posts...`);
+      router.push("/posts");
     } catch (error: any) {
       setMessage(
         error?.message ||
@@ -2534,12 +2536,12 @@ Do not return the same caption.`,
                   <h1>
                     {activePanel === "prepare"
                       ? "Adjust media"
-                      : "Review scheduled post"}
+                      : "Review post"}
                   </h1>
                   {activePanel !== "prepare" && (
                     <>
                       <p className="pr2-compact-media-subtitle">
-                        Check the wording, media and scheduled time. Nothing publishes until you approve it.
+                        Check the wording, then publish or autoschedule.
                       </p>
 
                       <div className="pr2-created-upload-inline">
@@ -2957,7 +2959,7 @@ Do not return the same caption.`,
               <div className="pr2-actions pr2-main-review-actions pr2-tidy-edit-actions pr2-edit-action-row">
                 <button
                   type="button"
-                  className="pr2-btn pr2-btn-primary"
+                  className="pr2-btn pr2-btn-primary pr2-save-wording-action"
                   onClick={saveWording}
                   disabled={saving}
                 >
@@ -2966,7 +2968,7 @@ Do not return the same caption.`,
 
                 <button
                   type="button"
-                  className="pr2-btn"
+                  className="pr2-btn pr2-improve-wording-action"
                   onClick={() => setActivePanel("improve")}
                 >
                   Improve wording
@@ -3038,8 +3040,8 @@ Do not return the same caption.`,
                   {isPosted
                     ? `This post has already been posted to ${autopublishPlatformLabel}.`
                     : approvalStatus.label === "Needs review" || approvalStatus.label === "Draft"
-                      ? "Once approved, you can publish now, autoschedule, or copy and post manually."
-                      : "Publish now, save an autoschedule, or open the platform."}
+                      ? "Publish now or autoschedule this post."
+                      : "Publish now or autoschedule this post."}
                 </p>
               </div>
 
@@ -3053,7 +3055,7 @@ Do not return the same caption.`,
                 {approvalStatus.label === "Needs review" || approvalStatus.label === "Draft" ? (
                   <button
                     type="button"
-                    className="pr2-btn pr2-btn-primary pr2-right-main-button"
+                    className="pr2-btn pr2-btn-primary pr2-right-main-button pr2-approve-action"
                     onClick={markApproved}
                     disabled={saving || isPosted}
                   >
@@ -3062,7 +3064,7 @@ Do not return the same caption.`,
                 ) : (
                   <button
                     type="button"
-                    className="pr2-btn pr2-right-main-button"
+                    className="pr2-btn pr2-right-main-button pr2-send-back-action"
                     onClick={isPosted ? markAsNotPosted : markNeedsReview}
                     disabled={saving}
                   >
@@ -3074,7 +3076,7 @@ Do not return the same caption.`,
                   isPosted ? (
                     <button
                       type="button"
-                      className="pr2-btn pr2-right-publish-now"
+                      className="pr2-btn pr2-right-publish-now pr2-publish-action"
                       disabled
                     >
                       Already posted to {autopublishPlatformLabel}
@@ -3082,15 +3084,10 @@ Do not return the same caption.`,
                   ) : (
                     <button
                       type="button"
-                      className="pr2-btn pr2-btn-primary pr2-right-publish-now"
+                      className="pr2-btn pr2-btn-primary pr2-right-publish-now pr2-publish-action"
                       data-publish-now-visible="true"
                       onClick={autopublishNow}
-                      disabled={
-                        autoPublishing ||
-                        saving ||
-                        approvalStatus.label === "Needs review" ||
-                        approvalStatus.label === "Draft"
-                      }
+                      disabled={autoPublishing || saving || isPosted}
                     >
                       {autoPublishing
                         ? "Publishing..."
@@ -3100,7 +3097,7 @@ Do not return the same caption.`,
                 ) : (
                   <button
                     type="button"
-                    className="pr2-btn pr2-right-publish-now"
+                    className="pr2-btn pr2-right-publish-now pr2-publish-action"
                     onClick={openPlatform}
                     disabled={isPosted}
                   >
@@ -3110,7 +3107,7 @@ Do not return the same caption.`,
 
                 {!isApprovedForPublishing && !isPosted && (
                   <p className="pr2-publish-locked-help">
-                    Approve the post first to unlock direct publishing.
+                    Use Publish or Autoschedule when you are happy.
                   </p>
                 )}
 
@@ -3126,21 +3123,16 @@ Do not return the same caption.`,
 
                 <button
                   type="button"
-                  className="pr2-btn pr2-btn-primary pr2-right-main-button"
+                  className="pr2-btn pr2-btn-primary pr2-right-main-button pr2-autoschedule-action"
                   onClick={saveSchedule}
-                  disabled={
-                    savingSchedule ||
-                    isPosted ||
-                    approvalStatus.label === "Needs review" ||
-                    approvalStatus.label === "Draft"
-                  }
+                  disabled={savingSchedule || isPosted}
                 >
-                  {savingSchedule ? "Saving..." : "Save time"}
+                  {savingSchedule ? "Saving..." : "Autoschedule"}
                 </button>
 
                 <button
                   type="button"
-                  className="pr2-btn"
+                  className="pr2-btn pr2-copy-platform-action"
                   onClick={openPlatform}
                 >
                   Copy caption and open platform
@@ -3149,7 +3141,7 @@ Do not return the same caption.`,
                 {preparedDisplayMedia?.url && (
                   <button
                     type="button"
-                    className="pr2-btn"
+                    className="pr2-btn pr2-share-media-action"
                     onClick={sharePreparedImage}
                     disabled={sharingMedia}
                   >
@@ -5125,6 +5117,491 @@ Do not return the same caption.`,
           max-width: 620px;
         }
 
+      `}</style>
+
+
+      <style jsx global>{`
+        /* FromOne review page — simple mobile, advanced desktop.
+           Mobile visible flow:
+           preview, caption, Improve wording, Publish, scheduled time, Autoschedule.
+        */
+
+        @media (max-width: 900px) {
+          .pr2-page {
+            min-height: 100dvh !important;
+            padding: 0 0 max(7.75rem, calc(7.75rem + env(safe-area-inset-bottom))) !important;
+            background: #050b18 !important;
+            color: #ffffff !important;
+            overflow-x: hidden !important;
+          }
+
+          .pr2-shell {
+            width: 100% !important;
+            max-width: 430px !important;
+            margin: 0 auto !important;
+            padding: 14px 14px 0 !important;
+            box-sizing: border-box !important;
+            background: #050b18 !important;
+          }
+
+          .pr2-simple-steps,
+          .pr2-simple-steps-merged {
+            display: none !important;
+          }
+
+          .pr2-topbar {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            margin: 0 0 12px !important;
+            padding: 0 !important;
+            background: transparent !important;
+          }
+
+          .pr2-back {
+            min-height: 42px !important;
+            padding: 0 14px !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(255, 212, 59, 0.18) !important;
+            background: rgba(255, 255, 255, 0.055) !important;
+            color: rgba(255, 255, 255, 0.86) !important;
+            font-size: 0.9rem !important;
+            font-weight: 900 !important;
+            text-decoration: none !important;
+          }
+
+          .pr2-topbar img,
+          .pr2-brand,
+          .pr2-review-brand,
+          .pr2-logo,
+          .pr2-logo-slash,
+          .fromone-mobile-ready-brand {
+            display: none !important;
+          }
+
+          .pr2-layout {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+          }
+
+          .pr2-main,
+          .pr2-side,
+          .pr2-side.pr2-approval-side {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+          }
+
+          .pr2-card {
+            width: 100% !important;
+            margin: 0 !important;
+            border-radius: 28px !important;
+            border: 1px solid rgba(32, 212, 178, 0.32) !important;
+            background: #172133 !important;
+            color: #ffffff !important;
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34) !important;
+            box-sizing: border-box !important;
+          }
+
+          .pr2-review-post-card {
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .pr2-review-post-head {
+            display: block !important;
+            margin: 0 !important;
+            padding: 20px 19px 14px !important;
+          }
+
+          .pr2-review-post-head .pr2-kicker {
+            color: #ffd43b !important;
+            font-size: 0.74rem !important;
+            font-weight: 1000 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase !important;
+          }
+
+          .pr2-review-post-head h1 {
+            margin: 7px 0 8px !important;
+            color: #ffffff !important;
+            font-size: clamp(2rem, 10vw, 2.6rem) !important;
+            line-height: 0.96 !important;
+            letter-spacing: -0.07em !important;
+            font-weight: 1000 !important;
+          }
+
+          .pr2-compact-media-subtitle {
+            display: block !important;
+            max-width: 340px !important;
+            margin: 0 !important;
+            color: rgba(255, 255, 255, 0.72) !important;
+            font-size: 0.96rem !important;
+            line-height: 1.42 !important;
+            font-weight: 760 !important;
+          }
+
+          .pr2-created-upload-inline {
+            display: grid !important;
+            gap: 6px !important;
+            margin: 13px 0 0 !important;
+            padding: 11px 12px !important;
+            border-radius: 17px !important;
+            border: 1px solid rgba(255, 212, 59, 0.14) !important;
+            background: rgba(255, 255, 255, 0.055) !important;
+            text-align: left !important;
+          }
+
+          .pr2-created-upload-inline p {
+            display: none !important;
+          }
+
+          .pr2-created-upload-inline span {
+            color: #ffffff !important;
+            font-weight: 950 !important;
+          }
+
+          .pr2-created-upload-inline small {
+            color: rgba(255, 255, 255, 0.72) !important;
+            font-weight: 800 !important;
+          }
+
+          .pr2-review-post-head > button,
+          .pr2-media-current-label,
+          .pr2-prepared-strip,
+          .pr2-review-wording-divider,
+          .pr2-review-wording-head,
+          .pr2-status.pr2-approval-status {
+            display: none !important;
+          }
+
+          .pr2-media-box {
+            display: block !important;
+            margin: 0 10px 12px !important;
+            border-radius: 23px !important;
+            overflow: hidden !important;
+            border: 0 !important;
+            background: #0f172a !important;
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22) !important;
+          }
+
+          .pr2-media-box img,
+          .pr2-media-box video,
+          .pr2-media-box canvas {
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            object-fit: contain !important;
+            border-radius: 21px !important;
+            background: #0f172a !important;
+          }
+
+          .pr2-empty {
+            min-height: 210px !important;
+            padding: 22px !important;
+            border-radius: 22px !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            color: #ffffff !important;
+          }
+
+          .pr2-wording {
+            display: grid !important;
+            gap: 10px !important;
+            padding: 2px 19px 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+          }
+
+          .pr2-wording label {
+            display: grid !important;
+            gap: 7px !important;
+            margin: 0 !important;
+          }
+
+          .pr2-wording label:not(.is-caption) {
+            display: none !important;
+          }
+
+          .pr2-wording label strong {
+            color: #ffd43b !important;
+            font-size: 0.74rem !important;
+            font-weight: 1000 !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+          }
+
+          .pr2-wording textarea {
+            display: block !important;
+            width: 100% !important;
+            min-height: 160px !important;
+            margin: 0 !important;
+            padding: 14px !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(255, 255, 255, 0.13) !important;
+            background: rgba(255, 255, 255, 0.075) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            caret-color: #ffd43b !important;
+            font-size: 1rem !important;
+            line-height: 1.48 !important;
+            font-weight: 760 !important;
+            resize: vertical !important;
+            box-sizing: border-box !important;
+          }
+
+          .pr2-edit-action-row,
+          .pr2-main-review-actions.pr2-edit-action-row,
+          .pr2-tidy-edit-actions.pr2-edit-action-row {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            padding: 14px 19px 20px !important;
+            margin: 0 !important;
+          }
+
+          .pr2-save-wording-action {
+            display: none !important;
+          }
+
+          .pr2-improve-wording-action {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            min-height: 58px !important;
+            border-radius: 21px !important;
+            border: 1px solid rgba(255, 212, 59, 0.42) !important;
+            background: rgba(255, 212, 59, 0.08) !important;
+            color: #ffd43b !important;
+            font-size: 1rem !important;
+            font-weight: 1000 !important;
+          }
+
+          .pr2-card:has(.pr2-improve-grid) {
+            padding: 20px 19px !important;
+          }
+
+          .pr2-card:has(.pr2-improve-grid) .pr2-card-head {
+            display: grid !important;
+            gap: 10px !important;
+            margin: 0 0 14px !important;
+          }
+
+          .pr2-card:has(.pr2-improve-grid) .pr2-card-head h2 {
+            margin: 0 !important;
+            color: #ffffff !important;
+            font-size: clamp(1.7rem, 8vw, 2.15rem) !important;
+            line-height: 0.98 !important;
+            letter-spacing: -0.06em !important;
+          }
+
+          .pr2-card:has(.pr2-improve-grid) .pr2-card-head p {
+            color: rgba(255, 255, 255, 0.68) !important;
+            font-weight: 750 !important;
+          }
+
+          .pr2-improve-grid {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+
+          .pr2-improve-grid .pr2-btn {
+            min-height: 52px !important;
+            border-radius: 18px !important;
+          }
+
+          .pr2-right-publish-card {
+            padding: 20px 19px !important;
+            border-radius: 28px !important;
+            background: #172133 !important;
+          }
+
+          .pr2-approval-simple-head .pr2-kicker {
+            color: #ffd43b !important;
+            font-size: 0.74rem !important;
+            font-weight: 1000 !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+          }
+
+          .pr2-approval-simple-head h2 {
+            margin: 7px 0 8px !important;
+            color: #ffffff !important;
+            font-size: clamp(1.65rem, 8vw, 2.1rem) !important;
+            line-height: 0.98 !important;
+            letter-spacing: -0.06em !important;
+          }
+
+          .pr2-approval-simple-head p {
+            margin: 0 !important;
+            color: rgba(255, 255, 255, 0.68) !important;
+            font-size: 0.96rem !important;
+            line-height: 1.42 !important;
+            font-weight: 750 !important;
+          }
+
+          .pr2-right-publish-actions {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 11px !important;
+            margin: 16px 0 0 !important;
+          }
+
+          .pr2-right-publish-actions .pr2-btn,
+          .pr2-right-publish-actions button {
+            width: 100% !important;
+            min-height: 58px !important;
+            border-radius: 21px !important;
+            font-size: 1rem !important;
+            font-weight: 1000 !important;
+          }
+
+          .pr2-approve-action,
+          .pr2-send-back-action,
+          .pr2-copy-platform-action,
+          .pr2-share-media-action,
+          .pr2-publish-locked-help {
+            display: none !important;
+          }
+
+          .pr2-publish-action,
+          .pr2-right-publish-actions .pr2-publish-action,
+          .pr2-right-publish-actions [data-publish-now-visible='true'] {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 0 !important;
+            background: linear-gradient(180deg, #ffd43b, #ffc021) !important;
+            color: #061225 !important;
+            box-shadow: 0 14px 30px rgba(255, 192, 31, 0.2) !important;
+          }
+
+          .pr2-right-schedule {
+            display: grid !important;
+            gap: 8px !important;
+            margin: 0 !important;
+          }
+
+          .pr2-right-schedule span {
+            color: #ffd43b !important;
+            font-size: 0.74rem !important;
+            font-weight: 1000 !important;
+            letter-spacing: 0.08em !important;
+            text-transform: uppercase !important;
+          }
+
+          .pr2-right-schedule input {
+            width: 100% !important;
+            min-height: 54px !important;
+            padding: 0 14px !important;
+            border-radius: 18px !important;
+            border: 0 !important;
+            background: #f8fafc !important;
+            color: #061225 !important;
+            color-scheme: light !important;
+            font-weight: 900 !important;
+            box-sizing: border-box !important;
+          }
+
+          .pr2-autoschedule-action,
+          .pr2-right-publish-actions .pr2-autoschedule-action {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 1px solid rgba(255, 212, 59, 0.42) !important;
+            background: rgba(255, 212, 59, 0.08) !important;
+            color: #ffd43b !important;
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
+
+
+      <style jsx global>{`
+        /* Review page compact back button.
+           Keeps Back to posts visible without creating a larger top gap than Posts. */
+        @media (max-width: 900px) {
+          body:has(.pr2-page) .main-content,
+          body:has(.pr2-page) .main-content.fromone-mobile-bottom-safe {
+            padding-top: 0 !important;
+          }
+
+          body:has(.pr2-page) .pr2-page {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+          }
+
+          body:has(.pr2-page) .pr2-shell {
+            padding-top: 14px !important;
+            margin-top: 0 !important;
+          }
+
+          body:has(.pr2-page) .pr2-topbar {
+            display: flex !important;
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 0 0 10px !important;
+            padding: 0 !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            background: transparent !important;
+          }
+
+          body:has(.pr2-page) .pr2-back {
+            width: auto !important;
+            min-height: 38px !important;
+            height: 38px !important;
+            padding: 0 14px !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(255, 212, 59, 0.22) !important;
+            background: rgba(255, 255, 255, 0.055) !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 0.88rem !important;
+            font-weight: 950 !important;
+            letter-spacing: -0.02em !important;
+            text-decoration: none !important;
+          }
+
+          body:has(.pr2-page) .pr2-layout {
+            margin-top: 0 !important;
+          }
+        }
+      `}</style>
+
+
+      <style jsx global>{`
+        /* Stop duplicate/big logo flashes on Review route changes */
+        @media (max-width: 900px) {
+          body:has(.pr2-page) .pr2-brand,
+          body:has(.pr2-page) .pr2-review-brand,
+          body:has(.pr2-page) .pr2-logo,
+          body:has(.pr2-page) .pr2-logo-slash,
+          body:has(.pr2-page) .fromone-mobile-ready-brand,
+          body:has(.pr2-page) .pr2-topbar img {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+
+          body:has(.pr2-page) * {
+            animation-duration: 0s !important;
+            transition-duration: 0s !important;
+          }
+        }
       `}</style>
 
     </main>

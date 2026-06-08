@@ -13056,3 +13056,112 @@ body:has(.simplified-posts-page) .simplified-posts-page {
     color: #101420 !important;
   }
 }
+/* -------------------------------------------------------------------------- */
+/* FromOne universal app width system                                         */
+/* Paste at the very bottom of app/globals.css                                */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --fromone-desktop-page-width: 1400px;
+  --fromone-mobile-page-width: 430px;
+  --fromone-desktop-page-padding: 32px;
+  --fromone-mobile-page-padding: 14px;
+}
+
+/* Desktop: one consistent width for all app pages */
+@media (min-width: 901px) {
+  .app-shell .main-content {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: var(--fromone-desktop-page-padding) !important;
+    padding-right: var(--fromone-desktop-page-padding) !important;
+    box-sizing: border-box !important;
+  }
+
+  .app-shell .main-content > * {
+    width: 100% !important;
+    max-width: var(--fromone-desktop-page-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .app-shell .main-content > * > * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Mobile: one consistent width for all app pages */
+@media (max-width: 900px) {
+  .app-shell .main-content {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: var(--fromone-mobile-page-padding) !important;
+    padding-right: var(--fromone-mobile-page-padding) !important;
+    box-sizing: border-box !important;
+  }
+
+  .app-shell .main-content > * {
+    width: 100% !important;
+    max-width: var(--fromone-mobile-page-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .app-shell .main-content > * > * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Stop individual app pages from forcing their own narrow desktop widths */
+@media (min-width: 901px) {
+  .dashboard-final-card,
+  .dashboard-final-page,
+  .dashboard-page,
+  .dashboard-shell,
+  .upload-dashboard,
+  .campaign-dashboard,
+  .dashboard-container,
+  .dashboard-content,
+  .simplified-posts-page,
+  .campaign-brand-shell,
+  .pr2-page,
+  .pr2-shell,
+  .reports-page,
+  .settings-page,
+  .subscription-page {
+    width: 100% !important;
+    max-width: var(--fromone-desktop-page-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Stop individual app pages from forcing their own narrow mobile widths */
+@media (max-width: 900px) {
+  .dashboard-final-card,
+  .dashboard-final-page,
+  .dashboard-page,
+  .dashboard-shell,
+  .upload-dashboard,
+  .campaign-dashboard,
+  .dashboard-container,
+  .dashboard-content,
+  .simplified-posts-page,
+  .campaign-brand-shell,
+  .pr2-page,
+  .pr2-shell,
+  .reports-page,
+  .settings-page,
+  .subscription-page {
+    width: 100% !important;
+    max-width: var(--fromone-mobile-page-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+  }
+}

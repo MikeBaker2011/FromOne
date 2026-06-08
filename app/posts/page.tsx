@@ -310,6 +310,63 @@ const normaliseMainPlatform = (platform?: string | null) => {
   return "Post";
 };
 
+
+function getMobilePostState(post: any) {
+  const safeText = (value: unknown) => String(value || "").trim();
+
+  const approvalStatus = safeText(post?.approval_status).toLowerCase();
+  const publishStatus = safeText(post?.publish_status).toLowerCase();
+  const status = safeText(post?.status).toLowerCase();
+
+  const isPosted =
+    Boolean(post?.is_posted) ||
+    status === "posted" ||
+    publishStatus === "posted" ||
+    publishStatus === "published" ||
+    approvalStatus === "posted";
+
+  if (isPosted) {
+    return {
+      label: "Posted",
+      className: "is-posted",
+      reviewLabel: "View post",
+    };
+  }
+
+  if (
+    approvalStatus === "scheduled" ||
+    publishStatus === "scheduled" ||
+    status === "scheduled"
+  ) {
+    return {
+      label: "Autoscheduled",
+      className: "is-autoscheduled",
+      reviewLabel: "View post",
+    };
+  }
+
+  return {
+    label: "Manual",
+    className: "is-manual",
+    reviewLabel: "Review",
+  };
+}
+
+
+
+
+
+function MobileMethodPill({ post }: { post: any }) {
+  const mobilePostState = getMobilePostState(post);
+
+  return (
+    <span className={`fromone-mobile-method-pill ${mobilePostState.className}`}>
+      {mobilePostState.label}
+    </span>
+  );
+}
+
+
 export default function PostsPage() {
   const { showToast } = useToast();
 
@@ -450,7 +507,9 @@ export default function PostsPage() {
       const firstSchedule = getPostDisplayScheduleValue(firstPost);
       const secondSchedule = getPostDisplayScheduleValue(secondPost);
       const firstTime = firstSchedule ? new Date(firstSchedule).getTime() : 0;
-      const secondTime = secondSchedule ? new Date(secondSchedule).getTime() : 0;
+      const secondTime = secondSchedule
+        ? new Date(secondSchedule).getTime()
+        : 0;
       return firstTime - secondTime;
     });
   };
@@ -1042,7 +1101,9 @@ export default function PostsPage() {
       window.history.replaceState(
         {},
         "",
-        cleanQuery ? `${window.location.pathname}?${cleanQuery}` : window.location.pathname,
+        cleanQuery
+          ? `${window.location.pathname}?${cleanQuery}`
+          : window.location.pathname,
       );
       return;
     }
@@ -1365,7 +1426,9 @@ export default function PostsPage() {
   };
 
   const isGenericPostTitle = (value: any) => {
-    const cleanTitle = String(value || "").trim().toLowerCase();
+    const cleanTitle = String(value || "")
+      .trim()
+      .toLowerCase();
 
     if (!cleanTitle) return true;
 
@@ -1392,8 +1455,10 @@ export default function PostsPage() {
     if (!cleanCaption) return "";
 
     const firstSentence =
-      cleanCaption.split(/[.!?]/).find((part) => part.trim().length >= 12)?.trim() ||
-      cleanCaption;
+      cleanCaption
+        .split(/[.!?]/)
+        .find((part) => part.trim().length >= 12)
+        ?.trim() || cleanCaption;
 
     if (firstSentence.length <= 58) return firstSentence;
 
@@ -1598,7 +1663,9 @@ export default function PostsPage() {
 
   const getPostMediaMimeType = (post: any, mediaKind: string) => {
     const mediaType = String(post?.media_type || "").toLowerCase();
-    const mediaUrl = String(post?.media_url || post?.media_path || "").toLowerCase();
+    const mediaUrl = String(
+      post?.media_url || post?.media_path || "",
+    ).toLowerCase();
 
     if (mediaType.startsWith("video/")) return mediaType;
     if (mediaType.startsWith("image/")) return mediaType;
@@ -1621,8 +1688,10 @@ export default function PostsPage() {
 
   const buildPostMediaRescanContext = (post: any, mediaKind: string) => {
     const platform = post.platform || "Facebook";
-    const businessName = profile?.business_name || campaign?.business_name || "the business";
-    const industry = profile?.industry || campaign?.business_type || "general business";
+    const businessName =
+      profile?.business_name || campaign?.business_name || "the business";
+    const industry =
+      profile?.industry || campaign?.business_type || "general business";
     const currentCaption = String(post.caption || "").trim();
     const currentTitle = String(post.title || "").trim();
     const mediaName = post.media_path || post.title || "Post media";
@@ -2168,7 +2237,8 @@ Important:
           },
         ],
         requestedOutput: {
-          posts: "Return exactly one improved post. If this is video, analyse the footage when possible and make the post about the visible video moment.",
+          posts:
+            "Return exactly one improved post. If this is video, analyse the footage when possible and make the post about the visible video moment.",
           media_analysis_rule:
             mediaKind === "video"
               ? "Video rescan must be specific to the footage. Do not write a generic business caption."
@@ -2177,8 +2247,14 @@ Important:
       });
 
       const rewrittenPost = response.data?.posts?.[0];
-      const inlineVideoMediaUsed = Number(response.data?.inlineVideoMediaUsed || 0);
-      const inlineImageMediaUsed = Number(response.data?.inlineImageMediaUsed || response.data?.visionMediaUsed || 0);
+      const inlineVideoMediaUsed = Number(
+        response.data?.inlineVideoMediaUsed || 0,
+      );
+      const inlineImageMediaUsed = Number(
+        response.data?.inlineImageMediaUsed ||
+          response.data?.visionMediaUsed ||
+          0,
+      );
 
       if (!rewrittenPost?.caption) {
         notify(
@@ -2243,7 +2319,7 @@ Important:
         notify(
           "Post rewritten. This video may have been too large or unsupported for full footage analysis, so FromOne used the available context carefully.",
           "info",
-          "Video rewritten"
+          "Video rewritten",
         );
       } else {
         notify("Post rescanned and rewritten.", "success", "Post improved");
@@ -2867,6 +2943,8 @@ Important:
       ? improvementNote
       : null;
 
+  const mobileReviewPosts = sortedPosts;
+
   const brandPrimary = profile?.brand_primary_color || "#ffd43b";
   const brandSecondary = profile?.brand_secondary_color || "#101420";
   const brandAccent = profile?.brand_accent_color || "#3ddc97";
@@ -2889,6 +2967,288 @@ Important:
       className="campaign-brand-shell simplified-posts-page"
       style={brandStyle}
     >
+      <style jsx global>{`
+        @media (min-width: 901px) {
+          .fromone-mobile-ready-flow {
+            display: none !important;
+          }
+        }
+
+        @media (max-width: 900px) {
+          body:has(.fromone-mobile-ready-flow) .mobile-topbar {
+            display: none !important;
+          }
+
+          body:has(.fromone-mobile-ready-flow) .app-shell {
+            padding-top: 0 !important;
+          }
+
+          body:has(.fromone-mobile-ready-flow) .main-content {
+            padding-top: 0 !important;
+          }
+
+          .simplified-posts-page {
+            max-width: 430px !important;
+            min-height: 100dvh !important;
+            margin: 0 auto !important;
+            padding: 20px 18px 118px !important;
+            background:
+              radial-gradient(
+                circle at 0% 0%,
+                rgba(255, 212, 59, 0.14),
+                transparent 32%
+              ),
+              radial-gradient(
+                circle at 100% 8%,
+                rgba(236, 72, 153, 0.17),
+                transparent 30%
+              ),
+              linear-gradient(180deg, #050b18 0%, #071832 52%, #020713 100%) !important;
+          }
+
+          .simplified-posts-page
+            > section:not(.fromone-mobile-ready-flow):not(.access-status-card),
+          .simplified-posts-page
+            > .premium-card:not(.fromone-mobile-ready-flow) {
+            display: none !important;
+          }
+
+          .fromone-mobile-ready-flow {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            width: 100% !important;
+            max-width: 360px !important;
+            margin: 0 auto !important;
+            color: #ffffff !important;
+          }
+
+          .fromone-mobile-ready-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 0 0 18px;
+          }
+
+          .fromone-mobile-ready-brand img {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+          }
+
+          .fromone-mobile-ready-brand span {
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 950;
+            letter-spacing: -0.04em;
+          }
+
+          .fromone-mobile-ready-flow h1 {
+            margin: 0 0 18px;
+            color: #ffffff;
+            font-size: clamp(1.85rem, 8.2vw, 2.35rem);
+            line-height: 1.02;
+            letter-spacing: -0.06em;
+            font-weight: 950;
+            text-align: left;
+          }
+
+          .fromone-mobile-phone-card {
+            overflow: hidden;
+            border-radius: 24px;
+            background: #f8fafc;
+            color: #071225;
+            box-shadow:
+              0 28px 72px rgba(0, 0, 0, 0.48),
+              0 0 0 1px rgba(255, 255, 255, 0.18);
+          }
+
+          .fromone-mobile-media-wrap {
+            width: 100%;
+            height: 232px;
+            background: #ffffff;
+            overflow: hidden;
+          }
+
+          .fromone-mobile-media-wrap img,
+          .fromone-mobile-media-wrap video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #ffffff;
+          }
+
+          .fromone-mobile-flyer-placeholder {
+            display: grid;
+            place-items: center;
+            align-content: center;
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            padding: 24px;
+            color: #071225;
+            text-align: center;
+            background:
+              radial-gradient(
+                circle at top,
+                rgba(255, 212, 59, 0.35),
+                transparent 36%
+              ),
+              #eef2ff;
+          }
+
+          .fromone-mobile-flyer-placeholder strong {
+            font-size: 1.25rem;
+            font-weight: 950;
+            letter-spacing: -0.04em;
+          }
+
+          .fromone-mobile-flyer-placeholder span {
+            color: #475569;
+            font-size: 0.92rem;
+            font-weight: 750;
+            line-height: 1.35;
+          }
+
+          .fromone-mobile-card-body {
+            padding: 17px 18px 18px;
+          }
+
+          .fromone-mobile-card-count {
+            margin: 0 0 8px;
+            color: #d9a900;
+            font-size: 0.72rem;
+            font-weight: 950;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }
+
+          .fromone-mobile-card-body h2 {
+            margin: 0 0 8px;
+            color: #071225;
+            font-size: 1.28rem;
+            line-height: 1.05;
+            letter-spacing: -0.045em;
+            font-weight: 950;
+          }
+
+          .fromone-mobile-caption {
+            margin: 0;
+            color: #1f2937;
+            font-size: 0.94rem;
+            line-height: 1.42;
+            font-weight: 650;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          .fromone-mobile-hashtags {
+            margin: 10px 0 0;
+            color: #1d4ed8;
+            font-size: 0.9rem;
+            line-height: 1.35;
+            font-weight: 850;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          .fromone-mobile-card-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+            width: 100%;
+          }
+
+          .fromone-mobile-ready-subtitle {
+            margin: -8px 0 20px;
+            color: rgba(255,255,255,0.72);
+            font-size: 0.98rem;
+            line-height: 1.45;
+            font-weight: 800;
+            text-align: left;
+          }
+
+          .fromone-mobile-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+            margin-top: 0;
+            padding: 0 18px 18px;
+          }
+
+          .fromone-mobile-actions button {
+            min-height: 58px;
+            border-radius: 18px;
+            font-size: 1.02rem;
+            font-weight: 950;
+            cursor: pointer;
+          }
+
+          .fromone-mobile-review-button {
+            border: 0;
+            background: linear-gradient(180deg, #ffd43b, #ffb703);
+            color: #061225;
+            box-shadow: 0 16px 34px rgba(255, 183, 3, 0.3);
+          }
+
+          .fromone-mobile-card-meta-row,
+          .fromone-mobile-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 14px;
+            color: rgba(255,255,255,0.72);
+            font-size: 0.72rem;
+            font-weight: 900;
+          }
+
+          .fromone-mobile-card-meta-row span,
+          .fromone-mobile-status-row span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .fromone-mobile-safe-note {
+            margin: 14px 0 0;
+            color: rgba(255, 255, 255, 0.68);
+            font-size: 0.9rem;
+            font-weight: 800;
+            line-height: 1.35;
+            text-align: center;
+          }
+
+          @media (max-width: 380px) {
+            .fromone-mobile-ready-flow {
+              max-width: 334px !important;
+            }
+
+            .fromone-mobile-media-wrap {
+              height: 214px;
+            }
+
+            .fromone-mobile-card-body h2 {
+              font-size: 1.18rem;
+            }
+
+            .fromone-mobile-caption {
+              font-size: 0.88rem;
+            }
+
+            .fromone-mobile-actions button {
+              min-height: 54px;
+            }
+          }
+        }
+      `}</style>
+
       {loading ? null : campaigns.length === 0 ? (
         <section
           className="premium-card"
@@ -2904,19 +3264,20 @@ Important:
         >
           <div className="page-eyebrow">Posts</div>
           <h1 className="page-title" style={{ margin: "8px 0 12px" }}>
-            This week’s posts.
+            Your posts are ready.
           </h1>
           <p
             className="page-description"
             style={{ margin: "0 auto 28px", maxWidth: 760 }}
           >
-            Review each post before anything is published. Edit, schedule, publish or delete when ready.
+            Upload photos, videos or flyers. FromOne turns each one into a
+            scheduled post for you to review.
           </p>
 
           <div className="page-eyebrow">No posts yet</div>
           <h2 style={{ marginTop: 0 }}>Create this week’s posts first.</h2>
           <p style={{ maxWidth: 680, margin: "0 auto 22px" }}>
-            Go to Dashboard, upload photos, videos or flyers, then FromOne will
+            Go to Create, upload photos, videos or flyers, then FromOne will
             create posts ready to review here.
           </p>
 
@@ -2937,6 +3298,120 @@ Important:
               <a href="/subscription" className="dashboard-profile-link">
                 View subscription options
               </a>
+            </section>
+          )}
+
+          {mobileReviewPosts.length > 0 && (
+            <section
+              className="fromone-mobile-ready-flow"
+              aria-label="Posts ready to review"
+            >
+              <div className="fromone-mobile-ready-brand">
+                <img src="/fromone-logo.png" alt="FromOne logo" />
+                <span>FromOne</span>
+              </div>
+
+              <h1>Your posts are ready! ✨</h1>
+
+              <p className="fromone-mobile-ready-subtitle">
+                {mobileReviewPosts.length} scheduled{" "}
+                {mobileReviewPosts.length === 1 ? "post" : "posts"} created.
+                Review each one before anything publishes.
+              </p>
+
+              <div className="fromone-mobile-card-list">
+                {mobileReviewPosts.map((post, index) => {
+              const mobilePostState = getMobilePostState(post);
+                  const mediaKind = getPostMediaKind(post);
+                  const title = getDisplayPostTitle(post, index);
+                  const captionPreview = String(post?.caption || "").trim();
+                  const hashtags = Array.isArray(post?.hashtags)
+                    ? post.hashtags.join(" ")
+                    : String(post?.hashtags || "");
+                  const scheduleLabel = getPostScheduleLabel(post);
+                  const createdFromLabel = getCreatedFromUploadLabel(post);
+                  const status = getPostStatus(post);
+
+                  return (
+                    <article
+                      key={post.id}
+                      className="fromone-mobile-phone-card"
+                    >
+                      <div className="fromone-mobile-media-wrap">
+                        {post?.media_url ? (
+                          mediaKind === "video" ? (
+                            <video
+                              src={post.media_url}
+                              muted
+                              playsInline
+                              preload="metadata"
+                            />
+                          ) : mediaKind === "flyer" ? (
+                            <div className="fromone-mobile-flyer-placeholder">
+                              <strong>PDF flyer</strong>
+                              <span>Open to review this scheduled post.</span>
+                            </div>
+                          ) : (
+                            <img
+                              src={post.media_url}
+                              alt={title || "Post media"}
+                            />
+                          )
+                        ) : (
+                          <div className="fromone-mobile-flyer-placeholder">
+                            <strong>No media yet</strong>
+                            <span>Open to add or review the post.</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="fromone-mobile-card-body">
+                        <div className="fromone-mobile-card-meta-row">
+                          <span>{createdFromLabel}</span>
+                          <span>{scheduleLabel}</span>
+                        </div>
+
+                        <p className="fromone-mobile-card-count">
+                          Post {index + 1} of {mobileReviewPosts.length}
+                        </p>
+
+                        <h2>{title}</h2>
+
+                        <p className="fromone-mobile-caption">
+                          {captionPreview ||
+                            "Open to check the wording, media and scheduled time."}
+                        </p>
+
+                        {hashtags && (
+                          <p className="fromone-mobile-hashtags">{hashtags}</p>
+                        )}
+
+                        <div className="fromone-mobile-status-row">
+                          <span>{status}</span>
+                        </div>
+                      </div>
+
+                      <div className="fromone-mobile-method-row">
+                    <MobileMethodPill post={post} />
+                  </div>
+
+                  <div className="fromone-mobile-actions">
+                        <button
+                          type="button"
+                          className="fromone-mobile-review-button"
+                          onClick={() => choosePost(post.id)}
+                        >
+                          Review
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <p className="fromone-mobile-safe-note">
+                Nothing publishes until you approve each post.
+              </p>
             </section>
           )}
 
@@ -2964,7 +3439,10 @@ Important:
                   alignItems: "center",
                 }}
               >
-                <div className="fromone-posts-hero-copy" style={{ minWidth: 0 }}>
+                <div
+                  className="fromone-posts-hero-copy"
+                  style={{ minWidth: 0 }}
+                >
                   <div className="page-eyebrow">Posts</div>
                   <h1
                     className="page-title"
@@ -2975,13 +3453,14 @@ Important:
                       letterSpacing: "-0.06em",
                     }}
                   >
-                    This week’s posts.
+                    Your posts are ready.
                   </h1>
                   <p
                     className="page-description"
                     style={{ margin: 0, maxWidth: 760 }}
                   >
-                    Review each post before anything is published. Open a post to edit the wording, image, date or platform.
+                    Here is your review queue. Open a post, check it, approve
+                    it, then move to the next one.
                   </p>
                 </div>
 
@@ -2995,10 +3474,7 @@ Important:
                     alignItems: "center",
                     minWidth: 220,
                   }}
-                >
-
-                  
-                </div>
+                ></div>
               </div>
 
               {showSavedWeekControls && (
@@ -3123,12 +3599,12 @@ Important:
             </section>
           )}
 
-                    <section className="premium-card posts-onboarding-helper-card posts-upload-flow-helper-card">
+          <section className="premium-card posts-onboarding-helper-card posts-upload-flow-helper-card">
             <div className="page-eyebrow">Created from your uploads</div>
             <h2>Review your scheduled posts.</h2>
             <p>
-              FromOne creates one scheduled post for each photo, video or flyer you uploaded.
-              Open each post to check the wording, media and suggested time before approving.
+              FromOne creates one scheduled post for each photo, video or flyer
+              you upload. Nothing publishes until you approve it.
             </p>
           </section>
 
@@ -3154,7 +3630,7 @@ Important:
               }}
             >
               <div>
-                <div className="page-eyebrow">Weekly calendar</div>
+                <div className="page-eyebrow">Review queue</div>
                 <h2
                   style={{
                     margin: "0 0 8px",
@@ -3165,7 +3641,8 @@ Important:
                   to review.
                 </h2>
                 <p style={{ margin: 0, color: "var(--muted)" }}>
-                  Open each post to check the wording, media and suggested time before anything is published.
+                  Open each post to check the wording, media and suggested time.
+                  Nothing publishes until approved.
                 </p>
               </div>
             </div>
@@ -3185,11 +3662,11 @@ Important:
                 <div>
                   <div className="page-eyebrow">Empty weekly set</div>
                   <h3 style={{ margin: "4px 0 8px", fontSize: 26 }}>
-                    This saved week has no posts.
+                    No posts waiting for review.
                   </h3>
                   <p style={{ margin: 0, color: "var(--muted)" }}>
                     This can happen if a test run was interrupted. Delete this
-                    empty set, or create a new week from Dashboard.
+                    empty set, or create a new week from Create.
                   </p>
                 </div>
 
@@ -3253,7 +3730,7 @@ Important:
                       letterSpacing: "-0.04em",
                     }}
                   >
-                    Review your new posts.
+                    Your new posts are ready.
                   </h2>
                   <p
                     style={{
@@ -3263,8 +3740,8 @@ Important:
                       fontWeight: 760,
                     }}
                   >
-                    Start with Post 1 of {sortedPosts.length}. Edit the wording,
-                    publish now, schedule later, post manually or delete anything you do not need.
+                    Start with Post 1 of {sortedPosts.length}. Review it,
+                    approve it, then move to the next one.
                   </p>
                 </div>
 
@@ -3279,7 +3756,7 @@ Important:
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Start review
+                  Review first post
                 </button>
               </section>
             )}
@@ -3299,6 +3776,7 @@ Important:
                 }}
               >
                 {sortedPosts.map((post: any, index: number) => {
+              const mobilePostState = getMobilePostState(post);
                   const status = getPostStatus(post);
                   const platformName = getPlatformDisplayName(post);
                   const captionPreview = String(post.caption || "").slice(
@@ -3451,7 +3929,9 @@ Important:
                           ) : (
                             <img
                               src={post.media_url}
-                              alt={getDisplayPostTitle(post, index) || "Post media"}
+                              alt={
+                                getDisplayPostTitle(post, index) || "Post media"
+                              }
                               style={{
                                 display: "block",
                                 width: "auto",
@@ -3627,7 +4107,7 @@ Important:
                               textAlign: "center",
                             }}
                           >
-                            Review post
+                            Review
                           </button>
 
                           <button
@@ -3645,7 +4125,9 @@ Important:
                               color: "#fecaca",
                               fontWeight: 950,
                               cursor:
-                                deletingPostId === post.id ? "not-allowed" : "pointer",
+                                deletingPostId === post.id
+                                  ? "not-allowed"
+                                  : "pointer",
                             }}
                           >
                             {deletingPostId === post.id ? "..." : "Delete"}
@@ -3703,8 +4185,7 @@ Important:
               </div>
             </section>
           )}
-
-</>
+        </>
       )}
 
       {showTodayReminder && todayReminderPost && (
@@ -3918,6 +4399,167 @@ Important:
         </div>
       )}
       <style jsx global>{`
+        /* FromOne simple mobile post-review flow */
+        .simplified-posts-page {
+          background:
+            radial-gradient(
+              circle at 15% 0%,
+              rgba(255, 212, 59, 0.12),
+              transparent 28%
+            ),
+            linear-gradient(180deg, #07162f 0%, #020617 58%, #020617 100%) !important;
+        }
+
+        .fromone-posts-hero-card,
+        .posts-weekly-review-section,
+        .posts-onboarding-helper-card {
+          isolation: isolate !important;
+        }
+
+        @media (max-width: 900px) {
+          .simplified-posts-page {
+            padding: 14px 14px 118px !important;
+          }
+
+          .fromone-posts-hero-card {
+            margin: 0 0 14px !important;
+            padding: 18px !important;
+            border-radius: 28px !important;
+            text-align: center !important;
+            background:
+              radial-gradient(
+                circle at top,
+                rgba(255, 212, 59, 0.18),
+                transparent 36%
+              ),
+              linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.08),
+                rgba(255, 255, 255, 0.03)
+              ) !important;
+          }
+
+          .fromone-posts-hero-layout {
+            display: block !important;
+          }
+
+          .fromone-posts-hero-copy .page-title {
+            font-size: clamp(2rem, 11vw, 3.15rem) !important;
+            line-height: 0.94 !important;
+            letter-spacing: -0.065em !important;
+            margin-bottom: 10px !important;
+          }
+
+          .fromone-posts-hero-copy .page-description {
+            margin: 0 auto !important;
+            max-width: 320px !important;
+            font-size: 0.98rem !important;
+            line-height: 1.45 !important;
+            color: rgba(248, 250, 252, 0.76) !important;
+          }
+
+          .posts-onboarding-helper-card {
+            display: none !important;
+          }
+
+          .posts-weekly-review-section {
+            padding: 16px !important;
+            border-radius: 30px !important;
+            gap: 16px !important;
+            border-color: rgba(255, 212, 59, 0.24) !important;
+            background:
+              radial-gradient(
+                circle at top,
+                rgba(255, 212, 59, 0.12),
+                transparent 32%
+              ),
+              linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.075),
+                rgba(255, 255, 255, 0.028)
+              ) !important;
+          }
+
+          .posts-weekly-review-section > div:first-child {
+            text-align: center !important;
+            justify-content: center !important;
+          }
+
+          .posts-weekly-review-section > div:first-child h2 {
+            font-size: clamp(1.75rem, 8vw, 2.45rem) !important;
+            line-height: 0.98 !important;
+            letter-spacing: -0.055em !important;
+          }
+
+          .posts-weekly-review-section > div:first-child p {
+            max-width: 320px !important;
+            margin: 0 auto !important;
+            font-size: 0.94rem !important;
+          }
+
+          .posts-weekly-card-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+            justify-items: center !important;
+            gap: 18px !important;
+          }
+
+          .fromone-premium-calendar-review-card {
+            width: min(100%, 356px) !important;
+            max-width: 356px !important;
+            min-height: 0 !important;
+            grid-template-rows: minmax(245px, 54vw) auto !important;
+            border-radius: 34px !important;
+            box-shadow:
+              0 28px 90px rgba(0, 0, 0, 0.44),
+              inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+          }
+
+          .fromone-premium-calendar-review-card:nth-of-type(n + 2) {
+            opacity: 0.92 !important;
+          }
+
+          .fromone-premium-calendar-media-frame {
+            padding: 12px !important;
+          }
+
+          .fromone-premium-calendar-review-card h3 {
+            font-size: 1.12rem !important;
+          }
+
+          .fromone-premium-calendar-review-card p {
+            font-size: 0.94rem !important;
+          }
+
+          .fromone-post-card-actions {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-post-card-actions .dashboard-platform-create-button {
+            min-height: 52px !important;
+            border-radius: 18px !important;
+            font-size: 1rem !important;
+            font-weight: 1000 !important;
+          }
+
+          .fromone-post-card-actions button[aria-label^="Delete"] {
+            min-height: 44px !important;
+            opacity: 0.72 !important;
+          }
+        }
+
+        @media (max-width: 430px) {
+          .simplified-posts-page {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+          }
+
+          .fromone-premium-calendar-review-card {
+            width: 100% !important;
+            border-radius: 30px !important;
+            grid-template-rows: 238px auto !important;
+          }
+        }
+
         /* Premium post card media centering fix */
         .fromone-premium-calendar-media-frame {
           width: 100% !important;
@@ -3991,7 +4633,6 @@ Important:
           transform: none !important;
         }
 
-
         /* Phase 9 UI polish — Posts list */
         .posts-page,
         .posts-shell,
@@ -4017,7 +4658,11 @@ Important:
           margin-bottom: 18px !important;
           border: 1px solid rgba(255, 212, 59, 0.16) !important;
           background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.12), transparent 34%),
+            radial-gradient(
+              circle at top right,
+              rgba(255, 212, 59, 0.12),
+              transparent 34%
+            ),
             rgba(15, 23, 42, 0.84) !important;
         }
 
@@ -4055,7 +4700,11 @@ Important:
           padding: clamp(18px, 2.4vw, 26px) !important;
           border: 1px solid rgba(255, 255, 255, 0.09) !important;
           background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.055), transparent 34%),
+            radial-gradient(
+              circle at top right,
+              rgba(255, 212, 59, 0.055),
+              transparent 34%
+            ),
             rgba(15, 23, 42, 0.82) !important;
         }
 
@@ -4435,7 +5084,6 @@ Important:
             max-height: 230px !important;
           }
         }
-      
 
         .fromone-post-card-actions {
           grid-template-columns: 1fr !important;
@@ -4456,7 +5104,6 @@ Important:
           }
         }
 
-
         /* Final posts onboarding polish */
         .posts-onboarding-helper-card {
           margin: 0 0 22px !important;
@@ -4464,7 +5111,11 @@ Important:
           border-radius: 28px !important;
           border: 1px solid rgba(255, 212, 59, 0.16) !important;
           background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+            radial-gradient(
+              circle at top right,
+              rgba(255, 212, 59, 0.08),
+              transparent 34%
+            ),
             rgba(15, 23, 42, 0.84) !important;
           box-shadow: 0 22px 66px rgba(0, 0, 0, 0.2) !important;
         }
@@ -4498,7 +5149,6 @@ Important:
             font-size: 0.92rem !important;
           }
         }
-
 
         /* Final posts true mobile centering */
         .posts-weekly-card-grid {
@@ -4576,7 +5226,6 @@ Important:
           }
         }
 
-
         /* Upload-count review flow polish */
         .posts-upload-flow-helper-card {
           margin: 0 0 22px !important;
@@ -4584,7 +5233,11 @@ Important:
           border-radius: 28px !important;
           border: 1px solid rgba(255, 212, 59, 0.16) !important;
           background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
+            radial-gradient(
+              circle at top right,
+              rgba(255, 212, 59, 0.08),
+              transparent 34%
+            ),
             rgba(15, 23, 42, 0.84) !important;
           box-shadow: 0 22px 66px rgba(0, 0, 0, 0.2) !important;
         }
@@ -4623,14 +5276,14 @@ Important:
         }
 
         .posts-created-from-upload-badge {
-          background: rgba(255, 212, 59, 0.10) !important;
+          background: rgba(255, 212, 59, 0.1) !important;
           border: 1px solid rgba(255, 212, 59, 0.18) !important;
           color: #ffe58a !important;
         }
 
         .posts-suggested-time-badge {
           background: rgba(255, 255, 255, 0.07) !important;
-          border: 1px solid rgba(255, 255, 255, 0.10) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
           color: rgba(248, 250, 252, 0.76) !important;
         }
 
@@ -4644,9 +5297,7 @@ Important:
             font-size: 0.92rem !important;
           }
         }
-
       `}</style>
-
     </div>
   );
 }

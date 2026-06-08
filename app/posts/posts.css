@@ -1,3 +1,13 @@
+/* app/posts/posts.css
+   FromOne Posts page — mobile review queue
+
+   Full replacement for app/posts/posts.css.
+
+   Important:
+   - This file does NOT control or hide .mobile-topbar.
+   - The hamburger/topbar should be controlled by AppShell only.
+   - This prevents the topbar from flashing then disappearing when /posts loads.
+*/
 
 /* Free transform handles + mobile pinch-only zoom */
 
@@ -18,25 +28,70 @@
   border-radius: 999px;
   border: 2px solid #101420;
   background: #ffd43b;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.72), 0 8px 18px rgba(0,0,0,0.28);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.72),
+    0 8px 18px rgba(0, 0, 0, 0.28);
   padding: 0;
   pointer-events: auto;
   touch-action: none;
   z-index: 3;
 }
 
-.f1-review-transform-handle.is-top-left { top: 8px; left: 8px; cursor: nwse-resize; }
-.f1-review-transform-handle.is-top { top: 8px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
-.f1-review-transform-handle.is-top-right { top: 8px; right: 8px; cursor: nesw-resize; }
-.f1-review-transform-handle.is-right { top: 50%; right: 8px; transform: translateY(-50%); cursor: ew-resize; }
-.f1-review-transform-handle.is-bottom-right { right: 8px; bottom: 8px; cursor: nwse-resize; }
-.f1-review-transform-handle.is-bottom { left: 50%; bottom: 8px; transform: translateX(-50%); cursor: ns-resize; }
-.f1-review-transform-handle.is-bottom-left { left: 8px; bottom: 8px; cursor: nesw-resize; }
-.f1-review-transform-handle.is-left { top: 50%; left: 8px; transform: translateY(-50%); cursor: ew-resize; }
+.f1-review-transform-handle.is-top-left {
+  top: 8px;
+  left: 8px;
+  cursor: nwse-resize;
+}
+
+.f1-review-transform-handle.is-top {
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.f1-review-transform-handle.is-top-right {
+  top: 8px;
+  right: 8px;
+  cursor: nesw-resize;
+}
+
+.f1-review-transform-handle.is-right {
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.f1-review-transform-handle.is-bottom-right {
+  right: 8px;
+  bottom: 8px;
+  cursor: nwse-resize;
+}
+
+.f1-review-transform-handle.is-bottom {
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.f1-review-transform-handle.is-bottom-left {
+  left: 8px;
+  bottom: 8px;
+  cursor: nesw-resize;
+}
+
+.f1-review-transform-handle.is-left {
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
 
 .f1-review-transform-hint {
   margin: -4px 0 0;
-  color: rgba(248,250,252,0.68);
+  color: rgba(248, 250, 252, 0.68);
   font-size: 0.88rem;
   font-weight: 800;
   line-height: 1.45;
@@ -56,65 +111,1111 @@
     height: 20px;
   }
 }
-/* Posts page mobile hero: match premium dashboard layout */
-@media (max-width: 760px) {
-  .fromone-posts-hero-card {
+
+/* -------------------------------------------------------------------------- */
+/* Mobile Posts review queue                                                  */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  html,
+  body {
     width: 100%;
-    padding: 24px;
-    border-radius: 30px;
+    overflow-x: hidden !important;
+    background: #050b18 !important;
   }
 
-  .fromone-posts-hero-layout {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 24px !important;
-    align-items: start !important;
+  body:has(.fromone-mobile-ready-flow) {
+    background: #050b18 !important;
   }
 
-  .fromone-posts-hero-copy {
+  body:has(.fromone-mobile-ready-flow) .app-shell {
+    background: #050b18 !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .main-content,
+  body:has(.fromone-mobile-ready-flow) .main-content.fromone-mobile-bottom-safe {
+    width: 100% !important;
+    min-height: 100dvh !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: hidden !important;
+    background: #050b18 !important;
+  }
+
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page {
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 0 !important;
+    min-height: 100dvh !important;
+    margin: 0 auto !important;
+    padding: 24px 16px 126px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    background: #050b18 !important;
+    color: #ffffff !important;
+    box-sizing: border-box !important;
   }
 
-  .fromone-posts-hero-copy .page-title {
-    max-width: 100% !important;
-    margin-bottom: 18px !important;
-    font-size: clamp(2.7rem, 13vw, 4rem) !important;
-    line-height: 0.95 !important;
-    letter-spacing: -0.065em !important;
+  /* Hide old desktop/queue sections on mobile.
+     The updated page renders its own mobile review queue. */
+  .simplified-posts-page > section:not(.fromone-mobile-ready-flow):not(.access-status-card),
+  .simplified-posts-page > .premium-card:not(.fromone-mobile-ready-flow) {
+    display: none !important;
   }
 
-  .fromone-posts-hero-copy .page-description {
-    max-width: 100% !important;
-    font-size: 1rem !important;
-    line-height: 1.55 !important;
+  .fromone-mobile-ready-flow {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 0 auto !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    color: #ffffff !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
   }
 
-  .fromone-posts-hero-actions {
+  .fromone-mobile-ready-brand {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin: 0 0 22px !important;
+  }
+
+  .fromone-mobile-ready-brand img {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+    display: block !important;
+    box-shadow: 0 12px 28px rgba(255, 212, 59, 0.16) !important;
+  }
+
+  .fromone-mobile-ready-brand span {
+    color: #ffffff !important;
+    font-size: 1.13rem !important;
+    font-weight: 1000 !important;
+    letter-spacing: -0.045em !important;
+  }
+
+  .fromone-mobile-ready-flow h1 {
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 0 auto 10px !important;
+    color: #ffffff !important;
+    font-size: clamp(2.35rem, 10vw, 3.25rem) !important;
+    line-height: 0.93 !important;
+    letter-spacing: -0.075em !important;
+    font-weight: 1000 !important;
+    text-align: left !important;
+    text-wrap: balance !important;
+  }
+
+  .fromone-mobile-ready-flow > p,
+  .fromone-mobile-ready-subtitle {
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 0 auto 20px !important;
+    color: rgba(255, 255, 255, 0.68) !important;
+    text-align: left !important;
+    font-size: 0.98rem !important;
+    line-height: 1.45 !important;
+    font-weight: 750 !important;
+  }
+
+  .fromone-mobile-review-list {
+    width: 100% !important;
+    max-width: 430px !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 22px !important;
+  }
+
+  .fromone-mobile-phone-card {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-radius: 34px !important;
+    border: 1px solid rgba(32, 212, 178, 0.38) !important;
+    background:
+      linear-gradient(180deg, #182133 0%, #171b2c 48%, #191529 100%) !important;
+    color: #ffffff !important;
+    box-shadow:
+      0 28px 74px rgba(0, 0, 0, 0.48),
+      0 0 0 1px rgba(255, 212, 59, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    transform: translateZ(0) !important;
+  }
+
+  .fromone-mobile-phone-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: 36px;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(255, 212, 59, 0.36), transparent 28%),
+      radial-gradient(circle at 100% 6%, rgba(255, 42, 117, 0.22), transparent 34%),
+      linear-gradient(135deg, rgba(255, 212, 59, 0.22), rgba(18, 208, 255, 0.14));
+    filter: blur(10px);
+    opacity: 0.62;
+    pointer-events: none;
+  }
+
+  .fromone-mobile-media-wrap {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 10px 10px 0 !important;
+    border-radius: 34px 34px 0 0 !important;
+    background: #182133 !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+  }
+
+  .fromone-mobile-media-wrap::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .fromone-mobile-media-wrap img,
+  .fromone-mobile-media-wrap video {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    border-radius: 24px 24px 10px 10px !important;
+    background: #182133 !important;
+  }
+
+  .fromone-mobile-flyer-placeholder {
+    display: grid !important;
+    place-items: center !important;
+    align-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-height: 240px !important;
+    padding: 24px !important;
+    color: #071225 !important;
+    text-align: center !important;
+    border-radius: 24px 24px 10px 10px !important;
+    background:
+      radial-gradient(circle at top, rgba(255, 212, 59, 0.35), transparent 36%),
+      #eef2ff !important;
+  }
+
+  .fromone-mobile-flyer-placeholder strong {
+    font-size: 1.25rem !important;
+    font-weight: 1000 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .fromone-mobile-flyer-placeholder span {
+    color: #475569 !important;
+    font-size: 0.92rem !important;
+    font-weight: 750 !important;
+    line-height: 1.35 !important;
+  }
+
+  .fromone-mobile-card-body {
+    margin: 0 !important;
+    padding: 22px 20px 22px !important;
+    border-radius: 0 !important;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(255, 212, 59, 0.08), transparent 28%),
+      linear-gradient(180deg, #20283a 0%, #171d2f 100%) !important;
+    color: #ffffff !important;
+  }
+
+  .fromone-mobile-card-count {
+    margin: 0 0 13px !important;
+    color: #ffd43b !important;
+    text-align: left !important;
+    font-size: 0.84rem !important;
+    line-height: 1 !important;
+    font-weight: 1000 !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+  }
+
+  .fromone-mobile-card-body h2 {
+    margin: 0 0 14px !important;
+    color: #ffffff !important;
+    text-align: left !important;
+    font-size: clamp(1.32rem, 5.25vw, 1.62rem) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.055em !important;
+    font-weight: 1000 !important;
+    text-wrap: balance !important;
+  }
+
+  .fromone-mobile-caption {
+    margin: 0 !important;
+    color: rgba(255, 255, 255, 0.72) !important;
+    text-align: left !important;
+    font-size: clamp(1rem, 3.8vw, 1.12rem) !important;
+    line-height: 1.5 !important;
+    font-weight: 650 !important;
+    letter-spacing: -0.018em !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .fromone-mobile-hashtags {
+    display: none !important;
+  }
+
+  .fromone-mobile-actions {
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 0 auto !important;
+    padding: 0 20px 22px !important;
     display: grid !important;
     grid-template-columns: 1fr !important;
     gap: 12px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
+    align-items: stretch !important;
   }
 
-  .fromone-posts-hero-actions button,
-  .fromone-posts-hero-actions a {
+  .fromone-mobile-actions > * {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     width: 100% !important;
     min-height: 58px !important;
-    justify-content: center !important;
+    border-radius: 21px !important;
+    font-size: 1rem !important;
+    font-weight: 1000 !important;
+    letter-spacing: -0.02em !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+  }
+
+  .fromone-mobile-review-button,
+  .fromone-mobile-actions > *:first-child {
+    border: 0 !important;
+    background:
+      linear-gradient(180deg, #ffd43b 0%, #ffc021 100%) !important;
+    color: #061225 !important;
+    box-shadow:
+      0 16px 34px rgba(255, 192, 31, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+
+  .fromone-mobile-actions > *:nth-child(2),
+  .fromone-mobile-delete-button,
+  .fromone-mobile-actions button[type='button']:not(:first-child) {
+    border: 1px solid rgba(255, 89, 122, 0.52) !important;
+    background:
+      linear-gradient(180deg, rgba(86, 48, 66, 0.46), rgba(42, 27, 43, 0.54)) !important;
+    color: #ffd0d8 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+  }
+
+  .fromone-mobile-review-button:hover,
+  .fromone-mobile-actions > *:first-child:hover {
+    filter: brightness(1.02) !important;
+  }
+
+  .fromone-mobile-actions > *:active {
+    transform: translateY(1px) !important;
+  }
+
+  .fromone-mobile-safe-note {
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 16px auto 0 !important;
+    color: rgba(255, 255, 255, 0.62) !important;
+    text-align: center !important;
+    font-size: 0.98rem !important;
+    line-height: 1.35 !important;
+    font-weight: 850 !important;
+  }
+
+  .posts-weekly-card-grid .fromone-premium-calendar-review-card:nth-of-type(n + 2),
+  .posts-weekly-review-section,
+  .fromone-posts-hero-card,
+  .posts-onboarding-helper-card {
+    display: none !important;
   }
 }
 
-@media (max-width: 420px) {
-  .fromone-posts-hero-card {
-    padding: 22px;
-    border-radius: 28px;
+@media (max-width: 430px) {
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    padding-top: 22px !important;
   }
 
-  .fromone-posts-hero-copy .page-title {
-    font-size: clamp(2.4rem, 14vw, 3.35rem) !important;
+  .fromone-mobile-ready-flow,
+  .fromone-mobile-phone-card,
+  .fromone-mobile-actions,
+  .fromone-mobile-safe-note {
+    max-width: 398px !important;
+  }
+
+  .fromone-mobile-ready-flow h1 {
+    max-width: 398px !important;
+    font-size: clamp(2.15rem, 10.2vw, 2.8rem) !important;
+  }
+
+  .fromone-mobile-phone-card {
+    border-radius: 31px !important;
+  }
+
+  .fromone-mobile-media-wrap {
+    padding: 9px 9px 0 !important;
+    border-radius: 31px 31px 0 0 !important;
+    background: #182133 !important;
+  }
+
+  .fromone-mobile-media-wrap img,
+  .fromone-mobile-media-wrap video {
+    border-radius: 22px 22px 9px 9px !important;
+    background: #182133 !important;
+  }
+
+  .fromone-mobile-card-body {
+    margin: 0 !important;
+    padding: 20px 19px 21px !important;
+    border-radius: 0 !important;
+  }
+
+  .fromone-mobile-actions {
+    padding: 0 19px 21px !important;
+    gap: 11px !important;
+  }
+
+  .fromone-mobile-actions > * {
+    min-height: 56px !important;
+    border-radius: 20px !important;
+  }
+}
+
+@media (max-width: 370px) {
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .fromone-mobile-card-body {
+    padding: 18px 17px 19px !important;
+  }
+
+  .fromone-mobile-actions {
+    padding-left: 17px !important;
+    padding-right: 17px !important;
+  }
+
+  .fromone-mobile-ready-flow h1 {
+    font-size: 2.08rem !important;
+  }
+}
+
+/* Hide duplicate centre FromOne logo on mobile Posts page.
+   The top account bar already shows the FromOne logo + hamburger. */
+@media (max-width: 900px) {
+  .fromone-mobile-ready-brand {
+    display: none !important;
+  }
+
+  .fromone-mobile-ready-flow h1 {
+    margin-top: 8px !important;
+  }
+}
+
+/* Final mobile page background cleanup.
+   Keep the post cards premium, but remove the purple/radial page background. */
+@media (max-width: 900px) {
+  html,
+  body,
+  body:has(.fromone-mobile-ready-flow),
+  body:has(.fromone-mobile-ready-flow) .app-shell,
+  body:has(.fromone-mobile-ready-flow) .main-content,
+  body:has(.fromone-mobile-ready-flow) .main-content.fromone-mobile-bottom-safe,
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page {
+    background: #050b18 !important;
+  }
+
+  .fromone-mobile-ready-flow {
+    background: transparent !important;
+  }
+}
+
+/* Final global background cleanup.
+   Remove the purple/radial background on desktop as well as mobile.
+   Cards stay dark/premium, but the page shell is flat and clean. */
+html,
+body,
+.app-shell,
+.main-content,
+.main-content.fromone-mobile-bottom-safe,
+.campaign-brand-shell.simplified-posts-page,
+.simplified-posts-page {
+  background: #050b18 !important;
+}
+
+/* Desktop posts page: remove decorative purple/radial hero/card gradients. */
+.simplified-posts-page .premium-card,
+.simplified-posts-page .fromone-posts-hero-card,
+.simplified-posts-page .posts-weekly-review-section,
+.simplified-posts-page .posts-weekly-card-grid,
+.simplified-posts-page .posts-onboarding-helper-card,
+.simplified-posts-page section {
+  background: #111827 !important;
+}
+
+/* Keep individual mobile review cards styled separately on mobile. */
+@media (max-width: 900px) {
+  .fromone-mobile-phone-card {
+    background:
+      linear-gradient(180deg, #182133 0%, #171b2c 48%, #191529 100%) !important;
+  }
+
+  .fromone-mobile-card-body {
+    background:
+      linear-gradient(180deg, #20283a 0%, #171d2f 100%) !important;
+  }
+}
+
+/* Final mobile content background removal.
+   The area behind "Your posts are ready" should be transparent/flat,
+   not a separate dark rectangle. */
+@media (max-width: 900px) {
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page,
+  .fromone-mobile-ready-flow,
+  .fromone-mobile-review-list {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow),
+  body:has(.fromone-mobile-ready-flow) .app-shell,
+  body:has(.fromone-mobile-ready-flow) .main-content,
+  body:has(.fromone-mobile-ready-flow) .main-content.fromone-mobile-bottom-safe {
+    background: #050b18 !important;
+    background-color: #050b18 !important;
+  }
+
+  /* Keep only the actual post cards as cards. */
+  .fromone-mobile-phone-card {
+    border: 1px solid rgba(32, 212, 178, 0.38) !important;
+    background: linear-gradient(180deg, #182133 0%, #171b2c 48%, #191529 100%) !important;
+    box-shadow:
+      0 28px 74px rgba(0, 0, 0, 0.48),
+      0 0 0 1px rgba(255, 212, 59, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .fromone-mobile-ready-flow::before,
+  .fromone-mobile-ready-flow::after,
+  .simplified-posts-page::before,
+  .simplified-posts-page::after,
+  .campaign-brand-shell.simplified-posts-page::before,
+  .campaign-brand-shell.simplified-posts-page::after {
+    display: none !important;
+    content: none !important;
+    background: transparent !important;
+  }
+}
+
+/* Hard remove the remaining mobile header/content slab.
+   Make every Posts page wrapper the same flat dark colour so there is no
+   visible rectangle behind the heading or queue. */
+@media (max-width: 900px) {
+  html,
+  body,
+  #__next,
+  .app-shell,
+  .main-content,
+  .main-content.fromone-mobile-bottom-safe,
+  body:has(.fromone-mobile-ready-flow),
+  body:has(.fromone-mobile-ready-flow) .app-shell,
+  body:has(.fromone-mobile-ready-flow) .main-content,
+  body:has(.fromone-mobile-ready-flow) .main-content.fromone-mobile-bottom-safe,
+  .campaign-brand-shell,
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page,
+  .fromone-mobile-ready-flow,
+  .fromone-mobile-review-list {
+    background: #050b18 !important;
+    background-color: #050b18 !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 18px 14px 126px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .fromone-mobile-ready-flow,
+  .fromone-mobile-review-list,
+  .fromone-mobile-ready-flow h1,
+  .fromone-mobile-ready-flow > p,
+  .fromone-mobile-ready-subtitle {
+    width: 100% !important;
+    max-width: 430px !important;
+  }
+
+  .fromone-mobile-ready-flow {
+    margin: 0 auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .fromone-mobile-ready-flow::before,
+  .fromone-mobile-ready-flow::after,
+  .fromone-mobile-review-list::before,
+  .fromone-mobile-review-list::after,
+  .simplified-posts-page::before,
+  .simplified-posts-page::after,
+  .campaign-brand-shell.simplified-posts-page::before,
+  .campaign-brand-shell.simplified-posts-page::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Keep only each actual post as a visible card. */
+  .fromone-mobile-phone-card {
+    border-radius: 34px !important;
+    border: 1px solid rgba(32, 212, 178, 0.38) !important;
+    background: linear-gradient(180deg, #182133 0%, #171b2c 48%, #191529 100%) !important;
+    box-shadow:
+      0 28px 74px rgba(0, 0, 0, 0.48),
+      0 0 0 1px rgba(255, 212, 59, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+/* Remove the final safety note under the mobile review queue.
+   The Review buttons already make the flow clear. */
+@media (max-width: 900px) {
+  .fromone-mobile-safe-note,
+  .fromone-mobile-ready-flow > .fromone-mobile-safe-note,
+  .fromone-mobile-review-list + .fromone-mobile-safe-note {
+    display: none !important;
+  }
+
+  .fromone-mobile-review-list {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .fromone-mobile-ready-flow {
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Keep the mobile intro text, but remove the visible panel/slab behind it. */
+@media (max-width: 900px) {
+  .fromone-mobile-ready-flow h1,
+  .fromone-mobile-ready-flow > p,
+  .fromone-mobile-ready-subtitle {
+    display: block !important;
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page,
+  .fromone-mobile-ready-flow,
+  .fromone-mobile-review-list {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow),
+  body:has(.fromone-mobile-ready-flow) .app-shell,
+  body:has(.fromone-mobile-ready-flow) .main-content,
+  body:has(.fromone-mobile-ready-flow) .main-content.fromone-mobile-bottom-safe {
+    background: #050b18 !important;
+    background-color: #050b18 !important;
+    background-image: none !important;
+  }
+
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 18px 14px 126px !important;
+    border-radius: 0 !important;
+  }
+
+  .fromone-mobile-ready-flow {
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+}
+
+/* FINAL: remove the remaining mobile intro/card slab.
+   This targets the specific Posts mobile wrapper with higher specificity than
+   the desktop .premium-card / section background rules. */
+@media (max-width: 900px) {
+  body:has(.fromone-mobile-ready-flow),
+  body:has(.fromone-mobile-ready-flow) .app-shell,
+  body:has(.fromone-mobile-ready-flow) .main-content,
+  body:has(.fromone-mobile-ready-flow) .main-content.fromone-mobile-bottom-safe {
+    background: #050b18 !important;
+    background-color: #050b18 !important;
+    background-image: none !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .campaign-brand-shell,
+  body:has(.fromone-mobile-ready-flow) .campaign-brand-shell.simplified-posts-page,
+  body:has(.fromone-mobile-ready-flow) .simplified-posts-page,
+  body:has(.fromone-mobile-ready-flow) .simplified-posts-page > section,
+  body:has(.fromone-mobile-ready-flow) .simplified-posts-page > .premium-card,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow.premium-card,
+  body:has(.fromone-mobile-ready-flow) .premium-card.fromone-mobile-ready-flow,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-review-list {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .campaign-brand-shell.simplified-posts-page,
+  body:has(.fromone-mobile-ready-flow) .simplified-posts-page {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 18px 14px 126px !important;
+    border-radius: 0 !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow {
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow h1,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow > p,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-subtitle {
+    display: block !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow::before,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow::after,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-review-list::before,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-review-list::after,
+  body:has(.fromone-mobile-ready-flow) .simplified-posts-page::before,
+  body:has(.fromone-mobile-ready-flow) .simplified-posts-page::after,
+  body:has(.fromone-mobile-ready-flow) .campaign-brand-shell.simplified-posts-page::before,
+  body:has(.fromone-mobile-ready-flow) .campaign-brand-shell.simplified-posts-page::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Keep the actual post cards visible. */
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-phone-card {
+    border-radius: 34px !important;
+    border: 1px solid rgba(32, 212, 178, 0.38) !important;
+    background: linear-gradient(180deg, #182133 0%, #171b2c 48%, #191529 100%) !important;
+    box-shadow:
+      0 28px 74px rgba(0, 0, 0, 0.48),
+      0 0 0 1px rgba(255, 212, 59, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-card-body {
+    background: linear-gradient(180deg, #20283a 0%, #171d2f 100%) !important;
+  }
+}
+
+/* FINAL NAV/SPACING NORMALISATION FOR POSTS
+   Matches the review page spacing below the shared mobile top nav. */
+@media (max-width: 900px) {
+  body:has(.fromone-mobile-ready-flow) .main-content,
+  body:has(.fromone-mobile-ready-flow) .main-content.fromone-mobile-bottom-safe {
+    padding-top: 0 !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .campaign-brand-shell.simplified-posts-page,
+  body:has(.fromone-mobile-ready-flow) .simplified-posts-page {
+    padding-top: 14px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow {
+    margin-top: 0 !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow h1 {
+    margin-top: 0 !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-safe-note {
+    display: none !important;
+  }
+}
+
+/* Mobile post status pills: Ready / Autoscheduled / Posted */
+@media (max-width: 900px) {
+  .fromone-mobile-card-meta-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin: 0 0 13px !important;
+  }
+
+  .fromone-mobile-card-meta-row .fromone-mobile-card-count {
+    margin: 0 !important;
+  }
+
+  .fromone-mobile-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 26px !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 0.7rem !important;
+    line-height: 1 !important;
+    font-weight: 1000 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  .fromone-mobile-status-pill.is-ready {
+    border: 1px solid rgba(255, 212, 59, 0.36) !important;
+    background: rgba(255, 212, 59, 0.1) !important;
+    color: #ffd43b !important;
+  }
+
+  .fromone-mobile-status-pill.is-autoscheduled,
+  .fromone-mobile-status-pill.is-approved {
+    border: 1px solid rgba(56, 189, 248, 0.36) !important;
+    background: rgba(56, 189, 248, 0.12) !important;
+    color: #93e4ff !important;
+  }
+
+  .fromone-mobile-status-pill.is-posted {
+    border: 1px solid rgba(34, 197, 94, 0.36) !important;
+    background: rgba(34, 197, 94, 0.12) !important;
+    color: #86efac !important;
+  }
+}
+
+/* Strong status pill styles */
+@media (max-width: 900px) {
+  .fromone-mobile-card-meta-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin: 0 0 13px !important;
+  }
+
+  .fromone-mobile-card-meta-row .fromone-mobile-card-count {
+    margin: 0 !important;
+  }
+
+  .fromone-mobile-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 26px !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 0.68rem !important;
+    line-height: 1 !important;
+    font-weight: 1000 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  .fromone-mobile-status-pill.is-ready {
+    border: 1px solid rgba(255, 212, 59, 0.36) !important;
+    background: rgba(255, 212, 59, 0.1) !important;
+    color: #ffd43b !important;
+  }
+
+  .fromone-mobile-status-pill.is-autoscheduled,
+  .fromone-mobile-status-pill.is-approved {
+    border: 1px solid rgba(56, 189, 248, 0.36) !important;
+    background: rgba(56, 189, 248, 0.12) !important;
+    color: #93e4ff !important;
+  }
+
+  .fromone-mobile-status-pill.is-posted {
+    border: 1px solid rgba(34, 197, 94, 0.36) !important;
+    background: rgba(34, 197, 94, 0.12) !important;
+    color: #86efac !important;
+  }
+}
+
+/* Guaranteed mobile pill position inside each mobile post card */
+@media (max-width: 900px) {
+  .fromone-mobile-card-status-row {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0 0 12px !important;
+  }
+
+  .fromone-mobile-card-status-row .fromone-mobile-status-pill {
+    display: inline-flex !important;
+  }
+}
+
+/* Single post method pill: Manual / Autoscheduled / Posted */
+@media (max-width: 900px) {
+  .fromone-mobile-card-status-row {
+    display: none !important;
+  }
+
+  .fromone-mobile-card-meta-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin: 0 0 13px !important;
+  }
+
+  .fromone-mobile-card-meta-row .fromone-mobile-card-count {
+    margin: 0 !important;
+  }
+
+  .fromone-mobile-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 26px !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 0.68rem !important;
+    line-height: 1 !important;
+    font-weight: 1000 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  .fromone-mobile-status-pill.is-manual {
+    border: 1px solid rgba(255, 212, 59, 0.36) !important;
+    background: rgba(255, 212, 59, 0.1) !important;
+    color: #ffd43b !important;
+  }
+
+  .fromone-mobile-status-pill.is-autoscheduled {
+    border: 1px solid rgba(56, 189, 248, 0.36) !important;
+    background: rgba(56, 189, 248, 0.12) !important;
+    color: #93e4ff !important;
+  }
+
+  .fromone-mobile-status-pill.is-posted {
+    border: 1px solid rgba(34, 197, 94, 0.36) !important;
+    background: rgba(34, 197, 94, 0.12) !important;
+    color: #86efac !important;
+  }
+}
+
+/* Guaranteed single method pill on mobile cards.
+   Shows Manual / Autoscheduled / Posted just above the card actions. */
+@media (max-width: 900px) {
+  .fromone-mobile-card-status-row,
+  .fromone-mobile-card-meta-row .fromone-mobile-status-pill {
+    display: none !important;
+  }
+
+  .fromone-mobile-method-row {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 0 auto !important;
+    padding: 0 20px 12px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+  }
+
+  .fromone-mobile-method-pill {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 28px !important;
+    padding: 0 11px !important;
+    border-radius: 999px !important;
+    font-size: 0.7rem !important;
+    line-height: 1 !important;
+    font-weight: 1000 !important;
+    letter-spacing: 0.055em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  .fromone-mobile-method-pill.is-manual {
+    border: 1px solid rgba(255, 212, 59, 0.36) !important;
+    background: rgba(255, 212, 59, 0.1) !important;
+    color: #ffd43b !important;
+  }
+
+  .fromone-mobile-method-pill.is-autoscheduled {
+    border: 1px solid rgba(56, 189, 248, 0.36) !important;
+    background: rgba(56, 189, 248, 0.12) !important;
+    color: #93e4ff !important;
+  }
+
+  .fromone-mobile-method-pill.is-posted {
+    border: 1px solid rgba(34, 197, 94, 0.36) !important;
+    background: rgba(34, 197, 94, 0.12) !important;
+    color: #86efac !important;
+  }
+}
+
+/* Polish mobile card bottom: remove action block slab and centre the safety note */
+@media (max-width: 900px) {
+  .fromone-mobile-actions {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
+  .fromone-mobile-phone-card,
+  .fromone-mobile-card-body {
+    background-clip: padding-box !important;
+  }
+
+  .fromone-mobile-method-row {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  .fromone-mobile-safe-note {
+    display: block !important;
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 18px auto 0 !important;
+    padding: 0 18px !important;
+    color: rgba(255, 255, 255, 0.62) !important;
+    text-align: center !important;
+    font-size: 0.96rem !important;
+    line-height: 1.35 !important;
+    font-weight: 850 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* FINAL card bottom polish.
+   1) Remove the separate darker action band behind the pill/button.
+   2) Centre the safety note and add clear spacing below the card. */
+@media (max-width: 900px) {
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-phone-card {
+    background: #182133 !important;
+    background-color: #182133 !important;
+    background-image: none !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-card-body,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-method-row,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-actions {
+    background: #182133 !important;
+    background-color: #182133 !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-card-body {
+    padding-bottom: 16px !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-method-row {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 20px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-actions {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 20px 24px !important;
+    box-sizing: border-box !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-actions > * {
+    box-shadow:
+      0 14px 30px rgba(255, 192, 31, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.32) !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-safe-note,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-review-list + .fromone-mobile-safe-note,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow > .fromone-mobile-safe-note {
+    display: block !important;
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 26px auto 0 !important;
+    padding: 0 22px !important;
+    color: rgba(255, 255, 255, 0.62) !important;
+    text-align: center !important;
+    font-size: 0.96rem !important;
+    line-height: 1.35 !important;
+    font-weight: 850 !important;
+    box-sizing: border-box !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-review-list {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
 }

@@ -2524,13 +2524,16 @@ If uploads are supplied:
   };
 
   const togglePlatform = (platformName: string) => {
+    const isOnlySelectedPlatform =
+      selectedPlatforms.includes(platformName) && selectedPlatforms.length === 1;
+
+    if (isOnlySelectedPlatform) {
+      notify("Please choose at least one platform.", "warning", "Platform needed");
+      return;
+    }
+
     setSelectedPlatforms((currentPlatforms) => {
       if (currentPlatforms.includes(platformName)) {
-        if (currentPlatforms.length === 1) {
-          notify("Please choose at least one platform.", "warning", "Platform needed");
-          return currentPlatforms;
-        }
-
         return currentPlatforms.filter((item) => item !== platformName);
       }
 
@@ -2663,10 +2666,7 @@ If uploads are supplied:
           <div
             style={{
               display: "grid",
-              gridTemplateColumns:
-                typeof window !== "undefined" && window.innerWidth <= 760
-                  ? "1fr"
-                  : "repeat(3, minmax(0, 1fr))",
+              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
               gap: 12,
               marginBottom: 18,
             }}
@@ -3902,26 +3902,7 @@ If uploads are supplied:
     font-size: 0 !important;
     line-height: 0 !important;
   }
-
-  .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
-    content: "<span className="dashboard-first-upload-helper">Start here: add a photo, video or flyer. FromOne will turn it into posts you can review.</span>
-                Click here to upload";
-    min-height: 54px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 22px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, #ffd43b, #f7b733);
-    color: #101420;
-    font-size: 1rem;
-    line-height: 1;
-    font-weight: 1000;
-    letter-spacing: -0.01em;
-    box-shadow: 0 16px 38px rgba(255, 212, 59, 0.18);
-  }
-
-  .dashboard-upload-dropzone > span > strong,
+.dashboard-upload-dropzone > span > strong,
   .dashboard-upload-dropzone h2,
   .dashboard-upload-dropzone h3 {
     margin-top: 2px !important;
@@ -3955,17 +3936,7 @@ If uploads are supplied:
       line-height: 1.05 !important;
       white-space: nowrap !important;
     }
-
-    .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
-      content: "+";
-      width: 54px;
-      height: 54px;
-      min-height: 54px;
-      padding: 0;
-      border-radius: 17px;
-      font-size: 1.6rem;
-    }
-  }
+}
 
 
   /* Agency-standard dashboard redesign */
@@ -4120,25 +4091,7 @@ If uploads are supplied:
     font-size: 0 !important;
     line-height: 0 !important;
   }
-
-  .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
-    content: "Click here to upload";
-    min-height: 58px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 26px !important;
-    border-radius: 19px !important;
-    background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-    color: #101420 !important;
-    font-size: 1.02rem !important;
-    line-height: 1 !important;
-    font-weight: 1000 !important;
-    letter-spacing: -0.01em !important;
-    box-shadow: 0 18px 44px rgba(255, 212, 59, 0.18) !important;
-  }
-
-  .dashboard-mobile-capture-actions {
+.dashboard-mobile-capture-actions {
     display: none !important;
   }
 
@@ -4211,18 +4164,7 @@ If uploads are supplied:
       line-height: 1.05 !important;
       white-space: nowrap !important;
     }
-
-    .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
-      content: "+";
-      width: 54px !important;
-      height: 54px !important;
-      min-height: 54px !important;
-      padding: 0 !important;
-      border-radius: 17px !important;
-      font-size: 1.6rem !important;
-    }
-
-    .dashboard-weekly-upload-grid {
+.dashboard-weekly-upload-grid {
       grid-template-columns: 1fr !important;
     }
 
@@ -4252,21 +4194,8 @@ If uploads are supplied:
 
 
   /* Centre the upload plus icon */
-  .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
-    display: inline-grid !important;
-    place-items: center !important;
-    text-align: center !important;
-    line-height: 1 !important;
-  }
-
-  @media (max-width: 760px) {
-    .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before {
-      display: inline-grid !important;
-      place-items: center !important;
-      text-align: center !important;
-      line-height: 1 !important;
-    }
-  }
+@media (max-width: 760px) {
+}
 
 
   /* Final upload icon and mobile button fix */
@@ -5432,6 +5361,2980 @@ If uploads are supplied:
           }
         }
 
+
+        /* ------------------------------------------------------------------ */
+        /* Final Dashboard polish — simple client create page                  */
+        /* Keeps logic intact. Visual/text polish only.                        */
+        /* ------------------------------------------------------------------ */
+
+        .dashboard-final-card {
+          overflow: hidden !important;
+          border-color: rgba(255, 212, 59, 0.22) !important;
+          background:
+            radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.13), transparent 34%),
+            linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.028)) !important;
+        }
+
+        .dashboard-final-hero {
+          max-width: 860px !important;
+          margin-bottom: 22px !important;
+        }
+
+        .dashboard-final-hero .page-eyebrow {
+          color: #ffd43b !important;
+        }
+
+        .dashboard-final-hero .page-title {
+          max-width: 860px !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          font-size: clamp(3rem, 5.4vw, 5.3rem) !important;
+          line-height: 0.9 !important;
+          letter-spacing: -0.075em !important;
+        }
+
+        .dashboard-final-hero .page-description {
+          max-width: 720px !important;
+          color: rgba(248, 250, 252, 0.76) !important;
+          font-size: clamp(1rem, 1.25vw, 1.16rem) !important;
+          line-height: 1.55 !important;
+          font-weight: 820 !important;
+        }
+
+        .dashboard-quick-start-cards {
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 12px !important;
+          margin: 0 0 18px !important;
+        }
+
+        .dashboard-quick-start-card {
+          min-height: 138px !important;
+          padding: 17px !important;
+          border-radius: 22px !important;
+          background: rgba(2, 6, 23, 0.34) !important;
+          border: 1px solid rgba(255,255,255,0.09) !important;
+          box-shadow: none !important;
+        }
+
+        .dashboard-quick-start-card.is-active,
+        .dashboard-quick-start-card.is-complete {
+          border-color: rgba(255, 212, 59, 0.22) !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.10), transparent 45%),
+            rgba(2, 6, 23, 0.34) !important;
+        }
+
+        .dashboard-quick-start-card > span:first-child {
+          min-width: 34px !important;
+          min-height: 28px !important;
+          padding: 0 10px !important;
+          border-radius: 999px !important;
+          background: rgba(255, 212, 59, 0.12) !important;
+          border: 1px solid rgba(255, 212, 59, 0.18) !important;
+          color: #ffd43b !important;
+        }
+
+        .dashboard-quick-start-card strong {
+          color: #ffffff !important;
+          font-size: 1.02rem !important;
+          letter-spacing: -0.025em !important;
+        }
+
+        .dashboard-quick-start-card p {
+          min-height: 48px !important;
+          color: rgba(248,250,252,0.68) !important;
+          font-size: 0.9rem !important;
+          line-height: 1.42 !important;
+        }
+
+        .dashboard-quick-start-link {
+          background: rgba(255,255,255,0.06) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          color: #ffffff !important;
+        }
+
+        .dashboard-guided-week-card {
+          margin: 0 0 18px !important;
+          padding: 16px 18px !important;
+          border-radius: 22px !important;
+          background:
+            radial-gradient(circle at top left, rgba(255, 212, 59, 0.11), transparent 42%),
+            rgba(255, 212, 59, 0.055) !important;
+        }
+
+        .dashboard-guided-week-card strong {
+          font-size: clamp(1.18rem, 1.8vw, 1.62rem) !important;
+        }
+
+        .dashboard-guided-week-card p {
+          max-width: 900px !important;
+        }
+
+        .dashboard-upload-dropzone {
+          min-height: 245px !important;
+          border-radius: 30px !important;
+          border-color: rgba(255, 212, 59, 0.32) !important;
+          background:
+            radial-gradient(circle at top, rgba(255, 212, 59, 0.14), transparent 36%),
+            rgba(2, 6, 23, 0.42) !important;
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.075),
+            0 22px 60px rgba(0,0,0,0.18) !important;
+        }
+
+        .dashboard-mobile-upload-title {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-height: 32px !important;
+          padding: 0 13px !important;
+          border-radius: 999px !important;
+          background: rgba(255, 212, 59, 0.12) !important;
+          border: 1px solid rgba(255, 212, 59, 0.18) !important;
+          color: #ffd43b !important;
+          font-size: 0.75rem !important;
+          font-weight: 1000 !important;
+          letter-spacing: 0.1em !important;
+          text-transform: uppercase !important;
+        }
+
+        .dashboard-upload-type-grid {
+          margin-top: 14px !important;
+          margin-bottom: 12px !important;
+        }
+
+        .dashboard-upload-type-card {
+          background: rgba(2, 6, 23, 0.34) !important;
+          border-color: rgba(255,255,255,0.1) !important;
+        }
+
+        .dashboard-upload-type-card:hover {
+          border-color: rgba(255, 212, 59, 0.26) !important;
+        }
+
+        .dashboard-one-upload-note,
+        .dashboard-review-reassurance,
+        .dashboard-nothing-published-note {
+          width: min(100%, 760px) !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          text-align: center !important;
+        }
+
+        .dashboard-one-upload-note {
+          color: rgba(248,250,252,0.74) !important;
+          font-size: 0.96rem !important;
+        }
+
+        .dashboard-review-reassurance {
+          margin-top: 2px !important;
+          color: rgba(255, 212, 59, 0.82) !important;
+          font-size: 0.92rem !important;
+          font-weight: 950 !important;
+        }
+
+        .dashboard-nothing-published-note {
+          color: rgba(248,250,252,0.58) !important;
+          font-size: 0.9rem !important;
+        }
+
+        .dashboard-platform-create-button {
+          min-height: 70px !important;
+          border-radius: 23px !important;
+          font-size: 1.14rem !important;
+          letter-spacing: -0.015em !important;
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-final-card {
+            padding: 18px 14px 22px !important;
+            border-radius: 28px !important;
+          }
+
+          .dashboard-final-hero {
+            max-width: 100% !important;
+            text-align: center !important;
+            margin-bottom: 16px !important;
+          }
+
+          .dashboard-final-hero .page-title {
+            font-size: clamp(2.55rem, 13vw, 3.45rem) !important;
+            line-height: 0.88 !important;
+            margin-top: 8px !important;
+          }
+
+          .dashboard-final-hero .page-description {
+            max-width: 340px !important;
+            font-size: 0.94rem !important;
+          }
+
+          .dashboard-quick-start-cards {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+
+          .dashboard-quick-start-card {
+            min-height: 0 !important;
+            grid-template-columns: auto minmax(0, 1fr) !important;
+            grid-template-rows: auto auto auto !important;
+            column-gap: 12px !important;
+            row-gap: 5px !important;
+            text-align: left !important;
+            justify-items: stretch !important;
+            align-items: start !important;
+            padding: 14px !important;
+          }
+
+          .dashboard-quick-start-card > span:first-child {
+            grid-row: 1 / 4 !important;
+            justify-self: start !important;
+            margin-top: 1px !important;
+          }
+
+          .dashboard-quick-start-card strong,
+          .dashboard-quick-start-card p,
+          .dashboard-quick-start-link {
+            grid-column: 2 !important;
+            justify-self: start !important;
+            min-height: 0 !important;
+          }
+
+          .dashboard-quick-start-card p {
+            margin: 0 !important;
+            font-size: 0.86rem !important;
+          }
+
+          .dashboard-quick-start-link {
+            min-height: 34px !important;
+            padding: 0 12px !important;
+            margin-top: 2px !important;
+            font-size: 0.82rem !important;
+          }
+
+          .dashboard-guided-week-card {
+            text-align: center !important;
+            padding: 15px !important;
+          }
+
+          .dashboard-guided-week-card span {
+            margin-inline: auto !important;
+          }
+
+          .dashboard-upload-dropzone {
+            min-height: 222px !important;
+            padding: 18px 12px !important;
+            border-radius: 26px !important;
+          }
+
+          .dashboard-upload-type-grid {
+            grid-template-columns: 1fr !important;
+            max-width: 285px !important;
+            gap: 9px !important;
+          }
+
+          .dashboard-upload-type-card {
+            min-height: 84px !important;
+            grid-template-columns: 48px minmax(0, 1fr) !important;
+            place-items: center start !important;
+            text-align: left !important;
+            padding: 12px !important;
+          }
+
+          .dashboard-upload-type-card strong,
+          .dashboard-upload-type-card small {
+            text-align: left !important;
+          }
+
+          .dashboard-upload-type-card small {
+            grid-column: 2 !important;
+          }
+
+          .dashboard-platform-grid {
+            display: none !important;
+          }
+
+          .dashboard-platform-create-button {
+            min-height: 64px !important;
+            font-size: 1.05rem !important;
+          }
+        }
+
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard polish v2 — calmer desktop create page                    */
+        /* Keep the page focused: hero, upload, create.                        */
+        /* ------------------------------------------------------------------ */
+
+        @media (min-width: 901px) {
+          .dashboard-final-card {
+            padding-top: 46px !important;
+            padding-bottom: 44px !important;
+            border-radius: 34px !important;
+            background:
+              radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.10), transparent 30%),
+              linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.022)) !important;
+          }
+
+          .dashboard-final-hero {
+            max-width: 820px !important;
+            margin-bottom: 28px !important;
+          }
+
+          .dashboard-final-hero .page-eyebrow {
+            margin-bottom: 16px !important;
+            font-size: 0.76rem !important;
+            letter-spacing: 0.16em !important;
+          }
+
+          .dashboard-final-hero .page-title {
+            max-width: 760px !important;
+            font-size: clamp(3.65rem, 4.8vw, 5rem) !important;
+            line-height: 0.88 !important;
+            letter-spacing: -0.08em !important;
+          }
+
+          .dashboard-final-hero .page-description {
+            max-width: 650px !important;
+            margin-top: 18px !important;
+            font-size: 1.06rem !important;
+            line-height: 1.52 !important;
+            color: rgba(248, 250, 252, 0.68) !important;
+          }
+
+          /* The three step cards make the desktop feel busy. Hide them. */
+          .dashboard-quick-start-cards {
+            display: none !important;
+          }
+
+          .dashboard-guided-week-card {
+            max-width: 848px !important;
+            margin: 0 auto 24px !important;
+            padding: 14px 18px !important;
+            border-radius: 20px !important;
+            display: grid !important;
+            grid-template-columns: auto 1fr !important;
+            column-gap: 16px !important;
+            align-items: center !important;
+            background: rgba(255, 212, 59, 0.075) !important;
+            border: 1px solid rgba(255, 212, 59, 0.16) !important;
+            box-shadow: none !important;
+          }
+
+          .dashboard-guided-week-card span {
+            margin: 0 !important;
+          }
+
+          .dashboard-guided-week-card strong {
+            font-size: 1.2rem !important;
+            letter-spacing: -0.035em !important;
+          }
+
+          .dashboard-guided-week-card p {
+            max-width: none !important;
+            margin-top: 3px !important;
+            font-size: 0.92rem !important;
+            color: rgba(248, 250, 252, 0.68) !important;
+          }
+
+          .dashboard-upload-dropzone {
+            max-width: 848px !important;
+            min-height: 315px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding: 42px 26px !important;
+            border-radius: 30px !important;
+            background:
+              radial-gradient(circle at 50% 35%, rgba(255, 212, 59, 0.105), transparent 42%),
+              rgba(2, 6, 23, 0.36) !important;
+            border: 1px dashed rgba(255, 212, 59, 0.28) !important;
+            box-shadow: none !important;
+          }
+
+          .dashboard-upload-type-grid {
+            max-width: 470px !important;
+            margin: 0 auto 22px !important;
+            gap: 10px !important;
+          }
+
+          .dashboard-upload-type-card {
+            min-height: 88px !important;
+            padding: 13px !important;
+            border-radius: 18px !important;
+            background: rgba(255,255,255,0.035) !important;
+          }
+
+          .dashboard-upload-type-card strong {
+            font-size: 0.9rem !important;
+          }
+
+          .dashboard-upload-type-card small {
+            font-size: 0.72rem !important;
+          }
+
+          .dashboard-upload-dropzone .dashboard-upload-plus,
+          .dashboard-upload-dropzone button[aria-label*="upload"],
+          .dashboard-upload-dropzone button[type="button"] {
+            transform: none !important;
+          }
+
+          /* Hide platform cards on desktop too. They are technical noise here. */
+          .dashboard-platform-grid {
+            display: none !important;
+          }
+
+          .dashboard-platform-create-button {
+            max-width: 848px !important;
+            min-height: 66px !important;
+            margin: 22px auto 0 !important;
+            border-radius: 22px !important;
+            font-size: 1.08rem !important;
+            box-shadow: 0 18px 34px rgba(255, 212, 59, 0.17) !important;
+          }
+
+          .dashboard-review-reassurance {
+            margin-top: 16px !important;
+            font-size: 0.9rem !important;
+            color: rgba(255, 212, 59, 0.78) !important;
+          }
+
+          .dashboard-nothing-published-note {
+            margin-top: 10px !important;
+            color: rgba(248,250,252,0.52) !important;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-quick-start-cards {
+            display: none !important;
+          }
+
+          .dashboard-final-card {
+            padding-top: 24px !important;
+          }
+
+          .dashboard-guided-week-card {
+            margin-bottom: 16px !important;
+          }
+
+          .dashboard-platform-grid {
+            display: none !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard polish v3 — compact platform choice + premium create CTA  */
+        /* ------------------------------------------------------------------ */
+
+        @media (min-width: 901px) {
+          /* Bring platform choice back as simple chips, not big cards */
+          .dashboard-platform-grid {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            max-width: 848px !important;
+            margin: 18px auto 0 !important;
+          }
+
+          .dashboard-platform-grid::before {
+            content: "Post to:";
+            color: rgba(248, 250, 252, 0.72) !important;
+            font-size: 0.88rem !important;
+            font-weight: 950 !important;
+            margin-right: 4px !important;
+          }
+
+          .dashboard-platform-card {
+            width: auto !important;
+            min-width: 0 !important;
+            min-height: 38px !important;
+            padding: 0 14px !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            background: rgba(255, 255, 255, 0.055) !important;
+            border: 1px solid rgba(255, 255, 255, 0.11) !important;
+            box-shadow: none !important;
+            transition:
+              transform 160ms ease,
+              border-color 160ms ease,
+              background 160ms ease !important;
+          }
+
+          .dashboard-platform-card:hover {
+            transform: translateY(-1px) !important;
+            border-color: rgba(255, 212, 59, 0.28) !important;
+          }
+
+          .dashboard-platform-card.is-selected {
+            background: rgba(255, 212, 59, 0.12) !important;
+            border-color: rgba(255, 212, 59, 0.34) !important;
+          }
+
+          .dashboard-platform-card strong {
+            font-size: 0.86rem !important;
+            font-weight: 950 !important;
+            color: #ffffff !important;
+            line-height: 1 !important;
+          }
+
+          .dashboard-platform-card p,
+          .dashboard-platform-card small,
+          .dashboard-platform-card span:not(:first-child) {
+            display: none !important;
+          }
+
+          /* Premium yellow create button */
+          .dashboard-platform-create-button {
+            position: relative !important;
+            isolation: isolate !important;
+            overflow: hidden !important;
+            max-width: 848px !important;
+            min-height: 72px !important;
+            margin: 22px auto 0 !important;
+            border: 0 !important;
+            border-radius: 24px !important;
+            background:
+              radial-gradient(circle at 18% 18%, rgba(255,255,255,0.35), transparent 28%),
+              linear-gradient(135deg, #ffe066 0%, #ffd43b 42%, #ffb703 100%) !important;
+            color: #061225 !important;
+            font-size: 1.12rem !important;
+            font-weight: 1000 !important;
+            letter-spacing: -0.018em !important;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.26) !important;
+            box-shadow:
+              0 20px 42px rgba(255, 212, 59, 0.22),
+              0 9px 18px rgba(0,0,0,0.18),
+              inset 0 1px 0 rgba(255,255,255,0.55),
+              inset 0 -1px 0 rgba(120,74,0,0.18) !important;
+            transition:
+              transform 160ms ease,
+              box-shadow 160ms ease,
+              filter 160ms ease !important;
+          }
+
+          .dashboard-platform-create-button::before {
+            content: "" !important;
+            position: absolute !important;
+            inset: 1px !important;
+            z-index: -1 !important;
+            border-radius: inherit !important;
+            background: linear-gradient(180deg, rgba(255,255,255,0.28), transparent 46%) !important;
+            pointer-events: none !important;
+          }
+
+          .dashboard-platform-create-button:hover:not(:disabled) {
+            transform: translateY(-2px) !important;
+            filter: saturate(1.05) brightness(1.02) !important;
+            box-shadow:
+              0 24px 52px rgba(255, 212, 59, 0.28),
+              0 12px 22px rgba(0,0,0,0.2),
+              inset 0 1px 0 rgba(255,255,255,0.6),
+              inset 0 -1px 0 rgba(120,74,0,0.18) !important;
+          }
+
+          .dashboard-platform-create-button:active:not(:disabled) {
+            transform: translateY(0) scale(0.995) !important;
+          }
+
+          .dashboard-platform-create-button:disabled {
+            opacity: 0.58 !important;
+            cursor: not-allowed !important;
+            filter: grayscale(0.15) !important;
+            box-shadow:
+              0 14px 28px rgba(255, 212, 59, 0.12),
+              inset 0 1px 0 rgba(255,255,255,0.32) !important;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-platform-grid {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            margin: 16px auto 0 !important;
+          }
+
+          .dashboard-platform-grid::before {
+            content: "Post to:" !important;
+            width: 100% !important;
+            text-align: center !important;
+            color: rgba(248, 250, 252, 0.68) !important;
+            font-size: 0.78rem !important;
+            font-weight: 950 !important;
+            margin-bottom: 1px !important;
+          }
+
+          .dashboard-platform-card {
+            width: auto !important;
+            min-width: 0 !important;
+            min-height: 36px !important;
+            padding: 0 12px !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 7px !important;
+            background: rgba(255, 255, 255, 0.055) !important;
+            border: 1px solid rgba(255, 255, 255, 0.11) !important;
+            box-shadow: none !important;
+          }
+
+          .dashboard-platform-card.is-selected {
+            background: rgba(255, 212, 59, 0.12) !important;
+            border-color: rgba(255, 212, 59, 0.34) !important;
+          }
+
+          .dashboard-platform-card strong {
+            font-size: 0.82rem !important;
+            line-height: 1 !important;
+            font-weight: 950 !important;
+          }
+
+          .dashboard-platform-card p,
+          .dashboard-platform-card small,
+          .dashboard-platform-card span:not(:first-child) {
+            display: none !important;
+          }
+
+          .dashboard-platform-create-button {
+            position: relative !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            min-height: 66px !important;
+            margin-top: 18px !important;
+            border: 0 !important;
+            border-radius: 22px !important;
+            background:
+              radial-gradient(circle at 18% 18%, rgba(255,255,255,0.34), transparent 28%),
+              linear-gradient(135deg, #ffe066 0%, #ffd43b 46%, #ffb703 100%) !important;
+            color: #061225 !important;
+            font-size: 1.05rem !important;
+            font-weight: 1000 !important;
+            letter-spacing: -0.018em !important;
+            box-shadow:
+              0 18px 34px rgba(255, 212, 59, 0.22),
+              0 8px 16px rgba(0,0,0,0.18),
+              inset 0 1px 0 rgba(255,255,255,0.52) !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard polish v4 — agency-standard platform selector             */
+        /* Clean, quiet, premium. No chunky yellow blobs.                      */
+        /* ------------------------------------------------------------------ */
+
+        @media (min-width: 901px) {
+          .dashboard-platform-grid {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            max-width: 848px !important;
+            margin: 22px auto 0 !important;
+          }
+
+          .dashboard-platform-grid::before {
+            content: "Post to" !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            height: 34px !important;
+            margin: 0 4px 0 0 !important;
+            color: rgba(248, 250, 252, 0.54) !important;
+            font-size: 0.78rem !important;
+            line-height: 1 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.02em !important;
+          }
+
+          .dashboard-platform-card {
+            position: relative !important;
+            width: auto !important;
+            min-width: 0 !important;
+            min-height: 34px !important;
+            height: 34px !important;
+            padding: 0 13px 0 34px !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
+            background: rgba(255, 255, 255, 0.045) !important;
+            border: 1px solid rgba(255, 255, 255, 0.095) !important;
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.06),
+              0 8px 18px rgba(0,0,0,0.10) !important;
+            color: rgba(248, 250, 252, 0.82) !important;
+            transition:
+              transform 160ms ease,
+              border-color 160ms ease,
+              background 160ms ease,
+              color 160ms ease !important;
+          }
+
+          .dashboard-platform-card:hover {
+            transform: translateY(-1px) !important;
+            border-color: rgba(255, 212, 59, 0.24) !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+          }
+
+          .dashboard-platform-card.is-selected {
+            background: rgba(255, 212, 59, 0.075) !important;
+            border-color: rgba(255, 212, 59, 0.24) !important;
+            color: #ffffff !important;
+          }
+
+          /* Turn the existing yellow icon/check into a small premium tick */
+          .dashboard-platform-card > span:first-child,
+          .dashboard-platform-card > div:first-child {
+            position: absolute !important;
+            left: 10px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 16px !important;
+            height: 16px !important;
+            min-width: 16px !important;
+            min-height: 16px !important;
+            padding: 0 !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #ffd43b !important;
+            border: 0 !important;
+            color: #061225 !important;
+            font-size: 0.66rem !important;
+            line-height: 1 !important;
+            font-weight: 1000 !important;
+            box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.08) !important;
+          }
+
+          .dashboard-platform-card:not(.is-selected) > span:first-child,
+          .dashboard-platform-card:not(.is-selected) > div:first-child {
+            background: rgba(255,255,255,0.08) !important;
+            color: transparent !important;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.13) !important;
+          }
+
+          .dashboard-platform-card strong {
+            display: block !important;
+            color: inherit !important;
+            font-size: 0.78rem !important;
+            line-height: 1 !important;
+            font-weight: 900 !important;
+            letter-spacing: -0.015em !important;
+          }
+
+          .dashboard-platform-card p,
+          .dashboard-platform-card small,
+          .dashboard-platform-card span:not(:first-child) {
+            display: none !important;
+          }
+
+          .dashboard-platform-create-button {
+            max-width: 848px !important;
+            min-height: 68px !important;
+            margin: 24px auto 0 !important;
+            border-radius: 20px !important;
+            background:
+              linear-gradient(135deg, #ffdd4a 0%, #ffd43b 50%, #ffc21a 100%) !important;
+            box-shadow:
+              0 18px 36px rgba(255, 212, 59, 0.18),
+              0 9px 18px rgba(0,0,0,0.16),
+              inset 0 1px 0 rgba(255,255,255,0.44) !important;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-platform-grid {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 7px !important;
+            max-width: 330px !important;
+            margin: 18px auto 0 !important;
+          }
+
+          .dashboard-platform-grid::before {
+            content: "Post to" !important;
+            width: 100% !important;
+            text-align: center !important;
+            color: rgba(248, 250, 252, 0.54) !important;
+            font-size: 0.74rem !important;
+            line-height: 1 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.02em !important;
+            margin-bottom: 2px !important;
+          }
+
+          .dashboard-platform-card {
+            position: relative !important;
+            width: auto !important;
+            min-width: 0 !important;
+            min-height: 32px !important;
+            height: 32px !important;
+            padding: 0 11px 0 30px !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(255, 255, 255, 0.045) !important;
+            border: 1px solid rgba(255, 255, 255, 0.095) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.055) !important;
+            color: rgba(248,250,252,0.82) !important;
+          }
+
+          .dashboard-platform-card.is-selected {
+            background: rgba(255, 212, 59, 0.075) !important;
+            border-color: rgba(255, 212, 59, 0.24) !important;
+            color: #ffffff !important;
+          }
+
+          .dashboard-platform-card > span:first-child,
+          .dashboard-platform-card > div:first-child {
+            position: absolute !important;
+            left: 9px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 15px !important;
+            height: 15px !important;
+            min-width: 15px !important;
+            min-height: 15px !important;
+            padding: 0 !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #ffd43b !important;
+            color: #061225 !important;
+            font-size: 0.6rem !important;
+            line-height: 1 !important;
+            font-weight: 1000 !important;
+            box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.075) !important;
+          }
+
+          .dashboard-platform-card:not(.is-selected) > span:first-child,
+          .dashboard-platform-card:not(.is-selected) > div:first-child {
+            background: rgba(255,255,255,0.08) !important;
+            color: transparent !important;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.13) !important;
+          }
+
+          .dashboard-platform-card strong {
+            display: block !important;
+            color: inherit !important;
+            font-size: 0.76rem !important;
+            line-height: 1 !important;
+            font-weight: 900 !important;
+            letter-spacing: -0.015em !important;
+          }
+
+          .dashboard-platform-card p,
+          .dashboard-platform-card small,
+          .dashboard-platform-card span:not(:first-child) {
+            display: none !important;
+          }
+
+          .dashboard-platform-create-button {
+            min-height: 64px !important;
+            margin-top: 20px !important;
+            border-radius: 20px !important;
+            background:
+              linear-gradient(135deg, #ffdd4a 0%, #ffd43b 50%, #ffc21a 100%) !important;
+            box-shadow:
+              0 18px 34px rgba(255, 212, 59, 0.18),
+              0 8px 16px rgba(0,0,0,0.16),
+              inset 0 1px 0 rgba(255,255,255,0.42) !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard platform selector v6 — fixed selection + cleaner design   */
+        /* ------------------------------------------------------------------ */
+
+        .dashboard-platform-grid {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          flex-wrap: wrap !important;
+          gap: 8px !important;
+          width: 100% !important;
+          max-width: 848px !important;
+          margin: 20px auto 0 !important;
+          padding: 0 !important;
+        }
+
+        .dashboard-platform-grid::before {
+          content: "Post to" !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          height: 34px !important;
+          margin-right: 6px !important;
+          color: rgba(248, 250, 252, 0.58) !important;
+          font-size: 0.78rem !important;
+          line-height: 1 !important;
+          font-weight: 900 !important;
+          letter-spacing: 0.02em !important;
+        }
+
+        .dashboard-platform-card {
+          position: relative !important;
+          width: auto !important;
+          min-width: 0 !important;
+          height: 34px !important;
+          min-height: 34px !important;
+          padding: 0 13px 0 35px !important;
+          border-radius: 999px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 0 !important;
+          text-align: center !important;
+          cursor: pointer !important;
+          background: rgba(255, 255, 255, 0.045) !important;
+          border: 1px solid rgba(255, 255, 255, 0.11) !important;
+          color: rgba(248, 250, 252, 0.78) !important;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
+          transition:
+            transform 150ms ease,
+            background 150ms ease,
+            border-color 150ms ease,
+            color 150ms ease !important;
+        }
+
+        .dashboard-platform-card:hover {
+          transform: translateY(-1px) !important;
+          background: rgba(255, 255, 255, 0.06) !important;
+          border-color: rgba(255, 212, 59, 0.24) !important;
+        }
+
+        .dashboard-platform-card.is-selected {
+          background: rgba(255, 212, 59, 0.09) !important;
+          border-color: rgba(255, 212, 59, 0.32) !important;
+          color: #ffffff !important;
+        }
+
+        .dashboard-platform-card > span:first-child {
+          position: absolute !important;
+          left: 10px !important;
+          top: 50% !important;
+          transform: translateY(-50%) !important;
+          width: 16px !important;
+          height: 16px !important;
+          min-width: 16px !important;
+          min-height: 16px !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border-radius: 999px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          background: rgba(255,255,255,0.07) !important;
+          border: 1px solid rgba(255,255,255,0.13) !important;
+          color: transparent !important;
+          font-size: 0 !important;
+          line-height: 1 !important;
+          box-shadow: none !important;
+        }
+
+        .dashboard-platform-card.is-selected > span:first-child {
+          background: #ffd43b !important;
+          border-color: #ffd43b !important;
+          color: #061225 !important;
+          font-size: 0.65rem !important;
+          font-weight: 1000 !important;
+          box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.08) !important;
+        }
+
+        .dashboard-platform-card strong {
+          display: block !important;
+          margin: 0 !important;
+          color: inherit !important;
+          font-size: 0.8rem !important;
+          line-height: 1 !important;
+          font-weight: 900 !important;
+          letter-spacing: -0.015em !important;
+        }
+
+        .dashboard-platform-card small,
+        .dashboard-platform-card p,
+        .dashboard-platform-card span:not(:first-child) {
+          display: none !important;
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-platform-grid {
+            max-width: 330px !important;
+            margin-top: 16px !important;
+            gap: 7px !important;
+          }
+
+          .dashboard-platform-grid::before {
+            width: 100% !important;
+            justify-content: center !important;
+            height: auto !important;
+            margin: 0 0 2px !important;
+            font-size: 0.74rem !important;
+          }
+
+          .dashboard-platform-card {
+            height: 32px !important;
+            min-height: 32px !important;
+            padding: 0 11px 0 31px !important;
+          }
+
+          .dashboard-platform-card > span:first-child {
+            left: 9px !important;
+            width: 15px !important;
+            height: 15px !important;
+            min-width: 15px !important;
+            min-height: 15px !important;
+          }
+
+          .dashboard-platform-card strong {
+            font-size: 0.76rem !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard platform selector v7 — visible, clean agency selector     */
+        /* ------------------------------------------------------------------ */
+
+        .dashboard-platform-grid {
+          max-width: 720px !important;
+          margin: 24px auto 0 !important;
+          padding: 14px 16px !important;
+          border-radius: 22px !important;
+          background: rgba(255, 255, 255, 0.035) !important;
+          border: 1px solid rgba(255, 255, 255, 0.075) !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          flex-wrap: wrap !important;
+          gap: 10px !important;
+          box-sizing: border-box !important;
+        }
+
+        .dashboard-platform-grid::before {
+          content: "Post to" !important;
+          height: 38px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          margin-right: 8px !important;
+          color: rgba(248, 250, 252, 0.62) !important;
+          font-size: 0.82rem !important;
+          line-height: 1 !important;
+          font-weight: 950 !important;
+          letter-spacing: 0.01em !important;
+        }
+
+        .dashboard-platform-card {
+          position: relative !important;
+          width: auto !important;
+          min-width: 0 !important;
+          height: 38px !important;
+          min-height: 38px !important;
+          padding: 0 15px 0 36px !important;
+          border-radius: 999px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 0 !important;
+          text-align: center !important;
+          cursor: pointer !important;
+          background: rgba(255, 255, 255, 0.055) !important;
+          border: 1px solid rgba(255, 255, 255, 0.12) !important;
+          color: rgba(248, 250, 252, 0.78) !important;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
+          transition:
+            transform 150ms ease,
+            background 150ms ease,
+            border-color 150ms ease,
+            color 150ms ease !important;
+        }
+
+        .dashboard-platform-card:hover {
+          transform: translateY(-1px) !important;
+          background: rgba(255, 255, 255, 0.07) !important;
+          border-color: rgba(255, 212, 59, 0.26) !important;
+        }
+
+        .dashboard-platform-card.is-selected {
+          background: rgba(255, 212, 59, 0.12) !important;
+          border-color: rgba(255, 212, 59, 0.38) !important;
+          color: #ffffff !important;
+        }
+
+        .dashboard-platform-card > span:first-child {
+          position: absolute !important;
+          left: 11px !important;
+          top: 50% !important;
+          transform: translateY(-50%) !important;
+          width: 17px !important;
+          height: 17px !important;
+          min-width: 17px !important;
+          min-height: 17px !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border-radius: 999px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          background: rgba(255,255,255,0.07) !important;
+          border: 1px solid rgba(255,255,255,0.13) !important;
+          color: transparent !important;
+          font-size: 0 !important;
+          line-height: 1 !important;
+          box-shadow: none !important;
+        }
+
+        .dashboard-platform-card.is-selected > span:first-child {
+          background: #ffd43b !important;
+          border-color: #ffd43b !important;
+          color: #061225 !important;
+          font-size: 0.68rem !important;
+          font-weight: 1000 !important;
+          box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.09) !important;
+        }
+
+        .dashboard-platform-card strong {
+          display: block !important;
+          margin: 0 !important;
+          color: inherit !important;
+          font-size: 0.84rem !important;
+          line-height: 1 !important;
+          font-weight: 950 !important;
+          letter-spacing: -0.015em !important;
+        }
+
+        .dashboard-platform-card small,
+        .dashboard-platform-card p,
+        .dashboard-platform-card span:not(:first-child) {
+          display: none !important;
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-platform-grid {
+            max-width: 330px !important;
+            margin-top: 18px !important;
+            padding: 12px !important;
+            gap: 8px !important;
+          }
+
+          .dashboard-platform-grid::before {
+            width: 100% !important;
+            justify-content: center !important;
+            height: auto !important;
+            margin: 0 0 2px !important;
+            font-size: 0.76rem !important;
+          }
+
+          .dashboard-platform-card {
+            height: 34px !important;
+            min-height: 34px !important;
+            padding: 0 12px 0 32px !important;
+          }
+
+          .dashboard-platform-card > span:first-child {
+            left: 10px !important;
+            width: 15px !important;
+            height: 15px !important;
+            min-width: 15px !important;
+            min-height: 15px !important;
+          }
+
+          .dashboard-platform-card strong {
+            font-size: 0.78rem !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard final action alignment — selector and CTA same width      */
+        /* ------------------------------------------------------------------ */
+
+        .dashboard-platform-grid,
+        .dashboard-platform-create-button {
+          width: 100% !important;
+          max-width: 720px !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          box-sizing: border-box !important;
+        }
+
+        .dashboard-platform-grid {
+          margin-top: 24px !important;
+          padding: 12px 14px !important;
+          border-radius: 20px !important;
+          background: rgba(255, 255, 255, 0.028) !important;
+          border: 1px solid rgba(255, 255, 255, 0.075) !important;
+        }
+
+        .dashboard-platform-create-button {
+          margin-top: 18px !important;
+          max-width: 720px !important;
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-platform-grid,
+          .dashboard-platform-create-button {
+            max-width: 330px !important;
+          }
+
+          .dashboard-platform-create-button {
+            max-width: 100% !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v9 — compact client-first create flow       */
+        /* Mobile goal: less scrolling, clearer actions, fewer stacked slabs.  */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-final-card {
+            padding: 18px 14px 22px !important;
+            border-radius: 30px !important;
+          }
+
+          .dashboard-final-hero {
+            margin-bottom: 14px !important;
+          }
+
+          .dashboard-final-hero .page-eyebrow {
+            margin-bottom: 10px !important;
+            font-size: 0.7rem !important;
+            letter-spacing: 0.15em !important;
+          }
+
+          .dashboard-final-hero .page-title {
+            font-size: clamp(2.65rem, 12.3vw, 3.25rem) !important;
+            line-height: 0.88 !important;
+            letter-spacing: -0.08em !important;
+            margin-bottom: 12px !important;
+          }
+
+          .dashboard-final-hero .page-description {
+            max-width: 330px !important;
+            font-size: 0.92rem !important;
+            line-height: 1.42 !important;
+          }
+
+          /* On mobile this card repeats the headline, so make it a slim reassurance strip */
+          .dashboard-guided-week-card {
+            max-width: 100% !important;
+            margin: 14px auto 16px !important;
+            padding: 12px 13px !important;
+            border-radius: 20px !important;
+            text-align: center !important;
+            background: rgba(255, 212, 59, 0.06) !important;
+            border: 1px solid rgba(255, 212, 59, 0.15) !important;
+          }
+
+          .dashboard-guided-week-card span {
+            min-height: 24px !important;
+            padding: 0 10px !important;
+            margin: 0 auto 8px !important;
+            font-size: 0.66rem !important;
+            letter-spacing: 0.11em !important;
+          }
+
+          .dashboard-guided-week-card strong {
+            font-size: 1.08rem !important;
+            line-height: 1.05 !important;
+            margin: 0 !important;
+          }
+
+          .dashboard-guided-week-card p {
+            max-width: 310px !important;
+            margin: 7px auto 0 !important;
+            font-size: 0.84rem !important;
+            line-height: 1.38 !important;
+            color: rgba(248,250,252,0.66) !important;
+          }
+
+          .dashboard-upload-dropzone {
+            max-width: 100% !important;
+            min-height: 0 !important;
+            padding: 18px 14px 16px !important;
+            border-radius: 24px !important;
+            background: rgba(2, 6, 23, 0.34) !important;
+            border: 1px dashed rgba(255, 212, 59, 0.28) !important;
+            box-shadow: none !important;
+          }
+
+          /* Compact upload choices into a proper mobile action grid */
+          .dashboard-upload-type-grid,
+          .dashboard-mobile-capture-actions {
+            width: 100% !important;
+            max-width: 310px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 9px !important;
+          }
+
+          .dashboard-upload-type-grid {
+            margin-top: 0 !important;
+            margin-bottom: 9px !important;
+          }
+
+          .dashboard-mobile-capture-actions {
+            margin-top: 0 !important;
+            margin-bottom: 13px !important;
+          }
+
+          .dashboard-upload-type-card,
+          .dashboard-mobile-capture-actions button {
+            min-height: 74px !important;
+            height: auto !important;
+            padding: 10px 9px !important;
+            border-radius: 18px !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            place-items: center !important;
+            gap: 7px !important;
+            text-align: center !important;
+            background: rgba(255,255,255,0.042) !important;
+            border: 1px solid rgba(255,255,255,0.095) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.045) !important;
+          }
+
+          .dashboard-upload-type-card span,
+          .dashboard-mobile-capture-actions button span:first-child {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            min-height: 34px !important;
+            border-radius: 13px !important;
+            margin: 0 !important;
+            background: rgba(255, 212, 59, 0.11) !important;
+            border: 1px solid rgba(255, 212, 59, 0.2) !important;
+            color: #ffd43b !important;
+          }
+
+          .dashboard-upload-type-card strong,
+          .dashboard-mobile-capture-actions button strong,
+          .dashboard-mobile-capture-actions button {
+            font-size: 0.78rem !important;
+            line-height: 1.05 !important;
+            font-weight: 950 !important;
+          }
+
+          .dashboard-upload-type-card small {
+            display: none !important;
+          }
+
+          /* Camera/record buttons can be full-width if only one lands on the row */
+          .dashboard-mobile-capture-actions button:last-child:nth-child(odd) {
+            grid-column: 1 / -1 !important;
+          }
+
+          /* Remove the awkward bordered strip around the plus */
+          .dashboard-upload-dropzone > div:has(.dashboard-upload-icon) {
+            border: 0 !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 2px auto 0 !important;
+          }
+
+          .dashboard-upload-icon {
+            width: 46px !important;
+            height: 46px !important;
+            border-radius: 16px !important;
+            font-size: 1.45rem !important;
+            margin: 2px auto 10px !important;
+            box-shadow: 0 12px 26px rgba(255, 212, 59, 0.16) !important;
+          }
+
+          .dashboard-upload-dropzone strong {
+            font-size: 1.22rem !important;
+            line-height: 1.05 !important;
+          }
+
+          .dashboard-upload-dropzone span span:last-child {
+            max-width: 285px !important;
+            margin: 8px auto 0 !important;
+            font-size: 0.82rem !important;
+            line-height: 1.35 !important;
+            color: rgba(248,250,252,0.58) !important;
+          }
+
+          .dashboard-platform-grid {
+            max-width: 100% !important;
+            margin-top: 18px !important;
+            padding: 13px 12px !important;
+            border-radius: 20px !important;
+            background: rgba(255,255,255,0.035) !important;
+          }
+
+          .dashboard-platform-grid::before {
+            width: 100% !important;
+            justify-content: center !important;
+            height: auto !important;
+            margin: 0 0 4px !important;
+            font-size: 0.76rem !important;
+          }
+
+          .dashboard-platform-card {
+            height: 34px !important;
+            min-height: 34px !important;
+            padding: 0 11px 0 32px !important;
+          }
+
+          .dashboard-platform-card strong {
+            font-size: 0.78rem !important;
+          }
+
+          .dashboard-platform-create-button {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 64px !important;
+            margin-top: 16px !important;
+            border-radius: 21px !important;
+            font-size: 1rem !important;
+          }
+
+          .dashboard-review-reassurance {
+            max-width: 300px !important;
+            margin: 14px auto 0 !important;
+            font-size: 0.82rem !important;
+            line-height: 1.35 !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v10 — remove ugly plus strip                */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone > div:has(.dashboard-upload-icon),
+          .dashboard-upload-dropzone label:has(.dashboard-upload-icon),
+          .dashboard-upload-dropzone button:has(.dashboard-upload-icon) {
+            width: auto !important;
+            max-width: none !important;
+            min-height: 0 !important;
+            height: auto !important;
+            padding: 0 !important;
+            margin: 4px auto 0 !important;
+            border: 0 !important;
+            outline: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+          }
+
+          .dashboard-upload-dropzone .dashboard-upload-icon {
+            width: 50px !important;
+            height: 50px !important;
+            min-width: 50px !important;
+            min-height: 50px !important;
+            border-radius: 17px !important;
+            margin: 0 auto 12px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: linear-gradient(135deg, #ffdd4a, #ffc21a) !important;
+            color: #061225 !important;
+            box-shadow:
+              0 14px 26px rgba(255, 212, 59, 0.18),
+              inset 0 1px 0 rgba(255,255,255,0.42) !important;
+          }
+
+          .dashboard-upload-dropzone [style*="border"]:has(.dashboard-upload-icon) {
+            border: 0 !important;
+            background: transparent !important;
+          }
+        }
+
+
+        /* Loading skeleton mobile fix — avoids window.innerWidth during render */
+        @media (max-width: 760px) {
+          section[aria-label="Dashboard loading"] > div:nth-of-type(2) {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v12 — remove big plus upload strip entirely */
+        /* Mobile already has upload action cards, so the plus button is noise. */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-icon,
+          .dashboard-upload-icon + strong {
+            display: none !important;
+          }
+
+          .dashboard-upload-icon + strong + span {
+            max-width: 300px !important;
+            margin: 4px auto 0 !important;
+            font-size: 0.82rem !important;
+            line-height: 1.36 !important;
+            color: rgba(248, 250, 252, 0.58) !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            gap: 12px !important;
+          }
+
+          .dashboard-upload-type-grid {
+            margin-bottom: 2px !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v13 — remove duplicate plus upload control  */
+        /* Mobile uses the upload cards instead. No big plus / strip needed.   */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-icon {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .dashboard-upload-icon + strong {
+            display: none !important;
+          }
+
+          .dashboard-upload-icon + strong + span {
+            display: none !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            gap: 0 !important;
+          }
+
+          .dashboard-upload-type-grid {
+            margin-bottom: 0 !important;
+          }
+
+          /* Kill the wrapper/row that was drawing the ugly border around the plus */
+          .dashboard-upload-dropzone > span > span:has(.dashboard-upload-icon),
+          .dashboard-upload-dropzone > span > div:has(.dashboard-upload-icon),
+          .dashboard-upload-dropzone label:has(.dashboard-upload-icon),
+          .dashboard-upload-dropzone button:has(.dashboard-upload-icon),
+          .dashboard-upload-dropzone [style*="border"]:has(.dashboard-upload-icon) {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            max-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            overflow: hidden !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v14 — remove old pseudo plus button         */
+        /* This kills the earlier ::before "+" rule that was still rendering.  */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-mobile-capture-actions)::before,
+          .dashboard-upload-dropzone > span > span:first-child::before,
+          .dashboard-upload-dropzone > span > span::before {
+            content: none !important;
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+          }
+
+          .dashboard-mobile-upload-title {
+            display: none !important;
+          }
+
+          .dashboard-upload-icon,
+          .dashboard-upload-icon::before,
+          .dashboard-upload-icon::after,
+          .dashboard-upload-icon + strong,
+          .dashboard-upload-icon + strong + span {
+            display: none !important;
+            content: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            gap: 0 !important;
+          }
+
+          .dashboard-upload-type-grid {
+            margin-bottom: 0 !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v15 — center upload actions + remove line   */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          /* Remove the leftover horizontal line/empty pseudo upload area */
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-upload-type-grid):not(.dashboard-mobile-capture-actions),
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-upload-type-grid):not(.dashboard-mobile-capture-actions)::before,
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-upload-type-grid):not(.dashboard-mobile-capture-actions)::after {
+            display: none !important;
+            content: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            max-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            overflow: hidden !important;
+          }
+
+          /* Make the upload area tighter and centre the options */
+          .dashboard-upload-dropzone {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 18px 14px !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 312px !important;
+            margin: 0 auto !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            justify-content: center !important;
+            align-items: center !important;
+          }
+
+          .dashboard-upload-type-card {
+            width: 100% !important;
+            min-height: 76px !important;
+            display: grid !important;
+            place-items: center !important;
+            text-align: center !important;
+          }
+
+          .dashboard-upload-type-card:nth-child(5) {
+            grid-column: 1 / -1 !important;
+            width: min(100%, 151px) !important;
+            justify-self: center !important;
+          }
+
+          .dashboard-upload-type-card small {
+            display: none !important;
+          }
+
+          .dashboard-upload-icon,
+          .dashboard-upload-icon + strong,
+          .dashboard-upload-icon + strong + span,
+          .dashboard-mobile-upload-title {
+            display: none !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v17 — restore card-style upload buttons     */
+        /* Original feel, cleaner spacing, centred icons, no duplicate plus.   */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone {
+            min-height: 0 !important;
+            padding: 20px 14px !important;
+            border-radius: 24px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background:
+              radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.055), transparent 34%),
+              rgba(2, 6, 23, 0.34) !important;
+            border: 1px dashed rgba(255, 212, 59, 0.28) !important;
+            box-shadow: none !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
+          }
+
+          .dashboard-mobile-upload-title {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 26px !important;
+            padding: 0 11px !important;
+            margin: 0 auto 14px !important;
+            border-radius: 999px !important;
+            background: rgba(255, 212, 59, 0.08) !important;
+            border: 1px solid rgba(255, 212, 59, 0.14) !important;
+            color: rgba(255, 212, 59, 0.92) !important;
+            font-size: 0.66rem !important;
+            line-height: 1 !important;
+            font-weight: 1000 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 322px !important;
+            margin: 0 auto !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 12px !important;
+            align-items: stretch !important;
+            justify-content: center !important;
+          }
+
+          .dashboard-upload-type-card {
+            width: 100% !important;
+            min-height: 92px !important;
+            height: auto !important;
+            padding: 14px 10px 12px !important;
+            border-radius: 20px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 9px !important;
+            text-align: center !important;
+            background: rgba(255,255,255,0.043) !important;
+            border: 1px solid rgba(255,255,255,0.105) !important;
+            color: rgba(248,250,252,0.88) !important;
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.055),
+              0 10px 22px rgba(0,0,0,0.12) !important;
+          }
+
+          .dashboard-upload-type-card:nth-child(5) {
+            grid-column: 1 / -1 !important;
+            width: min(100%, 155px) !important;
+            justify-self: center !important;
+          }
+
+          .dashboard-upload-type-card:active {
+            transform: scale(0.985) !important;
+          }
+
+          .dashboard-upload-type-card .dashboard-upload-type-icon,
+          .dashboard-upload-type-card > span:first-child {
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            min-height: 38px !important;
+            margin: 0 !important;
+            border-radius: 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(255, 212, 59, 0.105) !important;
+            border: 1px solid rgba(255, 212, 59, 0.2) !important;
+            color: #ffd43b !important;
+          }
+
+          .dashboard-upload-type-card svg {
+            width: 18px !important;
+            height: 18px !important;
+          }
+
+          .dashboard-upload-type-card strong {
+            display: block !important;
+            margin: 0 !important;
+            color: rgba(248,250,252,0.92) !important;
+            font-size: 0.78rem !important;
+            line-height: 1.05 !important;
+            font-weight: 950 !important;
+            letter-spacing: -0.01em !important;
+            white-space: nowrap !important;
+          }
+
+          .dashboard-upload-type-card small {
+            display: none !important;
+          }
+
+          .dashboard-upload-icon,
+          .dashboard-upload-icon::before,
+          .dashboard-upload-icon::after,
+          .dashboard-upload-icon + strong,
+          .dashboard-upload-icon + strong + span {
+            display: none !important;
+            content: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-upload-type-grid):not(.dashboard-mobile-capture-actions)::before,
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-upload-type-grid):not(.dashboard-mobile-capture-actions)::after {
+            content: none !important;
+            display: none !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v18 — stacked full-width upload buttons     */
+        /* Full-width rows with centred icon + clear text.                     */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone {
+            min-height: 0 !important;
+            padding: 18px 14px !important;
+            border-radius: 24px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background:
+              radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.055), transparent 34%),
+              rgba(2, 6, 23, 0.34) !important;
+            border: 1px dashed rgba(255, 212, 59, 0.28) !important;
+            box-shadow: none !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
+          }
+
+          .dashboard-mobile-upload-title {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 26px !important;
+            padding: 0 11px !important;
+            margin: 0 auto 14px !important;
+            border-radius: 999px !important;
+            background: rgba(255, 212, 59, 0.08) !important;
+            border: 1px solid rgba(255, 212, 59, 0.14) !important;
+            color: rgba(255, 212, 59, 0.92) !important;
+            font-size: 0.66rem !important;
+            line-height: 1 !important;
+            font-weight: 1000 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 330px !important;
+            margin: 0 auto !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            align-items: stretch !important;
+            justify-content: center !important;
+          }
+
+          .dashboard-upload-type-card,
+          .dashboard-upload-type-card:nth-child(5) {
+            grid-column: auto !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            min-height: 64px !important;
+            height: auto !important;
+            padding: 11px 14px !important;
+            border-radius: 20px !important;
+            display: grid !important;
+            grid-template-columns: 42px minmax(0, 1fr) !important;
+            column-gap: 13px !important;
+            row-gap: 2px !important;
+            align-items: center !important;
+            justify-content: stretch !important;
+            justify-items: start !important;
+            text-align: left !important;
+            background: rgba(255,255,255,0.043) !important;
+            border: 1px solid rgba(255,255,255,0.105) !important;
+            color: rgba(248,250,252,0.9) !important;
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.055),
+              0 10px 22px rgba(0,0,0,0.12) !important;
+          }
+
+          .dashboard-upload-type-card:active {
+            transform: scale(0.99) !important;
+          }
+
+          .dashboard-upload-type-card .dashboard-upload-type-icon,
+          .dashboard-upload-type-card > span:first-child {
+            grid-column: 1 !important;
+            grid-row: 1 / 3 !important;
+            justify-self: center !important;
+            align-self: center !important;
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            min-height: 38px !important;
+            margin: 0 !important;
+            border-radius: 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(255, 212, 59, 0.105) !important;
+            border: 1px solid rgba(255, 212, 59, 0.2) !important;
+            color: #ffd43b !important;
+          }
+
+          .dashboard-upload-type-card svg {
+            width: 18px !important;
+            height: 18px !important;
+          }
+
+          .dashboard-upload-type-card strong {
+            grid-column: 2 !important;
+            display: block !important;
+            margin: 0 !important;
+            color: rgba(248,250,252,0.94) !important;
+            font-size: 0.92rem !important;
+            line-height: 1.05 !important;
+            font-weight: 950 !important;
+            letter-spacing: -0.015em !important;
+            white-space: normal !important;
+          }
+
+          .dashboard-upload-type-card small {
+            grid-column: 2 !important;
+            display: block !important;
+            margin: 3px 0 0 !important;
+            color: rgba(248,250,252,0.54) !important;
+            font-size: 0.74rem !important;
+            line-height: 1.2 !important;
+            font-weight: 750 !important;
+          }
+
+          .dashboard-upload-icon,
+          .dashboard-upload-icon::before,
+          .dashboard-upload-icon::after,
+          .dashboard-upload-icon + strong,
+          .dashboard-upload-icon + strong + span {
+            display: none !important;
+            content: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-upload-type-grid):not(.dashboard-mobile-capture-actions)::before,
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-upload-type-grid):not(.dashboard-mobile-capture-actions)::after {
+            content: none !important;
+            display: none !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v19 — agency-standard upload list           */
+        /* Calm rows, clear labels, proper vertical centering.                 */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone {
+            min-height: 0 !important;
+            padding: 16px !important;
+            border-radius: 24px !important;
+            display: block !important;
+            background: rgba(2, 6, 23, 0.26) !important;
+            border: 1px solid rgba(255, 212, 59, 0.16) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.035) !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            width: 100% !important;
+            display: grid !important;
+            justify-items: center !important;
+            gap: 0 !important;
+          }
+
+          .dashboard-mobile-upload-title {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 26px !important;
+            padding: 0 11px !important;
+            margin: 0 auto 13px !important;
+            border-radius: 999px !important;
+            background: rgba(255, 212, 59, 0.075) !important;
+            border: 1px solid rgba(255, 212, 59, 0.13) !important;
+            color: rgba(255, 212, 59, 0.92) !important;
+            font-size: 0.64rem !important;
+            line-height: 1 !important;
+            font-weight: 1000 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 336px !important;
+            margin: 0 auto !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 9px !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card,
+          .dashboard-upload-type-grid .dashboard-upload-type-card:nth-child(5) {
+            grid-column: auto !important;
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            min-height: 64px !important;
+            height: 64px !important;
+            padding: 0 14px !important;
+            border-radius: 18px !important;
+            display: grid !important;
+            grid-template-columns: 42px minmax(0, 1fr) auto !important;
+            grid-template-rows: auto auto !important;
+            column-gap: 13px !important;
+            row-gap: 3px !important;
+            align-items: center !important;
+            justify-items: start !important;
+            text-align: left !important;
+            background:
+              linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.032)) !important;
+            border: 1px solid rgba(255,255,255,0.095) !important;
+            color: rgba(248,250,252,0.92) !important;
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.055),
+              0 8px 18px rgba(0,0,0,0.10) !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card::after {
+            content: "›" !important;
+            grid-column: 3 !important;
+            grid-row: 1 / 3 !important;
+            align-self: center !important;
+            color: rgba(248,250,252,0.34) !important;
+            font-size: 1.25rem !important;
+            line-height: 1 !important;
+            font-weight: 700 !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card:active {
+            transform: scale(0.992) !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card .dashboard-upload-type-icon,
+          .dashboard-upload-type-grid .dashboard-upload-type-card > span:first-child {
+            grid-column: 1 !important;
+            grid-row: 1 / 3 !important;
+            align-self: center !important;
+            justify-self: center !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            min-height: 36px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 13px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(255, 212, 59, 0.10) !important;
+            border: 1px solid rgba(255, 212, 59, 0.18) !important;
+            color: #ffd43b !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card svg {
+            width: 17px !important;
+            height: 17px !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card strong {
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            align-self: end !important;
+            color: rgba(248,250,252,0.96) !important;
+            font-size: 0.92rem !important;
+            line-height: 1.05 !important;
+            font-weight: 1000 !important;
+            letter-spacing: -0.018em !important;
+            white-space: nowrap !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card small {
+            grid-column: 2 !important;
+            grid-row: 2 !important;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            align-self: start !important;
+            color: rgba(248,250,252,0.52) !important;
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            font-weight: 760 !important;
+            white-space: nowrap !important;
+          }
+
+          .dashboard-upload-icon,
+          .dashboard-upload-icon::before,
+          .dashboard-upload-icon::after,
+          .dashboard-upload-icon + strong,
+          .dashboard-upload-icon + strong + span {
+            display: none !important;
+            content: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-upload-type-grid):not(.dashboard-mobile-capture-actions)::before,
+          .dashboard-upload-dropzone > span > span:first-child:not(.dashboard-upload-type-grid):not(.dashboard-mobile-capture-actions)::after {
+            content: none !important;
+            display: none !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v20 — aligned, evenly spaced upload list    */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone {
+            min-height: 520px !important;
+            padding: 18px 16px !important;
+            border-radius: 24px !important;
+            display: flex !important;
+            align-items: stretch !important;
+            justify-content: center !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            width: 100% !important;
+            min-height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            justify-content: center !important;
+            gap: 0 !important;
+          }
+
+          .dashboard-mobile-upload-title {
+            align-self: center !important;
+            margin: 0 auto 14px !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 336px !important;
+            min-height: 410px !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            align-items: stretch !important;
+            gap: 0 !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card,
+          .dashboard-upload-type-grid .dashboard-upload-type-card:nth-child(5) {
+            width: 100% !important;
+            height: 70px !important;
+            min-height: 70px !important;
+            max-height: 70px !important;
+            padding: 0 16px !important;
+            border-radius: 20px !important;
+            display: grid !important;
+            grid-template-columns: 42px minmax(0, 1fr) 18px !important;
+            grid-template-rows: 1fr !important;
+            column-gap: 14px !important;
+            align-items: center !important;
+            justify-items: stretch !important;
+            text-align: left !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card .dashboard-upload-type-icon,
+          .dashboard-upload-type-grid .dashboard-upload-type-card > span:first-child {
+            grid-column: 1 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: center !important;
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            min-height: 38px !important;
+            margin: 0 !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card strong {
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: start !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            color: rgba(248,250,252,0.95) !important;
+            font-size: 0.94rem !important;
+            line-height: 1.05 !important;
+            font-weight: 1000 !important;
+            letter-spacing: -0.018em !important;
+            white-space: nowrap !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card small {
+            display: none !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card::after {
+            grid-column: 3 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: end !important;
+            color: rgba(248,250,252,0.32) !important;
+            font-size: 1.18rem !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v21 — simple upload wording                 */
+        /* Fix labels to: Add image / Add video / Add flyer / Take photo...    */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-type-grid .dashboard-upload-type-card {
+            height: 68px !important;
+            min-height: 68px !important;
+            grid-template-columns: 42px minmax(0, 1fr) 18px !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card::before {
+            content: none !important;
+            display: none !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card strong::before,
+          .dashboard-upload-type-grid .dashboard-upload-type-card strong::after {
+            content: none !important;
+            display: none !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card small {
+            display: none !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card strong {
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: start !important;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            color: rgba(248,250,252,0.95) !important;
+            font-size: 1rem !important;
+            line-height: 1 !important;
+            font-weight: 1000 !important;
+            letter-spacing: -0.02em !important;
+            white-space: nowrap !important;
+          }
+
+          .dashboard-mobile-upload-title {
+            display: none !important;
+          }
+
+          .dashboard-upload-type-grid::before {
+            content: "Choose media" !important;
+            display: block !important;
+            width: 100% !important;
+            margin: 0 0 10px !important;
+            text-align: center !important;
+            color: rgba(255, 212, 59, 0.84) !important;
+            font-size: 0.72rem !important;
+            line-height: 1 !important;
+            font-weight: 1000 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v22 — vertically centre upload buttons      */
+        /* Centres the upload list inside the dashed upload card.              */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone {
+            min-height: 560px !important;
+            padding: 20px 16px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            width: 100% !important;
+            min-height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 336px !important;
+            margin: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 18px !important;
+          }
+
+          .dashboard-upload-type-grid::before {
+            display: none !important;
+            content: none !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card {
+            height: 68px !important;
+            min-height: 68px !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard mobile polish v23 — balanced upload card height           */
+        /* Shrinks the card slightly and balances top/bottom spacing.          */
+        /* ------------------------------------------------------------------ */
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone {
+            min-height: 500px !important;
+            padding: 28px 16px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 336px !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 14px !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card {
+            height: 66px !important;
+            min-height: 66px !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard upload card v24 — equal top/bottom spacing desktop/mobile */
+        /* This makes the upload card content centre itself properly instead   */
+        /* of relying on fixed empty height.                                   */
+        /* ------------------------------------------------------------------ */
+
+        .dashboard-upload-dropzone {
+          width: 100% !important;
+          max-width: 848px !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          min-height: 0 !important;
+          padding: 38px 28px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          box-sizing: border-box !important;
+        }
+
+        .dashboard-upload-dropzone > span {
+          width: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 18px !important;
+          box-sizing: border-box !important;
+        }
+
+        .dashboard-upload-type-grid {
+          margin: 0 auto !important;
+        }
+
+        .dashboard-upload-icon {
+          margin: 0 auto !important;
+        }
+
+        .dashboard-upload-icon + strong {
+          margin: 0 auto !important;
+        }
+
+        .dashboard-upload-icon + strong + span {
+          margin: 0 auto !important;
+        }
+
+        @media (min-width: 901px) {
+          .dashboard-upload-dropzone {
+            min-height: 360px !important;
+            padding-top: 42px !important;
+            padding-bottom: 42px !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            gap: 20px !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 470px !important;
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+          }
+
+          .dashboard-upload-icon {
+            width: 58px !important;
+            height: 58px !important;
+            min-width: 58px !important;
+            min-height: 58px !important;
+            border-radius: 20px !important;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone {
+            max-width: 100% !important;
+            min-height: 0 !important;
+            padding: 28px 16px !important;
+            border-radius: 24px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            width: 100% !important;
+            min-height: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 336px !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 12px !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card,
+          .dashboard-upload-type-grid .dashboard-upload-type-card:nth-child(5) {
+            width: 100% !important;
+            height: 66px !important;
+            min-height: 66px !important;
+            max-height: 66px !important;
+            margin: 0 !important;
+          }
+
+          .dashboard-mobile-upload-title,
+          .dashboard-upload-icon,
+          .dashboard-upload-icon::before,
+          .dashboard-upload-icon::after,
+          .dashboard-upload-icon + strong,
+          .dashboard-upload-icon + strong + span {
+            display: none !important;
+            content: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard upload card v25 — clean fixed spacing, no old pseudo CTA  */
+        /* ------------------------------------------------------------------ */
+
+        .dashboard-upload-dropzone {
+          width: 100% !important;
+          max-width: 848px !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          box-sizing: border-box !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+
+        .dashboard-upload-dropzone > span {
+          width: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: center !important;
+          box-sizing: border-box !important;
+        }
+
+        @media (min-width: 901px) {
+          .dashboard-upload-dropzone {
+            min-height: 300px !important;
+            padding: 34px 28px !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            gap: 18px !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 470px !important;
+            margin: 0 auto !important;
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+          }
+
+          .dashboard-upload-type-card {
+            min-height: 88px !important;
+          }
+
+          .dashboard-upload-icon {
+            width: 58px !important;
+            height: 58px !important;
+            min-width: 58px !important;
+            min-height: 58px !important;
+            margin: 0 auto !important;
+            border-radius: 20px !important;
+          }
+
+          .dashboard-upload-icon + strong {
+            margin: 0 auto !important;
+          }
+
+          .dashboard-upload-icon + strong + span {
+            margin: 0 auto !important;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone {
+            min-height: 0 !important;
+            height: auto !important;
+            padding: 22px 16px !important;
+            border-radius: 24px !important;
+            background:
+              radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.045), transparent 34%),
+              rgba(2, 6, 23, 0.30) !important;
+            border: 1px solid rgba(255, 212, 59, 0.18) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.035) !important;
+          }
+
+          .dashboard-upload-dropzone > span {
+            gap: 0 !important;
+          }
+
+          .dashboard-mobile-upload-title {
+            display: none !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 336px !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 11px !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card,
+          .dashboard-upload-type-grid .dashboard-upload-type-card:nth-child(5) {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            height: 64px !important;
+            min-height: 64px !important;
+            max-height: 64px !important;
+            margin: 0 !important;
+            padding: 0 16px !important;
+            border-radius: 18px !important;
+            display: grid !important;
+            grid-template-columns: 42px minmax(0, 1fr) 18px !important;
+            grid-template-rows: 1fr !important;
+            column-gap: 14px !important;
+            align-items: center !important;
+            justify-items: stretch !important;
+            text-align: left !important;
+            background:
+              linear-gradient(135deg, rgba(255,255,255,0.058), rgba(255,255,255,0.032)) !important;
+            border: 1px solid rgba(255,255,255,0.095) !important;
+            color: rgba(248,250,252,0.94) !important;
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.055),
+              0 8px 18px rgba(0,0,0,0.10) !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card::before {
+            content: none !important;
+            display: none !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card::after {
+            content: "›" !important;
+            grid-column: 3 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: end !important;
+            color: rgba(248,250,252,0.32) !important;
+            font-size: 1.18rem !important;
+            line-height: 1 !important;
+            font-weight: 700 !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card .dashboard-upload-type-icon,
+          .dashboard-upload-type-grid .dashboard-upload-type-card > span:first-child {
+            grid-column: 1 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: center !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            min-height: 36px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 13px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(255, 212, 59, 0.10) !important;
+            border: 1px solid rgba(255, 212, 59, 0.18) !important;
+            color: #ffd43b !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card svg {
+            width: 17px !important;
+            height: 17px !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card strong {
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: start !important;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            color: rgba(248,250,252,0.96) !important;
+            font-size: 1rem !important;
+            line-height: 1 !important;
+            font-weight: 1000 !important;
+            letter-spacing: -0.02em !important;
+            white-space: nowrap !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card small {
+            display: none !important;
+          }
+
+          .dashboard-upload-icon,
+          .dashboard-upload-icon::before,
+          .dashboard-upload-icon::after,
+          .dashboard-upload-icon + strong,
+          .dashboard-upload-icon + strong + span {
+            display: none !important;
+            content: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+        }
+
+
+        /* ------------------------------------------------------------------ */
+        /* Dashboard upload card v26 — real mobile layout reset                */
+        /* Targets the actual inner wrapper instead of fighting old selectors. */
+        /* ------------------------------------------------------------------ */
+
+        .dashboard-upload-inner {
+          width: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: center !important;
+          box-sizing: border-box !important;
+        }
+
+        .dashboard-desktop-upload-cta {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 12px !important;
+          width: 100% !important;
+          text-align: center !important;
+        }
+
+        @media (min-width: 901px) {
+          .dashboard-upload-dropzone {
+            min-height: 300px !important;
+            padding: 34px 28px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .dashboard-upload-inner {
+            gap: 18px !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 470px !important;
+            margin: 0 auto !important;
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-upload-dropzone {
+            min-height: 0 !important;
+            height: auto !important;
+            padding: 18px 14px !important;
+            border-radius: 24px !important;
+            display: block !important;
+            background:
+              radial-gradient(circle at 50% 0%, rgba(255, 212, 59, 0.045), transparent 34%),
+              rgba(2, 6, 23, 0.30) !important;
+            border: 1px solid rgba(255, 212, 59, 0.18) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.035) !important;
+          }
+
+          .dashboard-upload-inner {
+            gap: 0 !important;
+          }
+
+          .dashboard-mobile-upload-title,
+          .dashboard-desktop-upload-cta,
+          .dashboard-upload-icon,
+          .dashboard-upload-icon + strong,
+          .dashboard-upload-icon + strong + span {
+            display: none !important;
+          }
+
+          .dashboard-upload-type-grid {
+            width: 100% !important;
+            max-width: 336px !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 11px !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card,
+          .dashboard-upload-type-grid .dashboard-upload-type-card:nth-child(5) {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            height: 64px !important;
+            min-height: 64px !important;
+            max-height: 64px !important;
+            margin: 0 !important;
+            padding: 0 16px !important;
+            border-radius: 18px !important;
+            display: grid !important;
+            grid-template-columns: 42px minmax(0, 1fr) 18px !important;
+            grid-template-rows: 1fr !important;
+            column-gap: 14px !important;
+            align-items: center !important;
+            justify-items: stretch !important;
+            text-align: left !important;
+            background:
+              linear-gradient(135deg, rgba(255,255,255,0.058), rgba(255,255,255,0.032)) !important;
+            border: 1px solid rgba(255,255,255,0.095) !important;
+            color: rgba(248,250,252,0.94) !important;
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.055),
+              0 8px 18px rgba(0,0,0,0.10) !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card::before {
+            content: none !important;
+            display: none !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card::after {
+            content: "›" !important;
+            grid-column: 3 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: end !important;
+            color: rgba(248,250,252,0.32) !important;
+            font-size: 1.18rem !important;
+            line-height: 1 !important;
+            font-weight: 700 !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card .dashboard-upload-type-icon,
+          .dashboard-upload-type-grid .dashboard-upload-type-card > span:first-child {
+            grid-column: 1 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: center !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            min-height: 36px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 13px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(255, 212, 59, 0.10) !important;
+            border: 1px solid rgba(255, 212, 59, 0.18) !important;
+            color: #ffd43b !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card svg {
+            width: 17px !important;
+            height: 17px !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card strong {
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+            justify-self: start !important;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            color: rgba(248,250,252,0.96) !important;
+            font-size: 1rem !important;
+            line-height: 1 !important;
+            font-weight: 1000 !important;
+            letter-spacing: -0.02em !important;
+            white-space: nowrap !important;
+          }
+
+          .dashboard-upload-type-grid .dashboard-upload-type-card small {
+            display: none !important;
+          }
+        }
+
       `}</style>
       {(
         <section
@@ -5447,7 +8350,7 @@ If uploads are supplied:
           }}
         >
           <div className="dashboard-final-hero" style={{ textAlign: "center", maxWidth: 760, margin: "0 auto 22px" }}>
-            <div className="page-eyebrow">Create your week</div>
+            <div className="page-eyebrow">Create posts</div>
             <h1
               className="page-title"
               style={{
@@ -5457,12 +8360,12 @@ If uploads are supplied:
                 letterSpacing: "-0.06em",
               }}
             >
-              Create posts
+              Upload it.
               <br />
-              from what you have.
+              Post it. Done.
             </h1>
             <p className="page-description" style={{ margin: "0 auto", maxWidth: 680 }}>
-              Add photos, videos or flyers. FromOne creates one scheduled post for each item, then sends everything to review before anything is published.
+              Add photos, videos or flyers. FromOne turns each one into a scheduled post for you to review.
             </p>
 
             {addToCampaignId && (
@@ -5498,7 +8401,7 @@ If uploads are supplied:
                 <p>
                   {weeklyUploads.length > 0
                     ? `${weeklyUploads.length} file${weeklyUploads.length === 1 ? "" : "s"} added.`
-                    : "Upload photos, videos or flyers. If you do not have the perfect images, FromOne will still use what you have."}
+                    : "Upload photos, videos or flyers. FromOne uses each one as the topic for a post."}
                 </p>
                 <a href="#upload-media" className="dashboard-quick-start-link">
                   Add media
@@ -5513,11 +8416,11 @@ If uploads are supplied:
                 }
               >
                 <span>02</span>
-                <strong>Platforms are ready</strong>
+                <strong>Choose platforms</strong>
                 <p>
                   {selectedPlatforms.length > 0
                     ? `${selectedPlatforms.length} platform${selectedPlatforms.length === 1 ? "" : "s"} selected.`
-                    : "Facebook, Instagram and TikTok are selected. Change them if needed."}
+                    : "Facebook, Instagram and TikTok are selected. You can change them."}
                 </p>
                 <a href="#platforms" className="dashboard-quick-start-link">
                   Check
@@ -5536,10 +8439,10 @@ If uploads are supplied:
                 <p>
                   {weeklyProgress.total > 0 || hasScheduledPost
                     ? "Posts are ready to review."
-                    : "FromOne creates one scheduled post for each upload."}
+                    : "FromOne creates drafts and sends them to Posts."}
                 </p>
                 <a href="#create-posts" className="dashboard-quick-start-link">
-                  Create posts
+                  Create
                 </a>
               </article>
             </section>
@@ -5547,10 +8450,10 @@ If uploads are supplied:
 
           <section className="dashboard-guided-week-card" aria-label="Guided weekly post creation">
             <div>
-              <span>Simple weekly flow</span>
-              <strong>Create posts from what you have.</strong>
+              <span>Simple flow</span>
+              <strong>One upload. One post.</strong>
               <p>
-                Add photos, videos or flyers. FromOne creates one scheduled post for each item. If you do not have media, it can still create a few profile-only draft posts for you to review.
+                Upload what you have. FromOne creates the wording, suggested time and platform draft. You review everything before it goes out.
               </p>
             </div>
           </section>
@@ -5565,15 +8468,14 @@ If uploads are supplied:
               id="upload-media"
               className="dashboard-upload-dropzone"
               style={{
-                minHeight: 230,
+                minHeight: "auto",
                 borderRadius: 32,
                 border: weeklyUploads.length > 0
                   ? "1px solid rgba(61, 220, 151, 0.34)"
                   : "1px dashed rgba(255, 212, 59, 0.5)",
                 background:
                   "radial-gradient(circle at top, rgba(255, 212, 59, 0.12), transparent 36%), rgba(15, 23, 42, 0.56)",
-                display: "grid",
-                placeItems: "center",
+                display: "block",
                 textAlign: "center",
                 padding: "clamp(24px, 4vw, 34px)",
                 cursor: "pointer",
@@ -5590,7 +8492,7 @@ If uploads are supplied:
                 style={{ display: "none" }}
               />
 
-              <span style={{ display: "grid", gap: 10, justifyItems: "center" }}>
+              <span className="dashboard-upload-inner">
                 <span className="dashboard-mobile-upload-title">Add what you have</span>
 
                 <span className="dashboard-upload-type-grid" aria-label="Supported upload types">
@@ -5602,8 +8504,8 @@ If uploads are supplied:
                         <circle cx="8.4" cy="8.8" r="1.1" />
                       </svg>
                     </span>
-                    <strong>Photos</strong>
-                    <small>Upload images</small>
+                    <strong>Add image</strong>
+                    <small></small>
                   </span>
 
                   <span className="dashboard-upload-type-card">
@@ -5613,8 +8515,8 @@ If uploads are supplied:
                         <path d="M10 9.5v5l4.4-2.5z" />
                       </svg>
                     </span>
-                    <strong>Videos</strong>
-                    <small>Upload clips</small>
+                    <strong>Add video</strong>
+                    <small></small>
                   </span>
 
                   <span className="dashboard-upload-type-card">
@@ -5627,8 +8529,8 @@ If uploads are supplied:
                         <path d="M9.5 17h3" />
                       </svg>
                     </span>
-                    <strong>Flyers</strong>
-                    <small>Upload PDFs</small>
+                    <strong>Add flyer</strong>
+                    <small></small>
                   </span>
 
                   <button
@@ -5648,7 +8550,7 @@ If uploads are supplied:
                       </svg>
                     </span>
                     <strong>Take photo</strong>
-                    <small>Use camera</small>
+                    <small></small>
                   </button>
 
                   <button
@@ -5667,8 +8569,8 @@ If uploads are supplied:
                         <path d="M15 10l5-2.5v9L15 14z" />
                       </svg>
                     </span>
-                    <strong>Take video</strong>
-                    <small>Record now</small>
+                    <strong>Record video</strong>
+                    <small></small>
                   </button>
                 </span>
 
@@ -5708,31 +8610,33 @@ If uploads are supplied:
                   }}
                 />
 
-                <span
-                  className="dashboard-upload-icon"
-                  style={{
-                    width: 74,
-                    height: 74,
-                    borderRadius: 26,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#ffd43b",
-                    color: "#101420",
-                    fontSize: 34,
-                    fontWeight: 950,
-                    boxShadow: "0 20px 48px rgba(255, 212, 59, 0.24)",
-                  }}
-                >
-                  +
-                </span>
+                <span className="dashboard-desktop-upload-cta" aria-hidden="true">
+                  <span
+                    className="dashboard-upload-icon"
+                    style={{
+                      width: 74,
+                      height: 74,
+                      borderRadius: 26,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "#ffd43b",
+                      color: "#101420",
+                      fontSize: 34,
+                      fontWeight: 950,
+                      boxShadow: "0 20px 48px rgba(255, 212, 59, 0.24)",
+                    }}
+                  >
+                    +
+                  </span>
 
-                <strong style={{ fontSize: "clamp(1.35rem, 3vw, 2rem)" }}>
-                  Click here to upload
-                </strong>
+                  <strong style={{ fontSize: "clamp(1.35rem, 3vw, 2rem)" }}>
+                    Click here to upload
+                  </strong>
 
-                <span style={{ color: "var(--muted)", maxWidth: 560 }}>
-                  Upload what you have. FromOne will create one scheduled post for each photo, video or flyer.
+                  <span style={{ color: "var(--muted)", maxWidth: 560 }}>
+                    Upload what you have. FromOne will create one scheduled post for each photo, video or flyer.
+                  </span>
                 </span>
               </span>
             </label>
@@ -5987,7 +8891,7 @@ If uploads are supplied:
                   <button
                     key={platform.name}
                     type="button"
-                    className="dashboard-platform-card"
+                    className={`dashboard-platform-card ${selected ? "is-selected" : ""}`}
                     onClick={() => togglePlatform(platform.name)}
                     aria-pressed={selected}
                     style={{
@@ -6053,6 +8957,7 @@ If uploads are supplied:
 
             {weeklyUploads.length > 0 && (
               <p
+                className="dashboard-one-upload-note"
                 style={{
                   margin: 0,
                   textAlign: "center",
@@ -6061,7 +8966,7 @@ If uploads are supplied:
                   lineHeight: 1.5,
                 }}
               >
-                FromOne will create one scheduled post for each upload. FromOne will create one scheduled post for each upload. You’ll review every post before anything is published.
+                FromOne will create one scheduled post for each upload. You’ll review every post before anything is published.
               </p>
             )}
 
@@ -6133,6 +9038,7 @@ If uploads are supplied:
 
             {weeklyUploads.length > 0 && (
               <p
+                className="dashboard-nothing-published-note"
                 style={{
                   margin: "-4px 0 0",
                   textAlign: "center",
@@ -6140,7 +9046,7 @@ If uploads are supplied:
                   lineHeight: 1.5,
                 }}
               >
-                Nothing is published from this screen. FromOne creates scheduled posts from what you uploaded and sends them to Posts so you can review, edit, approve and schedule.
+                Nothing is published from this screen. Your posts go to Posts for review first.
               </p>
             )}
 
