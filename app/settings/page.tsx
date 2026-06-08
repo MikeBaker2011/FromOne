@@ -1835,6 +1835,359 @@ export default function SettingsPage() {
 
       <style jsx global>{`
 
+        /* Mobile settings simplification: keep desktop advanced, make phone view client-simple */
+        @media (max-width: 760px) {
+          .settings-setup-guide {
+            display: none !important;
+          }
+
+          .settings-quick-profile-card,
+          .settings-profile-wizard-card,
+          .settings-social-simple-section,
+          .settings-saved-weekly-sets-section,
+          .settings-create-posts-section,
+          .manual-collapse-card {
+            width: min(100%, 430px) !important;
+            margin: 0 auto 16px !important;
+            border-radius: 28px !important;
+            padding: 18px !important;
+          }
+
+          .settings-quick-profile-card {
+            margin-top: 0 !important;
+          }
+
+          .settings-quick-profile-layout {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+
+          .settings-quick-profile-copy {
+            text-align: center !important;
+            display: grid !important;
+            justify-items: center !important;
+          }
+
+          .settings-live-step-label {
+            justify-content: center !important;
+            margin-inline: auto !important;
+          }
+
+          .settings-quick-profile-copy h2,
+          .settings-social-simple-head h2,
+          .settings-create-posts-section h2,
+          .settings-saved-sets-head h2 {
+            text-align: center !important;
+            font-size: clamp(1.9rem, 9vw, 2.45rem) !important;
+            line-height: 0.96 !important;
+            letter-spacing: -0.055em !important;
+            margin: 10px auto 8px !important;
+          }
+
+          .settings-quick-profile-copy p,
+          .settings-social-simple-head p,
+          .settings-create-posts-section p,
+          .settings-saved-sets-head p {
+            text-align: center !important;
+            max-width: 330px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            font-size: 0.92rem !important;
+            line-height: 1.45 !important;
+          }
+
+          .settings-quick-profile-progress {
+            display: none !important;
+          }
+
+          .settings-quick-profile-actions {
+            width: 100% !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            margin-top: 16px !important;
+          }
+
+          .settings-quick-profile-actions .primary-button,
+          .settings-quick-profile-actions .secondary-button,
+          .settings-quick-profile-actions button,
+          .settings-quick-profile-actions a {
+            width: 100% !important;
+            min-height: 46px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+          }
+
+          .settings-profile-wizard-head {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            text-align: center !important;
+            gap: 14px !important;
+          }
+
+          .settings-profile-wizard-head h2 {
+            font-size: clamp(1.9rem, 9vw, 2.55rem) !important;
+            line-height: 0.96 !important;
+            letter-spacing: -0.055em !important;
+            margin: 8px 0 !important;
+          }
+
+          .settings-profile-wizard-head p {
+            max-width: 330px !important;
+            margin-inline: auto !important;
+            line-height: 1.45 !important;
+          }
+
+          .settings-one-card-setup {
+            padding: 18px !important;
+            border-radius: 26px !important;
+          }
+
+          .settings-one-card-head {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            text-align: center !important;
+            gap: 18px !important;
+            margin-bottom: 22px !important;
+          }
+
+          .settings-one-card-head > div {
+            display: grid !important;
+            justify-items: center !important;
+            gap: 10px !important;
+          }
+
+          .settings-one-card-head h3 {
+            margin: 4px 0 2px !important;
+            font-size: clamp(1.8rem, 9vw, 2.4rem) !important;
+            line-height: 0.98 !important;
+          }
+
+          .settings-one-card-head p {
+            margin: 0 0 6px !important;
+            max-width: 320px !important;
+          }
+
+          .settings-one-card-head .secondary-button {
+            width: 100% !important;
+            min-height: 46px !important;
+            margin-top: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .settings-one-card-website {
+            margin-top: 22px !important;
+            padding: 16px !important;
+            border-radius: 24px !important;
+          }
+
+          .settings-one-card-fields {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+          }
+
+          .settings-client-quick-save,
+          .settings-one-card-save {
+            padding: 14px !important;
+            border-radius: 22px !important;
+          }
+
+          .settings-client-quick-save button,
+          .settings-one-card-save button {
+            min-height: 48px !important;
+            border-radius: 16px !important;
+          }
+
+          .settings-client-quick-save span,
+          .settings-one-card-save span {
+            text-align: center !important;
+            display: block !important;
+            margin-top: 10px !important;
+          }
+
+          .settings-social-simple-head {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            text-align: center !important;
+            gap: 12px !important;
+          }
+
+          .settings-social-info-button {
+            width: 100% !important;
+            min-height: 42px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .settings-social-info-popover {
+            margin-top: 14px !important;
+            text-align: center !important;
+          }
+
+          .settings-social-simple-grid {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+            margin-top: 16px !important;
+          }
+
+          .settings-social-connect-card {
+            padding: 16px !important;
+            border-radius: 24px !important;
+            text-align: center !important;
+          }
+
+          .settings-social-connect-card h3 {
+            font-size: 1.35rem !important;
+            line-height: 1.08 !important;
+            margin: 8px 0 !important;
+          }
+
+          .settings-social-account-summary {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            margin: 14px 0 !important;
+          }
+
+          .settings-social-button-row {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+
+          .settings-social-button-row button,
+          .settings-social-button-row a {
+            width: 100% !important;
+            min-height: 46px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .settings-create-posts-section > div {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+            text-align: center !important;
+          }
+
+          .settings-create-posts-section > div > div:first-child {
+            display: grid !important;
+            justify-items: center !important;
+          }
+
+          .settings-create-posts-section > div > div:last-child {
+            width: 100% !important;
+            padding: 14px !important;
+          }
+
+          .settings-create-posts-section button {
+            min-height: 48px !important;
+            border-radius: 16px !important;
+          }
+
+          .settings-saved-sets-head {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            text-align: center !important;
+            gap: 14px !important;
+          }
+
+          .settings-saved-sets-head .secondary-button {
+            width: 100% !important;
+            min-height: 44px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .settings-saved-sets-limit-card {
+            text-align: center !important;
+            margin-top: 14px !important;
+            border-radius: 22px !important;
+          }
+
+          .settings-saved-sets-list {
+            display: grid !important;
+            gap: 10px !important;
+          }
+
+          .settings-saved-set-row {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+            text-align: center !important;
+            justify-items: center !important;
+            padding: 14px !important;
+            border-radius: 22px !important;
+          }
+
+          .settings-saved-set-row .danger-button {
+            width: 100% !important;
+            min-height: 42px !important;
+          }
+
+          .manual-collapse-card {
+            opacity: 0.78 !important;
+          }
+
+          .manual-collapse-card .manual-collapse-content {
+            text-align: center !important;
+          }
+
+          .manual-collapse-card .secondary-button {
+            width: 100% !important;
+            min-height: 44px !important;
+          }
+
+          .settings-profile-modal {
+            width: min(100% - 22px, 430px) !important;
+            max-height: min(86vh, 760px) !important;
+            overflow: auto !important;
+            border-radius: 28px !important;
+            padding: 18px !important;
+          }
+
+          .settings-profile-modal-head {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            justify-items: center !important;
+            text-align: center !important;
+            gap: 12px !important;
+          }
+
+          .settings-profile-modal-grid {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+          }
+
+          .settings-profile-modal-actions {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+
+          .settings-profile-modal-actions button {
+            width: 100% !important;
+            min-height: 46px !important;
+          }
+        }
+
+
+
         /* Mobile spacing polish: give Business details more breathing room */
         @media (max-width: 760px) {
           .settings-one-card-head {
