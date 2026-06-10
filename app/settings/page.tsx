@@ -36,6 +36,8 @@ type ScannedBusinessProfile = {
   content_pillars?: string[];
   main_offer?: string;
   business_goals?: string[];
+  customer_pain_points?: string[];
+  content_style?: string;
   brand_primary_color?: string;
   brand_secondary_color?: string;
   brand_accent_color?: string;
@@ -100,6 +102,8 @@ export default function SettingsPage() {
   const [mainOffer, setMainOffer] = useState('');
   const [contentPillars, setContentPillars] = useState('');
   const [businessGoals, setBusinessGoals] = useState('');
+  const [customerPainPoints, setCustomerPainPoints] = useState('');
+  const [contentStyle, setContentStyle] = useState('');
 
   const [brandPrimaryColor, setBrandPrimaryColor] = useState('#ffd43b');
   const [brandSecondaryColor, setBrandSecondaryColor] = useState('#101420');
@@ -252,7 +256,9 @@ export default function SettingsPage() {
       location.trim() ||
       services.trim() ||
       targetAudience.trim() ||
-      mainOffer.trim()
+      mainOffer.trim() ||
+      customerPainPoints.trim() ||
+      contentStyle.trim()
   );
 
   const profileCompletionItems = useMemo(
@@ -266,8 +272,9 @@ export default function SettingsPage() {
       { label: 'Location', ready: Boolean(location.trim()) },
       { label: 'Services', ready: Boolean(services.trim()) },
       { label: 'Customers', ready: Boolean(targetAudience.trim()) },
+      { label: 'Tone', ready: Boolean(toneOfVoice.trim()) },
     ],
-    [websiteUrl, businessName, industry, location, services, targetAudience]
+    [websiteUrl, businessName, industry, location, services, targetAudience, toneOfVoice]
   );
 
   const completedProfileItems = profileHasStarted
@@ -284,8 +291,10 @@ export default function SettingsPage() {
       { label: 'Business type', ready: Boolean(industry.trim()) },
       { label: 'Location', ready: Boolean(location.trim()) },
       { label: 'Services', ready: Boolean(services.trim()) },
+      { label: 'Audience', ready: Boolean(targetAudience.trim()) },
+      { label: 'Tone', ready: Boolean(toneOfVoice.trim()) },
     ],
-    [businessName, industry, location, services]
+    [businessName, industry, location, services, targetAudience, toneOfVoice]
   );
 
   const completedSimpleSteps = simpleProfileSteps.filter((item) => item.ready).length;
@@ -596,6 +605,10 @@ export default function SettingsPage() {
     if (Array.isArray(profile.business_goals)) {
       setBusinessGoals(profile.business_goals.join(', '));
     }
+    if (Array.isArray(profile.customer_pain_points)) {
+      setCustomerPainPoints(profile.customer_pain_points.join(', '));
+    }
+    if (profile.content_style) setContentStyle(profile.content_style);
     if (profile.brand_primary_color) setBrandPrimaryColor(profile.brand_primary_color);
     if (profile.brand_secondary_color) setBrandSecondaryColor(profile.brand_secondary_color);
     if (profile.brand_accent_color) setBrandAccentColor(profile.brand_accent_color);
@@ -717,6 +730,8 @@ export default function SettingsPage() {
       setMainOffer(data.main_offer || '');
       setContentPillars(joinList(data.content_pillars));
       setBusinessGoals(joinList(data.business_goals));
+      setCustomerPainPoints(joinList(data.customer_pain_points));
+      setContentStyle(data.content_style || '');
       setBrandPrimaryColor(data.brand_primary_color || '#ffd43b');
       setBrandSecondaryColor(data.brand_secondary_color || '#101420');
       setBrandAccentColor(data.brand_accent_color || '#3ddc97');
@@ -749,6 +764,8 @@ export default function SettingsPage() {
       main_offer: mainOffer.trim() || null,
       content_pillars: splitList(contentPillars),
       business_goals: splitList(businessGoals),
+      customer_pain_points: splitList(customerPainPoints),
+      content_style: contentStyle.trim() || null,
       brand_primary_color: brandPrimaryColor.trim() || null,
       brand_secondary_color: brandSecondaryColor.trim() || null,
       brand_accent_color: brandAccentColor.trim() || null,
@@ -870,6 +887,8 @@ export default function SettingsPage() {
     setMainOffer('');
     setContentPillars('');
     setBusinessGoals('');
+    setCustomerPainPoints('');
+    setContentStyle('');
     setBrandPrimaryColor('#ffd43b');
     setBrandSecondaryColor('#101420');
     setBrandAccentColor('#3ddc97');
@@ -1165,7 +1184,7 @@ export default function SettingsPage() {
                 <p>
                   {simpleProfileComplete
                     ? 'Your business profile is saved. You can edit it here whenever details change.'
-                    : 'Add these details once so FromOne knows what you offer, where you work and who you want to reach.'}
+                    : 'Add these details once so FromOne knows what you offer, who you want to reach and how your posts should sound.'}
                 </p>
 
                 <div className="settings-quick-profile-actions">
@@ -1263,7 +1282,7 @@ export default function SettingsPage() {
                   <div className="page-eyebrow">Quick setup</div>
                   <h2>One simple card.</h2>
                   <p>
-                    Add the basics, scan a website if helpful, then continue straight to the Dashboard.
+                    Add the basics, audience and tone, then continue straight to the Dashboard.
                   </p>
                 </div>
 
@@ -1379,6 +1398,70 @@ export default function SettingsPage() {
                         rows={3}
                       />
                     </label>
+
+                    <label>
+                      <strong>Target audience</strong>
+                      <span>Who should the posts speak to?</span>
+                      <textarea
+                        className="input"
+                        value={targetAudience}
+                        onChange={(event) => setTargetAudience(event.target.value)}
+                        placeholder="Example: Local homeowners, landlords, shop owners, event organisers"
+                        rows={3}
+                      />
+                    </label>
+
+                    <label>
+                      <strong>Tone of voice</strong>
+                      <span>How should the posts sound?</span>
+                      <select
+                        className="input"
+                        value={toneOfVoice}
+                        onChange={(event) => setToneOfVoice(event.target.value)}
+                      >
+                        {toneOptions.map((tone) => (
+                          <option key={tone} value={tone}>
+                            {tone}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label>
+                      <strong>Main offer or CTA</strong>
+                      <span>What should posts usually encourage people to do?</span>
+                      <textarea
+                        className="input"
+                        value={mainOffer}
+                        onChange={(event) => setMainOffer(event.target.value)}
+                        placeholder="Example: Request a quote, book a consultation, visit the showroom"
+                        rows={3}
+                      />
+                    </label>
+
+                    <label>
+                      <strong>Customer pain points</strong>
+                      <span>What problems do customers need solving?</span>
+                      <textarea
+                        className="input"
+                        value={customerPainPoints}
+                        onChange={(event) => setCustomerPainPoints(event.target.value)}
+                        placeholder="Example: Needs it fast, wants a professional finish, unsure what size or material to choose"
+                        rows={3}
+                      />
+                    </label>
+
+                    <label>
+                      <strong>Content style</strong>
+                      <span>What type of posts should FromOne create?</span>
+                      <textarea
+                        className="input"
+                        value={contentStyle}
+                        onChange={(event) => setContentStyle(event.target.value)}
+                        placeholder="Example: Project showcases, before and afters, tips, offers, local business support"
+                        rows={3}
+                      />
+                    </label>
                   </div>
                   <div className="settings-client-quick-save settings-one-card-save">
                     <button type="button" onClick={handleSaveProfile} disabled={saving}>
@@ -1411,7 +1494,7 @@ export default function SettingsPage() {
                     <div className="page-eyebrow">Optional details</div>
                     <h3>Improve the wording</h3>
                     <p>
-                      These are optional. Add them only if you want FromOne to better understand tone, customers and goals.
+                      These are optional. Add them only if you want FromOne to better understand themes, goals and brand details.
                     </p>
                   </div>
 
@@ -1425,46 +1508,6 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="settings-profile-modal-grid">
-                  <label>
-                    <strong>Target customers</strong>
-                    <span>Who should the posts speak to?</span>
-                    <textarea
-                      className="input"
-                      value={targetAudience}
-                      onChange={(event) => setTargetAudience(event.target.value)}
-                      placeholder="Example: Homeowners, landlords, local businesses"
-                      rows={3}
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Tone of voice</strong>
-                    <span>How should the content sound?</span>
-                    <select
-                      className="input"
-                      value={toneOfVoice}
-                      onChange={(event) => setToneOfVoice(event.target.value)}
-                    >
-                      {toneOptions.map((tone) => (
-                        <option key={tone} value={tone}>
-                          {tone}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    <strong>Main offer or CTA</strong>
-                    <span>Optional service, offer or action to promote.</span>
-                    <textarea
-                      className="input"
-                      value={mainOffer}
-                      onChange={(event) => setMainOffer(event.target.value)}
-                      placeholder="Example: Book a free quote this month"
-                      rows={3}
-                    />
-                  </label>
-
                   <label>
                     <strong>Content themes</strong>
                     <span>Optional topics, separated with commas.</span>
@@ -1835,6 +1878,62 @@ export default function SettingsPage() {
 
       <style jsx global>{`
 
+        .settings-one-card-fields {
+          align-items: start;
+        }
+
+        .settings-one-card-fields label {
+          min-width: 0;
+        }
+
+        .settings-one-card-fields textarea.input {
+          resize: vertical;
+        }
+
+        .settings-one-card-fields label:nth-child(n + 5) {
+          border: 1px solid rgba(255, 212, 59, 0.12);
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.055), transparent 34%),
+            rgba(255,255,255,0.025);
+          border-radius: 22px;
+          padding: 14px;
+        }
+
+        .settings-one-card-fields label:nth-child(5)::before,
+        .settings-one-card-fields label:nth-child(6)::before,
+        .settings-one-card-fields label:nth-child(7)::before,
+        .settings-one-card-fields label:nth-child(8)::before,
+        .settings-one-card-fields label:nth-child(9)::before {
+          display: inline-flex;
+          width: fit-content;
+          margin-bottom: 8px;
+          padding: 5px 9px;
+          border-radius: 999px;
+          background: rgba(255, 212, 59, 0.1);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+          color: #ffe58a;
+          font-size: 0.68rem;
+          font-weight: 1000;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .settings-one-card-fields label:nth-child(5)::before {
+          content: "Recommended";
+        }
+
+        .settings-one-card-fields label:nth-child(6)::before,
+        .settings-one-card-fields label:nth-child(7)::before {
+          content: "Improves posts";
+        }
+
+        .settings-one-card-fields label:nth-child(8)::before,
+        .settings-one-card-fields label:nth-child(9)::before {
+          content: "Less generic";
+        }
+
+
+
         /* Mobile settings simplification: keep desktop advanced, make phone view client-simple */
         @media (max-width: 760px) {
           .settings-setup-guide {
@@ -1993,6 +2092,20 @@ export default function SettingsPage() {
             grid-template-columns: 1fr !important;
             gap: 14px !important;
           }
+
+
+          .settings-one-card-fields label:nth-child(n + 5) {
+            padding: 14px !important;
+            border-radius: 22px !important;
+            text-align: left !important;
+          }
+
+          .settings-one-card-fields label:nth-child(n + 5) strong,
+          .settings-one-card-fields label:nth-child(n + 5) span {
+            text-align: left !important;
+          }
+
+
 
           .settings-client-quick-save,
           .settings-one-card-save {
