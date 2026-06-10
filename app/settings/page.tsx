@@ -1282,7 +1282,7 @@ export default function SettingsPage() {
                   <div className="page-eyebrow">Quick setup</div>
                   <h2>One simple card.</h2>
                   <p>
-                    Add the basics, audience and tone, then continue straight to the Dashboard.
+                    Add the details once, then continue straight to the Dashboard.
                   </p>
                 </div>
 
@@ -1303,44 +1303,57 @@ export default function SettingsPage() {
                       : 'settings-one-card-setup'
                   }
                 >
-                  <div className="settings-one-card-head">
+                  <div className="settings-one-card-head settings-guided-profile-head">
                     <div>
                       <span className="settings-simple-step">Quick setup</span>
                       <h3>Business details</h3>
                       <p>
-                        Fill in the basics yourself, or paste a website and let FromOne try to help.
+                        Start with the basics, then add audience and tone so FromOne can create less generic posts.
                       </p>
                     </div>
 
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => setShowOptionalProfileModal(true)}
-                    >
-                      Add more details
-                    </button>
+
                   </div>
 
-                  <div className="settings-one-card-website">
-                    <label>
-                      <strong>Website <em>optional</em></strong>
-                      <span>Use this only if you want FromOne to scan the site.</span>
-                      <input
-                        className="input"
-                        value={websiteUrl}
-                        onChange={(event) => setWebsiteUrl(event.target.value)}
-                        placeholder="https://example.com"
-                      />
-                    </label>
+                  <div className="settings-guided-profile-intro">
+                    <strong>Fill this in once.</strong>
+                    <span>
+                      FromOne uses these details every time it creates posts for this business.
+                    </span>
+                  </div>
 
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={handleScanWebsite}
-                      disabled={scanningWebsite || saving}
-                    >
-                      {scanningWebsite ? 'Scanning...' : 'Scan website'}
-                    </button>
+                  <div className="settings-one-card-website settings-guided-website-card settings-website-simple-card">
+                    <div className="settings-website-simple-head">
+                      <div>
+                        <span>Optional</span>
+                        <strong>Use your website to help fill this in</strong>
+                      </div>
+
+                      <p>
+                        Paste a website if you want FromOne to scan it. Otherwise, just fill the steps below.
+                      </p>
+                    </div>
+
+                    <div className="settings-website-simple-row">
+                      <label>
+                        <strong>Website</strong>
+                        <input
+                          className="input"
+                          value={websiteUrl}
+                          onChange={(event) => setWebsiteUrl(event.target.value)}
+                          placeholder="https://example.com"
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={handleScanWebsite}
+                        disabled={scanningWebsite || saving}
+                      >
+                        {scanningWebsite ? 'Scanning...' : 'Scan website'}
+                      </button>
+                    </div>
                   </div>
 
                   {scanMessage && (
@@ -1349,119 +1362,167 @@ export default function SettingsPage() {
                     </p>
                   )}
 
-                  <div className="settings-one-card-fields">
-                    <label>
-                      <strong>Business name *</strong>
-                      <span>What customers call the business.</span>
-                      <input
-                        className="input"
-                        value={businessName}
-                        onChange={(event) => setBusinessName(event.target.value)}
-                        placeholder="Example: Baker Roofing"
-                      />
-                    </label>
+                  <div className="settings-one-card-fields settings-guided-profile-fields">
+                    <section className="settings-profile-step">
+                      <div className="settings-profile-step-marker">1</div>
+                      <div className="settings-profile-step-content">
+                        <div className="settings-profile-step-copy">
+                          <strong>The business</strong>
+                          <span>Tell FromOne who the business is and where it works.</span>
+                        </div>
 
-                    <label>
-                      <strong>Type of business *</strong>
-                      <span>What does the business do?</span>
-                      <input
-                        className="input settings-mobile-editable-input"
-                        value={industry}
-                        onChange={(event) => setIndustry(event.target.value)}
-                        autoComplete="organization-title"
-                        inputMode="text"
-                        placeholder="Example: Roofing, Beauty, Fitness"
-                      />
-                    </label>
+                        <div className="settings-profile-step-fields">
+                          <label>
+                            <strong>Business name *</strong>
+                            <span>What customers call the business.</span>
+                            <input
+                              className="input"
+                              value={businessName}
+                              onChange={(event) => setBusinessName(event.target.value)}
+                              placeholder="Example: Baker Roofing"
+                            />
+                          </label>
 
-                    <label>
-                      <strong>Location</strong>
-                      <span>Town, city or service area.</span>
-                      <input
-                        className="input settings-mobile-editable-input"
-                        value={location}
-                        onChange={(event) => setLocation(event.target.value)}
-                        autoComplete="address-level2"
-                        inputMode="text"
-                        placeholder="Example: Manchester"
-                      />
-                    </label>
+                          <label>
+                            <strong>Type of business *</strong>
+                            <span>What does the business do?</span>
+                            <input
+                              className="input settings-mobile-editable-input"
+                              value={industry}
+                              onChange={(event) => setIndustry(event.target.value)}
+                              autoComplete="organization-title"
+                              inputMode="text"
+                              placeholder="Example: Roofing, Beauty, Fitness"
+                            />
+                          </label>
 
-                    <label>
-                      <strong>What services do you offer?</strong>
-                      <span>A few words is enough.</span>
-                      <textarea
-                        className="input"
-                        value={services}
-                        onChange={(event) => setServices(event.target.value)}
-                        placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
-                        rows={3}
-                      />
-                    </label>
+                          <label>
+                            <strong>Location</strong>
+                            <span>Town, city or service area.</span>
+                            <input
+                              className="input settings-mobile-editable-input"
+                              value={location}
+                              onChange={(event) => setLocation(event.target.value)}
+                              autoComplete="address-level2"
+                              inputMode="text"
+                              placeholder="Example: Manchester"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </section>
 
-                    <label>
-                      <strong>Target audience</strong>
-                      <span>Who should the posts speak to?</span>
-                      <textarea
-                        className="input"
-                        value={targetAudience}
-                        onChange={(event) => setTargetAudience(event.target.value)}
-                        placeholder="Example: Local homeowners, landlords, shop owners, event organisers"
-                        rows={3}
-                      />
-                    </label>
+                    <section className="settings-profile-step">
+                      <div className="settings-profile-step-marker">2</div>
+                      <div className="settings-profile-step-content">
+                        <div className="settings-profile-step-copy">
+                          <strong>What you offer</strong>
+                          <span>This helps FromOne write posts around real services instead of generic captions.</span>
+                        </div>
 
-                    <label>
-                      <strong>Tone of voice</strong>
-                      <span>How should the posts sound?</span>
-                      <select
-                        className="input"
-                        value={toneOfVoice}
-                        onChange={(event) => setToneOfVoice(event.target.value)}
-                      >
-                        {toneOptions.map((tone) => (
-                          <option key={tone} value={tone}>
-                            {tone}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                        <div className="settings-profile-step-fields">
+                          <label>
+                            <strong>Services</strong>
+                            <span>A few words is enough.</span>
+                            <textarea
+                              className="input"
+                              value={services}
+                              onChange={(event) => setServices(event.target.value)}
+                              placeholder="Example: Roof repairs, gutter cleaning, emergency callouts"
+                              rows={3}
+                            />
+                          </label>
 
-                    <label>
-                      <strong>Main offer or CTA</strong>
-                      <span>What should posts usually encourage people to do?</span>
-                      <textarea
-                        className="input"
-                        value={mainOffer}
-                        onChange={(event) => setMainOffer(event.target.value)}
-                        placeholder="Example: Request a quote, book a consultation, visit the showroom"
-                        rows={3}
-                      />
-                    </label>
+                          <label>
+                            <strong>Main offer or CTA</strong>
+                            <span>What should posts usually encourage people to do?</span>
+                            <textarea
+                              className="input"
+                              value={mainOffer}
+                              onChange={(event) => setMainOffer(event.target.value)}
+                              placeholder="Example: Request a quote, book a consultation, visit the showroom"
+                              rows={3}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </section>
 
-                    <label>
-                      <strong>Customer pain points</strong>
-                      <span>What problems do customers need solving?</span>
-                      <textarea
-                        className="input"
-                        value={customerPainPoints}
-                        onChange={(event) => setCustomerPainPoints(event.target.value)}
-                        placeholder="Example: Needs it fast, wants a professional finish, unsure what size or material to choose"
-                        rows={3}
-                      />
-                    </label>
+                    <section className="settings-profile-step">
+                      <div className="settings-profile-step-marker">3</div>
+                      <div className="settings-profile-step-content">
+                        <div className="settings-profile-step-copy">
+                          <strong>Who you want to reach</strong>
+                          <span>Audience and customer problems make posts more specific and useful.</span>
+                        </div>
 
-                    <label>
-                      <strong>Content style</strong>
-                      <span>What type of posts should FromOne create?</span>
-                      <textarea
-                        className="input"
-                        value={contentStyle}
-                        onChange={(event) => setContentStyle(event.target.value)}
-                        placeholder="Example: Project showcases, before and afters, tips, offers, local business support"
-                        rows={3}
-                      />
-                    </label>
+                        <div className="settings-profile-step-fields">
+                          <label>
+                            <strong>Target audience</strong>
+                            <span>Who should the posts speak to?</span>
+                            <textarea
+                              className="input"
+                              value={targetAudience}
+                              onChange={(event) => setTargetAudience(event.target.value)}
+                              placeholder="Example: Local homeowners, landlords, shop owners, event organisers"
+                              rows={3}
+                            />
+                          </label>
+
+                          <label>
+                            <strong>Customer pain points</strong>
+                            <span>What problems do customers need solving?</span>
+                            <textarea
+                              className="input"
+                              value={customerPainPoints}
+                              onChange={(event) => setCustomerPainPoints(event.target.value)}
+                              placeholder="Example: Needs it fast, wants a professional finish, unsure what size or material to choose"
+                              rows={3}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="settings-profile-step">
+                      <div className="settings-profile-step-marker">4</div>
+                      <div className="settings-profile-step-content">
+                        <div className="settings-profile-step-copy">
+                          <strong>How posts should sound</strong>
+                          <span>Set the voice and style so FromOne creates content that feels on-brand.</span>
+                        </div>
+
+                        <div className="settings-profile-step-fields">
+                          <label>
+                            <strong>Tone of voice</strong>
+                            <span>How should the posts sound?</span>
+                            <select
+                              className="input"
+                              value={toneOfVoice}
+                              onChange={(event) => setToneOfVoice(event.target.value)}
+                            >
+                              {toneOptions.map((tone) => (
+                                <option key={tone} value={tone}>
+                                  {tone}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <strong>Content style</strong>
+                            <span>What type of posts should FromOne create?</span>
+                            <textarea
+                              className="input"
+                              value={contentStyle}
+                              onChange={(event) => setContentStyle(event.target.value)}
+                              placeholder="Example: Project showcases, before and afters, tips, offers, local business support"
+                              rows={3}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </section>
                   </div>
                   <div className="settings-client-quick-save settings-one-card-save">
                     <button type="button" onClick={handleSaveProfile} disabled={saving}>
@@ -1475,86 +1536,6 @@ export default function SettingsPage() {
                 </section>
               </div>
             </section>
-          )}
-
-          {showOptionalProfileModal && (
-            <div
-              className="settings-profile-modal-backdrop"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Optional profile details"
-              onClick={() => setShowOptionalProfileModal(false)}
-            >
-              <section
-                className="settings-profile-modal"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="settings-profile-modal-head">
-                  <div>
-                    <div className="page-eyebrow">Optional details</div>
-                    <h3>Improve the wording</h3>
-                    <p>
-                      These are optional. Add them only if you want FromOne to better understand themes, goals and brand details.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => setShowOptionalProfileModal(false)}
-                  >
-                    Close
-                  </button>
-                </div>
-
-                <div className="settings-profile-modal-grid">
-                  <label>
-                    <strong>Content themes</strong>
-                    <span>Optional topics, separated with commas.</span>
-                    <textarea
-                      className="input"
-                      value={contentPillars}
-                      onChange={(event) => setContentPillars(event.target.value)}
-                      placeholder="Example: Tips, reviews, offers, before and afters"
-                      rows={3}
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Business goals</strong>
-                    <span>Optional goals, separated with commas.</span>
-                    <textarea
-                      className="input"
-                      value={businessGoals}
-                      onChange={(event) => setBusinessGoals(event.target.value)}
-                      placeholder="Example: More calls, more bookings, more enquiries"
-                      rows={3}
-                    />
-                  </label>
-                </div>
-
-                <div className="settings-profile-modal-actions">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await handleSaveProfile();
-                      setShowOptionalProfileModal(false);
-                    }}
-                    disabled={saving}
-                  >
-                    {saving ? 'Saving...' : 'Save details'}
-                  </button>
-
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => setShowOptionalProfileModal(false)}
-                  >
-                    Done
-                  </button>
-                </div>
-              </section>
-            </div>
           )}
 
           <section
@@ -5985,6 +5966,369 @@ export default function SettingsPage() {
           .settings-profile-card-pulse,
           .settings-setup-profile-button-pulse {
             animation: none !important;
+          }
+        }
+
+
+
+        /* Guided Business Profile layout - simple, stacked and client-friendly */
+        .settings-guided-profile-head {
+          align-items: center;
+        }
+
+        .settings-guided-profile-head > div {
+          max-width: 760px;
+        }
+
+        .settings-guided-profile-intro {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          margin: 0 0 16px;
+          padding: 14px 16px;
+          border-radius: 22px;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.075), transparent 36%),
+            rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.085);
+        }
+
+        .settings-guided-profile-intro strong {
+          color: #ffffff;
+          font-size: 1rem;
+          font-weight: 1000;
+        }
+
+        .settings-guided-profile-intro span {
+          color: rgba(248,250,252,0.62);
+          font-size: 0.9rem;
+          font-weight: 760;
+          text-align: right;
+        }
+
+        .settings-guided-website-card {
+          align-items: end;
+          margin-bottom: 16px;
+        }
+
+        .settings-profile-step-mini {
+          display: grid;
+          gap: 5px;
+          align-self: center;
+        }
+
+        .settings-profile-step-mini span {
+          width: fit-content;
+          padding: 5px 9px;
+          border-radius: 999px;
+          background: rgba(255, 212, 59, 0.1);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+          color: #ffe58a;
+          font-size: 0.68rem;
+          font-weight: 1000;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .settings-profile-step-mini strong {
+          color: #ffffff;
+          font-size: 1rem;
+          font-weight: 1000;
+        }
+
+        .settings-guided-profile-fields {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 14px !important;
+        }
+
+        .settings-profile-step {
+          display: grid;
+          grid-template-columns: 44px minmax(0, 1fr);
+          gap: 14px;
+          padding: 16px;
+          border-radius: 26px;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.055), transparent 34%),
+            linear-gradient(145deg, rgba(255,255,255,0.058), rgba(255,255,255,0.026));
+          border: 1px solid rgba(255,255,255,0.085);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        .settings-profile-step-marker {
+          width: 38px;
+          height: 38px;
+          display: inline-grid;
+          place-items: center;
+          border-radius: 15px;
+          background: linear-gradient(135deg, #ffdd4a, #ffc21a);
+          color: #081120;
+          font-size: 1rem;
+          font-weight: 1000;
+          box-shadow: 0 12px 26px rgba(255, 212, 59, 0.13);
+        }
+
+        .settings-profile-step-content {
+          display: grid;
+          gap: 14px;
+          min-width: 0;
+        }
+
+        .settings-profile-step-copy {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 14px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid rgba(255,255,255,0.075);
+        }
+
+        .settings-profile-step-copy strong {
+          color: #ffffff;
+          font-size: 1.08rem;
+          font-weight: 1000;
+          letter-spacing: -0.025em;
+        }
+
+        .settings-profile-step-copy span {
+          max-width: 560px;
+          color: rgba(248,250,252,0.58);
+          font-size: 0.86rem;
+          line-height: 1.42;
+          font-weight: 760;
+          text-align: right;
+        }
+
+        .settings-profile-step-fields {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .settings-profile-step:first-child .settings-profile-step-fields {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .settings-profile-step-fields label {
+          display: grid;
+          gap: 8px;
+          min-width: 0;
+        }
+
+        .settings-profile-step-fields label::before {
+          display: none !important;
+          content: none !important;
+        }
+
+        .settings-profile-step-fields label strong {
+          color: #ffffff;
+          font-size: 0.9rem;
+          font-weight: 1000;
+        }
+
+        .settings-profile-step-fields label span {
+          color: rgba(248,250,252,0.5);
+          font-size: 0.8rem;
+          font-weight: 720;
+          line-height: 1.35;
+        }
+
+        .settings-profile-step-fields label:nth-child(n) {
+          border: 0 !important;
+          background: transparent !important;
+          border-radius: 0 !important;
+          padding: 0 !important;
+        }
+
+        @media (max-width: 980px) {
+          .settings-profile-step:first-child .settings-profile-step-fields,
+          .settings-profile-step-fields {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-profile-step-copy {
+            display: grid;
+            gap: 6px;
+          }
+
+          .settings-profile-step-copy span {
+            text-align: left;
+            max-width: none;
+          }
+
+          .settings-guided-website-card {
+            align-items: stretch;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .settings-guided-profile-intro {
+            display: grid !important;
+            justify-items: center !important;
+            text-align: center !important;
+            gap: 8px !important;
+            padding: 14px !important;
+          }
+
+          .settings-guided-profile-intro span {
+            text-align: center !important;
+          }
+
+          .settings-profile-step {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+            padding: 14px !important;
+            border-radius: 24px !important;
+          }
+
+          .settings-profile-step-marker {
+            margin: 0 auto !important;
+          }
+
+          .settings-profile-step-copy {
+            justify-items: center !important;
+            text-align: center !important;
+          }
+
+          .settings-profile-step-copy span {
+            text-align: center !important;
+          }
+
+          .settings-profile-step-fields label {
+            text-align: left !important;
+          }
+
+          .settings-profile-step-fields label strong,
+          .settings-profile-step-fields label span {
+            text-align: left !important;
+          }
+
+          .settings-profile-step-mini {
+            justify-items: center !important;
+            text-align: center !important;
+          }
+        }
+
+
+
+        /* Cleaner optional website scan card */
+        .settings-website-simple-card {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 14px !important;
+          margin-bottom: 16px !important;
+          padding: 16px !important;
+          border-radius: 26px !important;
+          background:
+            radial-gradient(circle at top right, rgba(255, 212, 59, 0.06), transparent 34%),
+            rgba(255,255,255,0.035) !important;
+          border: 1px solid rgba(255,255,255,0.085) !important;
+        }
+
+        .settings-website-simple-head {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+        }
+
+        .settings-website-simple-head > div {
+          display: grid;
+          gap: 7px;
+        }
+
+        .settings-website-simple-head span {
+          width: fit-content;
+          padding: 5px 9px;
+          border-radius: 999px;
+          background: rgba(255, 212, 59, 0.1);
+          border: 1px solid rgba(255, 212, 59, 0.16);
+          color: #ffe58a;
+          font-size: 0.68rem;
+          font-weight: 1000;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .settings-website-simple-head strong {
+          color: #ffffff;
+          font-size: 1.05rem;
+          font-weight: 1000;
+          letter-spacing: -0.025em;
+        }
+
+        .settings-website-simple-head p {
+          max-width: 520px;
+          margin: 0;
+          color: rgba(248,250,252,0.58);
+          font-size: 0.86rem;
+          line-height: 1.42;
+          font-weight: 760;
+          text-align: right;
+        }
+
+        .settings-website-simple-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 12px;
+          align-items: start;
+        }
+
+        .settings-website-simple-row label {
+          display: grid;
+          gap: 8px;
+          min-width: 0;
+        }
+
+        .settings-website-simple-row label strong {
+          color: #ffffff;
+          font-size: 0.9rem;
+          font-weight: 1000;
+        }
+
+        .settings-website-simple-row .secondary-button {
+          min-width: 150px;
+          min-height: 56px;
+          height: 56px;
+          margin-top: 29px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        @media (max-width: 760px) {
+          .settings-website-simple-card {
+            padding: 14px !important;
+            border-radius: 24px !important;
+          }
+
+          .settings-website-simple-head {
+            display: grid !important;
+            justify-items: center !important;
+            text-align: center !important;
+            gap: 9px !important;
+          }
+
+          .settings-website-simple-head > div {
+            justify-items: center !important;
+          }
+
+          .settings-website-simple-head p {
+            text-align: center !important;
+            max-width: 320px !important;
+          }
+
+          .settings-website-simple-row {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+
+          .settings-website-simple-row .secondary-button {
+            width: 100% !important;
+            min-height: 46px !important;
+            height: 46px !important;
+            margin-top: 0 !important;
           }
         }
 
