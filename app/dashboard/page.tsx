@@ -553,7 +553,7 @@ export default function DashboardPage() {
     if (!access) {
       return {
         locked: false,
-        message: "Demo access is being prepared.",
+        message: "7-day demo access is being prepared.",
       };
     }
 
@@ -592,14 +592,14 @@ export default function DashboardPage() {
 
       return {
         locked: false,
-        message: `Demo active until ${date}.`,
+        message: `7-day demo active until ${date}.`,
       };
     }
 
     return {
       locked: true,
       message:
-        "Your 7-day demo has ended. You can still view existing posts, but creating new weekly posts is locked until access is extended or a subscription is active.",
+        "Your 7-day 7-day demo has ended. You can still view existing posts, but creating new weekly posts is locked until access is extended or a subscription is active.",
     };
   };
 
@@ -953,7 +953,7 @@ export default function DashboardPage() {
       notify(
         plan === "starter"
           ? `You have used your ${PAID_WEEKLY_SCAN_LIMIT} website scans for this 7-day period. You can still create posts using saved business details.`
-          : `Your demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Use saved business details or upgrade to FromOne Monthly.`,
+          : `Your 7-day demo includes ${DEMO_WEEKLY_SCAN_LIMIT} website scan per 7 days. Use saved business details or upgrade to FromOne Introductory Plan.`,
         "warning",
         "Weekly limit reached"
       );
@@ -984,7 +984,7 @@ export default function DashboardPage() {
       notify(
         plan === "starter"
           ? `You can scan ${PAID_WEEKLY_VIDEO_SCAN_LIMIT} videos per 7 days. You have ${remaining} video scan left.`
-          : `Your demo includes ${DEMO_WEEKLY_VIDEO_SCAN_LIMIT} video scan per 7 days. You have ${remaining} video scan left.`,
+          : `Your 7-day demo includes ${DEMO_WEEKLY_VIDEO_SCAN_LIMIT} video scan per 7 days. You have ${remaining} video scan left.`,
         "warning",
         "Video limit reached"
       );

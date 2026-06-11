@@ -1581,7 +1581,7 @@ export default function SettingsPage() {
                 <p>
                   Facebook and Instagram direct publishing need a connected business/professional Meta account.
                   Personal accounts can still use FromOne to create, edit, copy and manually publish posts.
-                  TikTok stays manual for beta.
+                  TikTok stays manual for now.
                 </p>
               </div>
             )}

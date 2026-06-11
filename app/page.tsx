@@ -18,17 +18,14 @@ export default function HomePage() {
           />
           <span>
             <strong>FromOne</strong>
-            <small>Upload. Review. Publish.</small>
+            <small>Upload it. Post it. Done.</small>
           </span>
         </Link>
 
         <div className="fo-nav-actions">
-          <a
-            href="mailto:info@fromone.co.uk?subject=FromOne beta tester"
-            className="fo-nav-beta"
-          >
-            Join beta
-          </a>
+          <Link href="/subscription" className="fo-nav-beta">
+            Intro offer
+          </Link>
 
           <Link href="/signin" className="fo-nav-open">
             Open app
@@ -49,21 +46,23 @@ export default function HomePage() {
 
           <div className="fo-hero-actions">
             <Link href="/signin" className="fo-primary">
-              Open the app
+              Start 7-day demo
             </Link>
 
-            <a
-              href="mailto:info@fromone.co.uk?subject=FromOne beta tester"
-              className="fo-secondary"
-            >
-              Apply to beta test
-            </a>
+            <Link href="/subscription" className="fo-secondary">
+              View intro offer
+            </Link>
           </div>
 
           <div className="fo-proof">
             <span>Upload photos, videos or flyers</span>
             <span>FromOne writes the post</span>
             <span>Review before anything goes live</span>
+          </div>
+
+          <div className="fo-launch-offer-strip" aria-label="FromOne introductory offer">
+            <strong>Introductory launch offer:</strong>
+            <span>£19.99/month · 7-day demo available</span>
           </div>
         </div>
       </section>
@@ -144,20 +143,17 @@ export default function HomePage() {
 
       <section className="fo-beta">
         <div>
-          <p className="fo-eyebrow">BETA TESTERS</p>
-          <h2>Beta spaces are open for local businesses.</h2>
+          <p className="fo-eyebrow">INTRODUCTORY OFFER</p>
+          <h2>FromOne is now open to small businesses.</h2>
           <p>
-            We are inviting a small number of businesses to test FromOne before
-            public launch and help shape the platform.
+            Founding customers can start for £19.99/month while the introductory
+            launch offer is available.
           </p>
         </div>
 
-        <a
-          href="mailto:info@fromone.co.uk?subject=FromOne beta tester"
-          className="fo-beta-cta"
-        >
-          Join the beta
-        </a>
+        <Link href="/subscription" className="fo-beta-cta">
+          View intro offer
+        </Link>
       </section>
 
       <style>{`
@@ -245,6 +241,34 @@ export default function HomePage() {
           min-height: 38px;
           display: inline-flex;
           align-items: center;
+        }
+
+        .fo-launch-offer-strip {
+          width: fit-content;
+          max-width: 100%;
+          margin: 28px auto 0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding: 12px 16px;
+          border-radius: 999px;
+          background: rgba(255, 212, 59, 0.1);
+          border: 1px solid rgba(255, 212, 59, 0.2);
+          color: rgba(248, 250, 252, 0.82);
+          font-size: 0.95rem;
+          font-weight: 850;
+        }
+
+        .fo-launch-offer-strip strong {
+          color: #ffd43b;
+          font-weight: 1000;
+        }
+
+        .fo-launch-offer-strip span {
+          color: rgba(248, 250, 252, 0.72);
+          font-weight: 850;
         }
 
         .fo-section,

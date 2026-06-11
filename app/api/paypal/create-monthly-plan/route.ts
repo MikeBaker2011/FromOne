@@ -107,8 +107,9 @@ async function createPayPalMonthlyPlan({
     },
     body: JSON.stringify({
       product_id: productId,
-      name: 'FromOne Monthly',
-      description: 'Monthly FromOne access for weekly social media content creation.',
+      name: 'FromOne Introductory Monthly',
+      description:
+        'Introductory monthly FromOne access for weekly social media content creation.',
       status: 'ACTIVE',
       billing_cycles: [
         {
@@ -121,7 +122,7 @@ async function createPayPalMonthlyPlan({
           total_cycles: 0,
           pricing_scheme: {
             fixed_price: {
-              value: '29.99',
+              value: '19.99',
               currency_code: 'GBP',
             },
           },
@@ -184,6 +185,8 @@ export async function POST(request: NextRequest) {
       environment: paypalEnvironment,
       product_id: productResult.productId,
       plan_id: planResult.planId,
+      price: '19.99',
+      currency: 'GBP',
       next_render_env_var: `PAYPAL_PLAN_ID=${planResult.planId}`,
     });
   } catch (error: any) {
@@ -204,7 +207,7 @@ export async function GET() {
     ok: true,
     route: '/api/paypal/create-monthly-plan',
     method: 'POST',
-    purpose: 'Creates the FromOne PayPal product and £29.99 monthly plan once.',
+    purpose: 'Creates the FromOne PayPal product and £19.99 monthly plan once.',
     required_env_vars: [
       'PAYPAL_CLIENT_ID',
       'PAYPAL_CLIENT_SECRET',
