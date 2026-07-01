@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "FromOne | Social posts from your business content",
+  title: "FromOne | One upload. Facebook, Instagram and Smiles.",
   description:
-    "FromOne turns your business photos, videos and flyers into ready-to-review social media posts for Facebook, Instagram and TikTok.",
+    "FromOne turns business photos, videos and flyers into ready-to-review Facebook, Instagram and Smiles posts.",
 };
 
 export default function HomePage() {
@@ -11,11 +11,7 @@ export default function HomePage() {
     <main className="fo-page">
       <nav className="fo-nav" aria-label="FromOne landing navigation">
         <Link href="/" className="fo-brand" aria-label="FromOne home">
-          <img
-            src="/fromone-logo.png"
-            alt="FromOne"
-            className="fo-logo-img"
-          />
+          <img src="/fromone-logo.png" alt="FromOne" />
           <span>
             <strong>FromOne</strong>
             <small>Upload it. Post it. Done.</small>
@@ -23,389 +19,126 @@ export default function HomePage() {
         </Link>
 
         <div className="fo-nav-actions">
-          <Link href="/subscription" className="fo-nav-beta">
-            Intro offer
-          </Link>
-
-          <Link href="/signin" className="fo-nav-open">
+          <Link href="/signin" className="fo-nav-secondary">
             Open app
+          </Link>
+          <Link href="/signin" className="fo-nav-primary">
+            Start 7-day trial
           </Link>
         </div>
       </nav>
 
       <section className="fo-hero">
-        <div className="fo-hero-copy">
-          <p className="fo-eyebrow">FROMONE FOR LOCAL BUSINESSES</p>
-
-          <h1>Social posts from the content your business already has.</h1>
-
+        <div className="fo-hero-main">
+          <p className="fo-eyebrow">FROMONE + SMILES</p>
+          <h1>
+            Turn one upload into posts, offers and events.
+          </h1>
           <p className="fo-intro">
-            FromOne turns your photos, videos and flyers into ready-to-review
-            posts for Facebook, Instagram and TikTok.
+            FromOne creates ready-to-review Facebook and Instagram posts from
+            your photos, videos and flyers. Suitable offers and events can also
+            be sent to Smiles for approval.
           </p>
 
-          <div className="fo-hero-actions">
+          <div className="fo-actions">
             <Link href="/signin" className="fo-primary">
-              Start 7-day demo
+              Start 7-day trial
             </Link>
-
             <Link href="/subscription" className="fo-secondary">
-              View intro offer
+              View plans
             </Link>
           </div>
-
-          <div className="fo-proof">
-            <span>Upload photos, videos or flyers</span>
-            <span>FromOne writes the post</span>
-            <span>Review before anything goes live</span>
-          </div>
-
-          <div className="fo-launch-offer-strip" aria-label="FromOne introductory offer">
-            <strong>Introductory launch offer:</strong>
-            <span>£19.99/month · 7-day demo available</span>
-          </div>
         </div>
       </section>
 
-      <section className="fo-section fo-explain">
-        <div className="fo-section-head fo-section-head-centred">
-          <p className="fo-eyebrow">WHAT FROMONE DOES</p>
-          <h2>FromOne takes the pressure out of knowing what to post.</h2>
+      <section className="fo-section fo-three">
+        <article>
+          <span>01</span>
+          <h3>Upload anything useful</h3>
           <p>
-            It reads the business context, looks at the uploaded media and
-            creates a post the client can quickly review before anything goes
-            live.
+            Add an image, video or flyer. FromOne understands the content and
+            prepares a practical post.
+          </p>
+        </article>
+
+        <article>
+          <span>02</span>
+          <h3>Review before posting</h3>
+          <p>
+            Captions, hashtags and calls to action are created for Facebook and
+            Instagram. Nothing is published until it is checked.
+          </p>
+        </article>
+
+        <article>
+          <span>03</span>
+          <h3>Publish or send</h3>
+          <p>
+            Publish to Facebook or Instagram after review. If the post is an
+            offer or event, it can also be sent to Smiles for approval.
+          </p>
+        </article>
+      </section>
+
+      <section className="fo-section fo-smiles-sell">
+        <div className="fo-smiles-copy">
+          <p className="fo-eyebrow">WHY SMILES MATTERS</p>
+          <h2>Social posts are seen. Smiles posts are found.</h2>
+          <p>
+            FromOne gives local offers and events a proper route into Smiles,
+            with clear references, approval status and view links.
           </p>
         </div>
 
-        <div className="fo-explain-grid">
-          <article>
-            <span>01</span>
-            <h3>Your website shows who you are.</h3>
-            <p>
-              FromOne uses your business profile to understand your tone,
-              services and customers.
-            </p>
-          </article>
-
-          <article>
-            <span>02</span>
-            <h3>Your media shows what you do.</h3>
-            <p>
-              Upload photos, videos or flyers from the work your business is
-              already doing.
-            </p>
-          </article>
-
-          <article>
-            <span>03</span>
-            <h3>FromOne writes the post.</h3>
-            <p>
-              It creates the caption, call to action and hashtags so the post is
-              ready to review.
-            </p>
-          </article>
+        <div className="fo-smiles-logo-card">
+          <img src="/stockport-smiles-logo.png" alt="Smiles" />
         </div>
       </section>
 
-      <section className="fo-section fo-how">
-        <div className="fo-how-copy">
-          <p className="fo-eyebrow">SIMPLE FLOW</p>
-          <h2>Upload once. Review the post. Approve when ready.</h2>
-          <p>
-            FromOne keeps the process simple for business owners who want to
-            post consistently without overthinking what to write.
-          </p>
-        </div>
-
-        <div className="fo-steps">
-          <article>
-            <span>Upload</span>
-            <strong>Add a photo, video or flyer.</strong>
-          </article>
-
-          <article>
-            <span>Create</span>
-            <strong>FromOne writes the caption, CTA and hashtags.</strong>
-          </article>
-
-          <article>
-            <span>Review</span>
-            <strong>Edit, improve and approve.</strong>
-          </article>
-
-          <article>
-            <span>Schedule</span>
-            <strong>Publish now or plan ahead.</strong>
-          </article>
-        </div>
-      </section>
-
-      <section className="fo-beta">
+      <section className="fo-section fo-proof">
         <div>
-          <p className="fo-eyebrow">INTRODUCTORY OFFER</p>
-          <h2>FromOne is now open to small businesses.</h2>
+          <p className="fo-eyebrow">BUILT FOR REAL USERS</p>
+          <h2>Big buttons. Clear steps. No accidental publishing.</h2>
+        </div>
+
+        <div className="fo-proof-list">
+          <article>
+            <strong>1</strong>
+            <span>Add image, video or flyer</span>
+          </article>
+          <article>
+            <strong>2</strong>
+            <span>Choose Facebook, Instagram and Smiles</span>
+          </article>
+          <article>
+            <strong>3</strong>
+            <span>Check the wording and image</span>
+          </article>
+          <article>
+            <strong>4</strong>
+            <span>Publish to Facebook or Instagram, or send suitable posts to Smiles</span>
+          </article>
+        </div>
+      </section>
+
+      <section className="fo-final">
+        <div>
+          <p className="fo-eyebrow">START WITH ONE UPLOAD</p>
+          <h2>Upload it. Post it. Done.</h2>
           <p>
-            Founding customers can start for £19.99/month while the introductory
-            launch offer is available.
+            Create posts for Facebook and Instagram, and send suitable offers
+            and events to Smiles.
           </p>
         </div>
 
-        <Link href="/subscription" className="fo-beta-cta">
-          View intro offer
+        <Link href="/signin" className="fo-primary">
+          Start 7-day trial
         </Link>
       </section>
 
       <style>{`
-        /* Phase 9 UI polish — Homepage / landing page */
-        .fo-page {
-          overflow-x: hidden;
-        }
-
-        .fo-nav {
-          position: sticky;
-          top: 18px;
-          z-index: 20;
-          padding: 12px;
-          border-radius: 24px;
-          background: rgba(5, 7, 13, 0.72);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(18px);
-        }
-
-        .fo-logo-img {
-          border-radius: 14px;
-        }
-
-        .fo-nav-actions a,
-        .fo-hero-actions a,
-        .fo-beta-cta {
-          min-height: 46px;
-        }
-
-        .fo-hero-copy {
-          position: relative;
-          overflow: hidden;
-        }
-
-        .fo-hero-copy::before {
-          content: "";
-          position: absolute;
-          inset: 24px;
-          border-radius: 28px;
-          border: 1px solid rgba(255, 255, 255, 0.055);
-          pointer-events: none;
-        }
-
-        .fo-hero-copy > * {
-          position: relative;
-          z-index: 1;
-        }
-
-        .fo-eyebrow {
-          width: fit-content;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          margin-inline: auto;
-          min-height: 30px;
-          padding: 0 12px;
-          border-radius: 999px;
-          background: rgba(255, 212, 59, 0.1);
-          border: 1px solid rgba(255, 212, 59, 0.18);
-        }
-
-        .fo-hero-copy .fo-eyebrow {
-          margin-bottom: 22px;
-        }
-
-        .fo-intro {
-          max-width: 700px;
-        }
-
-        .fo-primary,
-        .fo-beta-cta {
-          background: linear-gradient(135deg, #ffd43b, #f7b733);
-        }
-
-        .fo-secondary,
-        .fo-nav-open {
-          background: rgba(255, 255, 255, 0.075);
-        }
-
-        .fo-proof {
-          max-width: 780px;
-        }
-
-        .fo-proof span {
-          min-height: 38px;
-          display: inline-flex;
-          align-items: center;
-        }
-
-        .fo-launch-offer-strip {
-          width: fit-content;
-          max-width: 100%;
-          margin: 28px auto 0;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          flex-wrap: wrap;
-          padding: 12px 16px;
-          border-radius: 999px;
-          background: rgba(255, 212, 59, 0.1);
-          border: 1px solid rgba(255, 212, 59, 0.2);
-          color: rgba(248, 250, 252, 0.82);
-          font-size: 0.95rem;
-          font-weight: 850;
-        }
-
-        .fo-launch-offer-strip strong {
-          color: #ffd43b;
-          font-weight: 1000;
-        }
-
-        .fo-launch-offer-strip span {
-          color: rgba(248, 250, 252, 0.72);
-          font-weight: 850;
-        }
-
-        .fo-section,
-        .fo-beta {
-          overflow: hidden;
-        }
-
-        .fo-section-head-centred .fo-eyebrow {
-          margin-bottom: 16px;
-        }
-
-        .fo-explain-grid article,
-        .fo-steps article {
-          min-height: 190px;
-          display: grid;
-          align-content: start;
-          transition:
-            transform 160ms ease,
-            border-color 160ms ease,
-            background 160ms ease;
-        }
-
-        .fo-explain-grid article:hover,
-        .fo-steps article:hover {
-          transform: translateY(-2px);
-          border-color: rgba(255, 212, 59, 0.22);
-          background: rgba(5, 7, 13, 0.56);
-        }
-
-        .fo-explain-grid article p,
-        .fo-steps article strong {
-          text-wrap: pretty;
-        }
-
-        .fo-how-copy .fo-eyebrow {
-          margin-inline: 0;
-        }
-
-        .fo-steps article {
-          min-height: 138px;
-        }
-
-        .fo-beta {
-          background:
-            radial-gradient(circle at right, rgba(255, 212, 59, 0.14), transparent 38%),
-            rgba(13, 16, 24, 0.88);
-        }
-
-        .fo-beta .fo-eyebrow {
-          margin-inline: 0;
-        }
-
-        .fo-beta-cta {
-          min-width: 170px;
-        }
-
-        @media (max-width: 980px) {
-          .fo-nav {
-            top: 10px;
-            margin-bottom: 24px;
-          }
-
-          .fo-how-copy .fo-eyebrow,
-          .fo-beta .fo-eyebrow {
-            margin-inline: auto;
-          }
-
-          .fo-how,
-          .fo-beta {
-            text-align: center;
-          }
-
-          .fo-beta-cta {
-            width: fit-content;
-            margin-inline: auto;
-          }
-
-          .fo-explain-grid article,
-          .fo-steps article {
-            min-height: 0;
-          }
-        }
-
-        @media (max-width: 560px) {
-          .fo-page {
-            padding: 12px;
-          }
-
-          .fo-nav {
-            position: static;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-          }
-
-          .fo-brand {
-            width: 100%;
-            justify-content: center;
-            text-align: left;
-          }
-
-          .fo-nav-actions {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-
-          .fo-nav-beta,
-          .fo-nav-open {
-            width: 100%;
-            padding-inline: 12px;
-          }
-
-          .fo-hero-copy::before {
-            inset: 12px;
-            border-radius: 20px;
-          }
-
-          .fo-proof {
-            display: grid;
-            grid-template-columns: 1fr;
-            width: 100%;
-          }
-
-          .fo-proof span {
-            justify-content: center;
-            text-align: center;
-          }
-
-          .fo-beta-cta {
-            width: 100%;
-          }
-        }
-
-
         :root {
-          color-scheme: dark;
+          color-scheme: light;
         }
 
         * {
@@ -414,31 +147,35 @@ export default function HomePage() {
 
         body {
           margin: 0;
-          background: #05070d;
+          background: #f5f7fb;
         }
 
         .fo-page {
           min-height: 100vh;
-          padding: 28px;
-          color: #f8fafc;
+          padding: 24px;
+          overflow-x: hidden;
+          color: #071b49;
           background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.16), transparent 34rem),
-            radial-gradient(circle at 82% 10%, rgba(255, 212, 59, 0.08), transparent 34rem),
-            linear-gradient(180deg, #05070d 0%, #070a12 100%);
+            radial-gradient(circle at 6% 0%, rgba(247, 37, 133, 0.16), transparent 32rem),
+            radial-gradient(circle at 94% 3%, rgba(255, 193, 7, 0.24), transparent 30rem),
+            linear-gradient(180deg, #f8f9fd 0%, #edf2f8 100%);
           font-family:
-            Inter,
+            var(--font-main),
+            "Plus Jakarta Sans",
             ui-sans-serif,
             system-ui,
             -apple-system,
             BlinkMacSystemFont,
             "Segoe UI",
             sans-serif;
+          font-weight: 500;
+          letter-spacing: -0.01em;
         }
 
         .fo-nav,
         .fo-hero,
         .fo-section,
-        .fo-beta {
+        .fo-final {
           width: min(1180px, 100%);
           margin-left: auto;
           margin-right: auto;
@@ -449,336 +186,280 @@ export default function HomePage() {
           align-items: center;
           justify-content: space-between;
           gap: 18px;
-          margin-bottom: 58px;
+          margin-bottom: 22px;
+          padding: 14px;
+          border: 1px solid #dfe5f1;
+          border-radius: 28px;
+          background: rgba(255, 255, 255, 0.92);
+          box-shadow: 0 18px 50px rgba(7, 27, 73, 0.08);
+          backdrop-filter: blur(14px);
         }
 
         .fo-brand {
           display: inline-flex;
           align-items: center;
           gap: 12px;
-          color: #f8fafc;
+          color: #071b49;
           text-decoration: none;
         }
 
-        .fo-logo-img {
-          width: 46px;
-          height: 46px;
-          display: block;
+        .fo-brand img {
+          width: 52px;
+          height: 52px;
           object-fit: contain;
-          filter: drop-shadow(0 18px 34px rgba(255, 212, 59, 0.18));
+          border-radius: 16px;
+          box-shadow: 0 14px 30px rgba(255, 193, 7, 0.24);
         }
 
         .fo-brand strong {
           display: block;
-          font-size: 1.28rem;
+          font-size: 1.3rem;
           line-height: 1;
-          font-weight: 1000;
-          letter-spacing: -0.065em;
+          font-weight: 900;
+          letter-spacing: -0.055em;
         }
 
         .fo-brand small {
           display: block;
-          margin-top: 6px;
-          color: rgba(248, 250, 252, 0.62);
-          font-size: 0.78rem;
+          margin-top: 5px;
+          color: #52617a;
+          font-size: 0.8rem;
+          line-height: 1;
           font-weight: 800;
         }
 
-        .fo-nav-actions {
+        .fo-nav-actions,
+        .fo-actions {
           display: flex;
-          gap: 10px;
           align-items: center;
+          flex-wrap: wrap;
+          gap: 10px;
         }
 
-        .fo-nav-beta,
-        .fo-nav-open,
+        .fo-nav-primary,
+        .fo-nav-secondary,
         .fo-primary,
-        .fo-secondary,
-        .fo-beta-cta {
+        .fo-secondary {
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          min-height: 48px;
+          padding: 0 20px;
           border-radius: 999px;
           text-decoration: none;
-          font-weight: 1000;
-          letter-spacing: -0.035em;
-          transition:
-            transform 160ms ease,
-            border-color 160ms ease,
-            background 160ms ease;
+          font-weight: 850;
+          letter-spacing: -0.02em;
         }
 
-        .fo-nav-beta,
-        .fo-nav-open {
-          min-height: 44px;
-          padding: 0 18px;
-          font-size: 0.95rem;
+        .fo-nav-primary,
+        .fo-primary {
+          border: 1px solid #f72585;
+          background: #f72585;
+          color: #ffffff;
+          box-shadow: 0 18px 42px rgba(247, 37, 133, 0.24);
         }
 
-        .fo-nav-beta {
-          color: #ffd43b;
-          border: 1px solid rgba(255, 212, 59, 0.24);
-          background: rgba(255, 212, 59, 0.08);
-        }
-
-        .fo-nav-open {
-          color: #f8fafc;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.08);
+        .fo-nav-secondary,
+        .fo-secondary {
+          border: 1px solid #dfe5f1;
+          background: #ffffff;
+          color: #071b49;
         }
 
         .fo-hero {
           display: block;
         }
 
-        .fo-hero-copy,
+        .fo-hero-main,
         .fo-section,
-        .fo-beta {
-          border: 1px solid rgba(255, 212, 59, 0.18);
-          background:
-            linear-gradient(135deg, rgba(255, 212, 59, 0.08), transparent 38%),
-            rgba(13, 16, 24, 0.86);
-          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
-          backdrop-filter: blur(18px);
+        .fo-final {
+          border: 1px solid #dfe5f1;
+          border-radius: 34px;
+          background: #ffffff;
+          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10);
         }
 
-        .fo-hero-copy {
-          border-radius: 34px;
-          padding: clamp(42px, 7vw, 82px);
-          min-height: 600px;
+        .fo-hero-main {
+          min-height: 560px;
+          padding: clamp(42px, 5vw, 66px);
           display: flex;
           flex-direction: column;
-          align-items: center;
           justify-content: center;
-          text-align: center;
+          background:
+            radial-gradient(circle at right, rgba(247, 37, 133, 0.10), transparent 38%),
+            #ffffff;
         }
 
         .fo-eyebrow {
-          margin: 0 0 18px;
-          color: #ffd43b;
-          font-size: 0.76rem;
-          font-weight: 1000;
-          letter-spacing: 0.28em;
+          margin: 0 0 14px;
+          color: #f72585;
+          font-size: 0.78rem;
+          line-height: 1;
+          font-weight: 850;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
         }
 
-        h1,
-        h2,
-        h3,
-        p {
+        .fo-hero h1,
+        .fo-section h2,
+        .fo-final h2 {
+          margin: 0;
+          color: #071b49;
+          font-weight: 850;
+          letter-spacing: -0.067em;
           text-wrap: balance;
         }
 
-        h1 {
-          margin: 0;
+        .fo-hero h1 {
           max-width: 980px;
-          font-size: clamp(3.6rem, 7.4vw, 7.4rem);
-          line-height: 0.9;
-          letter-spacing: -0.09em;
-          font-weight: 1000;
+          font-size: clamp(4.4rem, 7vw, 7.4rem);
+          line-height: 0.88;
         }
 
         .fo-intro {
-          max-width: 760px;
-          margin: 28px auto 0;
-          color: rgba(248, 250, 252, 0.74);
-          font-size: clamp(1.1rem, 1.7vw, 1.38rem);
+          max-width: 720px;
+          margin: 28px 0 0;
+          color: #52617a;
+          font-size: clamp(1.12rem, 1.75vw, 1.4rem);
           line-height: 1.48;
-          font-weight: 780;
+          font-weight: 650;
         }
 
-        .fo-hero-actions {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 12px;
+        .fo-actions {
           margin-top: 34px;
         }
 
         .fo-primary,
-        .fo-secondary,
-        .fo-beta-cta {
-          min-height: 54px;
-          padding: 0 24px;
-        }
-
-        .fo-primary {
-          background: #ffd43b;
-          color: #05070d;
-          box-shadow: 0 18px 40px rgba(255, 212, 59, 0.22);
-        }
-
         .fo-secondary {
-          color: #f8fafc;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.08);
+          min-height: 56px;
+          padding: 0 26px;
         }
 
-        .fo-primary:hover,
-        .fo-secondary:hover,
-        .fo-nav-beta:hover,
-        .fo-nav-open:hover,
-        .fo-beta-cta:hover {
-          transform: translateY(-2px);
-        }
-
-        .fo-proof {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 10px;
-          margin-top: 34px;
-        }
-
-        .fo-proof span {
-          border-radius: 999px;
-          padding: 10px 13px;
-          color: rgba(248, 250, 252, 0.72);
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          font-size: 0.86rem;
-          font-weight: 850;
-        }
-
-        .fo-section {
-          margin-top: 24px;
-          border-radius: 34px;
-          padding: clamp(28px, 4vw, 42px);
-        }
-
-        .fo-section-head {
-          display: grid;
-          grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr);
-          gap: 26px;
-          align-items: end;
-        }
-
-        .fo-section-head-centred {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          max-width: 860px;
-          margin: 0 auto;
-        }
-
-        .fo-section-head-centred h2 {
-          max-width: 820px;
-        }
-
-        .fo-section-head-centred p:not(.fo-eyebrow) {
-          max-width: 720px;
-          margin: 18px auto 0;
-          color: rgba(248, 250, 252, 0.68);
-          line-height: 1.52;
-          font-size: 1.08rem;
-          font-weight: 760;
+        .fo-section,
+        .fo-final {
+          margin-top: 18px;
+          padding: clamp(32px, 4vw, 50px);
         }
 
         .fo-section h2,
-        .fo-how-copy h2,
-        .fo-beta h2 {
+        .fo-final h2 {
+          max-width: 900px;
+          font-size: clamp(2.8rem, 5vw, 4.8rem);
+          line-height: 0.94;
+        }
+
+        .fo-section p,
+        .fo-final p {
           margin: 0;
-          font-size: clamp(2.6rem, 4.5vw, 4.6rem);
-          line-height: 0.92;
-          letter-spacing: -0.085em;
-          font-weight: 1000;
+          color: #52617a;
+          line-height: 1.48;
+          font-weight: 650;
         }
 
-        .fo-explain-grid {
+        .fo-section > div > p:not(.fo-eyebrow),
+        .fo-final p {
+          margin-top: 16px;
+          max-width: 760px;
+          font-size: 1.06rem;
+        }
+
+        .fo-three {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 14px;
-          margin-top: 34px;
-        }
-
-        .fo-explain-grid article,
-        .fo-steps article {
-          border-radius: 24px;
-          padding: 22px;
-          background: rgba(5, 7, 13, 0.46);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .fo-explain-grid span {
-          display: inline-flex;
-          width: 34px;
-          height: 34px;
-          border-radius: 12px;
-          align-items: center;
-          justify-content: center;
-          background: rgba(255, 212, 59, 0.12);
-          color: #ffd43b;
-          font-size: 0.78rem;
-          font-weight: 1000;
-        }
-
-        .fo-explain-grid h3 {
-          margin: 20px 0 0;
-          font-size: 1.35rem;
-          line-height: 1.04;
-          letter-spacing: -0.055em;
-          font-weight: 1000;
-        }
-
-        .fo-explain-grid p,
-        .fo-how-copy p,
-        .fo-beta p {
-          margin: 12px 0 0;
-          color: rgba(248, 250, 252, 0.66);
-          line-height: 1.5;
-          font-weight: 760;
-        }
-
-        .fo-how {
-          display: grid;
-          grid-template-columns: 0.85fr 1.15fr;
-          gap: 26px;
-          align-items: center;
-        }
-
-        .fo-steps {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 12px;
         }
 
-        .fo-steps span {
-          display: block;
-          color: #ffd43b;
-          font-size: 0.78rem;
-          font-weight: 1000;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
+        .fo-three article,
+        .fo-proof-list article,
+        .fo-smiles-logo-card {
+          min-width: 0;
+          padding: 24px;
+          border: 1px solid #dfe5f1;
+          border-radius: 26px;
+          background: #f7f9fd;
         }
 
-        .fo-steps strong {
-          display: block;
-          margin-top: 16px;
-          font-size: 1.25rem;
-          line-height: 1.08;
-          letter-spacing: -0.05em;
-          font-weight: 1000;
+        .fo-three span,
+        .fo-proof-list strong {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 44px;
+          height: 44px;
+          border-radius: 999px;
+          background: #f72585;
+          color: #ffffff;
+          font-size: 0.84rem;
+          font-weight: 900;
+          box-shadow: 0 16px 34px rgba(247, 37, 133, 0.18);
         }
 
-        .fo-beta {
-          margin-top: 24px;
-          border-radius: 34px;
-          padding: clamp(28px, 4vw, 42px);
+        .fo-three h3 {
+          margin: 20px 0 10px;
+          color: #071b49;
+          font-size: 1.48rem;
+          line-height: 1.05;
+          font-weight: 850;
+          letter-spacing: -0.045em;
+        }
+
+        .fo-smiles-sell,
+        .fo-proof,
+        .fo-final {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
           gap: 24px;
           align-items: center;
         }
 
-        .fo-beta p {
-          max-width: 720px;
+        .fo-smiles-sell {
+          background:
+            radial-gradient(circle at right, rgba(247, 37, 133, 0.10), transparent 38%),
+            #ffffff;
         }
 
-        .fo-beta-cta {
-          color: #05070d;
-          background: #ffd43b;
-          white-space: nowrap;
+        .fo-smiles-logo-card {
+          background: #ffffff;
+          box-shadow: 0 18px 50px rgba(7, 27, 73, 0.08);
+        }
+
+        .fo-smiles-logo-card img {
+          width: 100%;
+          max-height: 240px;
+          object-fit: contain;
+          display: block;
+        }
+
+        .fo-proof-list {
+          display: grid;
+          gap: 10px;
+        }
+
+        .fo-proof-list article {
+          display: grid;
+          grid-template-columns: 44px 1fr;
+          align-items: center;
+          gap: 14px;
+          background: #ffffff;
+        }
+
+        .fo-proof-list span {
+          color: #071b49;
+          font-size: 1.08rem;
+          line-height: 1.2;
+          font-weight: 850;
+          letter-spacing: -0.025em;
+        }
+
+        .fo-final {
+          background:
+            radial-gradient(circle at right, rgba(247, 37, 133, 0.11), transparent 40%),
+            #ffffff;
+        }
+
+        .fo-final .fo-primary {
+          justify-self: end;
+          min-width: 190px;
         }
 
         @media (max-width: 980px) {
@@ -786,61 +467,81 @@ export default function HomePage() {
             padding: 18px;
           }
 
-          .fo-nav {
-            margin-bottom: 30px;
-          }
-
-          .fo-section-head,
-          .fo-how,
-          .fo-beta {
+          .fo-smiles-sell,
+          .fo-proof,
+          .fo-final {
             grid-template-columns: 1fr;
           }
 
-          .fo-section-head-centred {
-            display: flex;
-          }
-
-          .fo-hero-copy {
+          .fo-hero-main {
             min-height: auto;
           }
 
-          .fo-explain-grid {
+          .fo-three {
             grid-template-columns: 1fr;
+          }
+
+          .fo-final .fo-primary {
+            justify-self: start;
           }
         }
 
-        @media (max-width: 560px) {
+        @media (max-width: 620px) {
+          .fo-page {
+            padding: 12px;
+          }
+
           .fo-nav {
-            align-items: flex-start;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            border-radius: 24px;
+          }
+
+          .fo-brand {
+            justify-content: center;
           }
 
           .fo-nav-actions {
-            flex-direction: column;
-            align-items: stretch;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
           }
 
-          .fo-hero-copy,
+          .fo-nav-primary,
+          .fo-nav-secondary {
+            width: 100%;
+            padding: 0 12px;
+          }
+
+          .fo-hero-main,
           .fo-section,
-          .fo-beta {
+          .fo-final {
             border-radius: 26px;
             padding: 24px;
           }
 
-          h1 {
-            font-size: clamp(3rem, 15vw, 4.9rem);
+          .fo-hero h1 {
+            font-size: clamp(3.1rem, 15vw, 4.8rem);
           }
 
-          .fo-hero-actions,
-          .fo-steps {
+          .fo-section h2,
+          .fo-final h2 {
+            font-size: clamp(2.4rem, 12vw, 3.65rem);
+          }
+
+          .fo-actions {
             display: grid;
             grid-template-columns: 1fr;
           }
 
           .fo-primary,
           .fo-secondary,
-          .fo-beta-cta {
+          .fo-final .fo-primary {
             width: 100%;
+            justify-self: stretch;
           }
+
         }
       `}</style>
     </main>

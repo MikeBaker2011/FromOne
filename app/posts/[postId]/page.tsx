@@ -185,6 +185,9 @@ function getPointerCenter(first: ActivePointer, second: ActivePointer) {
 function normalisePlatform(platform?: string | null) {
   const clean = cleanText(platform).toLowerCase();
 
+  if (clean.includes("stockport smiles") || clean.includes("smiles")) {
+    return "Stockport Smiles";
+  }
   if (clean.includes("instagram")) return "Instagram";
   if (clean.includes("tiktok")) return "TikTok";
   if (clean.includes("facebook")) return "Facebook";
@@ -199,6 +202,21 @@ function getPlatformUrl(platform: string) {
   if (clean.includes("tiktok")) return "https://www.tiktok.com/upload";
 
   return "https://www.facebook.com/";
+}
+
+function mergePublishedPlatform(currentValue: any, platform: "Facebook" | "Instagram") {
+  const currentPlatforms = cleanText(currentValue)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  const nextPlatforms = currentPlatforms.some(
+    (value) => value.toLowerCase() === platform.toLowerCase(),
+  )
+    ? currentPlatforms
+    : [...currentPlatforms, platform];
+
+  return nextPlatforms.join(", ");
 }
 
 function formatScheduledDate(value?: string | null) {
@@ -908,6 +926,19 @@ export default function PostReviewPage() {
   const [resizingMedia, setResizingMedia] = useState(false);
   const [sharingMedia, setSharingMedia] = useState(false);
   const [autoPublishing, setAutoPublishing] = useState(false);
+  const [sendingToSmilesPostId, setSendingToSmilesPostId] = useState<
+    string | null
+  >(null);
+  const [lastPublishedPlatform, setLastPublishedPlatform] = useState("");
+  const [smilesChoice, setSmilesChoice] = useState<"no" | "offer" | "event">("no");
+  const [smilesOfferText, setSmilesOfferText] = useState("");
+  const [smilesEventText, setSmilesEventText] = useState("");
+  const [smilesEndDate, setSmilesEndDate] = useState("");
+  const [smilesTerms, setSmilesTerms] = useState("");
+  const [smilesEventDate, setSmilesEventDate] = useState("");
+  const [smilesStartTime, setSmilesStartTime] = useState("");
+  const [smilesEndTime, setSmilesEndTime] = useState("");
+  const [smilesBookingUrl, setSmilesBookingUrl] = useState("");
   const [preparedMedia, setPreparedMedia] = useState<PreparedMedia | null>(
     null,
   );
@@ -995,6 +1026,7 @@ export default function PostReviewPage() {
 
   const isFacebookPost = platformName.toLowerCase().includes("facebook");
   const isInstagramPost = platformName.toLowerCase().includes("instagram");
+  const isSmilesPost = platformName.toLowerCase().includes("smiles");
   const canAutopublish = isFacebookPost || isInstagramPost;
   const autopublishPlatformLabel = isInstagramPost ? "Instagram" : "Facebook";
 
@@ -1002,6 +1034,10 @@ export default function PostReviewPage() {
     Boolean(post?.is_posted) ||
     cleanText(post?.status).toLowerCase() === "posted" ||
     cleanText(post?.publish_status).toLowerCase() === "posted";
+  const publishedTo = cleanText(post?.published_to || post?.publishedTo);
+  const displayedPublishedPlatform = publishedTo || lastPublishedPlatform;
+  const facebookPublished = displayedPublishedPlatform.toLowerCase().includes("facebook");
+  const instagramPublished = displayedPublishedPlatform.toLowerCase().includes("instagram");
 
   const scheduleValue = getScheduleValue(post);
   const scheduledLabel = formatScheduledDate(scheduleValue);
@@ -1017,6 +1053,219 @@ export default function PostReviewPage() {
   const fullCaption = useMemo(() => {
     return [caption, cta, hashtags].map(cleanText).filter(Boolean).join("\n\n");
   }, [caption, cta, hashtags]);
+
+  const getSmilesDraft = (sourcePost: any) => {
+    return sourcePost?.smiles_draft || sourcePost?.smilesDraft || null;
+  };
+
+  const smilesDraft = getSmilesDraft(post);
+
+  useEffect(() => {
+    if (!post?.id) return;
+
+    const draft = getSmilesDraft(post);
+
+    if (draft?.type === "offer" || draft?.type === "event") {
+      setSmilesChoice(draft.type);
+      setSmilesOfferText(
+        draft.type === "offer" ? cleanText(draft.savingText || draft.title || "") : "",
+      );
+      setSmilesEventText(
+        draft.type === "event" ? cleanText(draft.title || draft.description || "") : "",
+      );
+      setSmilesEndDate(cleanText(draft.endDate || ""));
+      setSmilesTerms(cleanText(draft.terms || ""));
+      setSmilesEventDate(cleanText(draft.startDate || ""));
+      setSmilesStartTime(cleanText(draft.startTime || ""));
+      setSmilesEndTime(cleanText(draft.endTime || ""));
+      setSmilesBookingUrl(cleanText(draft.bookingUrl || draft.websiteUrl || ""));
+      return;
+    }
+
+    setSmilesChoice("no");
+  }, [post?.id]);
+
+  const canSendToSmiles = (sourcePost: any) => {
+    const draft = getSmilesDraft(sourcePost);
+
+    return Boolean(
+      sourcePost?.id &&
+        draft &&
+        draft.recommended === true &&
+        draft.type &&
+        draft.type !== "none" &&
+        sourcePost?.smiles_status !== "sent",
+    );
+  };
+
+  const getSmilesStatusText = (sourcePost: any) => {
+    if (!sourcePost?.id) return "Smiles status unavailable.";
+    if (sourcePost?.smiles_status === "sent") return "Already sent to Smiles.";
+    if (sourcePost?.smiles_status === "failed") {
+      return sourcePost?.smiles_error || "Smiles send failed.";
+    }
+
+    const draft = getSmilesDraft(sourcePost);
+
+    if (!draft) {
+      return "No Smiles draft was saved for this post.";
+    }
+
+    if (draft.recommended !== true || draft.type === "none") {
+      return "Not suitable for Smiles.";
+    }
+
+    return "Ready to send to Smiles.";
+  };
+
+  const getSmilesSentInfo = (sourcePost: any) => {
+    const draft = getSmilesDraft(sourcePost) || {};
+    const table = cleanText(sourcePost?.smiles_table || draft.table || draft.smilesTable);
+    const slug = cleanText(sourcePost?.smiles_slug || draft.slug || draft.smilesSlug);
+    const referenceCode = cleanText(
+      sourcePost?.smiles_reference_code ||
+        draft.referenceCode ||
+        draft.reference_code ||
+        draft.smilesReferenceCode,
+    );
+
+    const pathPrefix =
+      table === "events" || draft.type === "event"
+        ? "events"
+        : table === "offers" || draft.type === "offer"
+          ? "offers"
+          : "";
+
+    const baseUrl = cleanText(process.env.NEXT_PUBLIC_STOCKPORT_SMILES_URL).replace(/\/+$/, "");
+    const href = slug && pathPrefix
+      ? `${baseUrl || "https://www.stockportsmiles.co.uk"}/${pathPrefix}/${slug}`
+      : "";
+
+    return {
+      table,
+      slug,
+      referenceCode,
+      href,
+    };
+  };
+
+  useEffect(() => {
+    if (!post?.id || post?.smiles_status !== "sent") return;
+
+    const smilesSentInfo = getSmilesSentInfo(post);
+    if (smilesSentInfo.referenceCode) return;
+
+    const table = cleanText(post?.smiles_table || smilesSentInfo.table);
+    const draftId = cleanText(post?.smiles_draft_id);
+    const itemType =
+      table === "offers"
+        ? "offer"
+        : table === "events"
+          ? "event"
+          : "";
+
+    if (!itemType || !draftId) return;
+
+    let cancelled = false;
+
+    const backfillSmilesReference = async () => {
+      try {
+        const response = await fetch("/api/smiles/reference", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            itemType,
+            itemId: draftId,
+          }),
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || result?.ok === false || result?.success === false) {
+          return;
+        }
+
+        const referenceCode = cleanText(result?.reference_code);
+        const slug = cleanText(result?.smilesSlug || result?.slug);
+        if (!referenceCode || cancelled) return;
+
+        const nextDraft = {
+          ...(getSmilesDraft(post) || {}),
+          table,
+          slug: slug || getSmilesDraft(post)?.slug || getSmilesDraft(post)?.smilesSlug || "",
+          referenceCode,
+          reference_code: referenceCode,
+        };
+
+        await supabase
+          .from("campaign_posts")
+          .update({
+            smiles_draft: nextDraft,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", post.id);
+
+        if (!cancelled) {
+          setPost({
+            ...post,
+            smiles_draft: nextDraft,
+          });
+        }
+      } catch {
+        // Reference display should not block reviewing the post.
+      }
+    };
+
+    backfillSmilesReference();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [post?.id, post?.smiles_status, post?.smiles_draft_id, post?.smiles_table]);
+
+  const buildClientSmilesDraft = () => {
+    if (smilesChoice === "no") return null;
+
+    const baseTitle =
+      smilesChoice === "offer"
+        ? cleanText(smilesOfferText) || cleanText(post?.title) || "Special offer"
+        : cleanText(smilesEventText) ||
+          cleanText(post?.title) ||
+          cleanText(caption).split(".")[0] ||
+          "Local event";
+
+    return {
+      recommended: true,
+      type: smilesChoice,
+      title: baseTitle,
+      description: cleanText(caption),
+      shortDescription: cleanText(caption),
+      savingText: smilesChoice === "offer" ? cleanText(smilesOfferText) : "",
+      terms:
+        smilesChoice === "offer"
+          ? cleanText(smilesTerms) || "Subject to availability."
+          : cleanText(smilesTerms),
+      validDays: "",
+      validTimes: "",
+      startDate:
+        smilesChoice === "event"
+          ? cleanText(smilesEventDate) || null
+          : null,
+      endDate:
+        smilesChoice === "offer"
+          ? cleanText(smilesEndDate) || null
+          : cleanText(smilesEventDate) || null,
+      startTime: smilesChoice === "event" ? cleanText(smilesStartTime) || null : null,
+      endTime: smilesChoice === "event" ? cleanText(smilesEndTime) || null : null,
+      priceText: "",
+      locationName: cleanText(post?.location_name || post?.business_name || ""),
+      locationArea: cleanText(post?.location_area || post?.town || post?.city || ""),
+      address: cleanText(post?.address || ""),
+      venueType: "",
+      websiteUrl: cleanText(post?.website_url || ""),
+      bookingUrl: smilesChoice === "event" ? cleanText(smilesBookingUrl) : "",
+    };
+  };
 
   const transformStyle = useMemo(() => {
     const flipX = mediaFlipX ? -1 : 1;
@@ -1210,6 +1459,154 @@ export default function PostReviewPage() {
     setPost({ ...post, ...updates });
     setMessage("Post sent back to review.");
     setSaving(false);
+  };
+
+  const saveWordingSilently = async () => {
+    if (!post?.id) return true;
+
+    const cleanHashtags = hashtags
+      .split(/\s+/)
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+
+    const updates = {
+      caption,
+      cta,
+      hashtags: cleanHashtags,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from("campaign_posts")
+      .update(updates)
+      .eq("id", post.id);
+
+    if (error) {
+      setMessage(error.message || "Could not save the wording.");
+      return false;
+    }
+
+    setPost({ ...post, ...updates });
+    return true;
+  };
+
+  const sendPostToSmiles = async () => {
+    if (!post?.id) {
+      setMessage("This post is still loading. Please wait a moment, then try again.");
+      return;
+    }
+
+    setMessage("Preparing Smiles draft...");
+
+    const clientDraft = buildClientSmilesDraft();
+    const savedDraft = getSmilesDraft(post);
+    const draft = clientDraft || savedDraft;
+
+    if (!draft || !draft.recommended || draft.type === "none") {
+      setMessage("Choose Offer or Event before sending this to Stockport Smiles.");
+      return;
+    }
+
+    if (draft.type === "offer" && !cleanText(draft.title)) {
+      setMessage("Add the offer details before sending this to Stockport Smiles.");
+      return;
+    }
+
+    if (draft.type === "event" && !cleanText(draft.startDate)) {
+      setMessage("Add the event date before sending this to Stockport Smiles.");
+      return;
+    }
+
+    setSendingToSmilesPostId(post.id);
+    setMessage("Sending draft to Stockport Smiles...");
+
+    try {
+      await saveWordingSilently().catch(() => false);
+
+      const response = await fetch("/api/smiles/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId: post.id,
+          campaignPostId: post.id,
+          campaign_id: post.campaign_id,
+          userId: post.user_id || null,
+          user_id: post.user_id || null,
+          draftType: draft.type,
+          title: draft.title || post.title,
+          description: draft.description || post.caption,
+          shortDescription: draft.shortDescription || post.caption,
+          savingText: draft.savingText || "",
+          terms: draft.terms || "Subject to availability.",
+          validDays: draft.validDays || "",
+          validTimes: draft.validTimes || "",
+          startDate: draft.startDate || null,
+          endDate: draft.endDate || null,
+          startTime: draft.startTime || null,
+          endTime: draft.endTime || null,
+          priceText: draft.priceText || "",
+          locationName: draft.locationName || "",
+          locationArea: draft.locationArea || "",
+          address: draft.address || "",
+          venueType: draft.venueType || "",
+          websiteUrl: draft.websiteUrl || "",
+          bookingUrl: draft.bookingUrl || "",
+          mediaUrl: post.media_url || null,
+          media_url: post.media_url || null,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || result?.ok === false || result?.success === false) {
+        throw new Error(
+          result?.error ||
+            result?.message ||
+            "Could not send this draft to Smiles.",
+        );
+      }
+
+      const updates = {
+        smiles_status: "sent",
+        smiles_draft_id: result?.smilesDraftId || null,
+        smiles_table: result?.smilesTable || null,
+        smiles_draft: {
+          ...draft,
+          table: result?.smilesTable || null,
+          slug: result?.smilesSlug || null,
+          referenceCode: result?.smilesReferenceCode || null,
+          reference_code: result?.smilesReferenceCode || null,
+        },
+        smiles_sent_at: new Date().toISOString(),
+        smiles_error: null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("campaign_posts")
+        .update(updates)
+        .eq("id", post.id);
+
+      if (error) throw error;
+
+      setPost({ ...post, ...updates });
+      setMessage("Draft sent to Stockport Smiles.");
+    } catch (error: any) {
+      const message =
+        error?.message || "Could not send this draft to Stockport Smiles.";
+
+      const updates = {
+        smiles_status: "failed",
+        smiles_error: message,
+        updated_at: new Date().toISOString(),
+      };
+
+      await supabase.from("campaign_posts").update(updates).eq("id", post.id);
+      setPost({ ...post, ...updates });
+      setMessage(message);
+    } finally {
+      setSendingToSmilesPostId(null);
+    }
   };
 
 
@@ -2148,22 +2545,33 @@ export default function PostReviewPage() {
     }
   };
 
-  const autopublishNow = async () => {
+  const autopublishNow = async (targetPlatform?: "Facebook" | "Instagram" | unknown) => {
     if (!post?.id) return;
 
-    if (!canAutopublish) {
+    const saved = await saveWordingSilently();
+    if (!saved) return;
+
+    const requestedPlatform =
+      targetPlatform === "Facebook" || targetPlatform === "Instagram"
+        ? targetPlatform
+        : null;
+    const publishPlatform = requestedPlatform || autopublishPlatformLabel;
+    const targetIsInstagram = publishPlatform === "Instagram";
+    const targetIsFacebook = publishPlatform === "Facebook";
+
+    if (!targetIsFacebook && !targetIsInstagram) {
       setMessage(
         "Direct posting is only available for connected Facebook and Instagram business accounts.",
       );
       return;
     }
 
-    if (isInstagramPost && !mediaUrl) {
+    if (targetIsInstagram && !mediaUrl) {
       setMessage("Instagram needs an image or video attached.");
       return;
     }
 
-    if (isInstagramPost && isFlyer) {
+    if (targetIsInstagram && isFlyer) {
       setMessage(
         "Instagram cannot use a PDF directly. Re-upload the flyer or use an image version.",
       );
@@ -2183,7 +2591,7 @@ export default function PostReviewPage() {
     try {
       const ensuredPreparedMedia = await ensurePreparedImageForPublishing();
 
-      const endpoint = isInstagramPost
+      const endpoint = targetIsInstagram
         ? "/api/instagram/publish"
         : "/api/facebook/publish";
       const publishMediaUrl =
@@ -2198,7 +2606,7 @@ export default function PostReviewPage() {
           postId: post.id,
           campaignPostId: post.id,
           campaign_id: post.campaign_id,
-          platform: post.platform || platformName,
+          platform: publishPlatform,
           message: text,
           text,
           caption,
@@ -2232,25 +2640,44 @@ export default function PostReviewPage() {
         }
 
         throw new Error(
-          message || `Could not post to ${autopublishPlatformLabel}.`,
+          message || `Could not post to ${publishPlatform}.`,
+        );
+      }
+
+      const nextPublishedTo = mergePublishedPlatform(post?.published_to, publishPlatform);
+      const publishUpdates = {
+        is_posted: true,
+        status: "posted",
+        publish_status: "published",
+        published_to: nextPublishedTo,
+        approval_status: "posted",
+        approved_at: post?.approved_at || new Date().toISOString(),
+        publish_error: null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: publishSaveError } = await supabase
+        .from("campaign_posts")
+        .update(publishUpdates)
+        .eq("id", post.id);
+
+      if (publishSaveError) {
+        throw new Error(
+          publishSaveError.message ||
+            `Posted to ${publishPlatform}, but the saved status could not be updated.`,
         );
       }
 
       setPost({
         ...post,
-        is_posted: true,
-        status: "posted",
-        publish_status: "published",
-        approval_status: "posted",
-        approved_at: post?.approved_at || new Date().toISOString(),
-        publish_error: null,
+        ...publishUpdates,
       });
-      setMessage(`Posted to ${autopublishPlatformLabel}. Returning to your posts...`);
-      router.push("/posts");
+      setLastPublishedPlatform(publishPlatform);
+      setMessage(`Published to ${publishPlatform}.`);
     } catch (error: any) {
       setMessage(
         error?.message ||
-          `Could not post to ${autopublishPlatformLabel}.`,
+          `Could not post to ${publishPlatform}.`,
       );
     } finally {
       setAutoPublishing(false);
@@ -2485,6 +2912,747 @@ Do not return the same caption.`,
   }
 
   return (
+    <main className="fromone-review-page settings-create-style-page" data-fromone-review-redesign="v1">
+      <section id="fromone-standard-shell" className="review-create-style-card">
+        <button
+          type="button"
+          className="review-back-button"
+          onClick={() => router.push("/posts")}
+        >
+          Back to posts
+        </button>
+
+        {message && <div className="review-message">{message}</div>}
+
+        <header className="review-create-hero">
+          <div className="review-create-eyebrow">Review</div>
+          <h1>Check this post.</h1>
+          <p>
+            Check the media and wording, then publish it or send it to Stockport Smiles.
+          </p>
+        </header>
+
+        <section className="review-simple-panel">
+          <div className="review-panel-head">
+            <span className="review-step-badge">01</span>
+            <div>
+              <h2>Post media</h2>
+              <p>Make sure the image, video or flyer looks right before anything is published.</p>
+            </div>
+          </div>
+
+          <div className="review-media-frame">
+            {mediaUrl ? (
+              isVideo ? (
+                <video src={mediaUrl} controls />
+              ) : isFlyer && preparedDisplayMedia?.url ? (
+                <img src={preparedDisplayMedia.url} alt="Flyer preview" />
+              ) : isFlyer ? (
+                <div className="review-empty-media">
+                  <strong>Flyer preview</strong>
+                  <PdfFirstPagePreview url={mediaUrl} />
+                </div>
+              ) : (
+                <img src={preparedDisplayMedia?.url || mediaUrl} alt="Post preview" />
+              )
+            ) : (
+              <div className="review-empty-media">
+                <strong>No media attached</strong>
+                <p>Add media before publishing.</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="review-simple-panel">
+          <div className="review-panel-head">
+            <span className="review-step-badge">02</span>
+            <div>
+              <h2>Post wording</h2>
+              <p>Check the caption and hashtags. Edits are used when you publish or send.</p>
+            </div>
+          </div>
+
+          <div className="review-form-grid">
+            <label className="review-wide-field">
+              <span>Caption</span>
+              <textarea
+                value={caption}
+                onChange={(event) => setCaption(event.target.value)}
+              />
+            </label>
+            <label className="review-wide-field">
+              <span>Hashtags</span>
+              <textarea
+                className="review-hashtags-field"
+                value={hashtags}
+                onChange={(event) => setHashtags(event.target.value)}
+              />
+            </label>
+          </div>
+
+          <button
+            type="button"
+            className="review-secondary-action"
+            onClick={() => setActivePanel(activePanel === "improve" ? "review" : "improve")}
+          >
+            Improve wording
+          </button>
+
+          {activePanel === "improve" && (
+            <div className="review-improve-box">
+              <h3>Choose one change</h3>
+              <div className="review-pill-grid">
+                {quickImproveActions.map((action) => (
+                  <button
+                    key={action.value}
+                    type="button"
+                    className="review-pill"
+                    onClick={() => quickImprove(action.value, reachTarget)}
+                    disabled={Boolean(rewriting)}
+                  >
+                    {rewriting === action.value ? "Improving..." : action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="review-simple-panel review-smiles-panel">
+          <div className="review-panel-head">
+            <span className="review-step-badge">03</span>
+            <div>
+              <h2>Stockport Smiles</h2>
+              <p>Only choose Smiles if this is an offer or an event.</p>
+            </div>
+          </div>
+
+          {post?.smiles_status === "sent" ? (
+            (() => {
+              const smilesSentInfo = getSmilesSentInfo(post);
+
+              return (
+                <div className="review-status-box">
+                  <strong>Sent to Smiles</strong>
+                  <small>
+                    {smilesSentInfo.href
+                      ? "It is ready to view on Stockport Smiles."
+                      : "It is waiting for Stockport Smiles approval."}
+                  </small>
+
+                  {smilesSentInfo.referenceCode && (
+                    <small>
+                      Reference: <b>{smilesSentInfo.referenceCode}</b>
+                    </small>
+                  )}
+
+                  {smilesSentInfo.href && (
+                    <a href={smilesSentInfo.href} target="_blank" rel="noreferrer">
+                      View Smiles post
+                    </a>
+                  )}
+                </div>
+              );
+            })()
+          ) : (
+            <>
+              <div className="review-pill-grid">
+                {[
+                  { value: "no", label: "No" },
+                  { value: "offer", label: "Offer" },
+                  { value: "event", label: "Event" },
+                ].map((choice) => (
+                  <button
+                    key={choice.value}
+                    type="button"
+                    className={
+                      smilesChoice === choice.value
+                        ? "review-pill is-active"
+                        : "review-pill"
+                    }
+                    onClick={() =>
+                      setSmilesChoice(choice.value as "no" | "offer" | "event")
+                    }
+                  >
+                    {choice.label}
+                  </button>
+                ))}
+              </div>
+
+              {smilesChoice === "offer" && (
+                <div className="review-two-fields">
+                  <label>
+                    <span>Offer</span>
+                    <input
+                      value={smilesOfferText}
+                      onChange={(event) => setSmilesOfferText(event.target.value)}
+                      placeholder="Example: 20% off lunch"
+                    />
+                  </label>
+                  <label>
+                    <span>Ends</span>
+                    <input
+                      type="date"
+                      value={smilesEndDate}
+                      onChange={(event) => setSmilesEndDate(event.target.value)}
+                    />
+                  </label>
+                </div>
+              )}
+
+              {smilesChoice === "event" && (
+                <div className="review-two-fields">
+                  <label>
+                    <span>Event</span>
+                    <input
+                      value={smilesEventText}
+                      onChange={(event) => setSmilesEventText(event.target.value)}
+                      placeholder="Example: Family fun day"
+                    />
+                  </label>
+                  <label>
+                    <span>Date</span>
+                    <input
+                      type="date"
+                      value={smilesEventDate}
+                      onChange={(event) => setSmilesEventDate(event.target.value)}
+                    />
+                  </label>
+                </div>
+              )}
+
+              {smilesChoice !== "no" && (
+                <button
+                  type="button"
+                  className="review-primary-action"
+                  onClick={sendPostToSmiles}
+                  disabled={sendingToSmilesPostId === post?.id}
+                >
+                  {sendingToSmilesPostId === post?.id ? "Sending..." : "Send to Smiles"}
+                </button>
+              )}
+            </>
+          )}
+        </section>
+
+        <section className="review-simple-panel">
+          <div className="review-panel-head">
+            <span className="review-step-badge">04</span>
+            <div>
+              <h2>
+                {isSmilesPost
+                  ? "Also post on social?"
+                  : isPosted
+                    ? "Already posted"
+                    : "Ready to publish?"}
+              </h2>
+              <p>
+                {isSmilesPost
+                  ? "Optional. Use these only if you also want this on Facebook or Instagram."
+                  : isPosted
+                    ? `This post has already been posted to ${autopublishPlatformLabel}.`
+                    : "Publish to the selected platform, or add another destination if needed."}
+              </p>
+            </div>
+          </div>
+
+          <div className="review-publish-grid">
+            {isFacebookPost && (
+              <button
+                type="button"
+                className="review-primary-action"
+                onClick={() => autopublishNow("Facebook")}
+                disabled={autoPublishing || saving || facebookPublished}
+              >
+                {autoPublishing
+                  ? "Publishing..."
+                  : facebookPublished
+                    ? "Published to Facebook"
+                    : isPosted
+                      ? "Already posted"
+                      : "Publish to Facebook"}
+              </button>
+            )}
+
+            {isInstagramPost && (
+              <button
+                type="button"
+                className="review-primary-action"
+                onClick={() => autopublishNow("Instagram")}
+                disabled={autoPublishing || saving || instagramPublished}
+              >
+                {autoPublishing
+                  ? "Publishing..."
+                  : instagramPublished
+                    ? "Published to Instagram"
+                    : isPosted
+                      ? "Already posted"
+                      : "Publish to Instagram"}
+              </button>
+            )}
+
+            {!isFacebookPost && (
+              <button
+                type="button"
+                className="review-primary-action"
+                onClick={() => autopublishNow("Facebook")}
+                disabled={autoPublishing || saving || facebookPublished}
+              >
+                {facebookPublished
+                  ? "Published to Facebook"
+                  : "Also post to Facebook"}
+              </button>
+            )}
+
+            {!isInstagramPost && (
+              <button
+                type="button"
+                className="review-primary-action"
+                onClick={() => autopublishNow("Instagram")}
+                disabled={autoPublishing || saving || instagramPublished}
+              >
+                {instagramPublished
+                  ? "Published to Instagram"
+                  : "Also post to Instagram"}
+              </button>
+            )}
+          </div>
+        </section>
+      </section>
+
+      <style jsx global>{`
+        body:has(.fromone-review-page) {
+          background: #f5f7fb !important;
+          overflow-x: hidden !important;
+        }
+
+        body:has(.fromone-review-page)::before {
+          display: none !important;
+          content: none !important;
+        }
+
+        body:has(.fromone-review-page) .app-shell,
+        body:has(.fromone-review-page) .main-content {
+          background: #f5f7fb !important;
+        }
+
+        body:has(.fromone-review-page) .main-content {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding-top: 38px !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
+        }
+
+        .fromone-review-page.settings-create-style-page {
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          min-height: 100vh !important;
+          margin: 0 !important;
+          padding: 0 16px 104px !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
+          background: #f5f7fb !important;
+          color: #071b49 !important;
+          font-family:
+            var(--font-main),
+            "Plus Jakarta Sans",
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif !important;
+          font-weight: 500 !important;
+          letter-spacing: -0.01em !important;
+        }
+
+        .fromone-review-page #fromone-standard-shell.review-create-style-card {
+          width: 1040px !important;
+          max-width: calc(100% - 32px) !important;
+          min-width: 0 !important;
+          min-height: 620px !important;
+          margin: 28px auto 0 !important;
+          padding: clamp(30px, 4vw, 48px) !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+          display: block !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 32px !important;
+          background: #ffffff !important;
+          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
+          color: #071b49 !important;
+          backdrop-filter: none !important;
+        }
+
+        .fromone-review-page .review-back-button {
+          width: fit-content !important;
+          min-height: 44px !important;
+          margin: 0 0 22px !important;
+          padding: 0 18px !important;
+          border: 1px solid #ffd2e5 !important;
+          border-radius: 999px !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          box-shadow: 0 10px 24px rgba(7, 27, 73, 0.06) !important;
+          font: inherit !important;
+          font-weight: 800 !important;
+          cursor: pointer !important;
+        }
+
+        .fromone-review-page .review-message {
+          margin: 0 0 18px !important;
+          padding: 14px 16px !important;
+          border: 1px solid #ffd2e5 !important;
+          border-radius: 18px !important;
+          background: #fff8fc !important;
+          color: #071b49 !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-review-page .review-create-hero {
+          width: 100% !important;
+          max-width: 700px !important;
+          margin: 0 0 18px !important;
+          padding: 0 !important;
+          text-align: left !important;
+        }
+
+        .fromone-review-page .review-create-eyebrow,
+        .fromone-review-page label span {
+          color: #f72585 !important;
+          font-size: 0.78rem !important;
+          line-height: 1 !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.13em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-review-page .review-create-hero h1 {
+          max-width: 700px !important;
+          margin: 10px 0 12px !important;
+          color: #071b49 !important;
+          font-size: clamp(2.65rem, 4.6vw, 4rem) !important;
+          line-height: 0.94 !important;
+          letter-spacing: -0.055em !important;
+          font-weight: 800 !important;
+          text-align: left !important;
+          overflow: visible !important;
+        }
+
+        .fromone-review-page p {
+          color: #52617a !important;
+          font-size: 1rem !important;
+          line-height: 1.5 !important;
+          font-weight: 600 !important;
+        }
+
+        .fromone-review-page .review-create-hero p {
+          max-width: 640px !important;
+          margin: 0 !important;
+          font-size: 1.02rem !important;
+          line-height: 1.42 !important;
+        }
+
+        .fromone-review-page .review-simple-panel {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin-top: 14px !important;
+          padding: clamp(18px, 2.6vw, 26px) !important;
+          box-sizing: border-box !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 24px !important;
+          background: #f7f9fd !important;
+        }
+
+        .fromone-review-page .review-smiles-panel {
+          background:
+            linear-gradient(135deg, rgba(247, 37, 133, 0.045), transparent 46%),
+            #fff8fc !important;
+          border-color: #ffd2e5 !important;
+        }
+
+        .fromone-review-page .review-panel-head {
+          display: flex !important;
+          gap: 12px !important;
+          align-items: flex-start !important;
+          margin-bottom: 14px !important;
+        }
+
+        .fromone-review-page .review-step-badge {
+          display: inline-flex !important;
+          width: 34px !important;
+          height: 34px !important;
+          flex: 0 0 34px !important;
+          align-items: center !important;
+          justify-content: center !important;
+          border-radius: 50% !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          font-size: 0.78rem !important;
+          font-weight: 800 !important;
+          box-shadow: 0 12px 26px rgba(247, 37, 133, 0.18) !important;
+        }
+
+        .fromone-review-page .review-panel-head h2,
+        .fromone-review-page .review-improve-box h3 {
+          margin: 0 0 6px !important;
+          color: #071b49 !important;
+          font-size: clamp(1.65rem, 3.4vw, 2.15rem) !important;
+          font-weight: 800 !important;
+          line-height: 1.05 !important;
+          letter-spacing: -0.045em !important;
+        }
+
+        .fromone-review-page .review-panel-head p,
+        .fromone-review-page .review-improve-box h3 {
+          margin: 0 !important;
+        }
+
+        .fromone-review-page .review-media-frame {
+          width: min(100%, 500px) !important;
+          min-height: 250px !important;
+          margin: 0 auto !important;
+          display: grid !important;
+          place-items: center !important;
+          overflow: hidden !important;
+          border-radius: 20px !important;
+          background: #071026 !important;
+        }
+
+        .fromone-review-page .review-media-frame img,
+        .fromone-review-page .review-media-frame video {
+          display: block !important;
+          width: auto !important;
+          height: auto !important;
+          max-width: 100% !important;
+          max-height: 300px !important;
+          object-fit: contain !important;
+        }
+
+        .fromone-review-page .review-empty-media {
+          display: grid !important;
+          gap: 8px !important;
+          padding: 18px !important;
+          color: #ffffff !important;
+          text-align: center !important;
+        }
+
+        .fromone-review-page .review-form-grid,
+        .fromone-review-page .review-two-fields {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 14px !important;
+        }
+
+        .fromone-review-page .review-wide-field {
+          grid-column: 1 / -1 !important;
+        }
+
+        .fromone-review-page label {
+          display: grid !important;
+          gap: 8px !important;
+          margin: 0 !important;
+        }
+
+        .fromone-review-page input,
+        .fromone-review-page textarea {
+          width: 100% !important;
+          min-height: 52px !important;
+          padding: 12px 15px !important;
+          border: 1px solid #d7e0ee !important;
+          border-radius: 18px !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          box-sizing: border-box !important;
+          font: inherit !important;
+          font-weight: 600 !important;
+          outline: none !important;
+        }
+
+        .fromone-review-page textarea {
+          min-height: 128px !important;
+          resize: vertical !important;
+        }
+
+        .fromone-review-page textarea.review-hashtags-field {
+          min-height: 76px !important;
+          overflow-wrap: anywhere !important;
+          resize: vertical !important;
+        }
+
+        .fromone-review-page input:focus,
+        .fromone-review-page textarea:focus {
+          border-color: #f72585 !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.11) !important;
+        }
+
+        .fromone-review-page .review-primary-action,
+        .fromone-review-page .review-secondary-action,
+        .fromone-review-page .review-pill,
+        .fromone-review-page .review-status-box a {
+          min-height: 54px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 22px !important;
+          border-radius: 999px !important;
+          font: inherit !important;
+          font-weight: 800 !important;
+          text-decoration: none !important;
+          cursor: pointer !important;
+        }
+
+        .fromone-review-page .review-primary-action,
+        .fromone-review-page .review-status-box a {
+          border: 1px solid #f72585 !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          box-shadow: 0 18px 38px rgba(247, 37, 133, 0.24) !important;
+        }
+
+        .fromone-review-page .review-secondary-action,
+        .fromone-review-page .review-pill {
+          border: 1px solid #ffd2e5 !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          box-shadow: 0 10px 24px rgba(7, 27, 73, 0.06) !important;
+        }
+
+        .fromone-review-page .review-secondary-action {
+          width: fit-content !important;
+          margin-top: 14px !important;
+        }
+
+        .fromone-review-page .review-pill.is-active {
+          border-color: #f72585 !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+        }
+
+        .fromone-review-page .review-pill-grid,
+        .fromone-review-page .review-publish-grid {
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 10px !important;
+        }
+
+        .fromone-review-page .review-publish-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        .fromone-review-page .review-improve-box,
+        .fromone-review-page .review-status-box {
+          display: grid !important;
+          gap: 12px !important;
+          margin-top: 14px !important;
+          padding: 18px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 22px !important;
+          background: #ffffff !important;
+          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
+        }
+
+        .fromone-review-page .review-status-box strong {
+          color: #071b49 !important;
+          font-size: 1.2rem !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-review-page .review-status-box small {
+          color: #52617a !important;
+          font-weight: 600 !important;
+        }
+
+        button:disabled {
+          cursor: not-allowed !important;
+          opacity: 0.65 !important;
+        }
+
+        @media (max-width: 760px) {
+          body:has(.fromone-review-page) .main-content {
+            padding-top: 0 !important;
+          }
+
+          .fromone-review-page.settings-create-style-page {
+            padding: 0 0 112px !important;
+          }
+
+          .fromone-review-page #fromone-standard-shell.review-create-style-card {
+            width: calc(100% - 72px) !important;
+            max-width: 468px !important;
+            min-height: auto !important;
+            margin: 24px auto 0 !important;
+            padding: 28px 26px 26px !important;
+            border-radius: 26px !important;
+          }
+
+          .fromone-review-page .review-create-hero {
+            margin-bottom: 22px !important;
+          }
+
+          .fromone-review-page .review-create-hero h1 {
+            margin: 12px 0 14px !important;
+            font-size: clamp(2.45rem, 10vw, 3.15rem) !important;
+            line-height: 0.94 !important;
+            letter-spacing: -0.058em !important;
+          }
+
+          .fromone-review-page .review-create-hero p {
+            font-size: 1rem !important;
+            line-height: 1.45 !important;
+          }
+
+          .fromone-review-page .review-simple-panel {
+            margin-top: 14px !important;
+            padding: 18px !important;
+            border-radius: 24px !important;
+          }
+
+          .fromone-review-page .review-panel-head {
+            margin-bottom: 16px !important;
+          }
+
+          .fromone-review-page .review-panel-head h2 {
+            font-size: clamp(1.75rem, 7vw, 2.15rem) !important;
+            line-height: 0.98 !important;
+          }
+
+          .fromone-review-page .review-form-grid,
+          .fromone-review-page .review-two-fields,
+          .fromone-review-page .review-pill-grid,
+          .fromone-review-page .review-publish-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-review-page .review-media-frame {
+            width: 100% !important;
+            min-height: 210px !important;
+          }
+
+          .fromone-review-page .review-primary-action,
+          .fromone-review-page .review-secondary-action,
+          .fromone-review-page .review-status-box a {
+            width: 100% !important;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .fromone-review-page #fromone-standard-shell.review-create-style-card {
+            width: calc(100% - 48px) !important;
+            padding: 26px 22px 24px !important;
+          }
+        }
+      `}</style>
+    </main>
+  );
+
+  return (
     <main className="pr2-page" data-review-page="simple-mobile-tools-v1">
       <section className="pr2-shell">
         <div className="pr2-topbar">
@@ -2536,13 +3704,19 @@ Do not return the same caption.`,
                   <h1>
                     {activePanel === "prepare"
                       ? "Adjust media"
-                      : "Review post"}
+                      : "Review your post"}
                   </h1>
                   {activePanel !== "prepare" && (
                     <>
                       <p className="pr2-compact-media-subtitle">
-                        Check the wording, then publish or autoschedule.
+                        Check the post. If it is an offer or event, answer the Smiles questions below.
                       </p>
+
+                      <div className="pr2-simple-platform-row" aria-label="Created posts">
+                        <span>Facebook draft</span>
+                        <span>Instagram draft</span>
+                        {smilesChoice !== "no" && <span>Smiles draft</span>}
+                      </div>
 
                       <div className="pr2-created-upload-inline">
                         <span>{getCreatedFromUploadLabel(post)}</span>
@@ -2824,8 +3998,8 @@ Do not return the same caption.`,
                       <div>
                         <strong>{mediaPrepareLabel}</strong>
                         <span>
-                          {preparedDisplayMedia.width} ×{" "}
-                          {preparedDisplayMedia.height}
+                          {preparedDisplayMedia!.width} ×{" "}
+                          {preparedDisplayMedia!.height}
                         </span>
                       </div>
 
@@ -2864,7 +4038,7 @@ Do not return the same caption.`,
                         <video src={mediaUrl} controls />
                       ) : isFlyer && preparedDisplayMedia?.url ? (
                         <img
-                          src={preparedDisplayMedia.url}
+                          src={preparedDisplayMedia!.url}
                           alt="Flyer image"
                         />
                       ) : isFlyer ? (
@@ -2898,8 +4072,8 @@ Do not return the same caption.`,
                     <div className="pr2-prepared-strip">
                       <strong>{mediaPrepareLabel}</strong>
                       <span>
-                        {preparedDisplayMedia.width} ×{" "}
-                        {preparedDisplayMedia.height}
+                        {preparedDisplayMedia!.width} ×{" "}
+                        {preparedDisplayMedia!.height}
                       </span>
                       <button
                         type="button"
@@ -2924,10 +4098,10 @@ Do not return the same caption.`,
 
               <div className="pr2-review-wording-head">
                 <div>
-                  <span className="pr2-kicker">Caption</span>
-                  <h2>Check and edit</h2>
+                  <span className="pr2-kicker">Post wording</span>
+                  <h2>Check the words</h2>
                 </div>
-                <p>FromOne has written a draft. Edit anything that does not sound right.</p>
+                <p>Simple check: image, caption, button text and hashtags.</p>
               </div>
 
               <div className="pr2-wording">
@@ -2980,6 +4154,154 @@ Do not return the same caption.`,
                 </div>
               )}
               </div>
+
+              <section className="pr2-smiles-simple-card" aria-label="Stockport Smiles prompts">
+                <div className="pr2-smiles-simple-head">
+                  <span className="pr2-kicker">Stockport Smiles</span>
+                  <h2>Send to Smiles?</h2>
+                  <p>
+                    Only offers and events need Smiles. Pick one answer.
+                  </p>
+                </div>
+
+                {post?.smiles_status === "sent" ? (
+                  (() => {
+                    const smilesSentInfo = getSmilesSentInfo(post);
+
+                    return (
+                      <div className="pr2-smiles-sent-note">
+                        <strong>Sent to Smiles</strong>
+                        <span>
+                          {smilesSentInfo.href
+                            ? "It is ready to view on Stockport Smiles."
+                            : "This has gone to Stockport Smiles for approval."}
+                        </span>
+
+                        {smilesSentInfo.referenceCode && (
+                          <span className="pr2-smiles-reference">
+                            Reference: <b>{smilesSentInfo.referenceCode}</b>
+                          </span>
+                        )}
+
+                        {smilesSentInfo.href && (
+                          <a
+                            className="pr2-smiles-view-link"
+                            href={smilesSentInfo.href}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View Smiles post
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <>
+                    <div className="pr2-smiles-choice-row">
+                      {[
+                        { value: "no", label: "No" },
+                        { value: "offer", label: "Offer" },
+                        { value: "event", label: "Event" },
+                      ].map((choice) => (
+                        <button
+                          key={choice.value}
+                          type="button"
+                          className={
+                            smilesChoice === choice.value
+                              ? "pr2-smiles-choice is-active"
+                              : "pr2-smiles-choice"
+                          }
+                          onClick={() =>
+                            setSmilesChoice(choice.value as "no" | "offer" | "event")
+                          }
+                        >
+                          {choice.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {smilesChoice === "offer" && (
+                      <div className="pr2-smiles-prompt-grid">
+                        <label>
+                          <strong>What is the offer?</strong>
+                          <input
+                            value={smilesOfferText}
+                            onChange={(event) => setSmilesOfferText(event.target.value)}
+                            placeholder="Example: 20% off lunch"
+                          />
+                        </label>
+                        <label>
+                          <strong>When does it end?</strong>
+                          <input
+                            type="date"
+                            value={smilesEndDate}
+                            onChange={(event) => setSmilesEndDate(event.target.value)}
+                          />
+                        </label>
+                        <label className="is-wide">
+                          <strong>Any terms?</strong>
+                          <input
+                            value={smilesTerms}
+                            onChange={(event) => setSmilesTerms(event.target.value)}
+                            placeholder="Example: Tuesday to Friday only"
+                          />
+                        </label>
+                      </div>
+                    )}
+
+                    {smilesChoice === "event" && (
+                      <div className="pr2-smiles-prompt-grid">
+                        <label>
+                          <strong>Event date</strong>
+                          <input
+                            type="date"
+                            value={smilesEventDate}
+                            onChange={(event) => setSmilesEventDate(event.target.value)}
+                          />
+                        </label>
+                        <label>
+                          <strong>Start time</strong>
+                          <input
+                            type="time"
+                            value={smilesStartTime}
+                            onChange={(event) => setSmilesStartTime(event.target.value)}
+                          />
+                        </label>
+                        <label>
+                          <strong>End time</strong>
+                          <input
+                            type="time"
+                            value={smilesEndTime}
+                            onChange={(event) => setSmilesEndTime(event.target.value)}
+                          />
+                        </label>
+                        <label>
+                          <strong>Booking link</strong>
+                          <input
+                            value={smilesBookingUrl}
+                            onChange={(event) => setSmilesBookingUrl(event.target.value)}
+                            placeholder="Optional"
+                          />
+                        </label>
+                      </div>
+                    )}
+
+                    {smilesChoice !== "no" && (
+                      <button
+                        type="button"
+                        className="pr2-btn pr2-smiles-send-button"
+                        onClick={sendPostToSmiles}
+                        disabled={sendingToSmilesPostId === post?.id}
+                      >
+                        {sendingToSmilesPostId === post?.id
+                          ? "Sending..."
+                          : "Create Smiles post"}
+                      </button>
+                    )}
+                  </>
+                )}
+              </section>
             </article>
 
             {activePanel === "improve" && (
@@ -3111,24 +4433,28 @@ Do not return the same caption.`,
                   </p>
                 )}
 
-                <label className="pr2-simple-schedule pr2-right-schedule">
-                  <span>Scheduled time</span>
-                  <input
-                    type="datetime-local"
-                    value={scheduleInputValue}
-                    onChange={(event) => setScheduleInputValue(event.target.value)}
-                    disabled={savingSchedule || isPosted}
-                  />
-                </label>
+                {!isPosted && (
+                  <>
+                    <label className="pr2-simple-schedule pr2-right-schedule">
+                      <span>Choose a time</span>
+                      <input
+                        type="datetime-local"
+                        value={scheduleInputValue}
+                        onChange={(event) => setScheduleInputValue(event.target.value)}
+                        disabled={savingSchedule}
+                      />
+                    </label>
 
-                <button
-                  type="button"
-                  className="pr2-btn pr2-btn-primary pr2-right-main-button pr2-autoschedule-action"
-                  onClick={saveSchedule}
-                  disabled={savingSchedule || isPosted}
-                >
-                  {savingSchedule ? "Saving..." : "Autoschedule"}
-                </button>
+                    <button
+                      type="button"
+                      className="pr2-btn pr2-btn-primary pr2-right-main-button pr2-autoschedule-action"
+                      onClick={saveSchedule}
+                      disabled={savingSchedule}
+                    >
+                      {savingSchedule ? "Saving..." : "Schedule post"}
+                    </button>
+                  </>
+                )}
 
                 <button
                   type="button"
@@ -5600,6 +6926,678 @@ Do not return the same caption.`,
           body:has(.pr2-page) * {
             animation-duration: 0s !important;
             transition-duration: 0s !important;
+          }
+        }
+      `}</style>
+
+      <style jsx global>{`
+        /* Phase 2B simple Smiles review UI */
+        body:has(.pr2-page),
+        body:has(.pr2-page) * {
+          font-family:
+            var(--font-main),
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif !important;
+          letter-spacing: -0.01em;
+        }
+
+        .pr2-page[data-review-page="simple-mobile-tools-v1"] {
+          min-height: 100vh !important;
+          padding: clamp(22px, 4vw, 54px) clamp(16px, 4vw, 44px) !important;
+          background: #f5f7fb !important;
+          color: #071b4c !important;
+        }
+
+        .pr2-shell {
+          width: min(100%, 1050px) !important;
+          margin: 0 auto !important;
+          padding: 0 !important;
+        }
+
+        .pr2-layout {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) 320px !important;
+          gap: 22px !important;
+          align-items: start !important;
+        }
+
+        .pr2-card,
+        .pr2-review-post-card,
+        .pr2-right-publish-card {
+          border: 1px solid #e5eaf3 !important;
+          border-radius: 24px !important;
+          background: #ffffff !important;
+          color: #071b4c !important;
+          box-shadow: 0 24px 70px rgba(7, 27, 76, 0.08) !important;
+        }
+
+        .pr2-review-post-card {
+          padding: clamp(22px, 3vw, 32px) !important;
+        }
+
+        .pr2-card-head,
+        .pr2-review-post-head,
+        .pr2-compact-media-head {
+          display: grid !important;
+          gap: 12px !important;
+          margin-bottom: 18px !important;
+        }
+
+        .pr2-kicker {
+          color: #f72486 !important;
+          font-size: 0.76rem !important;
+          font-weight: 950 !important;
+          letter-spacing: 0.08em !important;
+          text-transform: uppercase !important;
+        }
+
+        .pr2-review-post-head h1,
+        .pr2-card-head h1,
+        .pr2-card-head h2,
+        .pr2-review-wording-head h2,
+        .pr2-smiles-simple-head h2,
+        .pr2-approval-simple-head h2 {
+          margin: 0 !important;
+          color: #071b4c !important;
+          font-weight: 950 !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.045em !important;
+        }
+
+        .pr2-review-post-head h1 {
+          max-width: 720px !important;
+          font-size: clamp(2.8rem, 6vw, 5rem) !important;
+        }
+
+        .pr2-card-head h2,
+        .pr2-review-wording-head h2,
+        .pr2-smiles-simple-head h2 {
+          font-size: clamp(1.6rem, 3vw, 2.35rem) !important;
+        }
+
+        .pr2-compact-media-subtitle,
+        .pr2-review-wording-head p,
+        .pr2-smiles-simple-head p,
+        .pr2-approval-simple-head p,
+        .pr2-created-upload-inline p,
+        .pr2-publish-locked-help {
+          margin: 0 !important;
+          color: #56627a !important;
+          font-weight: 750 !important;
+          line-height: 1.45 !important;
+        }
+
+        .pr2-simple-platform-row {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          gap: 10px !important;
+        }
+
+        .pr2-simple-platform-row span {
+          display: inline-flex !important;
+          min-height: 34px !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 14px !important;
+          border-radius: 999px !important;
+          background: #fff5fa !important;
+          border: 1px solid #ffc5df !important;
+          color: #071b4c !important;
+          font-size: 0.86rem !important;
+          font-weight: 900 !important;
+        }
+
+        .pr2-created-upload-inline {
+          display: none !important;
+        }
+
+        .pr2-media-box {
+          min-height: 360px !important;
+          max-height: 520px !important;
+          display: grid !important;
+          place-items: center !important;
+          overflow: hidden !important;
+          border: 1px solid #e5eaf3 !important;
+          border-radius: 22px !important;
+          background: #f7f8fc !important;
+          box-shadow: none !important;
+        }
+
+        .pr2-media-box img,
+        .pr2-media-box video {
+          display: block !important;
+          width: auto !important;
+          height: auto !important;
+          max-width: 100% !important;
+          max-height: 500px !important;
+          object-fit: contain !important;
+          background: transparent !important;
+        }
+
+        .pr2-review-wording-divider {
+          height: 1px !important;
+          margin: 28px 0 !important;
+          background: #e5eaf3 !important;
+        }
+
+        .pr2-review-wording-head {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) !important;
+          gap: 8px !important;
+          margin-bottom: 16px !important;
+        }
+
+        .pr2-wording,
+        .pr2-smiles-simple-card,
+        .pr2-smiles-simple-head {
+          display: grid !important;
+          gap: 14px !important;
+        }
+
+        .pr2-wording label,
+        .pr2-smiles-prompt-grid label {
+          display: grid !important;
+          gap: 8px !important;
+          color: #071b4c !important;
+          font-weight: 900 !important;
+        }
+
+        .pr2-wording textarea,
+        .pr2-wording input,
+        .pr2-smiles-prompt-grid input,
+        .pr2-right-schedule input {
+          width: 100% !important;
+          min-height: 54px !important;
+          border: 1px solid #dfe5ef !important;
+          border-radius: 16px !important;
+          background: #ffffff !important;
+          color: #071b4c !important;
+          padding: 0 16px !important;
+          font-size: 1rem !important;
+          font-weight: 750 !important;
+          box-shadow: none !important;
+        }
+
+        .pr2-wording textarea {
+          min-height: 190px !important;
+          padding: 16px !important;
+          resize: vertical !important;
+          line-height: 1.5 !important;
+        }
+
+        .pr2-wording textarea:focus,
+        .pr2-wording input:focus,
+        .pr2-smiles-prompt-grid input:focus,
+        .pr2-right-schedule input:focus {
+          outline: none !important;
+          border-color: #f72486 !important;
+          box-shadow: 0 0 0 4px rgba(247, 36, 134, 0.1) !important;
+        }
+
+        .pr2-edit-action-row {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 12px !important;
+          margin-top: 16px !important;
+        }
+
+        .pr2-btn {
+          min-height: 54px !important;
+          border-radius: 16px !important;
+          border: 1px solid #e5eaf3 !important;
+          background: #ffffff !important;
+          color: #071b4c !important;
+          font-weight: 950 !important;
+          box-shadow: none !important;
+        }
+
+        .pr2-btn-primary,
+        .pr2-save-wording-action,
+        .pr2-publish-action,
+        .pr2-autoschedule-action,
+        .pr2-smiles-send-button {
+          border-color: transparent !important;
+          background: #f72486 !important;
+          color: #ffffff !important;
+          box-shadow: 0 16px 32px rgba(247, 36, 134, 0.2) !important;
+        }
+
+        .pr2-improve-wording-action {
+          background: #fff5fa !important;
+          border-color: #ffc5df !important;
+          color: #071b4c !important;
+        }
+
+        .pr2-smiles-simple-card {
+          margin-top: 26px !important;
+          padding: clamp(18px, 3vw, 26px) !important;
+          border: 1px solid #ffc5df !important;
+          border-radius: 22px !important;
+          background: #fff8fc !important;
+        }
+
+        .pr2-smiles-choice-row {
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 12px !important;
+        }
+
+        .pr2-smiles-choice {
+          min-height: 60px !important;
+          border: 1px solid #ffc5df !important;
+          border-radius: 18px !important;
+          background: #ffffff !important;
+          color: #071b4c !important;
+          font-weight: 950 !important;
+          font-size: 1rem !important;
+        }
+
+        .pr2-smiles-choice.is-active {
+          background: #f72486 !important;
+          border-color: #f72486 !important;
+          color: #ffffff !important;
+          box-shadow: 0 16px 30px rgba(247, 36, 134, 0.18) !important;
+        }
+
+        .pr2-smiles-prompt-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 14px !important;
+        }
+
+        .pr2-smiles-prompt-grid .is-wide {
+          grid-column: 1 / -1 !important;
+        }
+
+        .pr2-smiles-send-button {
+          width: 100% !important;
+        }
+
+        .pr2-right-publish-card {
+          position: sticky !important;
+          top: 20px !important;
+          padding: 22px !important;
+        }
+
+        .pr2-right-publish-actions {
+          display: grid !important;
+          gap: 12px !important;
+        }
+
+        .pr2-approve-action,
+        .pr2-send-back-action,
+        .pr2-copy-platform-action,
+        .pr2-share-media-action {
+          display: none !important;
+        }
+
+        .pr2-message-inline {
+          margin: 0 0 16px !important;
+          border: 1px solid #ffc5df !important;
+          border-radius: 18px !important;
+          background: #fff5fa !important;
+          color: #071b4c !important;
+          padding: 14px 16px !important;
+          font-weight: 850 !important;
+        }
+
+        .pr2-back {
+          min-height: 42px !important;
+          border-radius: 999px !important;
+          border: 1px solid #dfe5ef !important;
+          background: #ffffff !important;
+          color: #071b4c !important;
+          font-weight: 900 !important;
+        }
+
+        @media (max-width: 980px) {
+          .pr2-layout {
+            grid-template-columns: 1fr !important;
+          }
+
+          .pr2-right-publish-card {
+            position: static !important;
+          }
+        }
+
+        @media (max-width: 700px) {
+          .pr2-page[data-review-page="simple-mobile-tools-v1"] {
+            padding: 14px !important;
+          }
+
+          .pr2-review-post-card,
+          .pr2-right-publish-card {
+            border-radius: 20px !important;
+            padding: 18px !important;
+          }
+
+          .pr2-review-post-head h1 {
+            font-size: clamp(2.25rem, 12vw, 3.5rem) !important;
+          }
+
+          .pr2-media-box {
+            min-height: 260px !important;
+          }
+
+          .pr2-edit-action-row,
+          .pr2-smiles-choice-row,
+          .pr2-smiles-prompt-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
+      <style jsx global>{`
+        /* Agency pass: granny-proof review page */
+        .pr2-page[data-review-page="simple-mobile-tools-v1"] {
+          padding-top: 52px !important;
+          padding-bottom: 72px !important;
+        }
+
+        .pr2-shell {
+          max-width: 980px !important;
+        }
+
+        .pr2-layout {
+          grid-template-columns: minmax(0, 1fr) 280px !important;
+          gap: 20px !important;
+        }
+
+        .pr2-review-post-card {
+          padding: 28px !important;
+          overflow: hidden !important;
+        }
+
+        .pr2-review-post-head {
+          max-width: 100% !important;
+          margin-bottom: 22px !important;
+        }
+
+        .pr2-review-post-head h1 {
+          max-width: 610px !important;
+          font-size: clamp(3rem, 5vw, 4.05rem) !important;
+          line-height: 0.92 !important;
+          letter-spacing: -0.055em !important;
+          text-wrap: balance !important;
+        }
+
+        .pr2-compact-media-subtitle {
+          max-width: 560px !important;
+          font-size: 1rem !important;
+        }
+
+        .pr2-simple-platform-row {
+          margin-top: 2px !important;
+        }
+
+        .pr2-simple-platform-row span {
+          min-height: 32px !important;
+          padding: 0 13px !important;
+          border-radius: 999px !important;
+          background: #fff8fc !important;
+          font-size: 0.82rem !important;
+        }
+
+        .pr2-media-box,
+        .pr2-compact-media-card .pr2-media-box {
+          width: min(100%, 390px) !important;
+          min-height: 250px !important;
+          max-height: 300px !important;
+          margin: 20px 0 0 !important;
+          border-radius: 18px !important;
+          background: #070d25 !important;
+        }
+
+        .pr2-media-box img,
+        .pr2-media-box video,
+        .pr2-compact-media-card .pr2-media-box img,
+        .pr2-compact-media-card .pr2-media-box video {
+          width: auto !important;
+          height: auto !important;
+          max-width: 100% !important;
+          max-height: 300px !important;
+          object-fit: contain !important;
+        }
+
+        .pr2-review-wording-divider {
+          margin: 30px 0 26px !important;
+        }
+
+        .pr2-review-wording-head {
+          text-align: left !important;
+          margin-bottom: 16px !important;
+        }
+
+        .pr2-review-wording-head h2 {
+          font-size: clamp(1.8rem, 3vw, 2.35rem) !important;
+          line-height: 1 !important;
+        }
+
+        .pr2-review-wording-head p {
+          max-width: 520px !important;
+          margin-top: 2px !important;
+          font-size: 1rem !important;
+        }
+
+        .pr2-wording,
+        .pr2-review-post-card .pr2-wording {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 12px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+
+        .pr2-wording label,
+        .pr2-review-post-card .pr2-wording label,
+        .pr2-wording label:not(.is-caption) {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 7px !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          color: #071b4c !important;
+        }
+
+        .pr2-wording label strong {
+          color: #071b4c !important;
+          font-size: 0.82rem !important;
+          line-height: 1 !important;
+          letter-spacing: 0.04em !important;
+          text-transform: uppercase !important;
+        }
+
+        .pr2-wording textarea,
+        .pr2-wording input,
+        .pr2-review-post-card .pr2-wording textarea,
+        .pr2-review-post-card .pr2-wording input {
+          min-height: 56px !important;
+          width: 100% !important;
+          border: 1px solid #dfe5ef !important;
+          border-radius: 16px !important;
+          background: #ffffff !important;
+          color: #071b4c !important;
+          padding: 15px 16px !important;
+          font-size: 1rem !important;
+          font-weight: 750 !important;
+          line-height: 1.45 !important;
+          box-shadow: none !important;
+          opacity: 1 !important;
+        }
+
+        .pr2-wording textarea,
+        .pr2-review-post-card .pr2-wording textarea {
+          min-height: 150px !important;
+        }
+
+        .pr2-edit-action-row,
+        .pr2-main-review-actions.pr2-edit-action-row,
+        .pr2-tidy-edit-actions.pr2-edit-action-row {
+          grid-template-columns: 1fr !important;
+          gap: 10px !important;
+          margin-top: 18px !important;
+        }
+
+        .pr2-edit-action-row .pr2-btn {
+          min-height: 58px !important;
+          border-radius: 16px !important;
+          font-size: 1rem !important;
+        }
+
+        .pr2-smiles-simple-card {
+          margin-top: 26px !important;
+          padding: 22px !important;
+          border-radius: 20px !important;
+          background: #fff8fc !important;
+        }
+
+        .pr2-smiles-simple-head h2 {
+          font-size: clamp(1.9rem, 3vw, 2.45rem) !important;
+          line-height: 1 !important;
+        }
+
+        .pr2-smiles-choice-row {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 10px !important;
+        }
+
+        .pr2-smiles-choice {
+          min-height: 58px !important;
+          border-radius: 16px !important;
+          background: #ffffff !important;
+        }
+
+        .pr2-smiles-prompt-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 12px !important;
+        }
+
+        .pr2-smiles-prompt-grid label strong {
+          color: #071b4c !important;
+          font-size: 0.82rem !important;
+        }
+
+        .pr2-smiles-sent-note {
+          display: grid !important;
+          gap: 4px !important;
+          padding: 18px !important;
+          border-radius: 16px !important;
+          border: 1px solid #ffc5df !important;
+          background: #ffffff !important;
+          color: #071b4c !important;
+        }
+
+        .pr2-smiles-sent-note strong {
+          font-size: 1.15rem !important;
+          font-weight: 950 !important;
+        }
+
+        .pr2-smiles-sent-note span {
+          color: #56627a !important;
+          font-weight: 750 !important;
+        }
+
+        .pr2-smiles-reference {
+          width: fit-content !important;
+          margin-top: 6px !important;
+          padding: 9px 12px !important;
+          border-radius: 999px !important;
+          border: 1px solid #ffd2e5 !important;
+          background: #fff8fc !important;
+          color: #56627a !important;
+          font-weight: 850 !important;
+        }
+
+        .pr2-smiles-reference b {
+          color: #071b4c !important;
+          font-weight: 950 !important;
+        }
+
+        .pr2-smiles-view-link,
+        .fo-review-status-box a {
+          width: fit-content !important;
+          min-height: 44px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin-top: 8px !important;
+          padding: 0 18px !important;
+          border-radius: 999px !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          font-weight: 950 !important;
+          text-decoration: none !important;
+        }
+
+        .pr2-right-publish-card {
+          padding: 18px !important;
+          border-radius: 20px !important;
+        }
+
+        .pr2-approval-simple-head h2 {
+          font-size: 1.8rem !important;
+          line-height: 0.98 !important;
+        }
+
+        .pr2-approval-simple-head p {
+          font-size: 0.98rem !important;
+        }
+
+        .pr2-right-publish-actions .pr2-btn,
+        .pr2-right-publish-actions button {
+          min-height: 54px !important;
+          border-radius: 14px !important;
+          font-size: 0.98rem !important;
+        }
+
+        .pr2-right-schedule span {
+          color: #f72486 !important;
+          font-size: 0.76rem !important;
+        }
+
+        .pr2-autoschedule-action[disabled],
+        .pr2-publish-action[disabled],
+        .pr2-smiles-send-button[disabled] {
+          opacity: 0.58 !important;
+          box-shadow: none !important;
+        }
+
+        @media (max-width: 980px) {
+          .pr2-layout {
+            grid-template-columns: 1fr !important;
+          }
+
+          .pr2-media-box,
+          .pr2-compact-media-card .pr2-media-box {
+            width: 100% !important;
+          }
+        }
+
+        @media (max-width: 700px) {
+          .pr2-review-post-card {
+            padding: 18px !important;
+          }
+
+          .pr2-review-post-head h1 {
+            font-size: clamp(2.4rem, 11vw, 3.2rem) !important;
+          }
+
+          .pr2-simple-platform-row,
+          .pr2-smiles-choice-row,
+          .pr2-smiles-prompt-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .pr2-simple-platform-row {
+            display: grid !important;
           }
         }
       `}</style>

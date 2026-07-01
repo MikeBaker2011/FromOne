@@ -11,6 +11,7 @@ const protectedRoutes = [
   '/reports',
   '/settings',
   '/subscription',
+  '/smiles',
 ];
 
 const publicMarketingRoutes = [
@@ -289,22 +290,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           .fromone-account-topbar {
             position: sticky !important;
             top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
             z-index: 1200 !important;
             display: flex !important;
             visibility: visible !important;
             opacity: 1 !important;
             align-items: center !important;
             justify-content: space-between !important;
-            width: 100% !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            min-width: 100vw !important;
             min-height: 62px !important;
             height: 62px !important;
+            margin-left: calc(50% - 50vw) !important;
+            margin-right: calc(50% - 50vw) !important;
             padding: 8px 16px !important;
+            box-sizing: border-box !important;
             background: rgba(5, 11, 24, 0.96) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
             backdrop-filter: blur(16px) !important;
             -webkit-backdrop-filter: blur(16px) !important;
             transform: none !important;
             pointer-events: auto !important;
+            overflow: hidden !important;
           }
 
           .fromone-account-topbar-brand {

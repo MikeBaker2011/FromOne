@@ -13057,111 +13057,860 @@ body:has(.simplified-posts-page) .simplified-posts-page {
   }
 }
 /* -------------------------------------------------------------------------- */
-/* FromOne universal app width system                                         */
-/* Paste at the very bottom of app/globals.css                                */
+
+/* FromOne post review - simple agency-standard Smiles override                */
+/* Paste at the VERY BOTTOM of global.css. This is intentionally strict.        */
 /* -------------------------------------------------------------------------- */
 
 :root {
-  --fromone-desktop-page-width: 1400px;
-  --fromone-mobile-page-width: 430px;
-  --fromone-desktop-page-padding: 32px;
-  --fromone-mobile-page-padding: 14px;
+  --review-pink: #f72585;
+  --review-navy: #071b49;
+  --review-ink: #101828;
+  --review-muted: #667085;
+  --review-line: #eceef5;
+  --review-line-strong: #d9dce8;
+  --review-page: #f7f8fc;
+  --review-soft-pink: #fff6fb;
+  --review-white: #ffffff;
 }
 
-/* Desktop: one consistent width for all app pages */
-@media (min-width: 901px) {
-  .app-shell .main-content {
-    width: 100% !important;
-    max-width: none !important;
-    padding-left: var(--fromone-desktop-page-padding) !important;
-    padding-right: var(--fromone-desktop-page-padding) !important;
-    box-sizing: border-box !important;
+body:has(.pr2-page[data-review-page]),
+body:has(.pr2-page[data-review-page]) * {
+  font-family:
+    var(--font-main),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif !important;
+  letter-spacing: -0.01em !important;
+}
+
+body:has(.pr2-page[data-review-page]) {
+  background: var(--review-page) !important;
+  color: var(--review-ink) !important;
+  font-weight: 500 !important;
+}
+
+body:has(.pr2-page[data-review-page]) .app-shell,
+body:has(.pr2-page[data-review-page]) .main-content,
+body:has(.pr2-page[data-review-page]) .main-content.fromone-mobile-bottom-safe {
+  background: var(--review-page) !important;
+}
+
+.pr2-page[data-review-page] {
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 40px 20px 72px !important;
+  background: var(--review-page) !important;
+  color: var(--review-ink) !important;
+  font-weight: 500 !important;
+}
+
+.pr2-page[data-review-page] .pr2-shell {
+  width: min(100%, 760px) !important;
+  max-width: 760px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+.pr2-page[data-review-page] .pr2-topbar {
+  margin: 0 0 18px !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.pr2-page[data-review-page] .pr2-back {
+  display: inline-flex !important;
+  min-height: 40px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  border: 1px solid var(--review-line) !important;
+  border-radius: 999px !important;
+  background: var(--review-white) !important;
+  color: var(--review-navy) !important;
+  box-shadow: none !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+}
+
+/* One simple column. The action card moves below the review. */
+.pr2-page[data-review-page] .pr2-layout {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 16px !important;
+  align-items: start !important;
+  margin: 0 !important;
+}
+
+.pr2-page[data-review-page] .pr2-main,
+.pr2-page[data-review-page] .pr2-side,
+.pr2-page[data-review-page] .pr2-side.pr2-approval-side {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Remove review-page clutter. */
+.pr2-page[data-review-page] .pr2-hidden-steps,
+.pr2-page[data-review-page] .pr2-simple-steps,
+.pr2-page[data-review-page] .pr2-simple-platform-row,
+.pr2-page[data-review-page] .pr2-created-upload-inline,
+.pr2-page[data-review-page] .pr2-review-post-head > button,
+.pr2-page[data-review-page] .pr2-media-current-label,
+.pr2-page[data-review-page] .pr2-prepared-strip,
+.pr2-page[data-review-page] .pr2-status.pr2-approval-status,
+.pr2-page[data-review-page] .pr2-approve-action,
+.pr2-page[data-review-page] .pr2-send-back-action,
+.pr2-page[data-review-page] .pr2-copy-platform-action,
+.pr2-page[data-review-page] .pr2-share-media-action {
+  display: none !important;
+}
+
+.pr2-page[data-review-page] .pr2-card,
+.pr2-page[data-review-page] .pr2-review-post-card,
+.pr2-page[data-review-page] .pr2-right-publish-card,
+.pr2-page[data-review-page] .pr2-approval-card-simple {
+  border: 1px solid var(--review-line) !important;
+  border-radius: 20px !important;
+  background: var(--review-white) !important;
+  color: var(--review-ink) !important;
+  box-shadow: none !important;
+}
+
+.pr2-page[data-review-page] .pr2-review-post-card {
+  padding: 26px !important;
+  overflow: hidden !important;
+}
+
+.pr2-page[data-review-page] .pr2-right-publish-card {
+  position: static !important;
+  padding: 20px !important;
+}
+
+.pr2-page[data-review-page] .pr2-card-head,
+.pr2-page[data-review-page] .pr2-review-post-head,
+.pr2-page[data-review-page] .pr2-review-wording-head,
+.pr2-page[data-review-page] .pr2-smiles-simple-head,
+.pr2-page[data-review-page] .pr2-approval-simple-head {
+  display: grid !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pr2-page[data-review-page] .pr2-kicker,
+.pr2-page[data-review-page] .page-eyebrow {
+  color: var(--review-pink) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+}
+
+.pr2-page[data-review-page] h1,
+.pr2-page[data-review-page] h2,
+.pr2-page[data-review-page] h3,
+.pr2-page[data-review-page] .pr2-review-post-head h1,
+.pr2-page[data-review-page] .pr2-card-head h1,
+.pr2-page[data-review-page] .pr2-card-head h2,
+.pr2-page[data-review-page] .pr2-review-wording-head h2,
+.pr2-page[data-review-page] .pr2-smiles-simple-head h2,
+.pr2-page[data-review-page] .pr2-approval-simple-head h2 {
+  margin: 0 !important;
+  color: var(--review-navy) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.pr2-page[data-review-page] .pr2-review-post-head h1 {
+  max-width: 560px !important;
+  font-size: clamp(2.15rem, 4vw, 2.85rem) !important;
+  line-height: 1 !important;
+}
+
+.pr2-page[data-review-page] .pr2-review-wording-head h2,
+.pr2-page[data-review-page] .pr2-smiles-simple-head h2 {
+  font-size: clamp(1.45rem, 2.4vw, 1.85rem) !important;
+  line-height: 1.08 !important;
+}
+
+.pr2-page[data-review-page] .pr2-approval-simple-head h2 {
+  font-size: 1.45rem !important;
+  line-height: 1.1 !important;
+}
+
+.pr2-page[data-review-page] p,
+.pr2-page[data-review-page] .pr2-compact-media-subtitle,
+.pr2-page[data-review-page] .pr2-review-wording-head p,
+.pr2-page[data-review-page] .pr2-smiles-simple-head p,
+.pr2-page[data-review-page] .pr2-approval-simple-head p,
+.pr2-page[data-review-page] .pr2-smiles-sent-note span {
+  max-width: 560px !important;
+  margin: 0 !important;
+  color: var(--review-muted) !important;
+  font-size: 0.98rem !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+}
+
+/* Keep the image obvious, but not huge. */
+.pr2-page[data-review-page] .pr2-media-box,
+.pr2-page[data-review-page] .pr2-compact-media-card .pr2-media-box {
+  width: min(100%, 360px) !important;
+  min-height: 230px !important;
+  max-height: 280px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 22px 0 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  background: #071026 !important;
+  box-shadow: none !important;
+}
+
+.pr2-page[data-review-page] .pr2-media-box img,
+.pr2-page[data-review-page] .pr2-media-box video,
+.pr2-page[data-review-page] .pr2-compact-media-card .pr2-media-box img,
+.pr2-page[data-review-page] .pr2-compact-media-card .pr2-media-box video {
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 280px !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  margin: auto !important;
+}
+
+.pr2-page[data-review-page] .pr2-review-wording-divider {
+  height: 1px !important;
+  margin: 28px 0 24px !important;
+  background: var(--review-line) !important;
+}
+
+/* Make the wording section feel like a simple form, not a system panel. */
+.pr2-page[data-review-page] .pr2-wording,
+.pr2-page[data-review-page] .pr2-review-post-card .pr2-wording {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.pr2-page[data-review-page] .pr2-wording label,
+.pr2-page[data-review-page] .pr2-review-post-card .pr2-wording label,
+.pr2-page[data-review-page] .pr2-wording label:not(.is-caption),
+.pr2-page[data-review-page] .pr2-smiles-prompt-grid label,
+.pr2-page[data-review-page] .pr2-right-schedule {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 6px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.pr2-page[data-review-page] .pr2-wording label strong,
+.pr2-page[data-review-page] .pr2-smiles-prompt-grid label strong,
+.pr2-page[data-review-page] .pr2-right-schedule span {
+  color: var(--review-navy) !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+}
+
+.pr2-page[data-review-page] input,
+.pr2-page[data-review-page] textarea,
+.pr2-page[data-review-page] select,
+.pr2-page[data-review-page] .pr2-wording input,
+.pr2-page[data-review-page] .pr2-wording textarea,
+.pr2-page[data-review-page] .pr2-review-post-card .pr2-wording input,
+.pr2-page[data-review-page] .pr2-review-post-card .pr2-wording textarea,
+.pr2-page[data-review-page] .pr2-smiles-prompt-grid input,
+.pr2-page[data-review-page] .pr2-right-schedule input {
+  width: 100% !important;
+  min-height: 50px !important;
+  border: 1px solid var(--review-line-strong) !important;
+  border-radius: 14px !important;
+  background: var(--review-white) !important;
+  color: var(--review-navy) !important;
+  padding: 13px 15px !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  font-size: 0.98rem !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+}
+
+.pr2-page[data-review-page] textarea,
+.pr2-page[data-review-page] .pr2-wording textarea,
+.pr2-page[data-review-page] .pr2-review-post-card .pr2-wording textarea {
+  min-height: 128px !important;
+  resize: vertical !important;
+}
+
+.pr2-page[data-review-page] input:focus,
+.pr2-page[data-review-page] textarea:focus,
+.pr2-page[data-review-page] select:focus {
+  outline: none !important;
+  border-color: var(--review-pink) !important;
+  box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1) !important;
+}
+
+.pr2-page[data-review-page] .pr2-actions,
+.pr2-page[data-review-page] .pr2-edit-action-row,
+.pr2-page[data-review-page] .pr2-main-review-actions.pr2-edit-action-row,
+.pr2-page[data-review-page] .pr2-tidy-edit-actions.pr2-edit-action-row,
+.pr2-page[data-review-page] .pr2-right-publish-actions {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+  margin-top: 16px !important;
+}
+
+.pr2-page[data-review-page] button,
+.pr2-page[data-review-page] .pr2-btn {
+  min-height: 50px !important;
+  border: 1px solid var(--review-line) !important;
+  border-radius: 999px !important;
+  background: var(--review-white) !important;
+  color: var(--review-navy) !important;
+  box-shadow: none !important;
+  font-size: 0.98rem !important;
+  font-weight: 800 !important;
+}
+
+.pr2-page[data-review-page] .pr2-btn-primary,
+.pr2-page[data-review-page] .pr2-save-wording-action,
+.pr2-page[data-review-page] .pr2-publish-action,
+.pr2-page[data-review-page] .pr2-autoschedule-action,
+.pr2-page[data-review-page] .pr2-smiles-send-button {
+  border-color: var(--review-pink) !important;
+  background: var(--review-pink) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.pr2-page[data-review-page] .pr2-improve-wording-action,
+.pr2-page[data-review-page] .pr2-smiles-choice {
+  border-color: #ffd4e8 !important;
+  background: var(--review-white) !important;
+  color: var(--review-navy) !important;
+}
+
+.pr2-page[data-review-page] .pr2-smiles-choice.is-active {
+  border-color: var(--review-pink) !important;
+  background: var(--review-pink) !important;
+  color: #ffffff !important;
+}
+
+.pr2-page[data-review-page] button:disabled,
+.pr2-page[data-review-page] .pr2-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+/* Smiles is a small decision box, not a second dashboard. */
+.pr2-page[data-review-page] .pr2-smiles-simple-card {
+  display: grid !important;
+  gap: 14px !important;
+  margin-top: 26px !important;
+  padding: 20px !important;
+  border: 1px solid #ffd4e8 !important;
+  border-radius: 18px !important;
+  background: var(--review-soft-pink) !important;
+  box-shadow: none !important;
+}
+
+.pr2-page[data-review-page] .pr2-smiles-choice-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.pr2-page[data-review-page] .pr2-smiles-prompt-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.pr2-page[data-review-page] .pr2-smiles-prompt-grid .is-wide {
+  grid-column: 1 / -1 !important;
+}
+
+.pr2-page[data-review-page] .pr2-smiles-sent-note {
+  display: grid !important;
+  gap: 3px !important;
+  padding: 16px !important;
+  border: 1px solid #ffd4e8 !important;
+  border-radius: 14px !important;
+  background: var(--review-white) !important;
+}
+
+.pr2-page[data-review-page] .pr2-smiles-sent-note strong {
+  color: var(--review-navy) !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+}
+
+.pr2-page[data-review-page] .pr2-message-inline,
+.pr2-page[data-review-page] .pr2-message,
+.pr2-page[data-review-page] .pr2-action-error {
+  border: 1px solid #ffd4e8 !important;
+  border-radius: 14px !important;
+  background: var(--review-soft-pink) !important;
+  color: var(--review-navy) !important;
+  padding: 13px 15px !important;
+  font-weight: 700 !important;
+}
+
+@media (max-width: 700px) {
+  .pr2-page[data-review-page] {
+    padding: 14px !important;
   }
 
-  .app-shell .main-content > * {
-    width: 100% !important;
-    max-width: var(--fromone-desktop-page-width) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    box-sizing: border-box !important;
+  .pr2-page[data-review-page] .pr2-review-post-card,
+  .pr2-page[data-review-page] .pr2-right-publish-card {
+    padding: 18px !important;
+    border-radius: 18px !important;
   }
 
-  .app-shell .main-content > * > * {
+  .pr2-page[data-review-page] .pr2-review-post-head h1 {
+    font-size: clamp(2rem, 10vw, 2.65rem) !important;
+  }
+
+  .pr2-page[data-review-page] .pr2-media-box,
+  .pr2-page[data-review-page] .pr2-compact-media-card .pr2-media-box {
+    width: 100% !important;
+  }
+
+  .pr2-page[data-review-page] .pr2-smiles-choice-row,
+  .pr2-page[data-review-page] .pr2-smiles-prompt-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (max-width: 760px) {
+  .dashboard-upload-card,
+  .dashboard-upload-card *,
+  .dashboard-media-option,
+  .dashboard-media-option * {
+    color: #071b49 !important;
+  }
+
+  .dashboard-upload-card span,
+  .dashboard-upload-card strong,
+  .dashboard-media-option span,
+  .dashboard-media-option strong {
+    color: #071b49 !important;
+    opacity: 1 !important;
+  }
+
+  .dashboard-upload-card p,
+  .dashboard-media-option p {
+    color: #56627a !important;
+    opacity: 1 !important;
+  }
+}
+@media (max-width: 760px) {
+  .dashboard-upload-card,
+  .dashboard-media-option {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    text-align: center !important;
+  }
+
+  .dashboard-upload-card *,
+  .dashboard-media-option * {
+    color: #071b49 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .dashboard-upload-card span,
+  .dashboard-upload-card strong,
+  .dashboard-media-option span,
+  .dashboard-media-option strong {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #071b49 !important;
+    opacity: 1 !important;
+    text-align: center !important;
+  }
+
+  .dashboard-upload-card p,
+  .dashboard-media-option p {
+    color: #56627a !important;
+    opacity: 1 !important;
+    text-align: center !important;
+  }
+}
+/* FromOne typography override — match Stockport Smiles
+   Paste at the very bottom of app/globals.css
+   Requires app/layout.tsx to load Plus_Jakarta_Sans with variable: "--font-main"
+*/
+
+:root {
+  --fromone-smiles-font:
+    var(--font-main),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  --fromone-smiles-navy: #071b49;
+  --fromone-smiles-pink: #f72585;
+  --fromone-smiles-muted: #667085;
+}
+
+/* Force the real Smiles font everywhere */
+html,
+body,
+body * {
+  font-family: var(--fromone-smiles-font) !important;
+}
+
+body {
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--fromone-smiles-navy);
+}
+
+/* Remove the old FromOne chunky typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+[class*="title"],
+[class*="Title"],
+[class*="heading"],
+[class*="Heading"] {
+  font-family: var(--fromone-smiles-font) !important;
+  color: var(--fromone-smiles-navy);
+  font-weight: 800 !important;
+  letter-spacing: -0.055em !important;
+  text-transform: none;
+}
+
+/* Smiles-style hero headings */
+h1,
+[data-fromone-smiles-hub] h1,
+[data-fromone-smiles-bookings] h1,
+[data-fromone-dashboard] h1,
+[data-fromone-post-review] h1,
+[data-fromone-posts] h1,
+[data-fromone-settings] h1,
+[data-fromone-help] h1,
+[data-fromone-subscription] h1 {
+  font-weight: 800 !important;
+  line-height: 0.96 !important;
+  letter-spacing: -0.055em !important;
+}
+
+/* Smiles-style section headings */
+h2,
+[data-fromone-smiles-hub] h2,
+[data-fromone-smiles-bookings] h2,
+[data-fromone-dashboard] h2,
+[data-fromone-post-review] h2,
+[data-fromone-posts] h2,
+[data-fromone-settings] h2,
+[data-fromone-help] h2,
+[data-fromone-subscription] h2 {
+  font-weight: 800 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.045em !important;
+}
+
+/* Body copy should feel like Smiles, not old FromOne */
+p,
+span,
+li,
+label,
+input,
+textarea,
+select,
+button,
+a {
+  font-family: var(--fromone-smiles-font) !important;
+}
+
+p,
+li,
+input,
+textarea,
+select {
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+}
+
+button,
+a,
+strong,
+b,
+label {
+  font-weight: 700 !important;
+}
+
+/* Keep the pink Smiles action language */
+button[class*="primary"],
+a[class*="primary"],
+[class*="Primary"],
+[class*="cta"],
+[class*="Cta"] {
+  font-weight: 800 !important;
+}
+
+/* Pink eyebrow labels like Stockport Smiles */
+[class*="eyebrow"],
+[class*="Eyebrow"],
+[class*="kicker"],
+[class*="Kicker"],
+[data-fromone-smiles-bookings] small,
+[data-fromone-smiles-hub] small {
+  color: var(--fromone-smiles-pink) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+/* Do not let old ultra-heavy utilities win */
+.font-black,
+.font-extrabold,
+.font-bold,
+[class*="font-black"],
+[class*="font-extrabold"] {
+  font-weight: 800 !important;
+}
+/* FromOne mobile bottom nav fix
+   Paste at the very bottom of app/globals.css
+
+   Fixes:
+   - bottom nav labels being cut off
+   - centre Create button crowding neighbouring labels
+   - text sitting too low under icons
+*/
+
+@media (max-width: 768px) {
+  /* Main fixed mobile nav container */
+  nav[class*="mobile"],
+  [data-fromone-mobile-nav],
+  .mobile-bottom-nav {
+    min-height: 76px !important;
+    height: 76px !important;
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom)) !important;
+    overflow: visible !important;
+  }
+
+  /* Five equal columns */
+  nav[class*="mobile"] ul,
+  nav[class*="mobile"] > div,
+  [data-fromone-mobile-nav] ul,
+  [data-fromone-mobile-nav] > div,
+  .mobile-bottom-nav ul,
+  .mobile-bottom-nav > div {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: end !important;
+    gap: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Each nav item */
+  nav[class*="mobile"] a,
+  nav[class*="mobile"] button,
+  [data-fromone-mobile-nav] a,
+  [data-fromone-mobile-nav] button,
+  .mobile-bottom-nav a,
+  .mobile-bottom-nav button {
+    min-width: 0 !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    padding: 4px 2px 2px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 3px !important;
+    overflow: visible !important;
+    line-height: 1 !important;
+  }
+
+  /* Icon sizing */
+  nav[class*="mobile"] svg,
+  [data-fromone-mobile-nav] svg,
+  .mobile-bottom-nav svg {
+    flex: 0 0 auto !important;
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  /* Labels must not clip */
+  nav[class*="mobile"] span,
+  nav[class*="mobile"] small,
+  nav[class*="mobile"] p,
+  [data-fromone-mobile-nav] span,
+  [data-fromone-mobile-nav] small,
+  [data-fromone-mobile-nav] p,
+  .mobile-bottom-nav span,
+  .mobile-bottom-nav small,
+  .mobile-bottom-nav p {
+    display: block !important;
     max-width: 100% !important;
-    box-sizing: border-box !important;
+    min-height: 14px !important;
+    height: auto !important;
+    overflow: visible !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    font-size: 10px !important;
+    line-height: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Centre plus button */
+  nav[class*="mobile"] a[aria-label*="Create"],
+  nav[class*="mobile"] button[aria-label*="Create"],
+  [data-fromone-mobile-nav] a[aria-label*="Create"],
+  [data-fromone-mobile-nav] button[aria-label*="Create"],
+  .mobile-bottom-nav a[aria-label*="Create"],
+  .mobile-bottom-nav button[aria-label*="Create"] {
+    transform: translateY(-9px) !important;
+    justify-content: center !important;
+  }
+
+  nav[class*="mobile"] a[aria-label*="Create"] span,
+  nav[class*="mobile"] button[aria-label*="Create"] span,
+  [data-fromone-mobile-nav] a[aria-label*="Create"] span,
+  [data-fromone-mobile-nav] button[aria-label*="Create"] span,
+  .mobile-bottom-nav a[aria-label*="Create"] span,
+  .mobile-bottom-nav button[aria-label*="Create"] span {
+    display: none !important;
+  }
+
+  /* Give pages enough room above fixed nav */
+  body {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important;
   }
 }
 
-/* Mobile: one consistent width for all app pages */
+/* ========================================================================== */
+/* FROMONE CLEAN APP BASELINE                                                  */
+/* Keep this as the only global layout reset at the bottom of globals.css.      */
+/* Page-specific polish belongs in the page/component file, not here.           */
+/* ========================================================================== */
+
+:root {
+  --fromone-page-bg: #f5f7fb;
+  --fromone-card-bg: #ffffff;
+  --fromone-navy: #071b49;
+  --fromone-muted: #52617a;
+  --fromone-pink: #f72585;
+  --fromone-border: #dfe5f1;
+}
+
+html {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+body {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* The app chrome owns the viewport. Individual pages own their cards. */
+.app-shell,
+.main-content,
+.app-shell .main-content {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
+/* App pages use the light FromOne canvas. Public marketing/sign-in pages keep their own styling. */
+body:has(.app-shell) {
+  background: var(--fromone-page-bg) !important;
+}
+
+body:has(.app-shell)::before {
+  display: none !important;
+  content: none !important;
+}
+
+body:has(.app-shell) .app-shell,
+body:has(.app-shell) .main-content {
+  background: var(--fromone-page-bg) !important;
+}
+
+/* AppShell renders this topbar outside .app-shell; keep it full bleed. */
 @media (max-width: 900px) {
+  .fromone-account-topbar {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 100vw !important;
+    margin-left: calc(50% - 50vw) !important;
+    margin-right: calc(50% - 50vw) !important;
+    box-sizing: border-box !important;
+  }
+
+  .app-shell,
+  .main-content,
   .app-shell .main-content {
-    width: 100% !important;
-    max-width: none !important;
-    padding-left: var(--fromone-mobile-page-padding) !important;
-    padding-right: var(--fromone-mobile-page-padding) !important;
-    box-sizing: border-box !important;
-  }
-
-  .app-shell .main-content > * {
-    width: 100% !important;
-    max-width: var(--fromone-mobile-page-width) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    box-sizing: border-box !important;
-  }
-
-  .app-shell .main-content > * > * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 }
-
-/* Stop individual app pages from forcing their own narrow desktop widths */
-@media (min-width: 901px) {
-  .dashboard-final-card,
-  .dashboard-final-page,
-  .dashboard-page,
-  .dashboard-shell,
-  .upload-dashboard,
-  .campaign-dashboard,
-  .dashboard-container,
-  .dashboard-content,
-  .simplified-posts-page,
-  .campaign-brand-shell,
-  .pr2-page,
-  .pr2-shell,
-  .reports-page,
-  .settings-page,
-  .subscription-page {
-    width: 100% !important;
-    max-width: var(--fromone-desktop-page-width) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    box-sizing: border-box !important;
-  }
+/* Sidebar: pink FromOne client style */
+.sidebar {
+  background:
+    linear-gradient(180deg, #fff0f7 0%, #fff8fc 42%, #f7f8fc 100%) !important;
+  border-right: 1px solid #ffd2e5 !important;
 }
 
-/* Stop individual app pages from forcing their own narrow mobile widths */
-@media (max-width: 900px) {
-  .dashboard-final-card,
-  .dashboard-final-page,
-  .dashboard-page,
-  .dashboard-shell,
-  .upload-dashboard,
-  .campaign-dashboard,
-  .dashboard-container,
-  .dashboard-content,
-  .simplified-posts-page,
-  .campaign-brand-shell,
-  .pr2-page,
-  .pr2-shell,
-  .reports-page,
-  .settings-page,
-  .subscription-page {
-    width: 100% !important;
-    max-width: var(--fromone-mobile-page-width) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    box-sizing: border-box !important;
-  }
+.sidebar-link.is-active,
+.sidebar-link.active,
+.sidebar-link[aria-current="page"],
+.sidebar a[aria-current="page"] {
+  background: #fff0f7 !important;
+  border: 1px solid #ffc2dc !important;
+  color: #071b49 !important;
+  box-shadow: 0 18px 42px rgba(247, 37, 133, 0.12) !important;
 }
+
+.sidebar-link-icon {
+  color: #f72585 !important;
+}
+

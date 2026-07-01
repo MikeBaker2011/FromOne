@@ -27,6 +27,31 @@ type BusinessProfileResult = {
   campaign_idea: string;
 };
 
+type SmilesDraftType = 'venue' | 'offer' | 'event' | 'none';
+
+type SmilesDraftResult = {
+  recommended: boolean;
+  type: SmilesDraftType;
+  title: string;
+  description: string;
+  shortDescription: string;
+  savingText: string;
+  terms: string;
+  validDays: string;
+  validTimes: string;
+  startDate: string | null;
+  endDate: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  priceText: string;
+  locationName: string;
+  locationArea: string;
+  address: string;
+  venueType: string;
+  websiteUrl: string;
+  bookingUrl: string;
+};
+
 type GeneratedPost = {
   day: string;
   platform: string;
@@ -35,6 +60,7 @@ type GeneratedPost = {
   cta: string;
   hashtags: string[];
   image_prompt: string;
+  smilesDraft: SmilesDraftResult;
 };
 
 type UploadedMediaContext = {
@@ -607,6 +633,247 @@ function fallbackBusinessProfile({
   };
 }
 
+function normaliseSmilesDraftType(value: any): SmilesDraftType {
+  const clean = cleanText(value).toLowerCase().replace(/\s+/g, '_');
+
+  if (clean === 'venue') return 'venue';
+  if (clean === 'offer') return 'offer';
+  if (clean === 'event') return 'event';
+
+  return 'none';
+}
+
+function cleanOptionalIsoDate(value: any) {
+  const clean = cleanText(value);
+
+  if (!clean) return null;
+
+  const parsed = new Date(clean);
+
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  return parsed.toISOString().slice(0, 10);
+}
+
+function cleanOptionalTime(value: any) {
+  const clean = cleanText(value);
+
+  if (!clean) return null;
+
+  const match = clean.match(/^([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/);
+
+  if (!match) return null;
+
+  return `${match[1].padStart(2, '0')}:${match[2]}:${match[3] || '00'}`;
+}
+
+function inferSmilesDraftTypeFromText(value: string): SmilesDraftType {
+  const clean = value.toLowerCase();
+
+  if (
+    clean.includes('ticket') ||
+    clean.includes('tickets') ||
+    clean.includes('event') ||
+    clean.includes('events') ||
+    clean.includes('gig') ||
+    clean.includes('show') ||
+    clean.includes('live music') ||
+    clean.includes('party') ||
+    clean.includes('quiz') ||
+    clean.includes('session') ||
+    clean.includes('market') ||
+    clean.includes('class') ||
+    clean.includes('workshop') ||
+    clean.includes('launch night') ||
+    clean.includes('open day') ||
+    clean.includes('join us') ||
+    /\b(mon|tue|wed|thu|fri|sat|sun)(day)?\b/.test(clean) && /\b(at|from)\s*\d{1,2}(:\d{2})?\s*(am|pm)?\b/.test(clean) ||
+    /\b\d{1,2}(st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)/.test(clean)
+  ) {
+    return 'event';
+  }
+
+  if (
+    clean.includes('offer') ||
+    clean.includes('special') ||
+    clean.includes('discount') ||
+    clean.includes('sale') ||
+    clean.includes('save ') ||
+    clean.includes('saving') ||
+    clean.includes('free ') ||
+    clean.includes('complimentary') ||
+    clean.includes('2 for 1') ||
+    clean.includes('two for one') ||
+    clean.includes('deal') ||
+    clean.includes('deals') ||
+    clean.includes('voucher') ||
+    clean.includes('coupon') ||
+    clean.includes('% off') ||
+    clean.includes('off today') ||
+    clean.includes('off this week') ||
+    clean.includes('limited time') ||
+    clean.includes('subject to availability') ||
+    /\bsave\s*£?\d+/.test(clean) ||
+    /\b\d+%\s*off\b/.test(clean) ||
+    /\b\d+\s*for\s*£?\d+/.test(clean) ||
+    /\b\d+\s+[a-z0-9][a-z0-9\s-]{0,40}\s+for\s*£?\d+/.test(clean) ||
+    /\bfrom\s*£\d+/.test(clean) ||
+    /\bonly\s*£\d+/.test(clean)
+  ) {
+    return 'offer';
+  }
+
+  return 'none';
+}
+
+function extractSavingTextFromText(value: string) {
+  const clean = cleanText(value);
+
+  if (!clean) return '';
+
+  const patterns = [
+    /\b\d+%\s*off\b/i,
+    /\b2\s*for\s*1\b/i,
+    /\btwo\s*for\s*one\b/i,
+    /\b\d+\s*for\s*£?\d+(?:\.\d{2})?\b/i,
+    /\b\d+\s+[a-z0-9][a-z0-9\s-]{0,40}\s+for\s*£?\d+(?:\.\d{2})?\b/i,
+    /\bsave\s*£?\d+(?:\.\d{2})?\b/i,
+    /\bfrom\s*£\d+(?:\.\d{2})?\b/i,
+    /\bonly\s*£\d+(?:\.\d{2})?\b/i,
+    /\bfree\s+[a-z0-9][a-z0-9\s-]{2,40}\b/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = clean.match(pattern);
+    if (match?.[0]) return truncateTextToLimit(match[0].trim(), 80);
+  }
+
+  return '';
+}
+
+function extractValidDaysFromText(value: string) {
+  const clean = cleanText(value);
+  const match = clean.match(
+    /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)(?:\s*(?:to|-|until|and|&)\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun))?\b/i
+  );
+
+  return match?.[0] ? match[0].trim() : '';
+}
+
+function extractValidTimesFromText(value: string) {
+  const clean = cleanText(value);
+  const match = clean.match(
+    /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s*(?:to|-|until)\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i
+  );
+
+  return match?.[0] ? match[0].trim() : '';
+}
+
+function buildFallbackSmilesDraft({
+  post,
+  profile,
+  marketReach,
+}: {
+  post: Partial<GeneratedPost>;
+  profile: BusinessProfileResult;
+  marketReach: string;
+}): SmilesDraftResult {
+  const combinedText = [
+    post.title,
+    post.caption,
+    post.cta,
+    profile.main_offer,
+    profile.industry,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const inferredType = inferSmilesDraftTypeFromText(combinedText);
+  const isRecommended = inferredType === 'offer' || inferredType === 'event';
+  const title = cleanText(post.title, profile.business_name || 'FromOne draft');
+  const description = cleanText(post.caption, profile.main_offer || 'Created from FromOne.');
+  const savingText = extractSavingTextFromText(combinedText);
+  const validDays = extractValidDaysFromText(combinedText);
+  const validTimes = extractValidTimesFromText(combinedText);
+
+  return {
+    recommended: isRecommended,
+    type: isRecommended ? inferredType : 'none',
+    title,
+    description,
+    shortDescription: truncateTextToLimit(description, 150),
+    savingText:
+      inferredType === 'offer'
+        ? savingText || cleanText(profile.main_offer, 'Special offer')
+        : '',
+    terms: inferredType === 'offer' ? 'Subject to availability.' : '',
+    validDays,
+    validTimes,
+    startDate: null,
+    endDate: null,
+    startTime: null,
+    endTime: null,
+    priceText: '',
+    locationName: cleanText(profile.business_name),
+    locationArea: cleanText(profile.location, marketReach.includes('Local') ? 'Stockport' : ''),
+    address: '',
+    venueType: cleanText(profile.industry, 'Business'),
+    websiteUrl: '',
+    bookingUrl: '',
+  };
+}
+
+function normaliseSmilesDraft(
+  value: any,
+  fallbackPost: Partial<GeneratedPost>,
+  profile: BusinessProfileResult,
+  marketReach: string
+): SmilesDraftResult {
+  const fallback = buildFallbackSmilesDraft({
+    post: fallbackPost,
+    profile,
+    marketReach,
+  });
+
+  if (!value || typeof value !== 'object') {
+    return fallback;
+  }
+
+  const requestedType = normaliseSmilesDraftType(value.type || value.draftType || value.smilesType);
+  const recommended =
+    typeof value.recommended === 'boolean'
+      ? value.recommended
+      : requestedType === 'offer' || requestedType === 'event' || requestedType === 'venue';
+  const finalType = recommended ? requestedType : 'none';
+  const title = cleanText(value.title || value.name, fallback.title);
+  const description = cleanText(value.description || value.caption, fallback.description);
+
+  return {
+    recommended: recommended && finalType !== 'none',
+    type: finalType,
+    title,
+    description,
+    shortDescription: cleanText(
+      value.shortDescription || value.short_description,
+      fallback.shortDescription
+    ),
+    savingText: cleanText(value.savingText || value.saving_text, fallback.savingText),
+    terms: cleanText(value.terms, fallback.terms || 'Subject to availability.'),
+    validDays: cleanText(value.validDays || value.valid_days, fallback.validDays),
+    validTimes: cleanText(value.validTimes || value.valid_times, fallback.validTimes),
+    startDate: cleanOptionalIsoDate(value.startDate || value.start_date),
+    endDate: cleanOptionalIsoDate(value.endDate || value.end_date),
+    startTime: cleanOptionalTime(value.startTime || value.start_time),
+    endTime: cleanOptionalTime(value.endTime || value.end_time),
+    priceText: cleanText(value.priceText || value.price_text, fallback.priceText),
+    locationName: cleanText(value.locationName || value.location_name, fallback.locationName),
+    locationArea: cleanText(value.locationArea || value.location_area, fallback.locationArea),
+    address: cleanText(value.address, fallback.address),
+    venueType: cleanText(value.venueType || value.venue_type, fallback.venueType),
+    websiteUrl: cleanText(value.websiteUrl || value.website_url, fallback.websiteUrl),
+    bookingUrl: cleanText(value.bookingUrl || value.booking_url, fallback.bookingUrl),
+  };
+}
+
 function buildFallbackPosts(
   profile: BusinessProfileResult,
   selectedPlatforms = defaultPlatformPlan,
@@ -616,7 +883,7 @@ function buildFallbackPosts(
   return Array.from({ length: postCount }).map((_, index) => {
     const platform = getPlatformForDay(selectedPlatforms, index);
 
-    return {
+    const post = {
       day: `Post ${index + 1}`,
       platform,
       title: weeklyAngles[index] || `${platform} Post`,
@@ -627,6 +894,15 @@ function buildFallbackPosts(
       cta: profile.main_offer || 'Contact us today to find out more.',
       hashtags: getFallbackHashtags(marketReach),
       image_prompt: `Use the uploaded photo or flyer where available. Otherwise use a realistic ${profile.industry} image for ${profile.business_name} that supports the post and matches the brand style.`,
+    };
+
+    return {
+      ...post,
+      smilesDraft: buildFallbackSmilesDraft({
+        post,
+        profile,
+        marketReach,
+      }),
     };
   });
 }
@@ -641,7 +917,7 @@ function normalisePost(
   const fallbackPlatform = getPlatformForDay(selectedPlatforms, index);
 
   if (typeof value === 'string') {
-    return {
+    const post = {
       day: `Post ${index + 1}`,
       platform: fallbackPlatform,
       title: weeklyAngles[index] || `${fallbackPlatform} Post`,
@@ -649,6 +925,15 @@ function normalisePost(
       cta: fallbackProfile.main_offer || 'Contact us today to find out more.',
       hashtags: getFallbackHashtags(marketReach),
       image_prompt: 'Use a clean, professional image that matches the business and post message.',
+    };
+
+    return {
+      ...post,
+      smilesDraft: buildFallbackSmilesDraft({
+        post,
+        profile: fallbackProfile,
+        marketReach,
+      }),
     };
   }
 
@@ -660,7 +945,7 @@ function normalisePost(
   const aiPlatform = cleanText(value?.platform);
   const safePlatform = selectedPlatforms.includes(aiPlatform) ? aiPlatform : fallbackPlatform;
 
-  return {
+  const post = {
     day: value?.day || `Post ${index + 1}`,
     platform: safePlatform,
     title: cleanText(value?.title, weeklyAngles[index] || `${safePlatform} Post`),
@@ -670,6 +955,16 @@ function normalisePost(
     image_prompt:
       cleanText(value?.image_prompt || value?.imagePrompt) ||
       'Use a clean, professional image that matches the business and post message.',
+  };
+
+  return {
+    ...post,
+    smilesDraft: normaliseSmilesDraft(
+      value?.smilesDraft || value?.smiles_draft || value?.stockportSmilesDraft,
+      post,
+      fallbackProfile,
+      marketReach
+    ),
   };
 }
 
@@ -1413,12 +1708,36 @@ export async function POST(req: NextRequest) {
       inlineMediaParts,
     });
 
-    const rawResult =
-      provider === 'openai'
-        ? await generateWithOpenAI(prompt)
-        : await generateWithGemini(prompt, inlineMediaParts);
+    let result: GenerateResult;
+    let generationWarning = '';
 
-    const result = normaliseResult(rawResult, fallback, selectedPlatforms, marketReach, postCount);
+    try {
+      const rawResult =
+        provider === 'openai'
+          ? await generateWithOpenAI(prompt)
+          : await generateWithGemini(prompt, inlineMediaParts);
+
+      result = normaliseResult(rawResult, fallback, selectedPlatforms, marketReach, postCount);
+    } catch (generationError: any) {
+      generationWarning =
+        generationError?.response?.data?.error?.message ||
+        generationError?.response?.data?.error ||
+        generationError?.response?.data?.message ||
+        generationError?.message ||
+        'AI generation failed, so FromOne used a safe fallback.';
+
+      console.error('Generate posts provider fallback:', generationWarning);
+
+      result = {
+        businessProfile: fallback,
+        posts: buildFallbackPosts(
+          fallback,
+          selectedPlatforms,
+          marketReach,
+          postCount
+        ),
+      };
+    }
 
     if (!result.posts.length) {
       return NextResponse.json(
@@ -1452,6 +1771,7 @@ export async function POST(req: NextRequest) {
       usedWebsiteScan: Boolean(website && websiteContent),
       detectedBrandColours: colours,
       platformCaptionLimits,
+      warning: generationWarning || null,
     });
   } catch (error: any) {
     console.error('Generate posts API error:', error?.response?.data || error?.message || error);

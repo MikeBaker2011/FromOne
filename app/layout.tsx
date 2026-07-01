@@ -3,6 +3,14 @@ import AppShell from './components/AppShell';
 import CookieBanner from './components/CookieBanner';
 import ToastProvider from '@/app/components/ToastProvider';
 import type { Metadata, Viewport } from 'next';
+import { Plus_Jakarta_Sans } from 'next/font/google';
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-main',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.fromone.co.uk'),
@@ -67,7 +75,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#ffd43b',
+  themeColor: '#ffffff',
+  colorScheme: 'light',
   width: 'device-width',
   initialScale: 1,
 };
@@ -78,7 +87,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en-GB">
+    <html lang="en-GB" className={jakarta.variable}>
       <body>
         <ToastProvider>
           <AppShell>{children}</AppShell>

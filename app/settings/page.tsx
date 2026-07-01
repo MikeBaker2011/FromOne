@@ -96,6 +96,9 @@ export default function SettingsPage() {
   const [businessName, setBusinessName] = useState('');
   const [industry, setIndustry] = useState('');
   const [location, setLocation] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [services, setServices] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [toneOfVoice, setToneOfVoice] = useState('Professional');
@@ -110,6 +113,8 @@ export default function SettingsPage() {
   const [brandAccentColor, setBrandAccentColor] = useState('#3ddc97');
   const [brandLogoUrl, setBrandLogoUrl] = useState('');
   const [brandSummary, setBrandSummary] = useState('');
+  const [smilesListingStatus, setSmilesListingStatus] = useState('');
+  const [smilesListingSubmissionId, setSmilesListingSubmissionId] = useState('');
 
   const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
@@ -130,6 +135,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [scanningWebsite, setScanningWebsite] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
+  const [sendingSmilesListing, setSendingSmilesListing] = useState(false);
+  const [smilesListingSent, setSmilesListingSent] = useState(false);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     type: 'disconnectMeta' | 'deleteProfile';
@@ -248,6 +255,81 @@ export default function SettingsPage() {
   const setupProfileComplete = Boolean(businessName.trim() && industry.trim() && location.trim() && services.trim());
   const setupChannelsComplete = hasMetaConnection;
   const setupCreatePostsReady = businessProfileReady;
+
+  const getSmilesListingStatusLabel = () => {
+    if (sendingSmilesListing) {
+      return 'Sending to Smiles...';
+    }
+
+    if (
+      smilesListingStatus === 'published' ||
+      smilesListingStatus === 'live'
+    ) {
+      return 'Live on Stockport Smiles';
+    }
+
+    if (smilesListingStatus === 'approved_not_live') {
+      return 'Approved by Smiles, waiting to go live';
+    }
+
+    if (smilesListingStatus === 'needs_changes') {
+      return 'Smiles needs changes';
+    }
+
+    if (smilesListingStatus === 'rejected') {
+      return 'Not approved for Smiles';
+    }
+
+    if (
+      smilesListingStatus === 'sent' ||
+      smilesListingStatus === 'pending' ||
+      smilesListingStatus === 'pending_review' ||
+      smilesListingSent
+    ) {
+      return 'Waiting for Smiles admin';
+    }
+
+    if (smilesListingStatus === 'failed') {
+      return 'Could not send to Smiles';
+    }
+
+    return 'Will send automatically when saved';
+  };
+
+  const getSmilesListingStatusTone = () => {
+    if (
+      smilesListingStatus === 'published' ||
+      smilesListingStatus === 'live'
+    ) {
+      return 'live';
+    }
+
+    if (smilesListingStatus === 'failed') {
+      return 'failed';
+    }
+
+    if (
+      smilesListingStatus === 'needs_changes' ||
+      smilesListingStatus === 'rejected'
+    ) {
+      return 'failed';
+    }
+
+    if (
+      sendingSmilesListing ||
+      smilesListingStatus === 'sent' ||
+      smilesListingStatus === 'pending' ||
+      smilesListingStatus === 'pending_review' ||
+      smilesListingStatus === 'approved_not_live' ||
+      smilesListingSent
+    ) {
+      return 'waiting';
+    }
+
+    return 'ready';
+  };
+
+  const smilesListingStatusTone = getSmilesListingStatusTone();
 
   const profileHasStarted = Boolean(
     websiteUrl.trim() ||
@@ -673,6 +755,42 @@ export default function SettingsPage() {
     }
   };
 
+  const syncSmilesListingStatus = async (businessProfileId: string) => {
+    if (!businessProfileId) return;
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token || '';
+
+      const response = await fetch('/api/smiles/sync-listing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({
+          businessProfileId,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || result?.ok === false || result?.success === false) {
+        throw new Error(
+          result?.error ||
+            result?.message ||
+            'Could not check Smiles listing status.',
+        );
+      }
+
+      if (result?.status) {
+        setSmilesListingStatus(result.status);
+      }
+    } catch (error: any) {
+      console.error('Sync Smiles listing status error:', error?.message || error);
+    }
+  };
+
   const loadBusinessProfile = async () => {
     setLoading(true);
 
@@ -724,6 +842,9 @@ export default function SettingsPage() {
       setBusinessName(data.business_name || '');
       setIndustry(data.industry || '');
       setLocation(data.location || '');
+      setAddress(data.address || '');
+      setPhone(data.phone || '');
+      setEmail(data.email || '');
       setServices(joinList(data.services));
       setTargetAudience(joinList(data.target_audience));
       setToneOfVoice(data.tone_of_voice || 'Professional');
@@ -737,6 +858,17 @@ export default function SettingsPage() {
       setBrandAccentColor(data.brand_accent_color || '#3ddc97');
       setBrandLogoUrl(data.brand_logo_url || '');
       setBrandSummary(data.brand_summary || '');
+      setSmilesListingStatus(data.smiles_listing_status || '');
+      setSmilesListingSubmissionId(data.smiles_listing_submission_id || '');
+
+      if (
+        data.id &&
+        data.smiles_listing_submission_id &&
+        data.smiles_listing_status !== 'live' &&
+        data.smiles_listing_status !== 'published'
+      ) {
+        await syncSmilesListingStatus(data.id);
+      }
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -758,6 +890,9 @@ export default function SettingsPage() {
       business_name: businessName.trim() || null,
       industry: industry.trim() || null,
       location: location.trim() || null,
+      address: address.trim() || null,
+      phone: phone.trim() || null,
+      email: email.trim() || null,
       services: splitList(services),
       target_audience: splitList(targetAudience),
       tone_of_voice: toneOfVoice,
@@ -827,7 +962,11 @@ export default function SettingsPage() {
     setSaving(true);
 
     try {
-      await saveProfile();
+      const savedProfileId = await saveProfile();
+
+      if (smilesListingStatus !== 'sent' && !smilesListingSubmissionId) {
+        await sendBusinessListingToSmiles(savedProfileId);
+      }
 
       const params = new URLSearchParams(window.location.search);
       const setup = params.get('setup');
@@ -850,6 +989,113 @@ export default function SettingsPage() {
       notify(error?.message || 'Error saving Business Profile.', 'error', 'Save failed');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const sendBusinessListingToSmiles = async (savedProfileId: string) => {
+    const hasBusinessDetails = Boolean(businessName.trim() && industry.trim());
+
+    if (!hasBusinessDetails) {
+      notify(
+        'Please add at least a company name and business type first.',
+        'warning',
+        'Business details needed',
+      );
+      openProfileEditor();
+      return;
+    }
+
+    setSendingSmilesListing(true);
+
+    try {
+      const freshUserId = await getFreshAuthUserId();
+      const description =
+        brandSummary.trim() ||
+        services.trim() ||
+        mainOffer.trim() ||
+        `${businessName.trim()} is a local ${industry.trim()} business.`;
+
+      const response = await fetch('/api/smiles/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          draftType: 'venue',
+          businessProfileId: savedProfileId,
+          userId: freshUserId,
+          user_id: freshUserId,
+          title: businessName.trim(),
+          name: businessName.trim(),
+          description,
+          shortDescription: description.slice(0, 150),
+          locationName: businessName.trim(),
+          locationArea: location.trim(),
+          address: address.trim(),
+          phone: phone.trim(),
+          email: email.trim(),
+          venueType: industry.trim(),
+          websiteUrl: normaliseWebsiteUrl(websiteUrl) || '',
+          bookingUrl: normaliseWebsiteUrl(websiteUrl) || '',
+          mediaUrl: brandLogoUrl.trim() || null,
+          media_url: brandLogoUrl.trim() || null,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || result?.ok === false || result?.success === false) {
+        throw new Error(
+          result?.error ||
+            result?.message ||
+            'Could not send this listing to Smiles.',
+        );
+      }
+
+      const updates = {
+        smiles_listing_status: 'pending_review',
+        smiles_listing_submission_id: result?.smilesDraftId || null,
+        smiles_listing_sent_at: new Date().toISOString(),
+        smiles_listing_error: null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: updateError } = await supabase
+        .from('business_profiles')
+        .update(updates)
+        .eq('id', savedProfileId);
+
+      if (updateError) throw updateError;
+
+      setSmilesListingStatus('pending_review');
+      setSmilesListingSubmissionId(result?.smilesDraftId || '');
+      setSmilesListingSent(true);
+      notify(
+        'Business listing sent to Stockport Smiles. It is waiting for admin approval before customers can see it.',
+        'success',
+        'Waiting for Smiles admin',
+      );
+      await loadBusinessProfile();
+    } catch (error: any) {
+      console.error('Send Smiles listing error:', error?.message || error);
+      if (savedProfileId) {
+        await supabase
+          .from('business_profiles')
+          .update({
+            smiles_listing_status: 'failed',
+            smiles_listing_error:
+              error?.message || 'Could not send this listing to Smiles.',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', savedProfileId);
+        setSmilesListingStatus('failed');
+      }
+
+      notify(
+        error?.message || 'Could not send this listing to Smiles.',
+        'error',
+        'Smiles send failed',
+      );
+    } finally {
+      setSendingSmilesListing(false);
     }
   };
 
@@ -881,6 +1127,9 @@ export default function SettingsPage() {
     setBusinessName('');
     setIndustry('');
     setLocation('');
+    setAddress('');
+    setPhone('');
+    setEmail('');
     setServices('');
     setTargetAudience('');
     setToneOfVoice('Professional');
@@ -971,6 +1220,751 @@ export default function SettingsPage() {
       setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <main className="fromone-settings-page settings-create-style-page">
+        <section id="fromone-standard-shell" className="settings-create-style-card settings-loading-card" aria-label="Settings loading">
+          <div className="settings-create-eyebrow">Settings</div>
+          <h1>Loading settings.</h1>
+          <p>Checking your business profile and social connections.</p>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="fromone-settings-page settings-create-style-page" data-settings-page="create-style-v1">
+      <section id="fromone-standard-shell" className="settings-create-style-card">
+        <header className="settings-create-hero">
+          <div className="settings-create-eyebrow">Settings</div>
+          <h1>
+            Business setup.
+          </h1>
+          <p>
+            Add the business details once. Connect Facebook and Instagram if you want direct publishing.
+          </p>
+        </header>
+
+        <section className="settings-simple-panel">
+          <div className="settings-panel-head">
+            <span className="settings-step-badge">01</span>
+            <div>
+              <h2>Business Profile</h2>
+              <p>Used for captions, offers, events and Smiles approvals.</p>
+            </div>
+          </div>
+
+          <div className="settings-website-scan-card">
+            <div>
+              <span className="settings-create-eyebrow">Auto setup</span>
+              <h3>Scan website</h3>
+              <p>
+                Paste a website and FromOne will fill what it can.
+              </p>
+            </div>
+
+            <div className="settings-website-scan-row">
+              <input
+                className="settings-simple-input"
+                value={websiteUrl}
+                onChange={(event) => setWebsiteUrl(event.target.value)}
+                placeholder="https://example.com"
+              />
+
+              <button
+                type="button"
+                className="settings-secondary-action"
+                onClick={handleScanWebsite}
+                disabled={scanningWebsite || saving}
+              >
+                {scanningWebsite ? 'Scanning...' : 'Scan website'}
+              </button>
+            </div>
+
+            {scanMessage && <p className="settings-scan-message">{scanMessage}</p>}
+          </div>
+
+          <div className="settings-form-grid">
+            <label>
+              <strong>Business name</strong>
+              <input
+                className="settings-simple-input"
+                value={businessName}
+                onChange={(event) => setBusinessName(event.target.value)}
+                placeholder="Example: Stockport Flowers"
+              />
+            </label>
+
+            <label>
+              <strong>Business type</strong>
+              <input
+                className="settings-simple-input"
+                value={industry}
+                onChange={(event) => setIndustry(event.target.value)}
+                placeholder="Example: Florist, cafe, gym"
+              />
+            </label>
+
+            <label>
+              <strong>Location</strong>
+              <input
+                className="settings-simple-input"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                placeholder="Example: Stockport"
+              />
+            </label>
+
+            <label>
+              <strong>Address</strong>
+              <input
+                className="settings-simple-input"
+                value={address}
+                onChange={(event) => setAddress(event.target.value)}
+                placeholder="Business address"
+              />
+            </label>
+
+            <label>
+              <strong>Phone</strong>
+              <input
+                className="settings-simple-input"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="Phone number"
+              />
+            </label>
+
+            <label>
+              <strong>Website</strong>
+              <input
+                className="settings-simple-input"
+                value={websiteUrl}
+                onChange={(event) => setWebsiteUrl(event.target.value)}
+                placeholder="https://example.com"
+              />
+            </label>
+
+            <label className="settings-wide-field">
+              <strong>What do they offer?</strong>
+              <textarea
+                className="settings-simple-input"
+                value={services}
+                onChange={(event) => setServices(event.target.value)}
+                placeholder="Example: Fresh flowers, same-day bouquets, wedding flowers, funeral flowers"
+                rows={3}
+              />
+            </label>
+
+            <label className="settings-wide-field">
+              <strong>Who are the customers?</strong>
+              <textarea
+                className="settings-simple-input"
+                value={targetAudience}
+                onChange={(event) => setTargetAudience(event.target.value)}
+                placeholder="Example: Local families, office workers, event organisers"
+                rows={3}
+              />
+            </label>
+
+            <label className="settings-wide-field">
+              <strong>Tone of voice</strong>
+              <select
+                className="settings-simple-input"
+                value={toneOfVoice}
+                onChange={(event) => setToneOfVoice(event.target.value)}
+              >
+                {toneOptions.map((tone) => (
+                  <option key={tone} value={tone}>
+                    {tone}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <button
+            type="button"
+            className="settings-primary-action"
+            onClick={handleSaveProfile}
+            disabled={saving}
+          >
+            {saving ? 'Saving profile...' : 'Save Business Profile'}
+          </button>
+
+          <p className="settings-simple-note">
+            Smiles uses these business details when FromOne creates offers and events for approval.
+          </p>
+        </section>
+
+        <section className="settings-simple-panel">
+          <div className="settings-panel-head">
+            <span className="settings-step-badge">02</span>
+            <div>
+              <h2>Facebook and Instagram</h2>
+              <p>Optional. Connect Meta for direct publishing.</p>
+            </div>
+          </div>
+
+          <div className="settings-social-grid">
+            <article className={hasFacebookConnection ? 'settings-social-card is-connected' : 'settings-social-card'}>
+              <span>Facebook</span>
+              <strong>{hasFacebookConnection ? 'Connected' : 'Not connected'}</strong>
+              <p>{primaryMetaConnection?.page_name || 'Connect a Facebook Page for publishing.'}</p>
+            </article>
+
+            <article className={hasInstagramConnection ? 'settings-social-card is-connected' : 'settings-social-card'}>
+              <span>Instagram</span>
+              <strong>{hasInstagramConnection ? 'Connected' : 'Not connected'}</strong>
+              <p>
+                {primaryMetaConnection?.instagram_username
+                  ? `@${primaryMetaConnection.instagram_username}`
+                  : 'Connect an Instagram business account through Meta.'}
+              </p>
+            </article>
+          </div>
+
+          <div className="settings-action-row">
+            <button
+              type="button"
+              className="settings-primary-action"
+              onClick={connectMetaAccount}
+              disabled={loadingConnections || metaConnectionBusy}
+            >
+              {hasMetaConnection ? 'Reconnect Meta' : 'Connect Facebook and Instagram'}
+            </button>
+
+            {hasMetaConnection && (
+              <button
+                type="button"
+                className="settings-secondary-action"
+                onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
+                disabled={metaConnectionBusy}
+              >
+                {metaConnectionBusy ? 'Disconnecting...' : 'Disconnect'}
+              </button>
+            )}
+          </div>
+
+          <p className="settings-simple-note">
+            Nothing is published from Settings. Publishing happens from the post review page.
+          </p>
+        </section>
+
+        <section className="settings-smiles-strip">
+          <div>
+            <span className="settings-create-eyebrow">Stockport Smiles</span>
+            <h2>Smiles is automatic.</h2>
+            <p>
+              FromOne creates the Smiles offer or event from the review page. The client only answers the small offer/event questions.
+            </p>
+          </div>
+          <span className="settings-smiles-status">{getSmilesListingStatusLabel()}</span>
+        </section>
+      </section>
+
+      {confirmDialog && (() => {
+        const activeConfirmDialog = confirmDialog!;
+
+        return (
+          <div className="settings-confirm-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-confirm-title">
+            <section className="settings-confirm-card">
+              <div className="settings-create-eyebrow">
+                {activeConfirmDialog.danger ? 'Please confirm' : 'Confirm'}
+              </div>
+              <h2 id="settings-confirm-title">{activeConfirmDialog.title}</h2>
+              <p>{activeConfirmDialog.message}</p>
+              <div className="settings-action-row">
+                <button type="button" className="settings-secondary-action" onClick={closeConfirmDialog}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="settings-primary-action"
+                  onClick={() => {
+                    if (activeConfirmDialog.type === 'disconnectMeta') {
+                      confirmDisconnectMetaAccount(activeConfirmDialog.connectionId);
+                      return;
+                    }
+
+                    if (activeConfirmDialog.type === 'deleteProfile') {
+                      confirmDeleteProfile();
+                    }
+                  }}
+                  disabled={saving || metaConnectionBusy}
+                >
+                  {saving || metaConnectionBusy ? 'Working...' : activeConfirmDialog.confirmLabel}
+                </button>
+              </div>
+            </section>
+          </div>
+        );
+      })()}
+
+      <style jsx global>{`
+        /* -------------------------------------------------------------- */
+        /* FROMONE SETTINGS — CLEAN APPROVED STANDARD                      */
+        /* Desktop: main-content 38px + shell margin-top 28px              */
+        /* Mobile: same fixed width/gap as the finished mobile pages        */
+        /* -------------------------------------------------------------- */
+        body:has(.fromone-settings-page) {
+          background: #f5f7fb !important;
+          overflow-x: hidden !important;
+        }
+
+        body:has(.fromone-settings-page)::before {
+          display: none !important;
+          content: none !important;
+        }
+
+        body:has(.fromone-settings-page) .app-shell,
+        body:has(.fromone-settings-page) .main-content {
+          background: #f5f7fb !important;
+        }
+
+        body:has(.fromone-settings-page) .main-content {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding-top: 38px !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
+        }
+
+        .fromone-settings-page.settings-create-style-page {
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          min-height: 100vh !important;
+          margin: 0 !important;
+          padding: 0 16px 104px !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
+          background: #f5f7fb !important;
+          color: #071b49 !important;
+          font-family:
+            var(--font-main),
+            "Plus Jakarta Sans",
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif !important;
+          font-weight: 500 !important;
+          letter-spacing: -0.01em !important;
+        }
+
+        .fromone-settings-page #fromone-standard-shell.settings-create-style-card {
+          width: 1040px !important;
+          max-width: calc(100% - 32px) !important;
+          min-width: 0 !important;
+          min-height: 620px !important;
+          margin: 28px auto 0 !important;
+          padding: clamp(30px, 4vw, 48px) !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+          display: block !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 32px !important;
+          background: #ffffff !important;
+          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
+          color: #071b49 !important;
+          backdrop-filter: none !important;
+        }
+
+        .fromone-settings-page .settings-loading-card {
+          min-height: 320px !important;
+          display: grid !important;
+          align-content: center !important;
+        }
+
+        .fromone-settings-page .settings-create-hero {
+          width: 100% !important;
+          max-width: 760px !important;
+          margin: 0 0 26px !important;
+          padding: 0 !important;
+          text-align: left !important;
+        }
+
+        .fromone-settings-page .settings-create-eyebrow {
+          color: #f72585 !important;
+          font-size: 0.78rem !important;
+          line-height: 1 !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.13em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-settings-page .settings-create-hero h1,
+        .fromone-settings-page .settings-create-style-card h1 {
+          max-width: 760px !important;
+          margin: 12px 0 14px !important;
+          color: #071b49 !important;
+          font-size: clamp(3rem, 5.2vw, 4.45rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.055em !important;
+          font-weight: 800 !important;
+          text-align: left !important;
+          overflow: visible !important;
+        }
+
+        .fromone-settings-page .settings-create-hero p,
+        .fromone-settings-page .settings-create-style-card p {
+          max-width: 720px !important;
+          margin: 0 !important;
+          color: #52617a !important;
+          font-size: 1.02rem !important;
+          line-height: 1.5 !important;
+          font-weight: 600 !important;
+        }
+
+        .fromone-settings-page .settings-simple-panel,
+        .fromone-settings-page .settings-smiles-strip {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin-top: 18px !important;
+          padding: clamp(20px, 3vw, 30px) !important;
+          box-sizing: border-box !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 24px !important;
+          background: #f7f9fd !important;
+        }
+
+        .fromone-settings-page .settings-panel-head {
+          display: flex !important;
+          gap: 12px !important;
+          align-items: flex-start !important;
+          margin-bottom: 18px !important;
+        }
+
+        .fromone-settings-page .settings-step-badge {
+          display: inline-flex !important;
+          width: 34px !important;
+          height: 34px !important;
+          flex: 0 0 34px !important;
+          align-items: center !important;
+          justify-content: center !important;
+          border-radius: 50% !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          font-size: 0.78rem !important;
+          font-weight: 800 !important;
+          box-shadow: 0 12px 26px rgba(247, 37, 133, 0.18) !important;
+        }
+
+        .fromone-settings-page .settings-panel-head h2,
+        .fromone-settings-page .settings-smiles-strip h2,
+        .fromone-settings-page .settings-confirm-card h2 {
+          margin: 0 0 6px !important;
+          color: #071b49 !important;
+          font-size: clamp(1.65rem, 3.4vw, 2.15rem) !important;
+          font-weight: 800 !important;
+          line-height: 1.05 !important;
+          letter-spacing: -0.045em !important;
+        }
+
+        .fromone-settings-page .settings-form-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 12px !important;
+        }
+
+        .fromone-settings-page .settings-form-grid label {
+          display: grid !important;
+          gap: 8px !important;
+        }
+
+        .fromone-settings-page .settings-form-grid label strong {
+          color: #071b49 !important;
+          font-size: 0.86rem !important;
+          font-weight: 800 !important;
+          letter-spacing: -0.01em !important;
+        }
+
+        .fromone-settings-page .settings-wide-field {
+          grid-column: 1 / -1 !important;
+        }
+
+        .fromone-settings-page .settings-website-scan-card {
+          display: grid !important;
+          gap: 12px !important;
+          margin: 0 0 18px !important;
+          padding: 16px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 20px !important;
+          background: #ffffff !important;
+          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
+        }
+
+        .fromone-settings-page .settings-website-scan-card h3 {
+          margin: 7px 0 6px !important;
+          color: #071b49 !important;
+          font-size: clamp(1.35rem, 2.6vw, 1.65rem) !important;
+          font-weight: 800 !important;
+          line-height: 1.05 !important;
+          letter-spacing: -0.035em !important;
+        }
+
+        .fromone-settings-page .settings-website-scan-row {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) 180px !important;
+          gap: 10px !important;
+          align-items: center !important;
+        }
+
+        .fromone-settings-page .settings-simple-input {
+          width: 100% !important;
+          min-height: 52px !important;
+          padding: 12px 15px !important;
+          border: 1px solid #d7e0ee !important;
+          border-radius: 18px !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          box-sizing: border-box !important;
+          font: inherit !important;
+          font-weight: 600 !important;
+          outline: none !important;
+        }
+
+        .fromone-settings-page textarea.settings-simple-input {
+          min-height: 92px !important;
+          resize: vertical !important;
+        }
+
+        .fromone-settings-page .settings-simple-input:focus {
+          border-color: #f72585 !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.11) !important;
+        }
+
+        .fromone-settings-page .settings-primary-action,
+        .fromone-settings-page .settings-secondary-action {
+          min-height: 54px !important;
+          padding: 0 22px !important;
+          border-radius: 999px !important;
+          font: inherit !important;
+          font-weight: 800 !important;
+          cursor: pointer !important;
+        }
+
+        .fromone-settings-page .settings-primary-action {
+          width: 100% !important;
+          margin-top: 16px !important;
+          border: 1px solid #f72585 !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          box-shadow: 0 18px 38px rgba(247, 37, 133, 0.24) !important;
+        }
+
+        .fromone-settings-page .settings-secondary-action {
+          border: 1px solid #ffd2e5 !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          box-shadow: 0 10px 24px rgba(7, 27, 73, 0.06) !important;
+        }
+
+        .fromone-settings-page .settings-primary-action:disabled,
+        .fromone-settings-page .settings-secondary-action:disabled {
+          cursor: not-allowed !important;
+          opacity: 0.65 !important;
+        }
+
+        .fromone-settings-page .settings-simple-note {
+          margin: 14px 0 0 !important;
+          text-align: center !important;
+          color: #52617d !important;
+          font-size: 0.95rem !important;
+          font-weight: 600 !important;
+        }
+
+        .fromone-settings-page .settings-create-style-card p.settings-simple-note {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 14px auto 0 !important;
+          text-align: center !important;
+        }
+
+        .fromone-settings-page .settings-social-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 14px !important;
+        }
+
+        .fromone-settings-page .settings-social-card {
+          padding: 18px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 22px !important;
+          background: #ffffff !important;
+          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
+        }
+
+        .fromone-settings-page .settings-social-card.is-connected {
+          border-color: rgba(20, 184, 116, 0.42) !important;
+          background: linear-gradient(145deg, rgba(20, 184, 116, 0.10), #ffffff) !important;
+        }
+
+        .fromone-settings-page .settings-social-card span {
+          color: #f72585 !important;
+          font-size: 0.78rem !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.06em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-settings-page .settings-social-card strong {
+          display: block !important;
+          margin-top: 8px !important;
+          color: #071b49 !important;
+          font-size: 1.35rem !important;
+          font-weight: 800 !important;
+          letter-spacing: -0.03em !important;
+        }
+
+        .fromone-settings-page .settings-action-row {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 10px !important;
+        }
+
+        .fromone-settings-page .settings-action-row .settings-primary-action {
+          margin-top: 18px !important;
+        }
+
+        .fromone-settings-page .settings-action-row .settings-secondary-action {
+          width: 100% !important;
+        }
+
+        .fromone-settings-page .settings-smiles-strip {
+          display: flex !important;
+          gap: 18px !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          background:
+            linear-gradient(135deg, rgba(247, 37, 133, 0.045), transparent 46%),
+            #fff8fc !important;
+          border-color: #ffd2e5 !important;
+        }
+
+        .fromone-settings-page .settings-smiles-status {
+          display: inline-flex !important;
+          min-height: 44px !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 10px 16px !important;
+          border: 1px solid #ffd0e6 !important;
+          border-radius: 999px !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          font-weight: 800 !important;
+          white-space: nowrap !important;
+          box-shadow: 0 10px 24px rgba(7, 27, 73, 0.06) !important;
+        }
+
+        .settings-confirm-backdrop {
+          position: fixed !important;
+          inset: 0 !important;
+          z-index: 10000 !important;
+          display: grid !important;
+          place-items: center !important;
+          padding: 18px !important;
+          background: rgba(7, 27, 73, 0.42) !important;
+          backdrop-filter: blur(10px) !important;
+        }
+
+        .settings-confirm-card {
+          width: min(520px, 100%) !important;
+          padding: 26px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 26px !important;
+          background: #ffffff !important;
+          box-shadow: 0 28px 80px rgba(7, 27, 73, 0.22) !important;
+        }
+
+        @media (max-width: 760px) {
+          body:has(.fromone-settings-page) .main-content {
+            padding-top: 0 !important;
+          }
+
+          .fromone-settings-page.settings-create-style-page {
+            padding: 0 0 112px !important;
+          }
+
+          .fromone-settings-page #fromone-standard-shell.settings-create-style-card {
+            width: calc(100% - 72px) !important;
+            max-width: 468px !important;
+            min-height: auto !important;
+            margin: 24px auto 0 !important;
+            padding: 28px 26px 26px !important;
+            border-radius: 26px !important;
+          }
+
+          .fromone-settings-page .settings-create-hero {
+            margin-bottom: 32px !important;
+          }
+
+          .fromone-settings-page .settings-create-hero h1,
+          .fromone-settings-page .settings-create-style-card h1 {
+            margin: 14px 0 18px !important;
+            font-size: clamp(2.75rem, 11vw, 3.6rem) !important;
+            line-height: 0.94 !important;
+            letter-spacing: -0.058em !important;
+          }
+
+          .fromone-settings-page .settings-create-hero p,
+          .fromone-settings-page .settings-create-style-card p {
+            font-size: 1rem !important;
+            line-height: 1.45 !important;
+          }
+
+          .fromone-settings-page .settings-simple-panel,
+          .fromone-settings-page .settings-smiles-strip {
+            margin-top: 18px !important;
+            padding: 20px !important;
+            border-radius: 24px !important;
+          }
+
+          .fromone-settings-page .settings-panel-head {
+            margin-bottom: 22px !important;
+          }
+
+          .fromone-settings-page .settings-panel-head h2,
+          .fromone-settings-page .settings-smiles-strip h2,
+          .fromone-settings-page .settings-confirm-card h2 {
+            font-size: clamp(1.75rem, 7vw, 2.15rem) !important;
+            line-height: 0.98 !important;
+          }
+
+          .fromone-settings-page .settings-form-grid,
+          .fromone-settings-page .settings-social-grid,
+          .fromone-settings-page .settings-website-scan-row {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+          }
+
+          .fromone-settings-page .settings-smiles-strip {
+            display: grid !important;
+          }
+
+          .fromone-settings-page .settings-smiles-status {
+            width: 100% !important;
+            white-space: normal !important;
+            text-align: center !important;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .fromone-settings-page #fromone-standard-shell.settings-create-style-card {
+            width: calc(100% - 48px) !important;
+            padding: 26px 22px 24px !important;
+          }
+        }
+      `}</style>
+    </main>
+  );
 
   return (
     <>
@@ -1408,6 +2402,45 @@ export default function SettingsPage() {
                               placeholder="Example: Manchester"
                             />
                           </label>
+
+                          <label>
+                            <strong>Address</strong>
+                            <span>Business address for the Smiles listing.</span>
+                            <input
+                              className="input settings-mobile-editable-input"
+                              value={address}
+                              onChange={(event) => setAddress(event.target.value)}
+                              autoComplete="street-address"
+                              inputMode="text"
+                              placeholder="Example: 1 Market Place, Stockport"
+                            />
+                          </label>
+
+                          <label>
+                            <strong>Telephone</strong>
+                            <span>Customer phone number.</span>
+                            <input
+                              className="input settings-mobile-editable-input"
+                              value={phone}
+                              onChange={(event) => setPhone(event.target.value)}
+                              autoComplete="tel"
+                              inputMode="tel"
+                              placeholder="Example: 0161 123 4567"
+                            />
+                          </label>
+
+                          <label>
+                            <strong>Email</strong>
+                            <span>Customer email address.</span>
+                            <input
+                              className="input settings-mobile-editable-input"
+                              value={email}
+                              onChange={(event) => setEmail(event.target.value)}
+                              autoComplete="email"
+                              inputMode="email"
+                              placeholder="Example: hello@example.com"
+                            />
+                          </label>
                         </div>
                       </div>
                     </section>
@@ -1531,6 +2564,79 @@ export default function SettingsPage() {
 
                     <span>
                       Step 3 below will take you to the Dashboard when you are ready to create posts.
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 16,
+                      padding: 16,
+                      borderRadius: 22,
+                      border: '1px solid rgba(255, 212, 59, 0.22)',
+                      background:
+                        'linear-gradient(145deg, rgba(255, 212, 59, 0.095), rgba(255,255,255,0.045))',
+                      display: 'grid',
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <strong
+                        style={{
+                          display: 'block',
+                          color: '#ffffff',
+                          fontSize: 18,
+                          letterSpacing: '-0.02em',
+                        }}
+                      >
+                        Create your Smiles listing
+                      </strong>
+                      <span
+                        style={{
+                          display: 'block',
+                          marginTop: 5,
+                          color: 'rgba(248,250,252,0.72)',
+                          lineHeight: 1.45,
+                          fontWeight: 750,
+                        }}
+                      >
+                        When you save, FromOne automatically sends your company
+                        name, address, telephone and website to Stockport Smiles
+                        for approval. Smiles admin checks it, then makes it live
+                        on the public Venues page.
+                      </span>
+                    </div>
+
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        width: 'fit-content',
+                        minHeight: 34,
+                        alignItems: 'center',
+                        padding: '7px 12px',
+                        borderRadius: 999,
+                        background:
+                          smilesListingStatusTone === 'live'
+                            ? 'rgba(61, 220, 151, 0.14)'
+                            : smilesListingStatusTone === 'failed'
+                              ? 'rgba(248, 113, 113, 0.14)'
+                            : 'rgba(255, 212, 59, 0.12)',
+                        border:
+                          smilesListingStatusTone === 'live'
+                            ? '1px solid rgba(61, 220, 151, 0.28)'
+                            : smilesListingStatusTone === 'failed'
+                              ? '1px solid rgba(248, 113, 113, 0.3)'
+                            : '1px solid rgba(255, 212, 59, 0.24)',
+                        color:
+                          smilesListingStatusTone === 'live'
+                            ? '#a7f3d0'
+                            : smilesListingStatusTone === 'failed'
+                              ? '#fecaca'
+                              : '#ffe58a',
+                        fontSize: 12,
+                        fontWeight: 1000,
+                      }}
+                    >
+                      {getSmilesListingStatusLabel()}
                     </span>
                   </div>
                 </section>
@@ -6334,77 +7440,81 @@ export default function SettingsPage() {
 
       `}</style>
 
-      {confirmDialog && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="settings-confirm-title"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 10000,
-            display: 'grid',
-            placeItems: 'center',
-            padding: 18,
-            background: 'rgba(2, 6, 23, 0.72)',
-            backdropFilter: 'blur(14px)',
-          }}
-        >
+      {confirmDialog && (() => {
+        const activeConfirmDialog = confirmDialog!;
+
+        return (
           <div
-            className="premium-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-confirm-title"
             style={{
-              width: 'min(520px, 100%)',
-              borderRadius: 30,
-              border: confirmDialog.danger
-                ? '1px solid rgba(255, 95, 109, 0.34)'
-                : '1px solid rgba(255, 212, 59, 0.26)',
-              boxShadow: '0 34px 110px rgba(0,0,0,0.48)',
+              position: 'fixed',
+              inset: 0,
+              zIndex: 10000,
+              display: 'grid',
+              placeItems: 'center',
+              padding: 18,
+              background: 'rgba(2, 6, 23, 0.72)',
+              backdropFilter: 'blur(14px)',
             }}
           >
-            <div className="page-eyebrow">
-              {confirmDialog.danger ? 'Please confirm' : 'Confirm action'}
-            </div>
-            <h2 id="settings-confirm-title" style={{ margin: '4px 0 10px' }}>
-              {confirmDialog.title}
-            </h2>
-            <p style={{ margin: '0 0 20px', color: 'var(--muted)', lineHeight: 1.55 }}>
-              {confirmDialog.message}
-            </p>
-
             <div
-              className="button-row settings-confirm-actions"
-              style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}
+              className="premium-card"
+              style={{
+                width: 'min(520px, 100%)',
+                borderRadius: 30,
+                border: activeConfirmDialog.danger
+                  ? '1px solid rgba(255, 95, 109, 0.34)'
+                  : '1px solid rgba(255, 212, 59, 0.26)',
+                boxShadow: '0 34px 110px rgba(0,0,0,0.48)',
+              }}
             >
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={closeConfirmDialog}
-                disabled={saving || metaConnectionBusy}
-              >
-                Cancel
-              </button>
+              <div className="page-eyebrow">
+                {activeConfirmDialog.danger ? 'Please confirm' : 'Confirm action'}
+              </div>
+              <h2 id="settings-confirm-title" style={{ margin: '4px 0 10px' }}>
+                {activeConfirmDialog.title}
+              </h2>
+              <p style={{ margin: '0 0 20px', color: 'var(--muted)', lineHeight: 1.55 }}>
+                {activeConfirmDialog.message}
+              </p>
 
-              <button
-                type="button"
-                className={confirmDialog.danger ? 'secondary-button danger-button' : undefined}
-                onClick={() => {
-                  if (confirmDialog.type === 'disconnectMeta') {
-                    confirmDisconnectMetaAccount(confirmDialog.connectionId);
-                    return;
-                  }
-
-                  if (confirmDialog.type === 'deleteProfile') {
-                    confirmDeleteProfile();
-                  }
-                }}
-                disabled={saving || metaConnectionBusy}
+              <div
+                className="button-row settings-confirm-actions"
+                style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}
               >
-                {saving || metaConnectionBusy ? 'Working...' : confirmDialog.confirmLabel}
-              </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={closeConfirmDialog}
+                  disabled={saving || metaConnectionBusy}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className={activeConfirmDialog.danger ? 'secondary-button danger-button' : undefined}
+                  onClick={() => {
+                    if (activeConfirmDialog.type === 'disconnectMeta') {
+                      confirmDisconnectMetaAccount(activeConfirmDialog.connectionId);
+                      return;
+                    }
+
+                    if (activeConfirmDialog.type === 'deleteProfile') {
+                      confirmDeleteProfile();
+                    }
+                  }}
+                  disabled={saving || metaConnectionBusy}
+                >
+                  {saving || metaConnectionBusy ? 'Working...' : activeConfirmDialog.confirmLabel}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </>
   );
 }

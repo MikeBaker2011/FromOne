@@ -323,7 +323,8 @@ function getMobilePostState(post: any) {
     status === "posted" ||
     publishStatus === "posted" ||
     publishStatus === "published" ||
-    approvalStatus === "posted";
+    approvalStatus === "posted" ||
+    safeText(post?.smiles_status).toLowerCase() === "sent";
 
   if (isPosted) {
     return {
@@ -2944,6 +2945,573 @@ Important:
       : null;
 
   const mobileReviewPosts = sortedPosts;
+  const activeSuccessMoment = successMoment;
+  const activeConfirmDialog = confirmDialog;
+
+  const getSimplePostDestination = (post: any) => {
+    const platform = String(post?.platform || "").toLowerCase();
+
+    if (platform.includes("smiles")) return "Smiles";
+    if (platform.includes("instagram")) return "Instagram";
+    if (platform.includes("facebook")) return "Facebook";
+
+    return post?.platform || "Post";
+  };
+
+  const getSimplePostStatus = (post: any) => {
+    const publishedTo = String(post?.published_to || post?.publishedTo || "").trim();
+
+    if (publishedTo) return `Published to ${publishedTo}`;
+    if (post?.smiles_status === "sent") return "Sent to Smiles";
+    if (isPostPosted(post)) return "Published";
+    if (isPostFailed(post)) return "Needs checking";
+    if (isPostReminderSet(post)) return "Scheduled";
+
+    return "Ready to review";
+  };
+
+  const getSimpleStatusClass = (post: any) => {
+    if (post?.published_to || post?.publishedTo || post?.smiles_status === "sent" || isPostPosted(post)) {
+      return "is-done";
+    }
+
+    if (isPostFailed(post)) return "is-problem";
+    if (isPostReminderSet(post)) return "is-planned";
+
+    return "is-ready";
+  };
+
+  const getSimplePostActionLabel = (post: any) => {
+    const status = getSimplePostStatus(post).toLowerCase();
+
+    if (
+      status.includes("published") ||
+      status.includes("sent to smiles") ||
+      status.includes("scheduled")
+    ) {
+      return "View post";
+    }
+
+    return "Review";
+  };
+
+  const simplePostsToCheckCount = sortedPosts.filter(
+    (post: any) => getSimplePostActionLabel(post) === "Review"
+  ).length;
+
+  return (
+    <main className="fromone-posts-page settings-create-style-page" data-fromone-posts-redesign="v1">
+      <section id="fromone-standard-shell" className="posts-create-style-card">
+        <header className="posts-create-hero">
+          <div className="posts-create-eyebrow">Posts</div>
+          <h1>Your posts are ready.</h1>
+          <p>
+            Open a post, check the image and wording, then publish or send it where it needs to go.
+          </p>
+        </header>
+
+        <section className="posts-simple-panel posts-summary-panel">
+          <div className="posts-panel-head">
+            <span className="posts-step-badge">01</span>
+            <div>
+              <h2>Posts status</h2>
+              <p>
+                {loading
+                  ? "Loading the posts created from your uploads."
+                  : simplePostsToCheckCount > 0
+                    ? `${simplePostsToCheckCount} post${simplePostsToCheckCount === 1 ? "" : "s"} waiting for you.`
+                    : sortedPosts.length > 0
+                      ? "Everything here has already been sent or published."
+                      : "No posts are waiting right now."}
+              </p>
+            </div>
+          </div>
+
+          <div className="posts-summary-actions">
+            <a href="/dashboard">Create more posts</a>
+          </div>
+        </section>
+
+        {loading ? (
+          <section className="posts-simple-panel posts-empty-panel">
+            <div className="posts-panel-head">
+              <span className="posts-step-badge">...</span>
+              <div>
+                <h2>Loading posts</h2>
+                <p>One moment while FromOne gets your review queue.</p>
+              </div>
+            </div>
+          </section>
+        ) : sortedPosts.length === 0 ? (
+          <section className="posts-simple-panel posts-empty-panel">
+            <div className="posts-panel-head">
+              <span className="posts-step-badge">02</span>
+              <div>
+                <h2>No posts to review</h2>
+                <p>Create a post first, then it will appear here.</p>
+              </div>
+            </div>
+            <a className="posts-primary-action" href="/dashboard">Create a post</a>
+          </section>
+        ) : (
+          <section className="posts-simple-panel posts-list-panel" aria-label="Posts ready to review">
+            <div className="posts-panel-head">
+              <span className="posts-step-badge">02</span>
+              <div>
+                <h2>Check each post</h2>
+                <p>View the media, confirm the copy, then publish or send it on.</p>
+              </div>
+            </div>
+
+            <div className="posts-review-list">
+              {sortedPosts.map((post: any, index: number) => {
+                const mediaKind = getPostMediaKind(post);
+                const title = getDisplayPostTitle(post, index);
+                const captionPreview = String(post?.caption || "").trim();
+                const destination = getSimplePostDestination(post);
+                const status = getSimplePostStatus(post);
+                const statusClass = getSimpleStatusClass(post);
+
+                return (
+                  <article key={post.id} className="posts-review-card">
+                    <div className="posts-review-media">
+                      {post?.media_url ? (
+                        mediaKind === "video" ? (
+                          <video src={post.media_url} muted playsInline preload="metadata" />
+                        ) : mediaKind === "flyer" ? (
+                          <div className="posts-review-media-empty">
+                            <strong>Flyer</strong>
+                          </div>
+                        ) : (
+                          <img src={post.media_url} alt={title || "Post media"} />
+                        )
+                      ) : (
+                        <div className="posts-review-media-empty">
+                          <strong>No media</strong>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="posts-review-copy">
+                      <div className="posts-review-meta">
+                        <span>{destination}</span>
+                        <span className={statusClass}>{status}</span>
+                      </div>
+
+                      <h3>{title}</h3>
+
+                      <p>
+                        {captionPreview ||
+                          "Open this post to check the wording before anything is published."}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="posts-review-action"
+                      onClick={() => choosePost(post.id)}
+                    >
+                      {getSimplePostActionLabel(post)}
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
+      </section>
+
+      <style jsx global>{`
+        body:has(.fromone-posts-page) {
+          background: #f5f7fb !important;
+          overflow-x: hidden !important;
+        }
+
+        body:has(.fromone-posts-page)::before {
+          display: none !important;
+          content: none !important;
+        }
+
+        body:has(.fromone-posts-page) .app-shell,
+        body:has(.fromone-posts-page) .main-content {
+          background: #f5f7fb !important;
+        }
+
+        body:has(.fromone-posts-page) .main-content {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding-top: 38px !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
+        }
+
+        .fromone-posts-page.settings-create-style-page {
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          min-height: 100vh !important;
+          margin: 0 !important;
+          padding: 0 16px 104px !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
+          background: #f5f7fb !important;
+          color: #071b49 !important;
+          font-family:
+            var(--font-main),
+            "Plus Jakarta Sans",
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif !important;
+          font-weight: 500 !important;
+          letter-spacing: -0.01em !important;
+        }
+
+        .fromone-posts-page #fromone-standard-shell.posts-create-style-card {
+          width: 1040px !important;
+          max-width: calc(100% - 32px) !important;
+          min-width: 0 !important;
+          min-height: 620px !important;
+          margin: 28px auto 0 !important;
+          padding: clamp(30px, 4vw, 48px) !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+          display: block !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 32px !important;
+          background: #ffffff !important;
+          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
+          color: #071b49 !important;
+          backdrop-filter: none !important;
+        }
+
+        .fromone-posts-page .posts-create-hero {
+          width: 100% !important;
+          max-width: 760px !important;
+          margin: 0 0 26px !important;
+          padding: 0 !important;
+          text-align: left !important;
+        }
+
+        .fromone-posts-page .posts-create-eyebrow,
+        .fromone-posts-page .posts-review-meta span:first-child {
+          color: #f72585 !important;
+          font-size: 0.78rem !important;
+          line-height: 1 !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.13em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-posts-page .posts-create-hero h1 {
+          max-width: 760px !important;
+          margin: 12px 0 14px !important;
+          color: #071b49 !important;
+          font-size: clamp(3rem, 5.2vw, 4.45rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.055em !important;
+          font-weight: 800 !important;
+          text-align: left !important;
+          overflow: visible !important;
+        }
+
+        .fromone-posts-page p {
+          color: #52617a !important;
+          font-size: 1rem !important;
+          line-height: 1.5 !important;
+          font-weight: 600 !important;
+        }
+
+        .fromone-posts-page .posts-create-hero p {
+          max-width: 720px !important;
+          margin: 0 !important;
+          font-size: 1.02rem !important;
+        }
+
+        .fromone-posts-page .posts-simple-panel {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin-top: 18px !important;
+          padding: clamp(20px, 3vw, 30px) !important;
+          box-sizing: border-box !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 24px !important;
+          background: #f7f9fd !important;
+        }
+
+        .fromone-posts-page .posts-summary-panel {
+          display: flex !important;
+          gap: 18px !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          background:
+            linear-gradient(135deg, rgba(247, 37, 133, 0.045), transparent 46%),
+            #fff8fc !important;
+          border-color: #ffd2e5 !important;
+        }
+
+        .fromone-posts-page .posts-panel-head {
+          display: flex !important;
+          gap: 12px !important;
+          align-items: flex-start !important;
+          margin-bottom: 18px !important;
+        }
+
+        .fromone-posts-page .posts-summary-panel .posts-panel-head {
+          margin-bottom: 0 !important;
+        }
+
+        .fromone-posts-page .posts-step-badge {
+          display: inline-flex !important;
+          width: 34px !important;
+          height: 34px !important;
+          flex: 0 0 34px !important;
+          align-items: center !important;
+          justify-content: center !important;
+          border-radius: 50% !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          font-size: 0.78rem !important;
+          font-weight: 800 !important;
+          box-shadow: 0 12px 26px rgba(247, 37, 133, 0.18) !important;
+        }
+
+        .fromone-posts-page .posts-panel-head h2,
+        .fromone-posts-page .posts-review-copy h3,
+        .fromone-posts-page .posts-empty-panel h2 {
+          margin: 0 0 6px !important;
+          color: #071b49 !important;
+          font-size: clamp(1.65rem, 3.4vw, 2.15rem) !important;
+          font-weight: 800 !important;
+          line-height: 1.05 !important;
+          letter-spacing: -0.045em !important;
+        }
+
+        .fromone-posts-page .posts-panel-head p,
+        .fromone-posts-page .posts-review-copy p {
+          margin: 0 !important;
+        }
+
+        .fromone-posts-page .posts-summary-actions a,
+        .fromone-posts-page .posts-primary-action,
+        .fromone-posts-page .posts-review-action {
+          min-height: 54px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 22px !important;
+          border: 1px solid #f72585 !important;
+          border-radius: 999px !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          box-shadow: 0 18px 38px rgba(247, 37, 133, 0.24) !important;
+          font: inherit !important;
+          font-weight: 800 !important;
+          text-decoration: none !important;
+          cursor: pointer !important;
+        }
+
+        .fromone-posts-page .posts-review-list {
+          display: grid !important;
+          gap: 14px !important;
+        }
+
+        .fromone-posts-page .posts-review-card {
+          display: grid !important;
+          grid-template-columns: 132px minmax(0, 1fr) 150px !important;
+          gap: 18px !important;
+          align-items: center !important;
+          padding: 18px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 22px !important;
+          background: #ffffff !important;
+          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
+        }
+
+        .fromone-posts-page .posts-review-media {
+          width: 132px !important;
+          height: 112px !important;
+          display: grid !important;
+          place-items: center !important;
+          overflow: hidden !important;
+          border-radius: 18px !important;
+          background: #071026 !important;
+        }
+
+        .fromone-posts-page .posts-review-media img,
+        .fromone-posts-page .posts-review-media video {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: contain !important;
+        }
+
+        .fromone-posts-page .posts-review-media-empty {
+          width: 100% !important;
+          height: 100% !important;
+          display: grid !important;
+          place-items: center !important;
+          color: #ffffff !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-posts-page .posts-review-copy {
+          min-width: 0 !important;
+          display: grid !important;
+          gap: 8px !important;
+        }
+
+        .fromone-posts-page .posts-review-meta {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          gap: 8px !important;
+        }
+
+        .fromone-posts-page .posts-review-meta span {
+          min-height: 28px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          border: 1px solid #ffd4e8 !important;
+          border-radius: 999px !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          padding: 0 11px !important;
+          font-size: 0.8rem !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-posts-page .posts-review-meta .is-done {
+          border-color: #d7f7e5 !important;
+          background: #f0fff6 !important;
+        }
+
+        .fromone-posts-page .posts-review-meta .is-problem {
+          border-color: #ffd2d2 !important;
+          background: #fff5f5 !important;
+        }
+
+        .fromone-posts-page .posts-review-meta .is-planned {
+          border-color: #ffe8ad !important;
+          background: #fffaf0 !important;
+        }
+
+        .fromone-posts-page .posts-review-copy h3 {
+          font-size: clamp(1.35rem, 2.6vw, 1.65rem) !important;
+          letter-spacing: -0.035em !important;
+        }
+
+        .fromone-posts-page .posts-review-copy p {
+          display: -webkit-box !important;
+          overflow: hidden !important;
+          -webkit-line-clamp: 2 !important;
+          -webkit-box-orient: vertical !important;
+        }
+
+        .fromone-posts-page .posts-review-action {
+          width: 100% !important;
+          border-radius: 999px !important;
+        }
+
+        .fromone-posts-page .posts-empty-panel .posts-primary-action {
+          width: fit-content !important;
+        }
+
+        @media (max-width: 760px) {
+          body:has(.fromone-posts-page) .main-content {
+            padding-top: 0 !important;
+          }
+
+          .fromone-posts-page.settings-create-style-page {
+            padding: 0 0 112px !important;
+          }
+
+          .fromone-posts-page #fromone-standard-shell.posts-create-style-card {
+            width: calc(100% - 72px) !important;
+            max-width: 468px !important;
+            min-height: auto !important;
+            margin: 24px auto 0 !important;
+            padding: 28px 26px 26px !important;
+            border-radius: 26px !important;
+          }
+
+          .fromone-posts-page .posts-create-hero {
+            margin-bottom: 32px !important;
+          }
+
+          .fromone-posts-page .posts-create-hero h1 {
+            margin: 14px 0 18px !important;
+            font-size: clamp(2.75rem, 11vw, 3.6rem) !important;
+            line-height: 0.94 !important;
+            letter-spacing: -0.058em !important;
+          }
+
+          .fromone-posts-page .posts-create-hero p {
+            font-size: 1rem !important;
+            line-height: 1.45 !important;
+          }
+
+          .fromone-posts-page .posts-simple-panel {
+            margin-top: 18px !important;
+            padding: 20px !important;
+            border-radius: 24px !important;
+          }
+
+          .fromone-posts-page .posts-summary-panel {
+            display: grid !important;
+          }
+
+          .fromone-posts-page .posts-panel-head {
+            margin-bottom: 22px !important;
+          }
+
+          .fromone-posts-page .posts-summary-panel .posts-panel-head {
+            margin-bottom: 0 !important;
+          }
+
+          .fromone-posts-page .posts-panel-head h2 {
+            font-size: clamp(1.75rem, 7vw, 2.15rem) !important;
+            line-height: 0.98 !important;
+          }
+
+          .fromone-posts-page .posts-summary-actions a,
+          .fromone-posts-page .posts-primary-action {
+            width: 100% !important;
+          }
+
+          .fromone-posts-page .posts-review-card {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+            padding: 16px !important;
+            border-radius: 20px !important;
+          }
+
+          .fromone-posts-page .posts-review-media {
+            width: 100% !important;
+            height: 148px !important;
+          }
+
+          .fromone-posts-page .posts-review-copy h3 {
+            font-size: 1.2rem !important;
+          }
+
+          .fromone-posts-page .posts-review-copy p {
+            -webkit-line-clamp: 3 !important;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .fromone-posts-page #fromone-standard-shell.posts-create-style-card {
+            width: calc(100% - 48px) !important;
+            padding: 26px 22px 24px !important;
+          }
+        }
+      `}</style>
+    </main>
+  );
 
   const brandPrimary = profile?.brand_primary_color || "#ffd43b";
   const brandSecondary = profile?.brand_secondary_color || "#101420";
@@ -2954,8 +3522,8 @@ Important:
     "--client-secondary": brandSecondary,
     "--client-accent": brandAccent,
     width: "100%",
-    maxWidth: 1120,
-    margin: "0 auto 56px",
+    maxWidth: "none",
+    margin: "0 auto",
     minHeight: "auto",
     height: "auto",
     maxHeight: "none",
@@ -2964,7 +3532,8 @@ Important:
 
   return (
     <div
-      className="campaign-brand-shell simplified-posts-page"
+      id="fromone-standard-shell"
+      className="campaign-brand-shell simplified-posts-page fromone-agency-shell"
       style={brandStyle}
     >
       <style jsx global>{`
@@ -3401,7 +3970,7 @@ Important:
                           className="fromone-mobile-review-button"
                           onClick={() => choosePost(post.id)}
                         >
-                          Review
+                          {getSimplePostActionLabel(post)}
                         </button>
                       </div>
                     </article>
@@ -4107,7 +4676,7 @@ Important:
                               textAlign: "center",
                             }}
                           >
-                            Review
+                            {getSimplePostActionLabel(post)}
                           </button>
 
                           <button
@@ -4196,10 +4765,10 @@ Important:
         />
       )}
 
-      {successMoment && (
+      {activeSuccessMoment && (
         <PostSuccessModal
-          postsLeft={successMoment.postsLeft}
-          nextPostId={successMoment.nextPostId}
+          postsLeft={activeSuccessMoment!.postsLeft}
+          nextPostId={activeSuccessMoment!.nextPostId}
           onViewNextPost={viewNextPostAfterSuccess}
           onBackToDashboard={() => {
             window.location.href = "/dashboard";
@@ -4301,7 +4870,7 @@ Important:
         </div>
       )}
 
-      {confirmDialog && (
+      {activeConfirmDialog && (
         <div
           role="dialog"
           aria-modal="true"
@@ -4322,17 +4891,17 @@ Important:
             style={{
               width: "min(520px, 100%)",
               borderRadius: 30,
-              border: confirmDialog.danger
+              border: activeConfirmDialog!.danger
                 ? "1px solid rgba(255, 95, 109, 0.34)"
                 : "1px solid rgba(255, 212, 59, 0.26)",
               boxShadow: "0 34px 110px rgba(0,0,0,0.48)",
             }}
           >
             <div className="page-eyebrow">
-              {confirmDialog.danger ? "Please confirm" : "Confirm action"}
+              {activeConfirmDialog!.danger ? "Please confirm" : "Confirm action"}
             </div>
             <h2 id="confirm-action-title" style={{ margin: "4px 0 10px" }}>
-              {confirmDialog.title}
+              {activeConfirmDialog!.title}
             </h2>
             <p
               style={{
@@ -4341,7 +4910,7 @@ Important:
                 lineHeight: 1.55,
               }}
             >
-              {confirmDialog.message}
+              {activeConfirmDialog!.message}
             </p>
 
             <div
@@ -4354,8 +4923,8 @@ Important:
                 onClick={closeConfirmDialog}
                 disabled={
                   deletingCampaign ||
-                  deletingPostId === confirmDialog.post?.id ||
-                  removingMediaPostId === confirmDialog.post?.id
+                  deletingPostId === activeConfirmDialog!.post?.id ||
+                  removingMediaPostId === activeConfirmDialog!.post?.id
                 }
               >
                 Cancel
@@ -4363,36 +4932,36 @@ Important:
               <button
                 type="button"
                 className={
-                  confirmDialog.danger
+                  activeConfirmDialog!.danger
                     ? "secondary-button danger-button"
                     : undefined
                 }
                 onClick={() => {
-                  if (confirmDialog.type === "deleteCampaign") {
+                  if (activeConfirmDialog!.type === "deleteCampaign") {
                     confirmDeleteSelectedCampaign();
                     return;
                   }
 
-                  if (confirmDialog.type === "removeMedia") {
-                    confirmRemoveMedia(confirmDialog.post);
+                  if (activeConfirmDialog!.type === "removeMedia") {
+                    confirmRemoveMedia(activeConfirmDialog!.post);
                     return;
                   }
 
-                  if (confirmDialog.type === "deletePost") {
-                    confirmDeletePostWithUndo(confirmDialog.post);
+                  if (activeConfirmDialog!.type === "deletePost") {
+                    confirmDeletePostWithUndo(activeConfirmDialog!.post);
                   }
                 }}
                 disabled={
                   deletingCampaign ||
-                  deletingPostId === confirmDialog.post?.id ||
-                  removingMediaPostId === confirmDialog.post?.id
+                  deletingPostId === activeConfirmDialog!.post?.id ||
+                  removingMediaPostId === activeConfirmDialog!.post?.id
                 }
               >
                 {deletingCampaign ||
-                deletingPostId === confirmDialog.post?.id ||
-                removingMediaPostId === confirmDialog.post?.id
+                deletingPostId === activeConfirmDialog!.post?.id ||
+                removingMediaPostId === activeConfirmDialog!.post?.id
                   ? "Working..."
-                  : confirmDialog.confirmLabel}
+                  : activeConfirmDialog!.confirmLabel}
               </button>
             </div>
           </div>

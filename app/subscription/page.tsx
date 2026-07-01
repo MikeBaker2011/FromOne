@@ -316,6 +316,16 @@ export default function SubscriptionPage() {
   };
 
   const savePlan = async () => {
+    if (selectedPlan === 'starter' && hasPaidAccess) {
+      notify('Starter is already active on this account.', 'info', 'Starter active');
+      return;
+    }
+
+    if (selectedPlan === 'starter' && isPendingPayment) {
+      notify('PayPal checkout is already pending. Cancel it first if you need to start again.', 'warning', 'Payment pending');
+      return;
+    }
+
     if (selectedPlan === 'starter') {
       await startPayPalCheckout();
       return;
@@ -328,13 +338,13 @@ export default function SubscriptionPage() {
       const userId = authData.user?.id;
 
       if (!userId) {
-        notify('Please sign in again, then return to Subscription and continue with PayPal.', 'warning', 'Sign in needed');
+        notify('Please sign in again, then return to Billing.', 'warning', 'Sign in needed');
         setSaving(false);
         return;
       }
 
-      if (selectedPlan === 'demo' && status === 'expired') {
-        notify('Your demo has ended. Please choose the monthly plan to continue.', 'warning', 'Demo ended');
+      if (status === 'expired') {
+        notify('Your demo has ended. Choose Starter to continue.', 'warning', 'Demo ended');
         setSaving(false);
         return;
       }
@@ -363,12 +373,14 @@ export default function SubscriptionPage() {
       setCurrentPlan('demo');
       setSelectedPlan('demo');
       setStatus('trialing');
+      setTrialStartedAt(trialDates.trial_started_at);
+      setTrialEndsAt(trialDates.trial_ends_at);
 
       notify('Demo access saved.', 'success', 'Demo saved');
 
       await loadSubscription();
     } catch (error: any) {
-      notify(error?.message || 'Error saving plan and billing preference.', 'error', 'Save failed');
+      notify(error?.message || 'Error saving demo access.', 'error', 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -435,7 +447,6 @@ export default function SubscriptionPage() {
         .eq('user_id', userId);
 
       setCurrentPlan('demo');
-      setSelectedPlan(nextStatus === 'expired' ? 'starter' : 'demo');
       setStatus(nextStatus);
       setPaypalSubscriptionId(null);
       closeConfirmDialog();
@@ -520,7 +531,6 @@ export default function SubscriptionPage() {
       const cancelledDate = new Date().toISOString();
 
       setCurrentPlan('starter');
-      setSelectedPlan('starter');
       setStatus('cancelled');
       setCancelledAt(cancelledDate);
 
@@ -558,12 +568,6 @@ export default function SubscriptionPage() {
 
   const hasRealPayPalSubscription = paypalSubscriptionId?.startsWith('I-') === true;
 
-  const hasManualStarterAccess =
-    currentPlan === 'starter' &&
-    status === 'active' &&
-    Boolean(paypalSubscriptionId) &&
-    !hasRealPayPalSubscription;
-
   const canCancel =
     currentPlan === 'starter' &&
     status === 'active' &&
@@ -575,7 +579,7 @@ export default function SubscriptionPage() {
       : 'Managed manually'
     : isPendingPayment
       ? 'Available after PayPal confirms your subscription'
-      : 'No active monthly payment';
+      : 'No active Starter payment';
 
   const paypalStatusLabel = isPendingPayment
     ? 'Pending checkout'
@@ -588,24 +592,19 @@ export default function SubscriptionPage() {
         : 'No active PayPal subscription';
 
   const demoFeatures = [
-    '7-day access',
-    'Try the upload-to-post workflow',
-    'Create posts from uploaded media',
-    'Suggested posting times',
-    'Review and edit posts',
-    'Facebook and Instagram publishing where connected',
-    'TikTok copy/open manual posting',
+    '7-day access to try the workflow',
+    'Upload photos, videos and flyers',
+    'Create social posts from uploaded media',
+    'Preview Smiles-style offers and events',
+    'Review and edit before anything is sent',
   ];
 
   const monthlyFeatures = [
-    'Upload photos, videos and flyers',
-    'Posts written from uploaded media',
-    'Automatic suggested posting times',
-    'Facebook and Instagram autoposting',
-    'Instagram-safe image resizing',
-    'TikTok copy/open workflow',
-    'Rewrite posts using media',
-    'PayPal monthly billing',
+    'Create posts from photos, videos and flyers',
+    'Send approved posts to Facebook and Instagram',
+    'Create Smiles offers and events from uploads',
+    'Business listing and Smiles approval workflow',
+    'Review everything before publishing or sending',
   ];
 
   const plans = [
@@ -614,9 +613,8 @@ export default function SubscriptionPage() {
       name: 'Demo',
       price: 'Free',
       priceNote: 'for 7 days',
-      valueNote: 'Try FromOne with limited uploads, posts and website scans.',
-      description:
-        'Best for testing the simple upload, review and publish workflow before subscribing.',
+      valueNote: 'Try FromOne with your own uploads.',
+      description: 'Best for testing image-to-post creation, review screens and the Smiles workflow before subscribing.',
       buttonText: 'Use demo',
       disabled: isDemoExpired,
       features: demoFeatures,
@@ -626,9 +624,8 @@ export default function SubscriptionPage() {
       name: 'Starter',
       price: '£19.99',
       priceNote: '/ month',
-      valueNote: 'Introductory launch price for small businesses.',
-      description:
-        'Full monthly access to turn your weekly photos, videos and flyers into scheduled social posts.',
+      valueNote: 'Full posting, Smiles and publishing access.',
+      description: 'For businesses that want FromOne to turn uploads into posts, Smiles offers and events, then publish to Facebook and Instagram.',
       buttonText: isCancelled ? 'Restart Starter' : 'Continue with PayPal',
       disabled: false,
       features: monthlyFeatures,
@@ -650,13 +647,12 @@ export default function SubscriptionPage() {
 
   return (
     <>
-      <main className="subscription-simple-page">
+      <main id="fromone-standard-shell" className="fromone-subscription-page subscription-simple-page">
         <header className="subscription-simple-header">
           <div className="page-eyebrow">Subscription</div>
-          <h1>{isDemoExpired ? 'Your demo has ended.' : 'Choose your FromOne plan.'}</h1>
+          <h1>{isDemoExpired ? 'Demo ended.' : 'Plans for posting.'}</h1>
           <p>
-            Start with a 7-day demo. Continue with the introductory Starter price of
-            <strong> £19.99/month</strong>.
+            Choose the plan for image uploads, Smiles offers and events, and Facebook and Instagram publishing.
           </p>
         </header>
 
@@ -678,7 +674,7 @@ export default function SubscriptionPage() {
                 <strong>{isDemoExpired ? 'Demo ended' : 'Subscription cancelled'}</strong>
                 <span>
                   {isDemoExpired
-                    ? 'Choose Starter to keep creating scheduled posts from your media.'
+                    ? 'Choose Starter to keep creating posts, Smiles offers and events from your uploads.'
                     : 'Future renewals have been stopped. You can restart Starter anytime.'}
                 </span>
               </section>
@@ -697,9 +693,27 @@ export default function SubscriptionPage() {
               </div>
             </section>
 
+            <section className="subscription-simple-card subscription-smiles-focus-card">
+              <div>
+                <span>What Starter unlocks</span>
+                <h2>Smiles is built into the workflow.</h2>
+                <p>
+                  Upload an image, video or flyer. FromOne creates the social post, helps shape the Smiles offer or event, and lets you approve everything before it is sent anywhere.
+                </p>
+              </div>
+
+              <div className="subscription-smiles-focus-grid">
+                <strong>Image to posts</strong>
+                <strong>Smiles offers</strong>
+                <strong>Smiles events</strong>
+                <strong>Facebook and Instagram</strong>
+              </div>
+            </section>
+
             <section className="subscription-plan-grid">
               {plans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
+                const isCurrent = currentPlan === plan.id && !isPendingPayment && !isCancelled;
 
                 return (
                   <article
@@ -710,7 +724,8 @@ export default function SubscriptionPage() {
                   >
                     <div className="subscription-plan-head">
                       <span>{plan.name}</span>
-                      {isSelected && <em>Selected</em>}
+                      {isCurrent && <em>Current</em>}
+                      {isSelected && !isCurrent && <em>Selected</em>}
                     </div>
 
                     <div className="subscription-plan-price">
@@ -719,15 +734,17 @@ export default function SubscriptionPage() {
                     </div>
 
                     <p>{plan.valueNote}</p>
+                    <p>{plan.description}</p>
 
                     <ul>
-                      {plan.features.slice(0, 5).map((feature) => (
+                      {plan.features.map((feature) => (
                         <li key={feature}>{feature}</li>
                       ))}
                     </ul>
 
                     <button
-                      className={isSelected ? '' : 'secondary-button'}
+                      type="button"
+                      className={isSelected ? undefined : 'secondary-button'}
                       disabled={plan.disabled}
                       onClick={() => {
                         if (!plan.disabled) {
@@ -738,8 +755,8 @@ export default function SubscriptionPage() {
                       {plan.disabled
                         ? 'Demo ended'
                         : isSelected
-                          ? 'Selected'
-                          : plan.buttonText}
+                          ? plan.buttonText
+                          : `Choose ${plan.name}`}
                     </button>
                   </article>
                 );
@@ -749,17 +766,15 @@ export default function SubscriptionPage() {
             <section className="subscription-simple-card subscription-billing-card">
               <div className="subscription-billing-title">
                 <div>
-                  <span>Starter billing</span>
-                  <h2>PayPal monthly subscription</h2>
+                  <span>Starter access</span>
+                  <h2>Smiles, posts and publishing</h2>
                 </div>
 
-                <strong>£19.99/month</strong>
+                <strong>{hasPaidAccess ? 'Active' : '£19.99/month'}</strong>
               </div>
 
               <p>
-                Introductory offer for the first 50 founding customers or until
-                31 August 2026, whichever comes first. Standard price later:
-                <strong> £39.99/month</strong>.
+                Starter includes upload-to-post creation, Smiles offer and event workflows, and Facebook and Instagram publishing. Payments are handled by PayPal.
               </p>
 
               <div className="subscription-billing-grid">
@@ -794,25 +809,29 @@ export default function SubscriptionPage() {
               {hasPaidAccess && (
                 <p className="subscription-simple-success">
                   {hasRealPayPalSubscription
-                    ? 'Your subscription is active. Future payments and renewals are managed securely by PayPal.'
-                    : 'Your Starter access is active and managed manually by FromOne.'}
+                    ? 'Starter is active. You can create posts from uploads, send to Smiles, and publish to Facebook and Instagram.'
+                    : 'Starter access is active. Smiles, post creation and publishing features are available.'}
                 </p>
               )}
 
               {!hasPaidAccess && !isPendingPayment && (
                 <p className="subscription-simple-muted">
-                  Choose Starter above, then continue to PayPal to start the subscription.
+                  Choose Starter above, then continue to PayPal to unlock Smiles, posts and publishing.
                 </p>
               )}
 
               <div className="subscription-action-row">
-                <button onClick={savePlan} disabled={saving || cancelling}>
+                <button onClick={savePlan} disabled={saving || cancelling || (selectedPlan === 'starter' && (hasPaidAccess || isPendingPayment))}>
                   {saving
                     ? selectedPlan === 'starter'
                       ? 'Opening PayPal...'
                       : 'Saving...'
                     : selectedPlan === 'starter'
-                      ? 'Continue with PayPal'
+                      ? hasPaidAccess
+                        ? 'Starter active'
+                        : isPendingPayment
+                          ? 'Payment pending'
+                          : 'Continue with PayPal'
                       : 'Save Demo Plan'}
                 </button>
 
@@ -826,14 +845,6 @@ export default function SubscriptionPage() {
                     {cancelling ? 'Cancelling...' : 'Cancel pending payment'}
                   </button>
                 )}
-
-                <button
-                  className="secondary-button"
-                  onClick={() => setSelectedPlan(currentPlan)}
-                  disabled={saving || cancelling}
-                >
-                  Cancel changes
-                </button>
 
                 {canCancel && (
                   <button
@@ -851,411 +862,672 @@ export default function SubscriptionPage() {
         )}
       </main>
 
-      {confirmDialog && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="subscription-confirm-title"
-          className="subscription-dialog-backdrop"
-        >
-          <div className="premium-card subscription-dialog-card">
-            <div className="page-eyebrow">
-              {confirmDialog.danger ? 'Please confirm' : 'Confirm action'}
-            </div>
+      {confirmDialog && (() => {
+        const activeConfirmDialog = confirmDialog!;
 
-            <h2 id="subscription-confirm-title">{confirmDialog.title}</h2>
+        return (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="subscription-confirm-title"
+            className="subscription-dialog-backdrop"
+          >
+            <div className="subscription-dialog-card">
+              <div className="page-eyebrow">
+                {activeConfirmDialog.danger ? 'Please confirm' : 'Confirm action'}
+              </div>
 
-            <p>{confirmDialog.message}</p>
+              <h2 id="subscription-confirm-title">{activeConfirmDialog.title}</h2>
 
-            <div className="subscription-action-row subscription-dialog-actions">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={closeConfirmDialog}
-                disabled={cancelling || saving}
-              >
-                Keep as is
-              </button>
+              <p>{activeConfirmDialog.message}</p>
 
-              <button
-                type="button"
-                className={confirmDialog.danger ? 'secondary-button danger-button' : undefined}
-                onClick={() => {
-                  if (confirmDialog.type === 'cancelPendingPayment') {
-                    confirmCancelPendingPayment();
-                    return;
-                  }
+              <div className="subscription-action-row subscription-dialog-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={closeConfirmDialog}
+                  disabled={cancelling || saving}
+                >
+                  Keep as is
+                </button>
 
-                  if (confirmDialog.type === 'cancelSubscription') {
-                    confirmCancelSubscription();
-                  }
-                }}
-                disabled={cancelling || saving}
-              >
-                {cancelling ? 'Cancelling...' : confirmDialog.confirmLabel}
-              </button>
+                <button
+                  type="button"
+                  className={activeConfirmDialog.danger ? 'secondary-button danger-button' : undefined}
+                  onClick={() => {
+                    if (activeConfirmDialog.type === 'cancelPendingPayment') {
+                      confirmCancelPendingPayment();
+                      return;
+                    }
+
+                    if (activeConfirmDialog.type === 'cancelSubscription') {
+                      confirmCancelSubscription();
+                    }
+                  }}
+                  disabled={cancelling || saving}
+                >
+                  {cancelling ? 'Cancelling...' : activeConfirmDialog.confirmLabel}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <style jsx global>{`
-        .subscription-simple-page {
-          width: min(980px, calc(100vw - 28px));
-          margin: 0 auto 56px;
-          display: grid;
-          gap: 18px;
+        /* -------------------------------------------------------------- */
+        /* FROMONE SUBSCRIPTION — CLEAN APPROVED STANDARD                  */
+        /* Desktop: main-content 38px + shell margin-top 28px              */
+        /* Mobile: Posts/Help width + gap                                  */
+        /* -------------------------------------------------------------- */
+        body:has(.fromone-subscription-page) {
+          background: #f5f7fb !important;
+          overflow-x: hidden !important;
         }
 
-        .subscription-simple-header {
-          text-align: center;
-          max-width: 780px;
-          margin: 0 auto 8px;
+        body:has(.fromone-subscription-page)::before {
+          display: none !important;
+          content: none !important;
         }
 
-        .subscription-simple-header h1 {
-          margin: 8px 0 14px;
-          color: #f8fafc;
-          font-size: clamp(2.7rem, 6vw, 5.4rem);
-          line-height: 0.9;
-          letter-spacing: -0.08em;
-          font-weight: 1000;
+        body:has(.fromone-subscription-page) .app-shell,
+        body:has(.fromone-subscription-page) .main-content {
+          background: #f5f7fb !important;
         }
 
-        .subscription-simple-header p {
-          margin: 0 auto;
-          max-width: 680px;
-          color: rgba(191, 219, 254, 0.88);
-          font-size: clamp(1.02rem, 1.7vw, 1.2rem);
-          line-height: 1.55;
-          font-weight: 760;
+        body:has(.fromone-subscription-page) .main-content {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding-top: 38px !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
         }
 
-        .subscription-simple-card,
-        .subscription-current-strip,
-        .subscription-simple-alert,
-        .subscription-simple-notice {
-          border-radius: 28px;
-          border: 1px solid rgba(255, 212, 59, 0.18);
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 40%),
-            rgba(15, 23, 42, 0.78);
-          box-shadow: 0 24px 70px rgba(0, 0, 0, 0.26);
+        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+          width: 1040px !important;
+          max-width: calc(100% - 32px) !important;
+          min-width: 0 !important;
+          min-height: 620px !important;
+          margin: 28px auto 64px !important;
+          padding: clamp(30px, 4vw, 48px) !important;
+          display: grid !important;
+          gap: 18px !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 32px !important;
+          background: #ffffff !important;
+          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
+          color: #071b49 !important;
+          font-family:
+            var(--font-main),
+            "Plus Jakarta Sans",
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif !important;
+          backdrop-filter: none !important;
         }
 
-        .subscription-current-strip {
-          width: min(680px, 100%);
-          margin: 0 auto;
-          padding: 22px 24px;
-          display: grid;
-          gap: 14px;
-          text-align: center;
-          justify-items: center;
+        .fromone-subscription-page .subscription-simple-header {
+          width: 100% !important;
+          max-width: 760px !important;
+          margin: 0 0 8px !important;
+          padding: 0 !important;
+          text-align: left !important;
         }
 
-        .subscription-current-strip span,
-        .subscription-plan-head span,
-        .subscription-billing-title span,
-        .subscription-billing-grid span {
-          color: #ffd43b;
-          font-size: 0.72rem;
-          font-weight: 1000;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
+        .fromone-subscription-page .page-eyebrow {
+          color: #f72585 !important;
+          font-size: 0.78rem !important;
+          line-height: 1 !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.13em !important;
+          text-transform: uppercase !important;
         }
 
-        .subscription-current-strip strong {
-          display: block;
-          margin-top: 6px;
-          color: #ffffff;
-          font-size: clamp(1.8rem, 4vw, 2.7rem);
-          line-height: 1;
-          letter-spacing: -0.065em;
+        .fromone-subscription-page .subscription-simple-header h1 {
+          max-width: 760px !important;
+          margin: 12px 0 14px !important;
+          color: #071b49 !important;
+          font-size: clamp(3rem, 5.2vw, 4.45rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.055em !important;
+          font-weight: 800 !important;
+          text-align: left !important;
+          overflow: visible !important;
         }
 
-        .subscription-current-meta {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 8px;
+        .fromone-subscription-page .subscription-simple-header p,
+        .fromone-subscription-page .subscription-plan-option p,
+        .fromone-subscription-page .subscription-billing-card > p {
+          margin: 0 !important;
+          color: #52617a !important;
+          font-size: 1.02rem !important;
+          line-height: 1.5 !important;
+          font-weight: 600 !important;
         }
 
-        .subscription-current-meta span {
-          min-height: 30px;
-          display: inline-flex;
-          align-items: center;
-          padding: 0 11px;
-          border-radius: 999px;
-          color: rgba(248,250,252,0.75);
-          letter-spacing: 0;
-          text-transform: none;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.08);
+        .fromone-subscription-page .subscription-simple-card,
+        .fromone-subscription-page .subscription-current-strip,
+        .fromone-subscription-page .subscription-simple-alert,
+        .fromone-subscription-page .subscription-simple-notice {
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 24px !important;
+          background: #ffffff !important;
+          box-shadow: none !important;
+          box-sizing: border-box !important;
         }
 
-        .subscription-plan-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 16px;
+        .fromone-subscription-page .subscription-current-strip {
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 18px !important;
+          display: grid !important;
+          gap: 14px !important;
+          text-align: left !important;
+          justify-items: start !important;
+          background: #fff8fc !important;
+          border-color: #ffd2e5 !important;
         }
 
-        .subscription-plan-option {
-          padding: 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
-          min-height: 0;
+        .fromone-subscription-page .subscription-current-strip span,
+        .fromone-subscription-page .subscription-plan-head span,
+        .fromone-subscription-page .subscription-billing-title span,
+        .fromone-subscription-page .subscription-billing-grid span {
+          color: #f72585 !important;
+          font-size: 0.72rem !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.13em !important;
+          text-transform: uppercase !important;
         }
 
-        .subscription-plan-option.is-selected {
-          border-color: rgba(255, 212, 59, 0.58);
-          transform: translateY(-2px);
+        .fromone-subscription-page .subscription-current-strip strong {
+          display: block !important;
+          margin-top: 7px !important;
+          color: #071b49 !important;
+          font-size: clamp(1.6rem, 3.4vw, 2.15rem) !important;
+          line-height: 1 !important;
+          font-weight: 800 !important;
+          letter-spacing: -0.045em !important;
         }
 
-        .subscription-plan-option.is-disabled {
-          opacity: 0.58;
+        .fromone-subscription-page .subscription-current-meta {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          justify-content: flex-start !important;
+          gap: 8px !important;
         }
 
-        .subscription-plan-head {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          align-items: center;
+        .fromone-subscription-page .subscription-current-meta span {
+          min-height: 32px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          padding: 0 12px !important;
+          border: 1px solid #dfe7f2 !important;
+          border-radius: 999px !important;
+          background: #ffffff !important;
+          color: #52617a !important;
+          font-size: 0.82rem !important;
+          font-weight: 700 !important;
+          letter-spacing: 0 !important;
+          text-transform: none !important;
         }
 
-        .subscription-plan-head em {
-          min-height: 28px;
-          display: inline-flex;
-          align-items: center;
-          padding: 0 10px;
-          border-radius: 999px;
-          color: #05070d;
-          background: #ffd43b;
-          font-size: 0.75rem;
-          font-style: normal;
-          font-weight: 1000;
+        .fromone-subscription-page .subscription-plan-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 16px !important;
         }
 
-        .subscription-plan-price strong {
-          color: #ffffff;
-          font-size: clamp(2.4rem, 5vw, 4rem);
-          line-height: 0.9;
-          font-weight: 1000;
-          letter-spacing: -0.08em;
+        .fromone-subscription-page .subscription-plan-option {
+          min-height: 0 !important;
+          padding: 20px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 14px !important;
+          background: #ffffff !important;
+          border-color: #dfe7f2 !important;
         }
 
-        .subscription-plan-price span {
-          color: rgba(248,250,252,0.58);
-          font-weight: 900;
+        .fromone-subscription-page .subscription-plan-option.is-selected {
+          border-color: #f72585 !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.08) !important;
+          transform: none !important;
         }
 
-        .subscription-plan-option p {
-          margin: 0;
-          color: rgba(248,250,252,0.7);
-          line-height: 1.48;
-          font-weight: 760;
+        .fromone-subscription-page .subscription-plan-option.is-disabled {
+          opacity: 0.58 !important;
         }
 
-        .subscription-plan-option ul {
-          display: grid;
-          gap: 9px;
-          margin: 0;
-          padding: 0;
-          list-style: none;
+        .fromone-subscription-page .subscription-plan-head {
+          display: flex !important;
+          justify-content: space-between !important;
+          gap: 12px !important;
+          align-items: center !important;
         }
 
-        .subscription-plan-option li {
-          position: relative;
-          padding-left: 22px;
-          color: rgba(248,250,252,0.76);
-          line-height: 1.36;
-          font-weight: 800;
+        .fromone-subscription-page .subscription-plan-head em {
+          min-height: 28px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          padding: 0 10px !important;
+          border-radius: 999px !important;
+          color: #ffffff !important;
+          background: #f72585 !important;
+          font-size: 0.75rem !important;
+          font-style: normal !important;
+          font-weight: 800 !important;
         }
 
-        .subscription-plan-option li::before {
-          content: "✓";
-          position: absolute;
-          left: 0;
-          color: #ffd43b;
-          font-weight: 1000;
+        .fromone-subscription-page .subscription-plan-price {
+          display: grid !important;
+          gap: 5px !important;
         }
 
-        .subscription-plan-option button {
-          width: 100%;
-          margin-top: auto;
+        .fromone-subscription-page .subscription-plan-price strong {
+          display: block !important;
+          color: #071b49 !important;
+          font-size: clamp(2.1rem, 4vw, 3rem) !important;
+          line-height: 0.9 !important;
+          font-weight: 800 !important;
+          letter-spacing: -0.075em !important;
         }
 
-        .subscription-billing-card {
-          padding: 24px;
-          display: grid;
-          gap: 18px;
+        .fromone-subscription-page .subscription-plan-price span {
+          display: block !important;
+          color: #52617a !important;
+          font-size: 1rem !important;
+          line-height: 1.1 !important;
+          font-weight: 600 !important;
         }
 
-        .subscription-billing-title {
-          display: flex;
-          justify-content: space-between;
-          gap: 16px;
-          align-items: start;
+        .fromone-subscription-page .subscription-plan-option ul {
+          display: grid !important;
+          gap: 9px !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          list-style: none !important;
         }
 
-        .subscription-billing-title h2 {
-          margin: 6px 0 0;
-          color: #ffffff;
-          font-size: clamp(1.8rem, 3vw, 2.6rem);
-          line-height: 1;
-          letter-spacing: -0.065em;
-          font-weight: 1000;
+        .fromone-subscription-page .subscription-plan-option li {
+          position: relative !important;
+          padding-left: 22px !important;
+          color: #52617a !important;
+          line-height: 1.45 !important;
+          font-weight: 600 !important;
         }
 
-        .subscription-billing-title > strong {
-          color: #ffd43b;
-          font-size: clamp(1.6rem, 3vw, 2.4rem);
-          line-height: 1;
-          white-space: nowrap;
-          letter-spacing: -0.06em;
+        .fromone-subscription-page .subscription-plan-option li::before {
+          content: "✓" !important;
+          position: absolute !important;
+          left: 0 !important;
+          color: #f72585 !important;
+          font-weight: 800 !important;
         }
 
-        .subscription-billing-card > p {
-          margin: 0;
-          color: rgba(248,250,252,0.68);
-          line-height: 1.55;
-          font-weight: 760;
+        .fromone-subscription-page .subscription-plan-option button {
+          width: 100% !important;
+          margin-top: auto !important;
         }
 
-        .subscription-billing-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 10px;
+        .fromone-subscription-page .subscription-billing-card {
+          padding: clamp(18px, 3vw, 26px) !important;
+          display: grid !important;
+          gap: 14px !important;
+          background: #ffffff !important;
+          border-color: #dfe7f2 !important;
         }
 
-        .subscription-billing-grid div {
-          padding: 14px;
-          border-radius: 18px;
-          background: rgba(255,255,255,0.055);
-          border: 1px solid rgba(255,255,255,0.08);
+        .fromone-subscription-page .subscription-billing-title {
+          display: flex !important;
+          justify-content: space-between !important;
+          gap: 16px !important;
+          align-items: start !important;
         }
 
-        .subscription-billing-grid strong {
-          display: block;
-          margin-top: 6px;
-          color: rgba(248,250,252,0.76);
-          font-size: 0.95rem;
-          line-height: 1.25;
+        .fromone-subscription-page .subscription-billing-title h2 {
+          margin: 7px 0 0 !important;
+          color: #071b49 !important;
+          font-size: clamp(1.55rem, 3vw, 2.05rem) !important;
+          line-height: 1 !important;
+          letter-spacing: -0.055em !important;
+          font-weight: 800 !important;
         }
 
-        .subscription-simple-success,
-        .subscription-simple-warning,
-        .subscription-simple-muted {
-          padding: 13px 14px;
-          border-radius: 18px;
+        .fromone-subscription-page .subscription-billing-title > strong {
+          color: #f72585 !important;
+          font-size: clamp(1.25rem, 2.8vw, 1.7rem) !important;
+          line-height: 1 !important;
+          white-space: nowrap !important;
+          letter-spacing: -0.045em !important;
+          font-weight: 800 !important;
         }
 
-        .subscription-simple-success {
-          color: #ffe58a !important;
-          background: rgba(255, 212, 59, 0.08);
-          border: 1px solid rgba(255, 212, 59, 0.12);
-          font-weight: 900 !important;
+        .fromone-subscription-page .subscription-billing-grid {
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 10px !important;
         }
 
-        .subscription-simple-warning,
-        .subscription-simple-alert {
-          color: #fecaca;
-          background: rgba(248, 113, 113, 0.09);
-          border-color: rgba(248, 113, 113, 0.24);
+        .fromone-subscription-page .subscription-billing-grid div {
+          padding: 14px !important;
+          border: 1px solid #ffd2e5 !important;
+          border-radius: 18px !important;
+          background: #fff8fc !important;
         }
 
-        .subscription-simple-alert,
-        .subscription-simple-notice {
-          padding: 16px 18px;
-          display: grid;
-          gap: 4px;
-          text-align: center;
+        .fromone-subscription-page .subscription-billing-grid strong {
+          display: block !important;
+          margin-top: 7px !important;
+          color: #071b49 !important;
+          font-size: 0.95rem !important;
+          line-height: 1.25 !important;
+          font-weight: 700 !important;
         }
 
-        .subscription-simple-alert strong,
-        .subscription-simple-notice strong {
-          color: #ffffff;
-          font-size: 1.1rem;
+        .fromone-subscription-page .subscription-simple-success,
+        .fromone-subscription-page .subscription-simple-warning,
+        .fromone-subscription-page .subscription-simple-muted {
+          padding: 13px 14px !important;
+          border-radius: 18px !important;
+          line-height: 1.45 !important;
+          font-weight: 600 !important;
         }
 
-        .subscription-simple-alert span,
-        .subscription-simple-notice span {
-          color: rgba(248,250,252,0.68);
-          font-weight: 760;
+        .fromone-subscription-page .subscription-simple-success {
+          color: #071b49 !important;
+          background: #f1fff8 !important;
+          border: 1px solid rgba(61, 220, 151, 0.28) !important;
         }
 
-        .subscription-simple-muted {
-          color: rgba(248,250,252,0.62) !important;
-          background: rgba(255,255,255,0.045);
-          border: 1px solid rgba(255,255,255,0.08);
+        .fromone-subscription-page .subscription-simple-warning,
+        .fromone-subscription-page .subscription-simple-alert {
+          color: #9f1239 !important;
+          background: #fff1f2 !important;
+          border-color: #fecdd3 !important;
         }
 
-        .subscription-action-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
+        .fromone-subscription-page .subscription-simple-alert,
+        .fromone-subscription-page .subscription-simple-notice {
+          padding: 16px 18px !important;
+          display: grid !important;
+          gap: 4px !important;
+          text-align: center !important;
         }
 
-        .subscription-action-row button {
-          min-height: 52px;
+        .fromone-subscription-page .subscription-simple-alert strong,
+        .fromone-subscription-page .subscription-simple-notice strong {
+          color: #071b49 !important;
+          font-size: 1.08rem !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-subscription-page .subscription-simple-alert span,
+        .fromone-subscription-page .subscription-simple-notice span {
+          color: #52617a !important;
+          font-weight: 500 !important;
+        }
+
+        .fromone-subscription-page .subscription-simple-muted {
+          color: #52617a !important;
+          background: #f5f7fb !important;
+          border: 1px solid #dfe7f2 !important;
+        }
+
+        .fromone-subscription-page .subscription-action-row {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          gap: 10px !important;
+        }
+
+        .fromone-subscription-page .subscription-action-row button,
+        .fromone-subscription-page .subscription-plan-option button {
+          min-height: 54px !important;
+          padding: 0 22px !important;
+          border-radius: 999px !important;
+          font: inherit !important;
+          font-weight: 800 !important;
+          cursor: pointer !important;
+          transition:
+            transform 160ms ease,
+            box-shadow 160ms ease,
+            border-color 160ms ease !important;
+        }
+
+        .fromone-subscription-page .subscription-action-row button:not(.secondary-button),
+        .fromone-subscription-page .subscription-plan-option button:not(.secondary-button) {
+          border: 1px solid #f72585 !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          box-shadow: 0 16px 34px rgba(247, 37, 133, 0.22) !important;
+        }
+
+        .fromone-subscription-page .subscription-action-row .secondary-button,
+        .fromone-subscription-page .subscription-plan-option .secondary-button {
+          border: 1px solid #ffd2e5 !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+        }
+
+        .fromone-subscription-page .danger-button {
+          color: #9f1239 !important;
+          border-color: #fecdd3 !important;
+          background: #fff1f2 !important;
+          box-shadow: none !important;
         }
 
         .subscription-dialog-backdrop {
-          position: fixed;
-          inset: 0;
-          z-index: 10000;
-          display: grid;
-          place-items: center;
-          padding: 18px;
-          background: rgba(2, 6, 23, 0.72);
-          backdrop-filter: blur(14px);
+          position: fixed !important;
+          inset: 0 !important;
+          z-index: 10000 !important;
+          display: grid !important;
+          place-items: center !important;
+          padding: 18px !important;
+          background: rgba(7, 27, 73, 0.42) !important;
+          backdrop-filter: blur(10px) !important;
         }
 
         .subscription-dialog-card {
-          width: min(520px, 100%);
-          border-radius: 30px;
-          border: 1px solid rgba(255, 95, 109, 0.34);
-          box-shadow: 0 34px 110px rgba(0,0,0,0.48);
+          width: min(520px, 100%) !important;
+          padding: 26px !important;
+          border: 1px solid #ffd2e5 !important;
+          border-radius: 24px !important;
+          background: #ffffff !important;
+          box-shadow: 0 28px 80px rgba(7, 27, 73, 0.22) !important;
+          font-family:
+            var(--font-main),
+            "Plus Jakarta Sans",
+            ui-sans-serif,
+            system-ui,
+            sans-serif !important;
         }
 
         .subscription-dialog-card h2 {
-          margin: 4px 0 10px;
+          margin: 6px 0 10px !important;
+          color: #071b49 !important;
+          font-size: clamp(1.55rem, 3vw, 2rem) !important;
+          line-height: 1 !important;
+          letter-spacing: -0.045em !important;
+          font-weight: 800 !important;
         }
 
         .subscription-dialog-card p {
-          margin: 0 0 20px;
-          color: var(--muted);
-          line-height: 1.55;
+          margin: 0 0 20px !important;
+          color: #52617a !important;
+          line-height: 1.55 !important;
+          font-weight: 500 !important;
         }
 
         .subscription-dialog-actions {
-          justify-content: flex-end;
+          justify-content: flex-end !important;
         }
 
         @media (max-width: 820px) {
-          .subscription-simple-page {
-            width: min(100%, calc(100vw - 24px));
-            gap: 14px;
+          body:has(.fromone-subscription-page) .main-content {
+            padding-top: 0 !important;
           }
 
-          .subscription-plan-grid,
-          .subscription-billing-grid {
-            grid-template-columns: 1fr;
+          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+            width: calc(100% - 32px) !important;
+            max-width: 500px !important;
+            min-height: auto !important;
+            margin: 24px auto 112px !important;
+            padding: 28px 26px 26px !important;
+            border-radius: 26px !important;
+            gap: 16px !important;
           }
 
-          .subscription-billing-title {
-            display: grid;
+          .fromone-subscription-page .subscription-simple-header {
+            margin-bottom: 18px !important;
           }
 
-          .subscription-action-row {
-            display: grid;
-            grid-template-columns: 1fr;
+          .fromone-subscription-page .subscription-simple-header h1 {
+            margin: 14px 0 18px !important;
+            font-size: clamp(2.75rem, 11vw, 3.6rem) !important;
+            line-height: 0.94 !important;
+            letter-spacing: -0.058em !important;
           }
 
-          .subscription-action-row button {
-            width: 100%;
+          .fromone-subscription-page .subscription-simple-header p {
+            font-size: 1rem !important;
+            line-height: 1.45 !important;
+          }
+
+          .fromone-subscription-page .subscription-plan-grid,
+          .fromone-subscription-page .subscription-billing-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-subscription-page .subscription-billing-title {
+            display: grid !important;
+          }
+
+          .fromone-subscription-page .subscription-action-row {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-subscription-page .subscription-action-row button {
+            width: 100% !important;
           }
         }
+
+        @media (max-width: 420px) {
+          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+            width: calc(100% - 18px) !important;
+            padding: 26px 22px 24px !important;
+          }
+        }
+
+        /* -------------------------------------------------------------- */
+        /* SUBSCRIPTION MOBILE WIDTH TWEAK — desktop unchanged             */
+        /* -------------------------------------------------------------- */
+        @media (max-width: 820px) {
+          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+            width: calc(100% - 48px) !important;
+            max-width: 500px !important;
+            margin: 24px auto 112px !important;
+          }
+        }
+
+        @media (max-width: 420px) {
+          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+            width: calc(100% - 34px) !important;
+          }
+        }
+
+
+        /* -------------------------------------------------------------- */
+        /* SUBSCRIPTION MOBILE WIDTH FINAL — match Posts card width        */
+        /* Desktop unchanged                                              */
+        /* -------------------------------------------------------------- */
+        @media (max-width: 820px) {
+          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+            width: calc(100% - 72px) !important;
+            max-width: 468px !important;
+            margin: 24px auto 112px !important;
+          }
+        }
+
+        @media (max-width: 420px) {
+          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+            width: calc(100% - 48px) !important;
+            max-width: 468px !important;
+          }
+        }
+
+
+        .fromone-subscription-page .subscription-smiles-focus-card {
+          padding: clamp(18px, 3vw, 26px) !important;
+          display: grid !important;
+          gap: 16px !important;
+          background: #fff8fc !important;
+          border-color: #ffd2e5 !important;
+        }
+
+        .fromone-subscription-page .subscription-smiles-focus-card span {
+          color: #f72585 !important;
+          font-size: 0.72rem !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.13em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-subscription-page .subscription-smiles-focus-card h2 {
+          margin: 8px 0 8px !important;
+          color: #071b49 !important;
+          font-size: clamp(1.65rem, 3vw, 2.15rem) !important;
+          line-height: 1 !important;
+          letter-spacing: -0.055em !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-subscription-page .subscription-smiles-focus-card p {
+          margin: 0 !important;
+          color: #52617a !important;
+          font-size: 1.02rem !important;
+          line-height: 1.5 !important;
+          font-weight: 600 !important;
+        }
+
+        .fromone-subscription-page .subscription-smiles-focus-grid {
+          display: grid !important;
+          grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+          gap: 10px !important;
+        }
+
+        .fromone-subscription-page .subscription-smiles-focus-grid strong {
+          min-height: 44px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 10px 12px !important;
+          border: 1px solid #ffd2e5 !important;
+          border-radius: 999px !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          font-size: 0.86rem !important;
+          line-height: 1.15 !important;
+          font-weight: 800 !important;
+          text-align: center !important;
+        }
+
+        @media (max-width: 820px) {
+          .fromone-subscription-page .subscription-smiles-focus-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+
+          .fromone-subscription-page .subscription-smiles-focus-card {
+            padding: 20px !important;
+          }
+        }
+
       `}</style>
     </>
   );

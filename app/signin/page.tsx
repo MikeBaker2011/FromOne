@@ -425,354 +425,64 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="signin-page">
-      <style jsx global>{`
-        .signin-wrap-left-sales {
-          min-height: calc(100vh - 48px);
-          width: min(1040px, calc(100vw - 28px)) !important;
-          margin: 0 auto !important;
-          padding: clamp(18px, 3vw, 34px) 0 !important;
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) minmax(360px, 430px) !important;
-          gap: clamp(18px, 3vw, 34px) !important;
-          align-items: stretch !important;
-        }
-
-        .signin-left-sales-desktop {
-          height: 100%;
-          min-height: 610px;
-          display: grid;
-          grid-template-rows: auto auto auto;
-          gap: 14px;
-        }
-
-        .signin-left-sales-main {
-          padding: 24px;
-          border-radius: 30px;
-          border: 1px solid rgba(255, 212, 59, 0.18);
-          background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.16), transparent 36%),
-            linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.028));
-          box-shadow: 0 22px 70px rgba(0,0,0,0.24);
-        }
-
-        .signin-left-sales-main h1 {
-          margin: 8px 0 12px;
-          color: #ffffff;
-          font-size: clamp(2.1rem, 4vw, 4rem);
-          line-height: 0.94;
-          letter-spacing: -0.065em;
-        }
-
-        .signin-left-sales-main p {
-          max-width: 520px;
-          margin: 0;
-          color: rgba(248,250,252,0.72);
-          line-height: 1.58;
-          font-weight: 760;
-        }
-
-        .signin-left-sales-stack {
-          display: grid;
-          gap: 10px;
-        }
-
-        .signin-left-sales-stack div {
-          display: grid;
-          grid-template-columns: 42px minmax(0, 1fr);
-          column-gap: 13px;
-          row-gap: 4px;
-          align-items: start;
-          padding: 15px;
-          border-radius: 22px;
-          background: rgba(5, 10, 24, 0.42);
-          border: 1px solid rgba(255,255,255,0.09);
-          box-shadow: 0 14px 42px rgba(0,0,0,0.16);
-        }
-
-        .signin-left-sales-stack span {
-          grid-row: span 2;
-          display: inline-flex;
-          width: 38px;
-          height: 38px;
-          align-items: center;
-          justify-content: center;
-          border-radius: 14px;
-          background: rgba(255, 212, 59, 0.14);
-          color: #ffd43b;
-          font-weight: 1000;
-          font-size: 0.84rem;
-        }
-
-        .signin-left-sales-stack strong {
-          color: #ffffff;
-          line-height: 1.2;
-        }
-
-        .signin-left-sales-stack p {
-          margin: 0;
-          color: rgba(248,250,252,0.64);
-          line-height: 1.42;
-          font-size: 0.92rem;
-          font-weight: 740;
-        }
-
-        .signin-left-sales-price {
-          margin-top: auto;
-          padding: 16px 18px;
-          border-radius: 22px;
-          background:
-            radial-gradient(circle at top left, rgba(255, 212, 59, 0.13), transparent 36%),
-            rgba(255, 212, 59, 0.075);
-          border: 1px solid rgba(255, 212, 59, 0.16);
-          box-shadow: 0 14px 42px rgba(0,0,0,0.16);
-        }
-
-        .signin-left-sales-price strong {
-          display: block;
-          color: #ffffff;
-          margin-bottom: 5px;
-          line-height: 1.15;
-        }
-
-        .signin-left-sales-price span {
-          display: block;
-          color: rgba(248,250,252,0.68);
-          line-height: 1.45;
-          font-weight: 760;
-        }
-
-        .signin-login-card-right {
-          height: 100% !important;
-          min-height: 610px !important;
-          width: 100% !important;
-          max-width: 430px !important;
-          margin: 0 auto !important;
-          padding: 26px !important;
-          border-radius: 30px !important;
-          display: grid !important;
-          align-content: center !important;
-          background:
-            radial-gradient(circle at top, rgba(255, 212, 59, 0.08), transparent 30%),
-            rgba(5, 10, 24, 0.55) !important;
-          border: 1px solid rgba(255,255,255,0.11) !important;
-          box-shadow: 0 24px 80px rgba(0,0,0,0.28) !important;
-        }
-
-        .signin-wrap-left-sales .signin-logo-img {
-          margin-left: auto !important;
-          margin-right: auto !important;
-        }
-
-        .signin-wrap-left-sales .signin-card h2,
-        .signin-wrap-left-sales .signin-card-text {
-          text-align: center !important;
-        }
-
-        .signin-login-card-right label {
-          margin-top: 12px !important;
-        }
-
-        .signin-login-card-right .input {
-          min-height: 46px !important;
-        }
-
-        .signin-compact-options-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          flex-wrap: wrap;
-          margin: 10px 0 12px;
-        }
-
-        .signin-compact-options-row label {
-          margin: 0 !important;
-        }
-
-        .signin-compact-help {
-          margin: 12px 0 0;
-          text-align: center;
-          display: grid;
-          gap: 10px;
-        }
-
-        .signin-login-card-right .signin-primary-button,
-        .signin-login-card-right .signin-text-link,
-        .signin-login-card-right .signin-compact-help-panel button,
-        .signin-login-card-right .signin-switch button {
-          width: 100% !important;
-          min-height: 48px !important;
-          border-radius: 16px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          text-align: center !important;
-        }
-
-        .signin-text-link {
-          appearance: none;
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.065);
-          color: #ffe58a;
-          font-weight: 950;
-          cursor: pointer;
-          padding: 0 14px;
-          text-decoration: none;
-          box-shadow: none;
-        }
-
-        .signin-text-link:hover {
-          border-color: rgba(255, 212, 59, 0.24);
-          background: rgba(255,255,255,0.085);
-          text-decoration: none;
-        }
-
-        .signin-compact-help-panel {
-          display: grid;
-          gap: 12px;
-          margin-top: 0;
-          padding: 12px;
-          border-radius: 18px;
-          background: rgba(255,255,255,0.055);
-          border: 1px solid rgba(255, 212, 59, 0.13);
-          text-align: center;
-        }
-
-        .signin-compact-help-panel p {
-          margin: 0;
-          color: rgba(248,250,252,0.68);
-          line-height: 1.42;
-          font-size: 0.9rem;
-        }
-
-        .signin-verify-compact {
-          margin: 12px 0 0;
-        }
-
-        .signin-login-card-right .signin-primary-button {
-          margin-top: 12px !important;
-        }
-
-        .signin-switch {
-          display: grid !important;
-          gap: 10px !important;
-          margin-top: 14px !important;
-          text-align: center !important;
-        }
-
-
-
-        @media (max-width: 760px) {
-          .signin-wrap-left-sales {
-            width: min(100%, 520px) !important;
-            min-height: calc(100vh - 24px);
-            padding: 18px 12px 28px !important;
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-            align-content: start !important;
-          }
-
-          .signin-left-sales-desktop {
-            display: none !important;
-          }
-
-
-          .signin-login-card-right {
-            height: auto !important;
-            min-height: 0 !important;
-            max-width: 460px !important;
-            padding: 24px !important;
-            display: block !important;
-            background: rgba(255,255,255,0.075) !important;
-          }
-
-        }
-
-        @media (max-width: 520px) {
-          .signin-compact-options-row {
-            justify-content: center;
-            text-align: center;
-          }
-        }
-      `}</style>
-
-      <div className="signin-background-glow signin-glow-one"></div>
-      <div className="signin-background-glow signin-glow-two"></div>
-
-      <div className="signin-wrap-left-sales">
-
-        <section className="signin-left-sales-desktop" aria-label="FromOne overview">
-          <div className="signin-left-sales-main">
-            <div className="page-eyebrow">FromOne beta access</div>
-            <h1>Create better posts without the social media stress.</h1>
-            <p>
-              FromOne helps small businesses create, prepare, schedule and publish
-              ready-to-review posts from one simple workspace.
-            </p>
+    <main className="fromone-signin-page signin-page">
+      <section className="signin-card" aria-label={mode === 'signin' ? 'Sign in' : 'Create account'}>
+        <div className="signin-brand">
+          <img src="/fromone-logo.png" alt="FromOne" />
+          <div>
+            <strong>FromOne</strong>
+            <span>Upload it. Post it. Done.</span>
           </div>
+        </div>
 
-          <div className="signin-left-sales-stack">
-            <div>
-              <span>01</span>
-              <strong>Set up the business</strong>
-              <p>Add your Business Profile so posts match your services, audience and tone.</p>
-            </div>
-
-            <div>
-              <span>02</span>
-              <strong>Create posts from media</strong>
-              <p>Use photos, videos or flyers to create more relevant content.</p>
-            </div>
-
-            <div>
-              <span>03</span>
-              <strong>Review and publish</strong>
-              <p>Schedule, autopublish where supported, or post manually with control.</p>
-            </div>
-          </div>
-
-          <div className="signin-left-sales-price">
-            <strong>7-day demo included</strong>
-            <span>Then £39.99/month. FromOne Academy is built in to guide every step.</span>
-          </div>
-        </section>
-
-        <section className="signin-card signin-login-card-right">
-          <img
-            src="/fromone-logo.png"
-            alt="FromOne logo"
-            className="signin-logo-img"
-          />
-
-          <h2>{mode === 'signin' ? 'Welcome back' : 'Create account'}</h2>
-
-          <p className="signin-card-text">
+        <div className="signin-heading">
+          <p className="signin-eyebrow">{mode === 'signin' ? 'WELCOME BACK' : 'START WITH FROMONE'}</p>
+          <h1>{mode === 'signin' ? 'Sign in.' : 'Create account.'}</h1>
+          <p>
             {mode === 'signin'
-              ? 'Sign in to continue to FromOne.'
-              : 'Create your account to start your 7-day FromOne demo.'}
+              ? 'Open your workspace to create posts, review drafts and manage Smiles-ready offers.'
+              : 'Create your account to start making Facebook, Instagram and Smiles-ready posts.'}
           </p>
+        </div>
 
-          <div ref={messageRef}>
-            {authMessage && (
-              <div className="signin-auth-message">
-                {authMessage}
-              </div>
-            )}
+        <div className="signin-mode-tabs" aria-label="Choose sign in or register">
+          <button
+            type="button"
+            className={mode === 'signin' ? 'is-active' : ''}
+            onClick={() => {
+              setAuthMessage('');
+              setAuthError('');
+              setPassword('');
+              setShowPassword(false);
+              setMode('signin');
+            }}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            className={mode === 'signup' ? 'is-active' : ''}
+            onClick={() => {
+              setAuthMessage('');
+              setAuthError('');
+              setPassword('');
+              setShowPassword(false);
+              setMode('signup');
+            }}
+          >
+            Register
+          </button>
+        </div>
 
-            {authError && (
-              <div className="signin-auth-message is-error">
-                {authError}
-              </div>
-            )}
-          </div>
+        <div ref={messageRef}>
+          {authMessage && <div className="signin-message">{authMessage}</div>}
+          {authError && <div className="signin-message is-error">{authError}</div>}
+        </div>
 
-          <label htmlFor="email">
-            <strong>Email address</strong>
-          </label>
+        <label className="signin-field" htmlFor="email">
+          <span>Email address</span>
           <input
             id="email"
-            className="input"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -780,13 +490,12 @@ export default function SignInPage() {
             placeholder="you@example.com"
             autoComplete="email"
           />
+        </label>
 
-          <label htmlFor="password">
-            <strong>Password</strong>
-          </label>
+        <label className="signin-field" htmlFor="password">
+          <span>Password</span>
           <input
             id="password"
-            className="input"
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -794,123 +503,413 @@ export default function SignInPage() {
             placeholder={mode === 'signin' ? 'Enter your password' : 'Create a password'}
             autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
           />
+        </label>
 
-          <div className="signin-compact-options-row">
-            <label className="show-password-row">
+        <div className="signin-options">
+          <label>
+            <input
+              type="checkbox"
+              checked={showPassword}
+              onChange={(event) => setShowPassword(event.target.checked)}
+            />
+            <span>Show password</span>
+          </label>
+
+          {mode === 'signin' && (
+            <label>
               <input
                 type="checkbox"
-                checked={showPassword}
-                onChange={(event) => setShowPassword(event.target.checked)}
+                checked={rememberMe}
+                onChange={(event) => setRememberMe(event.target.checked)}
               />
-              <span>Show password</span>
+              <span>Remember email</span>
             </label>
-
-            {mode === 'signin' && (
-              <label className="signin-remember-label signin-remember-standalone">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(event) => setRememberMe(event.target.checked)}
-                />
-                <span>Remember email</span>
-              </label>
-            )}
-          </div>
-
-          {mode === 'signin' && (
-            <div className="signin-compact-help">
-              <button
-                type="button"
-                className="signin-text-link"
-                onClick={() => setShowResetOptions((current) => !current)}
-              >
-                Forgot password?
-              </button>
-
-              {showResetOptions && (
-                <div className="signin-compact-help-panel">
-                  <p>
-                    Enter your email above and we’ll send a fresh password reset link.
-                  </p>
-
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={handleForgotPassword}
-                    disabled={resettingPassword || loading || resendingConfirmation || resetCooldown > 0}
-                  >
-                    {resettingPassword
-                      ? 'Sending reset email...'
-                      : resetCooldown > 0
-                        ? `Reset sent · ${resetCooldown}s`
-                        : 'Send reset email'}
-                  </button>
-                </div>
-              )}
-            </div>
           )}
+        </div>
 
-          <button
-            type="button"
-            className="signin-primary-button"
-            onClick={handleAuth}
-            disabled={loading || resettingPassword || resendingConfirmation}
-          >
-            {loading
-              ? 'Please wait...'
-              : mode === 'signin'
-                ? 'Sign in'
-                : 'Create account'}
-          </button>
+        <button
+          type="button"
+          className="signin-primary"
+          onClick={handleAuth}
+          disabled={loading || resettingPassword || resendingConfirmation}
+        >
+          {loading
+            ? 'Please wait...'
+            : mode === 'signin'
+              ? 'Sign in'
+              : 'Create account'}
+        </button>
 
-          {mode === 'signin' && (
-            <div className="signin-compact-help signin-verify-compact">
-              <button
-                type="button"
-                className="signin-text-link"
-                onClick={() => setShowVerificationOptions((current) => !current)}
-              >
-                Waiting for verification email?
-              </button>
-
-              {showVerificationOptions && (
-                <div className="signin-compact-help-panel">
-                  <p>Use this if your account verification email has not arrived.</p>
-
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={handleResendConfirmation}
-                    disabled={loading || resettingPassword || resendingConfirmation}
-                  >
-                    {resendingConfirmation ? 'Sending...' : 'Resend verification email'}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="signin-switch">
-            <span>
-              {mode === 'signin' ? 'Need an account?' : 'Already have an account?'}
-            </span>
-
+        {mode === 'signin' && (
+          <div className="signin-help">
             <button
               type="button"
-              className="secondary-button"
-              onClick={() => {
-                setAuthMessage('');
-                setAuthError('');
-                setPassword('');
-                setShowPassword(false);
-                setMode(mode === 'signin' ? 'signup' : 'signin');
-              }}
+              onClick={() => setShowResetOptions((current) => !current)}
             >
-              {mode === 'signin' ? 'Create account' : 'Sign in'}
+              Forgot password?
             </button>
+
+            {showResetOptions && (
+              <div className="signin-help-panel">
+                <p>Enter your email above and FromOne will send a fresh password reset link.</p>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resettingPassword || loading || resendingConfirmation || resetCooldown > 0}
+                >
+                  {resettingPassword
+                    ? 'Sending reset email...'
+                    : resetCooldown > 0
+                      ? `Reset sent · ${resetCooldown}s`
+                      : 'Send reset email'}
+                </button>
+              </div>
+            )}
           </div>
-        </section>
-      </div>
-    </div>
+        )}
+
+        {mode === 'signin' && (
+          <div className="signin-help">
+            <button
+              type="button"
+              onClick={() => setShowVerificationOptions((current) => !current)}
+            >
+              Waiting for verification email?
+            </button>
+
+            {showVerificationOptions && (
+              <div className="signin-help-panel">
+                <p>Use this if your account verification email has not arrived.</p>
+                <button
+                  type="button"
+                  onClick={handleResendConfirmation}
+                  disabled={loading || resettingPassword || resendingConfirmation}
+                >
+                  {resendingConfirmation ? 'Sending...' : 'Resend verification email'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      <style jsx global>{`
+        body:has(.fromone-signin-page) {
+          background: #f5f7fb !important;
+          overflow-x: hidden !important;
+        }
+
+        body:has(.fromone-signin-page)::before {
+          display: none !important;
+          content: none !important;
+        }
+
+        body:has(.fromone-signin-page) .app-shell,
+        body:has(.fromone-signin-page) .main-content {
+          background: #f5f7fb !important;
+        }
+
+        body:has(.fromone-signin-page) .main-content {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
+        }
+
+        .fromone-signin-page.signin-page {
+          width: 100% !important;
+          min-height: 100vh !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 32px 16px !important;
+          background:
+            radial-gradient(circle at 15% 0%, rgba(247, 37, 133, 0.10), transparent 30rem),
+            radial-gradient(circle at 90% 10%, rgba(255, 193, 7, 0.18), transparent 28rem),
+            #f5f7fb !important;
+          color: #071b49 !important;
+          font-family:
+            var(--font-main),
+            "Plus Jakarta Sans",
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif !important;
+          box-sizing: border-box !important;
+        }
+
+        .fromone-signin-page .signin-card {
+          width: min(520px, 100%) !important;
+          margin: 0 auto !important;
+          padding: clamp(28px, 4vw, 42px) !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 32px !important;
+          background: #ffffff !important;
+          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.12) !important;
+          box-sizing: border-box !important;
+        }
+
+        .fromone-signin-page .signin-brand {
+          display: flex !important;
+          align-items: center !important;
+          gap: 12px !important;
+          margin-bottom: 28px !important;
+        }
+
+        .fromone-signin-page .signin-brand img {
+          width: 54px !important;
+          height: 54px !important;
+          object-fit: contain !important;
+          border-radius: 16px !important;
+          box-shadow: 0 14px 30px rgba(255, 193, 7, 0.24) !important;
+        }
+
+        .fromone-signin-page .signin-brand strong {
+          display: block !important;
+          color: #071b49 !important;
+          font-size: 1.35rem !important;
+          line-height: 1 !important;
+          font-weight: 900 !important;
+          letter-spacing: -0.055em !important;
+        }
+
+        .fromone-signin-page .signin-brand span {
+          display: block !important;
+          margin-top: 5px !important;
+          color: #52617a !important;
+          font-size: 0.82rem !important;
+          line-height: 1 !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-signin-page .signin-heading {
+          margin-bottom: 20px !important;
+        }
+
+        .fromone-signin-page .signin-eyebrow {
+          margin: 0 0 10px !important;
+          color: #f72585 !important;
+          font-size: 0.78rem !important;
+          line-height: 1 !important;
+          font-weight: 850 !important;
+          letter-spacing: 0.14em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-signin-page .signin-heading h1 {
+          margin: 0 !important;
+          color: #071b49 !important;
+          font-size: clamp(2.8rem, 8vw, 4.1rem) !important;
+          line-height: 0.94 !important;
+          font-weight: 850 !important;
+          letter-spacing: -0.065em !important;
+        }
+
+        .fromone-signin-page .signin-heading p:not(.signin-eyebrow) {
+          margin: 14px 0 0 !important;
+          color: #52617a !important;
+          font-size: 1rem !important;
+          line-height: 1.5 !important;
+          font-weight: 650 !important;
+        }
+
+        .fromone-signin-page .signin-mode-tabs {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 8px !important;
+          margin-bottom: 18px !important;
+          padding: 6px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 999px !important;
+          background: #f7f9fd !important;
+        }
+
+        .fromone-signin-page .signin-mode-tabs button {
+          min-height: 44px !important;
+          border: 0 !important;
+          border-radius: 999px !important;
+          background: transparent !important;
+          color: #52617a !important;
+          font: inherit !important;
+          font-weight: 850 !important;
+          cursor: pointer !important;
+        }
+
+        .fromone-signin-page .signin-mode-tabs button.is-active {
+          background: #f72585 !important;
+          color: #ffffff !important;
+          box-shadow: 0 14px 30px rgba(247, 37, 133, 0.18) !important;
+        }
+
+        .fromone-signin-page .signin-message {
+          margin: 0 0 14px !important;
+          padding: 13px 14px !important;
+          border: 1px solid #b9f2d6 !important;
+          border-radius: 18px !important;
+          background: #f0fff7 !important;
+          color: #007a4d !important;
+          line-height: 1.45 !important;
+          font-weight: 750 !important;
+        }
+
+        .fromone-signin-page .signin-message.is-error {
+          border-color: #ffc8df !important;
+          background: #fff6fa !important;
+          color: #b0004f !important;
+        }
+
+        .fromone-signin-page .signin-field {
+          display: grid !important;
+          gap: 8px !important;
+          margin-top: 14px !important;
+        }
+
+        .fromone-signin-page .signin-field span {
+          color: #071b49 !important;
+          font-size: 0.88rem !important;
+          font-weight: 850 !important;
+        }
+
+        .fromone-signin-page .signin-field input {
+          width: 100% !important;
+          min-height: 56px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 18px !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          padding: 0 16px !important;
+          font: inherit !important;
+          font-weight: 650 !important;
+          outline: none !important;
+          box-sizing: border-box !important;
+        }
+
+        .fromone-signin-page .signin-field input:focus {
+          border-color: #f72585 !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.10) !important;
+        }
+
+        .fromone-signin-page .signin-options {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          gap: 12px !important;
+          flex-wrap: wrap !important;
+          margin: 14px 0 18px !important;
+        }
+
+        .fromone-signin-page .signin-options label {
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 8px !important;
+          color: #52617a !important;
+          font-size: 0.9rem !important;
+          font-weight: 750 !important;
+        }
+
+        .fromone-signin-page .signin-options input {
+          width: 18px !important;
+          height: 18px !important;
+          accent-color: #f72585 !important;
+        }
+
+        .fromone-signin-page .signin-primary {
+          width: 100% !important;
+          min-height: 58px !important;
+          border: 0 !important;
+          border-radius: 999px !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          font: inherit !important;
+          font-size: 1rem !important;
+          font-weight: 850 !important;
+          box-shadow: 0 18px 42px rgba(247, 37, 133, 0.22) !important;
+          cursor: pointer !important;
+        }
+
+        .fromone-signin-page .signin-primary:disabled,
+        .fromone-signin-page .signin-help-panel button:disabled {
+          opacity: 0.55 !important;
+          cursor: not-allowed !important;
+          box-shadow: none !important;
+        }
+
+        .fromone-signin-page .signin-help {
+          margin-top: 14px !important;
+          text-align: center !important;
+        }
+
+        .fromone-signin-page .signin-help > button {
+          border: 0 !important;
+          background: transparent !important;
+          color: #f72585 !important;
+          font: inherit !important;
+          font-size: 0.92rem !important;
+          font-weight: 850 !important;
+          cursor: pointer !important;
+        }
+
+        .fromone-signin-page .signin-help-panel {
+          margin-top: 10px !important;
+          padding: 14px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 18px !important;
+          background: #f7f9fd !important;
+          text-align: left !important;
+        }
+
+        .fromone-signin-page .signin-help-panel p {
+          margin: 0 0 12px !important;
+          color: #52617a !important;
+          line-height: 1.45 !important;
+          font-weight: 650 !important;
+        }
+
+        .fromone-signin-page .signin-help-panel button {
+          width: 100% !important;
+          min-height: 46px !important;
+          border: 1px solid #ffc8df !important;
+          border-radius: 999px !important;
+          background: #fff6fa !important;
+          color: #f72585 !important;
+          font: inherit !important;
+          font-weight: 850 !important;
+          cursor: pointer !important;
+        }
+
+        @media (max-width: 620px) {
+          .fromone-signin-page.signin-page {
+            align-items: flex-start !important;
+            padding: 24px 14px !important;
+          }
+
+          .fromone-signin-page .signin-card {
+            padding: 26px 22px !important;
+            border-radius: 28px !important;
+          }
+
+          .fromone-signin-page .signin-brand {
+            justify-content: center !important;
+            text-align: left !important;
+          }
+
+          .fromone-signin-page .signin-heading {
+            text-align: center !important;
+          }
+
+          .fromone-signin-page .signin-heading h1 {
+            font-size: clamp(2.7rem, 14vw, 3.7rem) !important;
+          }
+
+          .fromone-signin-page .signin-options {
+            justify-content: center !important;
+          }
+        }
+      `}</style>
+    </main>
   );
 }
