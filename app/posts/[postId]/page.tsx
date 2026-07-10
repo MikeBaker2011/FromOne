@@ -1399,9 +1399,13 @@ export default function PostReviewPage() {
           ? "offers"
           : "";
 
-    const baseUrl = cleanText(process.env.NEXT_PUBLIC_STOCKPORT_SMILES_URL).replace(/\/+$/, "");
+    const baseUrl = (
+      cleanText(process.env.NEXT_PUBLIC_STOCKPORT_SMILEZ_URL) ||
+      cleanText(process.env.NEXT_PUBLIC_STOCKPORT_SMILES_URL) ||
+      "https://www.stockportsmilez.co.uk"
+    ).replace(/\/+$/, "");
     const href = slug && pathPrefix
-      ? `${baseUrl || "https://www.stockportsmiles.co.uk"}/${pathPrefix}/${slug}`
+      ? `${baseUrl}/${pathPrefix}/${slug}`
       : "";
 
     return {

@@ -96,8 +96,11 @@ function cleanText(value: unknown) {
 }
 
 function getSmilesBaseUrl() {
-  return cleanText(process.env.NEXT_PUBLIC_STOCKPORT_SMILES_URL).replace(/\/+$/, "") ||
-    "https://www.stockportsmiles.co.uk";
+  return (
+    cleanText(process.env.NEXT_PUBLIC_STOCKPORT_SMILEZ_URL) ||
+    cleanText(process.env.NEXT_PUBLIC_STOCKPORT_SMILES_URL) ||
+    "https://www.stockportsmilez.co.uk"
+  ).replace(/\/+$/, "");
 }
 
 function formatSentDate(value: string | null) {
@@ -116,7 +119,10 @@ function formatSentDate(value: string | null) {
   }).format(parsedDate);
 }
 
-function getDirectSmilesEditHref(type: "offer" | "event", id: string | null | undefined) {
+function getDirectSmilesEditHref(
+  type: "offer" | "event",
+  id: string | null | undefined
+) {
   const cleanId = cleanText(id);
   return cleanId ? `/smiles/edit/${type}/${cleanId}` : "";
 }
@@ -267,7 +273,10 @@ export default function SmilesDashboardPage() {
   }, []);
 
   return (
-    <main className="fromone-smiles-page settings-create-style-page" data-fromone-smiles-redesign="v1">
+    <main
+      className="fromone-smiles-page settings-create-style-page"
+      data-fromone-smiles-redesign="v1"
+    >
       <section id="fromone-standard-shell" className="smiles-create-style-card">
         <header className="smiles-create-hero">
           <div className="smiles-create-eyebrow">Stockport Smiles</div>
@@ -278,7 +287,10 @@ export default function SmilesDashboardPage() {
         </header>
 
         {loading ? (
-          <section className="smiles-simple-panel smiles-loading-panel" aria-label="Smiles loading">
+          <section
+            className="smiles-simple-panel smiles-loading-panel"
+            aria-label="Smiles loading"
+          >
             <div className="smiles-panel-head">
               <span className="smiles-step-badge">...</span>
               <div>
@@ -328,7 +340,10 @@ export default function SmilesDashboardPage() {
               </div>
 
               <div className="smiles-action-grid" aria-label="Smiles actions">
-                <Link href="/smiles/bookings" className="smiles-action-card is-priority">
+                <Link
+                  href="/smiles/bookings"
+                  className="smiles-action-card is-priority"
+                >
                   <span>Bookings</span>
                   <strong>{newBookings.length}</strong>
                   <h3>
@@ -336,7 +351,10 @@ export default function SmilesDashboardPage() {
                       ? "1 booking to confirm"
                       : `${newBookings.length} bookings to confirm`}
                   </h3>
-                  <p>See customer requests and confirm the bookings you can accept.</p>
+                  <p>
+                    See customer requests and confirm the bookings you can
+                    accept.
+                  </p>
                   <em>Manage bookings</em>
                 </Link>
 
@@ -356,15 +374,28 @@ export default function SmilesDashboardPage() {
                   <span>Offers & events</span>
                   <strong>{sentSmilesItems.length || "+"}</strong>
                   <h3>Send offers and events</h3>
-                  <p>Open Posts to prepare social content or send suitable offers and events to Smiles.</p>
+                  <p>
+                    Open Posts to prepare social content or send suitable offers
+                    and events to Smiles.
+                  </p>
                   <em>Review posts</em>
                 </Link>
 
-                <Link href="/smiles/booking-times" className="smiles-action-card">
+                <Link
+                  href="/smiles/booking-times"
+                  className="smiles-action-card"
+                >
                   <span>Opening & booking hours</span>
                   <strong>{openDays || 0}</strong>
-                  <h3>{openDays > 0 ? `${openDays} days open` : "Bookings are closed"}</h3>
-                  <p>These hours show on your Smiles venue page and control when customers can request bookings.</p>
+                  <h3>
+                    {openDays > 0
+                      ? `${openDays} days open`
+                      : "Bookings are closed"}
+                  </h3>
+                  <p>
+                    These hours show on your Smiles venue page and control when
+                    customers can request bookings.
+                  </p>
                   <em>Edit hours</em>
                 </Link>
               </div>
@@ -377,7 +408,9 @@ export default function SmilesDashboardPage() {
                   <h2>Smiles offers and events</h2>
                   <p>
                     {sentSmilesItems.length > 0
-                      ? `${sentSmilesItems.length} sent item${sentSmilesItems.length === 1 ? "" : "s"} with references.`
+                      ? `${sentSmilesItems.length} sent item${
+                          sentSmilesItems.length === 1 ? "" : "s"
+                        } with references.`
                       : "Nothing has been sent to Smiles yet."}
                   </p>
                   <p className="smiles-history-help">
@@ -390,7 +423,10 @@ export default function SmilesDashboardPage() {
               {sentSmilesItems.length > 0 ? (
                 <div className="smiles-history-grid">
                   {sentSmilesItems.map((item) => (
-                    <article key={`${item.type}-${item.id}`} className="smiles-history-card">
+                    <article
+                      key={`${item.type}-${item.id}`}
+                      className="smiles-history-card"
+                    >
                       <div>
                         <span>{item.type === "offer" ? "Offer" : "Event"}</span>
                         <h3>{item.title}</h3>
@@ -439,7 +475,10 @@ export default function SmilesDashboardPage() {
               ) : (
                 <div className="smiles-empty-history">
                   <h3>No offers or events sent yet</h3>
-                  <p>Create a post, choose Offer or Event, then send the live listing to Smiles.</p>
+                  <p>
+                    Create a post, choose Offer or Event, then send the live
+                    listing to Smiles.
+                  </p>
                   <Link href="/posts">Review posts</Link>
                 </div>
               )}
@@ -512,7 +551,7 @@ export default function SmilesDashboardPage() {
           border: 1px solid #dfe5f1 !important;
           border-radius: 32px !important;
           background: #ffffff !important;
-          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
+          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.1) !important;
           color: #071b49 !important;
           backdrop-filter: none !important;
         }
@@ -671,7 +710,11 @@ export default function SmilesDashboardPage() {
 
         .fromone-smiles-page .smiles-action-card.is-priority {
           border-color: #ffc2dc !important;
-          background: linear-gradient(145deg, rgba(247, 37, 133, 0.055), #ffffff) !important;
+          background: linear-gradient(
+            145deg,
+            rgba(247, 37, 133, 0.055),
+            #ffffff
+          ) !important;
         }
 
         .fromone-smiles-page .smiles-action-card strong {
