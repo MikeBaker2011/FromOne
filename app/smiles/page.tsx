@@ -37,6 +37,7 @@ type SmilesSentOffer = {
   end_date: string | null;
   is_published: boolean | null;
   reference_code: string | null;
+  fromone_post_id?: string | null;
   created_at: string | null;
 };
 
@@ -54,6 +55,7 @@ type SmilesSentEvent = {
   price_text: string | null;
   is_published: boolean | null;
   reference_code: string | null;
+  fromone_post_id?: string | null;
   created_at: string | null;
 };
 
@@ -64,6 +66,8 @@ type SmilesSentItem = {
   description: string;
   referenceCode: string;
   href: string;
+  editHref: string;
+  isExpired: boolean;
   createdAt: string | null;
   isPublished: boolean;
 };
@@ -112,6 +116,27 @@ function formatSentDate(value: string | null) {
   }).format(parsedDate);
 }
 
+function getDirectSmilesEditHref(type: "offer" | "event", id: string | null | undefined) {
+  const cleanId = cleanText(id);
+  return cleanId ? `/smiles/edit/${type}/${cleanId}` : "";
+}
+
+function isPastDatedItem(startDate?: string | null, endDate?: string | null) {
+  const relevantDate = cleanText(endDate || startDate);
+
+  if (!relevantDate) return false;
+
+  const parsedDate = new Date(`${relevantDate.slice(0, 10)}T12:00:00`);
+
+  if (Number.isNaN(parsedDate.getTime())) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  parsedDate.setHours(0, 0, 0, 0);
+
+  return parsedDate < today;
+}
+
 export default function SmilesDashboardPage() {
   const { showToast } = useToast();
 
@@ -158,6 +183,8 @@ export default function SmilesDashboardPage() {
         "Offer sent to Stockport Smiles.",
       referenceCode: cleanText(offer.reference_code),
       href: offer.slug ? `${baseUrl}/offers/${offer.slug}` : "",
+      editHref: getDirectSmilesEditHref("offer", offer.id),
+      isExpired: isPastDatedItem(offer.start_date, offer.end_date),
       createdAt: offer.created_at,
       isPublished: Boolean(offer.is_published),
     }));
@@ -173,6 +200,8 @@ export default function SmilesDashboardPage() {
         "Event sent to Stockport Smiles.",
       referenceCode: cleanText(event.reference_code),
       href: event.slug ? `${baseUrl}/events/${event.slug}` : "",
+      editHref: getDirectSmilesEditHref("event", event.id),
+      isExpired: isPastDatedItem(event.start_date, event.end_date),
       createdAt: event.created_at,
       isPublished: Boolean(event.is_published),
     }));
@@ -327,16 +356,16 @@ export default function SmilesDashboardPage() {
                   <span>Offers & events</span>
                   <strong>{sentSmilesItems.length || "+"}</strong>
                   <h3>Send offers and events</h3>
-                  <p>Review FromOne posts, then send suitable updates to Smiles.</p>
+                  <p>Open Posts to prepare social content or send suitable offers and events to Smiles.</p>
                   <em>Review posts</em>
                 </Link>
 
                 <Link href="/smiles/booking-times" className="smiles-action-card">
-                  <span>Booking times</span>
+                  <span>Opening & booking hours</span>
                   <strong>{openDays || 0}</strong>
                   <h3>{openDays > 0 ? `${openDays} days open` : "Bookings are closed"}</h3>
-                  <p>Set the days and times customers can request bookings.</p>
-                  <em>Edit times</em>
+                  <p>These hours show on your Smiles venue page and control when customers can request bookings.</p>
+                  <em>Edit hours</em>
                 </Link>
               </div>
             </section>
@@ -345,11 +374,14 @@ export default function SmilesDashboardPage() {
               <summary>
                 <span className="smiles-step-badge">02</span>
                 <div>
-                  <h2>Past offers and events</h2>
+                  <h2>Smiles offers and events</h2>
                   <p>
                     {sentSmilesItems.length > 0
                       ? `${sentSmilesItems.length} sent item${sentSmilesItems.length === 1 ? "" : "s"} with references.`
                       : "Nothing has been sent to Smiles yet."}
+                  </p>
+                  <p className="smiles-history-help">
+                    View or edit the live Smiles listings for your venue.
                   </p>
                 </div>
                 <strong>Open</strong>
@@ -368,21 +400,46 @@ export default function SmilesDashboardPage() {
                       <div className="smiles-history-meta">
                         <strong>{item.referenceCode || "Reference pending"}</strong>
                         <small>{formatSentDate(item.createdAt)}</small>
-                        <small>{item.isPublished ? "Live" : "Waiting approval"}</small>
+                        <small>
+                          {item.isExpired
+                            ? "Expired"
+                            : item.isPublished
+                              ? "Live"
+                              : "Waiting approval"}
+                        </small>
                       </div>
 
-                      {item.href ? (
-                        <a href={item.href} target="_blank" rel="noreferrer">
-                          View
-                        </a>
-                      ) : null}
+                      <div className="smiles-history-actions">
+                        {item.href && item.isPublished && !item.isExpired ? (
+                          <a href={item.href} target="_blank" rel="noreferrer">
+                            View live page
+                          </a>
+                        ) : (
+                          <button type="button" disabled>
+                            {item.isExpired ? "Expired" : "Not live"}
+                          </button>
+                        )}
+
+                        {item.editHref ? (
+                          <Link
+                            href={item.editHref}
+                            title="Edit this live Stockport Smiles listing directly."
+                          >
+                            Edit live listing
+                          </Link>
+                        ) : (
+                          <button type="button" disabled>
+                            Edit unavailable
+                          </button>
+                        )}
+                      </div>
                     </article>
                   ))}
                 </div>
               ) : (
                 <div className="smiles-empty-history">
                   <h3>No offers or events sent yet</h3>
-                  <p>Create a post, choose Offer or Event, then send it to Smiles.</p>
+                  <p>Create a post, choose Offer or Event, then send the live listing to Smiles.</p>
                   <Link href="/posts">Review posts</Link>
                 </div>
               )}
@@ -744,6 +801,56 @@ export default function SmilesDashboardPage() {
         .fromone-smiles-page .smiles-history-meta strong {
           border-color: #ffd2e5 !important;
           background: #fff8fc !important;
+        }
+
+        .fromone-smiles-page .smiles-history-help {
+          margin-top: 6px !important;
+          color: #52617a !important;
+          font-size: 0.95rem !important;
+          font-weight: 700 !important;
+        }
+
+        .fromone-smiles-page .smiles-history-actions {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 10px !important;
+          margin-top: 4px !important;
+        }
+
+        .fromone-smiles-page .smiles-history-actions a,
+        .fromone-smiles-page .smiles-history-actions button {
+          min-height: 48px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 16px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 999px !important;
+          font: inherit !important;
+          font-weight: 950 !important;
+          font-size: 0.95rem !important;
+          line-height: 1 !important;
+          text-decoration: none !important;
+        }
+
+        .fromone-smiles-page .smiles-history-actions a:first-child {
+          background: #f72585 !important;
+          border-color: #f72585 !important;
+          color: #ffffff !important;
+        }
+
+        .fromone-smiles-page .smiles-history-actions a:last-child {
+          background: #ffffff !important;
+          border-color: #dfe5f1 !important;
+          color: #071b49 !important;
+          box-shadow: none !important;
+        }
+
+        .fromone-smiles-page .smiles-history-actions button:disabled {
+          background: #f8fafc !important;
+          color: #7d8ca3 !important;
+          cursor: not-allowed !important;
+          opacity: 1 !important;
         }
 
         @media (max-width: 760px) {

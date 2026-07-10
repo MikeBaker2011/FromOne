@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '@/app/components/ToastProvider';
 import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 
@@ -56,6 +56,10 @@ const toneOptions = [
   'Local and trustworthy',
 ];
 
+const businessImageBucket = 'campaign-assets';
+const maxBusinessImageSize = 5 * 1024 * 1024;
+const allowedBusinessImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
 export default function SettingsPage() {
   const { showToast } = useToast();
 
@@ -97,6 +101,7 @@ export default function SettingsPage() {
   const [industry, setIndustry] = useState('');
   const [location, setLocation] = useState('');
   const [address, setAddress] = useState('');
+  const [postcode, setPostcode] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [services, setServices] = useState('');
@@ -115,6 +120,7 @@ export default function SettingsPage() {
   const [brandSummary, setBrandSummary] = useState('');
   const [smilesListingStatus, setSmilesListingStatus] = useState('');
   const [smilesListingSubmissionId, setSmilesListingSubmissionId] = useState('');
+  const [smilesListingVenueId, setSmilesListingVenueId] = useState('');
 
   const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
@@ -137,6 +143,7 @@ export default function SettingsPage() {
   const [scanMessage, setScanMessage] = useState('');
   const [sendingSmilesListing, setSendingSmilesListing] = useState(false);
   const [smilesListingSent, setSmilesListingSent] = useState(false);
+  const [uploadingBusinessImage, setUploadingBusinessImage] = useState(false);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     type: 'disconnectMeta' | 'deleteProfile';
@@ -150,6 +157,7 @@ export default function SettingsPage() {
   const profileEditorRef = useRef<HTMLElement | null>(null);
   const socialConnectionsRef = useRef<HTMLElement | null>(null);
   const createPostsRef = useRef<HTMLElement | null>(null);
+  const businessImageInputRef = useRef<HTMLInputElement | null>(null);
 
   const openProfileEditor = () => {
     setShowBusinessDetails(true);
@@ -265,7 +273,7 @@ export default function SettingsPage() {
       smilesListingStatus === 'published' ||
       smilesListingStatus === 'live'
     ) {
-      return 'Live on Stockport Smiles';
+      return 'Live on Smiles';
     }
 
     if (smilesListingStatus === 'approved_not_live') {
@@ -440,11 +448,137 @@ export default function SettingsPage() {
     return `https://${trimmed}`;
   };
 
+  const normalisePostcode = (value: string) => {
+    return value.replace(/\s+/g, ' ').trim().toUpperCase();
+  };
+
+  const getPostcodePrefix = (value: string) => {
+    const cleanPostcode = normalisePostcode(value).replace(/\s+/g, '');
+
+    if (!cleanPostcode) {
+      return '';
+    }
+
+    const outwardCode = cleanPostcode.match(/^[A-Z]{1,2}\d[A-Z\d]?/);
+
+    return outwardCode?.[0] || '';
+  };
+
+  const isValidPostcodePrefix = (value: string) => {
+    if (!value.trim()) {
+      return true;
+    }
+
+    return /^[A-Z]{1,2}\d[A-Z\d]?$/.test(getPostcodePrefix(value));
+  };
+
   const splitList = (value: string) => {
     return value
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
+  };
+
+  const getSafeStorageSegment = (value: string) => {
+    return value
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
+  const getBusinessImageExtension = (file: File) => {
+    const extension = file.name.split('.').pop()?.toLowerCase() || '';
+
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(extension)) {
+      return extension;
+    }
+
+    if (file.type === 'image/png') return 'png';
+    if (file.type === 'image/webp') return 'webp';
+    if (file.type === 'image/gif') return 'gif';
+
+    return 'jpg';
+  };
+
+  const handleBusinessImageUpload = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (!allowedBusinessImageTypes.includes(file.type)) {
+      notify('Upload a JPG, PNG, WEBP or GIF image.', 'warning', 'Image type needed');
+      return;
+    }
+
+    if (file.size > maxBusinessImageSize) {
+      notify('Upload an image under 5MB.', 'warning', 'Image too large');
+      return;
+    }
+
+    setUploadingBusinessImage(true);
+
+    try {
+      const freshUserId = await getFreshAuthUserId();
+
+      if (!freshUserId) {
+        throw new Error('Please sign in again before uploading an image.');
+      }
+
+      const safeUserId = getSafeStorageSegment(freshUserId);
+      const extension = getBusinessImageExtension(file);
+      const filePath = `business-profiles/${safeUserId}/${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 10)}.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(businessImageBucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from(businessImageBucket)
+        .getPublicUrl(filePath);
+
+      const publicUrl = data.publicUrl;
+
+      if (!publicUrl) {
+        throw new Error('The image uploaded, but no public URL was returned.');
+      }
+
+      setBrandLogoUrl(publicUrl);
+      notify(
+        'Image uploaded. Save the Business Profile to sync it to Smiles.',
+        'success',
+        'Image ready'
+      );
+    } catch (error: any) {
+      console.error('Business image upload error:', error?.message || error);
+      notify(error?.message || 'Could not upload this image.', 'error', 'Upload failed');
+    } finally {
+      setUploadingBusinessImage(false);
+    }
+  };
+
+  const removeBusinessImage = () => {
+    setBrandLogoUrl('');
+    notify(
+      'Image removed from the profile. Save the Business Profile to sync this to Smiles.',
+      'info',
+      'Image removed'
+    );
   };
 
   const joinList = (value: any) => {
@@ -843,6 +977,7 @@ export default function SettingsPage() {
       setIndustry(data.industry || '');
       setLocation(data.location || '');
       setAddress(data.address || '');
+      setPostcode(data.postcode || '');
       setPhone(data.phone || '');
       setEmail(data.email || '');
       setServices(joinList(data.services));
@@ -860,6 +995,7 @@ export default function SettingsPage() {
       setBrandSummary(data.brand_summary || '');
       setSmilesListingStatus(data.smiles_listing_status || '');
       setSmilesListingSubmissionId(data.smiles_listing_submission_id || '');
+      setSmilesListingVenueId(data.smiles_listing_venue_id || '');
 
       if (
         data.id &&
@@ -883,6 +1019,8 @@ export default function SettingsPage() {
 
   const buildPayload = async () => {
     const authUserId = await getFreshAuthUserId();
+    const cleanPostcode = normalisePostcode(postcode);
+    const postcodePrefix = getPostcodePrefix(cleanPostcode);
 
     return {
       user_id: authUserId,
@@ -891,6 +1029,8 @@ export default function SettingsPage() {
       industry: industry.trim() || null,
       location: location.trim() || null,
       address: address.trim() || null,
+      postcode: cleanPostcode || null,
+      postcode_prefix: postcodePrefix || null,
       phone: phone.trim() || null,
       email: email.trim() || null,
       services: splitList(services),
@@ -959,12 +1099,46 @@ export default function SettingsPage() {
       return;
     }
 
+    if (postcode.trim() && !isValidPostcodePrefix(postcode)) {
+      notify('Postcode must start with a valid UK postcode area, like SK1.', 'warning', 'Postcode needed');
+      return;
+    }
+
     setSaving(true);
 
     try {
       const savedProfileId = await saveProfile();
 
-      if (smilesListingStatus !== 'sent' && !smilesListingSubmissionId) {
+      const { data: latestProfile } = await supabase
+        .from('business_profiles')
+        .select(
+          'smiles_listing_status, smiles_listing_submission_id, smiles_listing_venue_id'
+        )
+        .eq('id', savedProfileId)
+        .maybeSingle();
+
+      const latestSmilesStatus = String(
+        latestProfile?.smiles_listing_status || smilesListingStatus || ''
+      ).trim();
+
+      const latestSubmissionId = String(
+        latestProfile?.smiles_listing_submission_id || smilesListingSubmissionId || ''
+      ).trim();
+
+      const latestVenueId = String(
+        latestProfile?.smiles_listing_venue_id || smilesListingVenueId || ''
+      ).trim();
+
+      const isLiveOnSmiles =
+        latestSmilesStatus === 'live' ||
+        latestSmilesStatus === 'published' ||
+        Boolean(latestVenueId);
+
+      const shouldSendOrSyncSmiles =
+        isLiveOnSmiles ||
+        (!latestSubmissionId && latestSmilesStatus !== 'sent');
+
+      if (shouldSendOrSyncSmiles) {
         await sendBusinessListingToSmiles(savedProfileId);
       }
 
@@ -1021,6 +1195,8 @@ export default function SettingsPage() {
         body: JSON.stringify({
           draftType: 'venue',
           businessProfileId: savedProfileId,
+          smilesVenueId: smilesListingVenueId || undefined,
+          smiles_venue_id: smilesListingVenueId || undefined,
           userId: freshUserId,
           user_id: freshUserId,
           title: businessName.trim(),
@@ -1030,6 +1206,9 @@ export default function SettingsPage() {
           locationName: businessName.trim(),
           locationArea: location.trim(),
           address: address.trim(),
+          postcode: normalisePostcode(postcode),
+          postcodePrefix: getPostcodePrefix(postcode),
+          postcode_prefix: getPostcodePrefix(postcode),
           phone: phone.trim(),
           email: email.trim(),
           venueType: industry.trim(),
@@ -1050,9 +1229,20 @@ export default function SettingsPage() {
         );
       }
 
+      const nextSmilesStatus =
+        result?.status ||
+        (result?.isPublished || result?.directSync ? 'live' : 'pending_review');
+
+      const nextSubmissionId =
+        result?.smilesDraftId || smilesListingSubmissionId || null;
+
+      const nextVenueId =
+        result?.smilesVenueId || smilesListingVenueId || null;
+
       const updates = {
-        smiles_listing_status: 'pending_review',
-        smiles_listing_submission_id: result?.smilesDraftId || null,
+        smiles_listing_status: nextSmilesStatus,
+        smiles_listing_submission_id: nextSubmissionId,
+        smiles_listing_venue_id: nextVenueId,
         smiles_listing_sent_at: new Date().toISOString(),
         smiles_listing_error: null,
         updated_at: new Date().toISOString(),
@@ -1065,13 +1255,16 @@ export default function SettingsPage() {
 
       if (updateError) throw updateError;
 
-      setSmilesListingStatus('pending_review');
-      setSmilesListingSubmissionId(result?.smilesDraftId || '');
+      setSmilesListingStatus(nextSmilesStatus);
+      setSmilesListingSubmissionId(nextSubmissionId || '');
+      setSmilesListingVenueId(nextVenueId || '');
       setSmilesListingSent(true);
       notify(
-        'Business listing sent to Stockport Smiles. It is waiting for admin approval before customers can see it.',
+        result?.directSync
+          ? 'Live Smiles listing updated.'
+          : 'Business listing sent to Smiles. It is waiting for admin approval before customers can see it.',
         'success',
-        'Waiting for Smiles admin',
+        result?.directSync ? 'Smiles listing updated' : 'Waiting for Smiles admin',
       );
       await loadBusinessProfile();
     } catch (error: any) {
@@ -1128,6 +1321,7 @@ export default function SettingsPage() {
     setIndustry('');
     setLocation('');
     setAddress('');
+    setPostcode('');
     setPhone('');
     setEmail('');
     setServices('');
@@ -1327,12 +1521,33 @@ export default function SettingsPage() {
             </label>
 
             <label>
+              <strong>Postcode</strong>
+              <input
+                className="settings-simple-input"
+                value={postcode}
+                onChange={(event) => setPostcode(event.target.value.toUpperCase())}
+                placeholder="Example: SK1 1AA"
+              />
+            </label>
+
+            <label>
               <strong>Phone</strong>
               <input
                 className="settings-simple-input"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
                 placeholder="Phone number"
+              />
+            </label>
+
+            <label>
+              <strong>Email</strong>
+              <input
+                className="settings-simple-input"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="hello@example.com"
               />
             </label>
 
@@ -1345,6 +1560,99 @@ export default function SettingsPage() {
                 placeholder="https://example.com"
               />
             </label>
+
+            <div className="settings-business-image-field settings-wide-field">
+              <div className="settings-business-image-copy">
+                <strong>Profile image</strong>
+                <span>
+                  This appears on Smiles as the venue image after you save the
+                  Business Profile.
+                </span>
+              </div>
+
+              <div className="settings-business-image-card">
+                {brandLogoUrl.trim() ? (
+                  <img src={brandLogoUrl.trim()} alt={`${businessName || 'Business'} profile`} />
+                ) : (
+                  <div className="settings-business-image-empty">
+                    <span>No image yet</span>
+                    <small>Upload a clear venue, logo or brand image.</small>
+                  </div>
+                )}
+              </div>
+
+              <div className="settings-business-image-actions">
+                <button
+                  type="button"
+                  className="settings-image-utility-button"
+                  style={{
+                    width: 140,
+                    minWidth: 140,
+                    maxWidth: 140,
+                    height: 38,
+                    minHeight: 38,
+                    padding: '0 14px',
+                    borderRadius: 12,
+                    boxSizing: 'border-box',
+                    display: 'inline-flex',
+                    position: 'relative',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.78rem',
+                    fontWeight: 900,
+                    lineHeight: 1,
+                    boxShadow: 'none',
+                    border: '1px solid #f72585',
+                    background: '#f72585',
+                    color: '#ffffff',
+                  }}
+                  onClick={() => businessImageInputRef.current?.click()}
+                  disabled={uploadingBusinessImage || saving}
+                >
+                  {uploadingBusinessImage ? 'Uploading...' : brandLogoUrl.trim() ? 'Change image' : 'Upload image'}
+                </button>
+                <input
+                  ref={businessImageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleBusinessImageUpload}
+                  disabled={uploadingBusinessImage || saving}
+                  style={{ display: 'none' }}
+                />
+
+                {brandLogoUrl.trim() ? (
+                  <button
+                    type="button"
+                    className="settings-image-utility-button"
+                    style={{
+                      width: 140,
+                      minWidth: 140,
+                      maxWidth: 140,
+                      height: 38,
+                      minHeight: 38,
+                      padding: '0 14px',
+                      borderRadius: 12,
+                      boxSizing: 'border-box',
+                      display: 'inline-flex',
+                      position: 'relative',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.78rem',
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      boxShadow: 'none',
+                      border: '1px solid #ffd0e4',
+                      background: '#fff7fb',
+                      color: '#f72585',
+                    }}
+                    onClick={removeBusinessImage}
+                    disabled={uploadingBusinessImage || saving}
+                  >
+                    Remove image
+                  </button>
+                ) : null}
+              </div>
+            </div>
 
             <label className="settings-wide-field">
               <strong>What do they offer?</strong>
@@ -1448,13 +1756,13 @@ export default function SettingsPage() {
           </div>
 
           <p className="settings-simple-note">
-            Nothing is published from Settings. Publishing happens from the post review page.
+            Settings updates your business profile and Smiles venue details. Social publishing happens from the post review page.
           </p>
         </section>
 
         <section className="settings-smiles-strip">
           <div>
-            <span className="settings-create-eyebrow">Stockport Smiles</span>
+            <span className="settings-create-eyebrow">Smiles</span>
             <h2>Smiles is automatic.</h2>
             <p>
               FromOne creates the Smiles offer or event from the review page. The client only answers the small offer/event questions.
@@ -1740,6 +2048,129 @@ export default function SettingsPage() {
           box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.11) !important;
         }
 
+        .fromone-settings-page .settings-business-image-field {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) 180px !important;
+          gap: 14px !important;
+          align-items: center !important;
+          padding: 14px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 20px !important;
+          background: #ffffff !important;
+        }
+
+        .fromone-settings-page .settings-business-image-copy {
+          display: grid !important;
+          gap: 6px !important;
+        }
+
+        .fromone-settings-page .settings-business-image-copy strong {
+          color: #071b49 !important;
+          font-size: 0.92rem !important;
+          font-weight: 900 !important;
+        }
+
+        .fromone-settings-page .settings-business-image-copy span {
+          max-width: 560px !important;
+          color: #52617a !important;
+          font-size: 0.9rem !important;
+          font-weight: 650 !important;
+          line-height: 1.45 !important;
+        }
+
+        .fromone-settings-page .settings-business-image-card {
+          width: 180px !important;
+          aspect-ratio: 16 / 10 !important;
+          overflow: hidden !important;
+          border: 1px solid #d7e0ee !important;
+          border-radius: 18px !important;
+          background: #f7f9fd !important;
+        }
+
+        .fromone-settings-page .settings-business-image-card img {
+          width: 100% !important;
+          height: 100% !important;
+          display: block !important;
+          object-fit: cover !important;
+        }
+
+        .fromone-settings-page .settings-business-image-empty {
+          width: 100% !important;
+          height: 100% !important;
+          display: grid !important;
+          place-content: center !important;
+          gap: 4px !important;
+          padding: 12px !important;
+          text-align: center !important;
+          color: #52617a !important;
+        }
+
+        .fromone-settings-page .settings-business-image-empty span {
+          color: #071b49 !important;
+          font-size: 0.9rem !important;
+          font-weight: 900 !important;
+        }
+
+        .fromone-settings-page .settings-business-image-empty small {
+          color: #66738b !important;
+          font-size: 0.78rem !important;
+          font-weight: 650 !important;
+          line-height: 1.25 !important;
+        }
+
+        .fromone-settings-page .settings-business-image-actions {
+          grid-column: 1 / -1 !important;
+          display: grid !important;
+          grid-template-columns: repeat(2, 152px) !important;
+          gap: 10px !important;
+          justify-content: start !important;
+          align-items: stretch !important;
+        }
+
+        .fromone-settings-page .settings-upload-action,
+        .fromone-settings-page .settings-light-action {
+          width: 100% !important;
+          min-height: 42px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          border-radius: 999px !important;
+          padding: 0 16px !important;
+          font: inherit !important;
+          font-size: 0.84rem !important;
+          font-weight: 900 !important;
+          cursor: pointer !important;
+          white-space: nowrap !important;
+          box-sizing: border-box !important;
+        }
+
+        .fromone-settings-page .settings-upload-action {
+          position: relative !important;
+          overflow: hidden !important;
+          border: 1px solid #f72585 !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+        }
+
+        .fromone-settings-page .settings-upload-action input {
+          position: absolute !important;
+          inset: 0 !important;
+          opacity: 0 !important;
+          cursor: pointer !important;
+        }
+
+        .fromone-settings-page .settings-light-action {
+          border: 1px solid #ffd0e4 !important;
+          background: #fff7fb !important;
+          color: #f72585 !important;
+        }
+
+        .fromone-settings-page .settings-upload-action:has(input:disabled),
+        .fromone-settings-page .settings-light-action:disabled {
+          cursor: not-allowed !important;
+          opacity: 0.65 !important;
+        }
+
         .fromone-settings-page .settings-primary-action,
         .fromone-settings-page .settings-secondary-action {
           min-height: 54px !important;
@@ -1918,6 +2349,18 @@ export default function SettingsPage() {
           .fromone-settings-page .settings-create-style-card p {
             font-size: 1rem !important;
             line-height: 1.45 !important;
+          }
+
+          .fromone-settings-page .settings-business-image-field {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-settings-page .settings-business-image-card {
+            width: 100% !important;
+          }
+
+          .fromone-settings-page .settings-business-image-actions {
+            grid-template-columns: 1fr !important;
           }
 
           .fromone-settings-page .settings-simple-panel,
@@ -2417,6 +2860,19 @@ export default function SettingsPage() {
                           </label>
 
                           <label>
+                            <strong>Postcode</strong>
+                            <span>Used by Stockport Smilez for postcode search and local filtering.</span>
+                            <input
+                              className="input settings-mobile-editable-input"
+                              value={postcode}
+                              onChange={(event) => setPostcode(event.target.value.toUpperCase())}
+                              autoComplete="postal-code"
+                              inputMode="text"
+                              placeholder="Example: SK1 1AA"
+                            />
+                          </label>
+
+                          <label>
                             <strong>Telephone</strong>
                             <span>Customer phone number.</span>
                             <input
@@ -2600,9 +3056,9 @@ export default function SettingsPage() {
                         }}
                       >
                         When you save, FromOne automatically sends your company
-                        name, address, telephone and website to Stockport Smiles
-                        for approval. Smiles admin checks it, then makes it live
-                        on the public Venues page.
+                        name, address, telephone and website to Smiles for
+                        approval. Smiles admin checks it, then makes it live on
+                        the public Venues page.
                       </span>
                     </div>
 
@@ -7435,6 +7891,64 @@ export default function SettingsPage() {
             min-height: 46px !important;
             height: 46px !important;
             margin-top: 0 !important;
+          }
+        }
+
+        /* Final override: keep profile image actions as compact utility buttons. */
+        .fromone-settings-page .settings-business-image-actions {
+          grid-column: 1 / -1 !important;
+          display: flex !important;
+          flex-wrap: wrap !important;
+          gap: 8px !important;
+          justify-content: flex-start !important;
+          align-items: center !important;
+        }
+
+        .fromone-settings-page .settings-business-image-actions .settings-image-utility-button {
+          width: 140px !important;
+          min-width: 140px !important;
+          max-width: 140px !important;
+          flex: 0 0 140px !important;
+          min-height: 38px !important;
+          height: 38px !important;
+          padding: 0 14px !important;
+          margin: 0 !important;
+          position: relative !important;
+          top: auto !important;
+          transform: none !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          vertical-align: top !important;
+          border-radius: 12px !important;
+          font-size: 0.78rem !important;
+          font-weight: 900 !important;
+          line-height: 1 !important;
+          box-shadow: none !important;
+          text-align: center !important;
+        }
+
+        .fromone-settings-page .settings-business-image-actions .settings-image-utility-button:first-child {
+          border-color: #f72585 !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+        }
+
+        .fromone-settings-page .settings-business-image-actions .settings-image-utility-button:last-child {
+          border-color: #ffd0e4 !important;
+          background: #fff7fb !important;
+          color: #f72585 !important;
+        }
+
+        @media (max-width: 760px) {
+          .fromone-settings-page .settings-business-image-actions {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-settings-page .settings-business-image-actions .settings-image-utility-button {
+            width: 100% !important;
+            max-width: none !important;
           }
         }
 

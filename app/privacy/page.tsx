@@ -15,7 +15,7 @@ const privacySections = [
   {
     title: '1. Who we are',
     body: [
-      'FromOne is a social media content workflow platform for small businesses. It helps users create weekly social media posts from a Business Profile, uploaded media, website information, and user-provided business details.',
+      'FromOne is a social media content workflow platform for small businesses. It helps users create social media posts, and where relevant Smiles offers and events, from a Business Profile, uploaded media, website information, and user-provided business details.',
       'For privacy questions, contact us at info@fromone.co.uk.',
     ],
   },
@@ -25,18 +25,18 @@ const privacySections = [
       'We may collect and store account information, such as your email address and user ID.',
       'We may collect business profile information, such as business name, website URL, industry, location, services, audience, tone of voice, offers, brand colours, and logo URL.',
       'We may store uploaded media, including photos, videos, flyers, offer graphics, menus, product images, event clips, or other files you add to create posts.',
-      'We may store generated content, including captions, hashtags, CTAs, image ideas, campaign plans, scheduled post times, post status, and publishing history.',
+      'We may store generated content, including captions, hashtags, CTAs, image ideas, campaign plans, Smiles offer or event details, post status, and publishing history.',
       'We may store social publishing connection details, such as connected Meta, Facebook Page, or Instagram Business account references needed to publish posts.',
-      'We may store support requests, feedback, reviews, billing status, subscription references, upload usage, saved weekly sets, media rescans, and product activity needed to operate the service.',
+      'We may store support requests, feedback, reviews, billing status, subscription references, upload usage, saved content, media rescans, and product activity needed to operate the service.',
     ],
   },
   {
     title: '3. How we use your information',
     body: [
       'We use your information to create and manage your FromOne account.',
-      'We use your Business Profile and uploaded media to generate weekly social media posts.',
-      'We save weekly sets, posts, uploaded media, scheduled times, and publishing progress.',
-      'We publish or schedule Facebook and Instagram posts when you connect those accounts and choose to use publishing features.',
+      'We use your Business Profile and uploaded media to generate social media posts and suitable Smiles offers or events.',
+      'We save posts, uploaded media, Smiles listing details, and publishing progress.',
+      'We publish Facebook and Instagram posts when you connect those accounts and choose to use publishing features.',
       'We use information to provide support, manage trials or subscriptions, improve FromOne, and keep the service secure.',
     ],
   },
@@ -44,7 +44,7 @@ const privacySections = [
     title: '4. Website scans and uploaded media',
     body: [
       'If you enter a website URL, FromOne may scan publicly available content from that website to understand the business, services, audience, tone, offers, and brand details.',
-      'If you upload photos, videos, flyers, or other files, FromOne may use that media to create, rewrite, improve, schedule, or publish social media posts for the connected business.',
+      'If you upload photos, videos, flyers, or other files, FromOne may use that media to create, rewrite, improve, or publish social media posts for the connected business, and to prepare suitable Smiles offers or events.',
     ],
   },
   {
@@ -64,7 +64,7 @@ const privacySections = [
     title: '7. Who we share data with',
     body: [
       'We only share data with service providers needed to operate FromOne. This may include Supabase for authentication, database storage and file storage.',
-      'It may also include AI/content generation providers used to create, improve, or rewrite posts; Meta, Facebook and Instagram when you connect accounts and publish posts; payment providers once subscription billing is connected; and hosting, analytics, security or support tools if added to the service.',
+      'It may also include AI/content generation providers used to create, improve, or rewrite posts, offers or events; Meta, Facebook and Instagram when you connect accounts and publish posts; payment providers once subscription billing is connected; and hosting, analytics, security or support tools if added to the service.',
       'We do not sell your personal data.',
     ],
   },
@@ -206,7 +206,7 @@ export default function PrivacyPage() {
             }}
           >
             This policy explains how FromOne collects, uses, stores, and protects personal data
-            when you use the app to create, schedule and publish social media content.
+            when you use the app to create posts, publish social media content, and prepare suitable Smiles offers or events.
           </p>
 
           <div
@@ -217,8 +217,8 @@ export default function PrivacyPage() {
               marginTop: 28,
             }}
           >
-            <span className="status-pill">Last updated: 13 May 2026</span>
-            <span className="status-pill">Uploads, posts and publishing</span>
+            <span className="status-pill">Last updated: 5 July 2026</span>
+            <span className="status-pill">Uploads, posts, offers and events</span>
             <span className="status-pill">Meta / Facebook / Instagram</span>
           </div>
         </section>
@@ -253,8 +253,8 @@ export default function PrivacyPage() {
             }}
           >
             FromOne uses your account details, Business Profile, uploaded media and connected
-            publishing information to provide the app, create posts, save your weekly content,
-            and publish to connected channels when you choose to use those features.
+            publishing information to provide the app, create posts, prepare suitable Smiles
+            offers or events, and publish to connected channels when you choose to use those features.
           </p>
         </section>
 

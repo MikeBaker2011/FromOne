@@ -120,18 +120,18 @@ export default function SmilesBookingTimesPage() {
       const result = (await response.json()) as SmilesResponse;
 
       if (!response.ok || result.success === false) {
-        throw new Error(result.message || "Could not load booking times.");
+        throw new Error(result.message || "Could not load opening and booking hours.");
       }
 
       setMessage(result.message || "");
       setProfile(result.profile || null);
       setBookingHours(normaliseHours(result.bookingHours || []));
     } catch (error: any) {
-      const errorMessage = error?.message || "Could not load booking times.";
+      const errorMessage = error?.message || "Could not load opening and booking hours.";
       setMessage(errorMessage);
       showToast({
         type: "error",
-        title: "Booking times unavailable",
+        title: "Hours unavailable",
         message: errorMessage,
       });
     } finally {
@@ -216,15 +216,15 @@ export default function SmilesBookingTimesPage() {
       const result = await response.json();
 
       if (!response.ok || result.success === false) {
-        throw new Error(result.message || "Could not save booking times.");
+        throw new Error(result.message || "Could not save opening and booking hours.");
       }
 
       showToast({
         type: "success",
-        title: "Booking times saved",
+        title: "Opening & booking hours saved",
         message:
           result.message ||
-          "Customers will now see these times on Stockport Smiles.",
+          "Customers will now see these opening hours on Smiles.",
       });
 
       await loadBookingTimes();
@@ -232,7 +232,7 @@ export default function SmilesBookingTimesPage() {
       showToast({
         type: "error",
         title: "Times not saved",
-        message: error?.message || "Could not save booking times.",
+        message: error?.message || "Could not save opening and booking hours.",
       });
     } finally {
       setSaving(false);
@@ -269,18 +269,18 @@ export default function SmilesBookingTimesPage() {
         >
           Back to Smiles
         </Link>
-        <span>Booking times</span>
-        <h1>When can customers book?</h1>
+        <span>Opening & booking hours</span>
+        <h1>When are you open?</h1>
         <p>
-          Set the days and times customers can request bookings on Stockport
-          Smiles.
+          These hours appear on your Smiles venue page and control when
+          customers can request bookings.
         </p>
       </section>
 
       {loading ? (
         <section className="simplePanel">
-          <h2>Loading booking times...</h2>
-          <p>Checking your current Smiles booking settings.</p>
+          <h2>Loading opening & booking hours...</h2>
+          <p>Checking your current Smiles hours.</p>
         </section>
       ) : null}
 
@@ -289,7 +289,7 @@ export default function SmilesBookingTimesPage() {
           <h2>Your Smiles listing is not live yet</h2>
           <p>
             {message ||
-              "Booking times can be changed once your Stockport Smiles listing is live."}
+              "Opening and booking hours can be changed once your Smiles listing is live."}
           </p>
           <Link href="/settings">Check listing status</Link>
         </section>
@@ -299,11 +299,11 @@ export default function SmilesBookingTimesPage() {
         <>
           <section className="timesSummary">
             <article>
-              <span>Current setup</span>
+              <span>Current hours</span>
               <strong>{getHoursSummary(bookingHours)}</strong>
             </article>
             <article>
-              <span>Open days</span>
+              <span>Days shown open</span>
               <strong>{openDays}</strong>
             </article>
           </section>
@@ -334,6 +334,10 @@ export default function SmilesBookingTimesPage() {
               <div>
                 <span>Fine tune</span>
                 <h2>Each day</h2>
+                <p>
+                  Mark closed days and set the opening window customers should
+                  see. The same times are used for Smiles booking request slots.
+                </p>
               </div>
             </div>
 
@@ -401,7 +405,7 @@ export default function SmilesBookingTimesPage() {
                         </label>
                       </div>
                     ) : (
-                      <p>No booking slots will show for this day.</p>
+                      <p>This day will show as closed on Smiles.</p>
                     )}
                   </article>
                 );
@@ -414,7 +418,7 @@ export default function SmilesBookingTimesPage() {
               onClick={saveBookingTimes}
               disabled={saving}
             >
-              {saving ? "Saving..." : "Save booking times"}
+              {saving ? "Saving..." : "Save opening & booking hours"}
             </button>
           </section>
         </>

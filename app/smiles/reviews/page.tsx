@@ -110,12 +110,12 @@ export default function SmilesReviewsPage() {
   const smilesLockedTitle =
     smilesEligibility?.label ||
     profile?.smiles_eligibility_label ||
-    "Stockport Smiles reviews are not available";
+    "Smiles reviews are not available";
 
   const smilesLockedMessage =
     smilesEligibility?.message ||
     profile?.smiles_eligibility_message ||
-    "Stockport Smiles is for Stockport businesses. You can still use FromOne for Facebook and Instagram posts.";
+    "Smiles is for eligible local businesses. You can still use FromOne for Facebook and Instagram posts.";
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [showAll, setShowAll] = useState(false);
 
@@ -253,7 +253,7 @@ export default function SmilesReviewsPage() {
               <strong>{profile.business_name}</strong>
               <p>
                 {profile.smiles_listing_venue_id
-                  ? "Live on Stockport Smiles"
+                  ? "Live on Smiles"
                   : "Waiting for listing setup"}
               </p>
             </div>
@@ -303,7 +303,7 @@ export default function SmilesReviewsPage() {
                   <h3>{showAll ? "No reviews yet" : "No reviews need a reply"}</h3>
                   <p>
                     {showAll
-                      ? "Customer reviews from Stockport Smiles will appear here."
+                      ? "Customer reviews from Smiles will appear here."
                       : "Reviews without a business reply will appear here."}
                   </p>
                 </div>

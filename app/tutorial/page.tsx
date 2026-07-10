@@ -4,14 +4,14 @@ import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
 
 export const metadata: Metadata = {
-  title: 'How FromOne Works | Create, Prepare, Schedule and Publish',
+  title: 'How FromOne Works | Create, Review and Publish',
   description:
-    'Learn how FromOne scans a business, creates posts, prepares media, schedules publishing and supports Facebook, Instagram and TikTok workflows.',
+    'Learn how FromOne scans a business, creates posts, prepares media and supports Facebook, Instagram and Smiles workflows.',
   alternates: { canonical: '/tutorial' },
   openGraph: {
-    title: 'How FromOne Works | Create, Prepare, Schedule and Publish',
+    title: 'How FromOne Works | Create, Review and Publish',
     description:
-      'A simple walkthrough for scanning a business, creating posts, preparing media, scheduling autopublish and using manual fallback.',
+      'A simple walkthrough for scanning a business, creating posts, preparing media, publishing to social channels and sending suitable offers or events to Smiles.',
     url: '/tutorial',
     type: 'website',
     images: [
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'How FromOne creates scheduled social media posts',
+        alt: 'How FromOne creates ready-to-review social media posts',
       },
     ],
   },
@@ -38,26 +38,26 @@ const guideSteps = [
   },
   {
     number: '03',
-    title: 'Schedule or publish',
-    text: 'Choose a scheduled time, autopublish to Facebook or Instagram where supported, or use the manual fallback.',
+    title: 'Publish or send',
+    text: 'Publish to Facebook or Instagram where supported, or send suitable offers and events to Smiles for approval.',
   },
 ];
 
 const platformNotes = [
   {
     title: 'Facebook',
-    label: 'Autopublish + schedule',
-    text: 'FromOne can publish now or schedule to a connected Facebook Page, with manual posting as a fallback.',
+    label: 'Direct publishing',
+    text: 'FromOne can publish to a connected Facebook Page, with manual posting as a fallback if the connection needs attention.',
   },
   {
     title: 'Instagram',
-    label: 'Prepared media needed',
-    text: 'Instagram needs supported image or video media. FromOne helps prepare platform-safe media before publishing.',
+    label: 'Connected publishing',
+    text: 'FromOne can prepare supported image or video media for Instagram before publishing.',
   },
   {
-    title: 'TikTok',
-    label: 'Manual for now',
-    text: 'FromOne prepares the wording and media. The user copies it and opens TikTok to post manually.',
+    title: 'Smiles',
+    label: 'Offers and events',
+    text: 'Suitable offers and events can be sent to Smiles for approval, then managed as live listings.',
   },
 ];
 
@@ -444,7 +444,7 @@ export default function TutorialPage() {
               How FromOne creates <span>ready posts.</span>
             </h1>
             <p className="fromone-guide-text">
-              A focused walkthrough for scanning a business, creating posts, preparing media, scheduling autopublish and keeping manual fallback available.
+              A focused walkthrough for scanning a business, creating posts, preparing media, publishing to Facebook or Instagram, and sending suitable offers or events to Smiles.
             </p>
             <div className="fromone-guide-actions">
               <Link href="/signin" className="sales-primary-button">Start 7-day demo</Link>
@@ -473,7 +473,7 @@ export default function TutorialPage() {
           <div className="fromone-section-heading">
             <div className="page-eyebrow">The workflow</div>
             <h2>Simple enough to use every week.</h2>
-            <p>FromOne keeps the process practical: scan the business, create posts, prepare the media, then publish with control.</p>
+            <p>FromOne keeps the process practical: scan the business, create posts, prepare the media, then publish or send with control.</p>
           </div>
 
           <div className="fromone-card-grid">
@@ -495,7 +495,7 @@ export default function TutorialPage() {
               <div className="page-eyebrow">Review before publishing</div>
               <h2>Every post stays under control.</h2>
               <p>
-                Posts are created for review first. You can edit wording, prepare the image, adjust the scheduled time and choose whether to autopublish, schedule or post manually.
+                Posts are created for review first. You can edit wording, prepare the image, publish to connected social channels, send suitable offers or events to Smiles, or post manually when needed.
               </p>
             </div>
 
@@ -503,7 +503,7 @@ export default function TutorialPage() {
               {[
                 'Check the caption, CTA and hashtags',
                 'Prepare or replace the media',
-                'Set the scheduled time or publish now',
+                'Publish now or keep it for manual posting',
                 'Use manual fallback if a connection needs attention',
               ].map((item) => (
                 <div key={item}><span aria-hidden="true">✓</span><strong>{item}</strong></div>
@@ -518,7 +518,7 @@ export default function TutorialPage() {
           <div className="fromone-section-heading">
             <div className="page-eyebrow">Publishing rules</div>
             <h2>Each platform is handled honestly.</h2>
-            <p>Autopublish where Facebook and Instagram support it. Keep TikTok and any connection issues simple with manual fallback.</p>
+            <p>Publish where Facebook and Instagram support it. Send suitable offers and events to Smiles, and keep connection issues simple with manual fallback.</p>
           </div>
 
           <div className="fromone-card-grid">
@@ -538,7 +538,7 @@ export default function TutorialPage() {
           <div className="fromone-final-cta">
             <div className="page-eyebrow">Ready to try it?</div>
             <h2>Create the first posting plan.</h2>
-            <p>Start with the demo, add the business or website, prepare the first posts and choose how they should publish.</p>
+            <p>Start with the demo, add the business or website, prepare the first posts and choose whether they should publish socially or go to Smiles.</p>
             <div className="fromone-final-actions">
               <Link href="/signin" className="sales-primary-button">Start 7-day demo</Link>
               <Link href="/" className="sales-secondary-button">Back to homepage</Link>

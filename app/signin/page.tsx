@@ -440,8 +440,8 @@ export default function SignInPage() {
           <h1>{mode === 'signin' ? 'Sign in.' : 'Create account.'}</h1>
           <p>
             {mode === 'signin'
-              ? 'Open your workspace to create posts, review drafts and manage Smiles-ready offers.'
-              : 'Create your account to start making Facebook, Instagram and Smiles-ready posts.'}
+              ? 'Open your workspace to create posts, review drafts and manage Smiles offers and events.'
+              : 'Create your account to make Facebook and Instagram posts, plus Smiles offers and events where relevant.'}
           </p>
         </div>
 

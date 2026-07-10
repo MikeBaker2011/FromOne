@@ -14,8 +14,8 @@ const termsSections = [
   {
     title: '1. About FromOne',
     body: [
-      'FromOne is a content workflow tool that helps small businesses create weekly social media posts from a Business Profile, uploaded media, website information, and user-provided business details.',
-      'FromOne can help create post wording, planned post times, and publishing workflows for channels such as Facebook, Instagram, and TikTok.',
+      'FromOne is a content workflow tool that helps small businesses create social media posts, Smiles offers and Smiles events from a Business Profile, uploaded media, website information, and user-provided business details.',
+      'FromOne can help create post wording, media preparation, publishing workflows for channels such as Facebook and Instagram, and suitable offer or event submissions for Smiles.',
     ],
   },
   {
@@ -35,11 +35,11 @@ const termsSections = [
     ],
   },
   {
-    title: '4. Publishing and autoposting',
+    title: '4. Publishing and Smiles submissions',
     body: [
-      'FromOne may support publishing now or scheduled autoposting for supported connected platforms, such as Facebook and Instagram, when your accounts are connected and permissions are active.',
-      'TikTok posting may remain manual. FromOne may create TikTok-ready wording, but you may need to copy, open TikTok, and publish it yourself.',
-      'You are responsible for checking post wording, media, platform choice, scheduled time, and publishing status before relying on a post being published.',
+      'FromOne may support direct publishing for supported connected platforms, such as Facebook and Instagram, when your accounts are connected and permissions are active.',
+      'FromOne may also help prepare suitable offers and events for Smiles review or approval before they appear as live Smiles listings.',
+      'You are responsible for checking post wording, media, platform choice, Smiles listing details, and publishing or submission status before relying on content being published or displayed.',
     ],
   },
   {
@@ -54,7 +54,7 @@ const termsSections = [
     title: '6. Demo and subscription',
     body: [
       'FromOne may offer a 7-day demo. After the demo, continued access may require a paid subscription.',
-      'The current monthly price is £29.99 unless shown differently at checkout or in your account.',
+      'The current monthly price is shown at checkout or in your account before you subscribe.',
       'Once payment billing is connected, the payment provider may manage subscription payments, renewals, invoices, and cancellation processes.',
     ],
   },
@@ -220,8 +220,8 @@ export default function TermsPage() {
               color: 'var(--muted-strong)',
             }}
           >
-            These terms explain the rules for using FromOne to create, review, schedule and publish
-            social media content for your business.
+            These terms explain the rules for using FromOne to create, review and publish
+            social media content, plus prepare suitable Smiles offers and events for your business.
           </p>
 
           <div
@@ -269,7 +269,7 @@ export default function TermsPage() {
           >
             FromOne helps small businesses create and manage social media content. You remain
             responsible for your account, uploaded materials, connected social accounts, generated
-            wording, scheduled times and published posts.
+            wording, Smiles listing details and published posts.
           </p>
         </section>
 

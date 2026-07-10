@@ -330,7 +330,7 @@ function getMobilePostState(post: any) {
     return {
       label: "Posted",
       className: "is-posted",
-      reviewLabel: "View post",
+      reviewLabel: "View details",
     };
   }
 
@@ -342,7 +342,7 @@ function getMobilePostState(post: any) {
     return {
       label: "Autoscheduled",
       className: "is-autoscheduled",
-      reviewLabel: "View post",
+      reviewLabel: "View details",
     };
   }
 
@@ -2989,7 +2989,7 @@ Important:
       status.includes("sent to smiles") ||
       status.includes("scheduled")
     ) {
-      return "View post";
+      return "View details";
     }
 
     return "Review";
@@ -3006,7 +3006,7 @@ Important:
           <div className="posts-create-eyebrow">Posts</div>
           <h1>Your posts are ready.</h1>
           <p>
-            Open a post, check the image and wording, then publish or send it where it needs to go.
+            Open each draft, check the image and wording, then publish to social or send suitable offers and events to Smiles.
           </p>
         </header>
 
@@ -3014,7 +3014,7 @@ Important:
           <div className="posts-panel-head">
             <span className="posts-step-badge">01</span>
             <div>
-              <h2>Posts status</h2>
+              <h2>Review queue</h2>
               <p>
                 {loading
                   ? "Loading the posts created from your uploads."
@@ -3059,7 +3059,7 @@ Important:
               <span className="posts-step-badge">02</span>
               <div>
                 <h2>Check each post</h2>
-                <p>View the media, confirm the copy, then publish or send it on.</p>
+                <p>View the media, confirm the copy, then publish to social or send suitable offers and events to Smiles.</p>
               </div>
             </div>
 

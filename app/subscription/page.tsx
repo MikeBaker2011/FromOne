@@ -595,15 +595,15 @@ export default function SubscriptionPage() {
     '7-day access to try the workflow',
     'Upload photos, videos and flyers',
     'Create social posts from uploaded media',
-    'Preview Smiles-style offers and events',
+    'Preview Smiles offer and event setup',
     'Review and edit before anything is sent',
   ];
 
   const monthlyFeatures = [
     'Create posts from photos, videos and flyers',
     'Send approved posts to Facebook and Instagram',
-    'Create Smiles offers and events from uploads',
-    'Business listing and Smiles approval workflow',
+    'Create live Smiles offers and events from uploads',
+    'Business listing and Smiles approvals',
     'Review everything before publishing or sending',
   ];
 
@@ -614,7 +614,7 @@ export default function SubscriptionPage() {
       price: 'Free',
       priceNote: 'for 7 days',
       valueNote: 'Try FromOne with your own uploads.',
-      description: 'Best for testing image-to-post creation, review screens and the Smiles workflow before subscribing.',
+      description: 'Best for testing uploads, review screens, social posts and Smiles offer/event setup before subscribing.',
       buttonText: 'Use demo',
       disabled: isDemoExpired,
       features: demoFeatures,
@@ -625,7 +625,7 @@ export default function SubscriptionPage() {
       price: '£19.99',
       priceNote: '/ month',
       valueNote: 'Full posting, Smiles and publishing access.',
-      description: 'For businesses that want FromOne to turn uploads into posts, Smiles offers and events, then publish to Facebook and Instagram.',
+      description: 'For businesses that want FromOne to turn uploads into social posts, live Smiles listings, and Facebook or Instagram posts.',
       buttonText: isCancelled ? 'Restart Starter' : 'Continue with PayPal',
       disabled: false,
       features: monthlyFeatures,
@@ -652,7 +652,7 @@ export default function SubscriptionPage() {
           <div className="page-eyebrow">Subscription</div>
           <h1>{isDemoExpired ? 'Demo ended.' : 'Plans for posting.'}</h1>
           <p>
-            Choose the plan for image uploads, Smiles offers and events, and Facebook and Instagram publishing.
+            Choose the plan for uploads, social posts, Smiles offers and events, and Facebook and Instagram publishing.
           </p>
         </header>
 
@@ -696,9 +696,9 @@ export default function SubscriptionPage() {
             <section className="subscription-simple-card subscription-smiles-focus-card">
               <div>
                 <span>What Starter unlocks</span>
-                <h2>Smiles is built into the workflow.</h2>
+                <h2>One workflow for posts and Smiles.</h2>
                 <p>
-                  Upload an image, video or flyer. FromOne creates the social post, helps shape the Smiles offer or event, and lets you approve everything before it is sent anywhere.
+                  Upload an image, video or flyer. FromOne prepares the social post and, when relevant, the Smiles offer or event. You review everything before it is published or sent for approval.
                 </p>
               </div>
 
@@ -767,14 +767,14 @@ export default function SubscriptionPage() {
               <div className="subscription-billing-title">
                 <div>
                   <span>Starter access</span>
-                  <h2>Smiles, posts and publishing</h2>
+                  <h2>Starter includes</h2>
                 </div>
 
                 <strong>{hasPaidAccess ? 'Active' : '£19.99/month'}</strong>
               </div>
 
               <p>
-                Starter includes upload-to-post creation, Smiles offer and event workflows, and Facebook and Instagram publishing. Payments are handled by PayPal.
+                Starter includes upload-to-post creation, Smiles offer and event workflows, and Facebook and Instagram publishing. PayPal handles the monthly payment.
               </p>
 
               <div className="subscription-billing-grid">
@@ -809,14 +809,14 @@ export default function SubscriptionPage() {
               {hasPaidAccess && (
                 <p className="subscription-simple-success">
                   {hasRealPayPalSubscription
-                    ? 'Starter is active. You can create posts from uploads, send to Smiles, and publish to Facebook and Instagram.'
-                    : 'Starter access is active. Smiles, post creation and publishing features are available.'}
+                    ? 'Starter is active. You can create posts from uploads, send offers and events to Smiles, and publish to Facebook and Instagram.'
+                    : 'Starter access is active. Post creation, Smiles workflows and publishing features are available.'}
                 </p>
               )}
 
               {!hasPaidAccess && !isPendingPayment && (
                 <p className="subscription-simple-muted">
-                  Choose Starter above, then continue to PayPal to unlock Smiles, posts and publishing.
+                  Choose Starter above, then continue to PayPal to unlock posts, Smiles workflows and publishing.
                 </p>
               )}
 
