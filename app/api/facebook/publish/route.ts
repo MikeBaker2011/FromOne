@@ -286,15 +286,14 @@ async function markMetaConnectionExpired(connectionId?: string | null, userId?: 
 }
 
 function buildPublishedToValue(currentValue: any) {
-  if (Array.isArray(currentValue)) {
-    return Array.from(new Set([...currentValue, 'facebook']));
-  }
+  const currentPlatforms = (Array.isArray(currentValue)
+    ? currentValue
+    : cleanText(currentValue).split(',')
+  )
+    .map((value) => cleanText(value).toLowerCase())
+    .filter(Boolean);
 
-  if (typeof currentValue === 'string' && currentValue.trim()) {
-    return Array.from(new Set([currentValue.toLowerCase(), 'facebook']));
-  }
-
-  return ['facebook'];
+  return Array.from(new Set([...currentPlatforms, 'facebook']));
 }
 
 async function insertPublishLog({
@@ -381,6 +380,8 @@ async function findUserIdForPost({
 
 async function getFacebookCredentials(body: FacebookPublishBody): Promise<FacebookCredentials> {
   const supabase = getSupabaseAdmin();
+  const envPageId = cleanText(process.env.FACEBOOK_PAGE_ID);
+  const envPageAccessToken = cleanText(process.env.FACEBOOK_PAGE_ACCESS_TOKEN);
 
   const userId = await findUserIdForPost({
     supabase,
@@ -427,16 +428,21 @@ async function getFacebookCredentials(body: FacebookPublishBody): Promise<Facebo
       };
     }
 
-    // For real signed-in users, do not fall back to old/global env tokens.
-    // If their own Meta row is missing, expired, or invalid, they should reconnect
-    // and still have the manual copy/open fallback in the UI.
+    // Local/single-page installs can still publish through the legacy env page token.
+    // If a client-specific Meta connection exists later, it will be preferred above.
+    if (envPageId && envPageAccessToken) {
+      return {
+        pageId: envPageId,
+        pageAccessToken: envPageAccessToken,
+        source: 'env',
+        connectionId: null,
+      };
+    }
+
     throw new Error(
       'Facebook connection has expired. Please reconnect Facebook and Instagram in Settings, then try again.'
     );
   }
-
-  const envPageId = cleanText(process.env.FACEBOOK_PAGE_ID);
-  const envPageAccessToken = cleanText(process.env.FACEBOOK_PAGE_ACCESS_TOKEN);
 
   if (envPageId && envPageAccessToken) {
     return {

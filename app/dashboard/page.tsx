@@ -133,7 +133,7 @@ const availablePlatforms: PlatformOption[] = [
   {
     name: "Stockport Smiles",
     shortName: "Smiles",
-    description: "Send suitable offers and events to Smiles for approval.",
+    description: "Prepare suitable offers and events for Smiles approval.",
   },
 ];
 
@@ -2783,46 +2783,6 @@ If uploads are supplied:
           )}
         </header>
 
-        {!onboardingIsComplete && (
-          <section className="create-step-grid" aria-label="Dashboard quick start">
-            <article className={weeklyUploads.length > 0 ? "create-step-card is-complete" : "create-step-card is-active"}>
-              <span>01</span>
-              <div>
-                <strong>Add media</strong>
-                <p>
-                  {weeklyUploads.length > 0
-                    ? `${weeklyUploads.length} file${weeklyUploads.length === 1 ? "" : "s"} added.`
-                    : "Add a photo, video or flyer."}
-                </p>
-              </div>
-            </article>
-
-            <article className={selectedPlatforms.length > 0 ? "create-step-card is-complete" : "create-step-card"}>
-              <span>02</span>
-              <div>
-                <strong>Choose where</strong>
-                <p>
-                  {selectedPlatforms.length > 0
-                    ? `${selectedPlatforms.length} platform${selectedPlatforms.length === 1 ? "" : "s"} selected.`
-                    : "Choose Facebook, Instagram or Smiles."}
-                </p>
-              </div>
-            </article>
-
-            <article className={weeklyProgress.total > 0 || hasScheduledPost ? "create-step-card is-complete" : "create-step-card"}>
-              <span>03</span>
-              <div>
-                <strong>Review first</strong>
-                <p>
-                  {weeklyProgress.total > 0 || hasScheduledPost
-                    ? "Posts are ready to review."
-                    : "Nothing goes live until you approve it."}
-                </p>
-              </div>
-            </article>
-          </section>
-        )}
-
         <section className="create-simple-panel" id="upload-media" aria-label="Upload media">
           <div className="create-panel-heading">
             <span>01</span>
@@ -2984,7 +2944,7 @@ If uploads are supplied:
             <span>02</span>
             <div>
               <h2>Post to</h2>
-              <p>Tap a destination to include or remove it. Deselected options fade back but stay readable.</p>
+              <p>Choose where these drafts should be prepared for. Nothing is published from this screen.</p>
             </div>
           </div>
 
@@ -3007,7 +2967,7 @@ If uploads are supplied:
               {
                 name: "Stockport Smiles",
                 title: "Smiles",
-                description: "For offers, events and listing updates.",
+                description: "Only for offers and events. Social posts stay in Posts.",
               },
             ].map((platform) => {
               const selected = selectedPlatforms.includes(platform.name);
@@ -3234,32 +3194,19 @@ If uploads are supplied:
           font-weight: 800 !important;
         }
 
-        .fromone-create-page .create-step-grid {
-          display: grid !important;
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          gap: 12px !important;
-          margin: 20px 0 14px !important;
-        }
-
-        .fromone-create-page .create-step-card {
-          display: grid !important;
-          grid-template-columns: 42px 1fr !important;
-          gap: 14px !important;
-          align-items: start !important;
-          min-width: 0 !important;
-          padding: 18px !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 24px !important;
-          background: #f7f9fd !important;
-        }
-
-        .fromone-create-page .create-step-card span,
         .fromone-create-page .create-panel-heading > span {
           display: inline-flex !important;
           align-items: center !important;
           justify-content: center !important;
           width: 42px !important;
+          min-width: 42px !important;
+          max-width: 42px !important;
           height: 42px !important;
+          min-height: 42px !important;
+          max-height: 42px !important;
+          flex: 0 0 42px !important;
+          aspect-ratio: 1 / 1 !important;
+          padding: 0 !important;
           border-radius: 999px !important;
           background: #f72585 !important;
           color: #ffffff !important;
@@ -3268,16 +3215,6 @@ If uploads are supplied:
           box-shadow: 0 16px 34px rgba(247, 37, 133, 0.18) !important;
         }
 
-        .fromone-create-page .create-step-card strong {
-          display: block !important;
-          margin: 0 0 5px !important;
-          color: #071b49 !important;
-          font-size: 1.05rem !important;
-          line-height: 1.05 !important;
-          font-weight: 850 !important;
-        }
-
-        .fromone-create-page .create-step-card p,
         .fromone-create-page .create-simple-panel p,
         .fromone-create-page .create-profile-needed-card p,
         .fromone-create-page .create-access-card p {
@@ -3697,7 +3634,6 @@ If uploads are supplied:
         }
 
         @media (max-width: 820px) {
-          .fromone-create-page .create-step-grid,
           .fromone-create-page .create-upload-type-grid,
           .fromone-create-page .create-platform-grid {
             grid-template-columns: 1fr !important;
@@ -3719,55 +3655,63 @@ If uploads are supplied:
           }
 
           .fromone-create-page #fromone-standard-shell.create-create-style-card {
-            width: calc(100% - 72px) !important;
+            width: calc(100% - 56px) !important;
             max-width: 468px !important;
             min-height: auto !important;
-            margin: 24px auto 0 !important;
-            padding: 28px 26px 26px !important;
-            border-radius: 26px !important;
+            margin: 18px auto 0 !important;
+            padding: 24px 22px 24px !important;
+            border-radius: 24px !important;
           }
 
           .fromone-create-page .page-title {
-            font-size: clamp(2.55rem, 11vw, 3.35rem) !important;
+            font-size: clamp(2.35rem, 10.4vw, 3.15rem) !important;
             line-height: 0.95 !important;
           }
 
           .fromone-create-page .page-description {
-            font-size: 1rem !important;
+            font-size: 0.96rem !important;
+            line-height: 1.42 !important;
           }
 
-          .fromone-create-page .create-step-grid {
-            margin-top: 18px !important;
-          }
-
-          .fromone-create-page .create-step-card,
           .fromone-create-page .create-simple-panel,
           .fromone-create-page .create-profile-needed-card,
           .fromone-create-page .create-access-card {
-            margin-top: 18px !important;
-            padding: 20px !important;
-            border-radius: 24px !important;
+            margin-top: 14px !important;
+            padding: 18px !important;
+            border-radius: 22px !important;
           }
 
           .fromone-create-page .create-panel-heading {
-            gap: 14px !important;
+            gap: 12px !important;
+            margin-bottom: 14px !important;
+          }
+
+          .fromone-create-page .create-panel-heading > span {
+            width: 38px !important;
+            min-width: 38px !important;
+            max-width: 38px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            max-height: 38px !important;
+            flex-basis: 38px !important;
+            font-size: 0.78rem !important;
           }
 
           .fromone-create-page .create-upload-type-card {
-            min-height: 64px !important;
+            min-height: 58px !important;
             justify-content: center !important;
-            padding: 0 20px !important;
+            padding: 0 18px !important;
           }
 
           .fromone-create-page .create-platform-pill {
-            min-height: 58px !important;
+            min-height: 54px !important;
           }
         }
 
         @media (max-width: 420px) {
           .fromone-create-page #fromone-standard-shell.create-create-style-card {
-            width: calc(100% - 48px) !important;
-            padding: 26px 22px 24px !important;
+            width: calc(100% - 40px) !important;
+            padding: 22px 20px 22px !important;
           }
         }
       `}</style>

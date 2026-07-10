@@ -160,6 +160,25 @@ const toneOptions = [
   "Bold and confident",
 ];
 
+const offerPricingOptions = [
+  "Free",
+  "Discount",
+  "Fixed price",
+  "From price",
+  "BOGOF / multibuy",
+  "Ask venue",
+  "Price to be confirmed",
+];
+
+const eventTicketOptions = [
+  "Free entry",
+  "Ticketed",
+  "Pay on door",
+  "From price",
+  "Donation",
+  "Price to be confirmed",
+];
+
 function cleanText(value: unknown) {
   return String(value || "").trim();
 }
@@ -205,18 +224,18 @@ function getPlatformUrl(platform: string) {
 }
 
 function mergePublishedPlatform(currentValue: any, platform: "Facebook" | "Instagram") {
-  const currentPlatforms = cleanText(currentValue)
-    .split(",")
-    .map((value) => value.trim())
+  const currentPlatforms = (Array.isArray(currentValue) ? currentValue : cleanText(currentValue).split(","))
+    .map((value) => cleanText(value).toLowerCase())
     .filter(Boolean);
+  const nextPlatform = platform.toLowerCase();
 
   const nextPlatforms = currentPlatforms.some(
-    (value) => value.toLowerCase() === platform.toLowerCase(),
+    (value) => value === nextPlatform,
   )
     ? currentPlatforms
-    : [...currentPlatforms, platform];
+    : [...currentPlatforms, nextPlatform];
 
-  return nextPlatforms.join(", ");
+  return Array.from(new Set(nextPlatforms));
 }
 
 function formatScheduledDate(value?: string | null) {
@@ -931,8 +950,14 @@ export default function PostReviewPage() {
   >(null);
   const [lastPublishedPlatform, setLastPublishedPlatform] = useState("");
   const [smilesChoice, setSmilesChoice] = useState<"no" | "offer" | "event">("no");
+  const [smilesTitle, setSmilesTitle] = useState("");
+  const [smilesDescription, setSmilesDescription] = useState("");
   const [smilesOfferText, setSmilesOfferText] = useState("");
+  const [smilesPricingLabel, setSmilesPricingLabel] = useState("Price to be confirmed");
+  const [smilesPriceValue, setSmilesPriceValue] = useState("");
   const [smilesEventText, setSmilesEventText] = useState("");
+  const [smilesTicketType, setSmilesTicketType] = useState("Price to be confirmed");
+  const [smilesTicketPrice, setSmilesTicketPrice] = useState("");
   const [smilesEndDate, setSmilesEndDate] = useState("");
   const [smilesTerms, setSmilesTerms] = useState("");
   const [smilesEventDate, setSmilesEventDate] = useState("");
@@ -1060,30 +1085,268 @@ export default function PostReviewPage() {
 
   const smilesDraft = getSmilesDraft(post);
 
+  const applySmilesDraftToForm = (
+    draft: any,
+    sourcePost: any,
+    fallbackType: "offer" | "event" | "" = "",
+  ) => {
+    const draftType =
+      draft?.type === "offer" || draft?.type === "event"
+        ? draft.type
+        : fallbackType;
+
+    if (draftType !== "offer" && draftType !== "event") {
+      setSmilesChoice("no");
+      setSmilesTitle("");
+      setSmilesDescription("");
+      setSmilesOfferText("");
+      setSmilesPricingLabel("Price to be confirmed");
+      setSmilesPriceValue("");
+      setSmilesEventText("");
+      setSmilesTicketType("Price to be confirmed");
+      setSmilesTicketPrice("");
+      setSmilesEndDate("");
+      setSmilesTerms("");
+      setSmilesEventDate("");
+      setSmilesStartTime("");
+      setSmilesEndTime("");
+      setSmilesBookingUrl("");
+      return;
+    }
+
+    setSmilesChoice(draftType);
+    setSmilesTitle(cleanText(draft?.title || sourcePost?.title || ""));
+    setSmilesDescription(
+      cleanText(
+        draft?.description ||
+          draft?.shortDescription ||
+          draft?.short_description ||
+          sourcePost?.caption ||
+          caption,
+      ),
+    );
+    setSmilesOfferText(
+      draftType === "offer"
+        ? cleanText(
+            draft?.savingText ||
+              draft?.saving_text ||
+              draft?.priceText ||
+              draft?.price_text ||
+              "",
+          )
+        : "",
+    );
+    setSmilesPricingLabel(
+      draftType === "offer"
+        ? cleanText(draft?.pricingLabel || draft?.pricing_label || "") ||
+            "Price to be confirmed"
+        : "Price to be confirmed",
+    );
+    setSmilesPriceValue(
+      draftType === "offer"
+        ? cleanText(
+            draft?.priceValue ||
+              draft?.price_value ||
+              draft?.savingValue ||
+              draft?.saving_value ||
+              "",
+          )
+        : "",
+    );
+    setSmilesEventText(
+      draftType === "event"
+        ? cleanText(draft?.title || draft?.description || "")
+        : "",
+    );
+    setSmilesTicketType(
+      draftType === "event"
+        ? cleanText(draft?.ticketType || draft?.ticket_type || "") ||
+            "Price to be confirmed"
+        : "Price to be confirmed",
+    );
+    setSmilesTicketPrice(
+      draftType === "event"
+        ? cleanText(
+            draft?.ticketPrice ||
+              draft?.ticket_price ||
+              draft?.priceText ||
+              draft?.price_text ||
+              "",
+          )
+        : "",
+    );
+    setSmilesEndDate(cleanText(draft?.endDate || draft?.end_date || ""));
+    setSmilesTerms(cleanText(draft?.terms || ""));
+    setSmilesEventDate(
+      cleanText(draft?.startDate || draft?.start_date || ""),
+    );
+    setSmilesStartTime(
+      cleanText(draft?.startTime || draft?.start_time || ""),
+    );
+    setSmilesEndTime(cleanText(draft?.endTime || draft?.end_time || ""));
+    setSmilesBookingUrl(
+      cleanText(draft?.bookingUrl || draft?.booking_url || draft?.websiteUrl || ""),
+    );
+  };
+
+  const buildSmilesDraftFromLiveItem = (
+    itemType: "offer" | "event",
+    item: any,
+    fallbackDraft: any,
+  ) => {
+    if (itemType === "offer") {
+      return {
+        ...(fallbackDraft || {}),
+        id: item?.id || fallbackDraft?.id || fallbackDraft?.smilesDraftId || null,
+        smilesDraftId: item?.id || fallbackDraft?.smilesDraftId || fallbackDraft?.id || null,
+        smiles_draft_id: item?.id || fallbackDraft?.smiles_draft_id || fallbackDraft?.id || null,
+        smilesOfferId: item?.id || fallbackDraft?.smilesOfferId || fallbackDraft?.id || null,
+        smiles_offer_id: item?.id || fallbackDraft?.smiles_offer_id || fallbackDraft?.id || null,
+        table: "offers",
+        smilesTable: "offers",
+        smiles_table: "offers",
+        recommended: true,
+        type: "offer",
+        title: item?.title,
+        description: item?.description || item?.short_description,
+        shortDescription: item?.short_description || item?.description,
+        savingText: item?.saving_text || item?.price_text,
+        saving_text: item?.saving_text || item?.price_text,
+        priceText: item?.price_text,
+        price_text: item?.price_text,
+        pricingLabel: item?.pricing_label,
+        pricing_label: item?.pricing_label,
+        priceValue: item?.price_value,
+        price_value: item?.price_value,
+        endDate: item?.end_date,
+        end_date: item?.end_date,
+        terms: item?.terms,
+      };
+    }
+
+    return {
+      ...(fallbackDraft || {}),
+      id: item?.id || fallbackDraft?.id || fallbackDraft?.smilesDraftId || null,
+      smilesDraftId: item?.id || fallbackDraft?.smilesDraftId || fallbackDraft?.id || null,
+      smiles_draft_id: item?.id || fallbackDraft?.smiles_draft_id || fallbackDraft?.id || null,
+      smilesEventId: item?.id || fallbackDraft?.smilesEventId || fallbackDraft?.id || null,
+      smiles_event_id: item?.id || fallbackDraft?.smiles_event_id || fallbackDraft?.id || null,
+      table: "events",
+      smilesTable: "events",
+      smiles_table: "events",
+      recommended: true,
+      type: "event",
+      title: item?.title,
+      description: item?.description || item?.short_description,
+      shortDescription: item?.short_description || item?.description,
+      ticketType: item?.ticket_type,
+      ticket_type: item?.ticket_type,
+      ticketPrice: item?.ticket_price,
+      ticket_price: item?.ticket_price,
+      priceText: item?.price_text,
+      price_text: item?.price_text,
+      startDate: item?.start_date,
+      start_date: item?.start_date,
+      endDate: item?.end_date,
+      end_date: item?.end_date,
+      startTime: item?.start_time,
+      start_time: item?.start_time,
+      endTime: item?.end_time,
+      end_time: item?.end_time,
+      bookingUrl: item?.booking_url,
+      booking_url: item?.booking_url,
+    };
+  };
+
+  const smilesPrefillKey = [
+    cleanText(post?.id),
+    cleanText(post?.smiles_draft_id),
+    cleanText(post?.smiles_table),
+  ].join("|");
+
   useEffect(() => {
     if (!post?.id) return;
 
     const draft = getSmilesDraft(post);
+    const linkedSmilesType =
+      cleanText(post?.smiles_table).toLowerCase() === "offers"
+        ? "offer"
+        : cleanText(post?.smiles_table).toLowerCase() === "events"
+          ? "event"
+          : "";
+    const linkedSmilesId = cleanText(
+      post?.smiles_draft_id || draft?.id || draft?.smilesDraftId,
+    );
 
     if (draft?.type === "offer" || draft?.type === "event") {
-      setSmilesChoice(draft.type);
-      setSmilesOfferText(
-        draft.type === "offer" ? cleanText(draft.savingText || draft.title || "") : "",
+      applySmilesDraftToForm(draft, post);
+    } else if (linkedSmilesType === "offer" || linkedSmilesType === "event") {
+      applySmilesDraftToForm(
+        {
+          recommended: true,
+          type: linkedSmilesType,
+          title: post?.title,
+          description: post?.caption || caption,
+        },
+        post,
+        linkedSmilesType,
       );
-      setSmilesEventText(
-        draft.type === "event" ? cleanText(draft.title || draft.description || "") : "",
-      );
-      setSmilesEndDate(cleanText(draft.endDate || ""));
-      setSmilesTerms(cleanText(draft.terms || ""));
-      setSmilesEventDate(cleanText(draft.startDate || ""));
-      setSmilesStartTime(cleanText(draft.startTime || ""));
-      setSmilesEndTime(cleanText(draft.endTime || ""));
-      setSmilesBookingUrl(cleanText(draft.bookingUrl || draft.websiteUrl || ""));
+    } else {
+      applySmilesDraftToForm(null, post);
       return;
     }
 
-    setSmilesChoice("no");
-  }, [post?.id]);
+    const liveItemType: "offer" | "event" | "" =
+      linkedSmilesType ||
+      (draft?.type === "offer" || draft?.type === "event" ? draft.type : "");
+
+    if (
+      (liveItemType !== "offer" && liveItemType !== "event") ||
+      !linkedSmilesId
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadLiveSmilesItem = async () => {
+      try {
+        const response = await fetch(
+          `/api/smiles/items/${liveItemType}/${linkedSmilesId}`,
+          { cache: "no-store" },
+        );
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || result?.ok === false || result?.success === false) {
+          return;
+        }
+
+        const liveItem =
+          result?.item ||
+          result?.data ||
+          result?.offer ||
+          result?.event ||
+          result?.record ||
+          null;
+
+        if (!liveItem || cancelled) return;
+
+        applySmilesDraftToForm(
+          buildSmilesDraftFromLiveItem(liveItemType, liveItem, draft),
+          post,
+          liveItemType,
+        );
+      } catch {
+        // Keep the saved FromOne draft visible if the live Smiles lookup fails.
+      }
+    };
+
+    loadLiveSmilesItem();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [smilesPrefillKey]);
 
   const canSendToSmiles = (sourcePost: any) => {
     const draft = getSmilesDraft(sourcePost);
@@ -1223,24 +1486,81 @@ export default function PostReviewPage() {
     };
   }, [post?.id, post?.smiles_status, post?.smiles_draft_id, post?.smiles_table]);
 
+  const getOfferPriceText = () => {
+    const label = cleanText(smilesPricingLabel);
+    const value = cleanText(smilesPriceValue || smilesOfferText);
+
+    if (label === "Free") return "Free";
+    if (label === "Ask venue") return "Ask venue";
+    if (label === "Price to be confirmed") return "Price to be confirmed";
+    if (!value) return label;
+    if (label === "From price") return `From ${value}`;
+    if (label === "Fixed price") return value;
+    return value;
+  };
+
+  const getEventTicketText = () => {
+    const label = cleanText(smilesTicketType);
+    const value = cleanText(smilesTicketPrice);
+
+    if (label === "Free entry") return "Free entry";
+    if (label === "Price to be confirmed") return "Ticket details TBC";
+    if (!value) return label;
+    if (label === "From price") return `From ${value}`;
+    return `${label}: ${value}`;
+  };
+
   const buildClientSmilesDraft = () => {
     if (smilesChoice === "no") return null;
 
+    const savedDraft = getSmilesDraft(post);
+    const savedDraftId = cleanText(
+      savedDraft?.id ||
+        savedDraft?.smilesDraftId ||
+        savedDraft?.smiles_draft_id ||
+        post?.smiles_draft_id,
+    );
+    const savedTable =
+      cleanText(post?.smiles_table || savedDraft?.table || savedDraft?.smilesTable || savedDraft?.smiles_table) ||
+      (smilesChoice === "offer" ? "offers" : "events");
     const baseTitle =
-      smilesChoice === "offer"
+      cleanText(smilesTitle) ||
+      (smilesChoice === "offer"
         ? cleanText(smilesOfferText) || cleanText(post?.title) || "Special offer"
         : cleanText(smilesEventText) ||
           cleanText(post?.title) ||
           cleanText(caption).split(".")[0] ||
-          "Local event";
+          "Local event");
+    const description = cleanText(caption) || cleanText(smilesDescription);
+    const offerPriceText = getOfferPriceText();
+    const ticketText = getEventTicketText();
 
     return {
+      ...(savedDraft || {}),
+      id: savedDraftId || savedDraft?.id || null,
+      smilesDraftId: savedDraftId || savedDraft?.smilesDraftId || null,
+      smiles_draft_id: savedDraftId || savedDraft?.smiles_draft_id || null,
+      smilesOfferId: smilesChoice === "offer" ? savedDraftId || savedDraft?.smilesOfferId || null : "",
+      smiles_offer_id: smilesChoice === "offer" ? savedDraftId || savedDraft?.smiles_offer_id || null : "",
+      smilesEventId: smilesChoice === "event" ? savedDraftId || savedDraft?.smilesEventId || null : "",
+      smiles_event_id: smilesChoice === "event" ? savedDraftId || savedDraft?.smiles_event_id || null : "",
+      table: savedTable,
+      smilesTable: savedTable,
+      smiles_table: savedTable,
       recommended: true,
       type: smilesChoice,
       title: baseTitle,
-      description: cleanText(caption),
-      shortDescription: cleanText(caption),
-      savingText: smilesChoice === "offer" ? cleanText(smilesOfferText) : "",
+      description,
+      shortDescription: description,
+      savingText: smilesChoice === "offer" ? cleanText(smilesOfferText || offerPriceText) : "",
+      pricingLabel: smilesChoice === "offer" ? cleanText(smilesPricingLabel) : "",
+      pricing_label: smilesChoice === "offer" ? cleanText(smilesPricingLabel) : "",
+      priceValue: smilesChoice === "offer" ? cleanText(smilesPriceValue) : "",
+      price_value: smilesChoice === "offer" ? cleanText(smilesPriceValue) : "",
+      ticketType: smilesChoice === "event" ? cleanText(smilesTicketType) : "",
+      ticket_type: smilesChoice === "event" ? cleanText(smilesTicketType) : "",
+      ticketPrice: smilesChoice === "event" ? cleanText(smilesTicketPrice) : "",
+      ticket_price: smilesChoice === "event" ? cleanText(smilesTicketPrice) : "",
       terms:
         smilesChoice === "offer"
           ? cleanText(smilesTerms) || "Subject to availability."
@@ -1257,7 +1577,8 @@ export default function PostReviewPage() {
           : cleanText(smilesEventDate) || null,
       startTime: smilesChoice === "event" ? cleanText(smilesStartTime) || null : null,
       endTime: smilesChoice === "event" ? cleanText(smilesEndTime) || null : null,
-      priceText: "",
+      priceText: smilesChoice === "offer" ? offerPriceText : ticketText,
+      price_text: smilesChoice === "offer" ? offerPriceText : ticketText,
       locationName: cleanText(post?.location_name || post?.business_name || ""),
       locationArea: cleanText(post?.location_area || post?.town || post?.city || ""),
       address: cleanText(post?.address || ""),
@@ -1503,22 +1824,29 @@ export default function PostReviewPage() {
     const draft = clientDraft || savedDraft;
 
     if (!draft || !draft.recommended || draft.type === "none") {
-      setMessage("Choose Offer or Event before sending this to Stockport Smiles.");
+      setMessage("Choose Offer or Event before sending this to Smiles.");
       return;
     }
 
     if (draft.type === "offer" && !cleanText(draft.title)) {
-      setMessage("Add the offer details before sending this to Stockport Smiles.");
+      setMessage("Add the offer details before sending this to Smiles.");
       return;
     }
 
     if (draft.type === "event" && !cleanText(draft.startDate)) {
-      setMessage("Add the event date before sending this to Stockport Smiles.");
+      setMessage("Add the event date before sending this to Smiles.");
       return;
     }
 
+    const isUpdatingSmilesPost =
+      post?.smiles_status === "sent" || Boolean(post?.smiles_draft_id);
+
     setSendingToSmilesPostId(post.id);
-    setMessage("Sending draft to Stockport Smiles...");
+    setMessage(
+      isUpdatingSmilesPost
+        ? "Updating live Smiles listing..."
+        : "Sending draft to Smiles...",
+    );
 
     try {
       await saveWordingSilently().catch(() => false);
@@ -1532,11 +1860,36 @@ export default function PostReviewPage() {
           campaign_id: post.campaign_id,
           userId: post.user_id || null,
           user_id: post.user_id || null,
+          smilesDraftId: draft.id || draft.smilesDraftId || draft.smiles_draft_id || post.smiles_draft_id || null,
+          smiles_draft_id: draft.id || draft.smiles_draft_id || draft.smilesDraftId || post.smiles_draft_id || null,
+          smilesOfferId: draft.type === "offer" ? draft.id || draft.smilesOfferId || draft.smiles_offer_id || post.smiles_draft_id || null : null,
+          smiles_offer_id: draft.type === "offer" ? draft.id || draft.smiles_offer_id || draft.smilesOfferId || post.smiles_draft_id || null : null,
+          smilesEventId: draft.type === "event" ? draft.id || draft.smilesEventId || draft.smiles_event_id || post.smiles_draft_id || null : null,
+          smiles_event_id: draft.type === "event" ? draft.id || draft.smiles_event_id || draft.smilesEventId || post.smiles_draft_id || null : null,
+          smilesTable: draft.table || draft.smilesTable || draft.smiles_table || post.smiles_table || null,
+          smiles_table: draft.table || draft.smiles_table || draft.smilesTable || post.smiles_table || null,
+          smilesReferenceCode:
+            draft.referenceCode ||
+            draft.reference_code ||
+            draft.smilesReferenceCode ||
+            post.smiles_reference_code ||
+            null,
+          smiles_reference_code:
+            draft.reference_code ||
+            draft.referenceCode ||
+            draft.smilesReferenceCode ||
+            post.smiles_reference_code ||
+            null,
           draftType: draft.type,
           title: draft.title || post.title,
           description: draft.description || post.caption,
           shortDescription: draft.shortDescription || post.caption,
           savingText: draft.savingText || "",
+          saving_text: draft.savingText || "",
+          pricingLabel: draft.pricingLabel || draft.pricing_label || "",
+          pricing_label: draft.pricingLabel || draft.pricing_label || "",
+          priceValue: draft.priceValue || draft.price_value || "",
+          price_value: draft.priceValue || draft.price_value || "",
           terms: draft.terms || "Subject to availability.",
           validDays: draft.validDays || "",
           validTimes: draft.validTimes || "",
@@ -1545,6 +1898,11 @@ export default function PostReviewPage() {
           startTime: draft.startTime || null,
           endTime: draft.endTime || null,
           priceText: draft.priceText || "",
+          price_text: draft.priceText || draft.price_text || "",
+          ticketType: draft.ticketType || draft.ticket_type || "",
+          ticket_type: draft.ticketType || draft.ticket_type || "",
+          ticketPrice: draft.ticketPrice || draft.ticket_price || "",
+          ticket_price: draft.ticketPrice || draft.ticket_price || "",
           locationName: draft.locationName || "",
           locationArea: draft.locationArea || "",
           address: draft.address || "",
@@ -1568,12 +1926,12 @@ export default function PostReviewPage() {
 
       const updates = {
         smiles_status: "sent",
-        smiles_draft_id: result?.smilesDraftId || null,
-        smiles_table: result?.smilesTable || null,
+        smiles_draft_id: result?.smilesDraftId || post?.smiles_draft_id || draft.id || null,
+        smiles_table: result?.smilesTable || post?.smiles_table || draft.table || null,
         smiles_draft: {
           ...draft,
-          table: result?.smilesTable || null,
-          slug: result?.smilesSlug || null,
+          table: result?.smilesTable || post?.smiles_table || draft.table || null,
+          slug: result?.smilesSlug || draft.slug || draft.smilesSlug || null,
           referenceCode: result?.smilesReferenceCode || null,
           reference_code: result?.smilesReferenceCode || null,
         },
@@ -1590,10 +1948,14 @@ export default function PostReviewPage() {
       if (error) throw error;
 
       setPost({ ...post, ...updates });
-      setMessage("Draft sent to Stockport Smiles.");
+      setMessage(
+        isUpdatingSmilesPost
+          ? "Live Smiles listing updated."
+          : "Draft sent to Smiles.",
+      );
     } catch (error: any) {
       const message =
-        error?.message || "Could not send this draft to Stockport Smiles.";
+        error?.message || "Could not send this draft to Smiles.";
 
       const updates = {
         smiles_status: "failed",
@@ -2928,7 +3290,7 @@ Do not return the same caption.`,
           <div className="review-create-eyebrow">Review</div>
           <h1>Check this post.</h1>
           <p>
-            Check the media and wording, then publish it or send it to Stockport Smiles.
+            Check the media and wording, then publish to social or send a suitable offer/event to Smiles.
           </p>
         </header>
 
@@ -3023,12 +3385,12 @@ Do not return the same caption.`,
           <div className="review-panel-head">
             <span className="review-step-badge">03</span>
             <div>
-              <h2>Stockport Smiles</h2>
+              <h2>Smiles</h2>
               <p>Only choose Smiles if this is an offer or an event.</p>
             </div>
           </div>
 
-          {post?.smiles_status === "sent" ? (
+          {post?.smiles_status === "sent" &&
             (() => {
               const smilesSentInfo = getSmilesSentInfo(post);
 
@@ -3037,8 +3399,8 @@ Do not return the same caption.`,
                   <strong>Sent to Smiles</strong>
                   <small>
                     {smilesSentInfo.href
-                      ? "It is ready to view on Stockport Smiles."
-                      : "It is waiting for Stockport Smiles approval."}
+                      ? "It is ready to view on Smiles. Changes here will update the linked live listing."
+                      : "It is waiting for Smiles approval. Changes here will update the linked live listing."}
                   </small>
 
                   {smilesSentInfo.referenceCode && (
@@ -3049,91 +3411,185 @@ Do not return the same caption.`,
 
                   {smilesSentInfo.href && (
                     <a href={smilesSentInfo.href} target="_blank" rel="noreferrer">
-                      View Smiles post
+                      View live listing
                     </a>
                   )}
                 </div>
               );
-            })()
-          ) : (
-            <>
-              <div className="review-pill-grid">
-                {[
-                  { value: "no", label: "No" },
-                  { value: "offer", label: "Offer" },
-                  { value: "event", label: "Event" },
-                ].map((choice) => (
-                  <button
-                    key={choice.value}
-                    type="button"
-                    className={
-                      smilesChoice === choice.value
-                        ? "review-pill is-active"
-                        : "review-pill"
-                    }
-                    onClick={() =>
-                      setSmilesChoice(choice.value as "no" | "offer" | "event")
-                    }
-                  >
-                    {choice.label}
-                  </button>
-                ))}
-              </div>
+            })()}
 
-              {smilesChoice === "offer" && (
-                <div className="review-two-fields">
-                  <label>
-                    <span>Offer</span>
-                    <input
-                      value={smilesOfferText}
-                      onChange={(event) => setSmilesOfferText(event.target.value)}
-                      placeholder="Example: 20% off lunch"
-                    />
-                  </label>
-                  <label>
-                    <span>Ends</span>
-                    <input
-                      type="date"
-                      value={smilesEndDate}
-                      onChange={(event) => setSmilesEndDate(event.target.value)}
-                    />
-                  </label>
-                </div>
-              )}
-
-              {smilesChoice === "event" && (
-                <div className="review-two-fields">
-                  <label>
-                    <span>Event</span>
-                    <input
-                      value={smilesEventText}
-                      onChange={(event) => setSmilesEventText(event.target.value)}
-                      placeholder="Example: Family fun day"
-                    />
-                  </label>
-                  <label>
-                    <span>Date</span>
-                    <input
-                      type="date"
-                      value={smilesEventDate}
-                      onChange={(event) => setSmilesEventDate(event.target.value)}
-                    />
-                  </label>
-                </div>
-              )}
-
-              {smilesChoice !== "no" && (
+          <>
+            <div className="review-pill-grid">
+              {[
+                { value: "no", label: "No" },
+                { value: "offer", label: "Offer" },
+                { value: "event", label: "Event" },
+              ].map((choice) => (
                 <button
+                  key={choice.value}
                   type="button"
-                  className="review-primary-action"
-                  onClick={sendPostToSmiles}
-                  disabled={sendingToSmilesPostId === post?.id}
+                  className={
+                    smilesChoice === choice.value
+                      ? "review-pill is-active"
+                      : "review-pill"
+                  }
+                  onClick={() => {
+                    const nextChoice = choice.value as "no" | "offer" | "event";
+                    setSmilesChoice(nextChoice);
+
+                    if (nextChoice !== "no" && !cleanText(smilesTitle)) {
+                      setSmilesTitle(cleanText(post?.title || ""));
+                    }
+
+                    if (nextChoice !== "no" && !cleanText(smilesDescription)) {
+                      setSmilesDescription(cleanText(caption || post?.caption || ""));
+                    }
+                  }}
                 >
-                  {sendingToSmilesPostId === post?.id ? "Sending..." : "Send to Smiles"}
+                  {choice.label}
                 </button>
-              )}
-            </>
-          )}
+              ))}
+            </div>
+
+            {smilesChoice === "offer" && (
+              <div className="review-smiles-edit-grid">
+                <label className="review-wide-field">
+                  <span>Offer headline</span>
+                  <input
+                    value={smilesTitle}
+                    onChange={(event) => setSmilesTitle(event.target.value)}
+                    placeholder="Example: 2 cocktails for £12"
+                  />
+                </label>
+                <label>
+                  <span>Saving or price text</span>
+                  <input
+                    value={smilesOfferText}
+                    onChange={(event) => setSmilesOfferText(event.target.value)}
+                    placeholder="Example: 20% off lunch"
+                  />
+                </label>
+                <label>
+                  <span>Pricing label</span>
+                  <select
+                    value={smilesPricingLabel}
+                    onChange={(event) => setSmilesPricingLabel(event.target.value)}
+                  >
+                    {offerPricingOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Price / saving value</span>
+                  <input
+                    value={smilesPriceValue}
+                    onChange={(event) => setSmilesPriceValue(event.target.value)}
+                    placeholder="Example: £12 or 20%"
+                  />
+                </label>
+                <label>
+                  <span>Ends</span>
+                  <input
+                    type="date"
+                    value={smilesEndDate}
+                    onChange={(event) => setSmilesEndDate(event.target.value)}
+                  />
+                </label>
+                <label className="review-wide-field">
+                  <span>Terms</span>
+                  <input
+                    value={smilesTerms}
+                    onChange={(event) => setSmilesTerms(event.target.value)}
+                    placeholder="Example: Tuesday to Friday only"
+                  />
+                </label>
+              </div>
+            )}
+
+            {smilesChoice === "event" && (
+              <div className="review-smiles-edit-grid">
+                <label className="review-wide-field">
+                  <span>Event headline</span>
+                  <input
+                    value={smilesTitle}
+                    onChange={(event) => setSmilesTitle(event.target.value)}
+                    placeholder="Example: Live night this weekend"
+                  />
+                </label>
+                <label>
+                  <span>Event date</span>
+                  <input
+                    type="date"
+                    value={smilesEventDate}
+                    onChange={(event) => setSmilesEventDate(event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>Start time</span>
+                  <input
+                    type="time"
+                    value={smilesStartTime}
+                    onChange={(event) => setSmilesStartTime(event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>End time</span>
+                  <input
+                    type="time"
+                    value={smilesEndTime}
+                    onChange={(event) => setSmilesEndTime(event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>Ticket type</span>
+                  <select
+                    value={smilesTicketType}
+                    onChange={(event) => setSmilesTicketType(event.target.value)}
+                  >
+                    {eventTicketOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Ticket price</span>
+                  <input
+                    value={smilesTicketPrice}
+                    onChange={(event) => setSmilesTicketPrice(event.target.value)}
+                    placeholder="Example: £10"
+                  />
+                </label>
+                <label>
+                  <span>Booking link</span>
+                  <input
+                    value={smilesBookingUrl}
+                    onChange={(event) => setSmilesBookingUrl(event.target.value)}
+                    placeholder="Optional"
+                  />
+                </label>
+              </div>
+            )}
+
+            {smilesChoice !== "no" && (
+              <button
+                type="button"
+                className="review-primary-action"
+                onClick={sendPostToSmiles}
+                disabled={sendingToSmilesPostId === post?.id}
+              >
+                {sendingToSmilesPostId === post?.id
+                  ? "Sending..."
+                  : post?.smiles_status === "sent"
+                    ? "Update Smiles post"
+                    : "Send to Smiles"}
+              </button>
+            )}
+          </>
         </section>
 
         <section className="review-simple-panel">
@@ -3444,10 +3900,15 @@ Do not return the same caption.`,
         }
 
         .fromone-review-page .review-form-grid,
-        .fromone-review-page .review-two-fields {
+        .fromone-review-page .review-two-fields,
+        .fromone-review-page .review-smiles-edit-grid {
           display: grid !important;
           grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           gap: 14px !important;
+        }
+
+        .fromone-review-page .review-smiles-edit-grid {
+          margin-top: 16px !important;
         }
 
         .fromone-review-page .review-wide-field {
@@ -3461,7 +3922,8 @@ Do not return the same caption.`,
         }
 
         .fromone-review-page input,
-        .fromone-review-page textarea {
+        .fromone-review-page textarea,
+        .fromone-review-page select {
           width: 100% !important;
           min-height: 52px !important;
           padding: 12px 15px !important;
@@ -3473,6 +3935,16 @@ Do not return the same caption.`,
           font: inherit !important;
           font-weight: 600 !important;
           outline: none !important;
+        }
+
+        .fromone-review-page select {
+          appearance: none !important;
+          background-image: linear-gradient(45deg, transparent 50%, #071b49 50%),
+            linear-gradient(135deg, #071b49 50%, transparent 50%) !important;
+          background-position: calc(100% - 22px) 23px, calc(100% - 16px) 23px !important;
+          background-size: 6px 6px, 6px 6px !important;
+          background-repeat: no-repeat !important;
+          padding-right: 42px !important;
         }
 
         .fromone-review-page textarea {
@@ -3487,7 +3959,8 @@ Do not return the same caption.`,
         }
 
         .fromone-review-page input:focus,
-        .fromone-review-page textarea:focus {
+        .fromone-review-page textarea:focus,
+        .fromone-review-page select:focus {
           border-color: #f72585 !important;
           box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.11) !important;
         }
@@ -3516,6 +3989,11 @@ Do not return the same caption.`,
           box-shadow: 0 18px 38px rgba(247, 37, 133, 0.24) !important;
         }
 
+        .fromone-review-page .review-smiles-panel > .review-primary-action {
+          width: min(100%, 360px) !important;
+          margin-top: 22px !important;
+        }
+
         .fromone-review-page .review-secondary-action,
         .fromone-review-page .review-pill {
           border: 1px solid #ffd2e5 !important;
@@ -3540,6 +4018,14 @@ Do not return the same caption.`,
           display: grid !important;
           grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
           gap: 10px !important;
+        }
+
+        .fromone-review-page .review-smiles-panel .review-status-box {
+          margin-bottom: 24px !important;
+        }
+
+        .fromone-review-page .review-smiles-panel .review-pill-grid {
+          margin-bottom: 22px !important;
         }
 
         .fromone-review-page .review-publish-grid {
@@ -3625,6 +4111,7 @@ Do not return the same caption.`,
 
           .fromone-review-page .review-form-grid,
           .fromone-review-page .review-two-fields,
+          .fromone-review-page .review-smiles-edit-grid,
           .fromone-review-page .review-pill-grid,
           .fromone-review-page .review-publish-grid {
             grid-template-columns: 1fr !important;
@@ -4155,16 +4642,16 @@ Do not return the same caption.`,
               )}
               </div>
 
-              <section className="pr2-smiles-simple-card" aria-label="Stockport Smiles prompts">
+              <section className="pr2-smiles-simple-card" aria-label="Smiles prompts">
                 <div className="pr2-smiles-simple-head">
-                  <span className="pr2-kicker">Stockport Smiles</span>
+                  <span className="pr2-kicker">Smiles</span>
                   <h2>Send to Smiles?</h2>
                   <p>
                     Only offers and events need Smiles. Pick one answer.
                   </p>
                 </div>
 
-                {post?.smiles_status === "sent" ? (
+                {post?.smiles_status === "sent" &&
                   (() => {
                     const smilesSentInfo = getSmilesSentInfo(post);
 
@@ -4173,8 +4660,8 @@ Do not return the same caption.`,
                         <strong>Sent to Smiles</strong>
                         <span>
                           {smilesSentInfo.href
-                            ? "It is ready to view on Stockport Smiles."
-                            : "This has gone to Stockport Smiles for approval."}
+                            ? "It is ready to view on Smiles. Changes here will update the linked live listing."
+                            : "This has gone to Smiles for approval. Changes here will update the linked live listing."}
                         </span>
 
                         {smilesSentInfo.referenceCode && (
@@ -4190,13 +4677,13 @@ Do not return the same caption.`,
                             target="_blank"
                             rel="noreferrer"
                           >
-                            View Smiles post
+                            View live listing
                           </a>
                         )}
                       </div>
                     );
-                  })()
-                ) : (
+                  })()}
+
                   <>
                     <div className="pr2-smiles-choice-row">
                       {[
@@ -4212,9 +4699,18 @@ Do not return the same caption.`,
                               ? "pr2-smiles-choice is-active"
                               : "pr2-smiles-choice"
                           }
-                          onClick={() =>
-                            setSmilesChoice(choice.value as "no" | "offer" | "event")
-                          }
+                          onClick={() => {
+                            const nextChoice = choice.value as "no" | "offer" | "event";
+                            setSmilesChoice(nextChoice);
+
+                            if (nextChoice !== "no" && !cleanText(smilesTitle)) {
+                              setSmilesTitle(cleanText(post?.title || ""));
+                            }
+
+                            if (nextChoice !== "no" && !cleanText(smilesDescription)) {
+                              setSmilesDescription(cleanText(caption || post?.caption || ""));
+                            }
+                          }}
                         >
                           {choice.label}
                         </button>
@@ -4223,12 +4719,41 @@ Do not return the same caption.`,
 
                     {smilesChoice === "offer" && (
                       <div className="pr2-smiles-prompt-grid">
+                        <label className="is-wide">
+                          <strong>Offer headline</strong>
+                          <input
+                            value={smilesTitle}
+                            onChange={(event) => setSmilesTitle(event.target.value)}
+                            placeholder="Example: 2 cocktails for £12"
+                          />
+                        </label>
                         <label>
-                          <strong>What is the offer?</strong>
+                          <strong>Saving or price text</strong>
                           <input
                             value={smilesOfferText}
                             onChange={(event) => setSmilesOfferText(event.target.value)}
                             placeholder="Example: 20% off lunch"
+                          />
+                        </label>
+                        <label>
+                          <strong>Pricing label</strong>
+                          <select
+                            value={smilesPricingLabel}
+                            onChange={(event) => setSmilesPricingLabel(event.target.value)}
+                          >
+                            {offerPricingOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label>
+                          <strong>Price / saving value</strong>
+                          <input
+                            value={smilesPriceValue}
+                            onChange={(event) => setSmilesPriceValue(event.target.value)}
+                            placeholder="Example: £12 or 20%"
                           />
                         </label>
                         <label>
@@ -4252,6 +4777,14 @@ Do not return the same caption.`,
 
                     {smilesChoice === "event" && (
                       <div className="pr2-smiles-prompt-grid">
+                        <label className="is-wide">
+                          <strong>Event headline</strong>
+                          <input
+                            value={smilesTitle}
+                            onChange={(event) => setSmilesTitle(event.target.value)}
+                            placeholder="Example: Live night this weekend"
+                          />
+                        </label>
                         <label>
                           <strong>Event date</strong>
                           <input
@@ -4277,6 +4810,27 @@ Do not return the same caption.`,
                           />
                         </label>
                         <label>
+                          <strong>Ticket type</strong>
+                          <select
+                            value={smilesTicketType}
+                            onChange={(event) => setSmilesTicketType(event.target.value)}
+                          >
+                            {eventTicketOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label>
+                          <strong>Ticket price</strong>
+                          <input
+                            value={smilesTicketPrice}
+                            onChange={(event) => setSmilesTicketPrice(event.target.value)}
+                            placeholder="Example: £10"
+                          />
+                        </label>
+                        <label>
                           <strong>Booking link</strong>
                           <input
                             value={smilesBookingUrl}
@@ -4296,11 +4850,12 @@ Do not return the same caption.`,
                       >
                         {sendingToSmilesPostId === post?.id
                           ? "Sending..."
-                          : "Create Smiles post"}
+                          : post?.smiles_status === "sent"
+                            ? "Update Smiles post"
+                            : "Create Smiles post"}
                       </button>
                     )}
                   </>
-                )}
               </section>
             </article>
 
@@ -7109,6 +7664,8 @@ Do not return the same caption.`,
         .pr2-wording textarea,
         .pr2-wording input,
         .pr2-smiles-prompt-grid input,
+        .pr2-smiles-prompt-grid select,
+        .pr2-smiles-prompt-grid textarea,
         .pr2-right-schedule input {
           width: 100% !important;
           min-height: 54px !important;
@@ -7122,8 +7679,25 @@ Do not return the same caption.`,
           box-shadow: none !important;
         }
 
+        .pr2-smiles-prompt-grid select {
+          appearance: none !important;
+          background-image: linear-gradient(45deg, transparent 50%, #071b4c 50%),
+            linear-gradient(135deg, #071b4c 50%, transparent 50%) !important;
+          background-position: calc(100% - 22px) 24px, calc(100% - 16px) 24px !important;
+          background-size: 6px 6px, 6px 6px !important;
+          background-repeat: no-repeat !important;
+          padding-right: 42px !important;
+        }
+
         .pr2-wording textarea {
           min-height: 190px !important;
+          padding: 16px !important;
+          resize: vertical !important;
+          line-height: 1.5 !important;
+        }
+
+        .pr2-smiles-prompt-grid textarea {
+          min-height: 140px !important;
           padding: 16px !important;
           resize: vertical !important;
           line-height: 1.5 !important;
@@ -7132,6 +7706,8 @@ Do not return the same caption.`,
         .pr2-wording textarea:focus,
         .pr2-wording input:focus,
         .pr2-smiles-prompt-grid input:focus,
+        .pr2-smiles-prompt-grid select:focus,
+        .pr2-smiles-prompt-grid textarea:focus,
         .pr2-right-schedule input:focus {
           outline: none !important;
           border-color: #f72486 !important;

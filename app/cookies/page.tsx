@@ -21,7 +21,7 @@ const cookieSections = [
     title: '2. How FromOne uses cookies',
     body: [
       'FromOne may use cookies or similar technologies for essential app functions, preferences, analytics if added, publishing connections, and payment or billing features if connected.',
-      'Essential cookies are needed for sign-in, account security, session management, dashboard access, uploads, saved posts, and core app functionality.',
+      'Essential cookies are needed for sign-in, account security, session management, dashboard access, uploads, saved posts, Smiles offer or event workflows, and core app functionality.',
       'Preference cookies may be used to remember interface choices, cookie choices, saved settings, or onboarding progress.',
       'Analytics cookies may be used only if analytics tools are added, to help understand how people use FromOne and improve the product.',
       'Publishing connection cookies may be used by Meta, Facebook, Instagram, or related services when you connect accounts or manage publishing permissions.',
@@ -31,7 +31,7 @@ const cookieSections = [
   {
     title: '3. Essential cookies',
     body: [
-      'Essential cookies are required for FromOne to work. These may include authentication cookies from Supabase or other session-related cookies needed for account access, uploads, saved weekly post sets, and publishing workflows.',
+      'Essential cookies are required for FromOne to work. These may include authentication cookies from Supabase or other session-related cookies needed for account access, uploads, saved posts, Smiles offer or event workflows, and publishing workflows.',
       'You cannot disable essential cookies through FromOne because they are needed to provide the service.',
     ],
   },
@@ -170,7 +170,7 @@ export default function CookiesPage() {
               marginTop: 28,
             }}
           >
-            <span className="status-pill">Last updated: 13 May 2026</span>
+            <span className="status-pill">Last updated: 5 July 2026</span>
             <span className="status-pill">Essential app cookies</span>
             <span className="status-pill">Connected services</span>
           </div>
@@ -206,7 +206,7 @@ export default function CookiesPage() {
             }}
           >
             FromOne uses essential cookies and similar technologies for sign-in, account security,
-            dashboard access, uploads, saved weekly sets, and publishing workflows. Other cookies
+            dashboard access, uploads, saved posts, Smiles offer or event workflows, and publishing workflows. Other cookies
             may be used only where needed for preferences, analytics, connected services, or
             payment features.
           </p>

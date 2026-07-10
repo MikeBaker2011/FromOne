@@ -37,12 +37,21 @@ type SmilesPublishBody = {
   locationName?: string;
   location_name?: string;
   address?: string;
+  postcode?: string;
+  postcodePrefix?: string;
+  postcode_prefix?: string;
   phone?: string;
   email?: string;
   venueType?: string;
   venue_type?: string;
   savingText?: string;
   saving_text?: string;
+  savingValue?: string;
+  saving_value?: string;
+  priceValue?: string;
+  price_value?: string;
+  pricingLabel?: string;
+  pricing_label?: string;
   terms?: string;
   validDays?: string;
   valid_days?: string;
@@ -58,6 +67,20 @@ type SmilesPublishBody = {
   end_time?: string;
   priceText?: string;
   price_text?: string;
+  ticketPrice?: string;
+  ticket_price?: string;
+  ticketType?: string;
+  ticket_type?: string;
+  smilesDraftId?: string;
+  smiles_draft_id?: string;
+  smilesOfferId?: string;
+  smiles_offer_id?: string;
+  smilesEventId?: string;
+  smiles_event_id?: string;
+  smilesReferenceCode?: string;
+  smiles_reference_code?: string;
+  referenceCode?: string;
+  reference_code?: string;
 };
 
 const fromOneSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -94,6 +117,34 @@ function getSmilesSupabaseAdmin() {
 
 function cleanText(value: unknown) {
   return String(value || "").trim();
+}
+
+function cleanNullableText(value: unknown) {
+  const cleaned = cleanText(value);
+  return cleaned || null;
+}
+
+function normalisePostcode(value: unknown) {
+  return cleanText(value).replace(/\s+/g, " ").trim().toUpperCase();
+}
+
+function getPostcodePrefixFromValue(value: unknown) {
+  const postcode = normalisePostcode(value).replace(/\s+/g, "");
+
+  if (!postcode) {
+    return "";
+  }
+
+  const outwardCode = postcode.match(/^[A-Z]{1,2}\d[A-Z\d]?/);
+
+  return outwardCode?.[0] || "";
+}
+
+function getPostcodePrefix(body: SmilesPublishBody) {
+  return (
+    getPostcodePrefixFromValue(body.postcodePrefix || body.postcode_prefix) ||
+    getPostcodePrefixFromValue(body.postcode)
+  );
 }
 
 function makeSmilesReference(prefix: SmilesReferencePrefix) {
@@ -134,11 +185,6 @@ async function makeUniqueSmilesReference({
   }
 
   throw new Error("Could not generate a unique Smiles reference. Please try again.");
-}
-
-function cleanNullableText(value: unknown) {
-  const cleaned = cleanText(value);
-  return cleaned || null;
 }
 
 function createSlug(value: string) {
@@ -244,6 +290,171 @@ function buildShortDescription(body: SmilesPublishBody, fallback = "") {
   return supplied.length > 160
     ? `${supplied.slice(0, 157).trim()}...`
     : supplied;
+}
+
+function getExistingSmilesDraftId(body: SmilesPublishBody, draftType: SmilesDraftType) {
+  if (draftType === "offer") {
+    return cleanText(
+      body.smilesOfferId || body.smiles_offer_id || body.smilesDraftId || body.smiles_draft_id
+    );
+  }
+
+  if (draftType === "event") {
+    return cleanText(
+      body.smilesEventId || body.smiles_event_id || body.smilesDraftId || body.smiles_draft_id
+    );
+  }
+
+  return cleanText(body.smilesDraftId || body.smiles_draft_id);
+}
+
+function getExistingSmilesReferenceCode(body: SmilesPublishBody) {
+  return cleanText(
+    body.smilesReferenceCode ||
+      body.smiles_reference_code ||
+      body.referenceCode ||
+      body.reference_code
+  );
+}
+
+function buildOfferPricing(body: SmilesPublishBody) {
+  const pricingLabel = cleanNullableText(body.pricingLabel || body.pricing_label);
+  const priceValue = cleanNullableText(
+    body.priceValue || body.price_value || body.savingValue || body.saving_value
+  );
+  const savingText =
+    cleanText(body.savingText || body.saving_text) ||
+    [pricingLabel, priceValue].filter(Boolean).join(" · ") ||
+    "Special offer";
+
+  return {
+    pricing_label: pricingLabel,
+    price_value: priceValue,
+    saving_text: savingText,
+  };
+}
+
+function buildEventTicketing(body: SmilesPublishBody) {
+  const ticketType = cleanNullableText(body.ticketType || body.ticket_type);
+  const ticketPrice = cleanNullableText(
+    body.ticketPrice || body.ticket_price || body.priceValue || body.price_value
+  );
+  const priceText =
+    cleanNullableText(body.priceText || body.price_text) ||
+    [ticketType, ticketPrice].filter(Boolean).join(" · ") ||
+    ticketType ||
+    ticketPrice;
+
+  return {
+    ticket_type: ticketType,
+    ticket_price: ticketPrice,
+    price_text: priceText || null,
+  };
+}
+
+async function findExistingSmilesDraftIdForPost({
+  postId,
+  draftType,
+}: {
+  postId: string;
+  draftType: SmilesDraftType;
+}) {
+  if (!postId || (draftType !== "offer" && draftType !== "event")) {
+    return "";
+  }
+
+  const supabase = getFromOneSupabaseAdmin();
+  const { data: post, error } = await supabase
+    .from("campaign_posts")
+    .select("*")
+    .eq("id", postId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Could not load existing Smiles reference:", error.message);
+    return "";
+  }
+
+  const metadata = (post as any)?.smiles_metadata || (post as any)?.metadata || {};
+  const table = cleanText((post as any)?.smiles_table || metadata?.smiles_table);
+  const draftId = cleanText(
+    (post as any)?.smiles_draft_id ||
+      (post as any)?.smiles_offer_id ||
+      (post as any)?.smiles_event_id ||
+      metadata?.smiles_draft_id
+  );
+
+  if (!draftId) {
+    return "";
+  }
+
+  if (draftType === "offer" && table && table !== "offers") {
+    return "";
+  }
+
+  if (draftType === "event" && table && table !== "events") {
+    return "";
+  }
+
+  return draftId;
+}
+
+async function findExistingSmilesItem({
+  smiles,
+  table,
+  postId,
+  explicitId,
+  referenceCode,
+}: {
+  smiles: ReturnType<typeof getSmilesSupabaseAdmin>;
+  table: "offers" | "events";
+  postId: string;
+  explicitId?: string;
+  referenceCode?: string;
+}) {
+  if (explicitId) {
+    const { data, error } = await smiles
+      .from(table)
+      .select("*")
+      .eq("id", explicitId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (data) return data as any;
+  }
+
+  if (referenceCode) {
+    const { data, error } = await smiles
+      .from(table)
+      .select("*")
+      .eq("reference_code", referenceCode)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (data) return data as any;
+  }
+
+  if (!postId) return null;
+
+  const { data, error } = await smiles
+    .from(table)
+    .select("*")
+    .eq("fromone_post_id", postId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as any) || null;
 }
 
 async function findUserIdForPost({
@@ -401,6 +612,8 @@ async function updateFromOnePostAfterSmilesDraft({
   const updates = {
     published_to: buildPublishedToValue((currentPost as any)?.published_to),
     publish_error: null,
+    smiles_table: smilesTable,
+    smiles_draft_id: smilesDraftId,
     updated_at: new Date().toISOString(),
   };
 
@@ -435,6 +648,9 @@ async function createVenueDraft(body: SmilesPublishBody, userId = "") {
   const shortDescription = buildShortDescription(body, description);
   const now = new Date().toISOString();
   const fromOneProfileId = getFromOneProfileId(body);
+  const postcode = normalisePostcode(body.postcode);
+  const postcodePrefix = getPostcodePrefix(body);
+
   const payload = {
     business_name: name,
     venue_name: name,
@@ -444,6 +660,8 @@ async function createVenueDraft(body: SmilesPublishBody, userId = "") {
     location_area:
       cleanText(body.locationArea || body.location_area) || "Stockport",
     address: cleanNullableText(body.address),
+    postcode: postcode || null,
+    postcode_prefix: postcodePrefix || null,
     phone: cleanNullableText(body.phone),
     email: cleanNullableText(body.email),
     website_url: cleanNullableText(body.websiteUrl || body.website_url),
@@ -489,27 +707,42 @@ async function createVenueDraft(body: SmilesPublishBody, userId = "") {
   };
 }
 
-async function createOfferDraft(body: SmilesPublishBody, smilesVenueId = "") {
+async function createOfferDraft(
+  body: SmilesPublishBody,
+  smilesVenueId = "",
+  existingDraftId = ""
+) {
   const smiles = getSmilesSupabaseAdmin();
+  const postId = cleanText(body.postId || body.campaignPostId);
+  const referenceCodeFromBody = getExistingSmilesReferenceCode(body);
+  const existingOffer = await findExistingSmilesItem({
+    smiles,
+    table: "offers",
+    postId,
+    explicitId: existingDraftId,
+    referenceCode: referenceCodeFromBody,
+  });
 
   const title = cleanText(body.title || body.name) || "FromOne offer draft";
   const description = buildDescription(body);
   const shortDescription = buildShortDescription(body, description);
   const now = new Date().toISOString();
-  const referenceCode = await makeUniqueSmilesReference({
-    smiles,
-    table: "offers",
-    prefix: "OF",
-  });
+  const referenceCode = existingOffer
+    ? cleanText(existingOffer.reference_code)
+    : referenceCodeFromBody ||
+      (await makeUniqueSmilesReference({
+        smiles,
+        table: "offers",
+        prefix: "OF",
+      }));
+  const pricing = buildOfferPricing(body);
 
   const draft = {
-    id: crypto.randomUUID(),
-    reference_code: referenceCode,
     client_id: null,
     venue_id: cleanNullableText(smilesVenueId),
     category_id: null,
     title,
-    slug: createSlug(title),
+    slug: existingOffer?.slug || createSlug(title),
     description,
     short_description: shortDescription,
     start_date: cleanDate(body.startDate || body.start_date),
@@ -517,20 +750,34 @@ async function createOfferDraft(body: SmilesPublishBody, smilesVenueId = "") {
     valid_days: cleanNullableText(body.validDays || body.valid_days),
     valid_times: cleanNullableText(body.validTimes || body.valid_times),
     terms: cleanText(body.terms) || "Subject to availability.",
-    saving_text:
-      cleanText(body.savingText || body.saving_text) || "Special offer",
+    ...pricing,
     main_image_url: cleanNullableText(body.mediaUrl || body.media_url),
-    is_featured: false,
-    is_published: false,
-    created_at: now,
+    fromone_post_id: cleanNullableText(postId),
+    fromone_profile_id: cleanNullableText(getFromOneProfileId(body)),
+    is_featured: Boolean(existingOffer?.is_featured),
+    is_published: existingOffer ? true : false,
     updated_at: now,
   };
 
-  const { data, error } = await smiles
-    .from("offers")
-    .insert(draft)
-    .select("id, slug, reference_code")
-    .single();
+  const query = existingOffer?.id
+    ? smiles
+        .from("offers")
+        .update(draft)
+        .eq("id", existingOffer.id)
+        .select("id, slug, reference_code")
+        .single()
+    : smiles
+        .from("offers")
+        .insert({
+          ...draft,
+          id: crypto.randomUUID(),
+          reference_code: referenceCode,
+          created_at: now,
+        })
+        .select("id, slug, reference_code")
+        .single();
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
@@ -541,31 +788,47 @@ async function createOfferDraft(body: SmilesPublishBody, smilesVenueId = "") {
     draftId: data.id,
     slug: data.slug,
     referenceCode: (data as any).reference_code || referenceCode,
+    updatedExisting: Boolean(existingOffer?.id),
     draft,
   };
 }
 
-async function createEventDraft(body: SmilesPublishBody, smilesVenueId = "") {
+async function createEventDraft(
+  body: SmilesPublishBody,
+  smilesVenueId = "",
+  existingDraftId = ""
+) {
   const smiles = getSmilesSupabaseAdmin();
+  const postId = cleanText(body.postId || body.campaignPostId);
+  const referenceCodeFromBody = getExistingSmilesReferenceCode(body);
+  const existingEvent = await findExistingSmilesItem({
+    smiles,
+    table: "events",
+    postId,
+    explicitId: existingDraftId,
+    referenceCode: referenceCodeFromBody,
+  });
 
   const title = cleanText(body.title || body.name) || "FromOne event draft";
   const description = buildDescription(body);
   const shortDescription = buildShortDescription(body, description);
   const now = new Date().toISOString();
-  const referenceCode = await makeUniqueSmilesReference({
-    smiles,
-    table: "events",
-    prefix: "EV",
-  });
+  const referenceCode = existingEvent
+    ? cleanText(existingEvent.reference_code)
+    : referenceCodeFromBody ||
+      (await makeUniqueSmilesReference({
+        smiles,
+        table: "events",
+        prefix: "EV",
+      }));
+  const ticketing = buildEventTicketing(body);
 
   const draft = {
-    id: crypto.randomUUID(),
-    reference_code: referenceCode,
     client_id: null,
     venue_id: cleanNullableText(smilesVenueId),
     category_id: null,
     title,
-    slug: createSlug(title),
+    slug: existingEvent?.slug || createSlug(title),
     description,
     short_description: shortDescription,
     location_name: cleanNullableText(body.locationName || body.location_name),
@@ -574,20 +837,35 @@ async function createEventDraft(body: SmilesPublishBody, smilesVenueId = "") {
     end_date: cleanDate(body.endDate || body.end_date),
     start_time: cleanTime(body.startTime || body.start_time),
     end_time: cleanTime(body.endTime || body.end_time),
-    price_text: cleanNullableText(body.priceText || body.price_text),
+    ...ticketing,
     booking_url: cleanNullableText(body.bookingUrl || body.booking_url),
     main_image_url: cleanNullableText(body.mediaUrl || body.media_url),
-    is_featured: false,
-    is_published: false,
-    created_at: now,
+    fromone_post_id: cleanNullableText(postId),
+    fromone_profile_id: cleanNullableText(getFromOneProfileId(body)),
+    is_featured: Boolean(existingEvent?.is_featured),
+    is_published: existingEvent ? true : false,
     updated_at: now,
   };
 
-  const { data, error } = await smiles
-    .from("events")
-    .insert(draft)
-    .select("id, slug, reference_code")
-    .single();
+  const query = existingEvent?.id
+    ? smiles
+        .from("events")
+        .update(draft)
+        .eq("id", existingEvent.id)
+        .select("id, slug, reference_code")
+        .single()
+    : smiles
+        .from("events")
+        .insert({
+          ...draft,
+          id: crypto.randomUUID(),
+          reference_code: referenceCode,
+          created_at: now,
+        })
+        .select("id, slug, reference_code")
+        .single();
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
@@ -598,6 +876,7 @@ async function createEventDraft(body: SmilesPublishBody, smilesVenueId = "") {
     draftId: data.id,
     slug: data.slug,
     referenceCode: (data as any).reference_code || referenceCode,
+    updatedExisting: Boolean(existingEvent?.id),
     draft,
   };
 }
@@ -616,6 +895,9 @@ export async function POST(req: NextRequest) {
     });
 
     const draftType = getDraftType(body);
+    const existingSmilesDraftId =
+      getExistingSmilesDraftId(body, draftType) ||
+      (await findExistingSmilesDraftIdForPost({ postId, draftType }));
     const smilesVenueId =
       draftType === "offer" || draftType === "event"
         ? await findSmilesVenueIdForBody({
@@ -629,8 +911,8 @@ export async function POST(req: NextRequest) {
       draftType === "venue"
         ? await createVenueDraft(body, userId)
         : draftType === "event"
-          ? await createEventDraft(body, smilesVenueId)
-          : await createOfferDraft(body, smilesVenueId);
+          ? await createEventDraft(body, smilesVenueId, existingSmilesDraftId)
+          : await createOfferDraft(body, smilesVenueId, existingSmilesDraftId);
 
     await updateFromOnePostAfterSmilesDraft({
       postId,
@@ -642,7 +924,9 @@ export async function POST(req: NextRequest) {
       userId,
       postId,
       status: "posted",
-      message: "Draft sent to Stockport Smiles.",
+      message: (result as any).updatedExisting || existingSmilesDraftId
+        ? "Smiles item updated."
+        : "Draft sent to Stockport Smiles.",
       metadata: {
         smiles_type: draftType,
         smiles_table: result.table,
@@ -666,6 +950,7 @@ export async function POST(req: NextRequest) {
       smilesReferenceCode: (result as any).referenceCode || null,
       smilesVenueId: smilesVenueId || null,
       isPublished: false,
+      updatedExisting: Boolean((result as any).updatedExisting || existingSmilesDraftId),
     });
   } catch (error: any) {
     const message =

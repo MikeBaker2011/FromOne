@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "FromOne | One upload. Facebook, Instagram and Smiles.",
+  title: "FromOne | One upload. Posts, offers and events.",
   description:
-    "FromOne turns business photos, videos and flyers into ready-to-review Facebook, Instagram and Smiles posts.",
+    "FromOne turns business photos, videos and flyers into ready-to-review Facebook and Instagram posts, plus Smiles offers and events when relevant.",
 };
 
 export default function HomePage() {
@@ -83,7 +83,7 @@ export default function HomePage() {
       <section className="fo-section fo-smiles-sell">
         <div className="fo-smiles-copy">
           <p className="fo-eyebrow">WHY SMILES MATTERS</p>
-          <h2>Social posts are seen. Smiles posts are found.</h2>
+          <h2>Social posts are seen. Smiles listings are found.</h2>
           <p>
             FromOne gives local offers and events a proper route into Smiles,
             with clear references, approval status and view links.
@@ -108,7 +108,7 @@ export default function HomePage() {
           </article>
           <article>
             <strong>2</strong>
-            <span>Choose Facebook, Instagram and Smiles</span>
+            <span>Choose Facebook, Instagram and Smiles if it fits</span>
           </article>
           <article>
             <strong>3</strong>
@@ -116,7 +116,7 @@ export default function HomePage() {
           </article>
           <article>
             <strong>4</strong>
-            <span>Publish to Facebook or Instagram, or send suitable posts to Smiles</span>
+            <span>Publish to Facebook or Instagram, or send suitable offers and events to Smiles</span>
           </article>
         </div>
       </section>
