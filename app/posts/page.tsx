@@ -323,14 +323,13 @@ function getMobilePostState(post: any) {
     status === "posted" ||
     publishStatus === "posted" ||
     publishStatus === "published" ||
-    approvalStatus === "posted" ||
-    safeText(post?.smiles_status).toLowerCase() === "sent";
+    approvalStatus === "posted";
 
   if (isPosted) {
     return {
       label: "Posted",
       className: "is-posted",
-      reviewLabel: "View details",
+      reviewLabel: "View post",
     };
   }
 
@@ -342,7 +341,7 @@ function getMobilePostState(post: any) {
     return {
       label: "Autoscheduled",
       className: "is-autoscheduled",
-      reviewLabel: "View details",
+      reviewLabel: "View post",
     };
   }
 
@@ -1288,7 +1287,7 @@ export default function PostsPage() {
       message:
         posts.length === 0
           ? `${getCampaignDisplayName()} has no posts. Deleting it will free up a saved weekly set slot.`
-          : `This will delete ${getCampaignDisplayName()} and all posts inside it. This cannot be undone.`,
+          : `This will remove ${getCampaignDisplayName()} and its posts from FromOne. Shared images used by Smilez will be kept. This cannot be undone.`,
       confirmLabel:
         posts.length === 0 ? "Delete empty set" : "Delete weekly set",
       danger: true,
@@ -1311,35 +1310,17 @@ export default function PostsPage() {
     try {
       const campaignIdToDelete = campaign.id;
 
-      const { data: campaignPosts, error: postsLoadError } = await supabase
-        .from("campaign_posts")
-        .select("id, image_path, media_path")
-        .eq("campaign_id", campaignIdToDelete);
-
-      if (postsLoadError) {
-        notify(postsLoadError.message, "error");
-        return;
-      }
-
-      const storagePaths =
-        campaignPosts
-          ?.flatMap((post) => [post.image_path, post.media_path])
-          .filter(Boolean)
-          .filter((value, index, array) => array.indexOf(value) === index) ||
-        [];
-
-      if (storagePaths.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from(MEDIA_BUCKET)
-          .remove(storagePaths);
-
-        if (storageError) {
-          console.error(
-            "Weekly posts media delete error:",
-            storageError.message,
-          );
-        }
-      }
+      /*
+       * Do not delete campaign media from Supabase Storage here.
+       *
+       * Smilez offers and events can continue referencing the same uploaded
+       * image after the FromOne weekly set has been removed. Deleting the
+       * storage object would leave those public records with a broken URL.
+       *
+       * This action therefore deletes only the FromOne campaign/database
+       * records. Shared media remains available until a separate, reference-
+       * aware cleanup process confirms that nothing still uses it.
+       */
 
       const { error: campaignDeleteError } = await supabase
         .from("campaigns")
@@ -1361,7 +1342,11 @@ export default function PostsPage() {
       cancelEditingPost();
       closeConfirmDialog();
 
-      notify("Weekly posts deleted.", "success", "Weekly set deleted");
+      notify(
+        "Weekly posts deleted from FromOne. Shared Smilez images were kept.",
+        "success",
+        "Weekly set deleted",
+      );
       await loadPageData();
     } catch (error: any) {
       const message = getReadableError(error, "Error deleting weekly posts.");
@@ -2981,147 +2966,347 @@ Important:
     return "is-ready";
   };
 
-  const getSimplePostActionLabel = (post: any) => {
-    const status = getSimplePostStatus(post).toLowerCase();
-
-    if (
-      status.includes("published") ||
-      status.includes("sent to smiles") ||
-      status.includes("scheduled")
-    ) {
-      return "View details";
-    }
-
-    return "Review";
-  };
-
-  const simplePostsToCheckCount = sortedPosts.filter(
-    (post: any) => getSimplePostActionLabel(post) === "Review"
-  ).length;
-
   return (
-    <main className="fromone-posts-page settings-create-style-page" data-fromone-posts-redesign="v1">
-      <section id="fromone-standard-shell" className="posts-create-style-card">
-        <header className="posts-create-hero">
-          <div className="posts-create-eyebrow">Posts</div>
-          <h1>Your posts are ready.</h1>
-          <p>
-            Open each draft, check the image and wording, then publish to social or send suitable offers and events to Smiles.
-          </p>
+    <main className="fromone-posts-page posts-simple-page">
+      <section id="fromone-standard-shell" className="posts-simple-card">
+        <header className="posts-simple-hero">
+          <span>Posts</span>
+          <h1>Your posts are ready.<br />Keep it simple.</h1>
+          <p>Open a post, check it, then publish or send it where it needs to go.</p>
         </header>
 
-        <section className="posts-simple-panel posts-summary-panel">
-          <div className="posts-panel-head">
-            <span className="posts-step-badge">01</span>
-            <div>
-              <h2>Review queue</h2>
-              <p>
-                {loading
-                  ? "Loading the posts created from your uploads."
-                  : simplePostsToCheckCount > 0
-                    ? `${simplePostsToCheckCount} post${simplePostsToCheckCount === 1 ? "" : "s"} waiting for you.`
-                    : sortedPosts.length > 0
-                      ? "Everything here has already been sent or published."
-                      : "No posts are waiting right now."}
-              </p>
-            </div>
-          </div>
-
-          <div className="posts-summary-actions">
-            <a href="/dashboard">Create more posts</a>
-          </div>
-        </section>
+        <div className="posts-simple-actions">
+          <a href="/dashboard">Create more posts</a>
+        </div>
 
         {loading ? (
-          <section className="posts-simple-panel posts-empty-panel">
-            <div className="posts-panel-head">
-              <span className="posts-step-badge">...</span>
-              <div>
-                <h2>Loading posts</h2>
-                <p>One moment while FromOne gets your review queue.</p>
-              </div>
-            </div>
+          <section className="posts-simple-empty">
+            <strong>Loading posts...</strong>
+            <p>One moment while FromOne gets your review queue.</p>
           </section>
         ) : sortedPosts.length === 0 ? (
-          <section className="posts-simple-panel posts-empty-panel">
-            <div className="posts-panel-head">
-              <span className="posts-step-badge">02</span>
-              <div>
-                <h2>No posts to review</h2>
-                <p>Create a post first, then it will appear here.</p>
-              </div>
-            </div>
-            <a className="posts-primary-action" href="/dashboard">Create a post</a>
+          <section className="posts-simple-empty">
+            <strong>No posts to review.</strong>
+            <p>Create a post first, then it will appear here.</p>
+            <a href="/dashboard">Create a post</a>
           </section>
         ) : (
-          <section className="posts-simple-panel posts-list-panel" aria-label="Posts ready to review">
-            <div className="posts-panel-head">
-              <span className="posts-step-badge">02</span>
-              <div>
-                <h2>Check each post</h2>
-                <p>View the media, confirm the copy, then publish to social or send suitable offers and events to Smiles.</p>
-              </div>
-            </div>
+          <section className="posts-simple-list" aria-label="Posts ready to review">
+            {sortedPosts.map((post: any, index: number) => {
+              const mediaKind = getPostMediaKind(post);
+              const title = getDisplayPostTitle(post, index);
+              const captionPreview = String(post?.caption || "").trim();
+              const destination = getSimplePostDestination(post);
+              const status = getSimplePostStatus(post);
+              const statusClass = getSimpleStatusClass(post);
 
-            <div className="posts-review-list">
-              {sortedPosts.map((post: any, index: number) => {
-                const mediaKind = getPostMediaKind(post);
-                const title = getDisplayPostTitle(post, index);
-                const captionPreview = String(post?.caption || "").trim();
-                const destination = getSimplePostDestination(post);
-                const status = getSimplePostStatus(post);
-                const statusClass = getSimpleStatusClass(post);
-
-                return (
-                  <article key={post.id} className="posts-review-card">
-                    <div className="posts-review-media">
-                      {post?.media_url ? (
-                        mediaKind === "video" ? (
-                          <video src={post.media_url} muted playsInline preload="metadata" />
-                        ) : mediaKind === "flyer" ? (
-                          <div className="posts-review-media-empty">
-                            <strong>Flyer</strong>
-                          </div>
-                        ) : (
-                          <img src={post.media_url} alt={title || "Post media"} />
-                        )
-                      ) : (
-                        <div className="posts-review-media-empty">
-                          <strong>No media</strong>
+              return (
+                <article key={post.id} className="posts-simple-item">
+                  <div className="posts-simple-media">
+                    {post?.media_url ? (
+                      mediaKind === "video" ? (
+                        <video src={post.media_url} muted playsInline preload="metadata" />
+                      ) : mediaKind === "flyer" ? (
+                        <div className="posts-simple-media-empty">
+                          <strong>Flyer</strong>
                         </div>
-                      )}
-                    </div>
-
-                    <div className="posts-review-copy">
-                      <div className="posts-review-meta">
-                        <span>{destination}</span>
-                        <span className={statusClass}>{status}</span>
+                      ) : (
+                        <img src={post.media_url} alt={title || "Post media"} />
+                      )
+                    ) : (
+                      <div className="posts-simple-media-empty">
+                        <strong>No media</strong>
                       </div>
+                    )}
+                  </div>
 
-                      <h3>{title}</h3>
-
-                      <p>
-                        {captionPreview ||
-                          "Open this post to check the wording before anything is published."}
-                      </p>
+                  <div className="posts-simple-copy">
+                    <div className="posts-simple-meta">
+                      <span>{destination}</span>
+                      <span className={statusClass}>{status}</span>
                     </div>
 
-                    <button
-                      type="button"
-                      className="posts-review-action"
-                      onClick={() => choosePost(post.id)}
-                    >
-                      {getSimplePostActionLabel(post)}
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
+                    <h2>{title}</h2>
+
+                    <p>
+                      {captionPreview ||
+                        "Open this post to check the wording before anything is published."}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="posts-simple-review"
+                    onClick={() => choosePost(post.id)}
+                  >
+                    Review
+                  </button>
+                </article>
+              );
+            })}
           </section>
         )}
       </section>
 
       <style jsx global>{`
+        body:has(.posts-simple-page),
+        body:has(.posts-simple-page) * {
+          font-family:
+            var(--font-main),
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif !important;
+          letter-spacing: -0.01em !important;
+        }
+
+        body:has(.posts-simple-page) .app-shell,
+        body:has(.posts-simple-page) .main-content {
+          background: #f4f7fb !important;
+        }
+
+        .posts-simple-page {
+          min-height: 100vh;
+          padding: 28px 18px 96px;
+          background: #f4f7fb;
+          color: #071b49;
+          font-weight: 500;
+        }
+
+        .posts-simple-card {
+          width: min(100%, 920px);
+          display: grid;
+          gap: 24px;
+          margin: 0 auto;
+          padding: clamp(28px, 4vw, 46px);
+          border: 1.5px solid #dfe5f1;
+          border-radius: 32px;
+          background: #ffffff;
+          box-shadow: 0 26px 80px rgba(7, 27, 73, 0.10);
+        }
+
+        .posts-simple-hero {
+          display: grid;
+          gap: 10px;
+        }
+
+        .posts-simple-hero span {
+          color: #f72585;
+          font-size: 0.78rem;
+          font-weight: 800;
+          letter-spacing: 0.06em !important;
+          text-transform: uppercase;
+        }
+
+        .posts-simple-hero h1 {
+          max-width: 760px;
+          margin: 0;
+          color: #071b49;
+          font-size: clamp(3rem, 5.4vw, 4.45rem);
+          font-weight: 800;
+          line-height: 0.96;
+          letter-spacing: -0.055em !important;
+        }
+
+        .posts-simple-hero p {
+          max-width: 650px;
+          margin: 0;
+          color: #52617d;
+          font-size: clamp(1.05rem, 2vw, 1.18rem);
+          font-weight: 500;
+          line-height: 1.48;
+        }
+
+        .posts-simple-actions {
+          display: flex;
+          justify-content: flex-start;
+        }
+
+        .posts-simple-actions a,
+        .posts-simple-empty a,
+        .posts-simple-review {
+          min-height: 52px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1.5px solid #f72585;
+          border-radius: 999px;
+          background: #f72585;
+          color: #ffffff;
+          padding: 0 24px;
+          font-size: 1rem;
+          font-weight: 800;
+          text-decoration: none;
+          box-shadow: 0 16px 34px rgba(247, 37, 133, 0.18);
+          cursor: pointer;
+        }
+
+        .posts-simple-list {
+          display: grid;
+          gap: 12px;
+        }
+
+        .posts-simple-item {
+          display: grid;
+          grid-template-columns: 118px minmax(0, 1fr) 132px;
+          gap: 18px;
+          align-items: center;
+          padding: 14px;
+          border: 1.5px solid #dfe5f1;
+          border-radius: 24px;
+          background: #fbfcff;
+        }
+
+        .posts-simple-media {
+          width: 118px;
+          height: 104px;
+          display: grid;
+          place-items: center;
+          overflow: hidden;
+          border-radius: 18px;
+          background: #071026;
+        }
+
+        .posts-simple-media img,
+        .posts-simple-media video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .posts-simple-media-empty {
+          display: grid;
+          place-items: center;
+          width: 100%;
+          height: 100%;
+          color: #ffffff;
+          font-weight: 800;
+        }
+
+        .posts-simple-copy {
+          min-width: 0;
+          display: grid;
+          gap: 8px;
+        }
+
+        .posts-simple-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .posts-simple-meta span {
+          min-height: 28px;
+          display: inline-flex;
+          align-items: center;
+          border: 1.5px solid #ffd4e8;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49;
+          padding: 0 11px;
+          font-size: 0.78rem;
+          font-weight: 800;
+        }
+
+        .posts-simple-meta .is-done {
+          border-color: #ccefdc;
+          background: #f2fff7;
+        }
+
+        .posts-simple-meta .is-problem {
+          border-color: #ffd2d2;
+          background: #fff5f5;
+        }
+
+        .posts-simple-meta .is-planned {
+          border-color: #ffe8ad;
+          background: #fffaf0;
+        }
+
+        .posts-simple-copy h2 {
+          margin: 0;
+          color: #071b49;
+          font-size: clamp(1.18rem, 2.2vw, 1.42rem);
+          font-weight: 800;
+          line-height: 1.08;
+          letter-spacing: -0.035em !important;
+        }
+
+        .posts-simple-copy p {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          margin: 0;
+          color: #52617d;
+          font-size: 0.98rem;
+          font-weight: 500;
+          line-height: 1.42;
+        }
+
+        .posts-simple-review {
+          width: 100%;
+          min-height: 50px;
+          border-radius: 999px;
+        }
+
+        .posts-simple-empty {
+          display: grid;
+          gap: 12px;
+          padding: 24px;
+          border: 1.5px solid #ffd4e8;
+          border-radius: 24px;
+          background: #fff6fb;
+        }
+
+        .posts-simple-empty strong {
+          color: #071b49;
+          font-size: 1.45rem;
+          font-weight: 800;
+          letter-spacing: -0.035em !important;
+        }
+
+        .posts-simple-empty p {
+          margin: 0;
+          color: #52617d;
+          font-weight: 500;
+          line-height: 1.45;
+        }
+
+        @media (max-width: 780px) {
+          .posts-simple-page {
+            padding: 14px 14px 104px;
+          }
+
+          .posts-simple-card {
+            gap: 22px;
+            padding: 22px;
+            border-radius: 24px;
+          }
+
+          .posts-simple-hero h1 {
+            font-size: clamp(2.55rem, 12vw, 3.5rem);
+            line-height: 1;
+          }
+
+          .posts-simple-item {
+            grid-template-columns: 1fr;
+            padding: 14px;
+          }
+
+          .posts-simple-media {
+            width: 100%;
+            height: 210px;
+          }
+
+          .posts-simple-review {
+            min-height: 54px;
+          }
+        }
+
+        /* EXACT AGENCY WIDTH LOCK — rendered inside the active Posts return */
         body:has(.fromone-posts-page) {
           background: #f5f7fb !important;
           overflow-x: hidden !important;
@@ -3141,374 +3326,112 @@ Important:
           width: 100% !important;
           max-width: none !important;
           margin: 0 !important;
-          padding-top: 38px !important;
           padding-left: 0 !important;
           padding-right: 0 !important;
           box-sizing: border-box !important;
           overflow-x: hidden !important;
         }
 
-        .fromone-posts-page.settings-create-style-page {
+        .fromone-posts-page {
           width: 100% !important;
           max-width: none !important;
           min-width: 0 !important;
           min-height: 100vh !important;
           margin: 0 !important;
-          padding: 0 16px 104px !important;
+          padding: 32px 16px 72px !important;
           box-sizing: border-box !important;
           overflow-x: hidden !important;
           background: #f5f7fb !important;
           color: #071b49 !important;
-          font-family:
-            var(--font-main),
-            "Plus Jakarta Sans",
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
-          font-weight: 500 !important;
-          letter-spacing: -0.01em !important;
         }
 
-        .fromone-posts-page #fromone-standard-shell.posts-create-style-card {
+        .fromone-posts-page #fromone-standard-shell {
           width: 1040px !important;
           max-width: calc(100% - 32px) !important;
           min-width: 0 !important;
           min-height: 620px !important;
-          margin: 28px auto 0 !important;
+          display: grid !important;
+          gap: 24px !important;
+          margin: 0 auto !important;
           padding: clamp(30px, 4vw, 48px) !important;
           box-sizing: border-box !important;
           overflow: hidden !important;
-          display: block !important;
           border: 1px solid #dfe5f1 !important;
           border-radius: 32px !important;
           background: #ffffff !important;
           box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
-          color: #071b49 !important;
-          backdrop-filter: none !important;
         }
 
-        .fromone-posts-page .posts-create-hero {
+        @media (max-width: 780px) {
+          .fromone-posts-page {
+            padding: 24px 16px 112px !important;
+          }
+
+          .fromone-posts-page #fromone-standard-shell {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: auto !important;
+            padding: 22px !important;
+            border-radius: 26px !important;
+          }
+        }
+
+
+
+        /* -------------------------------------------------------------- */
+        /* POSTS BUTTON POLISH                                             */
+        /* -------------------------------------------------------------- */
+        .fromone-posts-page .posts-simple-actions {
+          display: flex !important;
+          justify-content: flex-start !important;
           width: 100% !important;
-          max-width: 760px !important;
-          margin: 0 0 26px !important;
+          margin: 0 0 24px !important;
           padding: 0 !important;
-          text-align: left !important;
         }
 
-        .fromone-posts-page .posts-create-eyebrow,
-        .fromone-posts-page .posts-review-meta span:first-child {
-          color: #f72585 !important;
-          font-size: 0.78rem !important;
+        .fromone-posts-page .posts-simple-actions a {
+          width: auto !important;
+          min-width: 190px !important;
+          max-width: 220px !important;
+          min-height: 52px !important;
+          padding: 0 24px !important;
+          border-radius: 999px !important;
+          font-size: 0.98rem !important;
+          font-weight: 800 !important;
           line-height: 1 !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.13em !important;
-          text-transform: uppercase !important;
+          box-shadow: 0 14px 30px rgba(247, 37, 133, 0.22) !important;
         }
 
-        .fromone-posts-page .posts-create-hero h1 {
-          max-width: 760px !important;
-          margin: 12px 0 14px !important;
-          color: #071b49 !important;
-          font-size: clamp(3rem, 5.2vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.055em !important;
-          font-weight: 800 !important;
-          text-align: left !important;
-          overflow: visible !important;
+        @media (max-width: 760px) {
+          .fromone-posts-page .posts-simple-actions a {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            min-height: 56px !important;
+          }
         }
 
-        .fromone-posts-page p {
-          color: #52617a !important;
-          font-size: 1rem !important;
-          line-height: 1.5 !important;
-          font-weight: 600 !important;
-        }
 
-        .fromone-posts-page .posts-create-hero p {
-          max-width: 720px !important;
-          margin: 0 !important;
-          font-size: 1.02rem !important;
-        }
-
-        .fromone-posts-page .posts-simple-panel {
-          width: 100% !important;
-          max-width: 100% !important;
-          margin-top: 18px !important;
-          padding: clamp(20px, 3vw, 30px) !important;
-          box-sizing: border-box !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 24px !important;
-          background: #f7f9fd !important;
-        }
-
-        .fromone-posts-page .posts-summary-panel {
-          display: flex !important;
-          gap: 18px !important;
-          align-items: center !important;
-          justify-content: space-between !important;
-          background:
-            linear-gradient(135deg, rgba(247, 37, 133, 0.045), transparent 46%),
-            #fff8fc !important;
-          border-color: #ffd2e5 !important;
-        }
-
-        .fromone-posts-page .posts-panel-head {
-          display: flex !important;
-          gap: 12px !important;
-          align-items: flex-start !important;
-          margin-bottom: 18px !important;
-        }
-
-        .fromone-posts-page .posts-summary-panel .posts-panel-head {
-          margin-bottom: 0 !important;
-        }
-
-        .fromone-posts-page .posts-step-badge {
-          display: inline-flex !important;
-          width: 34px !important;
-          height: 34px !important;
-          flex: 0 0 34px !important;
-          align-items: center !important;
-          justify-content: center !important;
-          border-radius: 50% !important;
-          background: #f72585 !important;
-          color: #ffffff !important;
-          font-size: 0.78rem !important;
-          font-weight: 800 !important;
-          box-shadow: 0 12px 26px rgba(247, 37, 133, 0.18) !important;
-        }
-
-        .fromone-posts-page .posts-panel-head h2,
-        .fromone-posts-page .posts-review-copy h3,
-        .fromone-posts-page .posts-empty-panel h2 {
-          margin: 0 0 6px !important;
-          color: #071b49 !important;
-          font-size: clamp(1.65rem, 3.4vw, 2.15rem) !important;
-          font-weight: 800 !important;
-          line-height: 1.05 !important;
-          letter-spacing: -0.045em !important;
-        }
-
-        .fromone-posts-page .posts-panel-head p,
-        .fromone-posts-page .posts-review-copy p {
-          margin: 0 !important;
-        }
-
-        .fromone-posts-page .posts-summary-actions a,
-        .fromone-posts-page .posts-primary-action,
-        .fromone-posts-page .posts-review-action {
-          min-height: 54px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 22px !important;
-          border: 1px solid #f72585 !important;
-          border-radius: 999px !important;
-          background: #f72585 !important;
-          color: #ffffff !important;
-          box-shadow: 0 18px 38px rgba(247, 37, 133, 0.24) !important;
-          font: inherit !important;
-          font-weight: 800 !important;
-          text-decoration: none !important;
-          cursor: pointer !important;
-        }
-
-        .fromone-posts-page .posts-review-list {
-          display: grid !important;
-          gap: 14px !important;
-        }
-
-        .fromone-posts-page .posts-review-card {
-          display: grid !important;
-          grid-template-columns: 132px minmax(0, 1fr) 150px !important;
-          gap: 18px !important;
-          align-items: center !important;
-          padding: 18px !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 22px !important;
-          background: #ffffff !important;
-          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
-        }
-
-        .fromone-posts-page .posts-review-media {
-          width: 132px !important;
-          height: 112px !important;
-          display: grid !important;
-          place-items: center !important;
-          overflow: hidden !important;
-          border-radius: 18px !important;
-          background: #071026 !important;
-        }
-
-        .fromone-posts-page .posts-review-media img,
-        .fromone-posts-page .posts-review-media video {
-          width: 100% !important;
-          height: 100% !important;
-          object-fit: contain !important;
-        }
-
-        .fromone-posts-page .posts-review-media-empty {
-          width: 100% !important;
-          height: 100% !important;
-          display: grid !important;
-          place-items: center !important;
-          color: #ffffff !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-posts-page .posts-review-copy {
-          min-width: 0 !important;
-          display: grid !important;
-          gap: 8px !important;
-        }
-
-        .fromone-posts-page .posts-review-meta {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 8px !important;
-        }
-
-        .fromone-posts-page .posts-review-meta span {
-          min-height: 28px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          border: 1px solid #ffd4e8 !important;
-          border-radius: 999px !important;
-          background: #ffffff !important;
-          color: #071b49 !important;
-          padding: 0 11px !important;
-          font-size: 0.8rem !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-posts-page .posts-review-meta .is-done {
-          border-color: #d7f7e5 !important;
-          background: #f0fff6 !important;
-        }
-
-        .fromone-posts-page .posts-review-meta .is-problem {
-          border-color: #ffd2d2 !important;
-          background: #fff5f5 !important;
-        }
-
-        .fromone-posts-page .posts-review-meta .is-planned {
-          border-color: #ffe8ad !important;
-          background: #fffaf0 !important;
-        }
-
-        .fromone-posts-page .posts-review-copy h3 {
-          font-size: clamp(1.35rem, 2.6vw, 1.65rem) !important;
-          letter-spacing: -0.035em !important;
-        }
-
-        .fromone-posts-page .posts-review-copy p {
-          display: -webkit-box !important;
-          overflow: hidden !important;
-          -webkit-line-clamp: 2 !important;
-          -webkit-box-orient: vertical !important;
-        }
-
-        .fromone-posts-page .posts-review-action {
-          width: 100% !important;
-          border-radius: 999px !important;
-        }
-
-        .fromone-posts-page .posts-empty-panel .posts-primary-action {
-          width: fit-content !important;
-        }
-
+        /* -------------------------------------------------------------- */
+        /* POSTS MOBILE GAP ONLY — match Dashboard mobile                  */
+        /* Desktop spacing untouched                                      */
+        /* -------------------------------------------------------------- */
         @media (max-width: 760px) {
           body:has(.fromone-posts-page) .main-content {
             padding-top: 0 !important;
           }
 
-          .fromone-posts-page.settings-create-style-page {
-            padding: 0 0 112px !important;
+          .fromone-posts-page {
+            padding-top: 24px !important;
           }
 
-          .fromone-posts-page #fromone-standard-shell.posts-create-style-card {
-            width: calc(100% - 72px) !important;
-            max-width: 468px !important;
-            min-height: auto !important;
-            margin: 24px auto 0 !important;
-            padding: 28px 26px 26px !important;
-            border-radius: 26px !important;
-          }
-
-          .fromone-posts-page .posts-create-hero {
-            margin-bottom: 32px !important;
-          }
-
-          .fromone-posts-page .posts-create-hero h1 {
-            margin: 14px 0 18px !important;
-            font-size: clamp(2.75rem, 11vw, 3.6rem) !important;
-            line-height: 0.94 !important;
-            letter-spacing: -0.058em !important;
-          }
-
-          .fromone-posts-page .posts-create-hero p {
-            font-size: 1rem !important;
-            line-height: 1.45 !important;
-          }
-
-          .fromone-posts-page .posts-simple-panel {
-            margin-top: 18px !important;
-            padding: 20px !important;
-            border-radius: 24px !important;
-          }
-
-          .fromone-posts-page .posts-summary-panel {
-            display: grid !important;
-          }
-
-          .fromone-posts-page .posts-panel-head {
-            margin-bottom: 22px !important;
-          }
-
-          .fromone-posts-page .posts-summary-panel .posts-panel-head {
-            margin-bottom: 0 !important;
-          }
-
-          .fromone-posts-page .posts-panel-head h2 {
-            font-size: clamp(1.75rem, 7vw, 2.15rem) !important;
-            line-height: 0.98 !important;
-          }
-
-          .fromone-posts-page .posts-summary-actions a,
-          .fromone-posts-page .posts-primary-action {
-            width: 100% !important;
-          }
-
-          .fromone-posts-page .posts-review-card {
-            grid-template-columns: 1fr !important;
-            gap: 14px !important;
-            padding: 16px !important;
-            border-radius: 20px !important;
-          }
-
-          .fromone-posts-page .posts-review-media {
-            width: 100% !important;
-            height: 148px !important;
-          }
-
-          .fromone-posts-page .posts-review-copy h3 {
-            font-size: 1.2rem !important;
-          }
-
-          .fromone-posts-page .posts-review-copy p {
-            -webkit-line-clamp: 3 !important;
+          .fromone-posts-page #fromone-standard-shell,
+          .fromone-posts-page .posts-simple-shell,
+          .fromone-posts-page .posts-simple-page-card {
+            margin-top: 0 !important;
           }
         }
 
-        @media (max-width: 420px) {
-          .fromone-posts-page #fromone-standard-shell.posts-create-style-card {
-            width: calc(100% - 48px) !important;
-            padding: 26px 22px 24px !important;
-          }
-        }
       `}</style>
     </main>
   );
@@ -3522,8 +3445,8 @@ Important:
     "--client-secondary": brandSecondary,
     "--client-accent": brandAccent,
     width: "100%",
-    maxWidth: "none",
-    margin: "0 auto",
+    maxWidth: 1120,
+    margin: "0 auto 56px",
     minHeight: "auto",
     height: "auto",
     maxHeight: "none",
@@ -3532,8 +3455,7 @@ Important:
 
   return (
     <div
-      id="fromone-standard-shell"
-      className="campaign-brand-shell simplified-posts-page fromone-agency-shell"
+      className="campaign-brand-shell simplified-posts-page"
       style={brandStyle}
     >
       <style jsx global>{`
@@ -3970,7 +3892,7 @@ Important:
                           className="fromone-mobile-review-button"
                           onClick={() => choosePost(post.id)}
                         >
-                          {getSimplePostActionLabel(post)}
+                          Review
                         </button>
                       </div>
                     </article>
@@ -4676,7 +4598,7 @@ Important:
                               textAlign: "center",
                             }}
                           >
-                            {getSimplePostActionLabel(post)}
+                            Review
                           </button>
 
                           <button
