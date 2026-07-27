@@ -311,9 +311,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/dashboard", label: "Home" },
     { href: "/create", label: "Create" },
     { href: "/posts", label: "Posts" },
-    { href: "/smiles/bookings", label: "Bookings" },
     { href: "/smiles", label: "Smilez" },
-    { href: "/reports", label: "Reports" },
+    { href: "/reports", label: "Track my social" },
   ];
 
   const secondaryLinks = [

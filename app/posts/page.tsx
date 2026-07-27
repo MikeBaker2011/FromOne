@@ -3122,7 +3122,33 @@ Important:
         )}
       </section>
 
-      
+      <style jsx global>{`
+        body:has(.fromone-posts-page),
+        body:has(.fromone-posts-page) .app-shell,
+        body:has(.fromone-posts-page) .main-content,
+        body:has(.fromone-posts-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-posts-page) .fromone-universal-mobile-page-frame,
+        .fromone-posts-page,
+        .fromone-posts-page.settings-create-style-page {
+          background: #ffffff !important;
+          background-image: none !important;
+        }
+
+        @media (max-width: 900px) {
+          html,
+          body:has(.fromone-posts-page),
+          body:has(.fromone-posts-page) .app-shell,
+          body:has(.fromone-posts-page) .main-content,
+          body:has(.fromone-posts-page) .main-content.fromone-mobile-bottom-safe,
+          body:has(.fromone-posts-page) .fromone-universal-mobile-page-frame,
+          .fromone-route-posts,
+          .fromone-posts-page,
+          .fromone-posts-page.settings-create-style-page {
+            background: #ffffff !important;
+            background-image: none !important;
+          }
+        }
+      `}</style>
     </main>
   );
 

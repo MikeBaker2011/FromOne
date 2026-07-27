@@ -1046,14 +1046,14 @@ export default function SmilesDashboardPage() {
             padding-bottom: 0 !important;
             display: block !important;
             box-sizing: border-box !important;
-            background: #f5f7fb !important;
+            background: #ffffff !important;
             overflow-x: hidden !important;
           }
 
           html,
           body {
             overflow-x: hidden !important;
-            background: #f5f7fb !important;
+            background: #ffffff !important;
           }
 
           .fromone-smiles-page.settings-create-style-page {
@@ -1064,7 +1064,7 @@ export default function SmilesDashboardPage() {
             margin: 0 !important;
             padding: 0 10px 112px !important;
             box-sizing: border-box !important;
-            background: #f5f7fb !important;
+            background: #ffffff !important;
             display: block !important;
             box-sizing: border-box !important;
             overflow-x: hidden !important;
@@ -1236,12 +1236,12 @@ export default function SmilesDashboardPage() {
 
         /* FINAL SHARED FROMONE PAGE SYSTEM */
         body:has(.fromone-smiles-page) {
-          background: var(--posts-bg) !important;
+          background: #ffffff !important;
         }
 
         body:has(.fromone-smiles-page) .app-shell,
         body:has(.fromone-smiles-page) .main-content {
-          background: var(--posts-bg) !important;
+          background: #ffffff !important;
         }
 
         body:has(.fromone-smiles-page) .main-content {
@@ -1330,9 +1330,9 @@ export default function SmilesDashboardPage() {
           padding: 22px !important;
           border: 1px solid var(--posts-border) !important;
           border-radius: 26px !important;
-          background: rgba(255, 255, 255, 0.84) !important;
-          box-shadow: var(--posts-shadow) !important;
-          backdrop-filter: blur(10px) !important;
+          background: #ffffff !important;
+          box-shadow: none !important;
+          backdrop-filter: none !important;
         }
 
         .fromone-smiles-page .smiles-listing-strip {
@@ -1397,6 +1397,16 @@ export default function SmilesDashboardPage() {
         }
 
         @media (max-width: 700px) {
+          body:has(.fromone-smiles-page),
+          body:has(.fromone-smiles-page) .app-shell,
+          body:has(.fromone-smiles-page) .main-content,
+          body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe,
+          .fromone-smiles-page.settings-create-style-page,
+          .fromone-route-smiles .fromone-universal-mobile-page-frame {
+            background: #ffffff !important;
+            background-image: none !important;
+          }
+
           body:has(.fromone-smiles-page) .main-content,
           body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe {
             padding: 24px 16px 100px !important;

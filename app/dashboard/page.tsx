@@ -102,8 +102,12 @@ export default function DashboardPage() {
       </section>
 
       <style jsx global>{`
+        body:has(.companion-home),
+        body:has(.companion-home) .app-shell,
+        body:has(.companion-home) .main-content,
+        body:has(.companion-home) .main-content.fromone-mobile-bottom-safe,
         body:has(.companion-home) .fromone-universal-mobile-page-frame {
-          background: transparent !important;
+          background: #ffffff !important;
           background-image: none !important;
         }
 
@@ -113,7 +117,7 @@ export default function DashboardPage() {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
-          background: transparent !important;
+          background: #ffffff !important;
           color: #071b49;
           font-family: var(--font-main), "Plus Jakarta Sans", ui-sans-serif, system-ui,
             -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -156,7 +160,7 @@ export default function DashboardPage() {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 18px;
-          background: transparent !important;
+          background: #ffffff !important;
         }
 
         .companion-dashboard-card {
@@ -247,6 +251,17 @@ export default function DashboardPage() {
         }
 
         @media (max-width: 820px) {
+          body:has(.companion-home),
+          body:has(.companion-home) .app-shell,
+          body:has(.companion-home) .main-content,
+          body:has(.companion-home) .main-content.fromone-mobile-bottom-safe,
+          body:has(.companion-home) .fromone-universal-mobile-page-frame,
+          .companion-home,
+          .companion-card-grid {
+            background: #ffffff !important;
+            background-image: none !important;
+          }
+
           .companion-home-header {
             max-width: 100%;
             margin-bottom: 22px;

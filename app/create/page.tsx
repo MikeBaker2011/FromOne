@@ -2151,7 +2151,9 @@ Important flyer-to-wording rule: the generated caption, CTA and hashtags must be
     const contentDayCount =
       weeklyUploads.length > 0
         ? Math.min(weeklyUploads.length, 7)
-        : Math.max(1, Math.min(selectedPostingFrequency, 7));
+        : platformDistributionMode === "every_platform"
+          ? 1
+          : selectedPlatforms.length;
 
     const existingCampaignStats = addToCampaignId
       ? await getExistingCampaignStats(addToCampaignId)
@@ -2786,12 +2788,12 @@ If uploads are supplied:
   const marketReachContext = getMarketReachContext(client);
 
   const uploadDrivenPostCount = weeklyUploads.length;
-  const effectivePostCount =
-    uploadDrivenPostCount > 0 ? uploadDrivenPostCount : selectedPostingFrequency;
   const createdPostTotal =
-    platformDistributionMode === "every_platform"
-      ? effectivePostCount * selectedPlatforms.length
-      : effectivePostCount;
+    uploadDrivenPostCount > 0
+      ? platformDistributionMode === "every_platform"
+        ? uploadDrivenPostCount * selectedPlatforms.length
+        : uploadDrivenPostCount
+      : selectedPlatforms.length;
   const uploadLabel =
     weeklyUploads.length > 0
       ? `${weeklyUploads.length} upload${weeklyUploads.length === 1 ? "" : "s"} added`
@@ -3198,7 +3200,7 @@ If uploads are supplied:
                 <strong>{selectedPlatforms.length}</strong>
               </div>
               <div>
-                <span>Drafts</span>
+                <span>Posts</span>
                 <strong>{createdPostTotal}</strong>
               </div>
             </div>
@@ -3255,21 +3257,18 @@ If uploads are supplied:
           --create-muted: #66728a;
         }
 
-        body:has(.fromone-create-page) {
+        body:has(.fromone-create-page),
+        body:has(.fromone-create-page) .app-shell,
+        body:has(.fromone-create-page) .main-content,
+        body:has(.fromone-create-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-create-page) .fromone-universal-mobile-page-frame {
           overflow-x: hidden;
-          background: #f4f7fb !important;
+          background: #ffffff !important;
+          background-image: none !important;
         }
 
         body:has(.fromone-create-page) .main-content {
           color: #071b49 !important;
-          background:
-            linear-gradient(rgba(244, 247, 251, 0.78), rgba(244, 247, 251, 0.91)),
-            url("/map.png") center top / cover no-repeat,
-            #f4f7fb !important;
-        }
-
-        body:has(.fromone-create-page) .fromone-universal-mobile-page-frame {
-          background: transparent !important;
         }
 
         .fromone-create-page,
@@ -3284,7 +3283,8 @@ If uploads are supplied:
           margin: 0;
           padding: 0;
           color: var(--create-navy) !important;
-          background: transparent !important;
+          background: #ffffff !important;
+          background-image: none !important;
         }
 
         .create-page-shell {
@@ -3905,11 +3905,16 @@ If uploads are supplied:
         }
 
         @media (max-width: 640px) {
-          body:has(.fromone-create-page) .main-content {
-            background:
-              linear-gradient(rgba(244, 247, 251, 0.88), rgba(244, 247, 251, 0.97)),
-              url("/map.png") center top / cover no-repeat,
-              #f4f7fb !important;
+          body:has(.fromone-create-page),
+          body:has(.fromone-create-page) .app-shell,
+          body:has(.fromone-create-page) .main-content,
+          body:has(.fromone-create-page) .main-content.fromone-mobile-bottom-safe,
+          body:has(.fromone-create-page) .fromone-universal-mobile-page-frame,
+          .fromone-create-page,
+          .create-page-shell,
+          .create-workspace {
+            background: #ffffff !important;
+            background-image: none !important;
           }
 
           .fromone-create-page {

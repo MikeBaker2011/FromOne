@@ -777,8 +777,14 @@ export default function ReportsPage() {
       </section>
 
       <style jsx global>{`
-        body:has(.fromone-reports-page) {
-          background: var(--posts-bg) !important;
+        body:has(.fromone-reports-page),
+        body:has(.fromone-reports-page) .app-shell,
+        body:has(.fromone-reports-page) .main-content,
+        body:has(.fromone-reports-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-reports-page) .fromone-universal-mobile-page-frame,
+        .fromone-reports-page {
+          background: #ffffff !important;
+          background-image: none !important;
         }
 
         body:has(.fromone-reports-page) .main-content {
@@ -786,7 +792,6 @@ export default function ReportsPage() {
           max-width: none !important;
           margin: 0 !important;
           padding: 38px clamp(24px, 4vw, 54px) 90px !important;
-          background: var(--posts-bg) !important;
         }
 
         .reports-shared-summary {
@@ -985,6 +990,16 @@ export default function ReportsPage() {
         }
 
         @media (max-width: 700px) {
+          body:has(.fromone-reports-page),
+          body:has(.fromone-reports-page) .app-shell,
+          body:has(.fromone-reports-page) .main-content,
+          body:has(.fromone-reports-page) .main-content.fromone-mobile-bottom-safe,
+          body:has(.fromone-reports-page) .fromone-universal-mobile-page-frame,
+          .fromone-reports-page {
+            background: #ffffff !important;
+            background-image: none !important;
+          }
+
           body:has(.fromone-reports-page) .main-content {
             padding: 24px 16px 100px !important;
           }
