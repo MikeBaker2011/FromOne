@@ -1,20 +1,9 @@
 'use client';
 
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/app/components/ToastProvider';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: 'fromone-auth-session',
-  },
-});
+import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 
 const REMEMBER_EMAIL_KEY = 'fromone_remember_email';
 const RESET_COOLDOWN_SECONDS = 60;

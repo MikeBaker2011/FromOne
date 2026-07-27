@@ -1219,3 +1219,125 @@ body,
     padding-bottom: 0 !important;
   }
 }
+
+/* FINAL MOBILE WIDTH MATCH
+   Match the same outer width and 10px page gutter used by Settings and Smilez. */
+@media (max-width: 900px) {
+  body:has(.fromone-mobile-ready-flow) .main-content,
+  body:has(.fromone-mobile-ready-flow) .main-content.fromone-mobile-bottom-safe {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .campaign-brand-shell.simplified-posts-page,
+  body:has(.fromone-mobile-ready-flow) .simplified-posts-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 14px 0 126px !important;
+    box-sizing: border-box !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-review-list,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow h1,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow > p,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-subtitle,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-phone-card,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-actions,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-method-row,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-safe-note {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* ABSOLUTE FINAL MOBILE WIDTH FIX
+   Size the Posts review flow directly from the viewport so no parent max-width
+   or inherited container width can make it narrower than Settings or Smilez. */
+@media (max-width: 900px) {
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-review-list {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    min-width: 0 !important;
+    margin-left: 50% !important;
+    margin-right: 0 !important;
+    transform: translateX(-50%) !important;
+    box-sizing: border-box !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-phone-card {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    min-width: 0 !important;
+    margin-left: 50% !important;
+    margin-right: 0 !important;
+    transform: translateX(-50%) !important;
+    box-sizing: border-box !important;
+  }
+
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow h1,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-flow > p,
+  body:has(.fromone-mobile-ready-flow) .fromone-mobile-ready-subtitle {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    margin-left: 50% !important;
+    margin-right: 0 !important;
+    transform: translateX(-50%) !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/*
+ * OUTER MOBILE LAYOUT IS OWNED BY AppShell.
+ * This final block removes every remaining Posts-only outer width cap.
+ */
+@media (max-width: 900px) {
+  body:has(.fromone-mobile-ready-flow) .main-content,
+  body:has(.fromone-mobile-ready-flow) .main-content.fromone-mobile-bottom-safe {
+    padding-top: 0 !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .campaign-brand-shell.simplified-posts-page,
+  .simplified-posts-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .fromone-mobile-ready-flow,
+  .fromone-mobile-review-list,
+  .fromone-mobile-phone-card,
+  .fromone-mobile-ready-flow h1,
+  .fromone-mobile-ready-flow > p,
+  .fromone-mobile-ready-subtitle,
+  .fromone-mobile-actions,
+  .fromone-mobile-method-row,
+  .fromone-mobile-safe-note {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+  }
+}

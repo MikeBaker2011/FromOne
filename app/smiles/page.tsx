@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import "../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
 
@@ -19,6 +20,17 @@ type SmilesReview = {
 type SmilesBookingHour = {
   day_of_week: number;
   is_closed: boolean | null;
+};
+
+type SmilesCustomerPhoto = {
+  id: string;
+  status: string | null;
+};
+
+type SmilesCustomerPhotoReport = {
+  id: string;
+  photo_id: string;
+  status: string | null;
 };
 
 type SmilesProfile = {
@@ -78,6 +90,10 @@ type SmilesResponse = {
   profile?: SmilesProfile | null;
   bookings?: SmilesBooking[];
   reviews?: SmilesReview[];
+  customerPhotos?: SmilesCustomerPhoto[];
+  photos?: SmilesCustomerPhoto[];
+  customerPhotoReports?: SmilesCustomerPhotoReport[];
+  photoReports?: SmilesCustomerPhotoReport[];
   bookingHours?: SmilesBookingHour[];
   sentOffers?: SmilesSentOffer[];
   sentEvents?: SmilesSentEvent[];
@@ -151,13 +167,23 @@ export default function SmilesDashboardPage() {
   const [profile, setProfile] = useState<SmilesProfile | null>(null);
   const [bookings, setBookings] = useState<SmilesBooking[]>([]);
   const [reviews, setReviews] = useState<SmilesReview[]>([]);
+  const [customerPhotos, setCustomerPhotos] = useState<SmilesCustomerPhoto[]>([]);
+  const [customerPhotoReports, setCustomerPhotoReports] = useState<
+    SmilesCustomerPhotoReport[]
+  >([]);
   const [bookingHours, setBookingHours] = useState<SmilesBookingHour[]>([]);
   const [sentOffers, setSentOffers] = useState<SmilesSentOffer[]>([]);
   const [sentEvents, setSentEvents] = useState<SmilesSentEvent[]>([]);
+  const initialLoadStartedRef = useRef(false);
 
   const newBookings = useMemo(
     () => bookings.filter((booking) => !isBookingConfirmed(booking.status)),
     [bookings]
+  );
+
+  const pendingReviews = useMemo(
+    () => reviews.filter((review) => review.status === "pending"),
+    [reviews]
   );
 
   const reviewsNeedingReply = useMemo(
@@ -168,6 +194,31 @@ export default function SmilesDashboardPage() {
           !String(review.client_reply || "").trim()
       ),
     [reviews]
+  );
+
+  const reviewsNeedingAttention = pendingReviews.length + reviewsNeedingReply.length;
+
+  const pendingCustomerPhotos = useMemo(
+    () => customerPhotos.filter((photo) => photo.status === "pending"),
+    [customerPhotos]
+  );
+
+  const approvedCustomerPhotos = useMemo(
+    () => customerPhotos.filter((photo) => photo.status === "approved"),
+    [customerPhotos]
+  );
+
+  const rejectedCustomerPhotos = useMemo(
+    () => customerPhotos.filter((photo) => photo.status === "rejected"),
+    [customerPhotos]
+  );
+
+  const pendingCustomerPhotoReports = useMemo(
+    () =>
+      customerPhotoReports.filter(
+        (report) => String(report.status || "").toLowerCase() === "pending"
+      ),
+    [customerPhotoReports]
   );
 
   const openDays = useMemo(
@@ -241,17 +292,41 @@ export default function SmilesDashboardPage() {
       const response = await fetch("/api/smiles/business", {
         method: "GET",
         headers,
+        cache: "no-store",
       });
-      const result = (await response.json()) as SmilesResponse;
+
+      const responseText = await response.text();
+      let result: SmilesResponse = {};
+
+      if (responseText.trim()) {
+        try {
+          result = JSON.parse(responseText) as SmilesResponse;
+        } catch {
+          throw new Error(
+            response.ok
+              ? "Smiles returned an unreadable response. Please refresh and try again."
+              : `Smiles request failed with status ${response.status}.`
+          );
+        }
+      }
 
       if (!response.ok || result.success === false) {
-        throw new Error(result.message || "Could not load Stockport Smiles.");
+        throw new Error(
+          result.message ||
+            `Could not load Stockport Smiles${
+              response.status ? ` (${response.status})` : ""
+            }.`
+        );
       }
 
       setMessage(result.message || "");
       setProfile(result.profile || null);
       setBookings(result.bookings || []);
       setReviews(result.reviews || []);
+      setCustomerPhotos(result.customerPhotos || result.photos || []);
+      setCustomerPhotoReports(
+        result.customerPhotoReports || result.photoReports || []
+      );
       setBookingHours(result.bookingHours || []);
       setSentOffers(result.sentOffers || result.offers || []);
       setSentEvents(result.sentEvents || result.events || []);
@@ -269,20 +344,24 @@ export default function SmilesDashboardPage() {
   };
 
   useEffect(() => {
-    loadSmiles();
+    if (initialLoadStartedRef.current) return;
+
+    initialLoadStartedRef.current = true;
+    void loadSmiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <main
-      className="fromone-smiles-page settings-create-style-page"
+      className="fromone-posts-page fromone-smiles-page settings-create-style-page"
       data-fromone-smiles-redesign="v1"
     >
       <section id="fromone-standard-shell" className="smiles-create-style-card">
-        <header className="smiles-create-hero">
-          <div className="smiles-create-eyebrow">Stockport Smiles</div>
+        <header className="posts-create-hero smiles-create-hero">
+          <span className="posts-create-eyebrow smiles-create-eyebrow">Stockport Smiles</span>
           <h1>Smiles hub.</h1>
           <p>
-            Keep bookings, reviews, offers and events tidy from one simple place.
+            Keep bookings, reviews, customer photos, offers and events tidy from one simple place.
           </p>
         </header>
 
@@ -342,41 +421,100 @@ export default function SmilesDashboardPage() {
               <div className="smiles-action-grid" aria-label="Smiles actions">
                 <Link
                   href="/smiles/bookings"
-                  className="smiles-action-card is-priority"
+                  className={`smiles-action-card ${
+                    newBookings.length > 0 ? "is-priority" : ""
+                  }`}
                 >
                   <span>Bookings</span>
-                  <strong>{newBookings.length}</strong>
+                  <strong>{bookings.length}</strong>
                   <h3>
-                    {newBookings.length === 1
-                      ? "1 booking to confirm"
-                      : `${newBookings.length} bookings to confirm`}
+                    {bookings.length === 1
+                      ? "1 booking in total"
+                      : `${bookings.length} bookings in total`}
                   </h3>
                   <p>
-                    See customer requests and confirm the bookings you can
-                    accept.
+                    {newBookings.length === 1
+                      ? "1 booking still needs confirmation."
+                      : `${newBookings.length} bookings still need confirmation.`}
                   </p>
                   <em>Manage bookings</em>
                 </Link>
 
-                <Link href="/smiles/reviews" className="smiles-action-card">
+                <Link
+                  href="/smiles/reviews"
+                  className={`smiles-action-card ${
+                    reviewsNeedingAttention > 0 ? "is-priority" : ""
+                  }`}
+                >
                   <span>Reviews</span>
-                  <strong>{reviewsNeedingReply.length}</strong>
+                  <strong>{reviews.length}</strong>
                   <h3>
-                    {reviewsNeedingReply.length === 1
-                      ? "1 review needs a reply"
-                      : `${reviewsNeedingReply.length} reviews need a reply`}
+                    {reviews.length === 1
+                      ? "1 review in total"
+                      : `${reviews.length} reviews in total`}
                   </h3>
-                  <p>Reply to public Smiles reviews from your customers.</p>
+                  <p>
+                    {reviewsNeedingAttention === 0
+                      ? "No reviews need attention."
+                      : `${pendingReviews.length} waiting for approval and ${reviewsNeedingReply.length} needing a reply.`}
+                  </p>
                   <em>Manage reviews</em>
+                </Link>
+
+                <Link
+                  href="/smiles/photos"
+                  className={`smiles-action-card ${
+                    pendingCustomerPhotos.length > 0 ? "is-priority" : ""
+                  }`}
+                >
+                  <span>Customer photos</span>
+                  <strong>{customerPhotos.length}</strong>
+                  <h3>
+                    {customerPhotos.length === 1
+                      ? "1 customer photo in total"
+                      : `${customerPhotos.length} customer photos in total`}
+                  </h3>
+                  <p>
+                    {pendingCustomerPhotos.length > 0
+                      ? `${pendingCustomerPhotos.length} waiting, ${approvedCustomerPhotos.length} approved and ${rejectedCustomerPhotos.length} rejected.`
+                      : `${approvedCustomerPhotos.length} approved and ${rejectedCustomerPhotos.length} rejected. Nothing is waiting.`}
+                  </p>
+                  <em>Review photos</em>
+                </Link>
+
+                <Link
+                  href="/smiles/photos"
+                  className={`smiles-action-card ${
+                    pendingCustomerPhotoReports.length > 0 ? "is-priority" : ""
+                  }`}
+                >
+                  <span>Photo reports</span>
+                  <strong>{pendingCustomerPhotoReports.length}</strong>
+                  <h3>
+                    {pendingCustomerPhotoReports.length === 1
+                      ? "1 photo report needs review"
+                      : `${pendingCustomerPhotoReports.length} photo reports need review`}
+                  </h3>
+                  <p>
+                    {pendingCustomerPhotoReports.length > 0
+                      ? "Open customer photos to review reported content."
+                      : "No customer photo reports need attention."}
+                  </p>
+                  <em>Review reports</em>
                 </Link>
 
                 <Link href="/posts" className="smiles-action-card">
                   <span>Offers & events</span>
-                  <strong>{sentSmilesItems.length || "+"}</strong>
-                  <h3>Send offers and events</h3>
+                  <strong>{sentSmilesItems.length}</strong>
+                  <h3>
+                    {sentSmilesItems.length === 1
+                      ? "1 sent item in total"
+                      : `${sentSmilesItems.length} sent items in total`}
+                  </h3>
                   <p>
-                    Open Posts to prepare social content or send suitable offers
-                    and events to Smiles.
+                    {sentSmilesItems.length > 0
+                      ? "Open Posts to create another offer or event."
+                      : "No offers or events have been sent to Smiles yet."}
                   </p>
                   <em>Review posts</em>
                 </Link>
@@ -920,10 +1058,12 @@ export default function SmilesDashboardPage() {
 
           .fromone-smiles-page.settings-create-style-page {
             width: 100% !important;
-            max-width: none !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
             min-height: 100vh !important;
             margin: 0 !important;
-            padding: 0 0 112px !important;
+            padding: 0 10px 112px !important;
+            box-sizing: border-box !important;
             background: #f5f7fb !important;
             display: block !important;
             box-sizing: border-box !important;
@@ -931,11 +1071,13 @@ export default function SmilesDashboardPage() {
           }
 
           .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
-            width: calc(100% - 72px) !important;
-            max-width: 468px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
             min-height: auto !important;
-            margin: 24px auto 0 !important;
+            margin: 24px 0 0 !important;
             padding: 28px 26px 26px !important;
+            box-sizing: border-box !important;
             border-radius: 26px !important;
           }
 
@@ -1006,10 +1148,284 @@ export default function SmilesDashboardPage() {
 
         @media (max-width: 420px) {
           .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
-            width: calc(100% - 48px) !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
             padding: 26px 22px 24px !important;
           }
         }
+
+        /*
+         * OUTER MOBILE LAYOUT IS OWNED BY AppShell.
+         * Smilez keeps its internal card styling only.
+         */
+        @media (max-width: 900px) {
+          body:has(.fromone-smiles-page) .main-content {
+            padding-top: 0 !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+          }
+
+          .fromone-smiles-page.settings-create-style-page {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            padding: 0 0 112px !important;
+            box-sizing: border-box !important;
+          }
+
+          .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+          }
+        }
+
+
+        /*
+         * FINAL SMILEZ ALIGNMENT
+         * AppShell owns all outer spacing. Remove Smilez-only mobile gutter/margin.
+         */
+        @media (max-width: 900px) {
+          body:has(.fromone-smiles-page) .main-content,
+          body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe {
+            padding-top: 14px !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+            box-sizing: border-box !important;
+          }
+
+          .fromone-smiles-page.settings-create-style-page {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            padding: 0 0 112px !important;
+            box-sizing: border-box !important;
+          }
+
+          .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+          }
+        }
+
+
+        /*
+         * Smilez was receiving the 14px mobile top gap twice:
+         * once from main-content and once from the universal page frame.
+         */
+        @media (max-width: 900px) {
+          .fromone-route-smiles .fromone-universal-mobile-page-frame {
+            padding-top: 0 !important;
+          }
+
+          body:has(.fromone-smiles-page) .main-content,
+          body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe {
+            padding-top: 14px !important;
+          }
+        }
+
+
+        /* FINAL SHARED FROMONE PAGE SYSTEM */
+        body:has(.fromone-smiles-page) {
+          background: var(--posts-bg) !important;
+        }
+
+        body:has(.fromone-smiles-page) .app-shell,
+        body:has(.fromone-smiles-page) .main-content {
+          background: var(--posts-bg) !important;
+        }
+
+        body:has(.fromone-smiles-page) .main-content {
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
+          overflow-x: hidden !important;
+        }
+
+        .fromone-smiles-page.settings-create-style-page {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: transparent !important;
+          overflow: visible !important;
+        }
+
+        .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: visible !important;
+          display: grid !important;
+          gap: 22px !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          background-image: none !important;
+          box-shadow: none !important;
+          backdrop-filter: none !important;
+        }
+
+        .fromone-smiles-page .smiles-create-hero {
+          width: 100% !important;
+          max-width: 790px !important;
+          margin: 0 0 6px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+
+        .fromone-smiles-page .smiles-create-hero h1 {
+          max-width: 760px !important;
+          margin: 0 0 12px !important;
+          color: var(--posts-navy) !important;
+          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.06em !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-smiles-page .smiles-create-hero p {
+          max-width: 720px !important;
+          margin: 0 !important;
+          color: var(--posts-muted) !important;
+          font-size: 1.03rem !important;
+          line-height: 1.56 !important;
+          font-weight: 500 !important;
+        }
+
+        .fromone-smiles-page .smiles-create-eyebrow {
+          display: block !important;
+          margin: 0 0 10px !important;
+          color: var(--posts-pink) !important;
+          font-size: 0.74rem !important;
+          line-height: 1 !important;
+          font-weight: 900 !important;
+          letter-spacing: 0.14em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-smiles-page .smiles-simple-panel,
+        .fromone-smiles-page .smiles-listing-strip {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          padding: 22px !important;
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 26px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+          box-shadow: var(--posts-shadow) !important;
+          backdrop-filter: blur(10px) !important;
+        }
+
+        .fromone-smiles-page .smiles-listing-strip {
+          background: rgba(255, 255, 255, 0.9) !important;
+          border-color: var(--posts-border) !important;
+        }
+
+        .fromone-smiles-page .smiles-action-grid,
+        .fromone-smiles-page .smiles-history-grid {
+          gap: 16px !important;
+        }
+
+        .fromone-smiles-page .smiles-action-card,
+        .fromone-smiles-page .smiles-history-card,
+        .fromone-smiles-page .smiles-empty-history {
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 22px !important;
+          background: #fff !important;
+          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055) !important;
+        }
+
+        .fromone-smiles-page .smiles-action-card.is-priority {
+          border-color: rgba(247, 37, 133, 0.28) !important;
+          background: #fff !important;
+          box-shadow:
+            0 0 0 3px rgba(247, 37, 133, 0.08),
+            0 14px 34px rgba(7, 27, 73, 0.07) !important;
+        }
+
+        .fromone-smiles-page .smiles-listing-strip a,
+        .fromone-smiles-page .smiles-primary-action,
+        .fromone-smiles-page .smiles-action-card em,
+        .fromone-smiles-page .smiles-history-card a,
+        .fromone-smiles-page .smiles-empty-history a {
+          min-height: 46px !important;
+          padding: 0 17px !important;
+          border-radius: 15px !important;
+          border: 0 !important;
+          background: var(--posts-pink) !important;
+          color: #fff !important;
+          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21) !important;
+          font-size: 0.86rem !important;
+          font-weight: 900 !important;
+        }
+
+        .fromone-smiles-page .smiles-history-actions a,
+        .fromone-smiles-page .smiles-history-actions button,
+        .fromone-smiles-page .smiles-history-panel summary > strong {
+          min-height: 46px !important;
+          padding: 0 17px !important;
+          border-radius: 15px !important;
+          font-size: 0.86rem !important;
+          font-weight: 900 !important;
+        }
+
+        .fromone-smiles-page .smiles-history-actions a:last-child,
+        .fromone-smiles-page .smiles-history-panel summary > strong {
+          border: 1px solid var(--posts-border) !important;
+          background: #fff !important;
+          color: var(--posts-navy) !important;
+          box-shadow: none !important;
+        }
+
+        @media (max-width: 700px) {
+          body:has(.fromone-smiles-page) .main-content,
+          body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe {
+            padding: 24px 16px 100px !important;
+          }
+
+          .fromone-smiles-page.settings-create-style-page {
+            padding: 0 !important;
+          }
+
+          .fromone-smiles-page .smiles-create-hero h1 {
+            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          }
+
+          .fromone-smiles-page .smiles-create-hero p {
+            font-size: 0.95rem !important;
+          }
+
+          .fromone-smiles-page .smiles-simple-panel,
+          .fromone-smiles-page .smiles-listing-strip {
+            padding: 17px !important;
+            border-radius: 21px !important;
+          }
+
+          .fromone-smiles-page .smiles-action-grid,
+          .fromone-smiles-page .smiles-history-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
       `}</style>
     </main>
   );

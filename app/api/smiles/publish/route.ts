@@ -4,6 +4,38 @@ import { createClient } from "@supabase/supabase-js";
 type SmilesDraftType = "venue" | "offer" | "event";
 type SmilesReferencePrefix = "OF" | "EV";
 
+type BookingSettingsInput = {
+  slot_interval_minutes?: number | string;
+  max_covers_per_slot?: number | string;
+  max_party_size?: number | string;
+  minimum_notice_minutes?: number | string;
+  advance_booking_days?: number | string;
+};
+
+type BookingBlockInput = {
+  id?: string;
+  block_date?: string;
+  blockDate?: string;
+  is_full_day?: boolean;
+  isFullDay?: boolean;
+  start_time?: string | null;
+  startTime?: string | null;
+  end_time?: string | null;
+  endTime?: string | null;
+  reason?: string | null;
+};
+
+type WeeklyBookingHour = {
+  day_of_week?: number;
+  dayOfWeek?: number;
+  is_closed?: boolean;
+  isClosed?: boolean;
+  opens_at?: string | null;
+  opensAt?: string | null;
+  closes_at?: string | null;
+  closesAt?: string | null;
+};
+
 type SmilesPublishBody = {
   postId?: string;
   campaignPostId?: string;
@@ -16,6 +48,8 @@ type SmilesPublishBody = {
   fromone_profile_id?: string;
   smilesVenueId?: string;
   smiles_venue_id?: string;
+  smilesClientId?: string;
+  smiles_client_id?: string;
   venueId?: string;
   venue_id?: string;
   draftType?: SmilesDraftType;
@@ -40,8 +74,44 @@ type SmilesPublishBody = {
   postcode?: string;
   postcodePrefix?: string;
   postcode_prefix?: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  geoEnabled?: boolean;
+  geo_enabled?: boolean;
+  geoAccuracy?: string;
+  geo_accuracy?: string;
+  geoSource?: string;
+  geo_source?: string;
+  serviceRadiusMiles?: number | string;
+  service_radius_miles?: number | string;
+  geoUpdatedAt?: string | null;
+  geo_updated_at?: string | null;
+  mapLatitude?: number | string | null;
+  map_latitude?: number | string | null;
+  mapLongitude?: number | string | null;
+  map_longitude?: number | string | null;
+  mapLocationVerified?: boolean;
+  map_location_verified?: boolean;
+  mapLocationVerifiedAt?: string | null;
+  map_location_verified_at?: string | null;
   phone?: string;
   email?: string;
+  openingHours?: string;
+  opening_hours?: string;
+  parkingInfo?: string;
+  parking_info?: string;
+  accessibilityInfo?: string;
+  accessibility_info?: string;
+  galleryImageUrls?: string[];
+  gallery_image_urls?: string[];
+  acceptsBookings?: boolean;
+  accepts_bookings?: boolean;
+  bookingHours?: WeeklyBookingHour[];
+  booking_hours?: WeeklyBookingHour[];
+  bookingSettings?: BookingSettingsInput;
+  booking_settings?: BookingSettingsInput;
+  bookingBlocks?: BookingBlockInput[];
+  booking_blocks?: BookingBlockInput[];
   venueType?: string;
   venue_type?: string;
   savingText?: string;
@@ -124,6 +194,25 @@ function cleanNullableText(value: unknown) {
   return cleaned || null;
 }
 
+function cleanImageUrlList(value: unknown, limit = 6) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      value
+        .map((item) => cleanText(item))
+        .filter(
+          (item) =>
+            item.startsWith("https://") ||
+            item.startsWith("http://") ||
+            (item.startsWith("/") && !item.startsWith("//"))
+        )
+    )
+  ).slice(0, limit);
+}
+
 function normalisePostcode(value: unknown) {
   return cleanText(value).replace(/\s+/g, " ").trim().toUpperCase();
 }
@@ -201,6 +290,175 @@ function createSlug(value: string) {
   return `${base}-${suffix}`;
 }
 
+function cleanCoordinate(value: unknown, minimum: number, maximum: number, label: string) {
+  if (value === null || value === undefined || cleanText(value) === '') return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < minimum || parsed > maximum) throw new Error(`${label} is not valid.`);
+  return parsed;
+}
+
+function cleanServiceRadius(value: unknown) {
+  const parsed = Number(value ?? 5);
+  if (!Number.isFinite(parsed) || parsed < 0.5 || parsed > 50) throw new Error('Nearby discovery radius must be between 0.5 and 50 miles.');
+  return parsed;
+}
+
+function cleanBoolean(value: unknown) {
+  if (typeof value === 'boolean') return value;
+  const cleaned = cleanText(value).toLowerCase();
+  return cleaned === 'true' || cleaned === '1' || cleaned === 'yes';
+}
+
+function getWeeklyBookingHours(body: SmilesPublishBody) {
+  const supplied = body.bookingHours || body.booking_hours;
+
+  if (!Array.isArray(supplied)) {
+    return [];
+  }
+
+  const seenDays = new Set<number>();
+
+  return supplied.flatMap((row) => {
+    const rawDay = row.day_of_week ?? row.dayOfWeek;
+    const dayOfWeek = Number(rawDay);
+
+    if (
+      !Number.isInteger(dayOfWeek) ||
+      dayOfWeek < 0 ||
+      dayOfWeek > 6 ||
+      seenDays.has(dayOfWeek)
+    ) {
+      return [];
+    }
+
+    const isClosed = cleanBoolean(row.is_closed ?? row.isClosed);
+    const opensAt = isClosed
+      ? null
+      : cleanTime(row.opens_at ?? row.opensAt);
+    const closesAt = isClosed
+      ? null
+      : cleanTime(row.closes_at ?? row.closesAt);
+
+    if (!isClosed && (!opensAt || !closesAt || opensAt >= closesAt)) {
+      throw new Error(
+        `Booking hours for day ${dayOfWeek} must include a valid opening and closing time.`
+      );
+    }
+
+    seenDays.add(dayOfWeek);
+
+    return [
+      {
+        day_of_week: dayOfWeek,
+        is_closed: isClosed,
+        opens_at: opensAt,
+        closes_at: closesAt,
+      },
+    ];
+  });
+}
+
+function getBookingSettings(body: SmilesPublishBody) {
+  const supplied = body.bookingSettings || body.booking_settings || {};
+
+  const settings = {
+    slot_interval_minutes: Number(supplied.slot_interval_minutes ?? 30),
+    max_covers_per_slot: Number(supplied.max_covers_per_slot ?? 20),
+    max_party_size: Number(supplied.max_party_size ?? 9),
+    minimum_notice_minutes: Number(supplied.minimum_notice_minutes ?? 60),
+    advance_booking_days: Number(supplied.advance_booking_days ?? 14),
+  };
+
+  if (
+    ![15, 30, 45, 60].includes(settings.slot_interval_minutes) ||
+    settings.max_covers_per_slot < 1 ||
+    settings.max_covers_per_slot > 200 ||
+    settings.max_party_size < 1 ||
+    settings.max_party_size > settings.max_covers_per_slot ||
+    settings.minimum_notice_minutes < 0 ||
+    settings.advance_booking_days < 1 ||
+    settings.advance_booking_days > 365
+  ) {
+    throw new Error("Booking capacity settings are not valid.");
+  }
+
+  return settings;
+}
+
+function getBookingBlocks(body: SmilesPublishBody) {
+  const supplied = body.bookingBlocks || body.booking_blocks;
+
+  if (!Array.isArray(supplied)) {
+    return null;
+  }
+
+  return supplied.map((block) => {
+    const blockDate = cleanDate(block.block_date || block.blockDate);
+    const isFullDay = cleanBoolean(block.is_full_day ?? block.isFullDay);
+    const startTime = isFullDay
+      ? null
+      : cleanTime(block.start_time ?? block.startTime);
+    const endTime = isFullDay
+      ? null
+      : cleanTime(block.end_time ?? block.endTime);
+
+    if (!blockDate) {
+      throw new Error("Each blocked booking period needs a valid date.");
+    }
+
+    if (!isFullDay && (!startTime || !endTime || startTime >= endTime)) {
+      throw new Error(
+        `Blocked booking times on ${blockDate} need a valid start and end time.`
+      );
+    }
+
+    return {
+      block_date: blockDate,
+      is_full_day: isFullDay,
+      start_time: startTime,
+      end_time: endTime,
+      reason: cleanNullableText(block.reason),
+    };
+  });
+}
+
+function buildOpeningHoursText(
+  body: SmilesPublishBody,
+  weeklyHours: ReturnType<typeof getWeeklyBookingHours>
+) {
+  const supplied = cleanNullableText(body.openingHours || body.opening_hours);
+
+  if (supplied) {
+    return supplied;
+  }
+
+  if (weeklyHours.length === 0) {
+    return null;
+  }
+
+  const dayLabels = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+
+  return weeklyHours
+    .sort((a, b) => a.day_of_week - b.day_of_week)
+    .map((row) =>
+      row.is_closed
+        ? `${dayLabels[row.day_of_week]}: Closed`
+        : `${dayLabels[row.day_of_week]}: ${cleanText(row.opens_at).slice(
+            0,
+            5
+          )}-${cleanText(row.closes_at).slice(0, 5)}`
+    )
+    .join("\n");
+}
+
 function cleanDate(value: unknown) {
   const cleaned = cleanText(value);
 
@@ -254,6 +512,10 @@ function getExplicitSmilesVenueId(body: SmilesPublishBody) {
   return cleanText(
     body.smilesVenueId || body.smiles_venue_id || body.venueId || body.venue_id
   );
+}
+
+function getExplicitSmilesClientId(body: SmilesPublishBody) {
+  return cleanText(body.smilesClientId || body.smiles_client_id);
 }
 
 function buildPublishedToValue(currentValue: unknown) {
@@ -640,6 +902,292 @@ async function updateFromOnePostAfterSmilesDraft({
   });
 }
 
+async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
+  const fromOne = getFromOneSupabaseAdmin();
+  const smiles = getSmilesSupabaseAdmin();
+
+  const fromOneProfileId = getFromOneProfileId(body);
+  let smilesClientId = getExplicitSmilesClientId(body);
+  let smilesVenueId = getExplicitSmilesVenueId(body);
+
+  if (fromOneProfileId && (!smilesClientId || !smilesVenueId)) {
+    const { data: profile, error: profileError } = await fromOne
+      .from("business_profiles")
+      .select("smiles_listing_client_id, smiles_listing_venue_id")
+      .eq("id", fromOneProfileId)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error(
+        "Could not load linked Smilez ids from business profile:",
+        profileError.message
+      );
+      throw new Error(profileError.message);
+    }
+
+    smilesClientId =
+      smilesClientId ||
+      cleanText((profile as any)?.smiles_listing_client_id);
+    smilesVenueId =
+      smilesVenueId ||
+      cleanText((profile as any)?.smiles_listing_venue_id);
+  }
+
+  if (!smilesClientId || !smilesVenueId) {
+    return {
+      synced: false,
+      clientId: smilesClientId || null,
+      venueId: smilesVenueId || null,
+      reason: !smilesClientId
+        ? "missing_smiles_client_id"
+        : "missing_smiles_venue_id",
+    };
+  }
+
+  const latitude = cleanCoordinate(
+    body.mapLatitude ??
+      body.map_latitude ??
+      body.latitude,
+    -90,
+    90,
+    "Latitude",
+  );
+  const longitude = cleanCoordinate(
+    body.mapLongitude ??
+      body.map_longitude ??
+      body.longitude,
+    -180,
+    180,
+    "Longitude",
+  );
+  const geoEnabled = cleanBoolean(
+    body.mapLocationVerified ??
+      body.map_location_verified ??
+      body.geoEnabled ??
+      body.geo_enabled,
+  );
+  const serviceRadiusMiles = cleanServiceRadius(
+    body.serviceRadiusMiles ?? body.service_radius_miles
+  );
+
+  if (geoEnabled && (latitude === null || longitude === null)) {
+    throw new Error(
+      "Confirm the venue location before enabling nearby discovery."
+    );
+  }
+
+  const name = cleanText(body.name || body.title);
+  const description = buildDescription(body);
+  const shortDescription = buildShortDescription(body, description);
+  const venueType =
+    cleanNullableText(body.venueType || body.venue_type) || "Business";
+  const area = cleanNullableText(body.locationArea || body.location_area);
+  const postcode = normalisePostcode(body.postcode);
+  const postcodePrefix = getPostcodePrefix(body);
+  const phone = cleanNullableText(body.phone);
+  const email = cleanNullableText(body.email);
+  const websiteUrl = cleanNullableText(body.websiteUrl || body.website_url);
+  const mainImageUrl = cleanNullableText(body.mediaUrl || body.media_url);
+  const weeklyBookingHours = getWeeklyBookingHours(body);
+  const openingHours = buildOpeningHoursText(body, weeklyBookingHours);
+  const parkingInfo = cleanNullableText(body.parkingInfo || body.parking_info);
+  const accessibilityInfo = cleanNullableText(
+    body.accessibilityInfo || body.accessibility_info
+  );
+  const galleryImageUrls = cleanImageUrlList(
+    body.galleryImageUrls || body.gallery_image_urls
+  );
+  const acceptsBookings = cleanBoolean(
+    body.acceptsBookings ?? body.accepts_bookings
+  );
+  const bookingUrl = acceptsBookings
+    ? cleanNullableText(body.bookingUrl || body.booking_url)
+    : null;
+  const bookingSettings = getBookingSettings(body);
+  const bookingBlocks = getBookingBlocks(body);
+  const now = new Date().toISOString();
+  const geoUpdatedAt =
+    cleanNullableText(
+      body.mapLocationVerifiedAt ||
+        body.map_location_verified_at ||
+        body.geoUpdatedAt ||
+        body.geo_updated_at,
+    ) || (latitude !== null && longitude !== null ? now : null);
+
+  const sharedLocationUpdates = {
+    address: cleanNullableText(body.address),
+    postcode: postcode || null,
+    postcode_prefix: postcodePrefix || null,
+    latitude,
+    longitude,
+    geo_enabled: geoEnabled,
+    geo_accuracy: cleanNullableText(body.geoAccuracy || body.geo_accuracy),
+    geo_source: cleanNullableText(body.geoSource || body.geo_source),
+    service_radius_miles: serviceRadiusMiles,
+    geo_updated_at: geoUpdatedAt,
+    updated_at: now,
+  };
+
+  const clientUpdates = {
+    ...sharedLocationUpdates,
+    map_latitude: latitude,
+    map_longitude: longitude,
+    map_location_verified:
+      geoEnabled && latitude !== null && longitude !== null,
+    map_location_verified_at:
+      geoEnabled && latitude !== null && longitude !== null
+        ? geoUpdatedAt || now
+        : null,
+    ...(name ? { business_name: name } : {}),
+    description,
+    short_description: shortDescription,
+    area,
+    phone,
+    email,
+    website_url: websiteUrl,
+    opening_hours: openingHours,
+    parking_info: parkingInfo,
+    accessibility_info: accessibilityInfo,
+    gallery_image_urls: galleryImageUrls,
+    accepts_bookings: acceptsBookings,
+    booking_url: bookingUrl,
+    main_image_url: mainImageUrl,
+  };
+
+  const venueUpdates = {
+    ...sharedLocationUpdates,
+    ...(name ? { name } : {}),
+    description,
+    short_description: shortDescription,
+    venue_type: venueType,
+    location_area: area,
+    phone,
+    email,
+    website_url: websiteUrl,
+    booking_url: bookingUrl,
+    parking_info: parkingInfo,
+    accessibility_info: accessibilityInfo,
+    gallery_images: galleryImageUrls,
+    main_image_url: mainImageUrl,
+  };
+
+  const { data: updatedClient, error: clientUpdateError } = await smiles
+    .from("clients")
+    .update(clientUpdates)
+    .eq("id", smilesClientId)
+    .select("id")
+    .maybeSingle();
+
+  if (clientUpdateError) {
+    console.error("Linked Smilez client update failed:", {
+      clientId: smilesClientId,
+      message: clientUpdateError.message,
+    });
+    throw new Error(
+      `The linked Smilez client record could not be updated: ${clientUpdateError.message}`
+    );
+  }
+
+  if (!updatedClient?.id) {
+    throw new Error("The linked Smilez client record could not be found.");
+  }
+
+  const { data: updatedVenue, error: venueUpdateError } = await smiles
+    .from("venues")
+    .update(venueUpdates)
+    .eq("id", smilesVenueId)
+    .select("id")
+    .maybeSingle();
+
+  if (venueUpdateError) {
+    console.error("Linked Smilez venue update failed:", {
+      venueId: smilesVenueId,
+      message: venueUpdateError.message,
+    });
+    throw new Error(
+      `The linked Smilez venue record could not be updated: ${venueUpdateError.message}`
+    );
+  }
+
+  if (!updatedVenue?.id) {
+    throw new Error("The linked Smilez venue record could not be found.");
+  }
+
+  if (weeklyBookingHours.length > 0) {
+    const bookingHourRows = weeklyBookingHours.map((row) => ({
+      client_id: smilesClientId,
+      day_of_week: row.day_of_week,
+      is_closed: row.is_closed,
+      opens_at: row.is_closed ? null : row.opens_at,
+      closes_at: row.is_closed ? null : row.closes_at,
+      updated_at: now,
+    }));
+
+    const { error: bookingHoursError } = await smiles
+      .from("client_booking_hours")
+      .upsert(bookingHourRows, {
+        onConflict: "client_id,day_of_week",
+      });
+
+    if (bookingHoursError) {
+      throw new Error(bookingHoursError.message);
+    }
+  }
+
+  if (acceptsBookings && !bookingUrl) {
+    const { error: settingsError } = await smiles
+      .from("client_booking_settings")
+      .upsert(
+        {
+          client_id: smilesClientId,
+          ...bookingSettings,
+          updated_at: now,
+        },
+        {
+          onConflict: "client_id",
+        }
+      );
+
+    if (settingsError) {
+      throw new Error(settingsError.message);
+    }
+  }
+
+  if (bookingBlocks !== null) {
+    const { error: deleteBlocksError } = await smiles
+      .from("client_booking_blocks")
+      .delete()
+      .eq("client_id", smilesClientId);
+
+    if (deleteBlocksError) {
+      throw new Error(deleteBlocksError.message);
+    }
+
+    if (bookingBlocks.length > 0) {
+      const { error: insertBlocksError } = await smiles
+        .from("client_booking_blocks")
+        .insert(
+          bookingBlocks.map((block) => ({
+            client_id: smilesClientId,
+            ...block,
+            updated_at: now,
+          }))
+        );
+
+      if (insertBlocksError) {
+        throw new Error(insertBlocksError.message);
+      }
+    }
+  }
+
+  return {
+    synced: true,
+    clientId: smilesClientId,
+    venueId: smilesVenueId,
+    reason: null as string | null,
+  };
+}
+
 async function createVenueDraft(body: SmilesPublishBody, userId = "") {
   const smiles = getSmilesSupabaseAdmin();
 
@@ -650,6 +1198,48 @@ async function createVenueDraft(body: SmilesPublishBody, userId = "") {
   const fromOneProfileId = getFromOneProfileId(body);
   const postcode = normalisePostcode(body.postcode);
   const postcodePrefix = getPostcodePrefix(body);
+  const latitude = cleanCoordinate(
+    body.mapLatitude ??
+      body.map_latitude ??
+      body.latitude,
+    -90,
+    90,
+    'Latitude',
+  );
+  const longitude = cleanCoordinate(
+    body.mapLongitude ??
+      body.map_longitude ??
+      body.longitude,
+    -180,
+    180,
+    'Longitude',
+  );
+  const geoEnabled = cleanBoolean(
+    body.mapLocationVerified ??
+      body.map_location_verified ??
+      body.geoEnabled ??
+      body.geo_enabled,
+  );
+  const serviceRadiusMiles = cleanServiceRadius(body.serviceRadiusMiles ?? body.service_radius_miles);
+  const geoUpdatedAt = cleanNullableText(
+    body.mapLocationVerifiedAt ||
+      body.map_location_verified_at ||
+      body.geoUpdatedAt ||
+      body.geo_updated_at,
+  );
+  const weeklyBookingHours = getWeeklyBookingHours(body);
+  const openingHours = buildOpeningHoursText(body, weeklyBookingHours);
+  const parkingInfo = cleanNullableText(body.parkingInfo || body.parking_info);
+  const accessibilityInfo = cleanNullableText(
+    body.accessibilityInfo || body.accessibility_info
+  );
+  const galleryImageUrls = cleanImageUrlList(
+    body.galleryImageUrls || body.gallery_image_urls
+  );
+
+  if (geoEnabled && (latitude === null || longitude === null)) {
+    throw new Error('Confirm the venue location before enabling nearby discovery.');
+  }
 
   const payload = {
     business_name: name,
@@ -662,10 +1252,27 @@ async function createVenueDraft(body: SmilesPublishBody, userId = "") {
     address: cleanNullableText(body.address),
     postcode: postcode || null,
     postcode_prefix: postcodePrefix || null,
+    latitude,
+    longitude,
+    geo_enabled: geoEnabled,
+    geo_accuracy: cleanNullableText(body.geoAccuracy || body.geo_accuracy),
+    geo_source: cleanNullableText(body.geoSource || body.geo_source),
+    service_radius_miles: serviceRadiusMiles,
+    geo_updated_at: geoUpdatedAt,
     phone: cleanNullableText(body.phone),
     email: cleanNullableText(body.email),
     website_url: cleanNullableText(body.websiteUrl || body.website_url),
+    opening_hours: openingHours,
+    parking_info: parkingInfo,
+    accessibility_info: accessibilityInfo,
+    gallery_image_urls: galleryImageUrls,
+    accepts_bookings: cleanBoolean(
+      body.acceptsBookings ?? body.accepts_bookings
+    ),
     booking_url: cleanNullableText(body.bookingUrl || body.booking_url),
+    booking_hours: weeklyBookingHours,
+    booking_settings: getBookingSettings(body),
+    booking_blocks: getBookingBlocks(body) || [],
     main_image_url: cleanNullableText(body.mediaUrl || body.media_url),
     source: "fromone",
     fromone_source: "business_profile",
@@ -895,24 +1502,112 @@ export async function POST(req: NextRequest) {
     });
 
     const draftType = getDraftType(body);
+
+    if (draftType === "venue") {
+      const directSync = await syncLinkedSmilesClientGeo(body);
+
+      if (directSync.synced) {
+        const successMessage =
+          "Live Smilez business profile updated automatically.";
+
+        await insertPublishLog({
+          userId,
+          postId,
+          status: "posted",
+          message: successMessage,
+          metadata: {
+            smiles_type: draftType,
+            fromone_profile_id: getFromOneProfileId(body) || null,
+            direct_client_sync: true,
+            synced_client_id: directSync.clientId,
+            synced_venue_id: directSync.venueId,
+            admin_approval_bypassed: true,
+          },
+        });
+
+        return NextResponse.json({
+          ok: true,
+          success: true,
+          provider: "stockport_smiles",
+          message: successMessage,
+          smilesType: draftType,
+          smilesTable: "clients,venues",
+          smilesDraftId: null,
+          smilesSlug: null,
+          smilesReferenceCode: null,
+          smilesVenueId: directSync.venueId,
+          directSync: true,
+          syncedClientId: directSync.clientId,
+          syncedVenueId: directSync.venueId,
+          directSyncReason: null,
+          isPublished: true,
+          updatedExisting: true,
+          requiresAdminApproval: false,
+        });
+      }
+
+      const result = await createVenueDraft(body, userId);
+
+      await updateFromOnePostAfterSmilesDraft({
+        postId,
+        smilesTable: result.table,
+        smilesDraftId: result.draftId,
+      });
+
+      await insertPublishLog({
+        userId,
+        postId,
+        status: "posted",
+        message: "New Smilez business listing sent for admin approval.",
+        metadata: {
+          smiles_type: draftType,
+          smiles_table: result.table,
+          smiles_draft_id: result.draftId,
+          smiles_slug: result.slug,
+          fromone_profile_id: getFromOneProfileId(body) || null,
+          direct_client_sync: false,
+          direct_client_sync_reason: directSync.reason,
+          linked_client_id: directSync.clientId,
+          linked_venue_id: directSync.venueId,
+          requires_admin_approval: true,
+        },
+      });
+
+      return NextResponse.json({
+        ok: true,
+        success: true,
+        provider: "stockport_smiles",
+        message: "New Smilez business listing sent for admin approval.",
+        smilesType: draftType,
+        smilesTable: result.table,
+        smilesDraftId: result.draftId,
+        smilesSlug: result.slug,
+        smilesReferenceCode: null,
+        smilesVenueId: directSync.venueId,
+        directSync: false,
+        syncedClientId: directSync.clientId,
+        syncedVenueId: directSync.venueId,
+        directSyncReason: directSync.reason,
+        isPublished: false,
+        updatedExisting: false,
+        requiresAdminApproval: true,
+      });
+    }
+
     const existingSmilesDraftId =
       getExistingSmilesDraftId(body, draftType) ||
       (await findExistingSmilesDraftIdForPost({ postId, draftType }));
-    const smilesVenueId =
-      draftType === "offer" || draftType === "event"
-        ? await findSmilesVenueIdForBody({
-            supabase: fromOneSupabase,
-            body,
-            userId,
-          })
-        : "";
+
+    const smilesVenueId = await findSmilesVenueIdForBody({
+      supabase: fromOneSupabase,
+      body,
+      userId,
+    });
 
     const result =
-      draftType === "venue"
-        ? await createVenueDraft(body, userId)
-        : draftType === "event"
-          ? await createEventDraft(body, smilesVenueId, existingSmilesDraftId)
-          : await createOfferDraft(body, smilesVenueId, existingSmilesDraftId);
+      draftType === "event"
+        ? await createEventDraft(body, smilesVenueId, existingSmilesDraftId)
+        : await createOfferDraft(body, smilesVenueId, existingSmilesDraftId);
 
     await updateFromOnePostAfterSmilesDraft({
       postId,
@@ -920,13 +1615,18 @@ export async function POST(req: NextRequest) {
       smilesDraftId: result.draftId,
     });
 
+    const updatedExisting = Boolean(
+      (result as any).updatedExisting || existingSmilesDraftId
+    );
+    const successMessage = updatedExisting
+      ? "Smilez item updated."
+      : "Draft sent to Stockport Smilez.";
+
     await insertPublishLog({
       userId,
       postId,
       status: "posted",
-      message: (result as any).updatedExisting || existingSmilesDraftId
-        ? "Smiles item updated."
-        : "Draft sent to Stockport Smiles.",
+      message: successMessage,
       metadata: {
         smiles_type: draftType,
         smiles_table: result.table,
@@ -942,21 +1642,25 @@ export async function POST(req: NextRequest) {
       ok: true,
       success: true,
       provider: "stockport_smiles",
-      message: "Draft sent to Stockport Smiles.",
+      message: successMessage,
       smilesType: draftType,
       smilesTable: result.table,
       smilesDraftId: result.draftId,
       smilesSlug: result.slug,
       smilesReferenceCode: (result as any).referenceCode || null,
       smilesVenueId: smilesVenueId || null,
-      isPublished: false,
-      updatedExisting: Boolean((result as any).updatedExisting || existingSmilesDraftId),
+      directSync: false,
+      syncedClientId: null,
+      syncedVenueId: null,
+      directSyncReason: null,
+      isPublished: Boolean((result as any).updatedExisting),
+      updatedExisting,
     });
   } catch (error: any) {
     const message =
-      error?.message || "Something went wrong sending this draft to Smiles.";
+      error?.message || "Something went wrong sending this draft to Smilez.";
 
-    console.error("Smiles publish API error:", message);
+    console.error("Smilez publish API error:", message);
 
     const postId = cleanText(body?.postId || body?.campaignPostId);
     const userId = cleanText(body?.userId || body?.user_id);
@@ -965,7 +1669,7 @@ export async function POST(req: NextRequest) {
       userId,
       postId,
       status: "failed",
-      message: "Smiles draft failed.",
+      message: "Smilez publish failed.",
       error: message,
       metadata: {
         route: "/api/smiles/publish",

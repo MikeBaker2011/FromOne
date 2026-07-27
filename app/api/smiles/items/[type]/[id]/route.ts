@@ -59,6 +59,79 @@ function cleanTime(value: unknown) {
   return `${match[1].padStart(2, "0")}:${match[2]}:${match[3] || "00"}`;
 }
 
+function cleanShortDescription(value: unknown) {
+  const cleaned = cleanNullableText(value);
+
+  if (!cleaned) return null;
+
+  if (cleaned.length > 180) {
+    throw new Error("Short description must be 180 characters or fewer.");
+  }
+
+  return cleaned;
+}
+
+function cleanHttpUrl(value: unknown, label: string) {
+  const cleaned = cleanNullableText(value);
+
+  if (!cleaned) return null;
+
+  try {
+    const url = new URL(cleaned);
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error();
+    }
+
+    return url.toString();
+  } catch {
+    throw new Error(`${label} must be a full http:// or https:// URL.`);
+  }
+}
+
+function validateDateRange(
+  startDate: string | null,
+  endDate: string | null,
+  label: string
+) {
+  if (startDate && endDate && endDate < startDate) {
+    throw new Error(`${label} end date must be on or after the start date.`);
+  }
+}
+
+function validateTimeRange(
+  startDate: string | null,
+  endDate: string | null,
+  startTime: string | null,
+  endTime: string | null,
+  label: string
+) {
+  if (!startTime || !endTime) return;
+
+  const effectiveEndDate = endDate || startDate;
+
+  if (!startDate || !effectiveEndDate) {
+    if (endTime <= startTime) {
+      throw new Error(`${label} end time must be later than the start time.`);
+    }
+    return;
+  }
+
+  const startDateTime = new Date(`${startDate}T${startTime}`);
+  const endDateTime = new Date(`${effectiveEndDate}T${endTime}`);
+
+  if (
+    Number.isNaN(startDateTime.getTime()) ||
+    Number.isNaN(endDateTime.getTime())
+  ) {
+    throw new Error(`${label} date or time is not valid.`);
+  }
+
+  if (endDateTime <= startDateTime) {
+    throw new Error(`${label} end date and time must be later than the start date and time.`);
+  }
+}
+
 function getFromOneSupabaseForUser(req: NextRequest) {
   if (!fromOneSupabaseUrl || !fromOneAnonKey) {
     throw new Error("Missing FromOne public Supabase environment variables.");
@@ -263,40 +336,90 @@ async function loadOwnedItem({
 }
 
 function buildOfferUpdate(body: any) {
+  const title = cleanText(body.title);
+  const description = cleanNullableText(body.description);
+  const startDate = cleanDate(body.start_date || body.startDate);
+  const endDate = cleanDate(body.end_date || body.endDate);
+
+  if (!title) {
+    throw new Error("Offer title is required.");
+  }
+
+  if (!description) {
+    throw new Error("Offer description is required.");
+  }
+
+  validateDateRange(startDate, endDate, "Offer");
+
   return {
-    title: cleanText(body.title) || "Untitled offer",
-    description: cleanNullableText(body.description),
-    short_description: cleanNullableText(body.short_description || body.shortDescription),
+    title,
+    description,
+    short_description: cleanShortDescription(
+      body.short_description || body.shortDescription
+    ),
     saving_text: cleanNullableText(body.saving_text || body.savingText),
     pricing_label: cleanNullableText(body.pricing_label || body.pricingLabel),
     price_value: cleanNullableText(body.price_value || body.priceValue),
     terms: cleanNullableText(body.terms),
-    start_date: cleanDate(body.start_date || body.startDate),
-    end_date: cleanDate(body.end_date || body.endDate),
+    start_date: startDate,
+    end_date: endDate,
     valid_days: cleanNullableText(body.valid_days || body.validDays),
     valid_times: cleanNullableText(body.valid_times || body.validTimes),
-    main_image_url: cleanNullableText(body.main_image_url || body.mainImageUrl),
+    main_image_url: cleanHttpUrl(
+      body.main_image_url || body.mainImageUrl,
+      "Main image URL"
+    ),
     is_published: body.is_published === false ? false : true,
     updated_at: new Date().toISOString(),
   };
 }
 
 function buildEventUpdate(body: any) {
+  const title = cleanText(body.title);
+  const description = cleanNullableText(body.description);
+  const startDate = cleanDate(body.start_date || body.startDate);
+  const endDate = cleanDate(body.end_date || body.endDate);
+  const startTime = cleanTime(body.start_time || body.startTime);
+  const endTime = cleanTime(body.end_time || body.endTime);
+
+  if (!title) {
+    throw new Error("Event title is required.");
+  }
+
+  if (!description) {
+    throw new Error("Event description is required.");
+  }
+
+  if (!startDate) {
+    throw new Error("Event start date is required.");
+  }
+
+  validateDateRange(startDate, endDate, "Event");
+  validateTimeRange(startDate, endDate, startTime, endTime, "Event");
+
   return {
-    title: cleanText(body.title) || "Untitled event",
-    description: cleanNullableText(body.description),
-    short_description: cleanNullableText(body.short_description || body.shortDescription),
+    title,
+    description,
+    short_description: cleanShortDescription(
+      body.short_description || body.shortDescription
+    ),
     location_name: cleanNullableText(body.location_name || body.locationName),
     address: cleanNullableText(body.address),
-    start_date: cleanDate(body.start_date || body.startDate),
-    end_date: cleanDate(body.end_date || body.endDate),
-    start_time: cleanTime(body.start_time || body.startTime),
-    end_time: cleanTime(body.end_time || body.endTime),
+    start_date: startDate,
+    end_date: endDate,
+    start_time: startTime,
+    end_time: endTime,
     ticket_type: cleanNullableText(body.ticket_type || body.ticketType),
     ticket_price: cleanNullableText(body.ticket_price || body.ticketPrice),
     price_text: cleanNullableText(body.price_text || body.priceText),
-    booking_url: cleanNullableText(body.booking_url || body.bookingUrl),
-    main_image_url: cleanNullableText(body.main_image_url || body.mainImageUrl),
+    booking_url: cleanHttpUrl(
+      body.booking_url || body.bookingUrl,
+      "Booking URL"
+    ),
+    main_image_url: cleanHttpUrl(
+      body.main_image_url || body.mainImageUrl,
+      "Main image URL"
+    ),
     is_published: body.is_published === false ? false : true,
     updated_at: new Date().toISOString(),
   };
@@ -415,6 +538,11 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     });
   } catch (error: any) {
     const message = error?.message || "Could not save this Smiles item.";
+    const isValidationError =
+      message.includes("required") ||
+      message.includes("must be") ||
+      message.includes("must be on or after") ||
+      message.includes("must be later");
 
     console.error("Smiles item PATCH error:", message);
 
@@ -424,6 +552,69 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         success: false,
         message,
         item: null,
+      },
+      { status: isValidationError ? 400 : 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest, context: RouteContext) {
+  try {
+    const params = await context.params;
+    const type = normaliseType(params.type);
+    const id = cleanText(params.id);
+
+    if (!type || !id) {
+      return NextResponse.json(
+        {
+          ok: false,
+          success: false,
+          message: "Invalid Smiles item link.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const ownedItem = await loadOwnedItem({ req, type, id });
+
+    if (!ownedItem.ok || !ownedItem.smiles) {
+      return NextResponse.json(
+        {
+          ok: false,
+          success: false,
+          message: ownedItem.message,
+        },
+        { status: ownedItem.status }
+      );
+    }
+
+    const table = type === "offer" ? "offers" : "events";
+
+    const { error } = await ownedItem.smiles
+      .from(table)
+      .delete()
+      .eq("id", id)
+      .eq("venue_id", ownedItem.smilesVenueId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      success: true,
+      message: `Smilez ${type} deleted.`,
+    });
+  } catch (error: any) {
+    const message = error?.message || "Could not delete this Smilez item.";
+
+    console.error("Smilez item DELETE error:", message);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        success: false,
+        message,
       },
       { status: 500 }
     );

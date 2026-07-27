@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
 
@@ -244,9 +245,9 @@ export default function SmilesBookingTimesPage() {
   }, []);
 
   return (
-    <main className="fromone-booking-times-page bookingTimesPage" data-fromone-smiles-times="simple-v2">
+    <main className="fromone-posts-page fromone-booking-times-page bookingTimesPage" data-fromone-smiles-times="simple-v2">
       <section id="fromone-standard-shell" className="bookingTimesShell">
-      <section className="bookingTimesHero">
+      <section className="posts-create-hero bookingTimesHero">
         <Link
           href="/smiles"
           className="backPill"
@@ -269,7 +270,7 @@ export default function SmilesBookingTimesPage() {
         >
           Back to Smiles
         </Link>
-        <span>Opening & booking hours</span>
+        <span className="posts-create-eyebrow">Opening & booking hours</span>
         <h1>When are you open?</h1>
         <p>
           These hours appear on your Smiles venue page and control when
@@ -878,6 +879,235 @@ export default function SmilesBookingTimesPage() {
 
           .bookingTimesHero > span {
             display: block !important;
+            width: 100% !important;
+          }
+        }
+
+
+        /* FINAL SHARED FROMONE PAGE SYSTEM */
+        :global(body:has(.fromone-booking-times-page)) {
+          background: var(--posts-bg) !important;
+        }
+
+        :global(body:has(.fromone-booking-times-page) .app-shell),
+        :global(body:has(.fromone-booking-times-page) .main-content) {
+          background: var(--posts-bg) !important;
+        }
+
+        :global(body:has(.fromone-booking-times-page) .main-content) {
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
+          overflow-x: hidden !important;
+        }
+
+        .bookingTimesPage {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: transparent !important;
+          overflow: visible !important;
+        }
+
+        .bookingTimesShell {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          display: grid !important;
+          gap: 22px !important;
+          overflow: visible !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          background-image: none !important;
+          box-shadow: none !important;
+        }
+
+        .bookingTimesHero {
+          width: 100% !important;
+          max-width: 790px !important;
+          margin: 0 0 6px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+
+        .bookingTimesHero .backPill {
+          min-height: 46px !important;
+          margin: 0 0 24px !important;
+          padding: 0 17px !important;
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 15px !important;
+          background: #fff !important;
+          color: var(--posts-navy) !important;
+          box-shadow: none !important;
+          font-size: 0.86rem !important;
+          font-weight: 900 !important;
+        }
+
+        .bookingTimesHero > span {
+          display: block !important;
+          margin: 0 0 10px !important;
+          color: var(--posts-pink) !important;
+          font-size: 0.74rem !important;
+          line-height: 1 !important;
+          font-weight: 900 !important;
+          letter-spacing: 0.14em !important;
+          text-transform: uppercase !important;
+        }
+
+        .bookingTimesHero h1 {
+          max-width: 760px !important;
+          margin: 0 0 12px !important;
+          color: var(--posts-navy) !important;
+          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.06em !important;
+          font-weight: 800 !important;
+        }
+
+        .bookingTimesHero p {
+          max-width: 720px !important;
+          margin: 0 !important;
+          color: var(--posts-muted) !important;
+          font-size: 1.03rem !important;
+          line-height: 1.56 !important;
+          font-weight: 500 !important;
+        }
+
+        .timesSummary {
+          gap: 16px !important;
+          margin: 0 !important;
+        }
+
+        .timesSummary article,
+        .simplePanel {
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 26px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+          box-shadow: var(--posts-shadow) !important;
+          backdrop-filter: blur(10px) !important;
+        }
+
+        .timesSummary article {
+          padding: 20px !important;
+          background: rgba(255, 255, 255, 0.9) !important;
+          border-color: var(--posts-border) !important;
+        }
+
+        .simplePanel {
+          margin: 0 !important;
+          padding: 22px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+        }
+
+        .simplePanel.priority {
+          border-color: var(--posts-border) !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+        }
+
+        .presetGrid {
+          gap: 10px !important;
+        }
+
+        .presetGrid button,
+        .saveButton {
+          min-height: 46px !important;
+          padding: 0 17px !important;
+          border-radius: 15px !important;
+          font-size: 0.86rem !important;
+          font-weight: 900 !important;
+        }
+
+        .presetGrid button {
+          border: 1px solid var(--posts-border) !important;
+          background: #fff !important;
+          color: var(--posts-navy) !important;
+          box-shadow: none !important;
+        }
+
+        .presetGrid button:first-child,
+        .saveButton {
+          border: 0 !important;
+          background: var(--posts-pink) !important;
+          color: #fff !important;
+          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21) !important;
+        }
+
+        .dayGrid {
+          gap: 14px !important;
+        }
+
+        .dayCard {
+          padding: 18px !important;
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 22px !important;
+          background: #fff !important;
+          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055) !important;
+        }
+
+        .switchLabel {
+          border: 1px solid var(--posts-border) !important;
+          background: #f8fafc !important;
+          color: var(--posts-navy) !important;
+        }
+
+        .timeGrid input {
+          min-height: 48px !important;
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 14px !important;
+          color: var(--posts-navy) !important;
+          background: #fff !important;
+        }
+
+        .timeGrid input:focus {
+          border-color: var(--posts-pink) !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1) !important;
+        }
+
+        @media (max-width: 700px) {
+          :global(body:has(.fromone-booking-times-page) .main-content) {
+            padding: 24px 16px 100px !important;
+          }
+
+          .bookingTimesPage {
+            padding: 0 !important;
+          }
+
+          .bookingTimesHero h1 {
+            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          }
+
+          .bookingTimesHero p {
+            font-size: 0.95rem !important;
+          }
+
+          .timesSummary,
+          .presetGrid,
+          .dayGrid,
+          .sectionTop,
+          .dayTop,
+          .timeGrid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .timesSummary article,
+          .simplePanel {
+            padding: 17px !important;
+            border-radius: 21px !important;
+          }
+
+          .presetGrid button,
+          .saveButton {
             width: 100% !important;
           }
         }

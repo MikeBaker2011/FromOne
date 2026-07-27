@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
 
@@ -124,6 +125,11 @@ export default function SmilesReviewsPage() {
     [reviews]
   );
 
+  const pendingReviews = useMemo(
+    () => reviews.filter((review) => review.status === "pending"),
+    [reviews]
+  );
+
   const reviewsNeedingReply = useMemo(
     () =>
       approvedReviews.filter(
@@ -229,17 +235,37 @@ export default function SmilesReviewsPage() {
   }, []);
 
   return (
-    <main className="fromone-smiles-reviews-page smilesReviewsPage" data-fromone-smiles-reviews="simple-v2">
+    <main className="fromone-posts-page fromone-smiles-reviews-page smilesReviewsPage" data-fromone-smiles-reviews="simple-v2">
       <section id="fromone-standard-shell" className="reviewsShell">
         <div className="heroTop">
-          <Link href="/smiles" className="backLink">
+          <Link
+            href="/smiles"
+            className="backLink"
+            style={{
+              width: "fit-content",
+              minHeight: "52px",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "0 20px",
+              border: "1px solid #dfe5f1",
+              borderRadius: "999px",
+              background: "#ffffff",
+              color: "#071b49",
+              boxShadow: "0 10px 24px rgba(7, 27, 73, 0.06)",
+              fontSize: "0.98rem",
+              fontWeight: 800,
+              lineHeight: 1,
+              textDecoration: "none",
+            }}
+          >
             Back to Smiles
           </Link>
         </div>
 
-        <div className="heroGrid">
+        <div className="posts-create-hero heroGrid">
           <div>
-            <p className="eyebrow">Reviews</p>
+            <span className="posts-create-eyebrow eyebrow">Reviews</span>
             <h1>Customer reviews. Keep it simple.</h1>
             <p className="intro">
               Reply to public customer reviews from one clear place. Keep replies
@@ -278,6 +304,10 @@ export default function SmilesReviewsPage() {
           <>
             <section className="reviewSummary" aria-label="Review summary">
               <article>
+                <span>Waiting for approval</span>
+                <strong>{pendingReviews.length}</strong>
+              </article>
+              <article>
                 <span>Needs reply</span>
                 <strong>{reviewsNeedingReply.length}</strong>
               </article>
@@ -286,6 +316,53 @@ export default function SmilesReviewsPage() {
                 <strong>{approvedReviews.length}</strong>
               </article>
             </section>
+
+            {pendingReviews.length > 0 ? (
+              <section className="simplePanel pendingReviewsPanel">
+                <div className="sectionTop">
+                  <div>
+                    <span>Waiting for Smiles admin</span>
+                    <h2>Reviews awaiting approval</h2>
+                  </div>
+                </div>
+
+                <div className="reviewList">
+                  {pendingReviews.map((review) => (
+                    <article className="reviewCard pendingReviewCard" key={review.id}>
+                      <div className="reviewTop">
+                        <div>
+                          <span>{getReviewLabel(review.status)}</span>
+                          <h3>{review.customer_name || "Customer"}</h3>
+                          <p>{review.review_text || "No review text."}</p>
+                        </div>
+                        <strong aria-label={`${review.rating || 0} out of 5`}>
+                          <span>{renderStars(review.rating)}</span>
+                          {review.rating || 0}/5
+                        </strong>
+                      </div>
+
+                      <div className="pillRow">
+                        <span>{formatSubmittedAt(review.created_at)}</span>
+                        {review.customer_email ? (
+                          <a href={`mailto:${review.customer_email}`}>
+                            Email {review.customer_email}
+                          </a>
+                        ) : null}
+                      </div>
+
+                      <div className="reviewReference">
+                        Reference: <strong>{makeReviewReference(review)}</strong>
+                      </div>
+
+                      <p className="pendingReviewHelp">
+                        This review is visible here for awareness, but it cannot receive
+                        a public business reply until Smiles admin approves it.
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             <section className="simplePanel priority">
               <div className="sectionTop">
@@ -544,7 +621,7 @@ export default function SmilesReviewsPage() {
 
         .reviewSummary {
           display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
           gap: 14px !important;
           margin-bottom: 18px !important;
         }
@@ -760,6 +837,33 @@ export default function SmilesReviewsPage() {
           line-height: 1.1 !important;
           letter-spacing: -0.035em !important;
           font-weight: 800 !important;
+        }
+
+        .pendingReviewsPanel {
+          border-color: #ffd2e5 !important;
+          background: #fffafd !important;
+        }
+
+        .pendingReviewCard {
+          border-color: #ffd2e5 !important;
+          background: #ffffff !important;
+        }
+
+        .pendingReviewCard .reviewTop > div > span {
+          color: #b45309 !important;
+          background: #fff7d6 !important;
+        }
+
+        .pendingReviewHelp {
+          margin: 0 !important;
+          padding: 14px 16px !important;
+          border: 1px solid #ffe2a8 !important;
+          border-radius: 16px !important;
+          background: #fffbeb !important;
+          color: #7c4a03 !important;
+          font-size: 0.92rem !important;
+          line-height: 1.5 !important;
+          font-weight: 700 !important;
         }
 
         @media (max-width: 760px) {
@@ -1062,6 +1166,271 @@ export default function SmilesReviewsPage() {
           .reviewCard .reviewReference {
             margin-left: auto !important;
             margin-right: auto !important;
+          }
+        }
+
+
+        /* FINAL SHARED FROMONE PAGE SYSTEM */
+        :global(body:has(.fromone-smiles-reviews-page)) {
+          background: var(--posts-bg) !important;
+        }
+
+        :global(body:has(.fromone-smiles-reviews-page) .app-shell),
+        :global(body:has(.fromone-smiles-reviews-page) .main-content) {
+          background: var(--posts-bg) !important;
+        }
+
+        :global(body:has(.fromone-smiles-reviews-page) .main-content) {
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
+          overflow-x: hidden !important;
+        }
+
+        .smilesReviewsPage {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: transparent !important;
+          overflow: visible !important;
+        }
+
+        .reviewsShell {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          display: grid !important;
+          gap: 22px !important;
+          overflow: visible !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          background-image: none !important;
+          box-shadow: none !important;
+        }
+
+        .heroTop {
+          margin: 0 0 24px !important;
+        }
+
+        .backLink {
+          width: fit-content !important;
+          min-height: 44px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 9px !important;
+          padding: 0 18px !important;
+          border: 1px solid rgba(247, 37, 133, 0.2) !important;
+          border-radius: 999px !important;
+          background: #fff5fa !important;
+          color: var(--posts-navy) !important;
+          box-shadow: 0 8px 20px rgba(7, 27, 73, 0.06) !important;
+          font-size: 0.86rem !important;
+          font-weight: 900 !important;
+          line-height: 1 !important;
+          text-decoration: none !important;
+          transition:
+            transform 160ms ease,
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            background 160ms ease !important;
+        }
+
+        .backLink:hover {
+          transform: translateY(-1px) !important;
+          border-color: rgba(247, 37, 133, 0.32) !important;
+          background: #fff !important;
+          box-shadow: 0 12px 26px rgba(7, 27, 73, 0.09) !important;
+        }
+
+        .backLink:focus-visible {
+          outline: none !important;
+          box-shadow:
+            0 0 0 4px rgba(247, 37, 133, 0.12),
+            0 12px 26px rgba(7, 27, 73, 0.09) !important;
+        }
+
+        .heroGrid {
+          width: 100% !important;
+          max-width: 100% !important;
+          grid-template-columns: minmax(0, 1fr) 260px !important;
+          gap: 24px !important;
+          align-items: start !important;
+          margin: 0 0 6px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+
+        .heroGrid > div:first-child {
+          max-width: 790px !important;
+        }
+
+        .eyebrow {
+          display: block !important;
+          margin: 0 0 10px !important;
+          color: var(--posts-pink) !important;
+          font-size: 0.74rem !important;
+          line-height: 1 !important;
+          font-weight: 900 !important;
+          letter-spacing: 0.14em !important;
+          text-transform: uppercase !important;
+        }
+
+        h1 {
+          max-width: 760px !important;
+          margin: 0 0 12px !important;
+          color: var(--posts-navy) !important;
+          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.06em !important;
+          font-weight: 800 !important;
+        }
+
+        .intro {
+          max-width: 720px !important;
+          margin: 0 !important;
+          color: var(--posts-muted) !important;
+          font-size: 1.03rem !important;
+          line-height: 1.56 !important;
+          font-weight: 500 !important;
+        }
+
+        .listingCard,
+        .reviewSummary article,
+        .simplePanel {
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 26px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+          box-shadow: var(--posts-shadow) !important;
+          backdrop-filter: blur(10px) !important;
+        }
+
+        .listingCard {
+          background: rgba(255, 255, 255, 0.9) !important;
+          border-color: var(--posts-border) !important;
+        }
+
+        .reviewSummary {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 16px !important;
+          margin: 0 !important;
+        }
+
+        .reviewSummary article {
+          padding: 20px !important;
+          background: rgba(255, 255, 255, 0.9) !important;
+          border-color: var(--posts-border) !important;
+        }
+
+        .simplePanel {
+          margin: 0 !important;
+          padding: 22px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+        }
+
+        .simplePanel.priority {
+          background: rgba(255, 255, 255, 0.84) !important;
+          border-color: var(--posts-border) !important;
+        }
+
+        .sectionTop button,
+        .reviewCard button {
+          min-height: 46px !important;
+          padding: 0 17px !important;
+          border-radius: 15px !important;
+          font-size: 0.86rem !important;
+          font-weight: 900 !important;
+        }
+
+        .sectionTop button {
+          border: 1px solid var(--posts-border) !important;
+          background: #fff !important;
+          color: var(--posts-navy) !important;
+          box-shadow: none !important;
+        }
+
+        .reviewCard button {
+          border: 0 !important;
+          background: var(--posts-pink) !important;
+          color: #fff !important;
+          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21) !important;
+        }
+
+        .reviewCard {
+          padding: 20px !important;
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 22px !important;
+          background: #fff !important;
+          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055) !important;
+        }
+
+        .reviewCard textarea {
+          min-height: 124px !important;
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 14px !important;
+          background: #fff !important;
+          color: var(--posts-navy) !important;
+        }
+
+        .reviewCard textarea:focus {
+          border-color: var(--posts-pink) !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1) !important;
+        }
+
+        .pillRow span,
+        .pillRow a,
+        .reviewReference {
+          border: 1px solid var(--posts-border) !important;
+          background: #f8fafc !important;
+          color: var(--posts-navy) !important;
+        }
+
+        @media (max-width: 700px) {
+          :global(body:has(.fromone-smiles-reviews-page) .main-content) {
+            padding: 24px 16px 100px !important;
+          }
+
+          .smilesReviewsPage {
+            padding: 0 !important;
+          }
+
+          .heroGrid,
+          .reviewSummary,
+          .sectionTop,
+          .reviewTop {
+            grid-template-columns: 1fr !important;
+          }
+
+          h1 {
+            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          }
+
+          .intro {
+            font-size: 0.95rem !important;
+          }
+
+          .listingCard,
+          .reviewSummary article,
+          .simplePanel,
+          .reviewCard {
+            padding: 17px !important;
+            border-radius: 21px !important;
+          }
+
+          .sectionTop button,
+          .reviewCard button {
+            width: 100% !important;
           }
         }
 

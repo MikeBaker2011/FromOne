@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import "../posts/posts-companion-shared.css";
 import { useEffect, useMemo, useState } from "react";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 
@@ -502,1494 +503,511 @@ export default function ReportsPage() {
 
   if (loading) {
     return (
-      <main className="reports-page">
-        <section className="premium-card reports-hero-card">
-          <div className="page-eyebrow">Reports</div>
-          <h1 className="page-title">Loading reports...</h1>
-          <p className="page-description">Checking your posts, publishing activity and performance.</p>
+      <main className="fromone-posts-page fromone-reports-page">
+        <section id="fromone-standard-shell">
+          <header className="posts-create-hero">
+            <span className="posts-create-eyebrow">Reports</span>
+            <h1>Loading reports…</h1>
+            <p>Checking your posts, publishing activity and performance.</p>
+          </header>
         </section>
       </main>
     );
   }
 
   return (
-    <main className="reports-page">
-      <section className="premium-card reports-hero-card">
-        <div>
-          <div className="page-eyebrow">Reports</div>
-          <h1 className="page-title">See what FromOne has done.</h1>
-          <p className="page-description">
-            See your post activity, scheduled content and Facebook or Instagram performance in one place.
-          </p>
-        </div>
-
-        <div className="reports-hero-actions">
-          <button
-                type="button"
-                className="reports-action-button reports-action-button-secondary"
-                onClick={() => { window.location.href = "/posts"; }}
-              >
-                Review posts
-              </button>
-        </div>
-      </section>
-
-      {message && (
-        <section className="premium-card reports-message-card">
-          <strong>{message}</strong>
-        </section>
-      )}
-
-      {(metricsMessage || syncingMetrics) && (
-        <section className="premium-card reports-message-card reports-sync-message-card">
-          <strong>{syncingMetrics ? "Refreshing report..." : "Latest report update"}</strong>
+    <main className="fromone-posts-page fromone-reports-page">
+      <section id="fromone-standard-shell">
+        <header className="posts-create-hero reports-shared-hero">
+          <span className="posts-create-eyebrow">Reports</span>
+          <h1>See what is working.</h1>
           <p>
-            {syncingMetrics
-              ? "FromOne is checking Facebook and Instagram for the latest stats. This can take a few seconds."
-              : metricsMessage}
+            Review publishing activity and see how your Facebook and Instagram
+            posts are performing.
           </p>
+        </header>
+
+        {message ? (
+          <section className="posts-summary-panel reports-shared-message">
+            <div className="posts-panel-head">
+              <span className="posts-step-badge">!</span>
+              <div>
+                <h2>Reports update</h2>
+                <p>{message}</p>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {(metricsMessage || syncingMetrics) ? (
+          <section className="posts-summary-panel reports-shared-message">
+            <div className="posts-panel-head">
+              <span className="posts-step-badge">1</span>
+              <div>
+                <h2>{syncingMetrics ? "Refreshing report…" : "Latest report update"}</h2>
+                <p>
+                  {syncingMetrics
+                    ? "FromOne is checking Facebook and Instagram for the latest stats."
+                    : metricsMessage}
+                </p>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        <section className="reports-shared-summary">
+          <article>
+            <span>Published</span>
+            <strong>{report.posted.length}</strong>
+            <p>Posts already published.</p>
+          </article>
+          <article>
+            <span>Tracked posts</span>
+            <strong>{trackedPerformancePosts.length}</strong>
+            <p>Posts with performance tracking.</p>
+          </article>
+          <article>
+            <span>Created this week</span>
+            <strong>{report.postsThisWeek.length}</strong>
+            <p>Posts created this week.</p>
+          </article>
         </section>
-      )}
 
-      <section className="reports-metric-grid reports-summary-grid">
-        <article className="reports-metric-card">
-          <span>Published</span>
-          <strong>{report.posted.length}</strong>
-          <p>Posts already marked as published.</p>
-        </article>
+        <section className="posts-summary-panel reports-shared-guide">
+          <div className="posts-panel-head">
+            <span className="posts-step-badge">2</span>
+            <div>
+              <h2>Keep an eye on what works</h2>
+              <p>
+                Use Reports after posts have been published. Refresh the metrics
+                when you want the latest Facebook and Instagram activity.
+              </p>
+            </div>
+          </div>
+          <div className="posts-summary-actions reports-shared-actions">
+            <button
+              type="button"
+              className="posts-primary-action"
+              onClick={() => syncMetaMetrics()}
+              disabled={syncingMetrics}
+            >
+              {syncingMetrics ? "Refreshing…" : "Refresh metrics"}
+            </button>
+            <Link href="/posts">Review posts</Link>
+          </div>
+        </section>
 
-        <article className="reports-metric-card">
-          <span>Tracked posts</span>
-          <strong>{trackedPerformancePosts.length}</strong>
-          <p>Facebook and Instagram posts with report tracking.</p>
-        </article>
-
-        <article className="reports-metric-card">
-          <span>Created this week</span>
-          <strong>{report.postsThisWeek.length}</strong>
-          <p>Posts created during this week.</p>
-        </article>
-      </section>
-
-      <section className="premium-card reports-guidance-card">
-        <div className="page-eyebrow">How to use Reports</div>
-        <h2>Keep an eye on what is working.</h2>
-        <p>
-          Use this page after posts have been reviewed, scheduled or published. Reports helps you see what has gone live,
-          what is being tracked and which Facebook or Instagram posts are performing best.
-        </p>
-      </section>
-
-      <section className="premium-card reports-panel reports-main-performance-card">
-        <div className="reports-section-head reports-performance-head">
-          <div>
-            <div className="page-eyebrow">Performance</div>
-            <h2>Facebook & Instagram performance</h2>
-            <p>
-              FromOne can check Meta for Facebook and Instagram stats. Use refresh when you want the latest numbers.
-            </p>
+        <section className="posts-list-panel reports-shared-panel">
+          <div className="posts-panel-head">
+            <span className="posts-step-badge">3</span>
+            <div>
+              <h2>Facebook & Instagram performance</h2>
+              <p>See the totals and individual results for tracked posts.</p>
+            </div>
           </div>
 
-          <button type="button" className="reports-action-button reports-action-button-primary" onClick={() => syncMetaMetrics()} disabled={syncingMetrics}>
-            {syncingMetrics ? "Refreshing..." : "Refresh metrics"}
-          </button>
-        </div>
-
-        <div className="reports-compact-metrics">
-          <article>
-            <span>Likes</span>
-            <strong>{report.metricTotals.likes}</strong>
-          </article>
-          <article>
-            <span>Comments</span>
-            <strong>{report.metricTotals.comments}</strong>
-          </article>
-          <article>
-            <span>Shares</span>
-            <strong>{report.metricTotals.shares}</strong>
-          </article>
-          <article>
-            <span>Reach</span>
-            <strong>{report.metricTotals.reach}</strong>
-          </article>
-          <article>
-            <span>Impressions</span>
-            <strong>{report.metricTotals.impressions}</strong>
-          </article>
-          <article>
-            <span>Engagement</span>
-            <strong>{report.metricTotals.engagement}</strong>
-          </article>
-        </div>
-
-        <div className="reports-platform-filter" aria-label="Filter post performance">
-          <button
-            type="button"
-            className={performanceFilter === "all" ? "is-active" : ""}
-            onClick={() => setPerformanceFilter("all")}
-          >
-            All
-            <span>{trackedPerformancePosts.length}</span>
-          </button>
-          <button
-            type="button"
-            className={performanceFilter === "facebook" ? "is-active" : ""}
-            onClick={() => setPerformanceFilter("facebook")}
-          >
-            Facebook
-            <span>{facebookPerformanceCount}</span>
-          </button>
-          <button
-            type="button"
-            className={performanceFilter === "instagram" ? "is-active" : ""}
-            onClick={() => setPerformanceFilter("instagram")}
-          >
-            Instagram
-            <span>{instagramPerformanceCount}</span>
-          </button>
-        </div>
-
-        {filteredPerformancePosts.length === 0 ? (
-          <div className="reports-note-box reports-empty-clean">
-            <strong>No tracked Facebook or Instagram posts yet</strong>
-            <p>
-              Once Facebook or Instagram posts are published through FromOne, their stats will appear here.
-            </p>
-          </div>
-        ) : (
-          <div className="reports-post-clean-list">
-            {filteredPerformancePosts.map(({ metric, post: linkedPost, waitingForInsights }: any) => (
-              <article
-                key={`${metric.campaign_post_id}-${metric.platform}`}
-                className={waitingForInsights ? "reports-post-clean-card is-waiting" : "reports-post-clean-card"}
-              >
-                <div className="reports-post-clean-header">
-                  <div className="reports-post-clean-title">
-                    <span className="reports-pill">
-                      {waitingForInsights ? "Meta post found" : metric.platform}
-                    </span>
-                    <h3>{linkedPost?.title || `${metric.platform} post`}</h3>
-                    <p>
-                      {waitingForInsights
-                        ? "Waiting for Meta to return live activity."
-                        : `Last synced ${formatDate(metric.synced_at)}`}
-                    </p>
-                  </div>
-
-                  <div className="reports-post-clean-engagement">
-                    <strong>{Number(metric.engagement || 0)}</strong>
-                    <span>Engagement</span>
-                  </div>
-                </div>
-
-                <div className="reports-post-clean-stats">
-                  {[
-                    ["Likes", metric.likes],
-                    ["Comments", metric.comments],
-                    ["Shares", metric.shares],
-                    ["Reach", metric.reach],
-                    ["Impressions", metric.impressions],
-                    ["Saves", metric.saves],
-                  ].map(([label, value]) => (
-                    <div key={String(label)} className="reports-post-clean-stat">
-                      <strong>{Number(value || 0)}</strong>
-                      <span>{label}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="reports-post-clean-footer">
-                  <span>{metric.platform}</span>
-                  <span>Meta ID: {metric.provider_post_id || "Not saved"}</span>
-                </div>
+          <div className="reports-shared-compact-metrics">
+            {[
+              ["Likes", report.metricTotals.likes],
+              ["Comments", report.metricTotals.comments],
+              ["Shares", report.metricTotals.shares],
+              ["Reach", report.metricTotals.reach],
+              ["Impressions", report.metricTotals.impressions],
+              ["Engagement", report.metricTotals.engagement],
+            ].map(([label, value]) => (
+              <article key={String(label)}>
+                <span>{label}</span>
+                <strong>{Number(value || 0)}</strong>
               </article>
             ))}
           </div>
-        )}
-      </section>
 
-      <section className="premium-card reports-panel reports-recommendation-panel">
-        <div className="page-eyebrow">What to do next</div>
-        <h2>Create more of what works</h2>
+          <div className="reports-shared-filter" aria-label="Filter post performance">
+            <button
+              type="button"
+              className={performanceFilter === "all" ? "is-active" : ""}
+              onClick={() => setPerformanceFilter("all")}
+            >
+              All <span>{trackedPerformancePosts.length}</span>
+            </button>
+            <button
+              type="button"
+              className={performanceFilter === "facebook" ? "is-active" : ""}
+              onClick={() => setPerformanceFilter("facebook")}
+            >
+              Facebook <span>{facebookPerformanceCount}</span>
+            </button>
+            <button
+              type="button"
+              className={performanceFilter === "instagram" ? "is-active" : ""}
+              onClick={() => setPerformanceFilter("instagram")}
+            >
+              Instagram <span>{instagramPerformanceCount}</span>
+            </button>
+          </div>
 
-        {recommendationSource ? (
-          <div className="reports-recommendation-box">
-            <span className="reports-pill">
-              {recommendationSource.waitingForInsights
-                ? "Early signal"
-                : "Based on best performer"}
-            </span>
-            <h3>
-              Create another {recommendationSource.metric.platform} post similar to{" "}
-              {recommendationSource.post?.title || `${recommendationSource.metric.platform} post`}.
-            </h3>
-            <p>
-              {recommendationSource.waitingForInsights
-                ? "FromOne has found the post and is waiting for Meta to return activity. Once the stats arrive, this recommendation will become clearer."
-                : "This post currently has the strongest engagement. Use a similar offer, visual style or call to action in your next content plan."}
-            </p>
+          {filteredPerformancePosts.length === 0 ? (
+            <div className="posts-empty-panel">
+              <div className="posts-panel-head">
+                <span className="posts-step-badge">✓</span>
+                <div>
+                  <h2>No tracked posts yet</h2>
+                  <p>
+                    Published Facebook and Instagram posts will appear here once
+                    tracking is available.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="reports-shared-post-list">
+              {filteredPerformancePosts.map(
+                ({ metric, post: linkedPost, waitingForInsights }: any) => (
+                  <article
+                    key={`${metric.campaign_post_id}-${metric.platform}`}
+                    className="reports-shared-post-card"
+                  >
+                    <div className="reports-shared-post-head">
+                      <div>
+                        <div className="posts-review-meta">
+                          <span>{waitingForInsights ? "Waiting for Meta" : metric.platform}</span>
+                        </div>
+                        <h3>{linkedPost?.title || `${metric.platform} post`}</h3>
+                        <p>
+                          {waitingForInsights
+                            ? "Meta has found the post but has not returned activity yet."
+                            : `Last synced ${formatDate(metric.synced_at)}`}
+                        </p>
+                      </div>
 
-            {recommendationMessage && (
-              <p className="reports-recommendation-message">{recommendationMessage}</p>
-            )}
+                      <div className="reports-shared-engagement">
+                        <strong>{Number(metric.engagement || 0)}</strong>
+                        <span>Engagement</span>
+                      </div>
+                    </div>
 
-            {createdPostId && (
-              <Link
-                href={`/posts/${createdPostId}`}
-                className="reports-created-post-link"
-              >
-                Review new post
-              </Link>
-            )}
+                    <div className="reports-shared-post-stats">
+                      {[
+                        ["Likes", metric.likes],
+                        ["Comments", metric.comments],
+                        ["Shares", metric.shares],
+                        ["Reach", metric.reach],
+                        ["Impressions", metric.impressions],
+                        ["Saves", metric.saves],
+                      ].map(([label, value]) => (
+                        <div key={String(label)}>
+                          <strong>{Number(value || 0)}</strong>
+                          <span>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                ),
+              )}
+            </div>
+          )}
+        </section>
 
-            <div className="reports-recommendation-actions">
-              <button type="button" className="reports-action-button reports-action-button-primary" onClick={createPostFromBestPerformer} disabled={creatingFromBest}>
-                {creatingFromBest ? "Creating..." : "Create similar post"}
-              </button>
-              <button
-                type="button"
-                className="reports-action-button reports-action-button-secondary"
-                onClick={() => { window.location.href = "/posts"; }}
-              >
-                Review posts
-              </button>
-              <button type="button" className="reports-action-button reports-action-button-primary" onClick={() => syncMetaMetrics()} disabled={syncingMetrics}>{syncingMetrics ? "Refreshing..." : "Refresh metrics"}</button>
+        <section className="posts-list-panel reports-shared-panel reports-shared-recommendation">
+          <div className="posts-panel-head">
+            <span className="posts-step-badge">4</span>
+            <div>
+              <h2>Create more of what works</h2>
+              <p>Use your strongest tracked post as the starting point for a new draft.</p>
             </div>
           </div>
-        ) : (
-          <div className="reports-note-box">
-            <strong>No recommendation yet</strong>
-            <p>
-              After posts are published and tracked, FromOne will suggest what to create next based on the strongest performer.
-            </p>
-          </div>
-        )}
+
+          {recommendationSource ? (
+            <div className="reports-shared-recommendation-box">
+              <div className="posts-review-meta">
+                <span>
+                  {recommendationSource.waitingForInsights
+                    ? "Early signal"
+                    : "Best performer"}
+                </span>
+              </div>
+
+              <h3>
+                Create another {recommendationSource.metric.platform} post similar
+                to {recommendationSource.post?.title || "your strongest post"}.
+              </h3>
+
+              <p>
+                {recommendationSource.waitingForInsights
+                  ? "Meta is still returning activity, so this recommendation may become clearer."
+                  : "Use a similar offer, visual style or call to action in your next content plan."}
+              </p>
+
+              {recommendationMessage ? (
+                <p className="reports-shared-status">{recommendationMessage}</p>
+              ) : null}
+
+              <div className="reports-shared-actions">
+                <button
+                  type="button"
+                  className="posts-primary-action"
+                  onClick={createPostFromBestPerformer}
+                  disabled={creatingFromBest}
+                >
+                  {creatingFromBest ? "Creating…" : "Create similar post"}
+                </button>
+
+                {createdPostId ? (
+                  <Link href={`/posts/${createdPostId}`}>Review new post</Link>
+                ) : null}
+
+                <Link href="/posts">Review posts</Link>
+              </div>
+            </div>
+          ) : (
+            <div className="posts-empty-panel">
+              <div className="posts-panel-head">
+                <span className="posts-step-badge">✓</span>
+                <div>
+                  <h2>No recommendation yet</h2>
+                  <p>
+                    Once posts are published and tracked, FromOne will suggest
+                    what to create next.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
       </section>
 
-      <style jsx>{`
-        /* Phase 9 final polish — Reports cleanup */
-        .reports-page {
-          width: min(100%, 1080px) !important;
-          margin: 0 auto !important;
-          padding: 0 0 56px !important;
+      <style jsx global>{`
+        body:has(.fromone-reports-page) {
+          background: var(--posts-bg) !important;
         }
 
-        .reports-hero-card,
-        .reports-message-card,
-        .reports-panel,
-        .reports-metric-card {
-          border: 1px solid rgba(255, 255, 255, 0.09) !important;
-          box-shadow: 0 22px 66px rgba(0, 0, 0, 0.24) !important;
-        }
-
-        .reports-hero-card {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) auto !important;
-          gap: 22px !important;
-          align-items: center !important;
-          margin-bottom: 18px !important;
-          border-radius: 34px !important;
-          padding: clamp(24px, 3.4vw, 38px) !important;
-          border-color: rgba(255, 212, 59, 0.2) !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.14), transparent 34%),
-            rgba(15, 23, 42, 0.84) !important;
-        }
-
-        .reports-hero-card .page-title {
-          margin: 8px 0 12px !important;
-          color: #ffffff !important;
-          font-size: clamp(2.45rem, 5vw, 4.4rem) !important;
-          line-height: 0.92 !important;
-          letter-spacing: -0.06em !important;
-        }
-
-        .reports-hero-card .page-description {
-          max-width: 760px !important;
-          color: rgba(248, 250, 252, 0.72) !important;
-          line-height: 1.58 !important;
-        }
-
-        .reports-message-card {
-          display: grid !important;
-          gap: 7px !important;
-          margin-bottom: 18px !important;
-          padding: 16px 18px !important;
-          border-radius: 22px !important;
-          background: rgba(255, 212, 59, 0.08) !important;
-          border-color: rgba(255, 212, 59, 0.18) !important;
-        }
-
-        .reports-message-card strong {
-          color: #ffffff !important;
-        }
-
-        .reports-message-card p {
+        body:has(.fromone-reports-page) .main-content {
+          width: 100% !important;
+          max-width: none !important;
           margin: 0 !important;
-          color: rgba(248, 250, 252, 0.72) !important;
-          line-height: 1.48 !important;
+          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
+          background: var(--posts-bg) !important;
         }
 
-        .reports-summary-grid {
-          display: grid !important;
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          gap: 14px !important;
-          margin: 0 0 18px !important;
-        }
-
-        .reports-metric-card {
-          padding: 20px !important;
-          border-radius: 26px !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
-            rgba(15, 23, 42, 0.84) !important;
-        }
-
-        .reports-metric-card span,
-        .reports-compact-metrics span,
-        .reports-post-clean-stat span,
-        .reports-post-clean-engagement span {
-          color: rgba(255, 212, 59, 0.92) !important;
-          font-size: 0.72rem !important;
-          font-weight: 950 !important;
-          letter-spacing: 0.08em !important;
-          text-transform: uppercase !important;
-        }
-
-        .reports-metric-card strong {
-          display: block !important;
-          margin: 9px 0 7px !important;
-          color: #ffffff !important;
-          font-size: clamp(2.3rem, 4vw, 3.15rem) !important;
-          line-height: 0.9 !important;
-          letter-spacing: -0.07em !important;
-        }
-
-        .reports-metric-card p,
-        .reports-panel p {
-          color: rgba(248, 250, 252, 0.68) !important;
-          line-height: 1.5 !important;
-        }
-
-        .reports-panel {
-          border-radius: 30px !important;
-          padding: clamp(22px, 3vw, 30px) !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.055), transparent 34%),
-            rgba(15, 23, 42, 0.84) !important;
-        }
-
-        .reports-main-performance-card {
-          margin-bottom: 20px !important;
-          border-color: rgba(255, 212, 59, 0.14) !important;
-        }
-
-        .reports-section-head {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) auto !important;
-          gap: 18px !important;
-          align-items: start !important;
-          margin-bottom: 18px !important;
-        }
-
-        .reports-panel h2 {
-          margin: 8px 0 10px !important;
-          color: #ffffff !important;
-          font-size: clamp(1.9rem, 3.4vw, 3rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.055em !important;
-        }
-
-        .reports-compact-metrics {
-          display: grid !important;
-          grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-          gap: 10px !important;
-          margin: 18px 0 !important;
-        }
-
-        .reports-compact-metrics article,
-        .reports-post-clean-stat,
-        .reports-post-clean-engagement {
-          border-radius: 18px !important;
-          background: rgba(2, 6, 23, 0.32) !important;
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        }
-
-        .reports-compact-metrics article {
-          padding: 14px !important;
-        }
-
-        .reports-compact-metrics strong,
-        .reports-post-clean-stat strong,
-        .reports-post-clean-engagement strong {
-          color: #ffffff !important;
-          letter-spacing: -0.055em !important;
-        }
-
-        .reports-platform-filter {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 10px !important;
-          margin: 0 0 18px !important;
-          padding: 8px !important;
-          border-radius: 999px !important;
-          background: rgba(2, 6, 23, 0.22) !important;
-          border: 1px solid rgba(255, 255, 255, 0.07) !important;
-          width: fit-content !important;
-          max-width: 100% !important;
-        }
-
-        .reports-platform-filter button {
-          min-height: 40px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          gap: 9px !important;
-          padding: 0 14px !important;
-          border-radius: 999px !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
-          background: rgba(255, 255, 255, 0.055) !important;
-          color: rgba(248, 250, 252, 0.78) !important;
-          font-weight: 950 !important;
-          cursor: pointer !important;
-        }
-
-        .reports-platform-filter button.is-active {
-          background: rgba(255, 212, 59, 0.16) !important;
-          border-color: rgba(255, 212, 59, 0.34) !important;
-          color: #ffe58a !important;
-        }
-
-        .reports-post-clean-list {
-          display: grid !important;
-          gap: 14px !important;
-        }
-
-        .reports-post-clean-card {
-          display: grid !important;
-          gap: 16px !important;
-          padding: clamp(18px, 2.5vw, 24px) !important;
-          border-radius: 26px !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 255, 255, 0.05), transparent 36%),
-            rgba(2, 6, 23, 0.34) !important;
-          border: 1px solid rgba(255, 255, 255, 0.09) !important;
-          overflow: hidden !important;
-        }
-
-        .reports-post-clean-card.is-waiting {
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 36%),
-            rgba(255, 255, 255, 0.045) !important;
-          border-color: rgba(255, 212, 59, 0.2) !important;
-        }
-
-        .reports-post-clean-header {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) 132px !important;
-          gap: 16px !important;
-          align-items: start !important;
-        }
-
-        .reports-post-clean-title h3 {
-          margin: 12px 0 8px !important;
-          color: #ffffff !important;
-          font-size: clamp(1.25rem, 2vw, 1.65rem) !important;
-          line-height: 1.12 !important;
-          letter-spacing: -0.04em !important;
-        }
-
-        .reports-post-clean-stats {
-          display: grid !important;
-          grid-template-columns: repeat(6, minmax(90px, 1fr)) !important;
-          gap: 10px !important;
-        }
-
-        .reports-post-clean-stat {
-          display: grid !important;
-          gap: 7px !important;
-          padding: 13px 12px !important;
-        }
-
-        .reports-post-clean-footer {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 8px 14px !important;
-          color: rgba(248, 250, 252, 0.44) !important;
-          font-size: 0.78rem !important;
-          font-weight: 800 !important;
-          overflow-wrap: anywhere !important;
-        }
-
-        .reports-pill {
-          min-height: 28px !important;
-          width: fit-content !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 10px !important;
-          border-radius: 999px !important;
-          background: rgba(255, 212, 59, 0.12) !important;
-          color: #ffe58a !important;
-          border: 1px solid rgba(255, 212, 59, 0.2) !important;
-          font-size: 0.72rem !important;
-          font-weight: 1000 !important;
-          letter-spacing: 0.07em !important;
-          text-transform: uppercase !important;
-        }
-
-        .reports-recommendation-panel {
-          margin-top: 22px !important;
-          margin-bottom: 0 !important;
-          border-color: rgba(255, 212, 59, 0.18) !important;
-        }
-
-        .reports-recommendation-box {
-          display: grid !important;
-          gap: 14px !important;
-          padding: 18px !important;
-          border-radius: 24px !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 36%),
-            rgba(2, 6, 23, 0.26) !important;
-          border: 1px solid rgba(255, 212, 59, 0.16) !important;
-        }
-
-        .reports-recommendation-box h3 {
-          margin: 0 !important;
-          color: #ffffff !important;
-          font-size: clamp(1.25rem, 2.2vw, 1.75rem) !important;
-          line-height: 1.12 !important;
-          letter-spacing: -0.04em !important;
-        }
-
-        .reports-recommendation-message {
-          margin: 2px 0 0 !important;
-          padding: 12px 14px !important;
-          border-radius: 16px !important;
-          background: rgba(255, 212, 59, 0.09) !important;
-          border: 1px solid rgba(255, 212, 59, 0.18) !important;
-          color: rgba(248, 250, 252, 0.82) !important;
-          line-height: 1.45 !important;
-        }
-
-        .reports-created-post-link {
-          min-height: 46px !important;
-          width: fit-content !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 16px !important;
-          border-radius: 15px !important;
-          background: rgba(34, 197, 94, 0.14) !important;
-          color: #bbf7d0 !important;
-          border: 1px solid rgba(34, 197, 94, 0.3) !important;
-          font-weight: 950 !important;
-          text-decoration: none !important;
-        }
-
-        .reports-recommendation-actions,
-        .reports-hero-actions {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          align-items: center !important;
-          gap: 12px !important;
-        }
-
-        .reports-recommendation-actions {
-          margin-top: 4px !important;
-        }
-
-        .reports-action-button {
-          min-height: 46px !important;
-          height: 46px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 18px !important;
-          border-radius: 15px !important;
-          border-width: 1px !important;
-          border-style: solid !important;
-          font-family: inherit !important;
-          font-weight: 950 !important;
-          font-size: 0.98rem !important;
-          line-height: 1 !important;
-          letter-spacing: -0.01em !important;
-          text-decoration: none !important;
-          white-space: nowrap !important;
-          cursor: pointer !important;
-          appearance: none !important;
-        }
-
-        .reports-action-button-primary {
-          background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-          color: #101420 !important;
-          border-color: rgba(255, 212, 59, 0.5) !important;
-          box-shadow: 0 14px 32px rgba(255, 212, 59, 0.16) !important;
-        }
-
-        .reports-action-button-secondary {
-          background: rgba(255, 255, 255, 0.08) !important;
-          color: rgba(248, 250, 252, 0.94) !important;
-          border-color: rgba(255, 255, 255, 0.14) !important;
-          box-shadow: none !important;
-        }
-
-        .reports-action-button:disabled {
-          opacity: 0.72 !important;
-          cursor: wait !important;
-          box-shadow: none !important;
-        }
-
-        .reports-note-box,
-        .reports-empty-clean {
-          padding: 16px !important;
-          border-radius: 20px !important;
-          background: rgba(255, 255, 255, 0.055) !important;
-          border: 1px solid rgba(255, 255, 255, 0.09) !important;
-        }
-
-        @media (max-width: 920px) {
-          .reports-page {
-            width: min(100%, calc(100vw - 24px)) !important;
-          }
-
-          .reports-hero-card,
-          .reports-section-head,
-          .reports-post-clean-header {
-            grid-template-columns: 1fr !important;
-          }
-
-          .reports-hero-actions,
-          .reports-section-head {
-            justify-content: stretch !important;
-          }
-
-          .reports-compact-metrics,
-          .reports-post-clean-stats {
-            grid-template-columns: repeat(3, minmax(90px, 1fr)) !important;
-          }
-
-          .reports-post-clean-engagement {
-            justify-items: start !important;
-            width: fit-content !important;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .reports-hero-card,
-          .reports-panel,
-          .reports-metric-card {
-            border-radius: 24px !important;
-          }
-
-          .reports-summary-grid,
-          .reports-compact-metrics,
-          .reports-post-clean-stats {
-            grid-template-columns: 1fr !important;
-          }
-
-          .reports-platform-filter {
-            width: 100% !important;
-            border-radius: 22px !important;
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-
-          .reports-platform-filter button,
-          .reports-action-button,
-          .reports-created-post-link {
-            width: 100% !important;
-          }
-
-          .reports-recommendation-actions,
-          .reports-hero-actions {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-        }
-
-
-        .reports-recommendation-panel {
-          margin-top: 24px !important;
-          margin-bottom: 28px !important;
-          padding-top: clamp(26px, 3vw, 34px) !important;
-        }
-
-        .reports-recommendation-panel > h2 {
-          margin-bottom: 22px !important;
-        }
-
-        .reports-recommendation-box {
-          margin-top: 8px !important;
-        }
-
-        .reports-recommendation-actions {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          align-items: center !important;
-          gap: 12px !important;
-          margin-top: 14px !important;
-        }
-
-        .reports-recommendation-actions a[href="/posts"],
-        .reports-recommendation-actions .reports-review-posts-button,
-        .reports-recommendation-actions .reports-secondary-link {
-          min-height: 46px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 18px !important;
-          border-radius: 15px !important;
-          background: rgba(255, 255, 255, 0.08) !important;
-          color: rgba(248, 250, 252, 0.92) !important;
-          border: 1px solid rgba(255, 255, 255, 0.14) !important;
-          font-weight: 950 !important;
-          text-decoration: none !important;
-          line-height: 1 !important;
-          white-space: nowrap !important;
-        }
-
-        .reports-recommendation-actions button {
-          min-height: 46px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 18px !important;
-          border-radius: 15px !important;
-          background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-          color: #101420 !important;
-          border: 1px solid rgba(255, 212, 59, 0.5) !important;
-          box-shadow: 0 14px 32px rgba(255, 212, 59, 0.16) !important;
-          font-weight: 950 !important;
-          line-height: 1 !important;
-          white-space: nowrap !important;
-        }
-
-        @media (max-width: 720px) {
-          .reports-recommendation-actions {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-
-          .reports-recommendation-actions a[href="/posts"],
-          .reports-recommendation-actions button {
-            width: 100% !important;
-          }
-        }
-
-
-        .reports-hero-card .reports-hero-actions {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: flex-end !important;
-          gap: 12px !important;
-          flex-wrap: wrap !important;
-        }
-
-        .reports-hero-card .reports-hero-actions a[href="/posts"],
-        .reports-hero-card .reports-hero-actions .reports-hero-secondary-button {
-          min-height: 46px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 18px !important;
-          border-radius: 15px !important;
-          background: rgba(255, 255, 255, 0.08) !important;
-          color: rgba(248, 250, 252, 0.92) !important;
-          border: 1px solid rgba(255, 255, 255, 0.14) !important;
-          font-weight: 950 !important;
-          text-decoration: none !important;
-          line-height: 1 !important;
-          white-space: nowrap !important;
-        }
-
-        .reports-hero-card .reports-hero-actions .reports-hero-primary-button,
-        .reports-hero-card .reports-hero-actions button {
-          min-height: 46px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 18px !important;
-          border-radius: 15px !important;
-          background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-          color: #101420 !important;
-          border: 1px solid rgba(255, 212, 59, 0.5) !important;
-          box-shadow: 0 14px 32px rgba(255, 212, 59, 0.16) !important;
-          font-weight: 950 !important;
-          line-height: 1 !important;
-          white-space: nowrap !important;
-        }
-
-        @media (max-width: 720px) {
-          .reports-hero-card .reports-hero-actions {
-            justify-content: stretch !important;
-          }
-
-          .reports-hero-card .reports-hero-actions a[href="/posts"],
-          .reports-hero-card .reports-hero-actions button {
-            width: 100% !important;
-          }
-        }
-
-
-        .reports-page {
-          width: min(100%, 1040px);
-          margin: 0 auto;
-          padding: 0 0 56px;
-        }
-
-        .reports-hero-card {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
-          align-items: center;
-          gap: 22px;
-          margin-bottom: 18px;
-          padding: clamp(24px, 4vw, 38px) !important;
-          border-radius: 32px !important;
-          border: 1px solid rgba(255, 212, 59, 0.22) !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.15), transparent 34%),
-            linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.032)) !important;
-        }
-
-        .reports-hero-card .page-title {
-          margin: 8px 0 10px;
-          font-size: clamp(2.6rem, 5.2vw, 4.5rem);
-          line-height: 0.92;
-          letter-spacing: -0.06em;
-        }
-
-        .reports-hero-actions {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-          justify-content: flex-end;
-          flex-wrap: wrap;
-        }
-
-        .reports-secondary-link {
-          min-height: 46px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 16px;
-          border-radius: 15px;
-          background: rgba(255, 255, 255, 0.08);
-          color: rgba(248, 250, 252, 0.92);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          font-weight: 950;
-          text-decoration: none;
-          white-space: nowrap;
-        }
-
-        .reports-message-card {
-          display: grid;
-          gap: 6px;
-          margin-bottom: 18px;
-          border-color: rgba(255, 212, 59, 0.24) !important;
-        }
-
-        .reports-message-card p {
-          margin: 0;
-          color: rgba(248, 250, 252, 0.68);
-          line-height: 1.45;
-        }
-
-        .reports-summary-grid {
+        .reports-shared-summary {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 14px;
-          margin-bottom: 18px;
-        }
-
-        .reports-metric-card {
-          padding: 20px;
-          border-radius: 24px;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
-            rgba(15, 23, 42, 0.84);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .reports-metric-card span,
-        .reports-compact-metrics span {
-          display: block;
-          color: rgba(255, 212, 59, 0.92);
-          font-size: 0.72rem;
-          font-weight: 950;
-          letter-spacing: 0.09em;
-          text-transform: uppercase;
-        }
-
-        .reports-metric-card strong {
-          display: block;
-          margin: 9px 0 7px;
-          color: #ffffff;
-          font-size: clamp(2.35rem, 4vw, 3.2rem);
-          line-height: 0.9;
-          letter-spacing: -0.07em;
-        }
-
-        .reports-metric-card p,
-        .reports-panel p {
-          color: rgba(248, 250, 252, 0.68);
-          line-height: 1.5;
-        }
-
-        .reports-metric-card p {
-          margin: 0;
-        }
-
-        .reports-panel {
-          border-radius: 30px !important;
-          padding: clamp(22px, 3vw, 30px) !important;
-        }
-
-        .reports-panel h2 {
-          margin: 8px 0 10px;
-          font-size: clamp(1.9rem, 3.4vw, 3rem);
-          line-height: 0.96;
-          letter-spacing: -0.055em;
-        }
-
-        .reports-section-head {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 18px;
-          margin-bottom: 18px;
-        }
-
-        .reports-section-head p {
-          margin: 0;
-        }
-
-        .reports-main-performance-card {
-          margin-bottom: 20px;
-          border-color: rgba(255, 212, 59, 0.16) !important;
-        }
-
-        .reports-compact-metrics {
-          display: grid;
-          grid-template-columns: repeat(6, minmax(0, 1fr));
-          gap: 10px;
-          margin: 18px 0;
-        }
-
-        .reports-compact-metrics article {
-          padding: 14px;
-          border-radius: 18px;
-          background: rgba(2, 6, 23, 0.32);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .reports-compact-metrics strong {
-          display: block;
-          margin-top: 8px;
-          color: #ffffff;
-          font-size: clamp(1.55rem, 3vw, 2.2rem);
-          line-height: 0.95;
-          letter-spacing: -0.06em;
-        }
-
-        .reports-platform-filter {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin: 0 0 18px;
-        }
-
-        .reports-platform-filter button {
-          min-height: 42px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 9px;
-          padding: 0 14px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.06);
-          color: rgba(248, 250, 252, 0.78);
-          font-weight: 950;
-          cursor: pointer;
-        }
-
-        .reports-platform-filter button.is-active {
-          background: rgba(255, 212, 59, 0.16);
-          border-color: rgba(255, 212, 59, 0.36);
-          color: #ffe58a;
-        }
-
-        .reports-platform-filter button span {
-          min-width: 24px;
-          height: 24px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 999px;
-          background: rgba(2, 6, 23, 0.32);
-          font-size: 0.78rem;
-        }
-
-        .reports-post-clean-list {
-          display: grid;
           gap: 16px;
+          margin-bottom: 22px;
         }
 
-        .reports-post-clean-card {
-          display: grid;
-          gap: 18px;
-          padding: clamp(18px, 2.6vw, 26px);
-          border-radius: 28px;
-          background:
-            radial-gradient(circle at top right, rgba(255, 255, 255, 0.055), transparent 36%),
-            rgba(2, 6, 23, 0.34);
-          border: 1px solid rgba(255, 255, 255, 0.09);
-          overflow: hidden;
+        .reports-shared-summary article {
+          padding: 20px;
+          border: 1px solid var(--posts-border);
+          border-radius: 22px;
+          background: rgba(255, 255, 255, 0.9);
+          box-shadow: var(--posts-shadow);
         }
 
-        .reports-post-clean-card.is-waiting {
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 36%),
-            rgba(255, 255, 255, 0.045);
-          border-color: rgba(255, 212, 59, 0.2);
-        }
-
-        .reports-post-clean-header {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 132px;
-          gap: 18px;
-          align-items: start;
-        }
-
-        .reports-post-clean-title h3 {
-          margin: 14px 0 8px;
-          color: #ffffff;
-          font-size: clamp(1.3rem, 2vw, 1.7rem);
-          line-height: 1.1;
-          letter-spacing: -0.04em;
-        }
-
-        .reports-post-clean-title p {
-          max-width: 820px;
-          margin: 0;
-          color: rgba(248, 250, 252, 0.68);
-          line-height: 1.48;
-        }
-
-        .reports-post-clean-engagement {
-          display: grid;
-          gap: 7px;
-          justify-items: end;
-          padding: 14px;
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .reports-post-clean-engagement strong {
-          color: #ffffff;
-          font-size: 2.1rem;
-          line-height: 0.9;
-          letter-spacing: -0.06em;
-        }
-
-        .reports-post-clean-engagement span {
-          color: rgba(248, 250, 252, 0.58);
-          font-size: 0.68rem;
-          font-weight: 950;
+        .reports-shared-summary span,
+        .reports-shared-compact-metrics span,
+        .reports-shared-engagement span,
+        .reports-shared-post-stats span {
+          color: var(--posts-pink);
+          font-size: 0.72rem;
+          font-weight: 900;
           letter-spacing: 0.08em;
           text-transform: uppercase;
         }
 
-        .reports-post-clean-stats {
-          display: grid;
-          grid-template-columns: repeat(6, minmax(90px, 1fr));
-          gap: 10px;
-        }
-
-        .reports-post-clean-stat {
-          display: grid;
-          gap: 7px;
-          min-width: 0;
-          padding: 13px 12px;
-          border-radius: 18px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .reports-post-clean-stat strong {
+        .reports-shared-summary strong {
           display: block;
-          color: #ffffff;
-          font-size: 1.45rem;
+          margin: 9px 0 7px;
+          color: var(--posts-navy);
+          font-size: 2.4rem;
           line-height: 1;
-          letter-spacing: -0.045em;
         }
 
-        .reports-post-clean-stat span {
-          display: block;
-          color: rgba(248, 250, 252, 0.6);
-          font-size: 0.72rem;
-          line-height: 1.1;
-          font-weight: 900;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-        }
-
-        .reports-post-clean-footer {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px 14px;
-          color: rgba(248, 250, 252, 0.44);
-          font-size: 0.78rem;
-          font-weight: 800;
-          overflow-wrap: anywhere;
-        }
-
-        .reports-recommendation-panel {
-          margin-bottom: 0;
-          border-color: rgba(255, 212, 59, 0.18) !important;
-        }
-
-        .reports-recommendation-box {
-          display: grid;
-          gap: 12px;
-          padding: 18px;
-          border-radius: 24px;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 36%),
-            rgba(2, 6, 23, 0.26);
-          border: 1px solid rgba(255, 212, 59, 0.16);
-        }
-
-        .reports-recommendation-box h3 {
+        .reports-shared-summary p,
+        .reports-shared-post-card p,
+        .reports-shared-recommendation-box p {
           margin: 0;
-          color: #ffffff;
-          font-size: clamp(1.25rem, 2.2vw, 1.75rem);
-          line-height: 1.12;
-          letter-spacing: -0.04em;
+          color: var(--posts-muted);
+          line-height: 1.5;
         }
 
-        .reports-recommendation-box p {
-          margin: 0;
+        .reports-shared-guide,
+        .reports-shared-panel {
+          margin-bottom: 22px;
         }
 
-        .reports-recommendation-actions {
+        .reports-shared-actions {
           display: flex;
           flex-wrap: wrap;
           gap: 10px;
-          margin-top: 4px;
         }
 
-        .reports-note-box {
-          padding: 15px;
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.055);
-          border: 1px solid rgba(255, 255, 255, 0.09);
+        .reports-shared-actions a {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 46px;
+          padding: 0 17px;
+          border: 1px solid var(--posts-border);
+          border-radius: 15px;
+          background: #fff;
+          color: var(--posts-navy);
+          font-size: 0.86rem;
+          font-weight: 900;
+          text-decoration: none;
         }
 
-        .reports-note-box p {
-          margin: 6px 0 0;
+        .reports-shared-compact-metrics {
+          display: grid;
+          grid-template-columns: repeat(6, minmax(0, 1fr));
+          gap: 10px;
+          margin-bottom: 18px;
         }
 
-        .reports-sync-button.is-syncing {
-          cursor: wait;
-          opacity: 0.82;
+        .reports-shared-compact-metrics article,
+        .reports-shared-post-stats div,
+        .reports-shared-engagement {
+          padding: 14px;
+          border: 1px solid var(--posts-border);
+          border-radius: 16px;
+          background: #f8fafc;
         }
 
-        @media (max-width: 920px) {
-          .reports-page {
-            width: min(100%, calc(100vw - 24px));
-          }
+        .reports-shared-compact-metrics strong,
+        .reports-shared-post-stats strong,
+        .reports-shared-engagement strong {
+          display: block;
+          margin-top: 7px;
+          color: var(--posts-navy);
+          font-size: 1.55rem;
+          line-height: 1;
+        }
 
-          .reports-hero-card,
-          .reports-section-head {
-            grid-template-columns: 1fr;
-          }
+        .reports-shared-filter {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 9px;
+          margin-bottom: 18px;
+        }
 
-          .reports-hero-card,
-          .reports-section-head {
-            display: grid;
-          }
+        .reports-shared-filter button {
+          min-height: 42px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 0 14px;
+          border: 1px solid var(--posts-border);
+          border-radius: 999px;
+          background: #fff;
+          color: var(--posts-navy);
+          font: inherit;
+          font-weight: 900;
+          cursor: pointer;
+        }
 
-          .reports-hero-actions,
-          .reports-section-head {
-            justify-content: stretch;
-          }
+        .reports-shared-filter button.is-active {
+          border-color: #ffd4e8;
+          background: #fff5fa;
+          color: var(--posts-pink);
+        }
 
-          .reports-hero-actions button,
-          .reports-hero-actions a,
-          .reports-section-head a {
-            width: 100%;
-          }
+        .reports-shared-filter button span {
+          display: inline-grid;
+          place-items: center;
+          min-width: 24px;
+          min-height: 24px;
+          border-radius: 999px;
+          background: #f2f5fa;
+          font-size: 0.76rem;
+        }
 
-          .reports-summary-grid {
+        .reports-shared-post-list {
+          display: grid;
+          gap: 14px;
+        }
+
+        .reports-shared-post-card {
+          display: grid;
+          gap: 16px;
+          padding: 20px;
+          border: 1px solid var(--posts-border);
+          border-radius: 22px;
+          background: #fff;
+          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055);
+        }
+
+        .reports-shared-post-head {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 140px;
+          gap: 18px;
+          align-items: start;
+        }
+
+        .reports-shared-post-head h3,
+        .reports-shared-recommendation-box h3 {
+          margin: 10px 0 8px;
+          color: var(--posts-navy);
+          font-size: 1.35rem;
+          line-height: 1.15;
+          letter-spacing: -0.035em;
+        }
+
+        .reports-shared-post-stats {
+          display: grid;
+          grid-template-columns: repeat(6, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .reports-shared-recommendation-box {
+          padding: 20px;
+          border: 1px solid var(--posts-border);
+          border-radius: 22px;
+          background: #fff;
+        }
+
+        .reports-shared-recommendation-box .reports-shared-actions {
+          margin-top: 16px;
+        }
+
+        .reports-shared-status {
+          margin-top: 14px !important;
+          padding: 13px 14px;
+          border: 1px solid #ffd4e8;
+          border-radius: 15px;
+          background: #fff5fa;
+        }
+
+        @media (max-width: 980px) {
+          .reports-shared-compact-metrics,
+          .reports-shared-post-stats {
             grid-template-columns: repeat(3, minmax(0, 1fr));
           }
+        }
 
-          .reports-compact-metrics,
-          .reports-post-clean-stats {
-            grid-template-columns: repeat(3, minmax(90px, 1fr));
+        @media (max-width: 700px) {
+          body:has(.fromone-reports-page) .main-content {
+            padding: 24px 16px 100px !important;
           }
 
-          .reports-post-clean-header {
+          .reports-shared-summary,
+          .reports-shared-compact-metrics,
+          .reports-shared-post-stats,
+          .reports-shared-post-head {
             grid-template-columns: 1fr;
           }
 
-          .reports-post-clean-engagement {
-            justify-items: start;
-            width: fit-content;
-          }
-        }
-
-        @media (max-width: 580px) {
-          .reports-summary-grid,
-          .reports-compact-metrics,
-          .reports-post-clean-stats {
+          .reports-shared-actions,
+          .reports-shared-filter {
+            display: grid;
             grid-template-columns: 1fr;
           }
-        }
 
-        .reports-hero-actions {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: flex-end !important;
-          gap: 12px !important;
-          flex-wrap: wrap !important;
-        }
-
-        .reports-hero-actions .reports-hero-secondary-button,
-        .reports-hero-actions .reports-hero-primary-button {
-          min-height: 46px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 18px !important;
-          border-radius: 15px !important;
-          font-weight: 950 !important;
-          text-decoration: none !important;
-          line-height: 1 !important;
-          white-space: nowrap !important;
-        }
-
-        .reports-hero-actions .reports-hero-secondary-button {
-          background: rgba(255, 255, 255, 0.08) !important;
-          color: rgba(248, 250, 252, 0.92) !important;
-          border: 1px solid rgba(255, 255, 255, 0.14) !important;
-        }
-
-        .reports-hero-actions .reports-hero-primary-button {
-          background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-          color: #101420 !important;
-          border: 1px solid rgba(255, 212, 59, 0.5) !important;
-          box-shadow: 0 14px 32px rgba(255, 212, 59, 0.16) !important;
-        }
-
-        .reports-hero-actions .reports-hero-primary-button:disabled {
-          cursor: wait !important;
-          opacity: 0.78 !important;
-        }
-
-        @media (max-width: 720px) {
-          .reports-hero-actions {
-            justify-content: stretch !important;
-          }
-
-          .reports-hero-actions .reports-hero-secondary-button,
-          .reports-hero-actions .reports-hero-primary-button {
-            width: 100% !important;
+          .reports-shared-actions a,
+          .reports-shared-actions button,
+          .reports-shared-filter button {
+            width: 100%;
           }
         }
-
-
-        .reports-recommendation-actions {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          align-items: center !important;
-          gap: 12px !important;
-          margin-top: 16px !important;
-        }
-
-        .reports-action-button {
-          min-height: 46px !important;
-          height: 46px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 18px !important;
-          border-radius: 15px !important;
-          border-width: 1px !important;
-          border-style: solid !important;
-          font-weight: 950 !important;
-          font-size: 0.98rem !important;
-          line-height: 1 !important;
-          letter-spacing: -0.01em !important;
-          text-decoration: none !important;
-          white-space: nowrap !important;
-          cursor: pointer !important;
-          appearance: none !important;
-        }
-
-        .reports-action-button-primary {
-          background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-          color: #101420 !important;
-          border-color: rgba(255, 212, 59, 0.5) !important;
-          box-shadow: 0 14px 32px rgba(255, 212, 59, 0.16) !important;
-        }
-
-        .reports-action-button-secondary {
-          background: rgba(255, 255, 255, 0.08) !important;
-          color: rgba(248, 250, 252, 0.94) !important;
-          border-color: rgba(255, 255, 255, 0.14) !important;
-          box-shadow: none !important;
-        }
-
-        .reports-action-button-secondary:hover {
-          background: rgba(255, 255, 255, 0.12) !important;
-        }
-
-        .reports-action-button:disabled {
-          opacity: 0.75 !important;
-          cursor: wait !important;
-        }
-
-        @media (max-width: 720px) {
-          .reports-recommendation-actions {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-
-          .reports-action-button {
-            width: 100% !important;
-          }
-        }
-
-
-        .reports-recommendation-actions {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          align-items: center !important;
-          gap: 12px !important;
-          margin-top: 16px !important;
-        }
-
-        .reports-action-button {
-          min-height: 46px !important;
-          height: 46px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 18px !important;
-          border-radius: 15px !important;
-          border-width: 1px !important;
-          border-style: solid !important;
-          font-weight: 950 !important;
-          font-size: 0.98rem !important;
-          line-height: 1 !important;
-          letter-spacing: -0.01em !important;
-          text-decoration: none !important;
-          white-space: nowrap !important;
-          cursor: pointer !important;
-          appearance: none !important;
-          font-family: inherit !important;
-        }
-
-        .reports-action-button-primary {
-          background: linear-gradient(135deg, #ffd43b, #f7b733) !important;
-          color: #101420 !important;
-          border-color: rgba(255, 212, 59, 0.5) !important;
-          box-shadow: 0 14px 32px rgba(255, 212, 59, 0.16) !important;
-        }
-
-        .reports-action-button-secondary {
-          background: rgba(255, 255, 255, 0.08) !important;
-          color: rgba(248, 250, 252, 0.94) !important;
-          border-color: rgba(255, 255, 255, 0.14) !important;
-          box-shadow: none !important;
-        }
-
-        .reports-action-button-secondary:hover {
-          background: rgba(255, 255, 255, 0.12) !important;
-        }
-
-        .reports-action-button:disabled {
-          opacity: 0.75 !important;
-          cursor: wait !important;
-        }
-
-        @media (max-width: 720px) {
-          .reports-recommendation-actions {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-
-          .reports-action-button {
-            width: 100% !important;
-          }
-        }
-
-
-        /* Final reports onboarding polish */
-        .reports-guidance-card {
-          margin: 0 0 18px !important;
-          padding: clamp(20px, 3vw, 28px) !important;
-          border-radius: 28px !important;
-          border: 1px solid rgba(255, 212, 59, 0.16) !important;
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.08), transparent 34%),
-            rgba(15, 23, 42, 0.84) !important;
-          box-shadow: 0 22px 66px rgba(0, 0, 0, 0.2) !important;
-        }
-
-        .reports-guidance-card h2 {
-          margin: 8px 0 10px !important;
-          color: #ffffff !important;
-          font-size: clamp(1.7rem, 3vw, 2.6rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.055em !important;
-        }
-
-        .reports-guidance-card p {
-          max-width: 780px !important;
-          margin: 0 !important;
-          color: rgba(248, 250, 252, 0.72) !important;
-          line-height: 1.58 !important;
-          font-weight: 760 !important;
-        }
-
-        .reports-action-button-primary,
-        .reports-hero-card .reports-hero-actions button,
-        .reports-recommendation-actions button {
-          background: #ffd43b !important;
-          background-image: none !important;
-          color: #101420 !important;
-          border-color: rgba(255, 212, 59, 0.5) !important;
-          box-shadow: none !important;
-        }
-
-        .reports-action-button-secondary {
-          box-shadow: none !important;
-        }
-
-        .reports-hero-card .page-description {
-          font-weight: 760 !important;
-        }
-
-        .reports-metric-card {
-          min-height: 150px !important;
-        }
-
-        @media (max-width: 640px) {
-          .reports-guidance-card {
-            border-radius: 24px !important;
-          }
-
-          .reports-guidance-card p {
-            font-size: 0.92rem !important;
-          }
-        }
-
       `}</style>
     </main>
   );

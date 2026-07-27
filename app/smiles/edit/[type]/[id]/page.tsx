@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import "../../../../posts/posts-companion-shared.css";
 import { useParams, useRouter } from "next/navigation";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -85,6 +86,54 @@ function normaliseType(value: unknown): SmilesItemType | "" {
   return "";
 }
 
+function isValidHttpUrl(value: string) {
+  const cleanValue = cleanText(value);
+
+  if (!cleanValue) return true;
+
+  try {
+    const url = new URL(cleanValue);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isValidDateRange(startDate: string, endDate: string) {
+  return !startDate || !endDate || startDate <= endDate;
+}
+
+function isValidTimeRange(startTime: string, endTime: string) {
+  return !startTime || !endTime || startTime < endTime;
+}
+
+function isValidEventDateTimeRange(
+  startDate: string,
+  endDate: string,
+  startTime: string,
+  endTime: string,
+) {
+  if (!startDate) return false;
+
+  const resolvedEndDate = endDate || startDate;
+
+  if (resolvedEndDate < startDate) return false;
+
+  if (!startTime || !endTime) return true;
+
+  const startDateTime = new Date(`${startDate}T${startTime}:00`);
+  const endDateTime = new Date(`${resolvedEndDate}T${endTime}:00`);
+
+  if (
+    Number.isNaN(startDateTime.getTime()) ||
+    Number.isNaN(endDateTime.getTime())
+  ) {
+    return false;
+  }
+
+  return endDateTime.getTime() > startDateTime.getTime();
+}
+
 export default function SmilesDirectEditPage() {
   const params = useParams();
   const router = useRouter();
@@ -98,11 +147,13 @@ export default function SmilesDirectEditPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState("");
   const [item, setItem] = useState<SmilesItem | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
   const [mainImageUrl, setMainImageUrl] = useState("");
   const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
   const [isPublished, setIsPublished] = useState(true);
@@ -149,6 +200,7 @@ export default function SmilesDirectEditPage() {
     setItem(nextItem);
     setTitle(cleanText(nextItem.title));
     setDescription(cleanText(nextItem.description));
+    setShortDescription(cleanText(nextItem.short_description));
     setMainImageUrl(cleanText(nextItem.main_image_url));
     setIsPublished(nextItem.is_published !== false);
 
@@ -212,6 +264,100 @@ export default function SmilesDirectEditPage() {
   const saveItem = async () => {
     if (!type || !id) return;
 
+    const cleanTitle = title.trim();
+    const cleanDescription = description.trim();
+    const cleanShortDescription = shortDescription.trim();
+
+    if (!cleanTitle) {
+      showToast({
+        type: "warning",
+        title: "Title needed",
+        message: `Add a public ${itemLabel} title before saving.`,
+      });
+      return;
+    }
+
+    if (!cleanDescription) {
+      showToast({
+        type: "warning",
+        title: "Description needed",
+        message: `Add a public ${itemLabel} description before saving.`,
+      });
+      return;
+    }
+
+    if (cleanShortDescription.length > 180) {
+      showToast({
+        type: "warning",
+        title: "Short description too long",
+        message: "Keep the short description to 180 characters or fewer.",
+      });
+      return;
+    }
+
+    if (!isValidHttpUrl(mainImageUrl)) {
+      showToast({
+        type: "warning",
+        title: "Image URL not valid",
+        message: "Use a full image URL beginning with http:// or https://.",
+      });
+      return;
+    }
+
+    if (isOffer && !isValidDateRange(offerStartDate, offerEndDate)) {
+      showToast({
+        type: "warning",
+        title: "Offer dates not valid",
+        message: "The offer end date must be on or after the start date.",
+      });
+      return;
+    }
+
+    if (isEvent && !eventStartDate) {
+      showToast({
+        type: "warning",
+        title: "Event date needed",
+        message: "Choose a start date for the event.",
+      });
+      return;
+    }
+
+    if (isEvent && !isValidDateRange(eventStartDate, eventEndDate)) {
+      showToast({
+        type: "warning",
+        title: "Event dates not valid",
+        message: "The event end date must be on or after the start date.",
+      });
+      return;
+    }
+
+    if (
+      isEvent &&
+      !isValidEventDateTimeRange(
+        eventStartDate,
+        eventEndDate,
+        startTime,
+        endTime,
+      )
+    ) {
+      showToast({
+        type: "warning",
+        title: "Event date or time not valid",
+        message:
+          "The event must end after it starts. Overnight events are valid when the end date is later than the start date.",
+      });
+      return;
+    }
+
+    if (isEvent && !isValidHttpUrl(bookingUrl)) {
+      showToast({
+        type: "warning",
+        title: "Booking link not valid",
+        message: "Use a full booking URL beginning with http:// or https://.",
+      });
+      return;
+    }
+
     setSaving(true);
     setMessage("");
 
@@ -219,9 +365,10 @@ export default function SmilesDirectEditPage() {
       const headers = await getAuthHeaders();
       const payload = isOffer
         ? {
-            title,
-            description,
-            short_description: description,
+            title: cleanTitle,
+            description: cleanDescription,
+            short_description:
+              cleanShortDescription || cleanDescription.slice(0, 180),
             saving_text: savingText,
             pricing_label: pricingLabel,
             price_value: priceValue,
@@ -234,9 +381,10 @@ export default function SmilesDirectEditPage() {
             is_published: isPublished,
           }
         : {
-            title,
-            description,
-            short_description: description,
+            title: cleanTitle,
+            description: cleanDescription,
+            short_description:
+              cleanShortDescription || cleanDescription.slice(0, 180),
             location_name: locationName,
             address,
             start_date: eventStartDate || null,
@@ -263,11 +411,13 @@ export default function SmilesDirectEditPage() {
       }
 
       populateForm(result.item);
-      setMessage("Live Smiles listing updated.");
+      setMessage(isPublished ? "Live Smilez listing updated." : "Smilez listing saved as hidden.");
       showToast({
         type: "success",
-        title: "Smiles listing updated",
-        message: "The live Smiles listing has been updated.",
+        title: isPublished ? "Smilez listing updated" : "Smilez listing hidden",
+        message: isPublished
+          ? "The public Smilez listing has been updated."
+          : "The listing has been saved and is no longer public.",
       });
     } catch (error: any) {
       const errorMessage = error?.message || "Could not save this Smiles listing.";
@@ -282,6 +432,51 @@ export default function SmilesDirectEditPage() {
     }
   };
 
+  const deleteItem = async () => {
+    if (!type || !id || deleting) return;
+
+    const confirmed = window.confirm(
+      `Delete this Smilez ${itemLabel} permanently? This removes the public listing and cannot be undone. The original FromOne post will remain.`,
+    );
+
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setMessage("");
+
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/smiles/items/${type}/${id}`, {
+        method: "DELETE",
+        headers,
+      });
+      const result = (await response.json().catch(() => ({}))) as ApiResponse;
+
+      if (!response.ok || result.ok === false || result.success === false) {
+        throw new Error(result.message || `Could not delete this Smilez ${itemLabel}.`);
+      }
+
+      showToast({
+        type: "success",
+        title: `Smilez ${itemLabel} deleted`,
+        message: `The public Smilez ${itemLabel} has been permanently deleted. The original FromOne post remains.`,
+      });
+
+      router.replace("/smiles");
+      router.refresh();
+    } catch (error: any) {
+      const errorMessage =
+        error?.message || `Could not delete this Smilez ${itemLabel}.`;
+      setMessage(errorMessage);
+      showToast({
+        type: "error",
+        title: "Could not delete",
+        message: errorMessage,
+      });
+      setDeleting(false);
+    }
+  };
+
   useEffect(() => {
     loadItem();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -292,14 +487,34 @@ export default function SmilesDirectEditPage() {
   }, [mainImageUrl]);
 
   return (
-    <main className="fromone-smiles-edit-page settings-create-style-page">
+    <main className="fromone-posts-page fromone-smiles-edit-page settings-create-style-page">
       <section id="fromone-standard-shell" className="smiles-edit-card">
-        <Link className="smiles-edit-back" href="/smiles">
-          Back to Smiles hub
+        <Link
+          className="smiles-edit-back"
+          href="/smiles"
+          style={{
+            width: "fit-content",
+            minHeight: "52px",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 20px",
+            border: "1px solid #dfe5f1",
+            borderRadius: "999px",
+            background: "#ffffff",
+            color: "#071b49",
+            boxShadow: "0 10px 24px rgba(7, 27, 73, 0.06)",
+            fontSize: "0.98rem",
+            fontWeight: 800,
+            lineHeight: 1,
+            textDecoration: "none",
+          }}
+        >
+          Back to Smiles
         </Link>
 
-        <header className="smiles-edit-hero">
-          <div className="smiles-edit-eyebrow">Live Smiles listing</div>
+        <header className="posts-create-hero smiles-edit-hero">
+          <span className="posts-create-eyebrow smiles-edit-eyebrow">Live Smiles listing</span>
           <h1>Edit live {itemLabel} listing.</h1>
           <p>
             Changes here update the public Smiles {itemLabel} card and detail page. They do
@@ -327,7 +542,7 @@ export default function SmilesDirectEditPage() {
                 <div>
                   <h2>Public listing details</h2>
                   <p>
-                    Reference {item.reference_code || "pending"} · {isPublished ? "Live" : "Hidden"}
+                    Reference {item.reference_code || "pending"} · {isPublished ? "Public" : "Hidden"}
                   </p>
                 </div>
               </div>
@@ -344,6 +559,17 @@ export default function SmilesDirectEditPage() {
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                   />
+                </label>
+
+                <label className="is-wide">
+                  <span>Short card description</span>
+                  <textarea
+                    value={shortDescription}
+                    onChange={(event) => setShortDescription(event.target.value)}
+                    placeholder="A concise summary for Smilez cards and search results"
+                    maxLength={180}
+                  />
+                  <small>{shortDescription.length}/180 characters</small>
                 </label>
 
                 <label className="is-wide">
@@ -376,7 +602,7 @@ export default function SmilesDirectEditPage() {
                     checked={isPublished}
                     onChange={(event) => setIsPublished(event.target.checked)}
                   />
-                  <span>Show this listing publicly on Smiles</span>
+                  <span>Show this listing publicly on Smilez</span>
                 </label>
               </div>
             </section>
@@ -575,13 +801,38 @@ export default function SmilesDirectEditPage() {
             ) : null}
 
             <div className="smiles-edit-actions">
-              <button type="button" onClick={saveItem} disabled={saving}>
-                {saving ? "Saving..." : `Save live ${itemLabel} listing`}
+              <button type="button" onClick={saveItem} disabled={saving || deleting}>
+                {saving ? "Saving..." : `Save ${isPublished ? "public" : "hidden"} ${itemLabel}`}
               </button>
-              <button type="button" onClick={() => router.push("/smiles")}>
+              <button
+                type="button"
+                onClick={() => router.push("/smiles")}
+                disabled={saving || deleting}
+              >
                 Cancel
               </button>
             </div>
+
+            <section className="smiles-edit-danger-zone" aria-labelledby="smiles-delete-heading">
+              <div>
+                <span>Permanent action</span>
+                <h2 id="smiles-delete-heading">Delete this Smilez {itemLabel}</h2>
+                <p>
+                  This removes the public Smilez listing permanently. The original FromOne
+                  post will remain.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={deleteItem}
+                disabled={saving || deleting}
+              >
+                {deleting
+                  ? `Deleting ${itemLabel}...`
+                  : `Delete ${itemLabel} permanently`}
+              </button>
+            </section>
           </>
         )}
       </section>
@@ -731,6 +982,13 @@ export default function SmilesDirectEditPage() {
           line-height: 1.45;
         }
 
+        .smiles-edit-grid label small {
+          color: #6d7d95;
+          font-size: 0.78rem;
+          font-weight: 750;
+          text-align: right;
+        }
+
         .smiles-edit-grid select {
           appearance: none;
           background-image: linear-gradient(45deg, transparent 50%, #071b49 50%),
@@ -834,6 +1092,66 @@ export default function SmilesDirectEditPage() {
           opacity: 0.65;
         }
 
+        .smiles-edit-danger-zone {
+          margin-top: 28px;
+          padding: 22px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          border: 1px solid rgba(190, 24, 93, 0.22);
+          border-radius: 24px;
+          background: #fff7fa;
+        }
+
+        .smiles-edit-danger-zone span {
+          display: block;
+          margin-bottom: 5px;
+          color: #be185d;
+          font-size: 12px;
+          font-weight: 950;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .smiles-edit-danger-zone h2 {
+          margin: 0;
+          color: #7f1d1d;
+          font-size: 20px;
+          line-height: 1.15;
+        }
+
+        .smiles-edit-danger-zone p {
+          margin: 7px 0 0;
+          max-width: 580px;
+          color: #7d5261;
+          font-weight: 700;
+          line-height: 1.45;
+        }
+
+        .smiles-edit-danger-zone button {
+          min-height: 48px;
+          flex: 0 0 auto;
+          padding: 0 20px;
+          border: 1px solid #be185d;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #be185d;
+          font: inherit;
+          font-weight: 950;
+          cursor: pointer;
+        }
+
+        .smiles-edit-danger-zone button:hover:not(:disabled) {
+          background: #be185d;
+          color: #ffffff;
+        }
+
+        .smiles-edit-danger-zone button:disabled {
+          cursor: not-allowed;
+          opacity: 0.65;
+        }
+
         @media (max-width: 760px) {
           .fromone-smiles-edit-page {
             padding: 18px;
@@ -848,7 +1166,227 @@ export default function SmilesDirectEditPage() {
           .smiles-edit-actions {
             grid-template-columns: 1fr;
           }
+
+          .smiles-edit-danger-zone {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .smiles-edit-danger-zone button {
+            width: 100%;
+          }
         }
+
+        /* FINAL SHARED FROMONE PAGE SYSTEM */
+        :global(body:has(.fromone-smiles-edit-page)) {
+          background: var(--posts-bg) !important;
+        }
+
+        :global(body:has(.fromone-smiles-edit-page) .app-shell),
+        :global(body:has(.fromone-smiles-edit-page) .main-content) {
+          background: var(--posts-bg) !important;
+        }
+
+        :global(body:has(.fromone-smiles-edit-page) .main-content) {
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
+          overflow-x: hidden !important;
+        }
+
+        .fromone-smiles-edit-page {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: transparent !important;
+          background-image: none !important;
+          overflow: visible !important;
+        }
+
+        .smiles-edit-card {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          display: grid !important;
+          gap: 22px !important;
+          overflow: visible !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+
+        .smiles-edit-back {
+          margin: 0 0 2px !important;
+        }
+
+        .smiles-edit-hero {
+          width: 100% !important;
+          max-width: 790px !important;
+          margin: 0 0 6px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+
+        .smiles-edit-eyebrow {
+          display: block !important;
+          margin: 0 0 10px !important;
+          color: var(--posts-pink) !important;
+          font-size: 0.74rem !important;
+          line-height: 1 !important;
+          font-weight: 900 !important;
+          letter-spacing: 0.14em !important;
+          text-transform: uppercase !important;
+        }
+
+        .smiles-edit-hero h1 {
+          max-width: 760px !important;
+          margin: 0 0 12px !important;
+          color: var(--posts-navy) !important;
+          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.06em !important;
+          font-weight: 800 !important;
+        }
+
+        .smiles-edit-hero p {
+          max-width: 720px !important;
+          margin: 0 !important;
+          color: var(--posts-muted) !important;
+          font-size: 1.03rem !important;
+          line-height: 1.56 !important;
+          font-weight: 500 !important;
+        }
+
+        .smiles-edit-message,
+        .smiles-edit-panel,
+        .smiles-edit-danger-zone {
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 26px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+          box-shadow: var(--posts-shadow) !important;
+          backdrop-filter: blur(10px) !important;
+        }
+
+        .smiles-edit-message {
+          margin: 0 !important;
+          padding: 15px 16px !important;
+          background: #fff5fa !important;
+          border-color: rgba(247, 37, 133, 0.18) !important;
+        }
+
+        .smiles-edit-panel {
+          margin: 0 !important;
+          padding: 22px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+        }
+
+        .smiles-edit-grid input,
+        .smiles-edit-grid textarea,
+        .smiles-edit-grid select {
+          min-height: 48px !important;
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 14px !important;
+          color: var(--posts-navy) !important;
+          background: #fff !important;
+        }
+
+        .smiles-edit-grid input:focus,
+        .smiles-edit-grid textarea:focus,
+        .smiles-edit-grid select:focus {
+          border-color: var(--posts-pink) !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1) !important;
+        }
+
+        .smiles-edit-image-preview img,
+        .smiles-edit-image-placeholder,
+        .smiles-edit-toggle {
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 18px !important;
+          background: #fff !important;
+        }
+
+        .smiles-edit-actions {
+          margin: 0 !important;
+        }
+
+        .smiles-edit-actions button,
+        .smiles-edit-danger-zone button {
+          min-height: 46px !important;
+          padding: 0 17px !important;
+          border-radius: 15px !important;
+          font-size: 0.86rem !important;
+          font-weight: 900 !important;
+        }
+
+        .smiles-edit-actions button:first-child {
+          border: 0 !important;
+          background: var(--posts-pink) !important;
+          color: #fff !important;
+          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21) !important;
+        }
+
+        .smiles-edit-actions button:last-child {
+          border: 1px solid var(--posts-border) !important;
+          background: #fff !important;
+          color: var(--posts-navy) !important;
+          box-shadow: none !important;
+        }
+
+        .smiles-edit-danger-zone {
+          margin: 0 !important;
+          padding: 22px !important;
+          background: #fff7fa !important;
+          border-color: rgba(190, 24, 93, 0.2) !important;
+        }
+
+        @media (max-width: 700px) {
+          :global(body:has(.fromone-smiles-edit-page) .main-content) {
+            padding: 24px 16px 100px !important;
+          }
+
+          .fromone-smiles-edit-page {
+            padding: 0 !important;
+          }
+
+          .smiles-edit-hero h1 {
+            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          }
+
+          .smiles-edit-hero p {
+            font-size: 0.95rem !important;
+          }
+
+          .smiles-edit-grid,
+          .smiles-edit-actions {
+            grid-template-columns: 1fr !important;
+          }
+
+          .smiles-edit-panel,
+          .smiles-edit-danger-zone {
+            padding: 17px !important;
+            border-radius: 21px !important;
+          }
+
+          .smiles-edit-danger-zone {
+            align-items: stretch !important;
+            flex-direction: column !important;
+          }
+
+          .smiles-edit-danger-zone button {
+            width: 100% !important;
+          }
+        }
+
       `}</style>
     </main>
   );

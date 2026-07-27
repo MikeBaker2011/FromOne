@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '@/app/components/ToastProvider';
+import '../posts/posts-companion-shared.css';
 import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 
 type SocialConnection = {
@@ -23,7 +24,46 @@ type SavedWeeklySet = {
   campaign_idea: string | null;
   business_name: string | null;
   created_at: string | null;
-  campaign_posts?: { id: string }[];
+  campaign_posts?: {
+    id: string;
+    media_url?: string | null;
+    media_type?: string | null;
+    image_url?: string | null;
+    title?: string | null;
+  }[];
+};
+
+type WeeklyBookingHour = {
+  day_of_week: number;
+  is_closed: boolean;
+  opens_at: string | null;
+  closes_at: string | null;
+};
+
+type BookingSettings = {
+  slot_interval_minutes: number;
+  max_covers_per_slot: number;
+  max_party_size: number;
+  minimum_notice_minutes: number;
+  advance_booking_days: number;
+};
+
+type BookingBlock = {
+  id: string;
+  block_date: string;
+  is_full_day: boolean;
+  start_time: string | null;
+  end_time: string | null;
+  reason: string | null;
+};
+
+type ResolvedVenueLocation = {
+  postcode: string;
+  latitude: number;
+  longitude: number;
+  source: string;
+  accuracy: string;
+  verifiedAt: string;
 };
 
 type ScannedBusinessProfile = {
@@ -45,6 +85,36 @@ type ScannedBusinessProfile = {
   brand_summary?: string;
   campaign_idea?: string;
 };
+
+const dayLabels = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
+
+const shortDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const defaultBookingSettings: BookingSettings = {
+  slot_interval_minutes: 30,
+  max_covers_per_slot: 20,
+  max_party_size: 9,
+  minimum_notice_minutes: 60,
+  advance_booking_days: 14,
+};
+
+const defaultBookingHours: WeeklyBookingHour[] = [
+  { day_of_week: 0, is_closed: true, opens_at: null, closes_at: null },
+  { day_of_week: 1, is_closed: false, opens_at: '12:00', closes_at: '21:00' },
+  { day_of_week: 2, is_closed: false, opens_at: '12:00', closes_at: '21:00' },
+  { day_of_week: 3, is_closed: false, opens_at: '12:00', closes_at: '21:00' },
+  { day_of_week: 4, is_closed: false, opens_at: '12:00', closes_at: '22:00' },
+  { day_of_week: 5, is_closed: false, opens_at: '12:00', closes_at: '23:00' },
+  { day_of_week: 6, is_closed: false, opens_at: '10:00', closes_at: '23:00' },
+];
 
 const toneOptions = [
   'Professional',
@@ -102,8 +172,34 @@ export default function SettingsPage() {
   const [location, setLocation] = useState('');
   const [address, setAddress] = useState('');
   const [postcode, setPostcode] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [geoEnabled, setGeoEnabled] = useState(false);
+  const [geoAccuracy, setGeoAccuracy] = useState('');
+  const [geoSource, setGeoSource] = useState('');
+  const [serviceRadiusMiles, setServiceRadiusMiles] = useState('5');
+  const [geoUpdatedAt, setGeoUpdatedAt] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [openingHours, setOpeningHours] = useState('');
+  const [parkingInfo, setParkingInfo] = useState('');
+  const [accessibilityInfo, setAccessibilityInfo] = useState('');
+  const [galleryImageUrls, setGalleryImageUrls] = useState<string[]>([]);
+  const [acceptsBookings, setAcceptsBookings] = useState(false);
+  const [bookingUrl, setBookingUrl] = useState('');
+  const [bookingHours, setBookingHours] =
+    useState<WeeklyBookingHour[]>(defaultBookingHours);
+  const [selectedBookingDay, setSelectedBookingDay] = useState(1);
+  const [bookingSettings, setBookingSettings] =
+    useState<BookingSettings>(defaultBookingSettings);
+  const [bookingBlocks, setBookingBlocks] = useState<BookingBlock[]>([]);
+  const [newBookingBlock, setNewBookingBlock] = useState({
+    blockDate: '',
+    isFullDay: false,
+    startTime: '18:00',
+    endTime: '20:00',
+    reason: '',
+  });
   const [services, setServices] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [toneOfVoice, setToneOfVoice] = useState('Professional');
@@ -131,6 +227,12 @@ export default function SettingsPage() {
   const [deletingWeeklySetId, setDeletingWeeklySetId] = useState<string | null>(null);
 
   const [showBusinessDetails, setShowBusinessDetails] = useState(false);
+  const [showSavedPostSets, setShowSavedPostSets] = useState(false);
+  const [showSocialSettings, setShowSocialSettings] = useState(false);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
+  const [openExtraSection, setOpenExtraSection] = useState<
+    "bookings" | "smiles" | null
+  >(null);
   const [showBrandDetails, setShowBrandDetails] = useState(false);
   const [showPublishingRules, setShowPublishingRules] = useState(false);
   const [showOptionalProfileModal, setShowOptionalProfileModal] = useState(false);
@@ -144,6 +246,9 @@ export default function SettingsPage() {
   const [sendingSmilesListing, setSendingSmilesListing] = useState(false);
   const [smilesListingSent, setSmilesListingSent] = useState(false);
   const [uploadingBusinessImage, setUploadingBusinessImage] = useState(false);
+  const [uploadingGalleryImages, setUploadingGalleryImages] = useState(false);
+  const [isLookingUpLocation, setIsLookingUpLocation] = useState(false);
+  const [geoMessage, setGeoMessage] = useState('');
 
   const [confirmDialog, setConfirmDialog] = useState<{
     type: 'disconnectMeta' | 'deleteProfile';
@@ -158,6 +263,8 @@ export default function SettingsPage() {
   const socialConnectionsRef = useRef<HTMLElement | null>(null);
   const createPostsRef = useRef<HTMLElement | null>(null);
   const businessImageInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryImageInputRef = useRef<HTMLInputElement | null>(null);
+  const lastResolvedPostcodeRef = useRef('');
 
   const openProfileEditor = () => {
     setShowBusinessDetails(true);
@@ -263,6 +370,7 @@ export default function SettingsPage() {
   const setupProfileComplete = Boolean(businessName.trim() && industry.trim() && location.trim() && services.trim());
   const setupChannelsComplete = hasMetaConnection;
   const setupCreatePostsReady = businessProfileReady;
+  const hasLinkedSmilesListing = Boolean(smilesListingVenueId.trim());
 
   const getSmilesListingStatusLabel = () => {
     if (sendingSmilesListing) {
@@ -270,10 +378,11 @@ export default function SettingsPage() {
     }
 
     if (
+      hasLinkedSmilesListing ||
       smilesListingStatus === 'published' ||
       smilesListingStatus === 'live'
     ) {
-      return 'Live on Smiles';
+      return 'Live on Smilez · updates sync automatically';
     }
 
     if (smilesListingStatus === 'approved_not_live') {
@@ -306,6 +415,7 @@ export default function SettingsPage() {
 
   const getSmilesListingStatusTone = () => {
     if (
+      hasLinkedSmilesListing ||
       smilesListingStatus === 'published' ||
       smilesListingStatus === 'live'
     ) {
@@ -472,6 +582,353 @@ export default function SettingsPage() {
     return /^[A-Z]{1,2}\d[A-Z\d]?$/.test(getPostcodePrefix(value));
   };
 
+  const normaliseTime = (value: string | null | undefined) =>
+    String(value || '').slice(0, 5);
+
+  const formatDateValue = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getTodayDateValue = () => {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    return formatDateValue(date);
+  };
+
+  const getTomorrowDateValue = () => {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + 1);
+    return formatDateValue(date);
+  };
+
+  const getNextSaturdayDateValue = () => {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + ((6 - date.getDay() + 7) % 7));
+    return formatDateValue(date);
+  };
+
+  const getNextDateForDay = (dayOfWeek: number) => {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + ((dayOfWeek - date.getDay() + 7) % 7));
+
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+    }).format(date);
+  };
+
+  const formatBookingHourDisplay = (row: WeeklyBookingHour) => {
+    if (row.is_closed) return 'Closed';
+
+    const opensAt = normaliseTime(row.opens_at);
+    const closesAt = normaliseTime(row.closes_at);
+
+    return opensAt && closesAt ? `${opensAt}-${closesAt}` : 'Not set';
+  };
+
+  const formatBookingBlockDate = (value: string) => {
+    const parsed = new Date(`${value}T12:00:00`);
+
+    if (Number.isNaN(parsed.getTime())) return 'Date not set';
+
+    return new Intl.DateTimeFormat('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(parsed);
+  };
+
+  const formatBookingBlockDisplay = (block: BookingBlock) => {
+    if (block.is_full_day) return 'Closed all day';
+
+    const startsAt = normaliseTime(block.start_time);
+    const endsAt = normaliseTime(block.end_time);
+
+    return startsAt && endsAt ? `${startsAt}-${endsAt}` : 'Time not set';
+  };
+
+  const updateBookingSetting = (
+    field: keyof BookingSettings,
+    value: number,
+  ) => {
+    setBookingSettings((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const updateNewBookingBlock = (
+    field: keyof typeof newBookingBlock,
+    value: string | boolean,
+  ) => {
+    setNewBookingBlock((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const addBookingBlock = () => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(newBookingBlock.blockDate)) {
+      notify('Choose a valid date to block.', 'warning', 'Blocked date needed');
+      return;
+    }
+
+    if (
+      !newBookingBlock.isFullDay &&
+      (!newBookingBlock.startTime ||
+        !newBookingBlock.endTime ||
+        newBookingBlock.startTime >= newBookingBlock.endTime)
+    ) {
+      notify(
+        'The blocked time must have a valid start and end time.',
+        'warning',
+        'Blocked time needed',
+      );
+      return;
+    }
+
+    const nextBlock: BookingBlock = {
+      id: `new-${crypto.randomUUID()}`,
+      block_date: newBookingBlock.blockDate,
+      is_full_day: newBookingBlock.isFullDay,
+      start_time: newBookingBlock.isFullDay
+        ? null
+        : newBookingBlock.startTime,
+      end_time: newBookingBlock.isFullDay ? null : newBookingBlock.endTime,
+      reason: newBookingBlock.reason.trim() || null,
+    };
+
+    setBookingBlocks((current) =>
+      [...current, nextBlock].sort((first, second) => {
+        if (first.block_date === second.block_date) {
+          return normaliseTime(first.start_time).localeCompare(
+            normaliseTime(second.start_time),
+          );
+        }
+
+        return first.block_date.localeCompare(second.block_date);
+      }),
+    );
+
+    setNewBookingBlock({
+      blockDate: '',
+      isFullDay: false,
+      startTime: '18:00',
+      endTime: '20:00',
+      reason: '',
+    });
+  };
+
+  const removeBookingBlock = (blockId: string) => {
+    setBookingBlocks((current) =>
+      current.filter((block) => block.id !== blockId),
+    );
+  };
+
+  const updateBookingHour = (
+    dayOfWeek: number,
+    field: 'is_closed' | 'opens_at' | 'closes_at',
+    value: boolean | string,
+  ) => {
+    setBookingHours((current) =>
+      current.map((row) => {
+        if (row.day_of_week !== dayOfWeek) return row;
+
+        if (field === 'is_closed') {
+          const isClosed = Boolean(value);
+
+          return {
+            ...row,
+            is_closed: isClosed,
+            opens_at: isClosed ? null : row.opens_at || '12:00',
+            closes_at: isClosed ? null : row.closes_at || '21:00',
+          };
+        }
+
+        return {
+          ...row,
+          [field]: String(value),
+        };
+      }),
+    );
+  };
+
+  const resolvePostcodeCoordinates = async (
+    options: { silent?: boolean } = {},
+  ): Promise<ResolvedVenueLocation | null> => {
+    const postcodeValue = normalisePostcode(postcode);
+
+    if (!postcodeValue) {
+      if (!options.silent) {
+        notify(
+          'Add the venue postcode before finding its location.',
+          'warning',
+          'Postcode needed',
+        );
+      }
+      return null;
+    }
+
+    setIsLookingUpLocation(true);
+    setGeoMessage('');
+
+    try {
+      const response = await fetch(
+        `https://api.postcodes.io/postcodes/${encodeURIComponent(postcodeValue)}`,
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 404
+            ? 'That postcode could not be found.'
+            : 'The postcode lookup is temporarily unavailable.',
+        );
+      }
+
+      const payload = (await response.json()) as {
+        result?: {
+          postcode?: string;
+          latitude?: number;
+          longitude?: number;
+        } | null;
+      };
+      const result = payload.result;
+
+      if (
+        !result ||
+        typeof result.latitude !== 'number' ||
+        typeof result.longitude !== 'number'
+      ) {
+        throw new Error(
+          'That postcode did not return a usable map location.',
+        );
+      }
+
+      const resolved: ResolvedVenueLocation = {
+        postcode: normalisePostcode(result.postcode || postcodeValue),
+        latitude: result.latitude,
+        longitude: result.longitude,
+        source: 'postcodes.io',
+        accuracy: 'postcode',
+        verifiedAt: new Date().toISOString(),
+      };
+
+      lastResolvedPostcodeRef.current = resolved.postcode;
+      setPostcode(resolved.postcode);
+      setLatitude(String(resolved.latitude));
+      setLongitude(String(resolved.longitude));
+      setGeoEnabled(true);
+      setGeoAccuracy(resolved.accuracy);
+      setGeoSource(resolved.source);
+      setGeoUpdatedAt(resolved.verifiedAt);
+      setGeoMessage(
+        'Map location filled automatically from the venue postcode.',
+      );
+
+      if (!options.silent) {
+        notify(
+          'Map location filled automatically from the venue postcode.',
+          'success',
+          'Smilez map location ready',
+        );
+      }
+
+      return resolved;
+    } catch (error: any) {
+      if (!options.silent) {
+        notify(
+          error?.message || 'We could not confirm this postcode.',
+          'error',
+          'Location not confirmed',
+        );
+      }
+      return null;
+    } finally {
+      setIsLookingUpLocation(false);
+    }
+  };
+
+  const lookupPostcodeCoordinates = async () => {
+    await resolvePostcodeCoordinates();
+  };
+
+  const ensurePostcodeCoordinates = async () => {
+    const cleanPostcode = normalisePostcode(postcode);
+    const currentLatitude = latitude.trim() ? Number(latitude) : null;
+    const currentLongitude = longitude.trim() ? Number(longitude) : null;
+    const hasCurrentCoordinates =
+      currentLatitude !== null &&
+      currentLongitude !== null &&
+      Number.isFinite(currentLatitude) &&
+      Number.isFinite(currentLongitude) &&
+      lastResolvedPostcodeRef.current === cleanPostcode;
+
+    if (!cleanPostcode) {
+      return null;
+    }
+
+    if (hasCurrentCoordinates) {
+      return {
+        postcode: cleanPostcode,
+        latitude: currentLatitude,
+        longitude: currentLongitude,
+        source: geoSource || 'postcodes.io',
+        accuracy: geoAccuracy || 'postcode',
+        verifiedAt: geoUpdatedAt || new Date().toISOString(),
+      } satisfies ResolvedVenueLocation;
+    }
+
+    return resolvePostcodeCoordinates({ silent: true });
+  };
+
+  const handlePostcodeChange = (value: string) => {
+    const nextPostcode = value.toUpperCase();
+    const normalisedNextPostcode = normalisePostcode(nextPostcode);
+
+    setPostcode(nextPostcode);
+
+    if (
+      lastResolvedPostcodeRef.current &&
+      normalisedNextPostcode !== lastResolvedPostcodeRef.current
+    ) {
+      setLatitude('');
+      setLongitude('');
+      setGeoEnabled(false);
+      setGeoAccuracy('');
+      setGeoSource('');
+      setGeoUpdatedAt('');
+      setGeoMessage('Postcode changed. The map location will refresh automatically.');
+    }
+  };
+
+  const handlePostcodeBlur = () => {
+    const cleanPostcode = normalisePostcode(postcode);
+
+    if (
+      cleanPostcode &&
+      cleanPostcode !== lastResolvedPostcodeRef.current &&
+      !isLookingUpLocation
+    ) {
+      void resolvePostcodeCoordinates({ silent: true });
+    }
+  };
+
+  const formatGeoUpdatedAt = (value: string) => {
+    if (!value) return 'Not confirmed';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return 'Not confirmed';
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric',
+    }).format(parsed);
+  };
+
   const splitList = (value: string) => {
     return value
       .split(',')
@@ -581,6 +1038,93 @@ export default function SettingsPage() {
     );
   };
 
+  const uploadBusinessProfileFile = async (file: File, folder: string) => {
+    if (!allowedBusinessImageTypes.includes(file.type)) {
+      throw new Error('Upload JPG, PNG, WEBP or GIF images only.');
+    }
+
+    if (file.size > maxBusinessImageSize) {
+      throw new Error('Each image must be under 5MB.');
+    }
+
+    const freshUserId = await getFreshAuthUserId();
+
+    if (!freshUserId) {
+      throw new Error('Please sign in again before uploading images.');
+    }
+
+    const safeUserId = getSafeStorageSegment(freshUserId);
+    const extension = getBusinessImageExtension(file);
+    const filePath = `business-profiles/${safeUserId}/${folder}/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 10)}.${extension}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(businessImageBucket)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type,
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from(businessImageBucket)
+      .getPublicUrl(filePath);
+
+    if (!data.publicUrl) {
+      throw new Error('The image uploaded, but no public URL was returned.');
+    }
+
+    return data.publicUrl;
+  };
+
+  const handleGalleryImagesUpload = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+
+    if (files.length === 0) return;
+
+    const remainingSlots = Math.max(0, 6 - galleryImageUrls.length);
+
+    if (remainingSlots === 0) {
+      notify('You can add up to 6 gallery images.', 'warning', 'Gallery full');
+      return;
+    }
+
+    const selectedFiles = files.slice(0, remainingSlots);
+    setUploadingGalleryImages(true);
+
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const file of selectedFiles) {
+        uploadedUrls.push(await uploadBusinessProfileFile(file, 'gallery'));
+      }
+
+      setGalleryImageUrls((current) => [...current, ...uploadedUrls].slice(0, 6));
+      notify(
+        `${uploadedUrls.length} gallery ${uploadedUrls.length === 1 ? 'image' : 'images'} uploaded. Save the Business Profile to sync to Smilez.`,
+        'success',
+        'Gallery updated'
+      );
+    } catch (error: any) {
+      console.error('Gallery image upload error:', error?.message || error);
+      notify(error?.message || 'Could not upload the gallery images.', 'error', 'Upload failed');
+    } finally {
+      setUploadingGalleryImages(false);
+    }
+  };
+
+  const removeGalleryImage = (imageUrl: string) => {
+    setGalleryImageUrls((current) => current.filter((item) => item !== imageUrl));
+  };
+
   const joinList = (value: any) => {
     return Array.isArray(value) ? value.join(', ') : '';
   };
@@ -612,13 +1156,23 @@ export default function SettingsPage() {
     return Array.isArray(set.campaign_posts) ? set.campaign_posts.length : 0;
   };
 
+  const getSavedWeeklySetPreviewPosts = (set: SavedWeeklySet) => {
+    return Array.isArray(set.campaign_posts)
+      ? set.campaign_posts.filter(
+          (post) => Boolean(post?.media_url || post?.image_url),
+        ).slice(0, 4)
+      : [];
+  };
+
   const loadSavedWeeklySets = async (authUserId: string) => {
     setLoadingSavedWeeklySets(true);
 
     try {
       const { data, error } = await supabase
         .from("campaigns")
-        .select("id,name,campaign_idea,business_name,created_at,campaign_posts(id)")
+        .select(
+          "id,name,campaign_idea,business_name,created_at,campaign_posts(id,media_url,media_type,image_url,title)",
+        )
         .eq("user_id", authUserId)
         .order("created_at", { ascending: false })
         .limit(20);
@@ -652,31 +1206,12 @@ export default function SettingsPage() {
     setDeletingWeeklySetId(set.id);
 
     try {
-      const { data: campaignPosts, error: postsLoadError } = await supabase
-        .from("campaign_posts")
-        .select("id,image_path,media_path")
-        .eq("campaign_id", set.id);
-
-      if (postsLoadError) {
-        throw postsLoadError;
-      }
-
-      const storagePaths =
-        campaignPosts
-          ?.flatMap((post: any) => [post.image_path, post.media_path])
-          .filter(Boolean)
-          .filter((value: string, index: number, array: string[]) => array.indexOf(value) === index) || [];
-
-      if (storagePaths.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from("campaign-assets")
-          .remove(storagePaths);
-
-        if (storageError) {
-          console.error("Saved weekly set media delete error:", storageError.message);
-        }
-      }
-
+      /*
+       * Delete the FromOne rows only.
+       *
+       * Do not remove campaign media from Supabase Storage here because
+       * Stockport Smilez offers and events may still use the same public URLs.
+       */
       const { error: postsDeleteError } = await supabase
         .from("campaign_posts")
         .delete()
@@ -978,8 +1513,54 @@ export default function SettingsPage() {
       setLocation(data.location || '');
       setAddress(data.address || '');
       setPostcode(data.postcode || '');
+      setLatitude(typeof data.latitude === 'number' && Number.isFinite(data.latitude) ? String(data.latitude) : '');
+      setLongitude(typeof data.longitude === 'number' && Number.isFinite(data.longitude) ? String(data.longitude) : '');
+      setGeoEnabled(Boolean(data.geo_enabled));
+      setGeoAccuracy(data.geo_accuracy || '');
+      setGeoSource(data.geo_source || '');
+      setServiceRadiusMiles(typeof data.service_radius_miles === 'number' ? String(data.service_radius_miles) : '5');
+      setGeoUpdatedAt(data.geo_updated_at || '');
+      lastResolvedPostcodeRef.current =
+        data.geo_enabled &&
+        typeof data.latitude === 'number' &&
+        typeof data.longitude === 'number'
+          ? normalisePostcode(data.postcode || '')
+          : '';
       setPhone(data.phone || '');
       setEmail(data.email || '');
+      setOpeningHours(data.opening_hours || '');
+      setParkingInfo(data.parking_info || '');
+      setAccessibilityInfo(data.accessibility_info || '');
+      setGalleryImageUrls(
+        Array.isArray(data.gallery_image_urls) ? data.gallery_image_urls.filter(Boolean) : [],
+      );
+      setAcceptsBookings(Boolean(data.accepts_bookings));
+      setBookingUrl(data.booking_url || '');
+      setBookingHours(
+        Array.isArray(data.booking_hours) && data.booking_hours.length > 0
+          ? data.booking_hours
+          : defaultBookingHours,
+      );
+      setBookingSettings({
+        slot_interval_minutes:
+          Number(data.booking_settings?.slot_interval_minutes) ||
+          defaultBookingSettings.slot_interval_minutes,
+        max_covers_per_slot:
+          Number(data.booking_settings?.max_covers_per_slot) ||
+          defaultBookingSettings.max_covers_per_slot,
+        max_party_size:
+          Number(data.booking_settings?.max_party_size) ||
+          defaultBookingSettings.max_party_size,
+        minimum_notice_minutes:
+          Number(data.booking_settings?.minimum_notice_minutes) ||
+          defaultBookingSettings.minimum_notice_minutes,
+        advance_booking_days:
+          Number(data.booking_settings?.advance_booking_days) ||
+          defaultBookingSettings.advance_booking_days,
+      });
+      setBookingBlocks(
+        Array.isArray(data.booking_blocks) ? data.booking_blocks : [],
+      );
       setServices(joinList(data.services));
       setTargetAudience(joinList(data.target_audience));
       setToneOfVoice(data.tone_of_voice || 'Professional');
@@ -1017,10 +1598,36 @@ export default function SettingsPage() {
     setLoading(false);
   };
 
-  const buildPayload = async () => {
+  const buildPayload = async (resolvedLocation?: ResolvedVenueLocation | null) => {
     const authUserId = await getFreshAuthUserId();
-    const cleanPostcode = normalisePostcode(postcode);
+    const cleanPostcode = normalisePostcode(
+      resolvedLocation?.postcode || postcode,
+    );
     const postcodePrefix = getPostcodePrefix(cleanPostcode);
+    const parsedLatitude = resolvedLocation
+      ? resolvedLocation.latitude
+      : latitude.trim()
+        ? Number(latitude)
+        : null;
+    const parsedLongitude = resolvedLocation
+      ? resolvedLocation.longitude
+      : longitude.trim()
+        ? Number(longitude)
+        : null;
+    const parsedServiceRadius = Number(serviceRadiusMiles || '5');
+
+    if (parsedLatitude !== null && (!Number.isFinite(parsedLatitude) || parsedLatitude < -90 || parsedLatitude > 90)) {
+      throw new Error('Latitude must be a number between -90 and 90.');
+    }
+    if (parsedLongitude !== null && (!Number.isFinite(parsedLongitude) || parsedLongitude < -180 || parsedLongitude > 180)) {
+      throw new Error('Longitude must be a number between -180 and 180.');
+    }
+    if (!Number.isFinite(parsedServiceRadius) || parsedServiceRadius < 0.5 || parsedServiceRadius > 50) {
+      throw new Error('Nearby discovery radius must be between 0.5 and 50 miles.');
+    }
+    if (geoEnabled && (parsedLatitude === null || parsedLongitude === null)) {
+      throw new Error('Confirm the venue location before enabling nearby discovery.');
+    }
 
     return {
       user_id: authUserId,
@@ -1031,8 +1638,30 @@ export default function SettingsPage() {
       address: address.trim() || null,
       postcode: cleanPostcode || null,
       postcode_prefix: postcodePrefix || null,
+      latitude: parsedLatitude,
+      longitude: parsedLongitude,
+      geo_enabled: resolvedLocation ? true : geoEnabled,
+      geo_accuracy:
+        resolvedLocation?.accuracy || geoAccuracy.trim() || null,
+      geo_source:
+        resolvedLocation?.source || geoSource.trim() || null,
+      service_radius_miles: parsedServiceRadius,
+      geo_updated_at:
+        resolvedLocation?.verifiedAt || geoUpdatedAt || null,
       phone: phone.trim() || null,
       email: email.trim() || null,
+      opening_hours: openingHours.trim() || null,
+      parking_info: parkingInfo.trim() || null,
+      accessibility_info: accessibilityInfo.trim() || null,
+      gallery_image_urls: galleryImageUrls,
+      accepts_bookings: acceptsBookings,
+      booking_url:
+        acceptsBookings && bookingUrl.trim()
+          ? normaliseWebsiteUrl(bookingUrl)
+          : null,
+      booking_hours: bookingHours,
+      booking_settings: bookingSettings,
+      booking_blocks: bookingBlocks,
       services: splitList(services),
       target_audience: splitList(targetAudience),
       tone_of_voice: toneOfVoice,
@@ -1050,8 +1679,8 @@ export default function SettingsPage() {
     };
   };
 
-  const saveProfile = async () => {
-    const payload = await buildPayload();
+  const saveProfile = async (resolvedLocation?: ResolvedVenueLocation | null) => {
+    const payload = await buildPayload(resolvedLocation);
 
     if (!payload.user_id) {
       throw new Error('Please sign in again before saving settings.');
@@ -1083,11 +1712,13 @@ export default function SettingsPage() {
 
 
   const saveProfileAndContinue = async () => {
-    await handleSaveProfile();
+    const savedSuccessfully = await handleSaveProfile();
 
-    window.setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 450);
+    if (!savedSuccessfully) {
+      return;
+    }
+
+    window.location.href = '/dashboard';
   };
 
   const handleSaveProfile = async () => {
@@ -1096,18 +1727,77 @@ export default function SettingsPage() {
 
     if (!hasWebsite && !hasBusinessDetails) {
       notify('Please add a website URL, or add at least a business name and industry.', 'warning', 'Profile details needed');
-      return;
+      return false;
     }
 
     if (postcode.trim() && !isValidPostcodePrefix(postcode)) {
       notify('Postcode must start with a valid UK postcode area, like SK1.', 'warning', 'Postcode needed');
-      return;
+      return false;
+    }
+
+    if (acceptsBookings && bookingUrl.trim()) {
+      const safeBookingUrl = normaliseWebsiteUrl(bookingUrl);
+
+      try {
+        new URL(safeBookingUrl);
+      } catch {
+        notify(
+          'Booking URL must be a valid full web address.',
+          'warning',
+          'Booking URL needed',
+        );
+        return false;
+      }
+    }
+
+    if (acceptsBookings && !bookingUrl.trim()) {
+      for (const row of bookingHours) {
+        if (
+          !row.is_closed &&
+          (!row.opens_at ||
+            !row.closes_at ||
+            row.opens_at >= row.closes_at)
+        ) {
+          notify(
+            `${dayLabels[row.day_of_week]} must have a valid opening and closing time.`,
+            'warning',
+            'Opening hours needed',
+          );
+          return false;
+        }
+      }
+
+      if (
+        bookingSettings.max_party_size < 1 ||
+        bookingSettings.max_party_size >
+          bookingSettings.max_covers_per_slot
+      ) {
+        notify(
+          'Maximum party size must be between 1 and the covers available per slot.',
+          'warning',
+          'Booking capacity needed',
+        );
+        return false;
+      }
     }
 
     setSaving(true);
 
     try {
-      const savedProfileId = await saveProfile();
+      const resolvedLocation = postcode.trim()
+        ? await ensurePostcodeCoordinates()
+        : null;
+
+      if (postcode.trim() && !resolvedLocation) {
+        notify(
+          'The postcode could not be converted into a map location. Check it and try again.',
+          'error',
+          'Map location needed',
+        );
+        return false;
+      }
+
+      const savedProfileId = await saveProfile(resolvedLocation);
 
       const { data: latestProfile } = await supabase
         .from('business_profiles')
@@ -1139,7 +1829,12 @@ export default function SettingsPage() {
         (!latestSubmissionId && latestSmilesStatus !== 'sent');
 
       if (shouldSendOrSyncSmiles) {
-        await sendBusinessListingToSmiles(savedProfileId);
+        const smilesSyncSucceeded =
+          await sendBusinessListingToSmiles(savedProfileId, resolvedLocation);
+
+        if (!smilesSyncSucceeded) {
+          return false;
+        }
       }
 
       const params = new URLSearchParams(window.location.search);
@@ -1152,21 +1847,26 @@ export default function SettingsPage() {
         notify('Business Profile saved. You can connect Facebook and Instagram now, or go to Dashboard and create posts.', 'success', 'Business Profile saved');
         await loadBusinessProfile();
         scrollToSocialConnections();
-        return;
+        return false;
       }
 
       notify('Business Profile saved. Next: go to Dashboard and upload your first photo, video or flyer.', 'success', 'Profile saved');
       await loadBusinessProfile();
       scrollToSocialConnections();
+      return true;
     } catch (error: any) {
       console.error('Error saving business profile:', error?.message || error);
       notify(error?.message || 'Error saving Business Profile.', 'error', 'Save failed');
+      return false;
     } finally {
       setSaving(false);
     }
   };
 
-  const sendBusinessListingToSmiles = async (savedProfileId: string) => {
+  const sendBusinessListingToSmiles = async (
+    savedProfileId: string,
+    resolvedLocation?: ResolvedVenueLocation | null,
+  ) => {
     const hasBusinessDetails = Boolean(businessName.trim() && industry.trim());
 
     if (!hasBusinessDetails) {
@@ -1176,7 +1876,7 @@ export default function SettingsPage() {
         'Business details needed',
       );
       openProfileEditor();
-      return;
+      return false;
     }
 
     setSendingSmilesListing(true);
@@ -1209,11 +1909,46 @@ export default function SettingsPage() {
           postcode: normalisePostcode(postcode),
           postcodePrefix: getPostcodePrefix(postcode),
           postcode_prefix: getPostcodePrefix(postcode),
+          latitude: latitude.trim() ? Number(latitude) : null,
+          longitude: longitude.trim() ? Number(longitude) : null,
+          geoEnabled,
+          geo_enabled: geoEnabled,
+          geoAccuracy,
+          geo_accuracy: geoAccuracy,
+          geoSource,
+          geo_source: geoSource,
+          serviceRadiusMiles: Number(serviceRadiusMiles || '5'),
+          service_radius_miles: Number(serviceRadiusMiles || '5'),
+          geoUpdatedAt: geoUpdatedAt || null,
+          geo_updated_at: geoUpdatedAt || null,
           phone: phone.trim(),
           email: email.trim(),
+          openingHours: openingHours.trim(),
+          opening_hours: openingHours.trim(),
+          parkingInfo: parkingInfo.trim(),
+          parking_info: parkingInfo.trim(),
+          accessibilityInfo: accessibilityInfo.trim(),
+          accessibility_info: accessibilityInfo.trim(),
+          galleryImageUrls,
+          gallery_image_urls: galleryImageUrls,
+          acceptsBookings,
+          accepts_bookings: acceptsBookings,
+          bookingUrl:
+            acceptsBookings && bookingUrl.trim()
+              ? normaliseWebsiteUrl(bookingUrl)
+              : '',
+          booking_url:
+            acceptsBookings && bookingUrl.trim()
+              ? normaliseWebsiteUrl(bookingUrl)
+              : '',
+          bookingHours,
+          booking_hours: bookingHours,
+          bookingSettings,
+          booking_settings: bookingSettings,
+          bookingBlocks,
+          booking_blocks: bookingBlocks,
           venueType: industry.trim(),
           websiteUrl: normaliseWebsiteUrl(websiteUrl) || '',
-          bookingUrl: normaliseWebsiteUrl(websiteUrl) || '',
           mediaUrl: brandLogoUrl.trim() || null,
           media_url: brandLogoUrl.trim() || null,
         }),
@@ -1261,12 +1996,13 @@ export default function SettingsPage() {
       setSmilesListingSent(true);
       notify(
         result?.directSync
-          ? 'Live Smiles listing updated.'
-          : 'Business listing sent to Smiles. It is waiting for admin approval before customers can see it.',
+          ? 'Live Smilez business profile updated automatically.'
+          : 'New Smilez business listing sent for admin approval.',
         'success',
-        result?.directSync ? 'Smiles listing updated' : 'Waiting for Smiles admin',
+        result?.directSync ? 'Smilez profile updated' : 'Sent for approval',
       );
       await loadBusinessProfile();
+      return true;
     } catch (error: any) {
       console.error('Send Smiles listing error:', error?.message || error);
       if (savedProfileId) {
@@ -1283,10 +2019,11 @@ export default function SettingsPage() {
       }
 
       notify(
-        error?.message || 'Could not send this listing to Smiles.',
+        error?.message || 'Could not send this listing to Smilez.',
         'error',
-        'Smiles send failed',
+        'Smilez sync failed',
       );
+      return false;
     } finally {
       setSendingSmilesListing(false);
     }
@@ -1322,8 +2059,30 @@ export default function SettingsPage() {
     setLocation('');
     setAddress('');
     setPostcode('');
+    setLatitude('');
+    setLongitude('');
+    setGeoEnabled(false);
+    setGeoAccuracy('');
+    setGeoSource('');
+    setServiceRadiusMiles('5');
+    setGeoUpdatedAt('');
+    setGeoMessage('');
     setPhone('');
     setEmail('');
+    setOpeningHours('');
+    setAcceptsBookings(false);
+    setBookingUrl('');
+    setBookingHours(defaultBookingHours);
+    setSelectedBookingDay(1);
+    setBookingSettings(defaultBookingSettings);
+    setBookingBlocks([]);
+    setNewBookingBlock({
+      blockDate: '',
+      isFullDay: false,
+      startTime: '18:00',
+      endTime: '20:00',
+      reason: '',
+    });
     setServices('');
     setTargetAudience('');
     setToneOfVoice('Professional');
@@ -1417,9 +2176,9 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <main className="fromone-settings-page settings-create-style-page">
+      <main className="fromone-posts-page fromone-settings-page settings-create-style-page">
         <section id="fromone-standard-shell" className="settings-create-style-card settings-loading-card" aria-label="Settings loading">
-          <div className="settings-create-eyebrow">Settings</div>
+          <span className="posts-create-eyebrow settings-create-eyebrow">Settings</span>
           <h1>Loading settings.</h1>
           <p>Checking your business profile and social connections.</p>
         </section>
@@ -1428,27 +2187,166 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="fromone-settings-page settings-create-style-page" data-settings-page="create-style-v1">
+    <main className="fromone-posts-page fromone-settings-page settings-create-style-page" data-settings-page="create-style-v1">
       <section id="fromone-standard-shell" className="settings-create-style-card">
-        <header className="settings-create-hero">
-          <div className="settings-create-eyebrow">Settings</div>
-          <h1>
-            Business setup.
-          </h1>
+        <header className="posts-create-hero settings-create-hero">
+          <span className="posts-create-eyebrow settings-create-eyebrow">Settings</span>
+          <h1>Everything is in one place.</h1>
           <p>
-            Add the business details once. Connect Facebook and Instagram if you want direct publishing.
+            Choose what you need to update. The detailed options stay hidden until you open them.
           </p>
         </header>
 
-        <section className="settings-simple-panel">
+        <section className="settings-client-status" aria-label="Business setup status">
+          <div className="settings-client-status-copy">
+            <span className="settings-create-eyebrow">Your setup</span>
+            <h2>{businessName ? `${businessName} is ready` : 'Complete your business setup'}</h2>
+            <p>Most clients only need the first button. Everything else can stay closed.</p>
+          </div>
+
+          <div className="settings-client-status-grid">
+            <div>
+              <span>Business profile</span>
+              <strong>{businessProfileReady ? 'Ready' : 'Needs details'}</strong>
+            </div>
+            <div>
+              <span>Facebook</span>
+              <strong>{hasFacebookConnection ? 'Connected' : 'Not connected'}</strong>
+            </div>
+            <div>
+              <span>Instagram</span>
+              <strong>{hasInstagramConnection ? 'Connected' : 'Not connected'}</strong>
+            </div>
+            <div>
+              <span>Smilez listing</span>
+              <strong>{hasLinkedSmilesListing ? 'Live' : 'Not live yet'}</strong>
+            </div>
+            <div>
+              <span>Bookings</span>
+              <strong>{acceptsBookings ? 'On' : 'Off'}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="settings-task-chooser" aria-label="Choose what to change">
+          <div className="settings-task-chooser-heading">
+            <span>Choose one</span>
+            <h2>What would you like to do?</h2>
+            <p>Only the section you choose will open.</p>
+          </div>
+
+          <div className="settings-task-grid settings-client-task-grid">
+            <button
+              type="button"
+              className={openExtraSection === "smiles" && showBusinessDetails ? "settings-task-card is-active" : "settings-task-card"}
+              onClick={() => {
+                setOpenExtraSection("smiles");
+                setShowBusinessDetails(true);
+                setShowSocialSettings(false);
+                setShowAccountSettings(false);
+              }}
+            >
+              <span>01</span>
+              <strong>Business details and Smilez page</strong>
+              <small>Name, address, contact details, photos and visitor information</small>
+            </button>
+
+            <button
+              type="button"
+              className={openExtraSection === "bookings" && showBusinessDetails ? "settings-task-card is-active" : "settings-task-card"}
+              onClick={() => {
+                setOpenExtraSection("bookings");
+                setShowBusinessDetails(true);
+                setShowSocialSettings(false);
+                setShowAccountSettings(false);
+              }}
+            >
+              <span>02</span>
+              <strong>Manage bookings</strong>
+              <small>Booking link, hours and availability</small>
+            </button>
+
+            <button
+              type="button"
+              className={showSocialSettings ? "settings-task-card is-active" : "settings-task-card"}
+              onClick={() => {
+                setShowBusinessDetails(false);
+                setShowSocialSettings(true);
+                setShowAccountSettings(false);
+              }}
+            >
+              <span>03</span>
+              <strong>Connect social accounts</strong>
+              <small>Facebook and Instagram connection</small>
+            </button>
+
+            <button
+              type="button"
+              className={showAccountSettings ? "settings-task-card is-active" : "settings-task-card"}
+              onClick={() => {
+                setShowBusinessDetails(false);
+                setShowSocialSettings(false);
+                setShowAccountSettings(true);
+              }}
+            >
+              <span>04</span>
+              <strong>Account and saved posts</strong>
+              <small>Saved post sets and account controls</small>
+            </button>
+          </div>
+        </section>
+
+        <section
+          data-settings-mode={openExtraSection || "business"}
+          className={showBusinessDetails ? "settings-simple-panel settings-editor-panel is-open" : "settings-simple-panel settings-editor-panel is-collapsed"}
+          style={{ display: showBusinessDetails ? undefined : 'none' }}
+        >
           <div className="settings-panel-head">
             <span className="settings-step-badge">01</span>
             <div>
-              <h2>Business Profile</h2>
-              <p>Used for captions, offers, events and Smiles approvals.</p>
+              <h2>
+                {openExtraSection === "bookings"
+                  ? "Manage bookings"
+                  : "Business details and Smilez page"}
+              </h2>
+              <p>
+                {openExtraSection === "bookings"
+                  ? "Set the booking link, opening hours and availability. Advanced controls are lower down."
+                  : "Update the business name, description, contact details, location, photos and visitor information."}
+              </p>
             </div>
+
+            <button
+              type="button"
+              className="settings-panel-toggle"
+              onClick={() => setShowBusinessDetails(false)}
+              aria-expanded={showBusinessDetails}
+            >
+              Close
+            </button>
           </div>
 
+          {!showBusinessDetails ? (
+            <div className="settings-profile-summary">
+              <div>
+                <span>Business</span>
+                <strong>{businessName || "Not added yet"}</strong>
+              </div>
+              <div>
+                <span>Type</span>
+                <strong>{industry || "Not added yet"}</strong>
+              </div>
+              <div>
+                <span>Location</span>
+                <strong>{location || postcode || "Not added yet"}</strong>
+              </div>
+              <div>
+                <span>Contact</span>
+                <strong>{email || phone || "Not added yet"}</strong>
+              </div>
+            </div>
+          ) : (
+            <>
           <div className="settings-website-scan-card">
             <div>
               <span className="settings-create-eyebrow">Auto setup</span>
@@ -1477,6 +2375,14 @@ export default function SettingsPage() {
             </div>
 
             {scanMessage && <p className="settings-scan-message">{scanMessage}</p>}
+          </div>
+
+          <div className="settings-profile-section-heading">
+            <span>1</span>
+            <div>
+              <h3>Basic information</h3>
+              <p>Business name, type, description, contact details and location.</p>
+            </div>
           </div>
 
           <div className="settings-form-grid">
@@ -1525,7 +2431,8 @@ export default function SettingsPage() {
               <input
                 className="settings-simple-input"
                 value={postcode}
-                onChange={(event) => setPostcode(event.target.value.toUpperCase())}
+                onChange={(event) => handlePostcodeChange(event.target.value)}
+                onBlur={handlePostcodeBlur}
                 placeholder="Example: SK1 1AA"
               />
             </label>
@@ -1560,6 +2467,494 @@ export default function SettingsPage() {
                 placeholder="https://example.com"
               />
             </label>
+
+            <label className="settings-wide-field">
+              <strong>Public business description</strong>
+              <span className="settings-field-help">
+                A short customer-facing description shown on the Smilez venue page.
+              </span>
+              <textarea
+                className="settings-simple-input"
+                value={brandSummary}
+                onChange={(event) => setBrandSummary(event.target.value)}
+                placeholder="Explain what makes the business worth visiting or booking."
+                rows={4}
+                maxLength={800}
+              />
+            </label>
+
+            <label className="settings-wide-field">
+              <strong>Opening hours note</strong>
+              <textarea
+                className="settings-simple-input"
+                value={openingHours}
+                onChange={(event) => setOpeningHours(event.target.value)}
+                placeholder="Example: Kitchen closes 30 minutes earlier. Bank holiday hours may vary."
+                rows={3}
+              />
+              <span className="settings-field-help">
+                Optional customer-facing note shown underneath the weekly opening hours on Smilez.
+              </span>
+            </label>
+
+            {openExtraSection === "bookings" ? (
+              <section className="settings-smilez-booking-editor settings-wide-field">
+              <div className="settings-smilez-booking-header">
+                <div>
+                  <span className="settings-create-eyebrow">Bookings</span>
+                  <h3>Booking options</h3>
+                  <p>
+                    Mirrored from the Smilez business portal so both systems
+                    use the same controls and booking rules.
+                  </p>
+                </div>
+
+                <span className="settings-smilez-booking-status">
+                  {acceptsBookings
+                    ? bookingUrl.trim()
+                      ? 'External booking link'
+                      : 'Booking requests enabled'
+                    : 'Not enabled'}
+                </span>
+              </div>
+
+              <div className="settings-smilez-booking-options">
+                <label>
+                  <strong>Accept booking requests?</strong>
+                  <select
+                    className="settings-simple-input"
+                    value={acceptsBookings ? 'yes' : 'no'}
+                    onChange={(event) =>
+                      setAcceptsBookings(event.target.value === 'yes')
+                    }
+                  >
+                    <option value="no">No, do not show booking options</option>
+                    <option value="yes">Yes, show booking options</option>
+                  </select>
+                </label>
+
+                {acceptsBookings ? (
+                  <label>
+                    <strong>External booking URL optional</strong>
+                    <input
+                      className="settings-simple-input"
+                      type="url"
+                      value={bookingUrl}
+                      onChange={(event) => setBookingUrl(event.target.value)}
+                      placeholder="https://your-booking-page.com"
+                    />
+                  </label>
+                ) : null}
+              </div>
+
+              {acceptsBookings && !bookingUrl.trim() ? (
+                <>
+                  <section className="settings-smilez-capacity-card">
+                    <div className="settings-smilez-card-head">
+                      <div>
+                        <span>Booking capacity</span>
+                        <h4>Control slots, notice and covers</h4>
+                      </div>
+                      <strong>Prevent overbooking</strong>
+                    </div>
+
+                    <div className="settings-smilez-capacity-grid">
+                      <label>
+                        <span>Slot length</span>
+                        <select
+                          className="settings-simple-input"
+                          value={bookingSettings.slot_interval_minutes}
+                          onChange={(event) =>
+                            updateBookingSetting(
+                              'slot_interval_minutes',
+                              Number(event.target.value),
+                            )
+                          }
+                        >
+                          <option value={15}>15 minutes</option>
+                          <option value={30}>30 minutes</option>
+                          <option value={45}>45 minutes</option>
+                          <option value={60}>60 minutes</option>
+                        </select>
+                      </label>
+
+                      <label>
+                        <span>Maximum covers per slot</span>
+                        <input
+                          className="settings-simple-input"
+                          type="number"
+                          min={1}
+                          max={200}
+                          value={bookingSettings.max_covers_per_slot}
+                          onChange={(event) =>
+                            updateBookingSetting(
+                              'max_covers_per_slot',
+                              Number(event.target.value),
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        <span>Maximum party size</span>
+                        <input
+                          className="settings-simple-input"
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={bookingSettings.max_party_size}
+                          onChange={(event) =>
+                            updateBookingSetting(
+                              'max_party_size',
+                              Number(event.target.value),
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        <span>Minimum notice</span>
+                        <select
+                          className="settings-simple-input"
+                          value={bookingSettings.minimum_notice_minutes}
+                          onChange={(event) =>
+                            updateBookingSetting(
+                              'minimum_notice_minutes',
+                              Number(event.target.value),
+                            )
+                          }
+                        >
+                          <option value={0}>No minimum</option>
+                          <option value={30}>30 minutes</option>
+                          <option value={60}>1 hour</option>
+                          <option value={120}>2 hours</option>
+                          <option value={240}>4 hours</option>
+                          <option value={720}>12 hours</option>
+                          <option value={1440}>24 hours</option>
+                          <option value={2880}>48 hours</option>
+                        </select>
+                      </label>
+
+                      <label>
+                        <span>Booking window</span>
+                        <select
+                          className="settings-simple-input"
+                          value={bookingSettings.advance_booking_days}
+                          onChange={(event) =>
+                            updateBookingSetting(
+                              'advance_booking_days',
+                              Number(event.target.value),
+                            )
+                          }
+                        >
+                          <option value={7}>7 days ahead</option>
+                          <option value={14}>14 days ahead</option>
+                          <option value={30}>30 days ahead</option>
+                          <option value={60}>60 days ahead</option>
+                          <option value={90}>90 days ahead</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    <p className="settings-field-help">
+                      Covers are counted across active requests and confirmed
+                      bookings in the same time slot.
+                    </p>
+                  </section>
+
+                  <section className="settings-smilez-hours-card">
+                    <div className="settings-smilez-card-head">
+                      <div>
+                        <span>Booking request hours</span>
+                        <h4>Set your weekly availability</h4>
+                      </div>
+                      <strong>
+                        {bookingSettings.slot_interval_minutes}-minute slots
+                      </strong>
+                    </div>
+
+                    <div className="settings-smilez-day-cards" role="list">
+                      {bookingHours.map((row) => {
+                        const selected =
+                          row.day_of_week === selectedBookingDay;
+
+                        return (
+                          <button
+                            type="button"
+                            key={row.day_of_week}
+                            className={`${selected ? 'is-selected' : ''} ${
+                              row.is_closed ? 'is-closed' : ''
+                            }`}
+                            onClick={() =>
+                              setSelectedBookingDay(row.day_of_week)
+                            }
+                          >
+                            <strong>{shortDayLabels[row.day_of_week]}</strong>
+                            <em>{getNextDateForDay(row.day_of_week)}</em>
+                            <span>{formatBookingHourDisplay(row)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {(() => {
+                      const selected =
+                        bookingHours.find(
+                          (row) => row.day_of_week === selectedBookingDay,
+                        ) || bookingHours[0];
+
+                      if (!selected) return null;
+
+                      return (
+                        <div className="settings-smilez-selected-day">
+                          <div>
+                            <span>Editing</span>
+                            <h5>{dayLabels[selected.day_of_week]}</h5>
+                          </div>
+
+                          <label className="settings-smilez-closed-toggle">
+                            <input
+                              type="checkbox"
+                              checked={selected.is_closed}
+                              onChange={(event) =>
+                                updateBookingHour(
+                                  selected.day_of_week,
+                                  'is_closed',
+                                  event.target.checked,
+                                )
+                              }
+                            />
+                            Closed this day
+                          </label>
+
+                          {!selected.is_closed ? (
+                            <div className="settings-smilez-selected-times">
+                              <label>
+                                <span>Opens</span>
+                                <input
+                                  className="settings-simple-input"
+                                  type="time"
+                                  value={selected.opens_at || ''}
+                                  onChange={(event) =>
+                                    updateBookingHour(
+                                      selected.day_of_week,
+                                      'opens_at',
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </label>
+
+                              <label>
+                                <span>Closes</span>
+                                <input
+                                  className="settings-simple-input"
+                                  type="time"
+                                  value={selected.closes_at || ''}
+                                  onChange={(event) =>
+                                    updateBookingHour(
+                                      selected.day_of_week,
+                                      'closes_at',
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <p className="settings-field-help">
+                              This day will not show any customer booking
+                              request slots.
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </section>
+
+                  <section className="settings-smilez-blocks-card">
+                    <div className="settings-smilez-card-head">
+                      <div>
+                        <span>Blocked dates &amp; times</span>
+                        <h4>Unavailable slots</h4>
+                      </div>
+                      <strong>Optional</strong>
+                    </div>
+
+                    <div className="settings-smilez-quick-dates">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateNewBookingBlock(
+                            'blockDate',
+                            getTodayDateValue(),
+                          )
+                        }
+                      >
+                        Today
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateNewBookingBlock(
+                            'blockDate',
+                            getTomorrowDateValue(),
+                          )
+                        }
+                      >
+                        Tomorrow
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateNewBookingBlock(
+                            'blockDate',
+                            getNextSaturdayDateValue(),
+                          )
+                        }
+                      >
+                        Saturday
+                      </button>
+                    </div>
+
+                    <div className="settings-smilez-block-form">
+                      <label>
+                        <span>Date</span>
+                        <input
+                          className="settings-simple-input"
+                          type="date"
+                          value={newBookingBlock.blockDate}
+                          onChange={(event) =>
+                            updateNewBookingBlock(
+                              'blockDate',
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        <span>Full day?</span>
+                        <select
+                          className="settings-simple-input"
+                          value={
+                            newBookingBlock.isFullDay ? 'yes' : 'no'
+                          }
+                          onChange={(event) =>
+                            updateNewBookingBlock(
+                              'isFullDay',
+                              event.target.value === 'yes',
+                            )
+                          }
+                        >
+                          <option value="no">No, block times</option>
+                          <option value="yes">Yes, full day</option>
+                        </select>
+                      </label>
+
+                      {!newBookingBlock.isFullDay ? (
+                        <>
+                          <label>
+                            <span>Start</span>
+                            <input
+                              className="settings-simple-input"
+                              type="time"
+                              value={newBookingBlock.startTime}
+                              onChange={(event) =>
+                                updateNewBookingBlock(
+                                  'startTime',
+                                  event.target.value,
+                                )
+                              }
+                            />
+                          </label>
+
+                          <label>
+                            <span>End</span>
+                            <input
+                              className="settings-simple-input"
+                              type="time"
+                              value={newBookingBlock.endTime}
+                              onChange={(event) =>
+                                updateNewBookingBlock(
+                                  'endTime',
+                                  event.target.value,
+                                )
+                              }
+                            />
+                          </label>
+                        </>
+                      ) : null}
+
+                      <label className="is-wide">
+                        <span>Reason optional</span>
+                        <input
+                          className="settings-simple-input"
+                          value={newBookingBlock.reason}
+                          onChange={(event) =>
+                            updateNewBookingBlock(
+                              'reason',
+                              event.target.value,
+                            )
+                          }
+                          placeholder="Example: Private party"
+                        />
+                      </label>
+
+                      <button type="button" onClick={addBookingBlock}>
+                        Add block
+                      </button>
+                    </div>
+
+                    {bookingBlocks.length > 0 ? (
+                      <div className="settings-smilez-block-list">
+                        {bookingBlocks.map((block) => (
+                          <article key={block.id}>
+                            <div>
+                              <strong>
+                                {formatBookingBlockDate(block.block_date)}
+                              </strong>
+                              <span>
+                                {formatBookingBlockDisplay(block)}
+                              </span>
+                              {block.reason ? <em>{block.reason}</em> : null}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => removeBookingBlock(block.id)}
+                              aria-label="Remove booking block"
+                            >
+                              Remove
+                            </button>
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="settings-field-help">
+                        No blocked dates or times added yet.
+                      </p>
+                    )}
+                  </section>
+                </>
+              ) : null}
+
+              <p className="settings-field-help">
+                Adding a booking URL sends visitors there. Without a URL,
+                Smilez uses the capacity, weekly hours and blocked slots above.
+              </p>
+            </section>
+            ) : null}
+
+            {openExtraSection === "smiles" ? (
+              <>
+            <div className="settings-profile-section-heading settings-wide-field">
+              <span>2</span>
+              <div>
+                <h3>Photos and visitor details</h3>
+                <p>Profile image, gallery, parking, accessibility, audience and tone.</p>
+              </div>
+            </div>
 
             <div className="settings-business-image-field settings-wide-field">
               <div className="settings-business-image-copy">
@@ -1654,6 +3049,189 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            <div className="settings-wide-field">
+              <strong>Venue gallery</strong>
+              <p className="settings-field-help" style={{ marginTop: 6 }}>
+                Add up to 6 clear photos. These appear on the Stockport Smilez business page.
+              </p>
+
+              {galleryImageUrls.length > 0 ? (
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+                    gap: 12,
+                    marginTop: 14,
+                  }}
+                >
+                  {galleryImageUrls.map((imageUrl, index) => (
+                    <div
+                      key={`${imageUrl}-${index}`}
+                      style={{
+                        position: 'relative',
+                        overflow: 'hidden',
+                        borderRadius: 16,
+                        border: '1px solid rgba(15, 23, 42, 0.12)',
+                        background: '#f8fafc',
+                        aspectRatio: '4 / 3',
+                      }}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={`${businessName || 'Business'} gallery ${index + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(imageUrl)}
+                        disabled={uploadingGalleryImages || saving}
+                        aria-label={`Remove gallery image ${index + 1}`}
+                        title="Remove image"
+                        style={{
+                          position: 'absolute',
+                          left: '50%',
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: 0,
+                          border: 0,
+                          background: 'transparent',
+                          color: '#ffffff',
+                          fontSize: 12,
+                          lineHeight: 1,
+                          fontWeight: 900,
+                          textShadow: '0 2px 8px rgba(0,0,0,0.85)',
+                          cursor:
+                            uploadingGalleryImages || saving
+                              ? 'not-allowed'
+                              : 'pointer',
+                          opacity:
+                            uploadingGalleryImages || saving
+                              ? 0.55
+                              : 1,
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="settings-business-image-empty"
+                  style={{
+                    marginTop: 14,
+                    minHeight: 170,
+                    height: 'auto',
+                    border: '1px dashed #d7e0ee',
+                    borderRadius: 18,
+                    background: '#ffffff',
+                  }}
+                >
+                  <span>No gallery images yet</span>
+                  <small>Add venue, food, product, team or interior photos.</small>
+
+                  <button
+                    type="button"
+                    className="settings-image-utility-button"
+                    onClick={() => galleryImageInputRef.current?.click()}
+                    disabled={uploadingGalleryImages || saving}
+                    style={{
+                      width: 'fit-content',
+                      minWidth: 180,
+                      minHeight: 44,
+                      margin: '12px auto 0',
+                      padding: '0 18px',
+                      borderRadius: 12,
+                      border: '1px solid #f72585',
+                      background: '#f72585',
+                      color: '#fff',
+                      fontWeight: 900,
+                      cursor: uploadingGalleryImages || saving ? 'not-allowed' : 'pointer',
+                      opacity: uploadingGalleryImages || saving ? 0.65 : 1,
+                    }}
+                  >
+                    {uploadingGalleryImages ? 'Uploading...' : 'Add gallery images'}
+                  </button>
+
+                  <small>{galleryImageUrls.length}/6 images</small>
+                </div>
+              )}
+
+              {galleryImageUrls.length > 0 ? (
+                <div className="settings-business-image-actions" style={{ marginTop: 14 }}>
+                  <button
+                    type="button"
+                    className="settings-image-utility-button"
+                    onClick={() => galleryImageInputRef.current?.click()}
+                    disabled={
+                      uploadingGalleryImages ||
+                      saving ||
+                      galleryImageUrls.length >= 6
+                    }
+                    style={{
+                      minHeight: 42,
+                      padding: '0 16px',
+                      borderRadius: 12,
+                      border: '1px solid #f72585',
+                      background: '#f72585',
+                      color: '#fff',
+                      fontWeight: 900,
+                    }}
+                  >
+                    {uploadingGalleryImages
+                      ? 'Uploading...'
+                      : galleryImageUrls.length >= 6
+                        ? 'Gallery full'
+                        : 'Add more images'}
+                  </button>
+                  <span className="settings-field-help">
+                    {galleryImageUrls.length}/6 images
+                  </span>
+                </div>
+              ) : null}
+
+              <input
+                ref={galleryImageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                onChange={handleGalleryImagesUpload}
+                disabled={uploadingGalleryImages || saving}
+                style={{ display: 'none' }}
+              />
+            </div>
+
+            <label className="settings-wide-field">
+              <strong>Parking information</strong>
+              <textarea
+                className="settings-simple-input"
+                value={parkingInfo}
+                onChange={(event) => setParkingInfo(event.target.value)}
+                rows={3}
+                placeholder="Example: Free customer parking behind the venue. Two accessible bays near the entrance."
+              />
+              <span className="settings-field-help">
+                Include nearby car parks, on-street parking, charges and accessible bays.
+              </span>
+            </label>
+
+            <label className="settings-wide-field">
+              <strong>Accessibility information</strong>
+              <textarea
+                className="settings-simple-input"
+                value={accessibilityInfo}
+                onChange={(event) => setAccessibilityInfo(event.target.value)}
+                rows={3}
+                placeholder="Example: Step-free entrance, accessible toilet and space for wheelchairs."
+              />
+              <span className="settings-field-help">
+                Add only accurate details confirmed by the business.
+              </span>
+            </label>
+
             <label className="settings-wide-field">
               <strong>What do they offer?</strong>
               <textarea
@@ -1690,7 +3268,75 @@ export default function SettingsPage() {
                 ))}
               </select>
             </label>
+              </>
+            ) : null}
           </div>
+
+          {openExtraSection === "smiles" ? (
+            <>
+            <div className="settings-profile-section-heading">
+              <span>3</span>
+              <div>
+                <h3>Nearby discovery</h3>
+                <p>Confirm the venue location and choose the nearby search radius.</p>
+              </div>
+            </div>
+            <section className="settings-geo-card" aria-labelledby="settings-geo-heading">
+            <div className="settings-geo-head">
+              <div>
+                <span className="settings-create-eyebrow">Smart geo-booking</span>
+                <h3 id="settings-geo-heading">Nearby discovery</h3>
+                <p>Confirm the venue location and choose how it appears in nearby Smilez searches.</p>
+              </div>
+              <span className={`settings-geo-status ${geoEnabled ? 'is-live' : ''}`}>
+                {geoEnabled ? 'Nearby discovery enabled' : 'Nearby discovery disabled'}
+              </span>
+            </div>
+
+            <div className="settings-geo-grid">
+              <label className="settings-wide-field">
+                <strong>Show this venue in nearby searches?</strong>
+                <select className="settings-simple-input" value={geoEnabled ? 'yes' : 'no'} onChange={(event) => setGeoEnabled(event.target.value === 'yes')}>
+                  <option value="no">No, keep nearby discovery off</option>
+                  <option value="yes">Yes, show this venue nearby</option>
+                </select>
+              </label>
+
+              <div className="settings-geo-lookup settings-wide-field">
+                <div>
+                  <strong>Confirm venue location</strong>
+                  <span>Uses the postcode above to place the venue on the Smilez map. Customers never see these coordinates.</span>
+                </div>
+                <button type="button" className="settings-geo-lookup-button" onClick={lookupPostcodeCoordinates} disabled={isLookingUpLocation || !postcode.trim() || saving}>
+                  {isLookingUpLocation ? 'Checking postcode...' : 'Find location from postcode'}
+                </button>
+              </div>
+
+              <label>
+                <strong>Latitude</strong>
+                <input className="settings-simple-input" inputMode="decimal" value={latitude} onChange={(event) => { setLatitude(event.target.value); setGeoMessage(''); }} placeholder="Example: 53.4106" />
+              </label>
+              <label>
+                <strong>Longitude</strong>
+                <input className="settings-simple-input" inputMode="decimal" value={longitude} onChange={(event) => { setLongitude(event.target.value); setGeoMessage(''); }} placeholder="Example: -2.1575" />
+              </label>
+              <label className="settings-wide-field">
+                <strong>Nearby discovery radius</strong>
+                <select className="settings-simple-input" value={serviceRadiusMiles} onChange={(event) => setServiceRadiusMiles(event.target.value)}>
+                  <option value="0.5">0.5 miles</option><option value="1">1 mile</option><option value="2">2 miles</option><option value="3">3 miles</option><option value="5">5 miles</option><option value="10">10 miles</option><option value="15">15 miles</option><option value="25">25 miles</option><option value="50">50 miles</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="settings-geo-summary">
+              <div><span>Confirmed location</span><strong>{latitude.trim() && longitude.trim() ? `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}` : 'Not confirmed'}</strong></div>
+              <div><span>Search radius</span><strong>{serviceRadiusMiles || '5'} miles</strong></div>
+              <div><span>Last confirmed</span><strong>{formatGeoUpdatedAt(geoUpdatedAt)}</strong></div>
+            </div>
+            {geoMessage ? <p className="settings-geo-message">{geoMessage}</p> : null}
+            </section>
+            </>
+          ) : null}
 
           <button
             type="button"
@@ -1698,17 +3344,36 @@ export default function SettingsPage() {
             onClick={handleSaveProfile}
             disabled={saving}
           >
-            {saving ? 'Saving profile...' : 'Save Business Profile'}
+            {saving
+              ? 'Saving...'
+              : openExtraSection === "bookings"
+                ? 'Save booking settings'
+                : openExtraSection === "smiles"
+                  ? 'Save Smilez profile'
+                  : 'Save business details'}
           </button>
 
           <p className="settings-simple-note">
-            Smiles uses these business details when FromOne creates offers and events for approval.
+            When you are finished, save this section and close it.
           </p>
+            </>
+          )}
         </section>
 
-        <section className="settings-simple-panel">
+        <section className="settings-smiles-strip settings-smiles-status-panel" style={{ display: showBusinessDetails ? undefined : 'none' }}>
+          <div>
+            <span className="settings-create-eyebrow">04 · Smilez status</span>
+            <h2>Stockport Smilez connection</h2>
+            <p>
+              Your linked business profile updates automatically. New venue details are sent for approval.
+            </p>
+          </div>
+          <span className="settings-smiles-status">{getSmilesListingStatusLabel()}</span>
+        </section>
+
+        <section className="settings-simple-panel" style={{ display: showSocialSettings ? undefined : 'none' }}>
           <div className="settings-panel-head">
-            <span className="settings-step-badge">02</span>
+            <span className="settings-step-badge">03</span>
             <div>
               <h2>Facebook and Instagram</h2>
               <p>Optional. Connect Meta for direct publishing.</p>
@@ -1760,16 +3425,221 @@ export default function SettingsPage() {
           </p>
         </section>
 
-        <section className="settings-smiles-strip">
-          <div>
-            <span className="settings-create-eyebrow">Smiles</span>
-            <h2>Smiles is automatic.</h2>
-            <p>
-              FromOne creates the Smiles offer or event from the review page. The client only answers the small offer/event questions.
-            </p>
+        <section className={`settings-simple-panel settings-weekly-sets-panel ${showAccountSettings ? "" : "settings-force-hidden"}`}>
+          <div className="settings-panel-head settings-weekly-panel-head">
+            <span className="settings-step-badge">04</span>
+            <div>
+              <h2>Saved post sets</h2>
+              <p>
+                {savedWeeklySets.length} saved set
+                {savedWeeklySets.length === 1 ? "" : "s"} using your storage.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="settings-panel-toggle settings-weekly-toggle"
+              onClick={() => setShowSavedPostSets((current) => !current)}
+              aria-expanded={showSavedPostSets}
+            >
+              {showSavedPostSets ? "Hide saved sets" : "View saved sets"}
+            </button>
           </div>
-          <span className="settings-smiles-status">{getSmilesListingStatusLabel()}</span>
+
+          {showSavedPostSets ? (
+            <div className="settings-weekly-collapsible">
+          <div className="settings-weekly-overview">
+            <div className="settings-weekly-overview-copy">
+              <span className="settings-weekly-kicker">Content storage</span>
+              <strong>
+                {savedWeeklySets.length} of 4 weekly sets used
+              </strong>
+              <p>
+                {savedWeeklySets.length >= 4
+                  ? 'Delete one set below to create a new content week.'
+                  : `${Math.max(4 - savedWeeklySets.length, 0)} space${
+                      Math.max(4 - savedWeeklySets.length, 0) === 1 ? '' : 's'
+                    } remaining.`}
+              </p>
+            </div>
+
+            <div
+              className="settings-weekly-meter"
+              aria-label={`${savedWeeklySets.length} of 4 saved weekly sets used`}
+            >
+              <span
+                style={{
+                  width: `${Math.min((savedWeeklySets.length / 4) * 100, 100)}%`,
+                }}
+              />
+            </div>
+
+          </div>
+
+          {loadingSavedWeeklySets ? (
+            <div className="settings-weekly-empty">
+              <strong>Loading saved sets</strong>
+              <span>Checking your FromOne content weeks...</span>
+            </div>
+          ) : savedWeeklySets.length === 0 ? (
+            <div className="settings-weekly-empty">
+              <strong>No saved weekly sets</strong>
+              <span>Your next generated week will appear here.</span>
+            </div>
+          ) : (
+            <div className="settings-weekly-list">
+              {savedWeeklySets.map((set, index) => {
+                const postCount = getSavedWeeklySetPostCount(set);
+                const previewPosts = getSavedWeeklySetPreviewPosts(set);
+                const titledPosts = Array.isArray(set.campaign_posts)
+                  ? set.campaign_posts
+                      .filter((post) => Boolean(post?.title?.trim()))
+                      .slice(0, 2)
+                  : [];
+
+                return (
+                  <article key={set.id} className="settings-weekly-row">
+                    <div className="settings-weekly-index">
+                      {String(index + 1).padStart(2, '0')}
+                    </div>
+
+                    <div className="settings-weekly-row-copy">
+                      <div className="settings-weekly-title-line">
+                        <strong>{getSavedWeeklySetName(set)}</strong>
+                        <span className="settings-weekly-status">Saved week</span>
+                      </div>
+
+                      <p className="settings-weekly-summary">
+                        {postCount === 1
+                          ? '1 ready-to-manage post in this weekly set.'
+                          : `${postCount} ready-to-manage posts in this weekly set.`}
+                      </p>
+
+                      {titledPosts.length > 0 && (
+                        <div className="settings-weekly-post-titles">
+                          {titledPosts.map((post, titleIndex) => (
+                            <span key={post.id}>
+                              <b>{String(titleIndex + 1).padStart(2, '0')}</b>
+                              {post.title}
+                            </span>
+                          ))}
+                          {postCount > titledPosts.length && (
+                            <span className="settings-weekly-post-more">
+                              +{postCount - titledPosts.length} more post
+                              {postCount - titledPosts.length === 1 ? '' : 's'}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="settings-weekly-meta">
+                        <span>
+                          <b>Created</b>
+                          {formatSavedWeeklySetDate(set.created_at)}
+                        </span>
+                        <span>
+                          <b>Content</b>
+                          {postCount} post{postCount === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      className="settings-weekly-thumbnails"
+                      aria-label="Saved post thumbnails"
+                    >
+                      {previewPosts.length > 0 ? (
+                        previewPosts.map((post, previewIndex) => {
+                          const previewUrl = String(
+                            post.media_url || post.image_url || '',
+                          );
+                          const isVideo =
+                            String(post.media_type || '')
+                              .toLowerCase()
+                              .includes('video') ||
+                            /\.(mp4|mov|webm|m4v)(\?|$)/i.test(previewUrl);
+
+                          return (
+                            <div
+                              key={post.id}
+                              className="settings-weekly-thumbnail"
+                              title={post.title || `Post ${previewIndex + 1}`}
+                            >
+                              {isVideo ? (
+                                <video
+                                  src={previewUrl}
+                                  muted
+                                  playsInline
+                                  preload="metadata"
+                                />
+                              ) : (
+                                <img
+                                  src={previewUrl}
+                                  alt=""
+                                  loading="lazy"
+                                />
+                              )}
+
+                              <span className="settings-weekly-thumbnail-number">
+                                {String(previewIndex + 1).padStart(2, '0')}
+                              </span>
+
+                              {previewIndex === 3 && postCount > 4 && (
+                                <span className="settings-weekly-thumbnail-more">
+                                  +{postCount - 4}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <span className="settings-weekly-no-thumbnails">
+                          No previews available
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="settings-weekly-actions">
+                      <a href="/posts" className="settings-weekly-view">
+                        View posts
+                      </a>
+
+                      <button
+                        type="button"
+                        className="settings-weekly-delete"
+                        onClick={() => deleteSavedWeeklySet(set)}
+                        disabled={deletingWeeklySetId === set.id}
+                      >
+                        {deletingWeeklySetId === set.id
+                          ? 'Deleting...'
+                          : 'Delete set'}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="settings-weekly-safety-note">
+            <strong>FromOne only</strong>
+            <span>
+              Deleting a set removes its generated FromOne posts. Your business
+              profile and all Smilez venue, offer and event listings stay untouched.
+            </span>
+          </div>
+            </div>
+          ) : (
+            <div className="settings-weekly-collapsed-summary">
+              <span>Storage used</span>
+              <strong>{savedWeeklySets.length} of 4 sets</strong>
+              <p>
+                Select “View saved sets” to manage or delete an existing set.
+              </p>
+            </div>
+          )}
         </section>
+
       </section>
 
       {confirmDialog && (() => {
@@ -2203,6 +4073,321 @@ export default function SettingsPage() {
           opacity: 0.65 !important;
         }
 
+
+        .fromone-settings-page .settings-field-help {
+          display: block;
+          margin-top: 8px;
+          color: #6d7b91;
+          font-size: 0.8rem;
+          font-weight: 650;
+          line-height: 1.45;
+        }
+
+        .fromone-settings-page .settings-smilez-booking-editor {
+          display: grid;
+          gap: 18px;
+          padding: clamp(18px, 3vw, 26px);
+          border: 1px solid #dfe5f1;
+          border-radius: 24px;
+          background: #fff;
+          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045);
+        }
+
+        .fromone-settings-page .settings-smilez-booking-header,
+        .fromone-settings-page .settings-smilez-card-head {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+        }
+
+        .fromone-settings-page .settings-smilez-booking-header h3 {
+          margin: 7px 0;
+          color: #071b49;
+          font-size: clamp(1.55rem, 3vw, 2rem);
+          line-height: 1;
+          letter-spacing: -0.04em;
+          font-weight: 800;
+        }
+
+        .fromone-settings-page .settings-smilez-booking-header p {
+          max-width: 620px !important;
+          margin: 0 !important;
+          font-size: 0.94rem !important;
+        }
+
+        .fromone-settings-page .settings-smilez-booking-status,
+        .fromone-settings-page .settings-smilez-card-head > strong {
+          min-height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 13px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #f7f9fd;
+          color: #52617a;
+          font-size: 0.74rem;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .fromone-settings-page .settings-smilez-booking-options,
+        .fromone-settings-page .settings-smilez-capacity-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .fromone-settings-page .settings-smilez-booking-options label,
+        .fromone-settings-page .settings-smilez-capacity-grid label,
+        .fromone-settings-page .settings-smilez-selected-times label,
+        .fromone-settings-page .settings-smilez-block-form label {
+          display: grid;
+          gap: 7px;
+        }
+
+        .fromone-settings-page .settings-smilez-booking-options label > strong,
+        .fromone-settings-page .settings-smilez-capacity-grid label > span,
+        .fromone-settings-page .settings-smilez-selected-times label > span,
+        .fromone-settings-page .settings-smilez-block-form label > span {
+          color: #071b49;
+          font-size: 0.78rem;
+          font-weight: 850;
+        }
+
+        .fromone-settings-page .settings-smilez-capacity-card,
+        .fromone-settings-page .settings-smilez-hours-card,
+        .fromone-settings-page .settings-smilez-blocks-card {
+          display: grid;
+          gap: 16px;
+          padding: 20px;
+          border: 1px solid #dfe5f1;
+          border-radius: 20px;
+          background: #f9fbfe;
+        }
+
+        .fromone-settings-page .settings-smilez-card-head span {
+          display: block;
+          margin-bottom: 5px;
+          color: #f72585;
+          font-size: 0.72rem;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .fromone-settings-page .settings-smilez-card-head h4 {
+          margin: 0;
+          color: #071b49;
+          font-size: 1.2rem;
+          letter-spacing: -0.025em;
+        }
+
+        .fromone-settings-page .settings-smilez-day-cards {
+          display: grid;
+          grid-template-columns: repeat(7, minmax(0, 1fr));
+          gap: 8px;
+        }
+
+        .fromone-settings-page .settings-smilez-day-cards button {
+          min-width: 0;
+          display: grid;
+          gap: 4px;
+          padding: 13px 8px;
+          border: 1px solid #dfe5f1;
+          border-radius: 15px;
+          background: #fff;
+          color: #071b49;
+          text-align: center;
+          cursor: pointer;
+        }
+
+        .fromone-settings-page .settings-smilez-day-cards button strong {
+          font-size: 0.78rem;
+          font-weight: 950;
+        }
+
+        .fromone-settings-page .settings-smilez-day-cards button em {
+          color: #667085;
+          font-size: 0.66rem;
+          font-style: normal;
+          font-weight: 750;
+        }
+
+        .fromone-settings-page .settings-smilez-day-cards button span {
+          overflow: hidden;
+          color: #52617a;
+          font-size: 0.65rem;
+          font-weight: 800;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .fromone-settings-page .settings-smilez-day-cards button.is-selected {
+          border-color: #f72585;
+          background: #fff3f8;
+          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.12);
+        }
+
+        .fromone-settings-page .settings-smilez-day-cards button.is-closed {
+          opacity: 0.62;
+        }
+
+        .fromone-settings-page .settings-smilez-selected-day {
+          display: grid;
+          grid-template-columns: minmax(130px, 0.7fr) auto minmax(260px, 1.3fr);
+          gap: 16px;
+          align-items: center;
+          padding: 17px;
+          border: 1px solid #dfe5f1;
+          border-radius: 18px;
+          background: #fff;
+        }
+
+        .fromone-settings-page .settings-smilez-selected-day > div > span {
+          color: #f72585;
+          font-size: 0.68rem;
+          font-weight: 900;
+          text-transform: uppercase;
+        }
+
+        .fromone-settings-page .settings-smilez-selected-day h5 {
+          margin: 4px 0 0;
+          color: #071b49;
+          font-size: 1rem;
+        }
+
+        .fromone-settings-page .settings-smilez-closed-toggle {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: #52617a;
+          font-size: 0.8rem;
+          font-weight: 850;
+        }
+
+        .fromone-settings-page .settings-smilez-closed-toggle input {
+          width: 18px;
+          height: 18px;
+          accent-color: #f72585;
+        }
+
+        .fromone-settings-page .settings-smilez-selected-times {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .fromone-settings-page .settings-smilez-quick-dates {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .fromone-settings-page .settings-smilez-quick-dates button,
+        .fromone-settings-page .settings-smilez-block-form > button {
+          min-height: 38px;
+          padding: 0 14px;
+          border: 1px solid #ffd0e4;
+          border-radius: 999px;
+          background: #fff7fb;
+          color: #f72585;
+          font: inherit;
+          font-size: 0.78rem;
+          font-weight: 900;
+          cursor: pointer;
+        }
+
+        .fromone-settings-page .settings-smilez-block-form {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 10px;
+          align-items: end;
+        }
+
+        .fromone-settings-page .settings-smilez-block-form .is-wide {
+          grid-column: span 3;
+        }
+
+        .fromone-settings-page .settings-smilez-block-list {
+          display: grid;
+          gap: 9px;
+        }
+
+        .fromone-settings-page .settings-smilez-block-list article {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 13px 14px;
+          border: 1px solid #dfe5f1;
+          border-radius: 15px;
+          background: #fff;
+        }
+
+        .fromone-settings-page .settings-smilez-block-list article > div {
+          display: grid;
+          gap: 3px;
+        }
+
+        .fromone-settings-page .settings-smilez-block-list strong {
+          color: #071b49;
+          font-size: 0.85rem;
+        }
+
+        .fromone-settings-page .settings-smilez-block-list span,
+        .fromone-settings-page .settings-smilez-block-list em {
+          color: #667085;
+          font-size: 0.76rem;
+          font-style: normal;
+          font-weight: 700;
+        }
+
+        .fromone-settings-page .settings-smilez-block-list button {
+          border: 0;
+          background: transparent;
+          color: #b42318;
+          font: inherit;
+          font-size: 0.75rem;
+          font-weight: 900;
+          cursor: pointer;
+        }
+
+        .fromone-settings-page .settings-geo-card { display:grid!important; gap:18px!important; margin:18px 0 0!important; padding:clamp(18px,3vw,26px)!important; border:1px solid #dfe5f1!important; border-radius:24px!important; background:#fff!important; box-shadow:0 8px 22px rgba(7,27,73,.045)!important; }
+        .fromone-settings-page .settings-geo-head { display:flex!important; gap:18px!important; align-items:flex-start!important; justify-content:space-between!important; }
+        .fromone-settings-page .settings-geo-head h3 { margin:7px 0!important; color:#071b49!important; font-size:clamp(1.55rem,3vw,2rem)!important; line-height:1!important; letter-spacing:-.04em!important; font-weight:800!important; }
+        .fromone-settings-page .settings-geo-head p { max-width:620px!important; margin:0!important; font-size:.94rem!important; }
+        .fromone-settings-page .settings-geo-status { min-height:38px!important; display:inline-flex!important; align-items:center!important; justify-content:center!important; padding:0 14px!important; border:1px solid #dfe5f1!important; border-radius:999px!important; background:#f7f9fd!important; color:#52617a!important; font-size:.78rem!important; font-weight:900!important; white-space:nowrap!important; }
+        .fromone-settings-page .settings-geo-status.is-live { border-color:rgba(4,120,87,.22)!important; background:rgba(16,185,129,.09)!important; color:#047857!important; }
+        .fromone-settings-page .settings-geo-grid { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:12px!important; }
+        .fromone-settings-page .settings-geo-grid label { display:grid!important; gap:8px!important; }
+        .fromone-settings-page .settings-geo-grid label strong, .fromone-settings-page .settings-geo-lookup strong { color:#071b49!important; font-size:.86rem!important; font-weight:800!important; }
+        .fromone-settings-page .settings-geo-lookup { display:grid!important; grid-template-columns:minmax(0,1fr) minmax(220px,280px)!important; gap:16px!important; align-items:center!important; padding:15px!important; border:1px solid #dfe5f1!important; border-radius:18px!important; background:#f7f9fd!important; overflow:hidden!important; }
+        .fromone-settings-page .settings-geo-lookup>div { display:grid!important; gap:5px!important; }
+        .fromone-settings-page .settings-geo-lookup span { color:#52617a!important; font-size:.88rem!important; font-weight:650!important; line-height:1.4!important; }
+        .fromone-settings-page .settings-geo-lookup-button { width:100%!important; max-width:280px!important; min-width:0!important; min-height:46px!important; display:inline-flex!important; align-items:center!important; justify-content:center!important; justify-self:end!important; padding:10px 18px!important; border:0!important; border-radius:999px!important; background:#071b49!important; color:#fff!important; font:inherit!important; font-size:.9rem!important; line-height:1.15!important; font-weight:900!important; text-align:center!important; cursor:pointer!important; white-space:normal!important; overflow-wrap:anywhere!important; }
+        .fromone-settings-page .settings-geo-lookup-button:disabled { cursor:not-allowed!important; opacity:.55!important; }
+        .fromone-settings-page .settings-geo-summary { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr))!important; gap:10px!important; }
+        .fromone-settings-page .settings-geo-summary>div { display:grid!important; gap:5px!important; padding:14px!important; border:1px solid #dfe5f1!important; border-radius:18px!important; background:#f7f9fd!important; }
+        .fromone-settings-page .settings-geo-summary span { color:#f72585!important; font-size:.72rem!important; font-weight:900!important; letter-spacing:.08em!important; text-transform:uppercase!important; }
+        .fromone-settings-page .settings-geo-summary strong { color:#071b49!important; font-size:.92rem!important; font-weight:850!important; overflow-wrap:anywhere!important; }
+        .fromone-settings-page .settings-geo-message { margin:0!important; color:#047857!important; font-size:.9rem!important; font-weight:800!important; }
+        @media (max-width:900px) {
+          .fromone-settings-page .settings-geo-lookup {
+            grid-template-columns:minmax(0,1fr)!important;
+          }
+          .fromone-settings-page .settings-geo-lookup-button {
+            max-width:none!important;
+            justify-self:stretch!important;
+          }
+        }
+        @media (max-width:760px) {
+          .fromone-settings-page .settings-geo-head { display:grid!important; }
+          .fromone-settings-page .settings-geo-grid, .fromone-settings-page .settings-geo-summary { grid-template-columns:1fr!important; }
+          .fromone-settings-page .settings-geo-status, .fromone-settings-page .settings-geo-lookup-button { width:100%!important; }
+        }
+
         .fromone-settings-page .settings-simple-note {
           margin: 14px 0 0 !important;
           text-align: center !important;
@@ -2316,6 +4501,40 @@ export default function SettingsPage() {
         }
 
         @media (max-width: 760px) {
+          .fromone-settings-page .settings-smilez-booking-header,
+          .fromone-settings-page .settings-smilez-card-head {
+            display: grid;
+          }
+
+          .fromone-settings-page .settings-smilez-booking-options,
+          .fromone-settings-page .settings-smilez-capacity-grid,
+          .fromone-settings-page .settings-smilez-selected-times,
+          .fromone-settings-page .settings-smilez-block-form {
+            grid-template-columns: 1fr;
+          }
+
+          .fromone-settings-page .settings-smilez-day-cards {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .fromone-settings-page .settings-smilez-selected-day {
+            grid-template-columns: 1fr;
+            align-items: stretch;
+          }
+
+          .fromone-settings-page .settings-smilez-block-form .is-wide {
+            grid-column: auto;
+          }
+
+          .fromone-settings-page .settings-hours-row {
+            grid-template-columns: 1fr;
+            align-items: stretch;
+          }
+
+          .fromone-settings-page .settings-hours-row > strong {
+            padding-bottom: 2px;
+          }
+
           body:has(.fromone-settings-page) .main-content {
             padding-top: 0 !important;
           }
@@ -2405,6 +4624,1347 @@ export default function SettingsPage() {
             padding: 26px 22px 24px !important;
           }
         }
+        .fromone-settings-page .settings-weekly-sets-panel {
+          display: grid !important;
+          gap: 20px !important;
+          overflow: hidden !important;
+          background:
+            radial-gradient(circle at top right, rgba(247, 37, 133, 0.07), transparent 34%),
+            #f7f9fd !important;
+        }
+
+        .fromone-settings-page .settings-weekly-overview {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 16px 24px;
+          align-items: center;
+          padding: 22px;
+          border: 1px solid #dfe5f1;
+          border-radius: 22px;
+          background: #ffffff;
+          box-shadow: 0 18px 44px rgba(7, 27, 73, 0.07);
+        }
+
+        .fromone-settings-page .settings-weekly-overview-copy {
+          min-width: 0;
+          display: grid;
+          gap: 5px;
+        }
+
+        .fromone-settings-page .settings-weekly-kicker {
+          color: #f72585;
+          font-size: 0.72rem;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+
+        .fromone-settings-page .settings-weekly-overview-copy strong {
+          color: #071b49;
+          font-size: clamp(1.15rem, 2vw, 1.45rem);
+          line-height: 1.15;
+          letter-spacing: -0.025em;
+        }
+
+        .fromone-settings-page .settings-weekly-overview-copy p {
+          color: #637089 !important;
+          font-size: 0.92rem !important;
+          font-weight: 650 !important;
+        }
+
+        .fromone-settings-page .settings-weekly-meter {
+          grid-column: 1 / -1;
+          height: 9px;
+          overflow: hidden;
+          border-radius: 999px;
+          background: #e9edf5;
+        }
+
+        .fromone-settings-page .settings-weekly-meter span {
+          display: block;
+          height: 100%;
+          border-radius: inherit;
+          background: linear-gradient(90deg, #f72585, #ffba08);
+          box-shadow: 0 0 18px rgba(247, 37, 133, 0.25);
+          transition: width 180ms ease;
+        }
+
+        .fromone-settings-page .settings-weekly-posts-link {
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 18px;
+          border: 1px solid #d6deed;
+          border-radius: 999px;
+          background: #f7f9fd;
+          color: #071b49;
+          font-size: 0.88rem;
+          font-weight: 900;
+          text-decoration: none;
+          white-space: nowrap;
+          transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+        }
+
+        .fromone-settings-page .settings-weekly-posts-link:hover {
+          transform: translateY(-1px);
+          border-color: #f72585;
+          background: #ffffff;
+        }
+
+        .fromone-settings-page .settings-weekly-list {
+          display: grid;
+          gap: 16px;
+        }
+
+        .fromone-settings-page .settings-weekly-row {
+          position: relative;
+          display: grid;
+          grid-template-columns: 58px minmax(250px, 1.35fr) minmax(260px, auto) auto;
+          align-items: center;
+          gap: 20px;
+          padding: 20px;
+          overflow: hidden;
+          border: 1px solid rgba(7, 27, 73, 0.1);
+          border-radius: 26px;
+          background:
+            radial-gradient(circle at 0% 0%, rgba(255, 212, 59, 0.12), transparent 34%),
+            linear-gradient(145deg, #ffffff 0%, #fbfcff 100%);
+          box-shadow:
+            0 24px 60px rgba(7, 27, 73, 0.08),
+            0 2px 8px rgba(7, 27, 73, 0.035);
+          transition:
+            transform 180ms ease,
+            box-shadow 180ms ease,
+            border-color 180ms ease;
+        }
+
+        .fromone-settings-page .settings-weekly-row::before {
+          content: '';
+          position: absolute;
+          inset: 0 auto 0 0;
+          width: 4px;
+          background: linear-gradient(180deg, #ffd43b 0%, #f72585 100%);
+          opacity: 0.9;
+        }
+
+        .fromone-settings-page .settings-weekly-row:hover {
+          transform: translateY(-3px);
+          border-color: rgba(7, 27, 73, 0.18);
+          box-shadow:
+            0 30px 74px rgba(7, 27, 73, 0.12),
+            0 4px 14px rgba(7, 27, 73, 0.045);
+        }
+
+        .fromone-settings-page .settings-weekly-index {
+          width: 58px;
+          height: 58px;
+          display: grid;
+          place-items: center;
+          border-radius: 19px;
+          background:
+            linear-gradient(145deg, #0c2b68 0%, #071b49 68%, #041334 100%);
+          color: #ffffff;
+          font-size: 0.8rem;
+          font-weight: 1000;
+          letter-spacing: 0.11em;
+          box-shadow:
+            0 14px 30px rgba(7, 27, 73, 0.22),
+            inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+
+        .fromone-settings-page .settings-weekly-row-copy {
+          min-width: 0;
+          display: grid;
+          gap: 10px;
+        }
+
+        .fromone-settings-page .settings-weekly-title-line {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .fromone-settings-page .settings-weekly-title-line > strong {
+          color: #071b49;
+          font-size: clamp(1rem, 1.6vw, 1.15rem);
+          font-weight: 1000;
+          line-height: 1.2;
+          letter-spacing: -0.02em;
+          overflow-wrap: anywhere;
+        }
+
+        .fromone-settings-page .settings-weekly-status {
+          display: inline-flex;
+          align-items: center;
+          min-height: 25px;
+          padding: 4px 9px;
+          border: 1px solid rgba(61, 220, 151, 0.24);
+          border-radius: 999px;
+          background: rgba(61, 220, 151, 0.1);
+          color: #0b6b48;
+          font-size: 0.68rem;
+          font-weight: 1000;
+          letter-spacing: 0.055em;
+          text-transform: uppercase;
+        }
+
+        .fromone-settings-page .settings-weekly-summary {
+          margin: 0;
+          color: #627087;
+          font-size: 0.82rem;
+          font-weight: 700;
+          line-height: 1.45;
+        }
+
+        .fromone-settings-page .settings-weekly-post-titles {
+          display: grid;
+          gap: 6px;
+        }
+
+        .fromone-settings-page .settings-weekly-post-titles span {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+          color: #34445f;
+          font-size: 0.78rem;
+          font-weight: 800;
+          line-height: 1.35;
+        }
+
+        .fromone-settings-page .settings-weekly-post-titles span b {
+          flex: 0 0 auto;
+          display: inline-grid;
+          place-items: center;
+          width: 24px;
+          height: 24px;
+          border-radius: 8px;
+          background: #eef3fb;
+          color: #071b49;
+          font-size: 0.65rem;
+          letter-spacing: 0.06em;
+        }
+
+        .fromone-settings-page .settings-weekly-post-more {
+          color: #7a879a !important;
+          font-size: 0.73rem !important;
+          padding-left: 32px;
+        }
+
+        .fromone-settings-page .settings-weekly-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .fromone-settings-page .settings-weekly-meta span {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          min-height: 30px;
+          padding: 5px 11px;
+          border: 1px solid rgba(7, 27, 73, 0.1);
+          border-radius: 999px;
+          background: rgba(238, 243, 251, 0.78);
+          color: #52617a;
+          font-size: 0.75rem;
+          font-weight: 900;
+          letter-spacing: 0.01em;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        .fromone-settings-page .settings-weekly-meta span b {
+          color: #071b49;
+          font-size: 0.67rem;
+          font-weight: 1000;
+          letter-spacing: 0.045em;
+          text-transform: uppercase;
+        }
+
+        .fromone-settings-page .settings-weekly-thumbnails {
+          display: grid;
+          grid-template-columns: repeat(4, 64px);
+          gap: 8px;
+          align-items: center;
+          padding: 8px;
+          border: 1px solid rgba(7, 27, 73, 0.08);
+          border-radius: 18px;
+          background: rgba(238, 243, 251, 0.72);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+        }
+
+        .fromone-settings-page .settings-weekly-thumbnail {
+          position: relative;
+          width: 64px;
+          height: 64px;
+          overflow: hidden;
+          border: 2px solid #ffffff;
+          border-radius: 15px;
+          background: #e8edf6;
+          box-shadow: 0 8px 18px rgba(7, 27, 73, 0.13);
+        }
+
+        .fromone-settings-page .settings-weekly-thumbnail img,
+        .fromone-settings-page .settings-weekly-thumbnail video {
+          width: 100%;
+          height: 100%;
+          display: block;
+          object-fit: cover;
+          transition: transform 200ms ease;
+        }
+
+        .fromone-settings-page .settings-weekly-row:hover .settings-weekly-thumbnail img,
+        .fromone-settings-page .settings-weekly-row:hover .settings-weekly-thumbnail video {
+          transform: scale(1.045);
+        }
+
+        .fromone-settings-page .settings-weekly-thumbnail-number {
+          position: absolute;
+          left: 6px;
+          bottom: 6px;
+          display: inline-grid;
+          place-items: center;
+          min-width: 24px;
+          height: 22px;
+          padding: 0 6px;
+          border-radius: 8px;
+          background: rgba(7, 27, 73, 0.82);
+          color: #ffffff;
+          font-size: 0.62rem;
+          font-weight: 1000;
+          letter-spacing: 0.06em;
+          box-shadow: 0 5px 12px rgba(7, 27, 73, 0.2);
+          backdrop-filter: blur(4px);
+        }
+
+        .fromone-settings-page .settings-weekly-thumbnail-more {
+          position: absolute;
+          inset: 0;
+          display: grid;
+          place-items: center;
+          background: rgba(7, 27, 73, 0.72);
+          color: #ffffff;
+          font-size: 0.86rem;
+          font-weight: 1000;
+          backdrop-filter: blur(2px);
+        }
+
+        .fromone-settings-page .settings-weekly-no-thumbnails {
+          grid-column: 1 / -1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 64px;
+          padding: 0 18px;
+          color: #718096;
+          font-size: 0.78rem;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .fromone-settings-page .settings-weekly-actions {
+          display: grid;
+          gap: 9px;
+          min-width: 118px;
+        }
+
+        .fromone-settings-page .settings-weekly-view,
+        .fromone-settings-page .settings-weekly-delete {
+          min-height: 44px;
+          padding: 0 18px;
+          border-radius: 14px;
+          font: inherit;
+          font-size: 0.82rem;
+          font-weight: 1000;
+          white-space: nowrap;
+          transition:
+            transform 160ms ease,
+            background 160ms ease,
+            color 160ms ease,
+            box-shadow 160ms ease;
+        }
+
+        .fromone-settings-page .settings-weekly-view {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(7, 27, 73, 0.12);
+          background: #071b49;
+          color: #ffffff;
+          text-decoration: none;
+          box-shadow: 0 10px 22px rgba(7, 27, 73, 0.14);
+        }
+
+        .fromone-settings-page .settings-weekly-view:hover {
+          transform: translateY(-2px);
+          background: #0d2b66;
+          box-shadow: 0 14px 28px rgba(7, 27, 73, 0.2);
+        }
+
+        .fromone-settings-page .settings-weekly-delete {
+          border: 1px solid rgba(180, 35, 61, 0.18);
+          background: rgba(255, 247, 248, 0.9);
+          color: #a61f38;
+          cursor: pointer;
+          box-shadow: 0 8px 20px rgba(180, 35, 61, 0.06);
+        }
+
+        .fromone-settings-page .settings-weekly-delete:hover:not(:disabled) {
+          transform: translateY(-2px);
+          background: #a61f38;
+          color: #ffffff;
+          box-shadow: 0 12px 26px rgba(166, 31, 56, 0.2);
+        }
+
+        .fromone-settings-page .settings-weekly-delete:disabled {
+          cursor: not-allowed;
+          opacity: 0.58;
+        }
+
+        .fromone-settings-page .settings-weekly-empty {
+          display: grid;
+          gap: 5px;
+          padding: 24px;
+          border: 1px dashed #ccd5e5;
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.72);
+          text-align: center;
+        }
+
+        .fromone-settings-page .settings-weekly-empty strong {
+          color: #071b49;
+          font-size: 1rem;
+        }
+
+        .fromone-settings-page .settings-weekly-empty span {
+          color: #68758c;
+          font-size: 0.9rem;
+          font-weight: 650;
+        }
+
+        .fromone-settings-page .settings-weekly-safety-note {
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          gap: 10px 14px;
+          align-items: start;
+          padding: 15px 16px;
+          border-radius: 18px;
+          background: #eef3fb;
+          color: #52617a;
+          font-size: 0.86rem;
+          line-height: 1.5;
+        }
+
+        .fromone-settings-page .settings-weekly-safety-note strong {
+          color: #071b49;
+          white-space: nowrap;
+        }
+
+        /* Final responsive hardening for the FromOne settings workspace. */
+        .fromone-settings-page,
+        .fromone-settings-page *,
+        .fromone-settings-page *::before,
+        .fromone-settings-page *::after {
+          box-sizing: border-box;
+        }
+
+        .fromone-settings-page img,
+        .fromone-settings-page video,
+        .fromone-settings-page canvas {
+          max-width: 100%;
+        }
+
+        .fromone-settings-page input,
+        .fromone-settings-page select,
+        .fromone-settings-page textarea,
+        .fromone-settings-page button {
+          min-width: 0;
+        }
+
+        .fromone-settings-page .settings-simple-panel,
+        .fromone-settings-page .settings-profile-editor,
+        .fromone-settings-page .settings-smilez-booking-editor,
+        .fromone-settings-page .settings-geo-card,
+        .fromone-settings-page .settings-business-image-field,
+        .fromone-settings-page .settings-website-scan-card {
+          min-width: 0 !important;
+          max-width: 100% !important;
+          overflow-wrap: anywhere;
+        }
+
+        .fromone-settings-page .settings-simple-input,
+        .fromone-settings-page .input {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        .fromone-settings-page textarea.settings-simple-input,
+        .fromone-settings-page textarea.input {
+          resize: vertical;
+        }
+
+        .fromone-settings-page .settings-business-image-card {
+          width: 100% !important;
+          min-width: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .fromone-settings-page .settings-business-image-card img {
+          width: 100% !important;
+          height: 100% !important;
+          display: block !important;
+          object-fit: cover !important;
+        }
+
+        .fromone-settings-page .settings-smilez-block-list article,
+        .fromone-settings-page .settings-geo-summary article {
+          min-width: 0 !important;
+        }
+
+        @media (max-width: 760px) {
+          .fromone-settings-page #fromone-standard-shell.settings-create-style-card {
+            width: calc(100% - 20px) !important;
+            max-width: calc(100% - 20px) !important;
+            margin: 10px auto 0 !important;
+            padding: 20px 14px 28px !important;
+            border-radius: 24px !important;
+            overflow: hidden !important;
+          }
+
+          .fromone-settings-page .settings-create-hero {
+            margin-bottom: 20px !important;
+          }
+
+          .fromone-settings-page .settings-create-hero h1,
+          .fromone-settings-page .settings-create-style-card h1 {
+            font-size: clamp(2.25rem, 12vw, 3.15rem) !important;
+            line-height: 0.98 !important;
+            overflow-wrap: normal !important;
+            word-break: normal !important;
+          }
+
+          .fromone-settings-page .settings-simple-panel,
+          .fromone-settings-page .settings-profile-editor,
+          .fromone-settings-page .settings-smilez-booking-editor,
+          .fromone-settings-page .settings-geo-card,
+          .fromone-settings-page .settings-website-scan-card {
+            padding: 16px !important;
+            border-radius: 22px !important;
+          }
+
+          .fromone-settings-page .settings-panel-head,
+          .fromone-settings-page .settings-smilez-booking-header,
+          .fromone-settings-page .settings-geo-head {
+            align-items: flex-start !important;
+          }
+
+          .fromone-settings-page .settings-simple-grid,
+          .fromone-settings-page .settings-profile-grid,
+          .fromone-settings-page .settings-smilez-booking-options,
+          .fromone-settings-page .settings-smilez-hours-grid,
+          .fromone-settings-page .settings-smilez-capacity-grid,
+          .fromone-settings-page .settings-smilez-block-form,
+          .fromone-settings-page .settings-geo-grid,
+          .fromone-settings-page .settings-geo-summary {
+            grid-template-columns: minmax(0, 1fr) !important;
+          }
+
+          .fromone-settings-page .settings-wide-field,
+          .fromone-settings-page .is-wide {
+            grid-column: 1 !important;
+          }
+
+          .fromone-settings-page input,
+          .fromone-settings-page select,
+          .fromone-settings-page textarea {
+            font-size: 16px !important;
+          }
+
+          .fromone-settings-page .settings-smilez-block-list article {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 12px !important;
+            align-items: stretch !important;
+          }
+
+          .fromone-settings-page .settings-smilez-block-list article button {
+            width: 100% !important;
+          }
+
+          .fromone-settings-page .settings-business-image-card {
+            aspect-ratio: 16 / 10 !important;
+            min-height: 190px !important;
+          }
+
+          .fromone-settings-page .settings-business-image-actions {
+            width: 100% !important;
+          }
+
+          .fromone-settings-page .settings-weekly-overview {
+            grid-template-columns: 1fr;
+            padding: 18px;
+          }
+
+          .fromone-settings-page .settings-weekly-posts-link {
+            width: 100%;
+          }
+
+          .fromone-settings-page .settings-weekly-row {
+            grid-template-columns: 48px minmax(0, 1fr);
+            gap: 14px;
+            padding: 16px;
+            border-radius: 22px;
+          }
+
+          .fromone-settings-page .settings-weekly-index {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+          }
+
+          .fromone-settings-page .settings-weekly-thumbnails {
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            width: 100%;
+          }
+
+          .fromone-settings-page .settings-weekly-thumbnail {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1;
+          }
+
+          .fromone-settings-page .settings-weekly-actions {
+            grid-column: 1 / -1;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+          }
+
+          .fromone-settings-page .settings-weekly-view,
+          .fromone-settings-page .settings-weekly-delete {
+            width: 100%;
+            min-height: 46px;
+          }
+
+          .fromone-settings-page .settings-weekly-safety-note {
+            grid-template-columns: 1fr;
+          }
+
+        }
+
+        @media (max-width: 420px) {
+          .fromone-settings-page #fromone-standard-shell.settings-create-style-card {
+            width: calc(100% - 12px) !important;
+            max-width: calc(100% - 12px) !important;
+            padding-inline: 12px !important;
+          }
+
+          .fromone-settings-page .settings-simple-panel,
+          .fromone-settings-page .settings-profile-editor,
+          .fromone-settings-page .settings-smilez-booking-editor,
+          .fromone-settings-page .settings-geo-card,
+          .fromone-settings-page .settings-website-scan-card {
+            padding: 14px !important;
+            border-radius: 20px !important;
+          }
+        }
+
+
+        /* Granny-proof settings layout */
+        .fromone-settings-page .settings-create-hero {
+          margin-bottom: 18px !important;
+        }
+
+        .fromone-settings-page .settings-simple-panel {
+          padding: 22px !important;
+          border-radius: 20px !important;
+        }
+
+        .fromone-settings-page .settings-panel-head {
+          margin-bottom: 16px !important;
+        }
+
+        .fromone-settings-page .settings-form-grid {
+          gap: 12px !important;
+        }
+
+        .fromone-settings-page .settings-website-scan-card {
+          padding: 16px !important;
+          border-radius: 16px !important;
+        }
+
+        .fromone-settings-page .settings-advanced-toggle {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) auto !important;
+          align-items: center !important;
+          gap: 18px !important;
+          margin-top: 6px !important;
+          padding: 18px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 18px !important;
+          background: #f8fafc !important;
+        }
+
+        .fromone-settings-page .settings-advanced-toggle h3 {
+          margin: 5px 0 5px !important;
+          color: #071b49 !important;
+          font-size: 1.15rem !important;
+          line-height: 1.15 !important;
+          font-weight: 800 !important;
+          letter-spacing: -0.035em !important;
+        }
+
+        .fromone-settings-page .settings-advanced-toggle p {
+          margin: 0 !important;
+          max-width: 640px !important;
+          color: #52617a !important;
+          font-size: 0.9rem !important;
+          line-height: 1.45 !important;
+          font-weight: 600 !important;
+        }
+
+        .fromone-settings-page .settings-advanced-toggle-button {
+          min-width: 180px !important;
+          border-radius: 999px !important;
+          white-space: nowrap !important;
+        }
+
+        .fromone-settings-page .settings-primary-action {
+          border-radius: 999px !important;
+        }
+
+        .fromone-settings-page .settings-social-grid {
+          gap: 10px !important;
+        }
+
+        .fromone-settings-page .settings-weekly-sets-panel {
+          padding-bottom: 20px !important;
+        }
+
+        .fromone-settings-page .settings-smiles-strip {
+          padding: 18px !important;
+          border-radius: 18px !important;
+        }
+
+        @media (max-width: 760px) {
+          .fromone-settings-page .settings-advanced-toggle {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-settings-page .settings-advanced-toggle-button {
+            width: 100% !important;
+            min-width: 0 !important;
+          }
+        }
+
+
+        /* Simple summary-first settings experience */
+        .fromone-settings-page .settings-panel-head {
+          grid-template-columns: auto minmax(0, 1fr) auto !important;
+          align-items: center !important;
+        }
+
+        .fromone-settings-page .settings-panel-toggle {
+          min-height: 44px !important;
+          padding: 0 18px !important;
+          border: 1px solid #f72585 !important;
+          border-radius: 999px !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          font: inherit !important;
+          font-size: 0.88rem !important;
+          font-weight: 800 !important;
+          cursor: pointer !important;
+          box-shadow: 0 10px 22px rgba(247, 37, 133, 0.18) !important;
+        }
+
+        .fromone-settings-page .settings-panel-toggle:hover {
+          background: #e91e79 !important;
+          border-color: #e91e79 !important;
+        }
+
+        .fromone-settings-page .settings-profile-summary {
+          display: grid !important;
+          grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+          gap: 10px !important;
+          padding: 14px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 16px !important;
+          background: #f8fafc !important;
+        }
+
+        .fromone-settings-page .settings-profile-summary > div {
+          display: grid !important;
+          gap: 4px !important;
+          min-width: 0 !important;
+        }
+
+        .fromone-settings-page .settings-profile-summary span {
+          color: #f72585 !important;
+          font-size: 0.68rem !important;
+          line-height: 1 !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.1em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-settings-page .settings-profile-summary strong {
+          overflow: hidden !important;
+          color: #071b49 !important;
+          font-size: 0.9rem !important;
+          line-height: 1.3 !important;
+          font-weight: 800 !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+
+        .fromone-settings-page .settings-simple-panel.is-collapsed {
+          padding-bottom: 18px !important;
+        }
+
+        .fromone-settings-page .settings-simple-panel.is-collapsed .settings-panel-head {
+          margin-bottom: 12px !important;
+        }
+
+        @media (max-width: 900px) {
+          .fromone-settings-page .settings-profile-summary {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+        }
+
+        @media (max-width: 620px) {
+          .fromone-settings-page .settings-panel-head {
+            grid-template-columns: auto minmax(0, 1fr) !important;
+          }
+
+          .fromone-settings-page .settings-panel-toggle {
+            grid-column: 1 / -1 !important;
+            width: 100% !important;
+          }
+
+          .fromone-settings-page .settings-profile-summary {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+
+        /* Easy-flow settings: one task at a time */
+        .fromone-settings-page .settings-extra-choice-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 12px !important;
+          margin-top: 8px !important;
+        }
+
+        .fromone-settings-page .settings-extra-choice {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) auto !important;
+          align-items: center !important;
+          gap: 16px !important;
+          padding: 16px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 18px !important;
+          background: #f8fafc !important;
+        }
+
+        .fromone-settings-page .settings-extra-choice.is-open {
+          border-color: #ffd2e5 !important;
+          background: #fff8fc !important;
+        }
+
+        .fromone-settings-page .settings-extra-choice h3 {
+          margin: 5px 0 4px !important;
+          color: #071b49 !important;
+          font-size: 1.08rem !important;
+          line-height: 1.15 !important;
+          font-weight: 800 !important;
+          letter-spacing: -0.035em !important;
+        }
+
+        .fromone-settings-page .settings-extra-choice p {
+          margin: 0 !important;
+          color: #52617a !important;
+          font-size: 0.86rem !important;
+          line-height: 1.4 !important;
+          font-weight: 600 !important;
+        }
+
+        .fromone-settings-page .settings-extra-choice .settings-panel-toggle {
+          min-width: 150px !important;
+          white-space: nowrap !important;
+        }
+
+        .fromone-settings-page .settings-smilez-booking-editor,
+        .fromone-settings-page .settings-business-image-field,
+        .fromone-settings-page .settings-geo-card {
+          margin-top: 14px !important;
+        }
+
+        @media (max-width: 900px) {
+          .fromone-settings-page .settings-extra-choice-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (max-width: 620px) {
+          .fromone-settings-page .settings-extra-choice {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-settings-page .settings-extra-choice .settings-panel-toggle {
+            width: 100% !important;
+            min-width: 0 !important;
+          }
+        }
+
+
+        /* Task-first, granny-proof settings flow */
+        .fromone-settings-page .settings-task-chooser {
+          display: grid !important;
+          gap: 14px !important;
+          margin-bottom: 16px !important;
+          padding: 20px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 20px !important;
+          background: #ffffff !important;
+        }
+
+        .fromone-settings-page .settings-task-chooser-heading {
+          display: grid !important;
+          gap: 5px !important;
+        }
+
+        .fromone-settings-page .settings-task-chooser-heading > span {
+          color: #f72585 !important;
+          font-size: 0.7rem !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.12em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-settings-page .settings-task-chooser-heading h2 {
+          margin: 0 !important;
+          color: #071b49 !important;
+          font-size: 1.45rem !important;
+          line-height: 1.1 !important;
+          font-weight: 800 !important;
+          letter-spacing: -0.04em !important;
+        }
+
+        .fromone-settings-page .settings-task-chooser-heading p {
+          margin: 0 !important;
+          color: #52617a !important;
+          font-size: 0.9rem !important;
+          line-height: 1.45 !important;
+          font-weight: 600 !important;
+        }
+
+        .fromone-settings-page .settings-task-grid {
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 10px !important;
+        }
+
+        .fromone-settings-page .settings-task-card {
+          display: grid !important;
+          grid-template-columns: 32px minmax(0, 1fr) !important;
+          align-items: center !important;
+          gap: 3px 10px !important;
+          min-height: 88px !important;
+          padding: 14px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 16px !important;
+          background: #f8fafc !important;
+          color: #071b49 !important;
+          text-align: left !important;
+          cursor: pointer !important;
+        }
+
+        .fromone-settings-page .settings-task-card:hover,
+        .fromone-settings-page .settings-task-card.is-active {
+          border-color: #ffd2e5 !important;
+          background: #fff8fc !important;
+        }
+
+        .fromone-settings-page .settings-task-card > span {
+          grid-row: 1 / span 2 !important;
+          display: grid !important;
+          place-items: center !important;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: 999px !important;
+          background: #f72585 !important;
+          color: #ffffff !important;
+          font-size: 0.68rem !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-settings-page .settings-task-card strong {
+          font-size: 0.95rem !important;
+          line-height: 1.15 !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-settings-page .settings-task-card small {
+          color: #64748b !important;
+          font-size: 0.76rem !important;
+          line-height: 1.3 !important;
+          font-weight: 700 !important;
+        }
+
+        .fromone-settings-page .settings-editor-panel.is-collapsed {
+          display: none !important;
+        }
+
+        .fromone-settings-page .settings-editor-panel[data-settings-mode="bookings"] .settings-website-scan-card {
+          display: none !important;
+        }
+
+        .fromone-settings-page .settings-editor-panel[data-settings-mode="bookings"] .settings-form-grid > label:nth-of-type(-n+10) {
+          display: none !important;
+        }
+
+        .fromone-settings-page .settings-editor-panel[data-settings-mode="business"] .settings-geo-card {
+          display: none !important;
+        }
+
+        .fromone-settings-page .settings-editor-panel .settings-panel-toggle {
+          min-width: 92px !important;
+        }
+
+        @media (max-width: 900px) {
+          .fromone-settings-page .settings-task-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+
+        /* Corrected Settings flow */
+        .fromone-settings-page .settings-smiles-status-panel {
+          margin-top: 0 !important;
+          margin-bottom: 16px !important;
+        }
+
+        .fromone-settings-page .settings-weekly-sets-panel {
+          margin-top: 16px !important;
+        }
+
+
+        /* Saved sets already have their own View posts buttons */
+        .fromone-settings-page .settings-weekly-posts-link {
+          display: none !important;
+        }
+
+
+        .settings-client-status {
+          display: grid;
+          grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.6fr);
+          gap: 20px;
+          margin: 22px 0;
+          padding: 22px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          border-radius: 22px;
+          background: #ffffff;
+        }
+
+        .settings-client-status-copy h2 {
+          margin: 6px 0 8px;
+          color: #0f172a;
+          font-size: clamp(1.35rem, 3vw, 2rem);
+          line-height: 1.08;
+        }
+
+        .settings-client-status-copy p {
+          margin: 0;
+          color: #64748b;
+          font-weight: 700;
+          line-height: 1.55;
+        }
+
+        .settings-client-status-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .settings-client-status-grid > div {
+          display: grid;
+          gap: 4px;
+          min-height: 72px;
+          padding: 14px;
+          border: 1px solid #e7edf5;
+          border-radius: 16px;
+          background: #f8fafc;
+        }
+
+        .settings-client-status-grid span {
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 850;
+        }
+
+        .settings-client-status-grid strong {
+          color: #0f172a;
+          font-size: 15px;
+          font-weight: 950;
+        }
+
+        .settings-client-task-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        @media (max-width: 760px) {
+          .settings-client-status {
+            grid-template-columns: 1fr;
+            padding: 18px;
+          }
+
+          .settings-client-status-grid,
+          .settings-client-task-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .settings-client-status-grid > div {
+            min-height: 62px;
+          }
+        }
+
+        .fromone-settings-page .settings-force-hidden {
+          display: none !important;
+        }
+
+        .settings-profile-section-heading {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 18px 0 14px;
+          padding: 14px 16px;
+          border: 1px solid #e4eaf3;
+          border-radius: 16px;
+          background: #ffffff;
+        }
+
+        .settings-profile-section-heading > span {
+          display: grid;
+          place-items: center;
+          width: 34px;
+          height: 34px;
+          flex: 0 0 34px;
+          border-radius: 999px;
+          background: #f72585;
+          color: #ffffff;
+          font-weight: 950;
+        }
+
+        .settings-profile-section-heading h3 {
+          margin: 0;
+          color: #0f2454;
+          font-size: 1.05rem;
+        }
+
+        .settings-profile-section-heading p {
+          margin: 3px 0 0;
+          color: #64748b;
+          font-size: 0.82rem;
+          font-weight: 700;
+        }
+
+        /* Collapsible Saved post sets */
+        .fromone-settings-page .settings-weekly-panel-head {
+          grid-template-columns: auto minmax(0, 1fr) auto !important;
+          align-items: center !important;
+        }
+
+        .fromone-settings-page .settings-weekly-toggle {
+          min-width: 150px !important;
+          white-space: nowrap !important;
+        }
+
+        .fromone-settings-page .settings-weekly-collapsible {
+          display: grid !important;
+          gap: 16px !important;
+        }
+
+        .fromone-settings-page .settings-weekly-collapsed-summary {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) auto !important;
+          align-items: center !important;
+          gap: 4px 16px !important;
+          padding: 16px 18px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 16px !important;
+          background: #f8fafc !important;
+        }
+
+        .fromone-settings-page .settings-weekly-collapsed-summary span {
+          color: #f72585 !important;
+          font-size: 0.7rem !important;
+          line-height: 1 !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.1em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-settings-page .settings-weekly-collapsed-summary strong {
+          grid-column: 2 !important;
+          grid-row: 1 / span 2 !important;
+          color: #071b49 !important;
+          font-size: 1rem !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-settings-page .settings-weekly-collapsed-summary p {
+          margin: 0 !important;
+          color: #64748b !important;
+          font-size: 0.86rem !important;
+          line-height: 1.4 !important;
+          font-weight: 600 !important;
+        }
+
+        @media (max-width: 700px) {
+          .fromone-settings-page .settings-weekly-panel-head {
+            grid-template-columns: auto minmax(0, 1fr) !important;
+          }
+
+          .fromone-settings-page .settings-weekly-toggle {
+            grid-column: 1 / -1 !important;
+            width: 100% !important;
+            min-width: 0 !important;
+          }
+
+          .fromone-settings-page .settings-weekly-collapsed-summary {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-settings-page .settings-weekly-collapsed-summary strong {
+            grid-column: auto !important;
+            grid-row: auto !important;
+          }
+        }
+
+
+        /* EXACT SHARED PAGE SHELL — POSTS / BOOKINGS / REPORTS */
+        body:has(.fromone-settings-page) {
+          background: var(--posts-bg) !important;
+        }
+
+        body:has(.fromone-settings-page) .main-content {
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
+          background: var(--posts-bg) !important;
+          overflow-x: hidden !important;
+        }
+
+        .fromone-settings-page.settings-create-style-page {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: transparent !important;
+          overflow: visible !important;
+        }
+
+        .fromone-settings-page #fromone-standard-shell.settings-create-style-card {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          background-image: none !important;
+          box-shadow: none !important;
+          backdrop-filter: none !important;
+          overflow: visible !important;
+        }
+
+        .fromone-settings-page .settings-create-hero {
+          width: 100% !important;
+          max-width: 790px !important;
+          margin: 0 0 28px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          background-image: none !important;
+          box-shadow: none !important;
+          text-align: left !important;
+        }
+
+        .fromone-settings-page .settings-create-hero h1 {
+          max-width: 760px !important;
+          margin: 0 0 12px !important;
+          color: var(--posts-navy) !important;
+          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.06em !important;
+          text-align: left !important;
+        }
+
+        .fromone-settings-page .settings-create-hero p {
+          max-width: 720px !important;
+          margin: 0 !important;
+          color: var(--posts-muted) !important;
+          font-size: 1.03rem !important;
+          line-height: 1.56 !important;
+          text-align: left !important;
+        }
+
+        .fromone-settings-page .settings-create-eyebrow {
+          display: block !important;
+          margin: 0 0 10px !important;
+          color: var(--posts-pink) !important;
+          font-size: 0.74rem !important;
+          line-height: 1 !important;
+          font-weight: 900 !important;
+          letter-spacing: 0.14em !important;
+          text-transform: uppercase !important;
+          text-align: left !important;
+        }
+
+        .fromone-settings-page .settings-client-status,
+        .fromone-settings-page .settings-task-chooser,
+        .fromone-settings-page .settings-smiles-status-card {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 0 22px !important;
+          padding: 22px !important;
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 26px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+          box-shadow: var(--posts-shadow) !important;
+          backdrop-filter: blur(10px) !important;
+        }
+
+        @media (max-width: 700px) {
+          body:has(.fromone-settings-page) .main-content {
+            padding: 24px 16px 100px !important;
+          }
+
+          .fromone-settings-page .settings-create-hero h1 {
+            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          }
+
+          .fromone-settings-page .settings-create-hero p {
+            font-size: 0.95rem !important;
+          }
+
+          .fromone-settings-page .settings-client-status,
+          .fromone-settings-page .settings-task-chooser,
+          .fromone-settings-page .settings-smiles-status-card {
+            padding: 17px !important;
+            border-radius: 21px !important;
+          }
+        }
+
       `}</style>
     </main>
   );
@@ -2865,7 +6425,8 @@ export default function SettingsPage() {
                             <input
                               className="input settings-mobile-editable-input"
                               value={postcode}
-                              onChange={(event) => setPostcode(event.target.value.toUpperCase())}
+                              onChange={(event) => handlePostcodeChange(event.target.value)}
+                onBlur={handlePostcodeBlur}
                               autoComplete="postal-code"
                               inputMode="text"
                               placeholder="Example: SK1 1AA"
@@ -2931,6 +6492,21 @@ export default function SettingsPage() {
                               onChange={(event) => setMainOffer(event.target.value)}
                               placeholder="Example: Request a quote, book a consultation, visit the showroom"
                               rows={3}
+                            />
+                          </label>
+
+                          <label className="settings-wide-field">
+                            <strong>Public business description</strong>
+                            <span>
+                              Customer-facing copy for the Smilez venue page.
+                            </span>
+                            <textarea
+                              className="input"
+                              value={brandSummary}
+                              onChange={(event) => setBrandSummary(event.target.value)}
+                              placeholder="Explain what the business offers and why local customers should choose it."
+                              rows={4}
+                              maxLength={800}
                             />
                           </label>
                         </div>
@@ -3055,10 +6631,9 @@ export default function SettingsPage() {
                           fontWeight: 750,
                         }}
                       >
-                        When you save, FromOne automatically sends your company
-                        name, address, telephone and website to Smiles for
-                        approval. Smiles admin checks it, then makes it live on
-                        the public Venues page.
+                        When you save, FromOne updates an existing linked
+                        Smilez profile immediately. Only a brand-new listing is
+                        sent to Smilez admin before it appears publicly.
                       </span>
                     </div>
 
@@ -3354,6 +6929,68 @@ export default function SettingsPage() {
                         <span>
                           {formatSavedWeeklySetDate(set.created_at)} · {postCount} post{postCount === 1 ? '' : 's'}
                         </span>
+
+                        <div
+                          aria-label="Saved post thumbnails"
+                          style={{
+                            display: 'flex',
+                            gap: 6,
+                            flexWrap: 'wrap',
+                            marginTop: 10,
+                          }}
+                        >
+                          {getSavedWeeklySetPreviewPosts(set).map((post) => {
+                            const previewUrl = String(
+                              post.media_url || post.image_url || '',
+                            );
+                            const isVideo =
+                              String(post.media_type || '')
+                                .toLowerCase()
+                                .includes('video') ||
+                              /\.(mp4|mov|webm|m4v)(\?|$)/i.test(previewUrl);
+
+                            return (
+                              <div
+                                key={post.id}
+                                style={{
+                                  width: 46,
+                                  height: 46,
+                                  overflow: 'hidden',
+                                  borderRadius: 10,
+                                  border: '1px solid rgba(7, 27, 73, 0.12)',
+                                  background: 'rgba(7, 27, 73, 0.05)',
+                                }}
+                              >
+                                {isVideo ? (
+                                  <video
+                                    src={previewUrl}
+                                    muted
+                                    playsInline
+                                    preload="metadata"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover',
+                                      display: 'block',
+                                    }}
+                                  />
+                                ) : (
+                                  <img
+                                    src={previewUrl}
+                                    alt=""
+                                    loading="lazy"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover',
+                                      display: 'block',
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       <button
@@ -7949,6 +11586,52 @@ export default function SettingsPage() {
           .fromone-settings-page .settings-business-image-actions .settings-image-utility-button {
             width: 100% !important;
             max-width: none !important;
+          }
+        }
+
+
+        /*
+         * OUTER MOBILE LAYOUT IS OWNED BY AppShell.
+         * Settings keeps its internal card styling only.
+         */
+        @media (max-width: 900px) {
+          body:has(.fromone-settings-page) .main-content {
+            padding-top: 0 !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+          }
+
+          .fromone-settings-page.settings-create-style-page {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            padding: 0 0 112px !important;
+            box-sizing: border-box !important;
+          }
+
+          .fromone-settings-page #fromone-standard-shell.settings-create-style-card {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+          }
+        }
+
+
+        /*
+         * SETTINGS TOP-GAP ALIGNMENT
+         * Settings was receiving the universal mobile top gap twice.
+         */
+        @media (max-width: 900px) {
+          .fromone-route-settings .fromone-universal-mobile-page-frame {
+            padding-top: 0 !important;
+          }
+
+          body:has(.fromone-settings-page) .main-content,
+          body:has(.fromone-settings-page) .main-content.fromone-mobile-bottom-safe {
+            padding-top: 14px !important;
           }
         }
 
