@@ -1,21 +1,12 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/app/components/ToastProvider';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: 'fromone-auth-session',
-  },
-});
+import '../posts/posts-companion-shared.css';
+import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
 
 type Plan = 'demo' | 'starter';
+type PaymentProvider = 'revolut' | 'paypal' | 'manual' | null;
 
 export default function SubscriptionPage() {
   const { showToast } = useToast();
@@ -64,16 +55,25 @@ export default function SubscriptionPage() {
   const [trialStartedAt, setTrialStartedAt] = useState<string | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [paypalSubscriptionId, setPaypalSubscriptionId] = useState<string | null>(null);
+  const [subscriptionProvider, setSubscriptionProvider] = useState<PaymentProvider>(null);
+  const [subscriptionReference, setSubscriptionReference] = useState<string | null>(null);
   const [cancelledAt, setCancelledAt] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number>(7);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [confirmingPayPal, setConfirmingPayPal] = useState(false);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const revolutStatus = params.get('revolut');
     const paypalStatus = params.get('paypal');
+
+    if (revolutStatus === 'approved') {
+      confirmApprovedRevolutCheckout();
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
 
     if (paypalStatus === 'approved') {
       confirmApprovedPayPalCheckout();
@@ -82,6 +82,16 @@ export default function SubscriptionPage() {
     }
 
     loadSubscription();
+
+    if (revolutStatus === 'cancelled') {
+      notify(
+        'No payment was taken. You can try again whenever you are ready.',
+        'warning',
+        'Revolut checkout cancelled',
+      );
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
 
     if (paypalStatus === 'cancelled') {
       notify(
@@ -127,19 +137,46 @@ export default function SubscriptionPage() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('user_billing')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+    const [
+      { data: billingData, error: billingError },
+      { data: accessData, error: accessError },
+    ] = await Promise.all([
+      supabase
+        .from('user_billing')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('user_access')
+        .select('subscription_provider, subscription_reference')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
 
-    if (error) {
-      console.error('Error loading plan and billing:', error.message);
+    if (billingError) {
+      console.error('Error loading plan and billing:', billingError.message);
       setLoading(false);
       return;
     }
 
-    if (!data) {
+    if (accessError) {
+      console.error('Error loading subscription provider:', accessError.message);
+    }
+
+    const providerValue = String(accessData?.subscription_provider || '').toLowerCase();
+    const provider: PaymentProvider =
+      providerValue === 'revolut'
+        ? 'revolut'
+        : providerValue === 'paypal'
+          ? 'paypal'
+          : providerValue
+            ? 'manual'
+            : null;
+
+    setSubscriptionProvider(provider);
+    setSubscriptionReference(accessData?.subscription_reference || null);
+
+    if (!billingData) {
       const trialDates = createTrialDates();
 
       const { data: newBilling, error: insertError } = await supabase
@@ -178,10 +215,10 @@ export default function SubscriptionPage() {
       return;
     }
 
-    const rawPlan = data.plan || 'demo';
+    const rawPlan = billingData.plan || 'demo';
     const plan: Plan = rawPlan === 'starter' || rawPlan === 'pro' ? 'starter' : 'demo';
-    const billingStatus = data.status || 'trialing';
-    const remaining = calculateDaysRemaining(data.trial_ends_at || null);
+    const billingStatus = billingData.status || 'trialing';
+    const remaining = calculateDaysRemaining(billingData.trial_ends_at || null);
 
     if (plan === 'demo' && billingStatus === 'trialing' && remaining === 0) {
       await supabase
@@ -195,10 +232,10 @@ export default function SubscriptionPage() {
       setCurrentPlan('demo');
       setSelectedPlan('starter');
       setStatus('expired');
-      setTrialStartedAt(data.trial_started_at || null);
-      setTrialEndsAt(data.trial_ends_at || null);
-      setPaypalSubscriptionId(data.paypal_subscription_id || null);
-      setCancelledAt(data.cancelled_at || null);
+      setTrialStartedAt(billingData.trial_started_at || null);
+      setTrialEndsAt(billingData.trial_ends_at || null);
+      setPaypalSubscriptionId(billingData.paypal_subscription_id || null);
+      setCancelledAt(billingData.cancelled_at || null);
       setDaysRemaining(0);
       setLoading(false);
       return;
@@ -207,17 +244,16 @@ export default function SubscriptionPage() {
     setCurrentPlan(plan);
     setSelectedPlan(plan === 'demo' && billingStatus === 'expired' ? 'starter' : plan);
     setStatus(billingStatus);
-    setTrialStartedAt(data.trial_started_at || null);
-    setTrialEndsAt(data.trial_ends_at || null);
-    setPaypalSubscriptionId(data.paypal_subscription_id || null);
-    setCancelledAt(data.cancelled_at || null);
+    setTrialStartedAt(billingData.trial_started_at || null);
+    setTrialEndsAt(billingData.trial_ends_at || null);
+    setPaypalSubscriptionId(billingData.paypal_subscription_id || null);
+    setCancelledAt(billingData.cancelled_at || null);
     setDaysRemaining(remaining);
-
     setLoading(false);
   };
 
-  const confirmApprovedPayPalCheckout = async () => {
-    setConfirmingPayPal(true);
+  const confirmApprovedRevolutCheckout = async () => {
+    setConfirmingPayment(true);
 
     try {
       const {
@@ -225,7 +261,70 @@ export default function SubscriptionPage() {
       } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        notify('Please sign in again, then return to Subscription and continue with PayPal.', 'warning', 'Sign in needed');
+        notify(
+          'Please sign in again, then return to Subscription.',
+          'warning',
+          'Sign in needed',
+        );
+        await loadSubscription();
+        return;
+      }
+
+      const response = await fetch('/api/revolut/confirm-subscription', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          result?.error ||
+            result?.message ||
+            'Revolut completed the checkout, but FromOne could not confirm the subscription yet.',
+        );
+      }
+
+      if (result?.status === 'active') {
+        notify('Starter access is active.', 'success', 'Revolut subscription confirmed');
+      } else {
+        notify(
+          'Revolut received the checkout. Confirmation is still pending, so please refresh in a moment.',
+          'info',
+          'Revolut confirmation pending',
+        );
+      }
+
+      await loadSubscription();
+    } catch (error: any) {
+      notify(
+        error?.message || 'Revolut checkout returned, but confirmation failed.',
+        'error',
+        'Revolut confirmation failed',
+      );
+      await loadSubscription();
+    } finally {
+      setConfirmingPayment(false);
+    }
+  };
+
+  const confirmApprovedPayPalCheckout = async () => {
+    setConfirmingPayment(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        notify(
+          'Please sign in again, then return to Subscription.',
+          'warning',
+          'Sign in needed',
+        );
         await loadSubscription();
         return;
       }
@@ -244,7 +343,7 @@ export default function SubscriptionPage() {
         throw new Error(
           result?.error ||
             result?.message ||
-            'PayPal approved the checkout, but FromOne could not confirm the subscription yet.'
+            'PayPal approved the checkout, but FromOne could not confirm the subscription yet.',
         );
       }
 
@@ -267,11 +366,11 @@ export default function SubscriptionPage() {
       );
       await loadSubscription();
     } finally {
-      setConfirmingPayPal(false);
+      setConfirmingPayment(false);
     }
   };
 
-  const startPayPalCheckout = async () => {
+  const startRevolutCheckout = async () => {
     setSaving(true);
 
     try {
@@ -280,11 +379,15 @@ export default function SubscriptionPage() {
       } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        notify('Please sign in again, then return to Subscription and continue with PayPal.', 'warning', 'Sign in needed');
+        notify(
+          'Please sign in again, then return to Subscription and continue with Revolut.',
+          'warning',
+          'Sign in needed',
+        );
         return;
       }
 
-      const response = await fetch('/api/paypal/create-subscription', {
+      const response = await fetch('/api/revolut/create-subscription', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -294,40 +397,52 @@ export default function SubscriptionPage() {
 
       const result = await response.json().catch(() => null);
 
-      if (!response.ok || !result?.approve_url) {
+      if (!response.ok || !result?.checkout_url) {
         throw new Error(
           result?.error ||
             result?.message ||
-            'Could not start PayPal checkout. Please try again.'
+            'Could not start Revolut checkout. Please try again.',
         );
       }
 
       setCurrentPlan('starter');
       setSelectedPlan('starter');
       setStatus('pending_payment');
-      setPaypalSubscriptionId(result.subscription_id || null);
+      setSubscriptionProvider('revolut');
+      setSubscriptionReference(result.subscription_id || null);
 
-      window.location.href = result.approve_url;
+      window.location.href = result.checkout_url;
     } catch (error: any) {
-      notify(error?.message || 'Error starting PayPal checkout.', 'error', 'PayPal checkout failed');
+      notify(
+        error?.message || 'Error starting Revolut checkout.',
+        'error',
+        'Revolut checkout failed',
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const savePlan = async () => {
-    if (selectedPlan === 'starter' && hasPaidAccess) {
+  const savePlan = async (planOverride?: Plan) => {
+    const planToSave = planOverride ?? selectedPlan;
+
+    if (planToSave === 'starter' && hasPaidAccess) {
       notify('Starter is already active on this account.', 'info', 'Starter active');
       return;
     }
 
-    if (selectedPlan === 'starter' && isPendingPayment) {
-      notify('PayPal checkout is already pending. Cancel it first if you need to start again.', 'warning', 'Payment pending');
+    if (planToSave === 'starter' && isPendingPayment) {
+      notify(
+        'A checkout is already pending. Cancel it first if you need to start again.',
+        'warning',
+        'Payment pending',
+      );
       return;
     }
 
-    if (selectedPlan === 'starter') {
-      await startPayPalCheckout();
+    if (planToSave === 'starter') {
+      setSelectedPlan('starter');
+      await startRevolutCheckout();
       return;
     }
 
@@ -377,7 +492,6 @@ export default function SubscriptionPage() {
       setTrialEndsAt(trialDates.trial_ends_at);
 
       notify('Demo access saved.', 'success', 'Demo saved');
-
       await loadSubscription();
     } catch (error: any) {
       notify(error?.message || 'Error saving demo access.', 'error', 'Save failed');
@@ -388,23 +502,107 @@ export default function SubscriptionPage() {
 
   const cancelPendingPayment = async () => {
     if (!isPendingPayment) {
-      notify('There is no pending PayPal checkout to cancel.', 'warning', 'No pending payment');
+      notify('There is no pending checkout to cancel.', 'warning', 'No pending payment');
       return;
     }
 
     setConfirmDialog({
       type: 'cancelPendingPayment',
-      title: 'Cancel pending PayPal checkout?',
+      title: 'Cancel pending checkout?',
       message:
-        'This will return your account to the demo plan. No PayPal payment will be taken from this pending checkout.',
+        'This will stop the pending subscription and return your account to the demo plan. No future monthly payment will be taken from this pending checkout.',
       confirmLabel: 'Cancel pending payment',
       danger: true,
     });
   };
 
+  const resetPendingPaymentLocally = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+
+    if (!userId) {
+      throw new Error('Please sign in again, then return to Subscription.');
+    }
+
+    const nextStatus = daysRemaining > 0 ? 'trialing' : 'expired';
+
+    const { error: billingError } = await supabase
+      .from('user_billing')
+      .update({
+        plan: 'demo',
+        status: nextStatus,
+        paypal_subscription_id: null,
+        cancelled_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId);
+
+    if (billingError) {
+      throw billingError;
+    }
+
+    const { error: accessError } = await supabase
+      .from('user_access')
+      .update({
+        access_status: nextStatus === 'trialing' ? 'trial' : 'expired',
+        subscription_status: 'none',
+        subscription_provider: null,
+        subscription_reference: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId);
+
+    if (accessError) {
+      throw accessError;
+    }
+
+    setCurrentPlan('demo');
+    setStatus(nextStatus);
+    setPaypalSubscriptionId(null);
+    setSubscriptionProvider(null);
+    setSubscriptionReference(null);
+  };
+
+  const callCancellationRoute = async ({
+    route,
+    body,
+  }: {
+    route: string;
+    body?: Record<string, unknown>;
+  }) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error('Please sign in again, then return to Subscription.');
+    }
+
+    const response = await fetch(route, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    const result = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error ||
+          result?.message ||
+          'Subscription cancellation failed. Please try again or contact support.',
+      );
+    }
+
+    return result;
+  };
+
   const confirmCancelPendingPayment = async () => {
     if (!isPendingPayment) {
-      notify('There is no pending PayPal checkout to cancel.', 'warning', 'No pending payment');
+      notify('There is no pending checkout to cancel.', 'warning', 'No pending payment');
       closeConfirmDialog();
       return;
     }
@@ -412,46 +610,16 @@ export default function SubscriptionPage() {
     setCancelling(true);
 
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData.user?.id;
-
-      if (!userId) {
-        notify('Please sign in again, then return to Subscription and continue with PayPal.', 'warning', 'Sign in needed');
-        return;
+      if (effectiveProvider === 'revolut' && subscriptionReference) {
+        await callCancellationRoute({
+          route: '/api/revolut/cancel-subscription',
+        });
+      } else {
+        await resetPendingPaymentLocally();
       }
 
-      const nextStatus = daysRemaining > 0 ? 'trialing' : 'expired';
-
-      const { error: billingError } = await supabase
-        .from('user_billing')
-        .update({
-          plan: 'demo',
-          status: nextStatus,
-          paypal_subscription_id: null,
-          cancelled_at: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
-
-      if (billingError) {
-        throw billingError;
-      }
-
-      await supabase
-        .from('user_access')
-        .update({
-          access_status: nextStatus === 'trialing' ? 'trial' : 'expired',
-          subscription_status: 'none',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
-
-      setCurrentPlan('demo');
-      setStatus(nextStatus);
-      setPaypalSubscriptionId(null);
       closeConfirmDialog();
-
-      notify('Pending PayPal checkout cancelled.', 'success', 'Pending payment cancelled');
+      notify('Pending checkout cancelled.', 'success', 'Pending payment cancelled');
       await loadSubscription();
     } catch (error: any) {
       notify(error?.message || 'Error cancelling pending payment.', 'error', 'Cancel failed');
@@ -462,7 +630,7 @@ export default function SubscriptionPage() {
 
   const cancelSubscription = async () => {
     if (!canCancel) {
-      notify('There is no active PayPal subscription to cancel yet.', 'warning', 'No active subscription');
+      notify('There is no active subscription to cancel.', 'warning', 'No active subscription');
       return;
     }
 
@@ -470,7 +638,7 @@ export default function SubscriptionPage() {
       type: 'cancelSubscription',
       title: 'Cancel Starter subscription?',
       message:
-        'This will stop future renewals. You may keep access until the end of the current billing period depending on how your Starter billing is configured.',
+        'This will stop future renewals. Your access status will be updated after the payment provider confirms the cancellation.',
       confirmLabel: 'Cancel subscription',
       danger: true,
     });
@@ -478,73 +646,51 @@ export default function SubscriptionPage() {
 
   const confirmCancelSubscription = async () => {
     if (!canCancel) {
-      notify('There is no active PayPal subscription to cancel yet.', 'warning', 'No active subscription');
+      notify('There is no active subscription to cancel.', 'warning', 'No active subscription');
       closeConfirmDialog();
       return;
     }
 
     setCancelling(true);
     closeConfirmDialog();
-    notify('Cancelling your PayPal subscription now...', 'info', 'Cancelling subscription');
 
-    const timeoutController = new AbortController();
-    const timeoutId = window.setTimeout(() => timeoutController.abort(), 25000);
+    const providerName = effectiveProvider === 'paypal' ? 'PayPal' : 'Revolut';
+    notify(`Cancelling your ${providerName} subscription now...`, 'info', 'Cancelling subscription');
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      if (effectiveProvider === 'paypal') {
+        if (!paypalSubscriptionId) {
+          throw new Error('No PayPal subscription reference was found on this account.');
+        }
 
-      if (!session?.access_token) {
-        notify('Please sign in again, then return to Subscription and cancel the subscription.', 'warning', 'Sign in needed');
-        return;
+        await callCancellationRoute({
+          route: '/api/paypal/cancel-subscription',
+          body: {
+            paypalSubscriptionId,
+            paypal_subscription_id: paypalSubscriptionId,
+          },
+        });
+      } else if (effectiveProvider === 'revolut') {
+        await callCancellationRoute({
+          route: '/api/revolut/cancel-subscription',
+        });
+      } else {
+        throw new Error('No supported payment provider was found for this subscription.');
       }
-
-      if (!paypalSubscriptionId) {
-        notify('No PayPal subscription reference was found on this account.', 'warning', 'No PayPal reference');
-        return;
-      }
-
-      const response = await fetch('/api/paypal/cancel-subscription', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paypalSubscriptionId,
-          paypal_subscription_id: paypalSubscriptionId,
-        }),
-        signal: timeoutController.signal,
-      });
-
-      const result = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(
-          result?.error ||
-            result?.message ||
-            'PayPal cancellation failed. Please try again or contact support.'
-        );
-      }
-
-      const cancelledDate = new Date().toISOString();
 
       setCurrentPlan('starter');
       setStatus('cancelled');
-      setCancelledAt(cancelledDate);
+      setCancelledAt(new Date().toISOString());
 
       notify('Future renewals have been stopped.', 'success', 'Subscription cancelled');
       await loadSubscription();
     } catch (error: any) {
-      const message =
-        error?.name === 'AbortError'
-          ? 'PayPal cancellation is taking too long. Please refresh and try again, or check PayPal directly.'
-          : error?.message || 'Error cancelling subscription.';
-
-      notify(message, 'error', 'Cancellation failed');
+      notify(
+        error?.message || 'Error cancelling subscription.',
+        'error',
+        'Cancellation failed',
+      );
     } finally {
-      window.clearTimeout(timeoutId);
       setCancelling(false);
     }
   };
@@ -567,43 +713,75 @@ export default function SubscriptionPage() {
   const isPendingPayment = status === 'pending_payment';
 
   const hasRealPayPalSubscription = paypalSubscriptionId?.startsWith('I-') === true;
+  const hasRevolutSubscription =
+    subscriptionProvider === 'revolut' && Boolean(subscriptionReference);
+
+  const effectiveProvider: PaymentProvider = hasRealPayPalSubscription
+    ? 'paypal'
+    : hasRevolutSubscription
+      ? 'revolut'
+      : subscriptionProvider;
 
   const canCancel =
     currentPlan === 'starter' &&
     status === 'active' &&
-    hasRealPayPalSubscription;
+    ((effectiveProvider === 'paypal' && hasRealPayPalSubscription) ||
+      (effectiveProvider === 'revolut' && Boolean(subscriptionReference)));
+
+  const providerName =
+    effectiveProvider === 'paypal'
+      ? 'PayPal'
+      : effectiveProvider === 'revolut'
+        ? 'Revolut'
+        : hasPaidAccess
+          ? 'Manual access'
+          : 'Not connected';
 
   const nextPaymentLabel = hasPaidAccess
-    ? hasRealPayPalSubscription
+    ? effectiveProvider === 'paypal'
       ? 'Managed in PayPal'
-      : 'Managed manually'
+      : effectiveProvider === 'revolut'
+        ? 'Managed by Revolut'
+        : 'Managed manually'
     : isPendingPayment
-      ? 'Available after PayPal confirms your subscription'
+      ? effectiveProvider === 'paypal'
+        ? 'Available after PayPal confirms your subscription'
+        : 'Available after Revolut confirms your subscription'
       : 'No active Starter payment';
 
-  const paypalStatusLabel = isPendingPayment
+  const paymentStatusLabel = isPendingPayment
     ? 'Pending checkout'
     : hasPaidAccess
-      ? hasRealPayPalSubscription
+      ? effectiveProvider === 'paypal' || effectiveProvider === 'revolut'
         ? 'Active recurring subscription'
         : 'Manual access'
       : isCancelled
         ? 'Cancelled'
-        : 'No active PayPal subscription';
+        : 'No active subscription';
+
+  const paymentReference = effectiveProvider === 'paypal'
+    ? paypalSubscriptionId
+    : subscriptionReference;
+
+  const paymentReferenceLabel = paymentReference
+    ? effectiveProvider === 'manual'
+      ? 'Manual access'
+      : `${paymentReference.slice(0, 12)}...`
+    : 'Not connected yet';
 
   const demoFeatures = [
     '7-day access to try the workflow',
     'Upload photos, videos and flyers',
     'Create social posts from uploaded media',
-    'Preview Smiles offer and event setup',
+    'Preview Smilez offer and event setup',
     'Review and edit before anything is sent',
   ];
 
   const monthlyFeatures = [
     'Create posts from photos, videos and flyers',
     'Send approved posts to Facebook and Instagram',
-    'Create live Smiles offers and events from uploads',
-    'Business listing and Smiles approvals',
+    'Create live Smilez offers and events from uploads',
+    'Business listing and Smilez approvals',
     'Review everything before publishing or sending',
   ];
 
@@ -614,7 +792,7 @@ export default function SubscriptionPage() {
       price: 'Free',
       priceNote: 'for 7 days',
       valueNote: 'Try FromOne with your own uploads.',
-      description: 'Best for testing uploads, review screens, social posts and Smiles offer/event setup before subscribing.',
+      description: 'Best for testing uploads, review screens, social posts and Smilez offer/event setup before subscribing.',
       buttonText: 'Use demo',
       disabled: isDemoExpired,
       features: demoFeatures,
@@ -622,11 +800,11 @@ export default function SubscriptionPage() {
     {
       id: 'starter' as Plan,
       name: 'Starter',
-      price: '£19.99',
+      price: '£49.99',
       priceNote: '/ month',
-      valueNote: 'Full posting, Smiles and publishing access.',
-      description: 'For businesses that want FromOne to turn uploads into social posts, live Smiles listings, and Facebook or Instagram posts.',
-      buttonText: isCancelled ? 'Restart Starter' : 'Continue with PayPal',
+      valueNote: 'Full posting, Smilez and publishing access.',
+      description: 'For businesses that want FromOne to turn uploads into social posts, live Smilez listings, and Facebook or Instagram posts.',
+      buttonText: isCancelled ? 'Restart Starter' : 'Continue with Revolut',
       disabled: false,
       features: monthlyFeatures,
     },
@@ -647,19 +825,19 @@ export default function SubscriptionPage() {
 
   return (
     <>
-      <main id="fromone-standard-shell" className="fromone-subscription-page subscription-simple-page">
-        <header className="subscription-simple-header">
-          <div className="page-eyebrow">Subscription</div>
+      <main id="fromone-standard-shell" className="fromone-posts-page fromone-subscription-page subscription-simple-page">
+        <header className="posts-create-hero subscription-simple-header">
+          <span className="posts-create-eyebrow page-eyebrow">Subscription</span>
           <h1>{isDemoExpired ? 'Demo ended.' : 'Plans for posting.'}</h1>
           <p>
-            Choose the plan for uploads, social posts, Smiles offers and events, and Facebook and Instagram publishing.
+            Choose the plan for uploads, social posts, Smilez offers and events, and Facebook and Instagram publishing.
           </p>
         </header>
 
-        {confirmingPayPal && (
+        {confirmingPayment && (
           <section className="subscription-simple-notice">
-            <strong>Checking PayPal...</strong>
-            <span>FromOne is confirming your subscription and updating your access.</span>
+            <strong>Checking payment...</strong>
+            <span>FromOne is confirming your subscription with the payment provider and updating your access.</span>
           </section>
         )}
 
@@ -674,7 +852,7 @@ export default function SubscriptionPage() {
                 <strong>{isDemoExpired ? 'Demo ended' : 'Subscription cancelled'}</strong>
                 <span>
                   {isDemoExpired
-                    ? 'Choose Starter to keep creating posts, Smiles offers and events from your uploads.'
+                    ? 'Choose Starter to keep creating posts, Smilez offers and events from your uploads.'
                     : 'Future renewals have been stopped. You can restart Starter anytime.'}
                 </span>
               </section>
@@ -696,16 +874,16 @@ export default function SubscriptionPage() {
             <section className="subscription-simple-card subscription-smiles-focus-card">
               <div>
                 <span>What Starter unlocks</span>
-                <h2>One workflow for posts and Smiles.</h2>
+                <h2>One workflow for posts and Smilez.</h2>
                 <p>
-                  Upload an image, video or flyer. FromOne prepares the social post and, when relevant, the Smiles offer or event. You review everything before it is published or sent for approval.
+                  Upload an image, video or flyer. FromOne prepares the social post and, when relevant, the Smilez offer or event. You review everything before it is published or sent for approval.
                 </p>
               </div>
 
               <div className="subscription-smiles-focus-grid">
                 <strong>Image to posts</strong>
-                <strong>Smiles offers</strong>
-                <strong>Smiles events</strong>
+                <strong>Smilez offers</strong>
+                <strong>Smilez events</strong>
                 <strong>Facebook and Instagram</strong>
               </div>
             </section>
@@ -745,11 +923,21 @@ export default function SubscriptionPage() {
                     <button
                       type="button"
                       className={isSelected ? undefined : 'secondary-button'}
-                      disabled={plan.disabled}
-                      onClick={() => {
-                        if (!plan.disabled) {
-                          setSelectedPlan(plan.id);
+                      disabled={
+                        plan.disabled ||
+                        saving ||
+                        cancelling ||
+                        (plan.id === 'starter' && (hasPaidAccess || isPendingPayment))
+                      }
+                      onClick={async () => {
+                        if (plan.disabled || saving || cancelling) return;
+
+                        if (plan.id === 'starter' && isSelected) {
+                          await savePlan(plan.id);
+                          return;
                         }
+
+                        setSelectedPlan(plan.id);
                       }}
                     >
                       {plan.disabled
@@ -770,17 +958,17 @@ export default function SubscriptionPage() {
                   <h2>Starter includes</h2>
                 </div>
 
-                <strong>{hasPaidAccess ? 'Active' : '£19.99/month'}</strong>
+                <strong>{hasPaidAccess ? 'Active' : '£49.99/month'}</strong>
               </div>
 
               <p>
-                Starter includes upload-to-post creation, Smiles offer and event workflows, and Facebook and Instagram publishing. PayPal handles the monthly payment.
+                Starter includes upload-to-post creation, Smilez offer and event workflows, and Facebook and Instagram publishing. Revolut handles new monthly subscriptions.
               </p>
 
               <div className="subscription-billing-grid">
                 <div>
                   <span>Status</span>
-                  <strong>{paypalStatusLabel}</strong>
+                  <strong>{paymentStatusLabel}</strong>
                 </div>
 
                 <div>
@@ -789,49 +977,49 @@ export default function SubscriptionPage() {
                 </div>
 
                 <div>
-                  <span>PayPal reference</span>
-                  <strong>
-                    {paypalSubscriptionId
-                      ? hasRealPayPalSubscription
-                        ? `${paypalSubscriptionId.slice(0, 12)}...`
-                        : 'Manual access'
-                      : 'Not connected yet'}
-                  </strong>
+                  <span>Payment provider</span>
+                  <strong>{providerName}{paymentReference ? ` · ${paymentReferenceLabel}` : ''}</strong>
                 </div>
               </div>
 
               {isPendingPayment && (
                 <p className="subscription-simple-warning">
-                  You started PayPal checkout but it has not been confirmed yet.
+                  Your checkout has started but the subscription has not been confirmed yet.
                 </p>
               )}
 
               {hasPaidAccess && (
                 <p className="subscription-simple-success">
-                  {hasRealPayPalSubscription
-                    ? 'Starter is active. You can create posts from uploads, send offers and events to Smiles, and publish to Facebook and Instagram.'
-                    : 'Starter access is active. Post creation, Smiles workflows and publishing features are available.'}
+                  {effectiveProvider === 'paypal'
+                    ? 'Your legacy PayPal Starter subscription is active. Posting, Smilez workflows and publishing features are available.'
+                    : effectiveProvider === 'revolut'
+                      ? 'Your Revolut Starter subscription is active. Posting, Smilez workflows and publishing features are available.'
+                      : 'Starter access is active. Post creation, Smilez workflows and publishing features are available.'}
                 </p>
               )}
 
               {!hasPaidAccess && !isPendingPayment && (
                 <p className="subscription-simple-muted">
-                  Choose Starter above, then continue to PayPal to unlock posts, Smiles workflows and publishing.
+                  {isCancelled
+                    ? 'Restart Starter above or continue below to open Revolut and begin a new £49.99 monthly subscription.'
+                    : 'Choose Starter above, then continue to Revolut to unlock posts, Smilez workflows and publishing.'}
                 </p>
               )}
 
               <div className="subscription-action-row">
-                <button onClick={savePlan} disabled={saving || cancelling || (selectedPlan === 'starter' && (hasPaidAccess || isPendingPayment))}>
+                <button onClick={() => savePlan()} disabled={saving || cancelling || (selectedPlan === 'starter' && (hasPaidAccess || isPendingPayment))}>
                   {saving
                     ? selectedPlan === 'starter'
-                      ? 'Opening PayPal...'
+                      ? 'Opening Revolut...'
                       : 'Saving...'
                     : selectedPlan === 'starter'
                       ? hasPaidAccess
                         ? 'Starter active'
                         : isPendingPayment
                           ? 'Payment pending'
-                          : 'Continue with PayPal'
+                          : isCancelled
+                            ? 'Restart with Revolut'
+                            : 'Continue with Revolut'
                       : 'Save Demo Plan'}
                 </button>
 
@@ -1525,6 +1713,226 @@ export default function SubscriptionPage() {
 
           .fromone-subscription-page .subscription-smiles-focus-card {
             padding: 20px !important;
+          }
+        }
+
+
+        /* FINAL SHARED MOBILE WIDTH — matches Settings and Smilez */
+        @media (max-width: 820px) {
+          body:has(.fromone-subscription-page) .main-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important;
+          }
+
+          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 24px 0 112px !important;
+            box-sizing: border-box !important;
+          }
+        }
+
+
+        /*
+         * OUTER MOBILE LAYOUT IS OWNED BY AppShell.
+         * Billing keeps its internal card styling only.
+         */
+        @media (max-width: 900px) {
+          body:has(.fromone-subscription-page) .main-content {
+            padding-top: 0 !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+          }
+
+          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 0 112px !important;
+            box-sizing: border-box !important;
+          }
+        }
+
+
+        /* FINAL SHARED FROMONE PAGE SYSTEM */
+        body:has(.fromone-subscription-page) {
+          background: var(--posts-bg) !important;
+        }
+
+        body:has(.fromone-subscription-page) .app-shell,
+        body:has(.fromone-subscription-page) .main-content {
+          background: var(--posts-bg) !important;
+        }
+
+        body:has(.fromone-subscription-page) .main-content {
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
+          overflow-x: hidden !important;
+        }
+
+        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          display: grid !important;
+          gap: 22px !important;
+          overflow: visible !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          background-image: none !important;
+          box-shadow: none !important;
+          backdrop-filter: none !important;
+        }
+
+        .fromone-subscription-page .subscription-simple-header {
+          width: 100% !important;
+          max-width: 790px !important;
+          margin: 0 0 6px !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+
+        .fromone-subscription-page .subscription-simple-header h1 {
+          max-width: 760px !important;
+          margin: 0 0 12px !important;
+          color: var(--posts-navy) !important;
+          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
+          line-height: 0.96 !important;
+          letter-spacing: -0.06em !important;
+          font-weight: 800 !important;
+        }
+
+        .fromone-subscription-page .subscription-simple-header p {
+          max-width: 720px !important;
+          margin: 0 !important;
+          color: var(--posts-muted) !important;
+          font-size: 1.03rem !important;
+          line-height: 1.56 !important;
+          font-weight: 500 !important;
+        }
+
+        .fromone-subscription-page .page-eyebrow {
+          display: block !important;
+          margin: 0 0 10px !important;
+          color: var(--posts-pink) !important;
+          font-size: 0.74rem !important;
+          font-weight: 900 !important;
+          letter-spacing: 0.14em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-subscription-page .subscription-current-strip,
+        .fromone-subscription-page .subscription-simple-card,
+        .fromone-subscription-page .subscription-simple-alert,
+        .fromone-subscription-page .subscription-simple-notice {
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 26px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+          box-shadow: var(--posts-shadow) !important;
+          backdrop-filter: blur(10px) !important;
+        }
+
+        .fromone-subscription-page .subscription-current-strip {
+          padding: 20px !important;
+          background: rgba(255, 255, 255, 0.9) !important;
+          border-color: var(--posts-border) !important;
+        }
+
+        .fromone-subscription-page .subscription-smiles-focus-card,
+        .fromone-subscription-page .subscription-billing-card {
+          padding: 22px !important;
+          background: rgba(255, 255, 255, 0.84) !important;
+          border-color: var(--posts-border) !important;
+        }
+
+        .fromone-subscription-page .subscription-plan-grid {
+          gap: 16px !important;
+        }
+
+        .fromone-subscription-page .subscription-plan-option {
+          padding: 22px !important;
+          border: 1px solid var(--posts-border) !important;
+          border-radius: 22px !important;
+          background: #fff !important;
+          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055) !important;
+        }
+
+        .fromone-subscription-page .subscription-plan-option.is-selected {
+          border-color: rgba(247, 37, 133, 0.28) !important;
+          box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.08), 0 14px 34px rgba(7, 27, 73, 0.07) !important;
+        }
+
+        .fromone-subscription-page .subscription-action-row button,
+        .fromone-subscription-page .subscription-plan-option button {
+          min-height: 46px !important;
+          padding: 0 17px !important;
+          border-radius: 15px !important;
+          font-size: 0.86rem !important;
+          font-weight: 900 !important;
+        }
+
+        .fromone-subscription-page .subscription-action-row button:not(.secondary-button),
+        .fromone-subscription-page .subscription-plan-option button:not(.secondary-button) {
+          border: 0 !important;
+          background: var(--posts-pink) !important;
+          color: #fff !important;
+          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21) !important;
+        }
+
+        .fromone-subscription-page .subscription-action-row .secondary-button,
+        .fromone-subscription-page .subscription-plan-option .secondary-button {
+          border: 1px solid var(--posts-border) !important;
+          background: #fff !important;
+          color: var(--posts-navy) !important;
+          box-shadow: none !important;
+        }
+
+        .fromone-subscription-page .subscription-billing-grid div,
+        .fromone-subscription-page .subscription-smiles-focus-grid strong {
+          border: 1px solid var(--posts-border) !important;
+          background: #f8fafc !important;
+        }
+
+        @media (max-width: 700px) {
+          body:has(.fromone-subscription-page) .main-content {
+            padding: 24px 16px 100px !important;
+          }
+
+          .fromone-subscription-page .subscription-simple-header h1 {
+            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          }
+
+          .fromone-subscription-page .subscription-simple-header p {
+            font-size: 0.95rem !important;
+          }
+
+          .fromone-subscription-page .subscription-plan-grid,
+          .fromone-subscription-page .subscription-billing-grid,
+          .fromone-subscription-page .subscription-smiles-focus-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-subscription-page .subscription-current-strip,
+          .fromone-subscription-page .subscription-simple-card,
+          .fromone-subscription-page .subscription-simple-alert,
+          .fromone-subscription-page .subscription-simple-notice {
+            border-radius: 21px !important;
           }
         }
 
