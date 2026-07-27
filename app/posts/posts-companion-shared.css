@@ -1,0 +1,763 @@
+:root {
+  --posts-navy: #071b49;
+  --posts-pink: #f72585;
+  --posts-bg: #f4f7fb;
+  --posts-border: #dce4f0;
+  --posts-muted: #66728a;
+  --posts-shadow: 0 16px 42px rgba(7, 27, 73, 0.08);
+}
+
+body:has(.fromone-posts-page) {
+  overflow-x: hidden;
+}
+
+.fromone-posts-page,
+.fromone-posts-page * {
+  box-sizing: border-box;
+}
+
+.fromone-posts-page {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--posts-navy);
+  background: transparent;
+}
+
+.fromone-posts-page #fromone-standard-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.posts-create-hero {
+  max-width: 790px;
+  margin: 0 0 28px;
+}
+
+.posts-create-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--posts-pink);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.posts-create-hero h1 {
+  margin: 0 0 12px;
+  color: var(--posts-navy);
+  font-size: clamp(2.6rem, 5vw, 4.45rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+
+.posts-create-hero p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--posts-muted);
+  font-size: 1.03rem;
+  line-height: 1.56;
+}
+
+.posts-summary-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+  padding: 18px 20px;
+  border: 1px solid rgba(247, 37, 133, 0.2);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--posts-shadow);
+  backdrop-filter: blur(9px);
+}
+
+.posts-panel-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.posts-step-badge {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--posts-pink);
+  font-size: 0.75rem;
+  font-weight: 900;
+  box-shadow: 0 9px 22px rgba(247, 37, 133, 0.2);
+}
+
+.posts-panel-head h2 {
+  margin: 1px 0 4px;
+  color: var(--posts-navy);
+  font-size: 1.3rem;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.posts-panel-head p {
+  margin: 0;
+  color: var(--posts-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.posts-summary-actions a,
+.posts-primary-action,
+.posts-review-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 15px;
+  color: #fff;
+  background: var(--posts-pink);
+  box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.posts-list-panel {
+  padding: 22px;
+  border: 1px solid var(--posts-border);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--posts-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.posts-list-panel > .posts-panel-head {
+  margin-bottom: 18px;
+}
+
+.posts-review-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.posts-review-card {
+  display: grid;
+  grid-template-rows: 210px auto auto;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--posts-border);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.posts-review-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(247, 37, 133, 0.28);
+  box-shadow: 0 18px 38px rgba(7, 27, 73, 0.09);
+}
+
+.posts-review-media {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 210px;
+  overflow: hidden;
+  background: #071124;
+}
+
+.posts-review-media img,
+.posts-review-media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.posts-review-media-empty {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: rgba(255,255,255,0.84);
+  background:
+    radial-gradient(circle at top, rgba(247,37,133,0.24), transparent 48%),
+    #071124;
+}
+
+.posts-review-copy {
+  min-width: 0;
+  padding: 17px 17px 12px;
+}
+
+.posts-review-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 11px;
+}
+
+.posts-review-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid #e3e8f1;
+  border-radius: 999px;
+  color: var(--posts-navy);
+  background: #f7f9fc;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.posts-review-meta span:first-child {
+  color: var(--posts-pink);
+  border-color: #ffd4e8;
+  background: #fff5fa;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.posts-review-meta .is-done {
+  color: #047857;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.posts-review-meta .is-problem {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fff5f5;
+}
+
+.posts-review-meta .is-planned {
+  color: #9a6700;
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.posts-review-copy h3 {
+  margin: 0 0 9px;
+  color: var(--posts-navy);
+  font-size: 1.25rem;
+  line-height: 1.16;
+  letter-spacing: -0.035em;
+}
+
+.posts-review-copy p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--posts-muted);
+  font-size: 0.9rem;
+  line-height: 1.48;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.posts-review-action {
+  width: calc(100% - 34px);
+  margin: 0 17px 17px;
+  align-self: end;
+}
+
+.posts-empty-panel {
+  padding: 26px;
+  border: 1px dashed #c7d1df;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.76);
+  text-align: left;
+}
+
+.posts-empty-panel .posts-panel-head {
+  margin-bottom: 16px;
+}
+
+.posts-empty-panel .posts-primary-action {
+  margin-left: 48px;
+}
+
+@media (max-width: 980px) {
+  .posts-review-list {
+    grid-template-columns: 1fr;
+  }
+
+  .posts-review-card {
+    grid-template-columns: 180px minmax(0, 1fr) 145px;
+    grid-template-rows: auto;
+    align-items: center;
+  }
+
+  .posts-review-media {
+    height: 150px;
+  }
+
+  .posts-review-action {
+    width: auto;
+    margin: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .posts-create-hero {
+    margin-bottom: 21px;
+  }
+
+  .posts-create-hero h1 {
+    font-size: clamp(2.25rem, 11vw, 3rem);
+  }
+
+  .posts-create-hero p {
+    font-size: 0.95rem;
+  }
+
+  .posts-summary-panel {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 17px;
+    border-radius: 19px;
+  }
+
+  .posts-summary-actions a {
+    width: 100%;
+  }
+
+  .posts-list-panel {
+    padding: 14px;
+    border-radius: 21px;
+  }
+
+  .posts-review-card {
+    grid-template-columns: 1fr;
+    grid-template-rows: 190px auto auto;
+    border-radius: 19px;
+  }
+
+  .posts-review-media {
+    height: 190px;
+  }
+
+  .posts-review-action {
+    width: calc(100% - 28px);
+    margin: 0 14px 14px;
+  }
+
+  .posts-empty-panel {
+    padding: 18px;
+  }
+
+  .posts-empty-panel .posts-primary-action {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .posts-list-panel {
+    padding: 11px;
+  }
+
+  .posts-review-card {
+    grid-template-rows: 170px auto auto;
+  }
+
+  .posts-review-media {
+    height: 170px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fromone-posts-page * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* Shared Post Review layout                                                   */
+/* Uses the same variables, panels, headings, buttons and breakpoints as Posts */
+/* -------------------------------------------------------------------------- */
+
+.fromone-post-review-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--posts-navy);
+  background: transparent;
+}
+
+.fromone-post-review-page .pr2-shell {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 22px;
+}
+
+.fromone-post-review-page .pr2-topbar {
+  margin: 0;
+}
+
+.fromone-post-review-page .pr2-layout,
+.fromone-post-review-page .pr2-main,
+.fromone-post-review-page .pr2-side {
+  width: 100%;
+  min-width: 0;
+}
+
+.fromone-post-review-page .pr2-layout,
+.fromone-post-review-page .pr2-main {
+  display: grid;
+  gap: 22px;
+}
+
+.fromone-post-review-page .pr2-layout {
+  grid-template-columns: 1fr;
+}
+
+.fromone-post-review-page .pr2-side {
+  position: static;
+}
+
+.fromone-post-review-page .pr2-card {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.fromone-post-review-page .pr2-review-post-head {
+  max-width: 790px;
+  margin: 0 0 28px;
+}
+
+.fromone-post-review-page .pr2-review-post-head h1 {
+  margin: 0 0 12px;
+  color: var(--posts-navy);
+  font-size: clamp(2.6rem, 5vw, 4.45rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+
+.fromone-post-review-page .pr2-review-post-head p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--posts-muted);
+  font-size: 1.03rem;
+  line-height: 1.56;
+}
+
+.fromone-post-review-page .pr2-kicker {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--posts-pink);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fromone-post-review-page .pr2-simple-platform-row,
+.fromone-post-review-page .pr2-created-upload-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.fromone-post-review-page .pr2-simple-platform-row span,
+.fromone-post-review-page .pr2-created-upload-inline > span,
+.fromone-post-review-page .pr2-media-current-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid #ffd4e8;
+  border-radius: 999px;
+  color: var(--posts-pink);
+  background: #fff5fa;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.fromone-post-review-page .pr2-created-upload-inline p,
+.fromone-post-review-page .pr2-created-upload-inline small {
+  margin: 0;
+  color: var(--posts-muted);
+  line-height: 1.45;
+}
+
+.fromone-post-review-page .pr2-review-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+  grid-template-areas:
+    "status status"
+    "media wording-head"
+    "media wording"
+    "media actions";
+  gap: 18px 22px;
+  align-items: start;
+  padding: 22px;
+  border: 1px solid var(--posts-border);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--posts-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.fromone-post-review-page .pr2-media-current-label { grid-area: status; }
+.fromone-post-review-page .pr2-media-box { grid-area: media; }
+.fromone-post-review-page .pr2-review-wording-head { grid-area: wording-head; }
+.fromone-post-review-page .pr2-wording { grid-area: wording; }
+.fromone-post-review-page .pr2-main-review-actions { grid-area: actions; }
+
+.fromone-post-review-page .pr2-media-box {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--posts-border);
+  border-radius: 22px;
+  background: #071124;
+}
+
+.fromone-post-review-page .pr2-media-box img,
+.fromone-post-review-page .pr2-media-box video,
+.fromone-post-review-page .pr2-media-box canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 600px;
+  object-fit: contain;
+}
+
+.fromone-post-review-page .pr2-review-wording-head h2,
+.fromone-post-review-page .pr2-smiles-simple-head h2,
+.fromone-post-review-page .pr2-publish-card h2 {
+  margin: 1px 0 4px;
+  color: var(--posts-navy);
+  font-size: 1.3rem;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.fromone-post-review-page .pr2-review-wording-head p,
+.fromone-post-review-page .pr2-smiles-simple-head p,
+.fromone-post-review-page .pr2-publish-card p {
+  margin: 0;
+  color: var(--posts-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.fromone-post-review-page .pr2-wording {
+  display: grid;
+  gap: 13px;
+}
+
+.fromone-post-review-page label {
+  display: grid;
+  gap: 7px;
+  color: var(--posts-navy);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.fromone-post-review-page input,
+.fromone-post-review-page textarea,
+.fromone-post-review-page select {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px 13px;
+  border: 1px solid var(--posts-border);
+  border-radius: 14px;
+  outline: none;
+  color: var(--posts-navy);
+  background: #fff;
+  font: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.fromone-post-review-page textarea {
+  min-height: 124px;
+  resize: vertical;
+}
+
+.fromone-post-review-page .pr2-main-review-actions,
+.fromone-post-review-page .pr2-actions,
+.fromone-post-review-page .pr2-publish-actions,
+.fromone-post-review-page .pr2-side-options {
+  display: grid;
+  gap: 10px;
+}
+
+.fromone-post-review-page .pr2-main-review-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fromone-post-review-page .pr2-btn,
+.fromone-post-review-page .pr2-back,
+.fromone-post-review-page .pr2-actions a,
+.fromone-post-review-page .pr2-details summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 17px;
+  border: 1px solid var(--posts-border);
+  border-radius: 15px;
+  color: var(--posts-navy);
+  background: #fff;
+  box-shadow: none;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fromone-post-review-page .pr2-btn-primary,
+.fromone-post-review-page .pr2-save-wording-action,
+.fromone-post-review-page .pr2-smiles-send-button {
+  color: #fff;
+  border-color: var(--posts-pink);
+  background: var(--posts-pink);
+  box-shadow: 0 10px 24px rgba(247, 37, 133, .21);
+}
+
+.fromone-post-review-page .pr2-smiles-simple-card,
+.fromone-post-review-page .pr2-prepare,
+.fromone-post-review-page .pr2-publish-card {
+  width: 100%;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--posts-border);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, .84);
+  box-shadow: var(--posts-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.fromone-post-review-page .pr2-smiles-simple-card {
+  border-color: rgba(247, 37, 133, .2);
+  background: rgba(255, 247, 251, .94);
+}
+
+.fromone-post-review-page .pr2-smiles-choice-row,
+.fromone-post-review-page .pr2-smiles-prompt-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.fromone-post-review-page .pr2-smiles-choice-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 18px 0;
+}
+
+.fromone-post-review-page .pr2-smiles-prompt-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fromone-post-review-page .pr2-smiles-choice {
+  min-height: 46px;
+  border: 1px solid var(--posts-border);
+  border-radius: 15px;
+  color: var(--posts-navy);
+  background: #fff;
+  font-weight: 900;
+}
+
+.fromone-post-review-page .pr2-smiles-choice.is-active {
+  color: #fff;
+  border-color: var(--posts-pink);
+  background: var(--posts-pink);
+}
+
+.fromone-post-review-page .pr2-publish-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .55fr);
+  gap: 20px;
+  align-items: center;
+}
+
+.fromone-post-review-page .pr2-publish-actions,
+.fromone-post-review-page .pr2-side-options {
+  grid-template-columns: 1fr;
+}
+
+.fromone-post-review-page .pr2-publish-actions button,
+.fromone-post-review-page .pr2-side-options button {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .fromone-post-review-page .pr2-review-workspace {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "status"
+      "media"
+      "wording-head"
+      "wording"
+      "actions";
+  }
+
+  .fromone-post-review-page .pr2-publish-card,
+  .fromone-post-review-page .pr2-smiles-prompt-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .fromone-post-review-page .pr2-review-post-head h1 {
+    font-size: clamp(2.15rem, 10vw, 2.85rem);
+  }
+
+  .fromone-post-review-page .pr2-review-workspace,
+  .fromone-post-review-page .pr2-smiles-simple-card,
+  .fromone-post-review-page .pr2-prepare,
+  .fromone-post-review-page .pr2-publish-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .fromone-post-review-page .pr2-main-review-actions,
+  .fromone-post-review-page .pr2-smiles-choice-row {
+    grid-template-columns: 1fr;
+  }
+
+  .fromone-post-review-page .pr2-btn,
+  .fromone-post-review-page .pr2-btn-primary,
+  .fromone-post-review-page .pr2-actions a {
+    width: 100%;
+  }
+}

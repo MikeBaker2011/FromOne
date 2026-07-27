@@ -13914,3 +13914,117 @@ body:has(.app-shell) .main-content {
   color: #f72585 !important;
 }
 
+/* =========================================================
+   FROMONE COMPANION APP — AUTHORITATIVE SHARED APP LAYOUT
+   Keep this section at the very end of globals.css.
+   It overrides the original dark dashboard/sidebar theme only
+   when the modern top-navbar AppShell is present.
+   ========================================================= */
+
+body:has(.fromone-navbar) {
+  --bg: #f4f7fb;
+  --panel: rgba(255, 255, 255, 0.9);
+  --panel-solid: #ffffff;
+  --panel-soft: #f7f9fc;
+  --border: #dce4f0;
+  --border-strong: #cbd5e1;
+  --text: #071b49;
+  --muted: #66728a;
+  --muted-strong: #46536b;
+  --gold: #f72585;
+  --gold-dark: #c71363;
+  --blue: #3563e9;
+  --danger: #dc2626;
+  --success: #059669;
+  --shadow: 0 16px 42px rgba(7, 27, 73, 0.08);
+
+  background: #f4f7fb !important;
+  color: #071b49 !important;
+}
+
+body:has(.fromone-navbar)::before {
+  display: none !important;
+  content: none !important;
+}
+
+body:has(.fromone-navbar) .app-shell {
+  display: block !important;
+  min-height: 100vh;
+  background: #f4f7fb !important;
+}
+
+body:has(.fromone-navbar) .sidebar,
+body:has(.fromone-navbar) .mobile-topbar,
+body:has(.fromone-navbar) .mobile-menu-overlay {
+  display: none !important;
+}
+
+body:has(.fromone-navbar) .main-content {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+body:has(.fromone-navbar) .fromone-universal-mobile-page-frame {
+  width: min(100%, 1240px) !important;
+  max-width: 1240px !important;
+  min-width: 0 !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+body:has(.fromone-navbar) .fromone-universal-mobile-page-frame > * {
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Remove legacy page-level dark shells from the modern app pages. */
+body:has(.fromone-navbar) .fromone-create-page,
+body:has(.fromone-navbar) .fromone-posts-page,
+body:has(.fromone-navbar) .companion-home {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  color: #071b49 !important;
+  background: transparent !important;
+}
+
+/* Keep page-specific buttons intact instead of inheriting the old gold button theme. */
+body:has(.fromone-navbar) .fromone-create-page button,
+body:has(.fromone-navbar) .fromone-posts-page button,
+body:has(.fromone-navbar) .companion-home button,
+body:has(.fromone-navbar) .fromone-navbar button {
+  box-shadow: none;
+}
+
+/* Shared media safety without forcing page-specific component dimensions. */
+body:has(.fromone-navbar) .fromone-universal-mobile-page-frame img,
+body:has(.fromone-navbar) .fromone-universal-mobile-page-frame video,
+body:has(.fromone-navbar) .fromone-universal-mobile-page-frame canvas {
+  max-width: 100%;
+}
+
+/* Shared responsive foundation. Internal component breakpoints remain in each page. */
+@media (max-width: 900px) {
+  body:has(.fromone-navbar) .fromone-universal-mobile-page-frame {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  body:has(.fromone-navbar) .fromone-universal-mobile-page-frame > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  body:has(.fromone-navbar) .fromone-universal-mobile-page-frame {
+    overflow-x: clip;
+  }
+}

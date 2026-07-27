@@ -1,16 +1,24 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// This must match app/signin/page.tsx.
-// If different pages use different storage keys, /signin and /dashboard can read different sessions,
-// which can cause a redirect flicker between the two pages.
-export const supabaseBrowser = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: 'fromone-auth-session',
-  },
-});
+declare global {
+  // eslint-disable-next-line no-var
+  var __fromOneSupabaseBrowser: SupabaseClient | undefined;
+}
+
+export const supabaseBrowser =
+  globalThis.__fromOneSupabaseBrowser ??
+  createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'fromone-auth-session',
+    },
+  });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.__fromOneSupabaseBrowser = supabaseBrowser;
+}

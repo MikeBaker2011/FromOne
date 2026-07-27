@@ -639,6 +639,7 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             .mobile-bottom-nav-create:hover,
             .mobile-bottom-nav-create:active {
               transform: none !important;
+              transform-origin: center center !important;
             }
           }
 
@@ -1038,7 +1039,7 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
 
           /* -------------------------------------------------------------- */
-          /* STOCKPORT SMILES BRANDING — powered by FromOne                 */
+          /* STOCKPORT SMILEZ BRANDING — powered by FromOne                 */
           /* -------------------------------------------------------------- */
           .sidebar-smiles-powered {
             width: 100% !important;
@@ -1122,8 +1123,8 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
 
           /* -------------------------------------------------------------- */
-          /* FROMONE NAV — STOCKPORT SMILES LIGHT THEME                     */
-          /* Replaces old dark nav so it matches the finished Smiles pages   */
+          /* FROMONE NAV — STOCKPORT SMILEZ LIGHT THEME                     */
+          /* Replaces old dark nav so it matches the finished Smilez pages   */
           /* -------------------------------------------------------------- */
           .sidebar {
             width: 360px !important;
@@ -2443,7 +2444,7 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
 
           /* -------------------------------------------------------------- */
-          /* MOBILE DROPDOWN — hide Stockport Smiles card                    */
+          /* MOBILE DROPDOWN — hide Stockport Smilez card                    */
           /* Keep this card desktop-only                                     */
           /* -------------------------------------------------------------- */
           @media (max-width: 900px) {
@@ -2457,20 +2458,415 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             }
           }
 
+
+          /* -------------------------------------------------------------- */
+          /* FINAL SIDEBAR THEME — CLEAN WHITE AGENCY                        */
+          /* Removes the yellow wash and matches the rest of FromOne         */
+          /* -------------------------------------------------------------- */
+          .sidebar {
+            width: 320px !important;
+            flex: 0 0 320px !important;
+            min-width: 320px !important;
+            padding: 24px 22px !important;
+            gap: 26px !important;
+            border-right: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            box-shadow: 14px 0 40px rgba(7, 27, 73, 0.05) !important;
+            color: #071b49 !important;
+          }
+
+          .sidebar-logo-img {
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            border: 1px solid #dfe6ef !important;
+            border-radius: 14px !important;
+            background: #ffffff !important;
+            padding: 3px !important;
+            box-shadow: 0 8px 18px rgba(7, 27, 73, 0.06) !important;
+          }
+
+          .sidebar-title {
+            color: #071b49 !important;
+            font-size: 1.34rem !important;
+          }
+
+          .sidebar-subtitle {
+            color: #64748b !important;
+            font-size: 0.8rem !important;
+          }
+
+          .sidebar-nav {
+            gap: 20px !important;
+          }
+
+          .sidebar-nav-main,
+          .sidebar-nav-account {
+            gap: 8px !important;
+          }
+
+          .sidebar-nav-account {
+            padding-top: 16px !important;
+            border-top: 1px solid #e2e8f0 !important;
+          }
+
+          .sidebar-link,
+          .sidebar-link-button,
+          .sidebar-auth-link {
+            min-height: 52px !important;
+            padding: 7px 10px !important;
+            gap: 12px !important;
+            border: 1px solid transparent !important;
+            border-radius: 16px !important;
+            background: transparent !important;
+            color: #52617a !important;
+            font-size: 0.94rem !important;
+            font-weight: 800 !important;
+            box-shadow: none !important;
+          }
+
+          .sidebar-link:hover,
+          .sidebar-link-button:hover,
+          .sidebar-auth-link:hover {
+            transform: none !important;
+            border-color: #e2e8f0 !important;
+            background: #f8fafc !important;
+            color: #071b49 !important;
+          }
+
+          .sidebar-link.is-current,
+          .sidebar-link[aria-current='page'],
+          .sidebar-link.active,
+          .sidebar-link.is-active,
+          .sidebar-link.sidebar-active {
+            border-color: #ffd2e5 !important;
+            background: #fff7fb !important;
+            color: #071b49 !important;
+            box-shadow: none !important;
+          }
+
+          .sidebar-link.is-current::before,
+          .sidebar-link[aria-current='page']::before,
+          .sidebar-link.active::before,
+          .sidebar-link.is-active::before,
+          .sidebar-link.sidebar-active::before {
+            left: 6px !important;
+            width: 4px !important;
+            height: 22px !important;
+            background: #f72585 !important;
+          }
+
+          .sidebar-link-icon {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            background: #ffffff !important;
+            color: #f72585 !important;
+            box-shadow: none !important;
+          }
+
+          .sidebar-link-icon svg {
+            width: 18px !important;
+            height: 18px !important;
+            color: #f72585 !important;
+            stroke: #f72585 !important;
+          }
+
+          .sidebar-link.is-current .sidebar-link-icon,
+          .sidebar-link:hover .sidebar-link-icon,
+          .sidebar-link-button:hover .sidebar-link-icon {
+            border-color: #ffd2e5 !important;
+            background: #ffffff !important;
+          }
+
+          .sidebar-smiles-powered {
+            min-height: 70px !important;
+            grid-template-columns: 44px minmax(0, 1fr) !important;
+            gap: 11px !important;
+            margin-top: 2px !important;
+            padding: 11px !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 18px !important;
+            background: #f8fafc !important;
+            box-shadow: none !important;
+          }
+
+          .sidebar-smiles-powered img {
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            background: #ffffff !important;
+            padding: 4px !important;
+            box-shadow: none !important;
+          }
+
+          .sidebar-smiles-powered strong {
+            color: #071b49 !important;
+            font-size: 0.9rem !important;
+          }
+
+          .sidebar-smiles-powered span {
+            color: #64748b !important;
+            font-size: 0.72rem !important;
+          }
+
+          .sidebar-link:focus-visible .sidebar-link-icon,
+          .sidebar-link-button:focus-visible .sidebar-link-icon,
+          .mobile-menu-close:focus-visible,
+          .mobile-bottom-nav-link:focus-visible,
+          .mobile-bottom-nav-create:focus-visible {
+            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.16) !important;
+          }
+
+          @media (max-width: 900px) {
+            .sidebar {
+              width: min(84vw, 300px) !important;
+              min-width: 0 !important;
+              max-width: 300px !important;
+              padding: 18px 16px max(18px, env(safe-area-inset-bottom)) !important;
+              background: #ffffff !important;
+              border-right: 1px solid #e2e8f0 !important;
+              box-shadow: 18px 0 48px rgba(7, 27, 73, 0.16) !important;
+            }
+
+            .mobile-menu-close {
+              border: 1px solid #e2e8f0 !important;
+              background: #ffffff !important;
+              color: #071b49 !important;
+              box-shadow: none !important;
+            }
+
+            .mobile-bottom-nav {
+              border: 1px solid #e2e8f0 !important;
+              background: rgba(255, 255, 255, 0.97) !important;
+              box-shadow: 0 18px 46px rgba(7, 27, 73, 0.16) !important;
+            }
+
+            .mobile-bottom-nav-link {
+              color: #64748b !important;
+            }
+
+            .mobile-bottom-nav-link.is-current {
+              background: #fff7fb !important;
+              color: #071b49 !important;
+            }
+
+            .mobile-bottom-nav-icon,
+            .mobile-bottom-nav-icon svg {
+              color: #64748b !important;
+              stroke: #64748b !important;
+            }
+
+            .mobile-bottom-nav-link.is-current .mobile-bottom-nav-icon,
+            .mobile-bottom-nav-link.is-current .mobile-bottom-nav-icon svg {
+              color: #f72585 !important;
+              stroke: #f72585 !important;
+            }
+
+            .mobile-bottom-nav > a.mobile-bottom-nav-create {
+              background: #f72585 !important;
+              color: #ffffff !important;
+              box-shadow: 0 10px 24px rgba(247, 37, 133, 0.24) !important;
+            }
+          }
+
+
+          /* Final full-height sidebar fix: remove the old yellow page strip */
+          body:has(.sidebar) .app-shell::before {
+            display: none !important;
+            content: none !important;
+            background: none !important;
+            box-shadow: none !important;
+            border: 0 !important;
+          }
+
+          .sidebar {
+            align-self: stretch !important;
+            height: auto !important;
+            min-height: 100vh !important;
+            background: #ffffff !important;
+            border-right: 1px solid #e2e8f0 !important;
+            box-shadow: 14px 0 40px rgba(7, 27, 73, 0.05) !important;
+          }
+
+          @media (max-width: 900px) {
+            body:has(.sidebar) .app-shell::before {
+              display: none !important;
+            }
+
+            .sidebar {
+              height: 100dvh !important;
+              min-height: 100dvh !important;
+              background: #ffffff !important;
+            }
+          }
+
+
+          /* Permanent desktop sidebar backdrop */
+          @media (min-width: 901px) {
+            body:has(.sidebar)::before {
+              content: "" !important;
+              display: block !important;
+              position: fixed !important;
+              inset: 0 auto 0 0 !important;
+              width: 320px !important;
+              height: 100dvh !important;
+              z-index: 0 !important;
+              pointer-events: none !important;
+              background: #ffffff !important;
+              border-right: 1px solid #e2e8f0 !important;
+              box-shadow: 14px 0 40px rgba(7, 27, 73, 0.05) !important;
+            }
+
+            .sidebar {
+              position: sticky !important;
+              top: 0 !important;
+              z-index: 2 !important;
+              height: 100dvh !important;
+              min-height: 100dvh !important;
+              align-self: flex-start !important;
+              background: transparent !important;
+              border-right: 0 !important;
+              box-shadow: none !important;
+            }
+          }
+
+          @media (max-width: 900px) {
+            body:has(.sidebar)::before {
+              display: none !important;
+              content: none !important;
+            }
+
+            .sidebar {
+              background: #ffffff !important;
+            }
+          }
+
+          /* Final FromOne logo override — centred and clean */
+          .sidebar-mobile-top {
+            min-height: 96px !important;
+            height: 96px !important;
+            padding: 0 10px !important;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
+            border: 1px solid rgba(247, 37, 133, 0.18) !important;
+            border-radius: 24px !important;
+            background: #ffffff !important;
+            box-shadow:
+              0 14px 32px rgba(247, 37, 133, 0.14),
+              0 4px 10px rgba(7, 27, 73, 0.06) !important;
+            overflow: hidden !important;
+          }
+
+          .sidebar-brand {
+            width: 100% !important;
+            min-width: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: visible !important;
+          }
+
+          .sidebar-logo-img {
+            display: block !important;
+            width: min(250px, 100%) !important;
+            height: auto !important;
+            min-width: 0 !important;
+            max-width: 250px !important;
+            object-fit: contain !important;
+            object-position: center center !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 auto !important;
+            box-shadow: none !important;
+            transform: none !important;
+          }
+
+          @media (min-width: 901px) {
+            .sidebar {
+              background: #ffffff !important;
+              box-shadow: none !important;
+            }
+          }
+
+          @media (max-width: 900px) {
+            .sidebar-mobile-top {
+              min-height: 68px !important;
+              padding: 4px 4px 10px !important;
+              justify-content: space-between !important;
+              border: 0 !important;
+              border-radius: 0 !important;
+              background: transparent !important;
+              box-shadow: none !important;
+              overflow: visible !important;
+            }
+
+            .sidebar-brand {
+              justify-content: flex-start !important;
+              overflow: visible !important;
+            }
+
+            .sidebar-logo-img {
+              width: min(190px, calc(100vw - 110px)) !important;
+              height: auto !important;
+              min-width: 0 !important;
+              max-width: 190px !important;
+              margin: 0 !important;
+              transform: none !important;
+              object-position: left center !important;
+            }
+          }
+
+          @media (max-width: 900px) {
+            .mobile-menu-close {
+              display: grid !important;
+              place-items: center !important;
+              width: 48px !important;
+              height: 48px !important;
+              min-width: 48px !important;
+              min-height: 48px !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              line-height: 1 !important;
+              text-align: center !important;
+            }
+
+            .mobile-menu-close > svg {
+              display: block !important;
+              width: 22px !important;
+              height: 22px !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: visible !important;
+            }
+
+            .mobile-menu-close > svg path {
+              fill: none !important;
+              stroke: currentColor !important;
+              stroke-width: 3 !important;
+              stroke-linecap: round !important;
+              stroke-linejoin: round !important;
+            }
+          }
+
         `}</style>
 
         <div className="sidebar-mobile-top">
           <div className="sidebar-brand">
             <img
               src="/fromone-logo.png"
-              alt="FromOne logo"
+              alt="FromOne"
               className="sidebar-logo-img"
             />
-
-            <div>
-              <h1 className="sidebar-title">FromOne</h1>
-              <p className="sidebar-subtitle">Upload it. Post it. Done.</p>
-            </div>
           </div>
 
           <button
@@ -2479,7 +2875,13 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             onClick={closeMenu}
             aria-label="Close menu"
           >
-            ×
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              focusable="false"
+            >
+              <path d="M7 7L17 17M17 7L7 17" />
+            </svg>
           </button>
         </div>
 
@@ -2533,11 +2935,16 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </Link>
           </div>
 
-          <div className="sidebar-smiles-powered" aria-label="Stockport Smiles powered by FromOne">
-            <img src="/stockport-smiles-logo.png" alt="Stockport Smiles" />
+          <div className="sidebar-smiles-powered" aria-label="Stockport Smilez powered by FromOne">
+            <img
+              src="/stockport-smiles-logo.png"
+              alt="Stockport Smilez"
+              width={46}
+              height={46}
+            />
             <div>
-              <strong>Stockport Smiles</strong>
-              <span>Powered by FromOne</span>
+              <strong>Stockport Smilez</strong>
+              <span>Live offers and events</span>
             </div>
           </div>
 

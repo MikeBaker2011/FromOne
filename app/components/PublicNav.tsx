@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { supabaseBrowser as supabase } from '@/lib/supabase/browser';
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 
 export default function PublicNav() {
   const [open, setOpen] = useState(false);
@@ -46,30 +46,34 @@ export default function PublicNav() {
   return (
     <nav className="sales-nav public-nav">
       <div className="public-nav-inner">
-        <Link href="/" className="sales-brand public-nav-brand" onClick={closeMenu}>
+        <Link
+          href="/"
+          className="sales-brand public-nav-brand"
+          onClick={closeMenu}
+          aria-label="FromOne home"
+        >
           <img
             src="/fromone-logo.png"
-            alt="FromOne logo"
+            alt="FromOne"
             className="fromone-brand-logo"
           />
-          <strong>FromOne</strong>
         </Link>
 
         <button
           type="button"
           className="public-nav-toggle"
           onClick={() => setOpen(!open)}
-          aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-label={open ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={open}
         >
-          {open ? '×' : '☰'}
+          {open ? "×" : "☰"}
         </button>
 
         <div
           className={
             open
-              ? 'sales-nav-links public-nav-links open'
-              : 'sales-nav-links public-nav-links'
+              ? "sales-nav-links public-nav-links open"
+              : "sales-nav-links public-nav-links"
           }
         >
           <Link href="/" onClick={closeMenu}>
@@ -81,14 +85,40 @@ export default function PublicNav() {
           </Link>
 
           <Link
-            href={isSignedIn ? '/dashboard' : '/signin'}
+            href={isSignedIn ? "/dashboard" : "/signin"}
             className="sales-nav-button"
             onClick={closeMenu}
           >
-            {checkingAuth ? 'Checking...' : isSignedIn ? 'Dashboard' : 'Start free demo'}
+            {checkingAuth
+              ? "Checking..."
+              : isSignedIn
+                ? "Dashboard"
+                : "Start free demo"}
           </Link>
         </div>
       </div>
+
+      <style jsx>{`
+        .public-nav-brand {
+          display: inline-flex;
+          align-items: center;
+          min-width: 0;
+          text-decoration: none;
+        }
+
+        .fromone-brand-logo {
+          width: clamp(170px, 18vw, 250px);
+          height: auto;
+          display: block;
+          object-fit: contain;
+        }
+
+        @media (max-width: 700px) {
+          .fromone-brand-logo {
+            width: min(190px, 58vw);
+          }
+        }
+      `}</style>
     </nav>
   );
 }

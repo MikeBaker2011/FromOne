@@ -3,7 +3,7 @@ import Link from "next/link";
 export const metadata = {
   title: "FromOne | One upload. Posts, offers and events.",
   description:
-    "FromOne turns business photos, videos and flyers into ready-to-review Facebook and Instagram posts, plus Smiles offers and events when relevant.",
+    "FromOne turns business photos, videos and flyers into ready-to-review Facebook and Instagram posts, plus Smilez offers and events when relevant.",
 };
 
 export default function HomePage() {
@@ -12,10 +12,6 @@ export default function HomePage() {
       <nav className="fo-nav" aria-label="FromOne landing navigation">
         <Link href="/" className="fo-brand" aria-label="FromOne home">
           <img src="/fromone-logo.png" alt="FromOne" />
-          <span>
-            <strong>FromOne</strong>
-            <small>Upload it. Post it. Done.</small>
-          </span>
         </Link>
 
         <div className="fo-nav-actions">
@@ -30,14 +26,14 @@ export default function HomePage() {
 
       <section className="fo-hero">
         <div className="fo-hero-main">
-          <p className="fo-eyebrow">FROMONE + SMILES</p>
+          <p className="fo-eyebrow">FROMONE + SMILEZ</p>
           <h1>
             Turn one upload into posts, offers and events.
           </h1>
           <p className="fo-intro">
             FromOne creates ready-to-review Facebook and Instagram posts from
             your photos, videos and flyers. Suitable offers and events can also
-            be sent to Smiles for approval.
+            be sent to Smilez for approval.
           </p>
 
           <div className="fo-actions">
@@ -75,7 +71,7 @@ export default function HomePage() {
           <h3>Publish or send</h3>
           <p>
             Publish to Facebook or Instagram after review. If the post is an
-            offer or event, it can also be sent to Smiles for approval.
+            offer or event, it can also be sent to Smilez for approval.
           </p>
         </article>
       </section>
@@ -83,15 +79,15 @@ export default function HomePage() {
       <section className="fo-section fo-smiles-sell">
         <div className="fo-smiles-copy">
           <p className="fo-eyebrow">WHY SMILES MATTERS</p>
-          <h2>Social posts are seen. Smiles listings are found.</h2>
+          <h2>Social posts are seen. Smilez listings are found.</h2>
           <p>
-            FromOne gives local offers and events a proper route into Smiles,
+            FromOne gives local offers and events a proper route into Smilez,
             with clear references, approval status and view links.
           </p>
         </div>
 
         <div className="fo-smiles-logo-card">
-          <img src="/stockport-smiles-logo.png" alt="Smiles" />
+          <img src="/stockport-smiles-logo.png" alt="Smilez" />
         </div>
       </section>
 
@@ -108,7 +104,7 @@ export default function HomePage() {
           </article>
           <article>
             <strong>2</strong>
-            <span>Choose Facebook, Instagram and Smiles if it fits</span>
+            <span>Choose Facebook, Instagram and Smilez if it fits</span>
           </article>
           <article>
             <strong>3</strong>
@@ -116,7 +112,7 @@ export default function HomePage() {
           </article>
           <article>
             <strong>4</strong>
-            <span>Publish to Facebook or Instagram, or send suitable offers and events to Smiles</span>
+            <span>Publish to Facebook or Instagram, or send suitable offers and events to Smilez</span>
           </article>
         </div>
       </section>
@@ -127,7 +123,7 @@ export default function HomePage() {
           <h2>Upload it. Post it. Done.</h2>
           <p>
             Create posts for Facebook and Instagram, and send suitable offers
-            and events to Smiles.
+            and events to Smilez.
           </p>
         </div>
 
@@ -198,34 +194,15 @@ export default function HomePage() {
         .fo-brand {
           display: inline-flex;
           align-items: center;
-          gap: 12px;
           color: #071b49;
           text-decoration: none;
         }
 
         .fo-brand img {
-          width: 52px;
-          height: 52px;
+          width: clamp(180px, 21vw, 280px);
+          height: auto;
+          display: block;
           object-fit: contain;
-          border-radius: 16px;
-          box-shadow: 0 14px 30px rgba(255, 193, 7, 0.24);
-        }
-
-        .fo-brand strong {
-          display: block;
-          font-size: 1.3rem;
-          line-height: 1;
-          font-weight: 900;
-          letter-spacing: -0.055em;
-        }
-
-        .fo-brand small {
-          display: block;
-          margin-top: 5px;
-          color: #52617a;
-          font-size: 0.8rem;
-          line-height: 1;
-          font-weight: 800;
         }
 
         .fo-nav-actions,
@@ -500,6 +477,10 @@ export default function HomePage() {
 
           .fo-brand {
             justify-content: center;
+          }
+
+          .fo-brand img {
+            width: min(240px, 78vw);
           }
 
           .fo-nav-actions {

@@ -8,7 +8,7 @@ export default function PublicFooter() {
       <div className="public-footer-inner">
         <div className="public-footer-brand">
           <strong>FromOne</strong>
-          <p>Weekly social media content for small businesses.</p>
+          <p>Social posts, offers and events for small businesses.</p>
         </div>
 
         <nav className="public-footer-links" aria-label="Footer navigation">

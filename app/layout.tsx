@@ -1,4 +1,5 @@
 import './globals.css';
+import './companion.css';
 import AppShell from './components/AppShell';
 import CookieBanner from './components/CookieBanner';
 import ToastProvider from '@/app/components/ToastProvider';
