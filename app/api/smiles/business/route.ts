@@ -32,6 +32,19 @@ type SmilesBusinessAction =
       block_id?: string;
     }
   | {
+      action?: "moderate_customer_photo";
+      photoId?: string;
+      photo_id?: string;
+      decision?: "approved" | "rejected";
+      rejectionReason?: string;
+      rejection_reason?: string;
+    }
+  | {
+      action?: "dismiss_customer_photo_report" | "remove_reported_customer_photo";
+      reportId?: string;
+      report_id?: string;
+    }
+  | {
       action?: "save_booking_hours";
       hours?: Array<{
         day_of_week?: number;
@@ -664,6 +677,8 @@ export async function GET(req: NextRequest) {
           profile: ownedVenue.profile,
           bookings: [],
           reviews: [],
+          customerPhotos: [],
+          photos: [],
           sentOffers: [],
           sentEvents: [],
           offers: [],
@@ -682,6 +697,7 @@ export async function GET(req: NextRequest) {
       hoursResult,
       offersResult,
       eventsResult,
+      photosResult,
     ] = await Promise.all([
       smiles
         .from("bookings")
@@ -726,6 +742,13 @@ export async function GET(req: NextRequest) {
         )
         .eq("venue_id", ownedVenue.smilesVenueId)
         .order("created_at", { ascending: false }),
+      smiles
+        .from("customer_photos")
+        .select(
+          "id, user_id, title, caption, image_path, image_alt, linked_item_type, linked_item_title, linked_item_href, linked_venue_id, status, rejection_reason, created_at",
+        )
+        .eq("linked_venue_id", ownedVenue.smilesVenueId)
+        .order("created_at", { ascending: false }),
     ]);
 
     if (bookingsResult.error) {
@@ -752,6 +775,50 @@ export async function GET(req: NextRequest) {
       throw new Error(eventsResult.error.message);
     }
 
+    if (photosResult.error) {
+      throw new Error(photosResult.error.message);
+    }
+
+    const customerPhotos = await Promise.all(
+      (photosResult.data || []).map(async (photo: any) => {
+        const imagePath = cleanText(photo.image_path);
+
+        if (!imagePath) {
+          return { ...photo, image_url: null };
+        }
+
+        const { data, error } = await smiles.storage
+          .from("customer-photos")
+          .createSignedUrl(imagePath, 60 * 15);
+
+        if (error) {
+          console.error("Could not create customer photo URL:", error.message);
+        }
+
+        return {
+          ...photo,
+          image_url: data?.signedUrl || null,
+        };
+      }),
+    );
+
+    const photoIds = customerPhotos.map((photo: any) => photo.id).filter(Boolean);
+    let customerPhotoReports: any[] = [];
+
+    if (photoIds.length > 0) {
+      const { data: reportsData, error: reportsError } = await smiles
+        .from("customer_photo_reports")
+        .select("id, photo_id, reason, details, status, created_at, reviewed_at")
+        .in("photo_id", photoIds)
+        .order("created_at", { ascending: false });
+
+      if (reportsError) {
+        throw new Error(reportsError.message);
+      }
+
+      customerPhotoReports = reportsData || [];
+    }
+
     const sentItemsWithPostIds = await attachFromOnePostIds({
       offers: offersResult.data || [],
       events: eventsResult.data || [],
@@ -766,6 +833,10 @@ export async function GET(req: NextRequest) {
       smilesVenueId: ownedVenue.smilesVenueId,
       bookings: bookingsResult.data || [],
       reviews: reviewsResult.data || [],
+      customerPhotos,
+      photos: customerPhotos,
+      customerPhotoReports,
+      photoReports: customerPhotoReports,
       bookingBlocks: blocksResult.data || [],
       bookingHours: hoursResult.data || [],
       sentOffers: sentItemsWithPostIds.offers,
@@ -918,6 +989,195 @@ export async function POST(req: NextRequest) {
         success: true,
         message: "Review reply saved.",
         review: data,
+      });
+    }
+
+    if (action === "moderate_customer_photo") {
+      const photoId = cleanText(
+        (body as any).photoId || (body as any).photo_id,
+      );
+      const decision = cleanText((body as any).decision).toLowerCase();
+      const rejectionReason = cleanText(
+        (body as any).rejectionReason || (body as any).rejection_reason,
+      );
+
+      if (!photoId) {
+        return NextResponse.json(
+          {
+            ok: false,
+            success: false,
+            message: "Missing photo id.",
+          },
+          { status: 400 },
+        );
+      }
+
+      if (decision !== "approved" && decision !== "rejected") {
+        return NextResponse.json(
+          {
+            ok: false,
+            success: false,
+            message: "Choose approve or reject.",
+          },
+          { status: 400 },
+        );
+      }
+
+      if (decision === "rejected" && !rejectionReason) {
+        return NextResponse.json(
+          {
+            ok: false,
+            success: false,
+            message: "Add a short reason before rejecting the photo.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const { data, error } = await smiles
+        .from("customer_photos")
+        .update({
+          status: decision,
+          rejection_reason: decision === "rejected" ? rejectionReason : null,
+        })
+        .eq("id", photoId)
+        .eq("linked_venue_id", ownedVenue.smilesVenueId)
+        .select("id, status, rejection_reason")
+        .single();
+
+      if (error || !data?.id) {
+        throw new Error(
+          error?.message || "Photo moderation could not be saved.",
+        );
+      }
+
+      return NextResponse.json({
+        ok: true,
+        success: true,
+        message:
+          decision === "approved"
+            ? "Photo approved."
+            : "Photo rejected.",
+        photo: data,
+      });
+    }
+
+    if (
+      action === "dismiss_customer_photo_report" ||
+      action === "remove_reported_customer_photo"
+    ) {
+      const reportId = cleanText(
+        (body as any).reportId || (body as any).report_id,
+      );
+
+      if (!reportId) {
+        return NextResponse.json(
+          {
+            ok: false,
+            success: false,
+            message: "Missing report id.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const { data: report, error: reportError } = await smiles
+        .from("customer_photo_reports")
+        .select("id, photo_id, status")
+        .eq("id", reportId)
+        .single();
+
+      if (reportError || !report?.id || !report?.photo_id) {
+        return NextResponse.json(
+          {
+            ok: false,
+            success: false,
+            message: "That photo report could not be found.",
+          },
+          { status: 404 },
+        );
+      }
+
+      const { data: reportedPhoto, error: photoLookupError } = await smiles
+        .from("customer_photos")
+        .select("id, linked_venue_id")
+        .eq("id", report.photo_id)
+        .eq("linked_venue_id", ownedVenue.smilesVenueId)
+        .single();
+
+      if (photoLookupError || !reportedPhoto?.id) {
+        return NextResponse.json(
+          {
+            ok: false,
+            success: false,
+            message: "This report is not linked to your venue.",
+          },
+          { status: 403 },
+        );
+      }
+
+      if (action === "dismiss_customer_photo_report") {
+        const { data, error } = await smiles
+          .from("customer_photo_reports")
+          .update({
+            status: "dismissed",
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", reportId)
+          .select("id, status, reviewed_at")
+          .single();
+
+        if (error || !data?.id) {
+          throw new Error(error?.message || "The report could not be dismissed.");
+        }
+
+        return NextResponse.json({
+          ok: true,
+          success: true,
+          message: "Report dismissed. The photo remains public.",
+          report: data,
+        });
+      }
+
+      const { data: updatedPhoto, error: updatePhotoError } = await smiles
+        .from("customer_photos")
+        .update({
+          status: "rejected",
+          rejection_reason: "Removed from public display after a customer report.",
+        })
+        .eq("id", reportedPhoto.id)
+        .eq("linked_venue_id", ownedVenue.smilesVenueId)
+        .select("id, status, rejection_reason")
+        .single();
+
+      if (updatePhotoError || !updatedPhoto?.id) {
+        throw new Error(
+          updatePhotoError?.message || "The reported photo could not be removed.",
+        );
+      }
+
+      const { data: updatedReport, error: updateReportError } = await smiles
+        .from("customer_photo_reports")
+        .update({
+          status: "photo_removed",
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", reportId)
+        .select("id, status, reviewed_at")
+        .single();
+
+      if (updateReportError || !updatedReport?.id) {
+        throw new Error(
+          updateReportError?.message || "The report status could not be updated.",
+        );
+      }
+
+      return NextResponse.json({
+        ok: true,
+        success: true,
+        message: "Photo removed from public display.",
+        photo: updatedPhoto,
+        report: updatedReport,
       });
     }
 

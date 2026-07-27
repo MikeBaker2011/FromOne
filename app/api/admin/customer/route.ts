@@ -4,10 +4,19 @@ import { createClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 
 const ADMIN_EMAIL = 'mikeb33@hotmail.co.uk';
+const DEFAULT_WEEKLY_POST_LIMIT = 4;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+type WeeklyAllowance = {
+  weekly_limit: number;
+  posts_used: number;
+  posts_remaining: number;
+  week_start: string | null;
+  week_end: string | null;
+};
 
 function cleanText(value: unknown) {
   return String(value || '').trim();
@@ -93,7 +102,9 @@ async function findUsersByEmail(emailQuery: string) {
       ),
     );
 
-    if (users.length < perPage) break;
+    if (users.length < perPage) {
+      break;
+    }
 
     page += 1;
   }
@@ -118,6 +129,7 @@ async function getRecentUsers(limit = 40) {
       const firstTime = firstUser.created_at
         ? new Date(firstUser.created_at).getTime()
         : 0;
+
       const secondTime = secondUser.created_at
         ? new Date(secondUser.created_at).getTime()
         : 0;
@@ -127,8 +139,101 @@ async function getRecentUsers(limit = 40) {
     .slice(0, limit);
 }
 
-async function attachAccessAndBilling(users: any[]) {
-  const userIds = users.map((user) => user.id);
+function getLatestProfileByUserId(profileRows: any[]) {
+  const profileByUserId = new Map<string, any>();
+
+  const sortedProfiles = [...profileRows].sort(
+    (firstProfile, secondProfile) => {
+      const firstTime = new Date(
+        firstProfile.updated_at ||
+          firstProfile.created_at ||
+          '1970-01-01T00:00:00.000Z',
+      ).getTime();
+
+      const secondTime = new Date(
+        secondProfile.updated_at ||
+          secondProfile.created_at ||
+          '1970-01-01T00:00:00.000Z',
+      ).getTime();
+
+      return secondTime - firstTime;
+    },
+  );
+
+  for (const profile of sortedProfiles) {
+    const userId = cleanText(profile.user_id);
+
+    if (userId && !profileByUserId.has(userId)) {
+      profileByUserId.set(userId, profile);
+    }
+  }
+
+  return profileByUserId;
+}
+
+async function getWeeklyAllowance(
+  userId: string,
+): Promise<WeeklyAllowance> {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase.rpc(
+    'get_weekly_campaign_post_allowance',
+    {
+      requested_user_id: userId,
+    },
+  );
+
+  if (error) {
+    console.error('Could not load weekly post allowance:', {
+      userId,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    return {
+      weekly_limit: DEFAULT_WEEKLY_POST_LIMIT,
+      posts_used: 0,
+      posts_remaining: DEFAULT_WEEKLY_POST_LIMIT,
+      week_start: null,
+      week_end: null,
+    };
+  }
+
+  const allowance = Array.isArray(data) ? data[0] : data;
+
+  const weeklyLimit = Number(
+    allowance?.weekly_limit ?? DEFAULT_WEEKLY_POST_LIMIT,
+  );
+
+  const postsUsed = Number(allowance?.posts_used ?? 0);
+
+  const postsRemaining = Number(
+    allowance?.posts_remaining ??
+      Math.max(weeklyLimit - postsUsed, 0),
+  );
+
+  return {
+    weekly_limit: Number.isFinite(weeklyLimit)
+      ? weeklyLimit
+      : DEFAULT_WEEKLY_POST_LIMIT,
+
+    posts_used: Number.isFinite(postsUsed)
+      ? postsUsed
+      : 0,
+
+    posts_remaining: Number.isFinite(postsRemaining)
+      ? postsRemaining
+      : Math.max(DEFAULT_WEEKLY_POST_LIMIT - postsUsed, 0),
+
+    week_start: allowance?.week_start || null,
+    week_end: allowance?.week_end || null,
+  };
+}
+
+async function attachCustomerDetails(users: any[]) {
+  const userIds = users.map((user) => user.id).filter(Boolean);
   const supabase = getSupabaseAdmin();
 
   const accessPromise = userIds.length
@@ -139,13 +244,34 @@ async function attachAccessAndBilling(users: any[]) {
     ? supabase.from('user_billing').select('*').in('user_id', userIds)
     : Promise.resolve({ data: [], error: null });
 
+  const profilesPromise = userIds.length
+    ? supabase
+        .from('business_profiles')
+        .select('*')
+        .in('user_id', userIds)
+    : Promise.resolve({ data: [], error: null });
+
   const [
     { data: accessRows, error: accessError },
     { data: billingRows, error: billingError },
-  ] = await Promise.all([accessPromise, billingPromise]);
+    { data: profileRows, error: profilesError },
+  ] = await Promise.all([
+    accessPromise,
+    billingPromise,
+    profilesPromise,
+  ]);
 
-  if (accessError) throw accessError;
-  if (billingError) throw billingError;
+  if (accessError) {
+    throw accessError;
+  }
+
+  if (billingError) {
+    throw billingError;
+  }
+
+  if (profilesError) {
+    throw profilesError;
+  }
 
   const accessByUserId = new Map(
     (accessRows || []).map((row: any) => [row.user_id, row]),
@@ -155,14 +281,49 @@ async function attachAccessAndBilling(users: any[]) {
     (billingRows || []).map((row: any) => [row.user_id, row]),
   );
 
-  return users.map((user) => ({
-    id: user.id,
-    email: user.email,
-    created_at: user.created_at || null,
-    last_sign_in_at: user.last_sign_in_at || null,
-    access: accessByUserId.get(user.id) || null,
-    billing: billingByUserId.get(user.id) || null,
-  }));
+  const profileByUserId = getLatestProfileByUserId(profileRows || []);
+
+  const allowanceResults = await Promise.all(
+    users.map((user) => getWeeklyAllowance(user.id)),
+  );
+
+  return users.map((user, index) => {
+    const businessProfile = profileByUserId.get(user.id) || null;
+    const weeklyAllowance = allowanceResults[index];
+
+    const postLimitOverride =
+      businessProfile?.post_limit_override === null ||
+      businessProfile?.post_limit_override === undefined
+        ? null
+        : Number(businessProfile.post_limit_override);
+
+    return {
+      id: user.id,
+      email: user.email,
+      created_at: user.created_at || null,
+      last_sign_in_at: user.last_sign_in_at || null,
+
+      access: accessByUserId.get(user.id) || null,
+      billing: billingByUserId.get(user.id) || null,
+
+      business_profile: businessProfile,
+
+      weekly_allowance: weeklyAllowance,
+
+      post_limit_override: postLimitOverride,
+
+      effective_post_limit:
+        weeklyAllowance?.weekly_limit ??
+        DEFAULT_WEEKLY_POST_LIMIT,
+
+      posts_used_this_week:
+        weeklyAllowance?.posts_used ?? 0,
+
+      posts_remaining_this_week:
+        weeklyAllowance?.posts_remaining ??
+        DEFAULT_WEEKLY_POST_LIMIT,
+    };
+  });
 }
 
 async function getRecentBugReports() {
@@ -186,6 +347,7 @@ async function getRecentBugReports() {
   }
 
   const reports = data || [];
+
   const uniqueUserIds = Array.from(
     new Set(
       reports
@@ -206,7 +368,7 @@ async function getRecentBugReports() {
           emailByUserId.set(userId, userData.user.email);
         }
       } catch {
-        // Missing/deleted users should not break the admin dashboard.
+        // Missing or deleted users should not break the admin dashboard.
       }
     }),
   );
@@ -224,14 +386,19 @@ export async function GET(request: NextRequest) {
     await requireAdmin(request);
 
     const url = new URL(request.url);
-    const mode = cleanText(url.searchParams.get('mode')).toLowerCase();
-    const emailQuery = cleanText(url.searchParams.get('email'));
+    const mode = cleanText(
+      url.searchParams.get('mode'),
+    ).toLowerCase();
+
+    const emailQuery = cleanText(
+      url.searchParams.get('email'),
+    );
 
     if (mode === 'overview') {
       const users = await getRecentUsers(40);
 
       const [customers, bugReports] = await Promise.all([
-        attachAccessAndBilling(users),
+        attachCustomerDetails(users),
         getRecentBugReports(),
       ]);
 
@@ -247,12 +414,14 @@ export async function GET(request: NextRequest) {
         {
           error: 'Email search query is required.',
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
     const users = await findUsersByEmail(emailQuery);
-    const customers = await attachAccessAndBilling(users);
+    const customers = await attachCustomerDetails(users);
 
     return NextResponse.json({
       ok: true,
@@ -268,9 +437,12 @@ export async function GET(request: NextRequest) {
       code: error?.code,
     });
 
-    const message = error?.message || 'Could not search customer.';
+    const message =
+      error?.message || 'Could not search customer.';
+
     const status =
-      message.includes('Admin access') || message.includes('sign in')
+      message.includes('Admin access') ||
+      message.includes('sign in')
         ? 401
         : 500;
 
@@ -285,10 +457,14 @@ export async function GET(request: NextRequest) {
           hint: error?.hint || null,
           hasSupabaseUrl: Boolean(supabaseUrl),
           hasAnonKey: Boolean(supabaseAnonKey),
-          hasServiceRoleKey: Boolean(supabaseServiceRoleKey),
+          hasServiceRoleKey: Boolean(
+            supabaseServiceRoleKey,
+          ),
         },
       },
-      { status },
+      {
+        status,
+      },
     );
   }
 }

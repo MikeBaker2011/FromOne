@@ -44,6 +44,10 @@ type SmilesDraftResult = {
   startTime: string | null;
   endTime: string | null;
   priceText: string;
+  pricingLabel: string;
+  priceValue: string;
+  ticketType: string;
+  ticketPrice: string;
   locationName: string;
   locationArea: string;
   address: string;
@@ -670,6 +674,35 @@ function cleanOptionalTime(value: any) {
 function inferSmilesDraftTypeFromText(value: string): SmilesDraftType {
   const clean = value.toLowerCase();
 
+  const hasStrongOfferSignal =
+    clean.includes('offer') ||
+    clean.includes('special') ||
+    clean.includes('discount') ||
+    clean.includes('sale') ||
+    clean.includes('save ') ||
+    clean.includes('saving') ||
+    clean.includes('free ') ||
+    clean.includes('complimentary') ||
+    clean.includes('2 for 1') ||
+    clean.includes('two for one') ||
+    clean.includes('deal') ||
+    clean.includes('deals') ||
+    clean.includes('voucher') ||
+    clean.includes('coupon') ||
+    clean.includes('% off') ||
+    clean.includes('off today') ||
+    clean.includes('off this week') ||
+    clean.includes('limited time') ||
+    /\bsave\s*£?\d+/.test(clean) ||
+    /\b\d+%\s*off\b/.test(clean) ||
+    /\b\d+\s*for\s*£?\d+/.test(clean) ||
+    /\bfrom\s*£\d+/.test(clean) ||
+    /\bonly\s*£\d+/.test(clean);
+
+  if (hasStrongOfferSignal) {
+    return 'offer';
+  }
+
   if (
     clean.includes('ticket') ||
     clean.includes('tickets') ||
@@ -693,35 +726,7 @@ function inferSmilesDraftTypeFromText(value: string): SmilesDraftType {
     return 'event';
   }
 
-  if (
-    clean.includes('offer') ||
-    clean.includes('special') ||
-    clean.includes('discount') ||
-    clean.includes('sale') ||
-    clean.includes('save ') ||
-    clean.includes('saving') ||
-    clean.includes('free ') ||
-    clean.includes('complimentary') ||
-    clean.includes('2 for 1') ||
-    clean.includes('two for one') ||
-    clean.includes('deal') ||
-    clean.includes('deals') ||
-    clean.includes('voucher') ||
-    clean.includes('coupon') ||
-    clean.includes('% off') ||
-    clean.includes('off today') ||
-    clean.includes('off this week') ||
-    clean.includes('limited time') ||
-    clean.includes('subject to availability') ||
-    /\bsave\s*£?\d+/.test(clean) ||
-    /\b\d+%\s*off\b/.test(clean) ||
-    /\b\d+\s*for\s*£?\d+/.test(clean) ||
-    /\b\d+\s+[a-z0-9][a-z0-9\s-]{0,40}\s+for\s*£?\d+/.test(clean) ||
-    /\bfrom\s*£\d+/.test(clean) ||
-    /\bonly\s*£\d+/.test(clean)
-  ) {
-    return 'offer';
-  }
+
 
   return 'none';
 }
@@ -769,6 +774,80 @@ function extractValidTimesFromText(value: string) {
   return match?.[0] ? match[0].trim() : '';
 }
 
+function inferOfferPricingLabel(value: string) {
+  const clean = cleanText(value).toLowerCase();
+
+  if (!clean) return 'Price to be confirmed';
+  if (clean.includes('free')) return 'Free';
+
+  if (
+    clean.includes('% off') ||
+    clean.includes('discount') ||
+    clean.includes('save ') ||
+    clean.includes('saving') ||
+    clean.includes('reduced')
+  ) {
+    return 'Discount';
+  }
+
+  if (
+    clean.includes('2 for 1') ||
+    clean.includes('two for one') ||
+    /\b\d+\s*for\s*£?\d+/.test(clean)
+  ) {
+    return 'BOGOF / multibuy';
+  }
+
+  if (clean.includes('from £') || clean.includes('from£')) {
+    return 'From price';
+  }
+
+  if (/\b£\d+(?:\.\d{2})?\b/.test(clean)) {
+    return 'Fixed price';
+  }
+
+  return 'Price to be confirmed';
+}
+
+function inferEventTicketType(value: string) {
+  const clean = cleanText(value).toLowerCase();
+
+  if (!clean) return 'Price to be confirmed';
+  if (clean.includes('free entry') || clean.includes('free admission')) {
+    return 'Free entry';
+  }
+  if (clean.includes('pay on door') || clean.includes('pay at the door')) {
+    return 'Pay on door';
+  }
+  if (clean.includes('donation')) return 'Donation';
+  if (clean.includes('from £') || clean.includes('from£')) return 'From price';
+  if (clean.includes('ticket') || /\b£\d+(?:\.\d{2})?\b/.test(clean)) {
+    return 'Ticketed';
+  }
+
+  return 'Price to be confirmed';
+}
+
+function extractPriceValueFromText(value: string) {
+  const clean = cleanText(value);
+
+  if (!clean) return '';
+
+  const patterns = [
+    /\b\d+%\s*off(?:\s+[a-z0-9][a-z0-9\s-]{0,40})?/i,
+    /\b\d+\s*for\s*£?\d+(?:\.\d{2})?\b/i,
+    /\bsave\s*£?\d+(?:\.\d{2})?\b/i,
+    /\b(?:from\s*)?£\d+(?:\.\d{2})?\b/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = clean.match(pattern);
+    if (match?.[0]) return truncateTextToLimit(match[0].trim(), 80);
+  }
+
+  return '';
+}
+
 function buildFallbackSmilesDraft({
   post,
   profile,
@@ -794,6 +873,25 @@ function buildFallbackSmilesDraft({
   const savingText = extractSavingTextFromText(combinedText);
   const validDays = extractValidDaysFromText(combinedText);
   const validTimes = extractValidTimesFromText(combinedText);
+  const priceText =
+    inferredType === 'offer'
+      ? savingText
+      : cleanText(
+          combinedText.match(/\b(?:from\s*)?£\d+(?:\.\d{2})?\b/i)?.[0] || '',
+        );
+  const priceValue = extractPriceValueFromText(combinedText);
+  const pricingLabel =
+    inferredType === 'offer'
+      ? inferOfferPricingLabel(combinedText)
+      : '';
+  const ticketType =
+    inferredType === 'event'
+      ? inferEventTicketType(combinedText)
+      : '';
+  const ticketPrice =
+    inferredType === 'event'
+      ? priceValue
+      : '';
 
   return {
     recommended: isRecommended,
@@ -812,7 +910,11 @@ function buildFallbackSmilesDraft({
     endDate: null,
     startTime: null,
     endTime: null,
-    priceText: '',
+    priceText,
+    pricingLabel,
+    priceValue: inferredType === 'offer' ? priceValue : '',
+    ticketType,
+    ticketPrice,
     locationName: cleanText(profile.business_name),
     locationArea: cleanText(profile.location, marketReach.includes('Local') ? 'Stockport' : ''),
     address: '',
@@ -860,11 +962,35 @@ function normaliseSmilesDraft(
     terms: cleanText(value.terms, fallback.terms || 'Subject to availability.'),
     validDays: cleanText(value.validDays || value.valid_days, fallback.validDays),
     validTimes: cleanText(value.validTimes || value.valid_times, fallback.validTimes),
-    startDate: cleanOptionalIsoDate(value.startDate || value.start_date),
-    endDate: cleanOptionalIsoDate(value.endDate || value.end_date),
-    startTime: cleanOptionalTime(value.startTime || value.start_time),
-    endTime: cleanOptionalTime(value.endTime || value.end_time),
+    startDate:
+      cleanOptionalIsoDate(value.startDate || value.start_date) ||
+      fallback.startDate,
+    endDate:
+      cleanOptionalIsoDate(value.endDate || value.end_date) ||
+      fallback.endDate,
+    startTime:
+      cleanOptionalTime(value.startTime || value.start_time) ||
+      fallback.startTime,
+    endTime:
+      cleanOptionalTime(value.endTime || value.end_time) ||
+      fallback.endTime,
     priceText: cleanText(value.priceText || value.price_text, fallback.priceText),
+    pricingLabel: cleanText(
+      value.pricingLabel || value.pricing_label,
+      fallback.pricingLabel,
+    ),
+    priceValue: cleanText(
+      value.priceValue || value.price_value,
+      fallback.priceValue,
+    ),
+    ticketType: cleanText(
+      value.ticketType || value.ticket_type,
+      fallback.ticketType,
+    ),
+    ticketPrice: cleanText(
+      value.ticketPrice || value.ticket_price,
+      fallback.ticketPrice,
+    ),
     locationName: cleanText(value.locationName || value.location_name, fallback.locationName),
     locationArea: cleanText(value.locationArea || value.location_area, fallback.locationArea),
     address: cleanText(value.address, fallback.address),
@@ -1259,7 +1385,33 @@ Required JSON shape:
       "caption": "Ready-to-post caption.",
       "cta": "Short call to action",
       "hashtags": ["#Example", "#LocalBusiness"],
-      "image_prompt": "Specific media suggestion. Say what image, video, flyer, or simple visual should be used. If uploaded media is used, describe it."
+      "image_prompt": "Specific media suggestion. Say what image, video, flyer, or simple visual should be used. If uploaded media is used, describe it.",
+      "smilesDraft": {
+        "recommended": true,
+        "type": "venue | offer | event | none",
+        "title": "Public listing title",
+        "description": "Full public description",
+        "shortDescription": "Short card summary under 180 characters",
+        "savingText": "Offer saving or headline, otherwise empty",
+        "terms": "Offer terms, otherwise empty",
+        "validDays": "Offer valid days, otherwise empty",
+        "validTimes": "Offer valid times, otherwise empty",
+        "startDate": "YYYY-MM-DD or null",
+        "endDate": "YYYY-MM-DD or null",
+        "startTime": "HH:MM or null",
+        "endTime": "HH:MM or null",
+        "priceText": "Visible offer price or event ticket price, otherwise empty",
+        "pricingLabel": "For offers use exactly one of: Free, Discount, Fixed price, From price, BOGOF / multibuy, Ask venue, Price to be confirmed",
+        "priceValue": "Offer value such as 50% off all drinks, £12, or 2 for £15, otherwise empty",
+        "ticketType": "For events use exactly one of: Free entry, Ticketed, Pay on door, From price, Donation, Price to be confirmed",
+        "ticketPrice": "Event ticket price such as £10 or From £8, otherwise empty",
+        "locationName": "Venue or business name",
+        "locationArea": "Town or local area",
+        "address": "Public address if visible or supplied",
+        "venueType": "Nightclub, bar, restaurant, salon, shop, service business, etc.",
+        "websiteUrl": "Full website URL if supplied",
+        "bookingUrl": "Full booking or ticket URL if supplied"
+      }
     }
   ]
 }
@@ -1317,6 +1469,19 @@ Core media quality rule:
 - Do not only describe the image.
 - Turn the upload into a professional business post.
 - For flyers, extract offer, date, price, service, location, contact details, and CTA where supplied, then rewrite them naturally as a social post.
+- Every generated post must include a complete smilesDraft object.
+- Set smilesDraft.type to "offer" when the upload advertises a discount, deal, multibuy, fixed-price package, free item, percentage saving, reduced entry, reduced drinks, or other customer saving.
+- Set smilesDraft.type to "event" when the upload promotes a dated or timed event, party, live music night, class, workshop, show, launch, market, quiz, ticketed session, or one-off occasion.
+- Set smilesDraft.type to "venue" only when the upload is primarily general promotion for the business or place and is not mainly a specific offer or event.
+- Set smilesDraft.type to "none" only when the content is unsuitable for Smilez.
+- For an offer image such as "50% off all drinks before 11pm every Friday and Saturday", return type "offer", set pricingLabel to "Discount", set priceValue and savingText to "50% off all drinks", put Friday and Saturday in validDays, and put the time restriction in validTimes.
+- For a fixed-price offer such as "2 cocktails for £12", set pricingLabel to "Fixed price" or "BOGOF / multibuy" where appropriate and put the full customer-facing value in priceValue.
+- For a free offer, set pricingLabel to "Free".
+- For an event, set ticketType and ticketPrice from the visible ticket wording.
+- For an event, extract event date, end date, start time, end time and ticket price when visible.
+- Never turn an offer into an event merely because days or times are shown. The main customer proposition decides the type.
+- Never invent dates, prices, addresses, links or terms. Use empty strings or null when they are not visible or supplied.
+- shortDescription must be no more than 180 characters.
 - For videos with inline video attached, analyse the footage and turn the actual scene/action into a post about the visible proof, process, atmosphere, result, product, service, booking, or event. For videos without inline analysis, use the quick description/context carefully and do not claim visual details that were not supplied.
 - For photos, identify what is visibly in the photo first, then write a useful, local, industry-specific caption around that visible subject.
 - If no uploaded media is supplied, use the website/business profile.
@@ -1564,6 +1729,97 @@ async function generateWithGemini(prompt: string, inlineMediaParts: InlineMediaP
                     items: { type: 'STRING' },
                   },
                   image_prompt: { type: 'STRING' },
+                  smilesDraft: {
+                    type: 'OBJECT',
+                    properties: {
+                      recommended: { type: 'BOOLEAN' },
+                      type: {
+                        type: 'STRING',
+                        enum: ['venue', 'offer', 'event', 'none'],
+                      },
+                      title: { type: 'STRING' },
+                      description: { type: 'STRING' },
+                      shortDescription: { type: 'STRING' },
+                      savingText: { type: 'STRING' },
+                      terms: { type: 'STRING' },
+                      validDays: { type: 'STRING' },
+                      validTimes: { type: 'STRING' },
+                      startDate: {
+                        type: 'STRING',
+                        nullable: true,
+                      },
+                      endDate: {
+                        type: 'STRING',
+                        nullable: true,
+                      },
+                      startTime: {
+                        type: 'STRING',
+                        nullable: true,
+                      },
+                      endTime: {
+                        type: 'STRING',
+                        nullable: true,
+                      },
+                      priceText: { type: 'STRING' },
+                      pricingLabel: {
+                        type: 'STRING',
+                        enum: [
+                          'Free',
+                          'Discount',
+                          'Fixed price',
+                          'From price',
+                          'BOGOF / multibuy',
+                          'Ask venue',
+                          'Price to be confirmed',
+                        ],
+                      },
+                      priceValue: { type: 'STRING' },
+                      ticketType: {
+                        type: 'STRING',
+                        enum: [
+                          'Free entry',
+                          'Ticketed',
+                          'Pay on door',
+                          'From price',
+                          'Donation',
+                          'Price to be confirmed',
+                        ],
+                      },
+                      ticketPrice: { type: 'STRING' },
+                      locationName: { type: 'STRING' },
+                      locationArea: { type: 'STRING' },
+                      address: { type: 'STRING' },
+                      venueType: { type: 'STRING' },
+                      websiteUrl: { type: 'STRING' },
+                      bookingUrl: { type: 'STRING' },
+                    },
+                    required: [
+                      'recommended',
+                      'type',
+                      'title',
+                      'description',
+                      'shortDescription',
+                      'savingText',
+                      'terms',
+                      'validDays',
+                      'validTimes',
+                      'startDate',
+                      'endDate',
+                      'startTime',
+                      'endTime',
+                      'priceText',
+                      'pricingLabel',
+                      'priceValue',
+                      'ticketType',
+                      'ticketPrice',
+                      'locationName',
+                      'locationArea',
+                      'address',
+                      'venueType',
+                      'websiteUrl',
+                      'bookingUrl',
+                    ],
+                  },
                 },
                 required: [
                   'day',
@@ -1573,6 +1829,7 @@ async function generateWithGemini(prompt: string, inlineMediaParts: InlineMediaP
                   'cta',
                   'hashtags',
                   'image_prompt',
+                  'smilesDraft',
                 ],
               },
             },

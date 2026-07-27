@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import './admin.css';
+import "./admin.css";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
-import { useToast } from '@/app/components/ToastProvider';
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { createClient } from "@supabase/supabase-js";
+import { useToast } from "@/app/components/ToastProvider";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -17,9 +17,17 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: 'fromone-auth-session',
+    storageKey: "fromone-auth-session",
   },
 });
+
+type WeeklyAllowance = {
+  weekly_limit: number;
+  posts_used: number;
+  posts_remaining: number;
+  week_start: string | null;
+  week_end: string | null;
+};
 
 type AdminCustomer = {
   id: string;
@@ -28,6 +36,12 @@ type AdminCustomer = {
   last_sign_in_at: string | null;
   access: any | null;
   billing: any | null;
+  business_profile?: any | null;
+  weekly_allowance?: WeeklyAllowance | null;
+  post_limit_override?: number | null;
+  effective_post_limit?: number;
+  posts_used_this_week?: number;
+  posts_remaining_this_week?: number;
 };
 
 type AdminBugReport = {
@@ -44,26 +58,27 @@ type AdminBugReport = {
 };
 
 const formatDate = (value?: string | null) => {
-  if (!value) return 'Not set';
+  if (!value) return "Not set";
 
-  return new Date(value).toLocaleString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(value).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
 const cleanLabel = (value?: string | null) => {
-  return value ? String(value).replace(/_/g, ' ') : 'not set';
+  return value ? String(value).replace(/_/g, " ") : "not set";
 };
 
 const cleanText = (value?: unknown) => {
-  return String(value || '').trim();
+  return String(value || "").trim();
 };
 
-const formatCount = (value: number) => new Intl.NumberFormat('en-GB').format(value);
+const formatCount = (value: number) =>
+  new Intl.NumberFormat("en-GB").format(value);
 
 async function readJsonResponse(response: Response) {
   const responseText = await response.text();
@@ -76,54 +91,103 @@ async function readJsonResponse(response: Response) {
     return JSON.parse(responseText);
   } catch {
     return {
-      error: responseText || 'Server returned an empty response.',
+      error: responseText || "Server returned an empty response.",
     };
   }
 }
 
 function getCustomerStatus(customer: AdminCustomer) {
-  const accessStatus = String(customer.access?.access_status || '').toLowerCase();
-  const subscriptionStatus = String(customer.access?.subscription_status || '').toLowerCase();
-  const billingStatus = String(customer.billing?.status || '').toLowerCase();
-  const plan = String(customer.billing?.plan || '').toLowerCase();
+  const accessStatus = String(
+    customer.access?.access_status || "",
+  ).toLowerCase();
+  const subscriptionStatus = String(
+    customer.access?.subscription_status || "",
+  ).toLowerCase();
+  const billingStatus = String(customer.billing?.status || "").toLowerCase();
+  const plan = String(customer.billing?.plan || "").toLowerCase();
 
-  if (accessStatus === 'beta' || subscriptionStatus === 'beta' || billingStatus === 'beta') return 'Beta tester';
-  if (accessStatus === 'active' && subscriptionStatus === 'active') return 'Active subscriber';
-  if (plan === 'starter' || billingStatus === 'active') return 'Subscriber';
-  if (accessStatus === 'pending_payment' || subscriptionStatus === 'pending_payment' || billingStatus === 'pending_payment') return 'Pending';
-  if (accessStatus === 'expired' || billingStatus === 'expired') return 'Expired';
-  if (accessStatus === 'locked' || ['past_due', 'suspended'].includes(billingStatus)) return 'Needs attention';
-  return 'Demo / trial';
+  if (
+    accessStatus === "beta" ||
+    subscriptionStatus === "beta" ||
+    billingStatus === "beta"
+  )
+    return "Beta tester";
+  if (accessStatus === "active" && subscriptionStatus === "active")
+    return "Active subscriber";
+  if (plan === "starter" || billingStatus === "active") return "Subscriber";
+  if (
+    accessStatus === "pending_payment" ||
+    subscriptionStatus === "pending_payment" ||
+    billingStatus === "pending_payment"
+  )
+    return "Pending";
+  if (accessStatus === "expired" || billingStatus === "expired")
+    return "Expired";
+  if (
+    accessStatus === "locked" ||
+    ["past_due", "suspended"].includes(billingStatus)
+  )
+    return "Needs attention";
+  return "Demo / trial";
 }
 
 function isBetaCustomer(customer: AdminCustomer) {
-  const accessStatus = String(customer.access?.access_status || '').toLowerCase();
-  const subscriptionStatus = String(customer.access?.subscription_status || '').toLowerCase();
-  const billingStatus = String(customer.billing?.status || '').toLowerCase();
+  const accessStatus = String(
+    customer.access?.access_status || "",
+  ).toLowerCase();
+  const subscriptionStatus = String(
+    customer.access?.subscription_status || "",
+  ).toLowerCase();
+  const billingStatus = String(customer.billing?.status || "").toLowerCase();
 
-  return accessStatus === 'beta' || subscriptionStatus === 'beta' || billingStatus === 'beta';
+  return (
+    accessStatus === "beta" ||
+    subscriptionStatus === "beta" ||
+    billingStatus === "beta"
+  );
 }
 
 function isSubscriber(customer: AdminCustomer) {
   const status = getCustomerStatus(customer).toLowerCase();
-  const plan = String(customer.billing?.plan || '').toLowerCase();
-  const billingStatus = String(customer.billing?.status || '').toLowerCase();
-  const reference = customer.billing?.paypal_subscription_id || customer.access?.subscription_reference;
+  const plan = String(customer.billing?.plan || "").toLowerCase();
+  const billingStatus = String(customer.billing?.status || "").toLowerCase();
+  const reference =
+    customer.billing?.paypal_subscription_id ||
+    customer.access?.subscription_reference;
 
-  return status.includes('subscriber') || plan === 'starter' || billingStatus === 'active' || Boolean(reference);
+  return (
+    status.includes("subscriber") ||
+    plan === "starter" ||
+    billingStatus === "active" ||
+    Boolean(reference)
+  );
 }
 
 function needsAttention(customer: AdminCustomer) {
   const status = getCustomerStatus(customer).toLowerCase();
-  return status.includes('pending') || status.includes('expired') || status.includes('attention');
+  return (
+    status.includes("pending") ||
+    status.includes("expired") ||
+    status.includes("attention")
+  );
 }
 
 function getStatusTone(label: string) {
   const value = label.toLowerCase();
-  if (value.includes('active') || value.includes('subscriber') || value.includes('beta')) return 'good';
-  if (value.includes('pending') || value.includes('attention')) return 'warn';
-  if (value.includes('expired') || value.includes('locked') || value.includes('suspended')) return 'bad';
-  return 'neutral';
+  if (
+    value.includes("active") ||
+    value.includes("subscriber") ||
+    value.includes("beta")
+  )
+    return "good";
+  if (value.includes("pending") || value.includes("attention")) return "warn";
+  if (
+    value.includes("expired") ||
+    value.includes("locked") ||
+    value.includes("suspended")
+  )
+    return "bad";
+  return "neutral";
 }
 
 export default function AdminPage() {
@@ -132,16 +196,21 @@ export default function AdminPage() {
 
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [emailQuery, setEmailQuery] = useState('');
-  const [inviteEmail, setInviteEmail] = useState('');
+  const [emailQuery, setEmailQuery] = useState("");
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
   const [recentCustomers, setRecentCustomers] = useState<AdminCustomer[]>([]);
   const [bugReports, setBugReports] = useState<AdminBugReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingOverview, setLoadingOverview] = useState(false);
   const [actingUserId, setActingUserId] = useState<string | null>(null);
-  const [confirmExpireCustomer, setConfirmExpireCustomer] = useState<AdminCustomer | null>(null);
-  const [adminNotesByUserId, setAdminNotesByUserId] = useState<Record<string, string>>({});
+  const [confirmExpireCustomer, setConfirmExpireCustomer] =
+    useState<AdminCustomer | null>(null);
+  const [adminNotesByUserId, setAdminNotesByUserId] = useState<
+    Record<string, string>
+  >({});
+  const [postLimitByUserId, setPostLimitByUserId] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     let mounted = true;
@@ -181,20 +250,20 @@ export default function AdminPage() {
 
   const notify = (
     message: string,
-    type: 'success' | 'error' | 'info' | 'warning' = 'info',
+    type: "success" | "error" | "info" | "warning" = "info",
     title?: string,
   ) => {
     showToast({
       type,
       title:
         title ||
-        (type === 'success'
-          ? 'Done'
-          : type === 'error'
-            ? 'Something went wrong'
-            : type === 'warning'
-              ? 'Please check'
-              : 'FromOne Admin'),
+        (type === "success"
+          ? "Done"
+          : type === "error"
+            ? "Something went wrong"
+            : type === "warning"
+              ? "Please check"
+              : "FromOne Admin"),
       message,
     });
   };
@@ -216,18 +285,35 @@ export default function AdminPage() {
       await new Promise((resolve) => window.setTimeout(resolve, 250));
     }
 
-    throw new Error(lastError || 'Please sign in as the admin account first.');
+    throw new Error(lastError || "Please sign in as the admin account first.");
   };
 
-  const syncAdminNotes = (items: AdminCustomer[]) => {
+  const syncCustomerFormState = (items: AdminCustomer[]) => {
     setAdminNotesByUserId((current) => {
       const nextNotes: Record<string, string> = { ...current };
 
       for (const customer of items) {
-        nextNotes[customer.id] = String(customer.access?.admin_notes || nextNotes[customer.id] || '');
+        nextNotes[customer.id] = String(
+          customer.access?.admin_notes || nextNotes[customer.id] || "",
+        );
       }
 
       return nextNotes;
+    });
+
+    setPostLimitByUserId((current) => {
+      const nextLimits: Record<string, string> = { ...current };
+
+      for (const customer of items) {
+        const override = customer.post_limit_override;
+
+        nextLimits[customer.id] =
+          override === null || override === undefined
+            ? String(customer.effective_post_limit || 4)
+            : String(override);
+      }
+
+      return nextLimits;
     });
   };
 
@@ -239,7 +325,7 @@ export default function AdminPage() {
     try {
       const token = await getToken();
 
-      const response = await fetch('/api/admin/customer?mode=overview', {
+      const response = await fetch("/api/admin/customer?mode=overview", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -248,15 +334,15 @@ export default function AdminPage() {
       const result = await readJsonResponse(response);
 
       if (!response.ok) {
-        throw new Error(result?.error || 'Could not load admin overview.');
+        throw new Error(result?.error || "Could not load admin overview.");
       }
 
       const overviewCustomers = result.customers || [];
       setRecentCustomers(overviewCustomers);
       setBugReports(result.bugReports || []);
-      syncAdminNotes(overviewCustomers);
+      syncCustomerFormState(overviewCustomers);
     } catch (error: any) {
-      notify(error?.message || 'Could not load admin overview.', 'error');
+      notify(error?.message || "Could not load admin overview.", "error");
     } finally {
       setLoadingOverview(false);
     }
@@ -266,12 +352,20 @@ export default function AdminPage() {
     const cleanEmail = (overrideEmail || emailQuery).trim();
 
     if (!cleanEmail) {
-      notify('Enter an email address or part of an email.', 'warning', 'Email needed');
+      notify(
+        "Enter an email address or part of an email.",
+        "warning",
+        "Email needed",
+      );
       return;
     }
 
     if (!authReady && !adminEmail) {
-      notify('Checking admin session. Please try again in a moment.', 'info', 'Checking session');
+      notify(
+        "Checking admin session. Please try again in a moment.",
+        "info",
+        "Checking session",
+      );
       return;
     }
 
@@ -280,55 +374,80 @@ export default function AdminPage() {
     try {
       const token = await getToken();
 
-      const response = await fetch(`/api/admin/customer?email=${encodeURIComponent(cleanEmail)}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/admin/customer?email=${encodeURIComponent(cleanEmail)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const result = await readJsonResponse(response);
 
       if (!response.ok) {
-        throw new Error(result?.error || 'Could not search customers.');
+        throw new Error(result?.error || "Could not search customers.");
       }
 
       const foundCustomers = result.customers || [];
 
       setCustomers(foundCustomers);
-      syncAdminNotes(foundCustomers);
+      syncCustomerFormState(foundCustomers);
 
       if (!foundCustomers.length) {
-        notify('No matching customer found.', 'info', 'No result');
+        notify("No matching customer found.", "info", "No result");
         return;
       }
 
-      notify(`${foundCustomers.length} customer result found.`, 'success', 'Customer found');
-      window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+      notify(
+        `${foundCustomers.length} customer result found.`,
+        "success",
+        "Customer found",
+      );
+      window.setTimeout(
+        () =>
+          resultsRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          }),
+        80,
+      );
     } catch (error: any) {
-      notify(error?.message || 'Could not search customers.', 'error');
+      notify(error?.message || "Could not search customers.", "error");
     } finally {
       setLoading(false);
     }
   };
 
   const openCustomer = async (customer: AdminCustomer) => {
-    setEmailQuery(customer.email || '');
+    setEmailQuery(customer.email || "");
     setCustomers([customer]);
-    syncAdminNotes([customer]);
-    window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    syncCustomerFormState([customer]);
+    window.setTimeout(
+      () =>
+        resultsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        }),
+      80,
+    );
   };
 
-  const runAction = async (userId: string, action: string, extraBody?: Record<string, any>) => {
+  const runAction = async (
+    userId: string,
+    action: string,
+    extraBody?: Record<string, any>,
+  ) => {
     setActingUserId(userId);
 
     try {
       const token = await getToken();
 
-      const response = await fetch('/api/admin/customer/action', {
-        method: 'POST',
+      const response = await fetch("/api/admin/customer/action", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userId,
@@ -340,61 +459,55 @@ export default function AdminPage() {
       const result = await readJsonResponse(response);
 
       if (!response.ok) {
-        throw new Error(result?.error || 'Admin action failed.');
+        throw new Error(result?.error || "Admin action failed.");
       }
 
-      notify(result?.message || 'Customer updated.', 'success', 'Updated');
+      notify(result?.message || "Customer updated.", "success", "Updated");
       await loadOverview();
 
       if (customers.some((customer) => customer.id === userId)) {
-        await searchCustomer(customers.find((customer) => customer.id === userId)?.email || emailQuery);
+        await searchCustomer(
+          customers.find((customer) => customer.id === userId)?.email ||
+            emailQuery,
+        );
       }
     } catch (error: any) {
-      notify(error?.message || 'Admin action failed.', 'error');
+      notify(error?.message || "Admin action failed.", "error");
     } finally {
       setActingUserId(null);
     }
   };
 
-  const buildInviteMessage = (emailAddress?: string) => {
-    const email = cleanText(emailAddress || inviteEmail);
-
-    return [
-      'Hi,',
-      '',
-      'You’ve been invited to test FromOne beta.',
-      '',
-      'Please sign up or sign in here:',
-      'https://www.fromone.co.uk/signin',
-      '',
-      email
-        ? `Use this email address when signing in: ${email}`
-        : 'Use the email address this invite was sent to when signing in.',
-      '',
-      'Once you have signed in, reply to this email and we’ll activate your beta access.',
-      '',
-      'Thanks,',
-      'FromOne',
-      'info@fromone.co.uk',
-    ].join('\n');
+  const saveAdminNotes = async (customer: AdminCustomer) => {
+    await runAction(customer.id, "save_notes", {
+      adminNotes: adminNotesByUserId[customer.id] || "",
+    });
   };
 
-  const copyBetaInviteMessage = async () => {
-    const cleanEmail = cleanText(inviteEmail);
+  const savePostLimit = async (customer: AdminCustomer) => {
+    const rawValue = cleanText(postLimitByUserId[customer.id]);
+    const parsedValue = Number(rawValue);
 
-    if (!cleanEmail) {
-      notify('Enter the tester email first.', 'warning', 'Email needed');
+    if (
+      !Number.isInteger(parsedValue) ||
+      parsedValue < 1 ||
+      parsedValue > 100
+    ) {
+      notify(
+        "Enter a whole-number weekly limit between 1 and 100.",
+        "warning",
+        "Valid limit needed",
+      );
       return;
     }
 
-    await navigator.clipboard.writeText(buildInviteMessage(cleanEmail));
-    notify('Beta invite message copied.', 'success', 'Invite copied');
+    await runAction(customer.id, "set_post_limit_override", {
+      postLimitOverride: parsedValue,
+    });
   };
 
-  const saveAdminNotes = async (customer: AdminCustomer) => {
-    await runAction(customer.id, 'save_notes', {
-      adminNotes: adminNotesByUserId[customer.id] || '',
-    });
+  const clearPostLimit = async (customer: AdminCustomer) => {
+    await runAction(customer.id, "clear_post_limit_override");
   };
 
   const confirmExpireAccess = async () => {
@@ -402,7 +515,7 @@ export default function AdminPage() {
 
     const customer = confirmExpireCustomer;
     setConfirmExpireCustomer(null);
-    await runAction(customer.id, 'expire');
+    await runAction(customer.id, "expire");
   };
 
   const copySupportSummary = async (customer: AdminCustomer) => {
@@ -412,50 +525,63 @@ export default function AdminPage() {
       `Access: ${cleanLabel(customer.access?.access_status)}`,
       `Subscription: ${cleanLabel(customer.access?.subscription_status)}`,
       `Provider: ${cleanLabel(customer.access?.subscription_provider)}`,
-      `Reference: ${customer.access?.subscription_reference || customer.billing?.paypal_subscription_id || 'Not set'}`,
+      `Reference: ${customer.access?.subscription_reference || customer.billing?.paypal_subscription_id || "Not set"}`,
       `Plan: ${cleanLabel(customer.billing?.plan)}`,
       `Billing: ${cleanLabel(customer.billing?.status)}`,
       `Payment: ${cleanLabel(customer.billing?.payment_status)}`,
       `Extension ends: ${formatDate(customer.access?.extension_ends_at)}`,
-      `Admin notes: ${customer.access?.admin_notes || 'None'}`,
-    ].join('\n');
+      `Business: ${customer.business_profile?.business_name || "Not set"}`,
+      `Weekly post limit: ${customer.effective_post_limit ?? customer.weekly_allowance?.weekly_limit ?? 4}`,
+      `Posts used this week: ${customer.posts_used_this_week ?? customer.weekly_allowance?.posts_used ?? 0}`,
+      `Posts remaining this week: ${customer.posts_remaining_this_week ?? customer.weekly_allowance?.posts_remaining ?? 4}`,
+      `Post limit override: ${customer.post_limit_override ?? "Default"}`,
+      `Admin notes: ${customer.access?.admin_notes || "None"}`,
+    ].join("\n");
 
     await navigator.clipboard.writeText(summary);
-    notify('Support summary copied.', 'success', 'Copied');
+    notify("Support summary copied.", "success", "Copied");
   };
 
   const betaCustomers = useMemo(() => {
-    return recentCustomers.filter((customer) => isBetaCustomer(customer)).slice(0, 8);
+    return recentCustomers
+      .filter((customer) => isBetaCustomer(customer))
+      .slice(0, 8);
   }, [recentCustomers]);
 
   const demoCustomers = useMemo(() => {
     return recentCustomers
-      .filter((customer) => !isSubscriber(customer) && !isBetaCustomer(customer))
+      .filter(
+        (customer) => !isSubscriber(customer) && !isBetaCustomer(customer),
+      )
       .slice(0, 8);
   }, [recentCustomers]);
 
   const subscriberCustomers = useMemo(() => {
-    return recentCustomers.filter((customer) => isSubscriber(customer)).slice(0, 8);
+    return recentCustomers
+      .filter((customer) => isSubscriber(customer))
+      .slice(0, 8);
   }, [recentCustomers]);
 
   const attentionCustomers = useMemo(() => {
-    return recentCustomers.filter((customer) => needsAttention(customer)).slice(0, 8);
+    return recentCustomers
+      .filter((customer) => needsAttention(customer))
+      .slice(0, 8);
   }, [recentCustomers]);
 
   const openIssues = useMemo(() => {
     return bugReports.filter((report) => {
-      const status = String(report.status || '').toLowerCase();
-      return !['closed', 'resolved', 'done', 'fixed'].includes(status);
+      const status = String(report.status || "").toLowerCase();
+      return !["closed", "resolved", "done", "fixed"].includes(status);
     });
   }, [bugReports]);
 
   const systemServices = [
-    'API & Services',
-    'Database',
-    'Background Jobs',
-    'Email Delivery',
-    'File Storage',
-    'Web App',
+    "API & Services",
+    "Database",
+    "Background Jobs",
+    "Email Delivery",
+    "File Storage",
+    "Web App",
   ];
 
   const recentSearches = useMemo(() => {
@@ -477,36 +603,66 @@ export default function AdminPage() {
           const busy = actingUserId === customer.id;
           const status = getCustomerStatus(customer);
           const isBetaActive = isBetaCustomer(customer);
-          const isActive = customer.access?.access_status === 'active' && customer.access?.subscription_status === 'active';
+          const isActive =
+            customer.access?.access_status === "active" &&
+            customer.access?.subscription_status === "active";
 
           return (
             <article key={customer.id} className="admin-table-row">
-              <button type="button" className="admin-row-main" onClick={() => openCustomer(customer)}>
+              <button
+                type="button"
+                className="admin-row-main"
+                onClick={() => openCustomer(customer)}
+              >
                 <span className="admin-row-email">{customer.email}</span>
-                <span className="admin-row-meta">Created {formatDate(customer.created_at)}</span>
+                <span className="admin-row-meta">
+                  Created {formatDate(customer.created_at)} ·{" "}
+                  {customer.posts_used_this_week ??
+                    customer.weekly_allowance?.posts_used ??
+                    0}
+                  /
+                  {customer.effective_post_limit ??
+                    customer.weekly_allowance?.weekly_limit ??
+                    4}{" "}
+                  posts used
+                </span>
               </button>
 
-              <span className={`admin-status-chip is-${getStatusTone(status)}`}>{status}</span>
+              <span className={`admin-status-chip is-${getStatusTone(status)}`}>
+                {status}
+              </span>
 
               <div className="admin-row-actions">
-                <button type="button" className="admin-ghost-button" onClick={() => openCustomer(customer)}>
+                <button
+                  type="button"
+                  className="admin-ghost-button"
+                  onClick={() => openCustomer(customer)}
+                >
                   Open
                 </button>
                 <button
                   type="button"
                   className="admin-primary-button"
-                  onClick={() => runAction(customer.id, 'grant_beta')}
+                  onClick={() => runAction(customer.id, "grant_beta")}
                   disabled={busy || isBetaActive}
-                  title={isBetaActive ? 'Customer already has beta access.' : undefined}
+                  title={
+                    isBetaActive
+                      ? "Customer already has beta access."
+                      : undefined
+                  }
                 >
-                  {busy ? 'Updating...' : isBetaActive ? 'Beta active' : 'Grant beta'}
+                  {busy
+                    ? "Updating..."
+                    : isBetaActive
+                      ? "Beta active"
+                      : "Grant beta"}
                 </button>
                 <button
                   type="button"
                   className="admin-ghost-button"
-                  onClick={() => runAction(customer.id, 'manual_active')}
+                  onClick={() => runAction(customer.id, "manual_active")}
                   disabled={busy || isActive}
-                  title={isActive ? 'Customer is already active.' : undefined}
+                  title={isActive ? "Customer is already active." : undefined}
                 >
                   Activate
                 </button>
@@ -519,30 +675,40 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="admin-page admin-agency-page">
+    <main className="admin-page admin-agency-page" data-fromone-admin>
       <section className="admin-hero-panel">
         <div>
-          <div className="admin-eyebrow">Admin support</div>
-          <h1>Customer Action Panel</h1>
+          <div className="admin-eyebrow">FromOne admin</div>
+          <h1>Customer management.</h1>
           <p>
-            See recent beta testers, demo signups, subscribers and support reports. Open a customer,
-            grant beta access, or activate Starter manually when support needs it.
+            Manage customer access, subscriptions, weekly post allowances and
+            support activity from one place.
           </p>
           <div className="admin-session-pill">
-            Signed in as <strong>{authReady ? adminEmail || 'not signed in' : 'checking session...'}</strong>
+            Signed in as{" "}
+            <strong>
+              {authReady
+                ? adminEmail || "not signed in"
+                : "checking session..."}
+            </strong>
           </div>
         </div>
 
         <div className="admin-hero-actions" aria-label="Admin quick actions">
-          <Link href="/admin/health" className="admin-ghost-button">
-            Health dashboard
-          </Link>
-          <button type="button" className="admin-ghost-button" onClick={loadOverview} disabled={loadingOverview}>
-            {loadingOverview ? 'Refreshing...' : 'Refresh data'}
-          </button>
-          <a className="admin-primary-button" href="#beta-invite">
-            New beta invite
+          <a className="admin-primary-button" href="#customer-search">
+            Find customer
           </a>
+          <Link href="/admin/health" className="admin-ghost-button">
+            System health
+          </Link>
+          <button
+            type="button"
+            className="admin-ghost-button"
+            onClick={loadOverview}
+            disabled={loadingOverview}
+          >
+            {loadingOverview ? "Refreshing..." : "Refresh data"}
+          </button>
         </div>
       </section>
 
@@ -576,20 +742,24 @@ export default function AdminPage() {
           <div>
             <p>Open issues</p>
             <strong>{formatCount(openIssues.length)}</strong>
-            <small>{openIssues.length ? 'Needs review' : 'All clear'}</small>
+            <small>{openIssues.length ? "Needs review" : "All clear"}</small>
           </div>
         </article>
       </section>
 
       <section className="admin-action-grid">
-        <article className="admin-panel admin-search-panel">
+        <article
+          id="customer-search"
+          className="admin-panel admin-search-panel"
+        >
           <div className="admin-panel-header">
             <span className="admin-panel-icon">⌕</span>
             <div>
               <div className="admin-eyebrow">Find customer</div>
               <h2>Search by email</h2>
               <p>
-                Use a full email or partial match, then grant beta access, activate Starter, or copy a support summary.
+                Use a full email or partial match, then grant beta access,
+                activate Starter, or copy a support summary.
               </p>
             </div>
           </div>
@@ -601,11 +771,16 @@ export default function AdminPage() {
               onChange={(event) => setEmailQuery(event.target.value)}
               placeholder="customer@example.com"
               onKeyDown={(event) => {
-                if (event.key === 'Enter') searchCustomer();
+                if (event.key === "Enter") searchCustomer();
               }}
             />
-            <button type="button" className="admin-primary-button" onClick={() => searchCustomer()} disabled={loading}>
-              {loading ? 'Searching...' : 'Search'}
+            <button
+              type="button"
+              className="admin-primary-button"
+              onClick={() => searchCustomer()}
+              disabled={loading}
+            >
+              {loading ? "Searching..." : "Search"}
             </button>
           </div>
 
@@ -613,52 +788,53 @@ export default function AdminPage() {
             <div className="admin-mini-heading">Recent customers</div>
             {recentSearches.length ? (
               recentSearches.map((customer) => (
-                <button key={customer.id} type="button" onClick={() => openCustomer(customer)}>
+                <button
+                  key={customer.id}
+                  type="button"
+                  onClick={() => openCustomer(customer)}
+                >
                   <span>{customer.email}</span>
                   <small>{formatDate(customer.created_at)}</small>
                 </button>
               ))
             ) : (
-              <p className="admin-empty-text">Recent customer activity will appear here.</p>
+              <p className="admin-empty-text">
+                Recent customer activity will appear here.
+              </p>
             )}
           </div>
         </article>
 
-        <article id="beta-invite" className="admin-panel admin-invite-panel">
+        <article className="admin-panel admin-operations-panel">
           <div className="admin-panel-header">
-            <span className="admin-panel-icon">↗</span>
+            <span className="admin-panel-icon">✓</span>
             <div>
-              <div className="admin-eyebrow">Beta invite</div>
-              <h2>Prepare invite email</h2>
-              <p>Send a polished beta invite, then grant access after the tester signs up.</p>
+              <div className="admin-eyebrow">Live operations</div>
+              <h2>Manage the app, not a beta.</h2>
+              <p>
+                Customer lookup is now the main admin workflow. Open an account
+                to manage access, billing, notes and weekly post limits.
+              </p>
             </div>
           </div>
 
-          <label className="admin-field">
-            <span>Tester email</span>
-            <input
-              className="admin-input"
-              value={inviteEmail}
-              onChange={(event) => setInviteEmail(event.target.value)}
-              placeholder="tester@example.com"
-            />
-          </label>
-
-          <label className="admin-field">
-            <span>Invite message</span>
-            <textarea className="admin-input" value={buildInviteMessage(inviteEmail)} readOnly rows={9} />
-          </label>
-
-          <div className="admin-button-row">
-            <button type="button" className="admin-primary-button" onClick={copyBetaInviteMessage}>
-              Copy message
-            </button>
-            <a
-              className="admin-ghost-button"
-              href={`mailto:${encodeURIComponent(inviteEmail.trim())}?subject=${encodeURIComponent('FromOne beta invite')}&body=${encodeURIComponent(buildInviteMessage(inviteEmail))}`}
-            >
-              Open email
-            </a>
+          <div className="admin-operations-grid">
+            <div>
+              <strong>Customer access</strong>
+              <span>Activate, expire or extend accounts.</span>
+            </div>
+            <div>
+              <strong>Weekly limits</strong>
+              <span>Set or reset each customer’s allowance.</span>
+            </div>
+            <div>
+              <strong>Billing support</strong>
+              <span>Review plans, payments and account status.</span>
+            </div>
+            <div>
+              <strong>Support reports</strong>
+              <span>See recent issues and customer notes.</span>
+            </div>
           </div>
         </article>
       </section>
@@ -669,7 +845,10 @@ export default function AdminPage() {
           <div>
             <div className="admin-eyebrow">System health</div>
             <h2>All systems operational</h2>
-            <p>Keep an eye on media preparation, publishing, storage and app delivery from one clean view.</p>
+            <p>
+              Keep an eye on media preparation, publishing, storage and app
+              delivery from one clean view.
+            </p>
           </div>
         </div>
 
@@ -691,11 +870,16 @@ export default function AdminPage() {
               <div className="admin-eyebrow">Beta testers</div>
               <h2>Controlled beta access</h2>
             </div>
-            <button type="button" className="admin-ghost-button" onClick={loadOverview} disabled={loadingOverview}>
+            <button
+              type="button"
+              className="admin-ghost-button"
+              onClick={loadOverview}
+              disabled={loadingOverview}
+            >
               Refresh
             </button>
           </div>
-          {renderCustomerRows(betaCustomers, 'No beta testers found yet.')}
+          {renderCustomerRows(betaCustomers, "No beta testers found yet.")}
         </article>
 
         <article className="admin-panel admin-list-card">
@@ -705,7 +889,7 @@ export default function AdminPage() {
               <h2>People trying FromOne</h2>
             </div>
           </div>
-          {renderCustomerRows(demoCustomers, 'No recent demo signups found.')}
+          {renderCustomerRows(demoCustomers, "No recent demo signups found.")}
         </article>
 
         <article className="admin-panel admin-list-card">
@@ -716,8 +900,10 @@ export default function AdminPage() {
             </div>
           </div>
           {renderCustomerRows(
-            subscriberCustomers.length ? subscriberCustomers : attentionCustomers,
-            'No recent subscribers or billing records found.',
+            subscriberCustomers.length
+              ? subscriberCustomers
+              : attentionCustomers,
+            "No recent subscribers or billing records found.",
           )}
         </article>
       </section>
@@ -727,7 +913,10 @@ export default function AdminPage() {
           <div>
             <div className="admin-eyebrow">Support & bug reports</div>
             <h2>Latest customer reports</h2>
-            <p>Use this to spot issues from the support form without leaving the admin panel.</p>
+            <p>
+              Use this to spot issues from the support form without leaving the
+              admin panel.
+            </p>
           </div>
         </div>
 
@@ -737,20 +926,29 @@ export default function AdminPage() {
           <div className="admin-empty-state">
             <div className="admin-empty-icon">✓</div>
             <h3>No open support tickets</h3>
-            <p>Great job. There are no issues right now. New reports will appear here.</p>
+            <p>
+              Great job. There are no issues right now. New reports will appear
+              here.
+            </p>
           </div>
         ) : (
           <div className="admin-report-list">
             {bugReports.slice(0, 8).map((report) => (
               <article key={report.id} className="admin-report-item">
                 <div className="admin-report-chips">
-                  <span className="admin-status-chip is-warn">{report.severity || 'Medium'}</span>
-                  <span className="admin-status-chip is-neutral">{report.status || 'new'}</span>
+                  <span className="admin-status-chip is-warn">
+                    {report.severity || "Medium"}
+                  </span>
+                  <span className="admin-status-chip is-neutral">
+                    {report.status || "new"}
+                  </span>
                 </div>
                 <h3>{report.title}</h3>
                 <p>{report.description}</p>
                 <small>
-                  {report.user_email || report.user_id || 'Unknown user'} · {report.page_url || 'No page'} · {formatDate(report.created_at)}
+                  {report.user_email || report.user_id || "Unknown user"} ·{" "}
+                  {report.page_url || "No page"} ·{" "}
+                  {formatDate(report.created_at)}
                 </small>
               </article>
             ))}
@@ -763,20 +961,25 @@ export default function AdminPage() {
           const busy = actingUserId === customer.id;
           const isBetaActive = isBetaCustomer(customer);
           const isOwnerUnlimited =
-            customer.access?.subscription_reference === 'owner-unlimited-access' ||
-            customer.billing?.paypal_subscription_id === 'owner-unlimited-access';
+            customer.access?.subscription_reference ===
+              "owner-unlimited-access" ||
+            customer.billing?.paypal_subscription_id ===
+              "owner-unlimited-access";
           const isActive =
-            customer.access?.access_status === 'active' &&
-            customer.access?.subscription_status === 'active';
-          const isExpired = customer.access?.access_status === 'expired';
+            customer.access?.access_status === "active" &&
+            customer.access?.subscription_status === "active";
+          const isExpired = customer.access?.access_status === "expired";
           const isPending =
-            customer.access?.access_status === 'pending_payment' ||
-            customer.access?.subscription_status === 'pending_payment' ||
-            customer.billing?.status === 'pending_payment';
+            customer.access?.access_status === "pending_payment" ||
+            customer.access?.subscription_status === "pending_payment" ||
+            customer.billing?.status === "pending_payment";
           const status = getCustomerStatus(customer);
 
           return (
-            <article key={customer.id} className="admin-panel admin-customer-card">
+            <article
+              key={customer.id}
+              className="admin-panel admin-customer-card"
+            >
               <div className="admin-customer-top">
                 <div>
                   <div className="admin-eyebrow">Customer profile</div>
@@ -787,8 +990,16 @@ export default function AdminPage() {
                 </div>
 
                 <div className="admin-customer-top-actions">
-                  <span className={`admin-status-chip is-${getStatusTone(status)}`}>{status}</span>
-                  <button type="button" className="admin-ghost-button" onClick={() => copySupportSummary(customer)}>
+                  <span
+                    className={`admin-status-chip is-${getStatusTone(status)}`}
+                  >
+                    {status}
+                  </span>
+                  <button
+                    type="button"
+                    className="admin-ghost-button"
+                    onClick={() => copySupportSummary(customer)}
+                  >
                     Copy summary
                   </button>
                 </div>
@@ -798,16 +1009,32 @@ export default function AdminPage() {
                 <section className="admin-mini-card">
                   <span>Access</span>
                   <strong>{cleanLabel(customer.access?.access_status)}</strong>
-                  <p>Subscription: {cleanLabel(customer.access?.subscription_status)}</p>
-                  <p>Provider: {cleanLabel(customer.access?.subscription_provider)}</p>
-                  <p>Reference: {customer.access?.subscription_reference || 'Not set'}</p>
+                  <p>
+                    Subscription:{" "}
+                    {cleanLabel(customer.access?.subscription_status)}
+                  </p>
+                  <p>
+                    Provider:{" "}
+                    {cleanLabel(customer.access?.subscription_provider)}
+                  </p>
+                  <p>
+                    Reference:{" "}
+                    {customer.access?.subscription_reference || "Not set"}
+                  </p>
                 </section>
 
                 <section className="admin-mini-card">
                   <span>Demo / extension</span>
-                  <strong>{formatDate(customer.access?.extension_ends_at)}</strong>
-                  <p>Trial started: {formatDate(customer.access?.trial_started_at)}</p>
-                  <p>Trial ends: {formatDate(customer.access?.trial_ends_at)}</p>
+                  <strong>
+                    {formatDate(customer.access?.extension_ends_at)}
+                  </strong>
+                  <p>
+                    Trial started:{" "}
+                    {formatDate(customer.access?.trial_started_at)}
+                  </p>
+                  <p>
+                    Trial ends: {formatDate(customer.access?.trial_ends_at)}
+                  </p>
                   <p>Updated: {formatDate(customer.access?.updated_at)}</p>
                 </section>
 
@@ -816,7 +1043,10 @@ export default function AdminPage() {
                   <strong>{cleanLabel(customer.billing?.plan)}</strong>
                   <p>Status: {cleanLabel(customer.billing?.status)}</p>
                   <p>Payment: {cleanLabel(customer.billing?.payment_status)}</p>
-                  <p>PayPal: {customer.billing?.paypal_subscription_id || 'Not set'}</p>
+                  <p>
+                    PayPal:{" "}
+                    {customer.billing?.paypal_subscription_id || "Not set"}
+                  </p>
                 </section>
 
                 <section className="admin-mini-card">
@@ -824,18 +1054,141 @@ export default function AdminPage() {
                   <strong>Created {formatDate(customer.created_at)}</strong>
                   <p>Last sign-in: {formatDate(customer.last_sign_in_at)}</p>
                   <p>Cancelled: {formatDate(customer.billing?.cancelled_at)}</p>
-                  <p>Billing updated: {formatDate(customer.billing?.updated_at)}</p>
+                  <p>
+                    Billing updated: {formatDate(customer.billing?.updated_at)}
+                  </p>
                 </section>
+              </div>
+
+              <div className="admin-post-limit-card">
+                <div className="admin-post-limit-summary">
+                  <div>
+                    <div className="admin-eyebrow">Weekly post allowance</div>
+                    <h3>
+                      {customer.posts_used_this_week ??
+                        customer.weekly_allowance?.posts_used ??
+                        0}{" "}
+                      of{" "}
+                      {customer.effective_post_limit ??
+                        customer.weekly_allowance?.weekly_limit ??
+                        4}{" "}
+                      posts used
+                    </h3>
+                    <p>
+                      {customer.posts_remaining_this_week ??
+                        customer.weekly_allowance?.posts_remaining ??
+                        4}{" "}
+                      remaining. Resets every Monday.
+                    </p>
+                  </div>
+
+                  <span
+                    className={`admin-status-chip ${
+                      (customer.posts_remaining_this_week ??
+                        customer.weekly_allowance?.posts_remaining ??
+                        4) > 0
+                        ? "is-good"
+                        : "is-warn"
+                    }`}
+                  >
+                    {customer.post_limit_override === null ||
+                    customer.post_limit_override === undefined
+                      ? "Default limit"
+                      : "Custom limit"}
+                  </span>
+                </div>
+
+                <div className="admin-post-limit-controls">
+                  <label className="admin-field">
+                    <span>Posts per week</span>
+                    <input
+                      className="admin-input"
+                      type="number"
+                      min="1"
+                      max="100"
+                      step="1"
+                      inputMode="numeric"
+                      value={
+                        postLimitByUserId[customer.id] ??
+                        String(customer.effective_post_limit || 4)
+                      }
+                      onChange={(event) =>
+                        setPostLimitByUserId((current) => ({
+                          ...current,
+                          [customer.id]: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    className="admin-primary-button"
+                    onClick={() => savePostLimit(customer)}
+                    disabled={busy || !customer.business_profile?.id}
+                    title={
+                      !customer.business_profile?.id
+                        ? "This customer needs a business profile before a custom limit can be set."
+                        : undefined
+                    }
+                  >
+                    Save weekly limit
+                  </button>
+
+                  <button
+                    type="button"
+                    className="admin-ghost-button"
+                    onClick={() => clearPostLimit(customer)}
+                    disabled={
+                      busy ||
+                      !customer.business_profile?.id ||
+                      customer.post_limit_override === null ||
+                      customer.post_limit_override === undefined
+                    }
+                    title={
+                      customer.post_limit_override === null ||
+                      customer.post_limit_override === undefined
+                        ? "This customer is already using the default limit of 4."
+                        : undefined
+                    }
+                  >
+                    Reset to default 4
+                  </button>
+                </div>
+
+                <div className="admin-post-limit-meta">
+                  <span>
+                    Business:{" "}
+                    <strong>
+                      {customer.business_profile?.business_name || "Not set"}
+                    </strong>
+                  </span>
+                  <span>
+                    Week starts:{" "}
+                    <strong>
+                      {formatDate(customer.weekly_allowance?.week_start)}
+                    </strong>
+                  </span>
+                  <span>
+                    Next reset:{" "}
+                    <strong>
+                      {formatDate(customer.weekly_allowance?.week_end)}
+                    </strong>
+                  </span>
+                </div>
               </div>
 
               <div className="admin-notes-card">
                 <label>
                   <strong>Admin notes</strong>
-                  <span>Internal notes for beta access, billing support or onboarding history.</span>
+                  <span>
+                    Internal notes for beta access, billing support or
+                    onboarding history.
+                  </span>
                 </label>
                 <textarea
                   className="admin-input"
-                  value={adminNotesByUserId[customer.id] || ''}
+                  value={adminNotesByUserId[customer.id] || ""}
                   onChange={(event) =>
                     setAdminNotesByUserId((current) => ({
                       ...current,
@@ -845,7 +1198,12 @@ export default function AdminPage() {
                   rows={3}
                   placeholder="Example: Beta tester. Extended after onboarding feedback."
                 />
-                <button type="button" className="admin-ghost-button" onClick={() => saveAdminNotes(customer)} disabled={busy}>
+                <button
+                  type="button"
+                  className="admin-ghost-button"
+                  onClick={() => saveAdminNotes(customer)}
+                  disabled={busy}
+                >
                   Save notes
                 </button>
               </div>
@@ -854,63 +1212,100 @@ export default function AdminPage() {
                 <button
                   type="button"
                   className="admin-primary-button"
-                  onClick={() => runAction(customer.id, 'grant_beta')}
+                  onClick={() => runAction(customer.id, "grant_beta")}
                   disabled={busy || isBetaActive}
-                  title={isBetaActive ? 'Customer already has beta access.' : undefined}
+                  title={
+                    isBetaActive
+                      ? "Customer already has beta access."
+                      : undefined
+                  }
                 >
                   Grant beta access
                 </button>
                 <button
                   type="button"
                   className="admin-danger-button"
-                  onClick={() => runAction(customer.id, 'revoke_beta')}
+                  onClick={() => runAction(customer.id, "revoke_beta")}
                   disabled={busy || !isBetaActive}
-                  title={!isBetaActive ? 'Customer does not currently have beta access.' : undefined}
+                  title={
+                    !isBetaActive
+                      ? "Customer does not currently have beta access."
+                      : undefined
+                  }
                 >
                   Revoke beta
                 </button>
-                <button type="button" className="admin-ghost-button" onClick={() => runAction(customer.id, 'extend_7')} disabled={busy}>
+                <button
+                  type="button"
+                  className="admin-ghost-button"
+                  onClick={() => runAction(customer.id, "extend_7")}
+                  disabled={busy}
+                >
                   Extend 7 days
                 </button>
-                <button type="button" className="admin-ghost-button" onClick={() => runAction(customer.id, 'extend_14')} disabled={busy}>
+                <button
+                  type="button"
+                  className="admin-ghost-button"
+                  onClick={() => runAction(customer.id, "extend_14")}
+                  disabled={busy}
+                >
                   Extend 14 days
                 </button>
-                <button type="button" className="admin-ghost-button" onClick={() => runAction(customer.id, 'extend_30')} disabled={busy}>
+                <button
+                  type="button"
+                  className="admin-ghost-button"
+                  onClick={() => runAction(customer.id, "extend_30")}
+                  disabled={busy}
+                >
                   Extend 30 days
                 </button>
                 <button
                   type="button"
                   className="admin-ghost-button"
-                  onClick={() => runAction(customer.id, 'remove_extension')}
+                  onClick={() => runAction(customer.id, "remove_extension")}
                   disabled={busy || !customer.access?.extension_ends_at}
-                  title={!customer.access?.extension_ends_at ? 'No extension is set.' : undefined}
+                  title={
+                    !customer.access?.extension_ends_at
+                      ? "No extension is set."
+                      : undefined
+                  }
                 >
                   Remove extension
                 </button>
                 <button
                   type="button"
                   className="admin-ghost-button"
-                  onClick={() => runAction(customer.id, 'clear_pending')}
+                  onClick={() => runAction(customer.id, "clear_pending")}
                   disabled={busy || !isPending}
-                  title={!isPending ? 'No pending payment to clear.' : undefined}
+                  title={
+                    !isPending ? "No pending payment to clear." : undefined
+                  }
                 >
                   Clear pending
                 </button>
                 <button
                   type="button"
                   className="admin-primary-button"
-                  onClick={() => runAction(customer.id, 'manual_active')}
+                  onClick={() => runAction(customer.id, "manual_active")}
                   disabled={busy || (isActive && !isOwnerUnlimited)}
-                  title={isActive && !isOwnerUnlimited ? 'Customer is already active.' : undefined}
+                  title={
+                    isActive && !isOwnerUnlimited
+                      ? "Customer is already active."
+                      : undefined
+                  }
                 >
                   Activate Starter
                 </button>
                 <button
                   type="button"
                   className="admin-ghost-button"
-                  onClick={() => runAction(customer.id, 'owner_unlimited')}
+                  onClick={() => runAction(customer.id, "owner_unlimited")}
                   disabled={busy || isOwnerUnlimited}
-                  title={isOwnerUnlimited ? 'Owner unlimited is already active.' : undefined}
+                  title={
+                    isOwnerUnlimited
+                      ? "Owner unlimited is already active."
+                      : undefined
+                  }
                 >
                   Owner unlimited
                 </button>
@@ -919,7 +1314,7 @@ export default function AdminPage() {
                   className="admin-danger-button"
                   onClick={() => setConfirmExpireCustomer(customer)}
                   disabled={busy || isExpired}
-                  title={isExpired ? 'Customer is already expired.' : undefined}
+                  title={isExpired ? "Customer is already expired." : undefined}
                 >
                   Expire access
                 </button>
@@ -937,15 +1332,24 @@ export default function AdminPage() {
             <div className="admin-eyebrow">Please confirm</div>
             <h2>Expire this customer?</h2>
             <p>
-              This will remove active access for <strong>{confirmExpireCustomer.email}</strong> and mark their billing as expired.
-              Use this only for support/admin cases.
+              This will remove active access for{" "}
+              <strong>{confirmExpireCustomer.email}</strong> and mark their
+              billing as expired. Use this only for support/admin cases.
             </p>
 
             <div className="admin-button-row is-end">
-              <button type="button" className="admin-ghost-button" onClick={() => setConfirmExpireCustomer(null)}>
+              <button
+                type="button"
+                className="admin-ghost-button"
+                onClick={() => setConfirmExpireCustomer(null)}
+              >
                 Keep access
               </button>
-              <button type="button" className="admin-danger-button" onClick={confirmExpireAccess}>
+              <button
+                type="button"
+                className="admin-danger-button"
+                onClick={confirmExpireAccess}
+              >
                 Expire access
               </button>
             </div>
@@ -993,9 +1397,16 @@ export default function AdminPage() {
           position: relative;
           overflow: hidden;
           border: 1px solid var(--admin-border);
-          background:
-            radial-gradient(circle at top right, rgba(255, 212, 59, 0.1), transparent 34%),
-            linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(8, 13, 24, 0.86));
+          background: radial-gradient(
+              circle at top right,
+              rgba(255, 212, 59, 0.1),
+              transparent 34%
+            ),
+            linear-gradient(
+              145deg,
+              rgba(15, 23, 42, 0.95),
+              rgba(8, 13, 24, 0.86)
+            );
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
           backdrop-filter: blur(18px);
         }
@@ -1014,12 +1425,16 @@ export default function AdminPage() {
 
         .admin-hero-panel::after,
         .admin-support-panel::after {
-          content: '';
+          content: "";
           position: absolute;
           inset: auto -18% -60% 48%;
           height: 360px;
           border-radius: 999px;
-          background: radial-gradient(circle, rgba(255, 212, 59, 0.12), transparent 62%);
+          background: radial-gradient(
+            circle,
+            rgba(255, 212, 59, 0.12),
+            transparent 62%
+          );
           pointer-events: none;
         }
 
@@ -1102,11 +1517,19 @@ export default function AdminPage() {
           text-decoration: none;
           cursor: pointer;
           appearance: none;
-          transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+          transition:
+            transform 160ms ease,
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            background 160ms ease;
         }
 
         .admin-primary-button {
-          background: linear-gradient(135deg, var(--admin-gold), var(--admin-gold-2));
+          background: linear-gradient(
+            135deg,
+            var(--admin-gold),
+            var(--admin-gold-2)
+          );
           color: #101420;
           border-color: rgba(255, 212, 59, 0.54);
           box-shadow: 0 16px 34px rgba(255, 212, 59, 0.14);
@@ -1131,7 +1554,7 @@ export default function AdminPage() {
         }
 
         .admin-agency-page button:disabled,
-        .admin-agency-page a[aria-disabled='true'] {
+        .admin-agency-page a[aria-disabled="true"] {
           opacity: 0.55;
           cursor: not-allowed;
           transform: none !important;
@@ -1548,7 +1971,8 @@ export default function AdminPage() {
         }
 
         .admin-mini-card,
-        .admin-notes-card {
+        .admin-notes-card,
+        .admin-post-limit-card {
           min-width: 0;
           padding: 18px;
           border-radius: 22px;
@@ -1568,6 +1992,62 @@ export default function AdminPage() {
           margin: 5px 0 0;
           font-size: 0.88rem;
           overflow-wrap: anywhere;
+        }
+
+        .admin-post-limit-card {
+          display: grid;
+          gap: 16px;
+          margin-top: 18px;
+          border-color: rgba(255, 212, 59, 0.16);
+          background: radial-gradient(
+              circle at top right,
+              rgba(255, 212, 59, 0.08),
+              transparent 40%
+            ),
+            rgba(2, 6, 23, 0.34);
+        }
+
+        .admin-post-limit-summary {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+        }
+
+        .admin-post-limit-summary h3 {
+          margin: 8px 0 6px;
+          color: #ffffff;
+          font-size: clamp(1.25rem, 2vw, 1.7rem);
+          letter-spacing: -0.04em;
+        }
+
+        .admin-post-limit-summary p {
+          margin: 0;
+        }
+
+        .admin-post-limit-controls {
+          display: grid;
+          grid-template-columns: minmax(160px, 0.55fr) auto auto;
+          gap: 10px;
+          align-items: end;
+        }
+
+        .admin-post-limit-controls .admin-field {
+          margin: 0;
+        }
+
+        .admin-post-limit-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px 18px;
+          padding-top: 14px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          color: var(--admin-muted);
+          font-size: 0.84rem;
+        }
+
+        .admin-post-limit-meta strong {
+          color: rgba(248, 250, 252, 0.92);
         }
 
         .admin-notes-card {
@@ -1620,6 +2100,165 @@ export default function AdminPage() {
           margin-top: 18px;
         }
 
+        /* Match the live FromOne app: light canvas, white cards, navy copy and pink actions. */
+        .admin-agency-page {
+          --admin-bg: #f5f7fb;
+          --admin-panel: #ffffff;
+          --admin-panel-strong: #ffffff;
+          --admin-border: #dfe5f1;
+          --admin-border-strong: #ffd0e6;
+          --admin-text: #071b49;
+          --admin-muted: #52617a;
+          --admin-soft: #7b879d;
+          --admin-gold: #f72585;
+          --admin-gold-2: #e91e75;
+          --admin-good: #16a34a;
+          --admin-warn: #ca8a04;
+          --admin-bad: #e11d48;
+          background: transparent !important;
+          color: var(--admin-text) !important;
+        }
+
+        .admin-hero-panel,
+        .admin-panel,
+        .admin-kpi-card {
+          background: #ffffff !important;
+          border: 1.5px solid var(--admin-border) !important;
+          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.09) !important;
+          backdrop-filter: none !important;
+        }
+
+        .admin-hero-panel {
+          min-height: 220px;
+          border-color: #ffd0e6 !important;
+          background: radial-gradient(
+              circle at top right,
+              rgba(247, 37, 133, 0.09),
+              transparent 36%
+            ),
+            #ffffff !important;
+        }
+
+        .admin-hero-panel::after,
+        .admin-support-panel::after {
+          display: none !important;
+        }
+
+        .admin-hero-panel h1,
+        .admin-panel h2,
+        .admin-customer-top h2,
+        .admin-empty-state h3,
+        .admin-mini-card strong,
+        .admin-notes-card strong,
+        .admin-row-email,
+        .admin-kpi-card strong,
+        .admin-report-item h3 {
+          color: #071b49 !important;
+        }
+
+        .admin-hero-panel p,
+        .admin-panel p,
+        .admin-report-item p,
+        .admin-mini-card p,
+        .admin-notes-card span,
+        .admin-empty-text,
+        .admin-kpi-card p,
+        .admin-kpi-card small {
+          color: #52617a !important;
+        }
+
+        .admin-session-pill,
+        .admin-mini-card,
+        .admin-notes-card,
+        .admin-table-row,
+        .admin-report-item,
+        .admin-recent-searches button,
+        .admin-service-grid {
+          background: #f8faff !important;
+          border-color: #e3e8f2 !important;
+        }
+
+        .admin-primary-button {
+          background: #f72585 !important;
+          border-color: #f72585 !important;
+          color: #ffffff !important;
+          border-radius: 999px !important;
+          box-shadow: 0 16px 36px rgba(247, 37, 133, 0.2) !important;
+        }
+
+        .admin-ghost-button {
+          background: #ffffff !important;
+          color: #071b49 !important;
+          border-color: #d9e0ec !important;
+          border-radius: 999px !important;
+        }
+
+        .admin-danger-button {
+          background: #fff1f4 !important;
+          color: #be123c !important;
+          border-color: #fecdd3 !important;
+          border-radius: 999px !important;
+        }
+
+        .admin-input {
+          background: #ffffff !important;
+          color: #071b49 !important;
+          border-color: #dfe5f1 !important;
+          box-shadow: none !important;
+        }
+
+        .admin-input:focus {
+          border-color: rgba(247, 37, 133, 0.5) !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.08) !important;
+        }
+
+        .admin-kpi-icon,
+        .admin-panel-icon,
+        .admin-empty-icon {
+          background: #fff3fa !important;
+          border-color: #ffd0e6 !important;
+          color: #f72585 !important;
+        }
+
+        .admin-service-item {
+          border-color: #e3e8f2 !important;
+        }
+
+        .admin-service-item strong {
+          color: #071b49 !important;
+        }
+
+        .admin-status-chip.is-neutral {
+          color: #52617a !important;
+          background: #f3f6fb !important;
+          border-color: #dfe5f1 !important;
+        }
+
+        .admin-operations-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .admin-operations-grid > div {
+          display: grid;
+          gap: 6px;
+          padding: 16px;
+          border: 1px solid #e3e8f2;
+          border-radius: 18px;
+          background: #f8faff;
+        }
+
+        .admin-operations-grid strong {
+          color: #071b49;
+        }
+
+        .admin-operations-grid span {
+          color: #52617a;
+          font-size: 0.88rem;
+          line-height: 1.45;
+        }
+
         @media (max-width: 1120px) {
           .admin-hero-panel,
           .admin-action-grid,
@@ -1639,6 +2278,14 @@ export default function AdminPage() {
 
           .admin-status-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .admin-post-limit-controls {
+            grid-template-columns: minmax(150px, 0.7fr) 1fr;
+          }
+
+          .admin-post-limit-controls .admin-ghost-button {
+            grid-column: 1 / -1;
           }
         }
 
@@ -1661,7 +2308,8 @@ export default function AdminPage() {
           .admin-live-grid,
           .admin-status-grid,
           .admin-service-grid,
-          .admin-search-row {
+          .admin-search-row,
+          .admin-operations-grid {
             grid-template-columns: 1fr;
           }
 
@@ -1673,9 +2321,15 @@ export default function AdminPage() {
           .admin-action-button-grid,
           .admin-list-card-header,
           .admin-panel-header,
-          .admin-health-copy {
+          .admin-health-copy,
+          .admin-post-limit-summary,
+          .admin-post-limit-controls {
             display: grid;
             grid-template-columns: 1fr;
+          }
+
+          .admin-post-limit-controls .admin-ghost-button {
+            grid-column: auto;
           }
 
           .admin-primary-button,
@@ -1691,6 +2345,229 @@ export default function AdminPage() {
             height: 46px;
           }
         }
+
+        /* Final FromOne light-theme overrides */
+        .admin-agency-page {
+          --admin-bg: #f6f8fc;
+          --admin-panel: #ffffff;
+          --admin-panel-strong: #ffffff;
+          --admin-border: #dfe6f2;
+          --admin-border-strong: rgba(255, 31, 124, 0.24);
+          --admin-text: #071a4d;
+          --admin-muted: #52658a;
+          --admin-soft: #7f8daa;
+          --admin-gold: #ff1f7c;
+          --admin-gold-2: #ff4f9b;
+          --admin-good: #16a466;
+          --admin-warn: #b97900;
+          --admin-bad: #d9405f;
+          color: var(--admin-text) !important;
+        }
+
+        .admin-hero-panel,
+        .admin-panel,
+        .admin-kpi-card {
+          border-color: var(--admin-border);
+          background:
+            radial-gradient(circle at top right, rgba(255, 31, 124, 0.07), transparent 34%),
+            #ffffff;
+          box-shadow: 0 20px 60px rgba(31, 54, 99, 0.09);
+        }
+
+        .admin-hero-panel {
+          border-color: rgba(255, 31, 124, 0.18);
+        }
+
+        .admin-hero-panel h1,
+        .admin-panel h2,
+        .admin-empty-state h3,
+        .admin-report-item h3,
+        .admin-customer-top h2,
+        .admin-mini-card strong,
+        .admin-notes-card strong,
+        .admin-post-limit-summary h3,
+        .admin-row-email {
+          color: #071a4d;
+        }
+
+        .admin-hero-panel p,
+        .admin-panel p,
+        .admin-report-item p,
+        .admin-mini-card p,
+        .admin-notes-card span,
+        .admin-empty-text,
+        .admin-empty-state p {
+          color: var(--admin-muted);
+        }
+
+        .admin-session-pill {
+          background: #f5f7fb;
+          border-color: #dfe6f2;
+          color: #52658a;
+        }
+
+        .admin-primary-button {
+          background: linear-gradient(135deg, #ff1f7c, #ff4f9b);
+          color: #ffffff;
+          border-color: rgba(255, 31, 124, 0.35);
+          box-shadow: 0 14px 30px rgba(255, 31, 124, 0.18);
+        }
+
+        .admin-ghost-button {
+          background: #ffffff;
+          color: #071a4d;
+          border-color: #d7e0ee;
+        }
+
+        .admin-danger-button {
+          background: #fff2f5;
+          color: #c92f51;
+          border-color: #f2bcc8;
+        }
+
+        .admin-kpi-icon,
+        .admin-panel-icon,
+        .admin-empty-icon {
+          background: #fff0f6;
+          border-color: #ffd0e2;
+          color: #ff1f7c;
+        }
+
+        .admin-kpi-card p,
+        .admin-kpi-card small,
+        .admin-recent-searches small,
+        .admin-row-meta,
+        .admin-report-item small {
+          color: var(--admin-muted);
+        }
+
+        .admin-kpi-card strong {
+          color: #071a4d;
+        }
+
+        .admin-input {
+          border-color: #d7e0ee;
+          background: #ffffff;
+          color: #071a4d;
+          box-shadow: inset 0 1px 0 rgba(7, 26, 77, 0.02);
+        }
+
+        .admin-input::placeholder {
+          color: #98a4ba;
+        }
+
+        .admin-input:focus {
+          border-color: rgba(255, 31, 124, 0.55);
+          box-shadow: 0 0 0 4px rgba(255, 31, 124, 0.1);
+        }
+
+        .admin-recent-searches {
+          border-top-color: #e6ebf3;
+        }
+
+        .admin-recent-searches button,
+        .admin-table-row,
+        .admin-report-item,
+        .admin-mini-card,
+        .admin-notes-card {
+          background: #f8faff;
+          border-color: #dfe6f2;
+          color: #071a4d;
+        }
+
+        .admin-service-grid {
+          border-color: #dfe6f2;
+          background: #f8faff;
+        }
+
+        .admin-service-item {
+          border-right-color: #e3e9f2;
+          border-bottom-color: #e3e9f2;
+        }
+
+        .admin-service-item strong {
+          color: #071a4d;
+        }
+
+        .admin-status-chip.is-good {
+          color: #13794d;
+          background: #ecfbf3;
+          border-color: #bcebd2;
+        }
+
+        .admin-status-chip.is-warn {
+          color: #8c5a00;
+          background: #fff8df;
+          border-color: #f2dfa0;
+        }
+
+        .admin-status-chip.is-bad {
+          color: #b52f4c;
+          background: #fff0f3;
+          border-color: #f1c0cb;
+        }
+
+        .admin-status-chip.is-neutral {
+          color: #52658a;
+          background: #f2f5f9;
+          border-color: #d9e1ec;
+        }
+
+        .admin-customer-top {
+          border-bottom-color: #e4eaf3;
+        }
+
+        .admin-customer-top code {
+          background: #f2f5fa;
+          color: #52658a;
+          border-color: #dfe6f2;
+        }
+
+        .admin-post-limit-card {
+          border-color: #ffd0e2;
+          background:
+            radial-gradient(circle at top right, rgba(255, 31, 124, 0.08), transparent 38%),
+            linear-gradient(135deg, #fff7fb, #ffffff);
+          box-shadow: 0 16px 40px rgba(255, 31, 124, 0.08);
+        }
+
+        .admin-post-limit-summary p,
+        .admin-post-limit-meta {
+          color: #52658a;
+        }
+
+        .admin-post-limit-meta {
+          border-top-color: #eadfe6;
+        }
+
+        .admin-post-limit-meta strong {
+          color: #071a4d;
+        }
+
+        .admin-post-limit-controls .admin-ghost-button:disabled {
+          background: #f1f3f7;
+          color: #8996ad;
+          border-color: #e0e5ed;
+        }
+
+        .admin-working {
+          color: #b62d68;
+        }
+
+        .admin-confirm-overlay {
+          background: rgba(7, 26, 77, 0.34);
+        }
+
+        @media (max-width: 760px) {
+          .admin-post-limit-summary {
+            align-items: stretch;
+          }
+
+          .admin-post-limit-card .admin-status-chip {
+            width: fit-content;
+          }
+        }
+
       `}</style>
     </main>
   );

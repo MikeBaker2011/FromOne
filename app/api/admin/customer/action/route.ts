@@ -4,6 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 
 const ADMIN_EMAIL = 'mikeb33@hotmail.co.uk';
+const DEFAULT_WEEKLY_POST_LIMIT = 4;
+const MIN_WEEKLY_POST_LIMIT = 1;
+const MAX_WEEKLY_POST_LIMIT = 100;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -15,7 +18,11 @@ function cleanText(value: unknown) {
 
 function getBearerToken(request: NextRequest) {
   const authHeader = request.headers.get('authorization') || '';
-  if (!authHeader.toLowerCase().startsWith('bearer ')) return '';
+
+  if (!authHeader.toLowerCase().startsWith('bearer ')) {
+    return '';
+  }
+
   return authHeader.slice('bearer '.length).trim();
 }
 
@@ -25,7 +32,10 @@ function getSupabaseAdmin() {
   }
 
   return createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
   });
 }
 
@@ -35,14 +45,23 @@ async function requireAdmin(request: NextRequest) {
   }
 
   const token = getBearerToken(request);
-  if (!token) throw new Error('Please sign in as admin.');
+
+  if (!token) {
+    throw new Error('Please sign in as admin.');
+  }
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
   });
 
   const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data.user?.email) throw new Error('Please sign in as admin.');
+
+  if (error || !data.user?.email) {
+    throw new Error(error?.message || 'Please sign in as admin.');
+  }
 
   if (data.user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
     throw new Error('Admin access only.');
@@ -51,7 +70,10 @@ async function requireAdmin(request: NextRequest) {
   return data.user;
 }
 
-async function upsertAccess(userId: string, values: Record<string, any>) {
+async function upsertAccess(
+  userId: string,
+  values: Record<string, unknown>,
+) {
   const supabase = getSupabaseAdmin();
 
   const { error } = await supabase
@@ -62,13 +84,20 @@ async function upsertAccess(userId: string, values: Record<string, any>) {
         updated_at: new Date().toISOString(),
         ...values,
       },
-      { onConflict: 'user_id' },
+      {
+        onConflict: 'user_id',
+      },
     );
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 }
 
-async function upsertBilling(userId: string, values: Record<string, any>) {
+async function upsertBilling(
+  userId: string,
+  values: Record<string, unknown>,
+) {
   const supabase = getSupabaseAdmin();
 
   const { error } = await supabase
@@ -79,10 +108,103 @@ async function upsertBilling(userId: string, values: Record<string, any>) {
         updated_at: new Date().toISOString(),
         ...values,
       },
-      { onConflict: 'user_id' },
+      {
+        onConflict: 'user_id',
+      },
     );
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+}
+
+async function getLatestBusinessProfile(userId: string) {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from('business_profiles')
+    .select('id, user_id, business_name, post_limit_override')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data || null;
+}
+
+async function setPostLimitOverride(
+  userId: string,
+  requestedLimit: unknown,
+) {
+  const parsedLimit = Number(requestedLimit);
+
+  if (!Number.isInteger(parsedLimit)) {
+    throw new Error('Weekly post limit must be a whole number.');
+  }
+
+  if (
+    parsedLimit < MIN_WEEKLY_POST_LIMIT ||
+    parsedLimit > MAX_WEEKLY_POST_LIMIT
+  ) {
+    throw new Error(
+      `Weekly post limit must be between ${MIN_WEEKLY_POST_LIMIT} and ${MAX_WEEKLY_POST_LIMIT}.`,
+    );
+  }
+
+  const profile = await getLatestBusinessProfile(userId);
+
+  if (!profile?.id) {
+    throw new Error(
+      'This customer does not have a business profile yet.',
+    );
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  const { error } = await supabase
+    .from('business_profiles')
+    .update({
+      post_limit_override: parsedLimit,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profile.id)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return parsedLimit;
+}
+
+async function clearPostLimitOverride(userId: string) {
+  const profile = await getLatestBusinessProfile(userId);
+
+  if (!profile?.id) {
+    throw new Error(
+      'This customer does not have a business profile yet.',
+    );
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  const { error } = await supabase
+    .from('business_profiles')
+    .update({
+      post_limit_override: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profile.id)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -95,11 +217,50 @@ export async function POST(request: NextRequest) {
     const nowIso = new Date().toISOString();
 
     if (!userId) {
-      return NextResponse.json({ error: 'userId is required.' }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'userId is required.',
+        },
+        {
+          status: 400,
+        },
+      );
     }
 
     if (!action) {
-      return NextResponse.json({ error: 'action is required.' }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'action is required.',
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (action === 'set_post_limit_override') {
+      const weeklyLimit = await setPostLimitOverride(
+        userId,
+        body?.postLimitOverride,
+      );
+
+      return NextResponse.json({
+        ok: true,
+        message: `Weekly post limit set to ${weeklyLimit}.`,
+        post_limit_override: weeklyLimit,
+        effective_post_limit: weeklyLimit,
+      });
+    }
+
+    if (action === 'clear_post_limit_override') {
+      await clearPostLimitOverride(userId);
+
+      return NextResponse.json({
+        ok: true,
+        message: `Weekly post limit reset to the default of ${DEFAULT_WEEKLY_POST_LIMIT}.`,
+        post_limit_override: null,
+        effective_post_limit: DEFAULT_WEEKLY_POST_LIMIT,
+      });
     }
 
     if (action === 'save_notes') {
@@ -159,8 +320,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (action === 'extend_7' || action === 'extend_14' || action === 'extend_30') {
-      const days = action === 'extend_7' ? 7 : action === 'extend_14' ? 14 : 30;
+    if (
+      action === 'extend_7' ||
+      action === 'extend_14' ||
+      action === 'extend_30'
+    ) {
+      const days =
+        action === 'extend_7'
+          ? 7
+          : action === 'extend_14'
+            ? 14
+            : 30;
+
       const extensionEndsAt = new Date(
         Date.now() + days * 24 * 60 * 60 * 1000,
       ).toISOString();
@@ -282,12 +453,44 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ error: 'Unknown admin action.' }, { status: 400 });
+    return NextResponse.json(
+      {
+        error: 'Unknown admin action.',
+      },
+      {
+        status: 400,
+      },
+    );
   } catch (error: any) {
-    const message = error?.message || 'Admin action failed.';
-    const status =
-      message.includes('Admin access') || message.includes('sign in') ? 401 : 500;
+    console.error('Admin action error:', {
+      message: error?.message,
+      name: error?.name,
+      status: error?.status,
+      details: error?.details,
+      hint: error?.hint,
+      code: error?.code,
+    });
 
-    return NextResponse.json({ error: message }, { status });
+    const message = error?.message || 'Admin action failed.';
+
+    const status =
+      message.includes('Admin access') ||
+      message.includes('sign in')
+        ? 401
+        : message.includes('required') ||
+            message.includes('whole number') ||
+            message.includes('between') ||
+            message.includes('does not have a business profile')
+          ? 400
+          : 500;
+
+    return NextResponse.json(
+      {
+        error: message,
+      },
+      {
+        status,
+      },
+    );
   }
 }
