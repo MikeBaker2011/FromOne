@@ -238,6 +238,7 @@ export default function SettingsPage() {
   const [showOptionalProfileModal, setShowOptionalProfileModal] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
   const [isOnboardingSetup, setIsOnboardingSetup] = useState(false);
+  const [settingsMode, setSettingsMode] = useState<'simple' | 'advanced'>('simple');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -509,7 +510,10 @@ export default function SettingsPage() {
 
     const params = new URLSearchParams(window.location.search);
     const setup = params.get('setup');
+    const requestedView = params.get('view');
     const metaConnected = params.get('meta_connected');
+
+    setSettingsMode(requestedView === 'advanced' ? 'advanced' : 'simple');
     const metaError = params.get('meta_error');
 
     if (setup === 'business') {
@@ -2182,6 +2186,200 @@ export default function SettingsPage() {
           <h1>Loading settings.</h1>
           <p>Checking your business profile and social connections.</p>
         </section>
+      </main>
+    );
+  }
+
+  if (settingsMode === 'simple') {
+    return (
+      <main className="fromone-posts-page fromone-settings-page settings-simple-client-page" data-settings-page="client-simple-v1">
+        <section id="fromone-standard-shell" className="settings-simple-client-shell">
+          <header className="settings-simple-client-header">
+            <div>
+              <span className="posts-create-eyebrow">Settings</span>
+              <h1>Business settings</h1>
+              <p>Just the essentials. You can start creating posts without filling in everything.</p>
+            </div>
+            <button
+              type="button"
+              className="settings-simple-link-button"
+              onClick={() => {
+                setSettingsMode('advanced');
+                window.history.replaceState({}, '', '/settings?view=advanced');
+              }}
+            >
+              Advanced settings
+            </button>
+          </header>
+
+          <section className="settings-simple-status-row" aria-label="Setup status">
+            <div><span>Profile</span><strong>{businessProfileReady ? 'Ready' : 'Needs details'}</strong></div>
+            <div><span>Facebook</span><strong>{hasFacebookConnection ? 'Connected' : 'Optional'}</strong></div>
+            <div><span>Instagram</span><strong>{hasInstagramConnection ? 'Connected' : 'Optional'}</strong></div>
+            <div><span>Smilez</span><strong>{hasLinkedSmilesListing ? 'Live' : 'Not live yet'}</strong></div>
+          </section>
+
+          <section className="settings-simple-section">
+            <div className="settings-simple-section-heading">
+              <div>
+                <span>Business</span>
+                <h2>Tell FromOne the basics</h2>
+              </div>
+              <small>About two minutes</small>
+            </div>
+
+            <div className="settings-simple-essential-grid">
+              <label>
+                <strong>Business name</strong>
+                <input value={businessName} onChange={(event) => setBusinessName(event.target.value)} placeholder="Your business name" />
+              </label>
+              <label>
+                <strong>Business type</strong>
+                <input value={industry} onChange={(event) => setIndustry(event.target.value)} placeholder="Cafe, salon, retailer..." />
+              </label>
+              <label>
+                <strong>Location</strong>
+                <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Town or area" />
+              </label>
+              <label>
+                <strong>Website</strong>
+                <input value={websiteUrl} onChange={(event) => setWebsiteUrl(event.target.value)} placeholder="https://..." />
+              </label>
+              <label className="settings-simple-wide">
+                <strong>What do you offer?</strong>
+                <input value={services} onChange={(event) => setServices(event.target.value)} placeholder="Coffee, lunches, private events..." />
+              </label>
+              <label className="settings-simple-wide">
+                <strong>Who are your customers?</strong>
+                <input value={targetAudience} onChange={(event) => setTargetAudience(event.target.value)} placeholder="Local families, office workers, visitors..." />
+              </label>
+            </div>
+
+            <div className="settings-simple-actions">
+              <button type="button" className="settings-simple-primary" onClick={handleSaveProfile} disabled={saving}>
+                {saving ? 'Saving...' : 'Save business settings'}
+              </button>
+            </div>
+          </section>
+
+          <section className="settings-simple-section">
+            <div className="settings-simple-section-heading">
+              <div>
+                <span>Publishing</span>
+                <h2>Facebook and Instagram</h2>
+              </div>
+              <small>Optional</small>
+            </div>
+
+            <div className="settings-simple-connection-list">
+              <article>
+                <div><strong>Facebook</strong><span>{primaryMetaConnection?.page_name || 'Connect a Page for direct publishing.'}</span></div>
+                <em className={hasFacebookConnection ? 'is-ready' : ''}>{hasFacebookConnection ? 'Connected' : 'Not connected'}</em>
+              </article>
+              <article>
+                <div><strong>Instagram</strong><span>{primaryMetaConnection?.instagram_username ? `@${primaryMetaConnection.instagram_username}` : 'Connect a business account for direct publishing.'}</span></div>
+                <em className={hasInstagramConnection ? 'is-ready' : ''}>{hasInstagramConnection ? 'Connected' : 'Not connected'}</em>
+              </article>
+            </div>
+
+            <div className="settings-simple-actions">
+              {hasMetaConnection ? (
+                <button type="button" className="settings-simple-secondary" onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)} disabled={metaConnectionBusy}>
+                  {metaConnectionBusy ? 'Working...' : 'Disconnect accounts'}
+                </button>
+              ) : (
+                <button type="button" className="settings-simple-primary" onClick={connectMetaAccount}>Connect Facebook and Instagram</button>
+              )}
+            </div>
+          </section>
+
+          <section className="settings-simple-section settings-simple-two-column">
+            <div className="settings-simple-summary-card">
+              <span>Smilez listing</span>
+              <h2>{hasLinkedSmilesListing ? 'Your listing is live' : 'Ready when you are'}</h2>
+              <p>{getSmilesListingStatusLabel()}</p>
+              <button type="button" className="settings-simple-secondary" onClick={() => { setSettingsMode('advanced'); setOpenExtraSection('smiles'); setShowBusinessDetails(true); window.history.replaceState({}, '', '/settings?view=advanced'); }}>Manage Smilez details</button>
+            </div>
+
+            <div className="settings-simple-summary-card">
+              <span>Bookings</span>
+              <h2>{acceptsBookings ? 'Bookings are on' : 'Bookings are off'}</h2>
+              <p>{acceptsBookings ? 'Customers can use your saved booking setup.' : 'Turn this on only when you need it.'}</p>
+              <label className="settings-simple-toggle-row">
+                <input type="checkbox" checked={acceptsBookings} onChange={(event) => setAcceptsBookings(event.target.checked)} />
+                <strong>Accept bookings</strong>
+              </label>
+              <button type="button" className="settings-simple-secondary" onClick={() => { setSettingsMode('advanced'); setOpenExtraSection('bookings'); setShowBusinessDetails(true); window.history.replaceState({}, '', '/settings?view=advanced'); }}>Manage booking details</button>
+            </div>
+          </section>
+
+          <p className="settings-simple-reassurance">You do not need to complete advanced settings before using FromOne.</p>
+        </section>
+
+        {confirmDialog && (() => {
+          const activeConfirmDialog = confirmDialog!;
+          return (
+            <div className="settings-confirm-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-confirm-title">
+              <section className="settings-confirm-card">
+                <div className="settings-create-eyebrow">Please confirm</div>
+                <h2 id="settings-confirm-title">{activeConfirmDialog.title}</h2>
+                <p>{activeConfirmDialog.message}</p>
+                <div className="settings-action-row">
+                  <button type="button" className="settings-secondary-action" onClick={closeConfirmDialog}>Cancel</button>
+                  <button type="button" className="settings-primary-action" onClick={() => activeConfirmDialog.type === 'disconnectMeta' && confirmDisconnectMetaAccount(activeConfirmDialog.connectionId)} disabled={metaConnectionBusy}>
+                    {metaConnectionBusy ? 'Working...' : activeConfirmDialog.confirmLabel}
+                  </button>
+                </div>
+              </section>
+            </div>
+          );
+        })()}
+
+        <style jsx global>{`
+          body:has(.settings-simple-client-page) { background: var(--posts-bg, #f5f7fb) !important; }
+          body:has(.settings-simple-client-page) .main-content { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 38px clamp(24px, 4vw, 54px) 90px !important; }
+          .settings-simple-client-shell { width: 100%; max-width: 1040px; margin: 0 auto; display: grid; gap: 16px; color: #071b49; }
+          .settings-simple-client-header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; padding-bottom: 8px; }
+          .settings-simple-client-header h1 { margin: 5px 0 8px; font-size: clamp(2.35rem, 5vw, 4rem); line-height: .96; letter-spacing: -.055em; }
+          .settings-simple-client-header p { margin: 0; color: #52617a; font-weight: 600; }
+          .settings-simple-link-button, .settings-simple-primary, .settings-simple-secondary { min-height: 44px; padding: 0 16px; border-radius: 14px; font: inherit; font-size: .88rem; font-weight: 900; cursor: pointer; }
+          .settings-simple-link-button, .settings-simple-secondary { border: 1px solid #dfe7f2; background: #fff; color: #071b49; }
+          .settings-simple-primary { border: 0; background: #f72585; color: #fff; box-shadow: 0 10px 24px rgba(247,37,133,.18); }
+          .settings-simple-status-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+          .settings-simple-status-row div { padding: 11px 13px; border: 1px solid #dfe7f2; border-radius: 14px; background: rgba(255,255,255,.8); }
+          .settings-simple-status-row span, .settings-simple-section-heading span, .settings-simple-summary-card > span { display: block; color: #f72585; font-size: .68rem; font-weight: 900; letter-spacing: .11em; text-transform: uppercase; }
+          .settings-simple-status-row strong { display: block; margin-top: 4px; font-size: .88rem; }
+          .settings-simple-section { padding: 18px; border: 1px solid #dfe7f2; border-radius: 20px; background: rgba(255,255,255,.88); box-shadow: 0 10px 30px rgba(7,27,73,.05); }
+          .settings-simple-section-heading { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 14px; }
+          .settings-simple-section-heading h2, .settings-simple-summary-card h2 { margin: 5px 0 0; font-size: 1.35rem; line-height: 1.05; }
+          .settings-simple-section-heading small { color: #68758c; font-weight: 800; }
+          .settings-simple-essential-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+          .settings-simple-essential-grid label { display: grid; gap: 6px; color: #071b49; font-size: .85rem; }
+          .settings-simple-essential-grid input { width: 100%; min-height: 43px; padding: 0 12px; border: 1px solid #dfe7f2; border-radius: 12px; background: #fff; color: #071b49; font: inherit; }
+          .settings-simple-wide { grid-column: 1 / -1; }
+          .settings-simple-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+          .settings-simple-connection-list { display: grid; gap: 8px; }
+          .settings-simple-connection-list article { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 14px; align-items: center; padding: 11px 13px; border: 1px solid #e5eaf2; border-radius: 14px; background: #f8fafc; }
+          .settings-simple-connection-list article div { display: grid; gap: 3px; }
+          .settings-simple-connection-list article span { color: #68758c; font-size: .84rem; }
+          .settings-simple-connection-list em { padding: 6px 9px; border-radius: 999px; background: #fff3d6; color: #855d00; font-size: .68rem; font-style: normal; font-weight: 900; text-transform: uppercase; }
+          .settings-simple-connection-list em.is-ready { background: #e9fbf3; color: #087443; }
+          .settings-simple-two-column { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 0; border: 0; background: transparent; box-shadow: none; }
+          .settings-simple-summary-card { padding: 18px; border: 1px solid #dfe7f2; border-radius: 20px; background: rgba(255,255,255,.88); }
+          .settings-simple-summary-card p { min-height: 42px; margin: 8px 0 13px; color: #52617a; font-size: .88rem; line-height: 1.45; }
+          .settings-simple-toggle-row { display: flex; align-items: center; gap: 8px; margin: 0 0 13px; font-size: .88rem; }
+          .settings-simple-reassurance { margin: 0; text-align: center; color: #68758c; font-size: .86rem; font-weight: 700; }
+          @media (max-width: 760px) {
+            body:has(.settings-simple-client-page) .main-content { padding: 24px 14px 100px !important; }
+            .settings-simple-client-header { display: grid; align-items: start; }
+            .settings-simple-link-button { width: 100%; }
+            .settings-simple-status-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .settings-simple-essential-grid, .settings-simple-two-column { grid-template-columns: 1fr; }
+            .settings-simple-wide { grid-column: auto; }
+            .settings-simple-actions { display: grid; }
+            .settings-simple-actions button { width: 100%; }
+          }
+        `}</style>
       </main>
     );
   }
@@ -11633,6 +11831,51 @@ export default function SettingsPage() {
           body:has(.fromone-settings-page) .main-content.fromone-mobile-bottom-safe {
             padding-top: 14px !important;
           }
+        }
+
+        body:has(.fromone-settings-page),
+        body:has(.fromone-settings-page) .app-shell,
+        body:has(.fromone-settings-page) .main-content,
+        body:has(.fromone-settings-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame,
+        .fromone-route-settings,
+        .fromone-settings-page,
+        .fromone-settings-page.settings-create-style-page {
+          background: #ffffff !important;
+          background-image: none !important;
+        }
+
+        @media (max-width: 900px) {
+          html,
+          body:has(.fromone-settings-page),
+          body:has(.fromone-settings-page) .app-shell,
+          body:has(.fromone-settings-page) .main-content,
+          body:has(.fromone-settings-page) .main-content.fromone-mobile-bottom-safe,
+          body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame,
+          .fromone-route-settings,
+          .fromone-settings-page,
+          .fromone-settings-page.settings-create-style-page {
+            background: #ffffff !important;
+            background-image: none !important;
+          }
+        }
+
+        body:has(.fromone-settings-page)::before,
+        body:has(.fromone-settings-page)::after,
+        body:has(.fromone-settings-page) .app-shell::before,
+        body:has(.fromone-settings-page) .app-shell::after,
+        body:has(.fromone-settings-page) .main-content::before,
+        body:has(.fromone-settings-page) .main-content::after,
+        body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame::before,
+        body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame::after,
+        .fromone-route-settings::before,
+        .fromone-route-settings::after,
+        .fromone-settings-page::before,
+        .fromone-settings-page::after {
+          display: none !important;
+          content: none !important;
+          background: none !important;
+          background-image: none !important;
         }
 
       `}</style>

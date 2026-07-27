@@ -742,6 +742,33 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             --fromone-page-gutter: 8px;
           }
         }
+
+        body:has(.fromone-settings-page),
+        body:has(.fromone-settings-page) .app-shell,
+        body:has(.fromone-settings-page) .main-content,
+        body:has(.fromone-settings-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame,
+        .fromone-route-settings {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          background-image: none !important;
+        }
+
+        body:has(.fromone-settings-page)::before,
+        body:has(.fromone-settings-page)::after,
+        body:has(.fromone-settings-page) .app-shell::before,
+        body:has(.fromone-settings-page) .app-shell::after,
+        body:has(.fromone-settings-page) .main-content::before,
+        body:has(.fromone-settings-page) .main-content::after,
+        body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame::before,
+        body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame::after,
+        .fromone-route-settings::before,
+        .fromone-route-settings::after {
+          display: none !important;
+          content: none !important;
+          background: none !important;
+          background-image: none !important;
+        }
       `}</style>
     </>
   );
