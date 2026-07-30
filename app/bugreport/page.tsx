@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -205,681 +206,679 @@ export default function SupportPage() {
   ).length;
 
   return (
-    <main className="fromone-help-page help-create-style-page" data-help-page="create-style-v1">
-      <section id="fromone-standard-shell" className="help-create-style-card">
-        <header className="help-create-hero">
-          <div className="help-eyebrow">Help</div>
-          <h1>
-            Need help?
-            <br />
-            Keep it simple.
-          </h1>
+    <main className="supportHubPage">
+      <section className="supportHubContainer">
+        <header className="supportHubHeader">
+          <Link href="/dashboard" className="supportHubBackLink">
+            <span aria-hidden="true">←</span>
+            Back to dashboard
+          </Link>
+
+          <span className="supportHubEyebrow">FromOne support</span>
+          <h1>Support hub.</h1>
           <p>
-            Send a quick message. Tell us what you were trying to do and what happened.
+            Ask a question, report a problem, get billing help or send an
+            improvement idea from one simple place.
           </p>
         </header>
 
-        <section className="help-panel">
-          <div className="help-panel-head">
+        <section className="supportHubStatusCard">
+          <div>
+            <span className="supportHubEyebrow">Your support</span>
+            <h2>Need a hand?</h2>
+            <strong>Send us the details below</strong>
+          </div>
+
+          <a href="mailto:info@fromone.co.uk">Email support</a>
+        </section>
+
+        <section className="supportHubSectionCard">
+          <div className="supportHubSectionHeading">
+            <span>01</span>
             <div>
-              <div className="help-eyebrow">Support request</div>
-              <h2>Tell us what happened.</h2>
-              <p>Use this if something is confusing, broken, or you need a hand.</p>
+              <h2>Send a support request</h2>
+              <p>Tell us what happened and what you were trying to do.</p>
             </div>
           </div>
 
-          <div className="help-form-grid">
-            <label>
-              <strong>Type of help</strong>
-              <select
-                className="help-input"
-                value={requestType}
-                onChange={(event) => setRequestType(event.target.value)}
-              >
-                {supportTypes.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="supportHubFormCard">
+            <div className="supportHubFormGrid">
+              <label>
+                <strong>Type of help</strong>
+                <select
+                  className="supportHubInput"
+                  value={requestType}
+                  onChange={(event) => setRequestType(event.target.value)}
+                >
+                  {supportTypes.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <label>
-              <strong>Urgency</strong>
-              <select
-                className="help-input"
-                value={severity}
-                onChange={(event) => setSeverity(event.target.value)}
-              >
-                {urgencyOptions.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <label>
+                <strong>Urgency</strong>
+                <select
+                  className="supportHubInput"
+                  value={severity}
+                  onChange={(event) => setSeverity(event.target.value)}
+                >
+                  {urgencyOptions.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <label className="help-wide-field">
-              <strong>Short title</strong>
-              <input
-                className="help-input"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Example: I cannot create posts"
-              />
-            </label>
+              <label className="supportHubWideField">
+                <strong>Short title</strong>
+                <input
+                  className="supportHubInput"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Example: I cannot create posts"
+                />
+              </label>
 
-            <label className="help-wide-field">
-              <strong>Page</strong>
-              <input
-                className="help-input"
-                value={pageUrl}
-                onChange={(event) => setPageUrl(event.target.value)}
-                placeholder="Example: Dashboard, Posts, Settings"
-              />
-            </label>
+              <label className="supportHubWideField">
+                <strong>Page</strong>
+                <input
+                  className="supportHubInput"
+                  value={pageUrl}
+                  onChange={(event) => setPageUrl(event.target.value)}
+                  placeholder="Example: Dashboard, Posts, Settings"
+                />
+              </label>
 
-            <label className="help-wide-field">
-              <strong>What happened?</strong>
-              <textarea
-                className="help-input"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="Tell us what went wrong, what confused you, or what you need help with."
-                rows={5}
-              />
-            </label>
+              <label className="supportHubWideField">
+                <strong>What happened?</strong>
+                <textarea
+                  className="supportHubInput"
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder="Tell us what went wrong, what confused you, or what you need help with."
+                  rows={5}
+                />
+              </label>
 
-            <label className="help-wide-field">
-              <strong>What were you trying to do?</strong>
-              <textarea
-                className="help-input"
-                value={steps}
-                onChange={(event) => setSteps(event.target.value)}
-                placeholder="Example: I clicked Create drafts for review, waited, then saw an error."
-                rows={4}
-              />
-            </label>
+              <label className="supportHubWideField">
+                <strong>What were you trying to do?</strong>
+                <textarea
+                  className="supportHubInput"
+                  value={steps}
+                  onChange={(event) => setSteps(event.target.value)}
+                  placeholder="Example: I clicked Create drafts for review, waited, then saw an error."
+                  rows={4}
+                />
+              </label>
+            </div>
+
+            <button
+              type="button"
+              className="supportHubPrimaryAction"
+              onClick={submitSupportRequest}
+              disabled={saving}
+            >
+              {saving ? "Sending..." : "Send support request"}
+            </button>
+
+            <p className="supportHubNote">Nothing is published from this page.</p>
           </div>
-
-          <button
-            type="button"
-            className="help-primary-action"
-            onClick={submitSupportRequest}
-            disabled={saving}
-          >
-            {saving ? 'Sending...' : 'Send support request'}
-          </button>
-
-          <p className="help-note">Nothing is published from this page.</p>
         </section>
 
-        <p className="help-outside-note">
-          Helpful detail: which page you were on, what you clicked, and what happened next.
-        </p>
+        {isAdmin && (
+          <section className="supportHubSectionCard supportHubAdminSection">
+            <div className="supportHubSectionHeading">
+              <span>02</span>
+              <div>
+                <h2>Support inbox</h2>
+                <p>Review submitted requests and update their status.</p>
+              </div>
+            </div>
+
+            <div className="supportHubAdminToolbar">
+              <div className="supportHubStats">
+                <span><strong>{newReportsCount}</strong> New</span>
+                <span><strong>{openReportsCount}</strong> Open</span>
+                <span><strong>{bugReports.length}</strong> Total</span>
+              </div>
+
+              <div className="supportHubAdminControls">
+                <select
+                  className="supportHubInput"
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                >
+                  <option value="all">All requests</option>
+                  <option value="new">New</option>
+                  <option value="reviewing">Reviewing</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+
+                <button type="button" onClick={loadBugReports}>
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            {loadingReports ? (
+              <p className="supportHubNote">Loading support requests...</p>
+            ) : filteredBugReports.length === 0 ? (
+              <div className="supportHubEmpty">
+                <strong>No support requests found.</strong>
+                <p>Support requests submitted by users will appear here.</p>
+              </div>
+            ) : (
+              <div className="supportHubReportList">
+                {filteredBugReports.map((report) => (
+                  <article key={report.id} className="supportHubReportItem">
+                    <div className="supportHubReportTop">
+                      <div>
+                        <span>{report.severity}</span>
+                        <span>{report.status}</span>
+                      </div>
+
+                      <small>
+                        {new Date(report.created_at).toLocaleString(undefined, {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </small>
+                    </div>
+
+                    <h3>{report.title}</h3>
+                    {report.page_url && (
+                      <p>
+                        <strong>Page:</strong> {report.page_url}
+                      </p>
+                    )}
+                    <p>{report.description}</p>
+
+                    {report.steps_to_reproduce && (
+                      <div className="supportHubReportSteps">
+                        <strong>User was trying to do</strong>
+                        <p>{report.steps_to_reproduce}</p>
+                      </div>
+                    )}
+
+                    <div className="supportHubReportActions">
+                      <button type="button" onClick={() => updateBugStatus(report.id, "reviewing")}>
+                        Reviewing
+                      </button>
+                      <button type="button" onClick={() => updateBugStatus(report.id, "in_progress")}>
+                        In progress
+                      </button>
+                      <button type="button" onClick={() => updateBugStatus(report.id, "resolved")}>
+                        Resolved
+                      </button>
+                      <button type="button" onClick={() => deleteBugReport(report)}>
+                        Delete
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </section>
 
-      {isAdmin && (
-        <section className="help-create-style-card help-admin-card">
-          <div className="help-admin-head">
-            <div>
-              <div className="help-eyebrow">Admin only</div>
-              <h2>Support inbox</h2>
-              <p>Review submitted support requests and update their status.</p>
-            </div>
-
-            <div className="help-admin-stats">
-              <span><strong>{newReportsCount}</strong> New</span>
-              <span><strong>{openReportsCount}</strong> Open</span>
-              <span><strong>{bugReports.length}</strong> Total</span>
-            </div>
-          </div>
-
-          <div className="help-admin-controls">
-            <select
-              className="help-input"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option value="all">All requests</option>
-              <option value="new">New</option>
-              <option value="reviewing">Reviewing</option>
-              <option value="in_progress">In progress</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
-            </select>
-
-            <button type="button" className="help-secondary-action" onClick={loadBugReports}>
-              Refresh
-            </button>
-          </div>
-
-          {loadingReports ? (
-            <p className="help-note">Loading support requests...</p>
-          ) : filteredBugReports.length === 0 ? (
-            <div className="help-admin-empty">
-              <strong>No support requests found.</strong>
-              <p>Support requests submitted by users will appear here.</p>
-            </div>
-          ) : (
-            <div className="help-report-list">
-              {filteredBugReports.map((report) => (
-                <article key={report.id} className="help-report-item">
-                  <div className="help-report-top">
-                    <div>
-                      <span>{report.severity}</span>
-                      <span>{report.status}</span>
-                    </div>
-                    <small>
-                      {new Date(report.created_at).toLocaleString(undefined, {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </small>
-                  </div>
-
-                  <h3>{report.title}</h3>
-                  {report.page_url && <p><strong>Page:</strong> {report.page_url}</p>}
-                  <p>{report.description}</p>
-
-                  {report.steps_to_reproduce && (
-                    <div className="help-report-steps">
-                      <strong>User was trying to do</strong>
-                      <p>{report.steps_to_reproduce}</p>
-                    </div>
-                  )}
-
-                  <div className="help-report-actions">
-                    <button type="button" onClick={() => updateBugStatus(report.id, 'reviewing')}>
-                      Reviewing
-                    </button>
-                    <button type="button" onClick={() => updateBugStatus(report.id, 'in_progress')}>
-                      In progress
-                    </button>
-                    <button type="button" onClick={() => updateBugStatus(report.id, 'resolved')}>
-                      Resolved
-                    </button>
-                    <button type="button" onClick={() => deleteBugReport(report)}>
-                      Delete
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
       <style jsx global>{`
-        /* -------------------------------------------------------------- */
-        /* FROMONE HELP PAGE — CLEAN APPROVED STANDARD                     */
-        /* Desktop gap: main-content 38px + shell margin-top 28px          */
-        /* Mobile gap: page padding-top 24px, shell margin-top 0           */
-        /* -------------------------------------------------------------- */
-        body:has(.fromone-help-page) {
-          background: #f5f7fb !important;
-          overflow-x: hidden !important;
+        body:has(.supportHubPage),
+        body:has(.supportHubPage) .app-shell,
+        body:has(.supportHubPage) .main-content,
+        body:has(.supportHubPage) .main-content.fromone-mobile-bottom-safe,
+        body:has(.supportHubPage) .fromone-universal-mobile-page-frame,
+        .supportHubPage {
+          background: #f4f7fb !important;
+          background-color: #f4f7fb !important;
+          background-image: none !important;
+          color: #071b49;
         }
 
-        body:has(.fromone-help-page)::before {
+        body:has(.supportHubPage)::before,
+        body:has(.supportHubPage)::after,
+        body:has(.supportHubPage) .app-shell::before,
+        body:has(.supportHubPage) .app-shell::after,
+        body:has(.supportHubPage) .main-content::before,
+        body:has(.supportHubPage) .main-content::after,
+        body:has(.supportHubPage) .fromone-universal-mobile-page-frame::before,
+        body:has(.supportHubPage) .fromone-universal-mobile-page-frame::after,
+        .supportHubPage::before,
+        .supportHubPage::after {
           display: none !important;
           content: none !important;
+          background: none !important;
+          background-image: none !important;
         }
 
-        body:has(.fromone-help-page) .app-shell,
-        body:has(.fromone-help-page) .main-content {
-          background: #f5f7fb !important;
-        }
-
-        body:has(.fromone-help-page) .main-content {
+        body:has(.supportHubPage) .main-content {
           width: 100% !important;
           max-width: none !important;
           margin: 0 !important;
-          padding-top: 38px !important;
-          padding-left: 0 !important;
-          padding-right: 0 !important;
-          box-sizing: border-box !important;
-          overflow-x: hidden !important;
         }
 
-        .fromone-help-page.help-create-style-page {
-          width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          min-height: 100vh !important;
-          margin: 0 !important;
-          padding: 0 16px 72px !important;
-          box-sizing: border-box !important;
-          overflow-x: hidden !important;
-          background: #f5f7fb !important;
+        .supportHubPage {
+          width: 100%;
+          min-height: 100vh;
+        }
+
+        .supportHubContainer {
+          width: min(100%, 1240px);
+          margin: 0 auto;
+          padding: 8px 0 72px;
+          box-sizing: border-box;
+        }
+
+        .supportHubHeader {
+          margin-bottom: 34px;
+        }
+
+        .supportHubBackLink {
+          width: fit-content;
+          min-height: 42px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 28px;
+          padding: 0 15px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
           color: #071b49 !important;
-          font-family:
-            var(--font-main),
-            "Plus Jakarta Sans",
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
+          font-size: 0.84rem;
+          font-weight: 850;
+          text-decoration: none;
+          box-shadow: 0 8px 20px rgba(7, 27, 73, 0.05);
         }
 
-        .fromone-help-page #fromone-standard-shell.help-create-style-card,
-        .fromone-help-page .help-admin-card {
-          width: 1040px !important;
-          max-width: calc(100% - 32px) !important;
-          min-width: 0 !important;
-          padding: clamp(30px, 4vw, 48px) !important;
-          box-sizing: border-box !important;
-          overflow: hidden !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 32px !important;
-          background: #ffffff !important;
-          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
-          color: #071b49 !important;
-          backdrop-filter: none !important;
-        }
-
-        .fromone-help-page #fromone-standard-shell.help-create-style-card {
-          min-height: 620px !important;
-          margin: 28px auto 0 !important;
-        }
-
-        .fromone-help-page .help-admin-card {
-          margin: 22px auto 0 !important;
-        }
-
-        .fromone-help-page .help-create-hero {
-          width: 100% !important;
-          max-width: 760px !important;
-          margin: 0 0 26px !important;
-          padding: 0 !important;
-          text-align: left !important;
-        }
-
-        .fromone-help-page .help-eyebrow {
+        .supportHubBackLink:hover {
+          border-color: rgba(247, 37, 133, 0.28);
           color: #f72585 !important;
-          font-size: 0.78rem !important;
-          line-height: 1 !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.13em !important;
-          text-transform: uppercase !important;
         }
 
-        .fromone-help-page .help-create-hero h1 {
-          max-width: 760px !important;
-          margin: 12px 0 14px !important;
-          color: #071b49 !important;
-          font-size: clamp(3rem, 5.2vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.055em !important;
-          font-weight: 800 !important;
-          text-align: left !important;
-          overflow: visible !important;
+        .supportHubEyebrow {
+          display: block;
+          margin-bottom: 8px;
+          color: #f72585;
+          font-size: 0.74rem;
+          font-weight: 950;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
         }
 
-        .fromone-help-page .help-create-hero p,
-        .fromone-help-page .help-panel p,
-        .fromone-help-page .help-admin-card p {
-          max-width: 720px !important;
-          margin: 0 !important;
-          color: #52617a !important;
-          font-size: 1.02rem !important;
-          line-height: 1.5 !important;
-          font-weight: 600 !important;
-          text-align: left !important;
+        .supportHubHeader h1 {
+          margin: 0;
+          font-size: clamp(3rem, 6vw, 5.5rem);
+          line-height: 0.94;
+          letter-spacing: -0.065em;
         }
 
-        .fromone-help-page .help-panel {
-          width: 100% !important;
-          max-width: 100% !important;
-          margin: 0 !important;
-          padding: clamp(20px, 3vw, 30px) !important;
-          box-sizing: border-box !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 24px !important;
-          background: #f7f9fd !important;
+        .supportHubHeader p {
+          max-width: 850px;
+          margin: 16px 0 0;
+          color: #5f6d86;
+          font-size: clamp(1rem, 1.8vw, 1.18rem);
+          font-weight: 650;
+          line-height: 1.65;
         }
 
-        .fromone-help-page .help-panel-head,
-        .fromone-help-page .help-admin-head {
-          display: block !important;
-          margin-bottom: 18px !important;
+        .supportHubStatusCard {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 28px;
+          padding: 28px 0 34px;
+          border-bottom: 1px solid #dfe5f1;
+          background: transparent;
         }
 
-        .fromone-help-page .help-panel h2,
-        .fromone-help-page .help-admin-card h2 {
-          margin: 8px 0 8px !important;
-          color: #071b49 !important;
-          font-size: clamp(1.55rem, 3vw, 2.05rem) !important;
-          line-height: 1 !important;
-          letter-spacing: -0.045em !important;
-          font-weight: 800 !important;
+        .supportHubStatusCard h2 {
+          margin: 0 0 6px;
+          font-size: clamp(2rem, 4vw, 3rem);
+          line-height: 1;
+          letter-spacing: -0.05em;
         }
 
-        .fromone-help-page .help-form-grid {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 12px !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          box-sizing: border-box !important;
+        .supportHubStatusCard strong {
+          color: #0a9b5c;
+          font-size: 1rem;
         }
 
-        .fromone-help-page .help-form-grid label {
-          display: grid !important;
-          gap: 8px !important;
-        }
-
-        .fromone-help-page .help-form-grid label strong {
-          color: #071b49 !important;
-          font-size: 0.8rem !important;
-          font-weight: 800 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.045em !important;
-        }
-
-        .fromone-help-page .help-wide-field {
-          grid-column: 1 / -1 !important;
-        }
-
-        .fromone-help-page .help-input {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-height: 52px !important;
-          padding: 12px 15px !important;
-          border: 1px solid #d7e0ee !important;
-          border-radius: 16px !important;
-          background: #ffffff !important;
-          color: #071b49 !important;
-          box-sizing: border-box !important;
-          font: inherit !important;
-          font-size: 0.98rem !important;
-          font-weight: 500 !important;
-          outline: none !important;
-        }
-
-        .fromone-help-page textarea.help-input {
-          min-height: 96px !important;
-          resize: vertical !important;
-        }
-
-        .fromone-help-page .help-input:focus {
-          border-color: #f72585 !important;
-          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.11) !important;
-        }
-
-        .fromone-help-page .help-primary-action {
-          width: 100% !important;
-          min-height: 58px !important;
-          margin-top: 16px !important;
-          padding: 0 24px !important;
-          border: 1px solid #f72585 !important;
-          border-radius: 999px !important;
-          background: #f72585 !important;
+        .supportHubStatusCard a {
+          min-height: 48px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 20px;
+          border-radius: 999px;
+          background: #f72585;
           color: #ffffff !important;
-          box-shadow: 0 18px 38px rgba(247, 37, 133, 0.24) !important;
-          font: inherit !important;
-          font-weight: 800 !important;
-          cursor: pointer !important;
+          font-size: 0.84rem;
+          font-weight: 900;
+          text-decoration: none;
+          box-shadow: 0 12px 28px rgba(247, 37, 133, 0.2);
         }
 
-        .fromone-help-page .help-secondary-action,
-        .fromone-help-page .help-report-actions button {
-          min-height: 52px !important;
-          padding: 0 22px !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 999px !important;
-          background: #ffffff !important;
-          color: #071b49 !important;
-          font: inherit !important;
-          font-weight: 800 !important;
-          cursor: pointer !important;
+        .supportHubSectionCard {
+          margin-top: 0;
+          padding: 42px 0 0;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
         }
 
-        .fromone-help-page .help-primary-action:disabled {
-          cursor: not-allowed !important;
-          opacity: 0.65 !important;
+        .supportHubSectionHeading {
+          display: flex;
+          align-items: flex-start;
+          gap: 14px;
+          margin-bottom: 24px;
         }
 
-        .fromone-help-page .help-note,
-        .fromone-help-page .help-outside-note {
-          color: #626b80 !important;
-          font-size: 0.95rem !important;
-          line-height: 1.45 !important;
-          font-weight: 600 !important;
-          text-align: center !important;
+        .supportHubSectionHeading > span {
+          width: 42px;
+          height: 42px;
+          flex: 0 0 auto;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          background: #f72585;
+          color: #ffffff;
+          font-size: 0.78rem;
+          font-weight: 950;
         }
 
-        .fromone-help-page .help-note {
-          margin: 12px 0 0 !important;
+        .supportHubSectionHeading h2 {
+          margin: 0;
+          font-size: clamp(2rem, 4vw, 3rem);
+          line-height: 1;
+          letter-spacing: -0.05em;
         }
 
-        .fromone-help-page .help-outside-note {
-          max-width: 620px !important;
-          margin: 16px auto 0 !important;
+        .supportHubSectionHeading p {
+          margin: 8px 0 0;
+          color: #5f6d86;
+          font-size: 1rem;
+          font-weight: 650;
         }
 
-        .fromone-help-page .help-admin-stats,
-        .fromone-help-page .help-admin-controls,
-        .fromone-help-page .help-report-actions {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 10px !important;
+        .supportHubFormCard {
+          padding: clamp(24px, 4vw, 38px);
+          border: 1px solid #dfe5f1;
+          border-radius: 24px;
+          background: #ffffff;
+          box-shadow: 0 14px 38px rgba(7, 27, 73, 0.05);
         }
 
-        .fromone-help-page .help-admin-stats span,
-        .fromone-help-page .help-report-top span {
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 999px !important;
-          background: #fff8fc !important;
-          color: #071b49 !important;
-          font-weight: 800 !important;
+        .supportHubFormGrid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 18px;
         }
 
-        .fromone-help-page .help-admin-stats span {
-          min-height: 42px !important;
-          gap: 7px !important;
-          padding: 8px 13px !important;
+        .supportHubFormGrid label {
+          display: grid;
+          gap: 8px;
         }
 
-        .fromone-help-page .help-admin-controls {
-          margin-bottom: 16px !important;
+        .supportHubFormGrid label strong {
+          font-size: 0.76rem;
+          font-weight: 900;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
         }
 
-        .fromone-help-page .help-report-list {
-          display: grid !important;
-          gap: 12px !important;
+        .supportHubWideField {
+          grid-column: 1 / -1;
         }
 
-        .fromone-help-page .help-report-item,
-        .fromone-help-page .help-admin-empty {
-          padding: 16px !important;
-          border: 1px solid #dfe7f2 !important;
-          border-radius: 20px !important;
-          background: #ffffff !important;
+        .supportHubInput {
+          width: 100%;
+          min-height: 54px;
+          padding: 13px 15px;
+          border: 1px solid #d9e1ee;
+          border-radius: 14px;
+          background: #ffffff;
+          color: #071b49;
+          box-sizing: border-box;
+          font: inherit;
+          outline: none;
         }
 
-        .fromone-help-page .help-report-top {
-          display: flex !important;
-          gap: 12px !important;
-          justify-content: space-between !important;
+        textarea.supportHubInput {
+          min-height: 130px;
+          resize: vertical;
         }
 
-        .fromone-help-page .help-report-top div {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 8px !important;
+        .supportHubInput:focus {
+          border-color: #f72585;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1);
         }
 
-        .fromone-help-page .help-report-top span {
-          padding: 7px 10px !important;
-          font-size: 0.76rem !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.04em !important;
+        .supportHubPrimaryAction {
+          width: 100%;
+          min-height: 54px;
+          margin-top: 20px;
+          border: 0;
+          border-radius: 999px;
+          background: #f72585;
+          color: #ffffff;
+          box-shadow: 0 16px 34px rgba(247, 37, 133, 0.2);
+          font: inherit;
+          font-weight: 900;
+          cursor: pointer;
         }
 
-        .fromone-help-page .help-report-top small {
-          color: #6b7280 !important;
-          font-size: 0.82rem !important;
-          font-weight: 600 !important;
+        .supportHubPrimaryAction:disabled {
+          opacity: 0.65;
         }
 
-        .fromone-help-page .help-report-item h3 {
-          margin: 12px 0 8px !important;
-          color: #071b49 !important;
-          font-size: 1.2rem !important;
-          font-weight: 800 !important;
-          letter-spacing: -0.025em !important;
+        .supportHubNote {
+          margin: 12px 0 0;
+          color: #6b7890;
+          font-size: 0.84rem;
+          text-align: center;
         }
 
-        .fromone-help-page .help-report-steps {
-          margin: 12px 0 !important;
-          padding: 12px !important;
-          border-radius: 16px !important;
-          background: #f5f7fb !important;
+        .supportHubAdminSection {
+          margin-top: 48px;
+          padding-top: 42px;
+          border-top: 1px solid #dfe5f1;
+        }
+
+        .supportHubAdminToolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 18px;
+          margin-bottom: 18px;
+        }
+
+        .supportHubStats,
+        .supportHubAdminControls,
+        .supportHubReportActions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .supportHubStats span,
+        .supportHubReportTop span {
+          min-height: 38px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 0 12px;
+          border: 1px solid #ffd2e5;
+          border-radius: 999px;
+          background: #fff7fb;
+          font-size: 0.75rem;
+          font-weight: 850;
+        }
+
+        .supportHubAdminControls button,
+        .supportHubReportActions button {
+          min-height: 44px;
+          padding: 0 16px;
+          border: 1px solid #d9e1ee;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
+          font-size: 0.78rem;
+          font-weight: 850;
+          cursor: pointer;
+        }
+
+        .supportHubReportList {
+          display: grid;
+          gap: 12px;
+        }
+
+        .supportHubReportItem,
+        .supportHubEmpty {
+          padding: 20px;
+          border: 1px solid #dfe5f1;
+          border-radius: 18px;
+          background: #ffffff;
+        }
+
+        .supportHubReportTop {
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .supportHubReportTop > div {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .supportHubReportItem h3 {
+          margin: 14px 0 8px;
+        }
+
+        .supportHubReportItem p,
+        .supportHubEmpty p {
+          color: #6b7890;
+          line-height: 1.55;
+        }
+
+        .supportHubReportSteps {
+          margin: 12px 0;
+          padding: 13px;
+          border-radius: 15px;
+          background: #f8fafc;
         }
 
         @media (max-width: 760px) {
-          body:has(.fromone-help-page) .main-content {
-            padding-top: 0 !important;
+          .supportHubContainer {
+            width: 100%;
+            padding: 0 0 42px;
           }
 
-          .fromone-help-page.help-create-style-page {
-            padding: 24px 16px 112px !important;
+          .supportHubHeader {
+            margin-bottom: 22px;
           }
 
-          .fromone-help-page #fromone-standard-shell.help-create-style-card,
-          .fromone-help-page .help-admin-card {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-height: auto !important;
-            margin-top: 0 !important;
-            padding: 22px !important;
-            border-radius: 26px !important;
+          .supportHubBackLink {
+            margin-bottom: 22px;
           }
 
-          .fromone-help-page .help-create-hero h1 {
-            font-size: clamp(2.35rem, 10vw, 3.25rem) !important;
-            line-height: 0.96 !important;
+          .supportHubHeader h1 {
+            font-size: clamp(2.8rem, 14vw, 4rem);
           }
 
-          .fromone-help-page .help-create-hero p,
-          .fromone-help-page .help-panel p,
-          .fromone-help-page .help-admin-card p {
-            font-size: 0.96rem !important;
+          .supportHubHeader p {
+            font-size: 0.92rem;
           }
 
-          .fromone-help-page .help-form-grid,
-          .fromone-help-page .help-admin-head {
-            grid-template-columns: 1fr !important;
-            display: grid !important;
+          .supportHubStatusCard {
+            align-items: stretch;
+            flex-direction: column;
+            padding: 22px 0 28px;
           }
 
-          .fromone-help-page .help-panel {
-            padding: 18px !important;
-            border-radius: 22px !important;
+          .supportHubStatusCard a {
+            width: 100%;
+            box-sizing: border-box;
           }
 
-          .fromone-help-page .help-panel h2,
-          .fromone-help-page .help-admin-card h2 {
-            font-size: 1.55rem !important;
+          .supportHubSectionCard {
+            padding-top: 30px;
           }
 
-          .fromone-help-page .help-admin-controls .help-input,
-          .fromone-help-page .help-secondary-action {
-            width: 100% !important;
+          .supportHubSectionHeading {
+            gap: 10px;
           }
 
-          .fromone-help-page .help-report-top {
-            display: grid !important;
-          }
-        }
-
-        /* -------------------------------------------------------------- */
-        /* BUG REPORTS MOBILE POLISH — match Posts/Dashboard feel          */
-        /* Desktop unchanged                                              */
-        /* -------------------------------------------------------------- */
-        @media (max-width: 760px) {
-          body:has(.fromone-help-page) .main-content {
-            padding-top: 0 !important;
+          .supportHubSectionHeading > span {
+            width: 36px;
+            height: 36px;
           }
 
-          .fromone-help-page.help-create-style-page {
-            padding: 24px 16px 112px !important;
+          .supportHubSectionHeading h2 {
+            font-size: 1.8rem;
           }
 
-          .fromone-help-page #fromone-standard-shell.help-create-style-card,
-          .fromone-help-page .help-admin-card {
-            width: calc(100% - 32px) !important;
-            max-width: 500px !important;
-            min-height: auto !important;
-            margin: 0 auto !important;
-            padding: 28px 26px 26px !important;
-            border-radius: 26px !important;
+          .supportHubSectionHeading p {
+            font-size: 0.9rem;
           }
 
-          .fromone-help-page .help-create-hero {
-            margin-bottom: 32px !important;
+          .supportHubFormCard {
+            padding: 18px;
+            border-radius: 18px;
           }
 
-          .fromone-help-page .help-create-hero h1 {
-            margin: 14px 0 18px !important;
-            font-size: clamp(2.75rem, 11vw, 3.6rem) !important;
-            line-height: 0.94 !important;
-            letter-spacing: -0.058em !important;
+          .supportHubFormGrid {
+            grid-template-columns: 1fr;
+            gap: 14px;
           }
 
-          .fromone-help-page .help-create-hero p {
-            font-size: 1rem !important;
-            line-height: 1.45 !important;
+          .supportHubWideField {
+            grid-column: auto;
           }
 
-          .fromone-help-page .help-panel {
-            margin-top: 0 !important;
-            padding: 22px !important;
-            border-radius: 24px !important;
+          .supportHubAdminToolbar {
+            align-items: stretch;
+            flex-direction: column;
           }
 
-          .fromone-help-page .help-panel-head {
-            margin-bottom: 22px !important;
+          .supportHubAdminControls {
+            display: grid;
+            grid-template-columns: 1fr;
           }
 
-          .fromone-help-page .help-panel h2 {
-            font-size: clamp(1.75rem, 7vw, 2.15rem) !important;
-            line-height: 0.98 !important;
+          .supportHubAdminControls button {
+            width: 100%;
           }
 
-          .fromone-help-page .help-form-grid {
-            grid-template-columns: 1fr !important;
-            gap: 14px !important;
+          .supportHubReportTop {
+            display: grid;
           }
 
-          .fromone-help-page .help-primary-action {
-            min-height: 58px !important;
-            margin-top: 18px !important;
+          .supportHubReportActions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
-        @media (max-width: 420px) {
-          .fromone-help-page.help-create-style-page {
-            padding-left: 12px !important;
-            padding-right: 12px !important;
-          }
-
-          .fromone-help-page #fromone-standard-shell.help-create-style-card,
-          .fromone-help-page .help-admin-card {
-            width: calc(100% - 18px) !important;
-            padding: 26px 22px 24px !important;
+        @media (max-width: 390px) {
+          .supportHubReportActions {
+            grid-template-columns: 1fr;
           }
         }
-
       `}</style>
     </main>
   );

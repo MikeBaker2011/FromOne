@@ -93,19 +93,9 @@ export default function RootLayout({
       <body>
         <ToastProvider>
           <AppShell>{children}</AppShell>
-
-          <div className="fromone-public-footer">
-            <PublicFooter />
-          </div>
-
+          <PublicFooter />
           <CookieBanner />
         </ToastProvider>
-
-        <style>{`
-          body:has(.fromone-navbar) .fromone-public-footer {
-            display: none !important;
-          }
-        `}</style>
       </body>
     </html>
   );
