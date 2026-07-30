@@ -51,12 +51,38 @@ function cleanText(value: unknown) {
   return String(value || '').trim();
 }
 
+const PRODUCTION_APP_URL = 'https://fromone.co.uk';
+const PRODUCTION_META_CALLBACK_URL =
+  'https://fromone.co.uk/api/auth/meta/callback';
+
 function getAppUrl() {
-  return (
+  const configuredUrl =
     cleanText(process.env.NEXT_PUBLIC_APP_URL) ||
-    cleanText(process.env.META_SITE_URL) ||
-    'https://fromone.co.uk'
-  );
+    cleanText(process.env.META_SITE_URL);
+
+  if (
+    !configuredUrl ||
+    configuredUrl.includes('localhost') ||
+    configuredUrl.includes('127.0.0.1')
+  ) {
+    return PRODUCTION_APP_URL;
+  }
+
+  return configuredUrl.replace(/\/$/, '');
+}
+
+function getMetaRedirectUri() {
+  const configuredRedirectUri = cleanText(process.env.META_REDIRECT_URI);
+
+  if (
+    !configuredRedirectUri ||
+    configuredRedirectUri.includes('localhost') ||
+    configuredRedirectUri.includes('127.0.0.1')
+  ) {
+    return PRODUCTION_META_CALLBACK_URL;
+  }
+
+  return configuredRedirectUri;
 }
 
 function signState(payload: string) {
@@ -143,7 +169,7 @@ function getConnectResultUrl({
 async function exchangeCodeForShortLivedToken(code: string) {
   const appId = cleanText(process.env.META_APP_ID);
   const appSecret = cleanText(process.env.META_APP_SECRET);
-  const redirectUri = cleanText(process.env.META_REDIRECT_URI);
+  const redirectUri = getMetaRedirectUri();
 
   const params = new URLSearchParams();
 

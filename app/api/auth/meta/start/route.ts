@@ -3,8 +3,25 @@ import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
+const PRODUCTION_META_CALLBACK_URL =
+  'https://fromone.co.uk/api/auth/meta/callback';
+
 function cleanText(value: unknown) {
   return String(value || '').trim();
+}
+
+function getMetaRedirectUri() {
+  const configuredRedirectUri = cleanText(process.env.META_REDIRECT_URI);
+
+  if (
+    !configuredRedirectUri ||
+    configuredRedirectUri.includes('localhost') ||
+    configuredRedirectUri.includes('127.0.0.1')
+  ) {
+    return PRODUCTION_META_CALLBACK_URL;
+  }
+
+  return configuredRedirectUri;
 }
 
 function signState(payload: string) {
@@ -24,17 +41,18 @@ function base64UrlEncode(value: string) {
 export async function GET(request: NextRequest) {
   try {
     const appId = cleanText(process.env.META_APP_ID);
-    const redirectUri = cleanText(process.env.META_REDIRECT_URI);
+    const redirectUri = getMetaRedirectUri();
 
-    if (!appId || !redirectUri) {
+    if (!appId) {
       return NextResponse.json(
-        { error: 'Meta app ID or redirect URI is missing.' },
+        { error: 'Meta app ID is missing.' },
         { status: 500 }
       );
     }
 
     const userId = cleanText(request.nextUrl.searchParams.get('user_id'));
-    const returnTo = cleanText(request.nextUrl.searchParams.get('return_to')) || '/posts';
+    const returnTo =
+      cleanText(request.nextUrl.searchParams.get('return_to')) || '/posts';
 
     if (!userId) {
       return NextResponse.json(
