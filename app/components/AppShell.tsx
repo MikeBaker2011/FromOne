@@ -743,6 +743,40 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           }
         }
 
+
+        body:has(.fromone-route-smiles),
+        body:has(.fromone-route-smiles) .app-shell,
+        body:has(.fromone-route-smiles) .main-content,
+        body:has(.fromone-route-smiles) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-route-smiles) .fromone-universal-mobile-page-frame,
+        .fromone-route-smiles,
+        .fromone-route-smiles > .fromone-universal-mobile-page-frame,
+        .fromone-route-smiles > .fromone-universal-mobile-page-frame > * {
+          background-color: #ffffff !important;
+          background-image: none !important;
+        }
+
+        body:has(.fromone-route-smiles)::before,
+        body:has(.fromone-route-smiles)::after,
+        body:has(.fromone-route-smiles) .app-shell::before,
+        body:has(.fromone-route-smiles) .app-shell::after,
+        body:has(.fromone-route-smiles) .main-content::before,
+        body:has(.fromone-route-smiles) .main-content::after,
+        body:has(.fromone-route-smiles) .fromone-universal-mobile-page-frame::before,
+        body:has(.fromone-route-smiles) .fromone-universal-mobile-page-frame::after,
+        .fromone-route-smiles::before,
+        .fromone-route-smiles::after,
+        .fromone-route-smiles > .fromone-universal-mobile-page-frame::before,
+        .fromone-route-smiles > .fromone-universal-mobile-page-frame::after,
+        .fromone-route-smiles > .fromone-universal-mobile-page-frame > *::before,
+        .fromone-route-smiles > .fromone-universal-mobile-page-frame > *::after {
+          display: none !important;
+          content: none !important;
+          background: none !important;
+          background-image: none !important;
+          filter: none !important;
+        }
+
         body:has(.fromone-settings-page),
         body:has(.fromone-settings-page) .app-shell,
         body:has(.fromone-settings-page) .main-content,
