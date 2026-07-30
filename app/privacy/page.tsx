@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import PublicFooter from '../components/PublicFooter';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | FromOne',
@@ -111,205 +110,74 @@ const privacySections = [
 
 export default function PrivacyPage() {
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        overflow: 'hidden',
-      }}
-    >
-      <section
-        style={{
-          width: 'min(1180px, calc(100% - 32px))',
-          margin: '0 auto',
-          padding: '26px 0 70px',
-        }}
-      >
-        <header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 18,
-            marginBottom: 70,
-          }}
-        >
-          <Link
-            href="/signin"
-            aria-label="Back to FromOne"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 14,
-              color: 'var(--text)',
-              fontWeight: 1000,
-              letterSpacing: '-0.045em',
-            }}
-          >
-            <img
-              src="/fromone-logo.png"
-              alt="FromOne logo"
-              style={{
-                width: 62,
-                height: 62,
-                objectFit: 'contain',
-                borderRadius: 18,
-              }}
-            />
-            <span style={{ fontSize: 22 }}>FromOne</span>
+    <main className="privacyPage">
+      <section className="privacyContainer">
+        <header className="privacyTopbar">
+          <Link href="/" className="privacyBrand" aria-label="FromOne home">
+            <img src="/fromone-logo.png" alt="FromOne" />
           </Link>
 
-          <Link
-            href="/signin"
-            className="sales-secondary-button"
-            style={{
-              minHeight: 44,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '10px 16px',
-              borderRadius: 999,
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <Link href="/signin" className="privacyBackLink">
             ← Back to app
           </Link>
         </header>
 
-        <section
-          className="hero-card"
-          style={{
-            marginBottom: 28,
-            padding: 'clamp(26px, 5vw, 54px)',
-            borderRadius: 38,
-          }}
-        >
-          <div className="page-eyebrow">FromOne Privacy Policy</div>
+        <section className="privacyHero">
+          <div className="privacyHeroCopy">
+            <span className="privacyEyebrow">FromOne legal</span>
+            <h1>Privacy Policy</h1>
+            <p>
+              How FromOne collects, uses, stores and protects personal data when
+              you create content, publish posts and manage your business.
+            </p>
+          </div>
 
-          <h1
-            className="page-title"
-            style={{
-              maxWidth: 860,
-              fontSize: 'clamp(44px, 7vw, 86px)',
-              lineHeight: 0.9,
-              marginBottom: 18,
-            }}
-          >
-            Privacy Policy
-          </h1>
-
-          <p
-            className="page-description"
-            style={{
-              maxWidth: 820,
-              fontSize: 18,
-              color: 'var(--muted-strong)',
-            }}
-          >
-            This policy explains how FromOne collects, uses, stores, and protects personal data
-            when you use the app to create posts, publish social media content, and prepare suitable Smiles offers or events.
-          </p>
-
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 10,
-              marginTop: 28,
-            }}
-          >
-            <span className="status-pill">Last updated: 5 July 2026</span>
-            <span className="status-pill">Uploads, posts, offers and events</span>
-            <span className="status-pill">Meta / Facebook / Instagram</span>
+          <div className="privacyHeroMeta">
+            <span>Last updated</span>
+            <strong>5 July 2026</strong>
           </div>
         </section>
 
-        <section
-          className="premium-card"
-          style={{
-            marginBottom: 28,
-            borderRadius: 34,
-            padding: 'clamp(24px, 4vw, 38px)',
-          }}
-        >
-          <div className="page-eyebrow">Overview</div>
-          <h2
-            style={{
-              margin: '0 0 12px',
-              maxWidth: 860,
-              fontSize: 'clamp(32px, 4vw, 54px)',
-              lineHeight: 1,
-              letterSpacing: '-0.06em',
-            }}
-          >
-            Your data is used to run your FromOne workspace.
-          </h2>
-          <p
-            style={{
-              maxWidth: 900,
-              margin: 0,
-              color: 'var(--muted-strong)',
-              lineHeight: 1.75,
-              fontSize: 16,
-            }}
-          >
-            FromOne uses your account details, Business Profile, uploaded media and connected
-            publishing information to provide the app, create posts, prepare suitable Smiles
-            offers or events, and publish to connected channels when you choose to use those features.
+        <section className="privacyOverview">
+          <span className="privacyEyebrow">At a glance</span>
+          <h2>Your data is used to run your FromOne workspace.</h2>
+          <p>
+            FromOne uses your account details, Business Profile, uploaded media
+            and connected publishing information to provide the app, create
+            posts, prepare suitable Smilez offers or events, and publish to
+            connected channels when you choose those features.
           </p>
+
+          <div className="privacyPills">
+            <span>Account and business details</span>
+            <span>Uploads and generated content</span>
+            <span>Facebook and Instagram publishing</span>
+          </div>
         </section>
 
-        <section
-          className="premium-card"
-          style={{
-            borderRadius: 34,
-            padding: 'clamp(18px, 3vw, 30px)',
-            marginBottom: 42,
-          }}
-        >
-          <div
-            style={{
-              display: 'grid',
-              gap: 14,
-            }}
-          >
+        <section className="privacyLayout">
+          <aside className="privacySidebar">
+            <strong>Privacy Policy</strong>
+            <p>Read each section below or use these links for related policies.</p>
+
+            <nav aria-label="Related legal pages">
+              <Link href="/cookies">Cookie Policy</Link>
+              <Link href="/terms">Terms of Service</Link>
+              <Link href="/bugreport">Support</Link>
+            </nav>
+          </aside>
+
+          <div className="privacySections">
             {privacySections.map((section) => (
-              <article
-                key={section.title}
-                className="card"
-                style={{
-                  borderRadius: 24,
-                  padding: 'clamp(18px, 2.4vw, 24px)',
-                  background:
-                    'linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025))',
-                }}
-              >
-                <h2
-                  style={{
-                    margin: '0 0 10px',
-                    fontSize: 'clamp(20px, 2vw, 25px)',
-                    letterSpacing: '-0.04em',
-                  }}
-                >
-                  {section.title}
-                </h2>
+              <article key={section.title} className="privacySection">
+                <h2>{section.title}</h2>
 
                 {section.body.map((paragraph) => (
-                  <p
-                    key={paragraph}
-                    style={{
-                      margin: '0 0 9px',
-                      color: 'var(--muted-strong)',
-                      lineHeight: 1.65,
-                      fontSize: 15,
-                    }}
-                  >
-                    {paragraph.includes('info@fromone.co.uk') ? (
+                  <p key={paragraph}>
+                    {paragraph.includes("info@fromone.co.uk") ? (
                       <>
-                        {paragraph.replace('info@fromone.co.uk', '')}
-                        <a
-                          href="mailto:info@fromone.co.uk"
-                          style={{ color: 'var(--gold)', fontWeight: 950 }}
-                        >
+                        {paragraph.replace("info@fromone.co.uk", "")}
+                        <a href="mailto:info@fromone.co.uk">
                           info@fromone.co.uk
                         </a>
                       </>
@@ -321,31 +189,493 @@ export default function PrivacyPage() {
               </article>
             ))}
           </div>
+        </section>
 
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 12,
-              marginTop: 24,
-              paddingTop: 24,
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <Link href="/cookies" className="sales-secondary-button">
-              Cookie Policy
-            </Link>
-            <Link href="/terms" className="sales-secondary-button">
-              Terms of Service
-            </Link>
-            <Link href="/signin" className="sales-primary-button">
-              Back to FromOne
-            </Link>
+        <section className="privacyActions">
+          <div>
+            <span className="privacyEyebrow">Need help?</span>
+            <h2>Questions about your data?</h2>
+            <p>Contact FromOne and we will help with your privacy request.</p>
+          </div>
+
+          <div className="privacyActionLinks">
+            <a href="mailto:info@fromone.co.uk">Email FromOne</a>
+            <Link href="/signin">Back to app</Link>
           </div>
         </section>
       </section>
 
-      <PublicFooter />
+      <style>{`
+        .privacyPage {
+          min-height: 100vh;
+          background: #f7f9fc;
+          color: #071b49;
+        }
+
+        .privacyContainer {
+          width: min(1180px, calc(100% - 40px));
+          margin: 0 auto;
+          padding: 24px 0 72px;
+        }
+
+        .privacyTopbar {
+          min-height: 72px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          margin-bottom: 28px;
+        }
+
+        .privacyBrand {
+          display: inline-flex;
+          align-items: center;
+        }
+
+        .privacyBrand img {
+          width: 126px;
+          height: auto;
+          display: block;
+          object-fit: contain;
+        }
+
+        .privacyBackLink {
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 18px;
+          border: 1px solid rgba(7, 27, 73, 0.1);
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49;
+          font-size: 0.82rem;
+          font-weight: 900;
+          text-decoration: none;
+          box-shadow: 0 8px 24px rgba(7, 27, 73, 0.05);
+        }
+
+        .privacyHero {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 36px;
+          align-items: end;
+          padding: clamp(30px, 5vw, 58px);
+          border: 1px solid rgba(7, 27, 73, 0.08);
+          border-radius: 32px;
+          background: #ffffff;
+          box-shadow: 0 24px 60px rgba(7, 27, 73, 0.07);
+        }
+
+        .privacyHeroCopy {
+          min-width: 0;
+        }
+
+        .privacyEyebrow {
+          display: block;
+          margin-bottom: 10px;
+          color: #f72585;
+          font-size: 0.72rem;
+          font-weight: 950;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .privacyHero h1 {
+          max-width: 820px;
+          margin: 0;
+          font-size: clamp(3.6rem, 8vw, 6.6rem);
+          line-height: 0.9;
+          letter-spacing: -0.07em;
+        }
+
+        .privacyHero p {
+          max-width: 760px;
+          margin: 22px 0 0;
+          color: #5f6d86;
+          font-size: clamp(1rem, 1.8vw, 1.18rem);
+          font-weight: 650;
+          line-height: 1.7;
+        }
+
+        .privacyHeroMeta {
+          min-width: 180px;
+          display: grid;
+          gap: 6px;
+          padding: 18px 20px;
+          border-radius: 20px;
+          background: #f8fafc;
+        }
+
+        .privacyHeroMeta span {
+          color: #738096;
+          font-size: 0.72rem;
+          font-weight: 850;
+          text-transform: uppercase;
+        }
+
+        .privacyHeroMeta strong {
+          font-size: 1rem;
+        }
+
+        .privacyOverview {
+          margin-top: 24px;
+          padding: clamp(26px, 4vw, 42px);
+          border: 1px solid rgba(7, 27, 73, 0.08);
+          border-radius: 28px;
+          background: #071b49;
+          color: #ffffff;
+        }
+
+        .privacyOverview h2 {
+          max-width: 820px;
+          margin: 0;
+          font-size: clamp(2rem, 4vw, 3.4rem);
+          line-height: 1;
+          letter-spacing: -0.05em;
+        }
+
+        .privacyOverview p {
+          max-width: 900px;
+          margin: 18px 0 0;
+          color: rgba(255, 255, 255, 0.78);
+          line-height: 1.75;
+        }
+
+        .privacyPills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-top: 24px;
+        }
+
+        .privacyPills span {
+          display: inline-flex;
+          align-items: center;
+          min-height: 36px;
+          padding: 0 13px;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.08);
+          font-size: 0.75rem;
+          font-weight: 800;
+        }
+
+        .privacyLayout {
+          display: grid;
+          grid-template-columns: 260px minmax(0, 1fr);
+          gap: 24px;
+          align-items: start;
+          margin-top: 24px;
+        }
+
+        .privacySidebar {
+          position: sticky;
+          top: 22px;
+          display: grid;
+          gap: 14px;
+          padding: 22px;
+          border: 1px solid rgba(7, 27, 73, 0.08);
+          border-radius: 22px;
+          background: #ffffff;
+          box-shadow: 0 16px 38px rgba(7, 27, 73, 0.05);
+        }
+
+        .privacySidebar > strong {
+          font-size: 1.1rem;
+        }
+
+        .privacySidebar p {
+          margin: 0;
+          color: #6b7890;
+          font-size: 0.83rem;
+          line-height: 1.55;
+        }
+
+        .privacySidebar nav {
+          display: grid;
+          gap: 8px;
+        }
+
+        .privacySidebar a {
+          min-height: 40px;
+          display: flex;
+          align-items: center;
+          padding: 0 12px;
+          border-radius: 12px;
+          background: #f5f7fb;
+          color: #071b49;
+          font-size: 0.78rem;
+          font-weight: 850;
+          text-decoration: none;
+        }
+
+        .privacySections {
+          display: grid;
+          gap: 14px;
+        }
+
+        .privacySection {
+          padding: clamp(22px, 3vw, 30px);
+          border: 1px solid rgba(7, 27, 73, 0.08);
+          border-radius: 24px;
+          background: #ffffff;
+          box-shadow: 0 12px 30px rgba(7, 27, 73, 0.04);
+        }
+
+        .privacySection h2 {
+          margin: 0 0 14px;
+          font-size: clamp(1.25rem, 2vw, 1.55rem);
+          line-height: 1.2;
+          letter-spacing: -0.03em;
+        }
+
+        .privacySection p {
+          margin: 0 0 10px;
+          color: #5f6d86;
+          font-size: 0.95rem;
+          line-height: 1.72;
+        }
+
+        .privacySection p:last-child {
+          margin-bottom: 0;
+        }
+
+        .privacySection a {
+          color: #f72585;
+          font-weight: 900;
+        }
+
+        .privacyActions {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 24px;
+          align-items: center;
+          margin-top: 24px;
+          padding: 28px;
+          border: 1px solid rgba(7, 27, 73, 0.08);
+          border-radius: 24px;
+          background: #ffffff;
+        }
+
+        .privacyActions h2 {
+          margin: 0;
+          font-size: clamp(1.8rem, 3vw, 2.6rem);
+          letter-spacing: -0.04em;
+        }
+
+        .privacyActions p {
+          margin: 8px 0 0;
+          color: #66748c;
+        }
+
+        .privacyActionLinks {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 10px;
+        }
+
+        .privacyActionLinks a {
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 18px;
+          border-radius: 999px;
+          background: #f72585;
+          color: #ffffff;
+          font-size: 0.82rem;
+          font-weight: 900;
+          text-decoration: none;
+        }
+
+        .privacyActionLinks a:last-child {
+          border: 1px solid rgba(7, 27, 73, 0.1);
+          background: #ffffff;
+          color: #071b49;
+        }
+
+        @media (max-width: 900px) {
+          .privacyHero {
+            grid-template-columns: 1fr;
+            align-items: start;
+          }
+
+          .privacyHeroMeta {
+            width: fit-content;
+          }
+
+          .privacyLayout {
+            grid-template-columns: 1fr;
+          }
+
+          .privacySidebar {
+            position: static;
+          }
+
+          .privacySidebar nav {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+
+          .privacyActions {
+            grid-template-columns: 1fr;
+          }
+
+          .privacyActionLinks {
+            justify-content: flex-start;
+          }
+        }
+
+        @media (max-width: 620px) {
+          .privacyContainer {
+            width: min(100% - 16px, 680px);
+            padding: 10px 0 34px;
+          }
+
+          .privacyTopbar {
+            min-height: 54px;
+            margin-bottom: 14px;
+          }
+
+          .privacyBrand img {
+            width: 92px;
+          }
+
+          .privacyBackLink {
+            min-height: 38px;
+            padding: 0 13px;
+            font-size: 0.72rem;
+          }
+
+          .privacyHero {
+            gap: 18px;
+            padding: 24px 18px;
+            border-radius: 22px;
+          }
+
+          .privacyHero h1 {
+            font-size: clamp(2.7rem, 14vw, 3.8rem);
+            line-height: 0.94;
+          }
+
+          .privacyHero p {
+            margin-top: 16px;
+            font-size: 0.92rem;
+            line-height: 1.6;
+          }
+
+          .privacyHeroMeta {
+            min-width: 0;
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 16px;
+          }
+
+          .privacyOverview {
+            margin-top: 14px;
+            padding: 22px 18px;
+            border-radius: 20px;
+          }
+
+          .privacyOverview h2 {
+            font-size: 1.8rem;
+            line-height: 1.04;
+          }
+
+          .privacyOverview p {
+            margin-top: 14px;
+            font-size: 0.9rem;
+            line-height: 1.62;
+          }
+
+          .privacyPills {
+            gap: 8px;
+            margin-top: 18px;
+          }
+
+          .privacyPills span {
+            min-height: 34px;
+            font-size: 0.7rem;
+          }
+
+          .privacyLayout {
+            gap: 12px;
+            margin-top: 12px;
+          }
+
+          .privacySidebar {
+            padding: 16px;
+            border-radius: 18px;
+          }
+
+          .privacySidebar nav {
+            grid-template-columns: 1fr;
+          }
+
+          .privacySidebar a {
+            min-height: 38px;
+          }
+
+          .privacySections {
+            gap: 10px;
+          }
+
+          .privacySection {
+            padding: 18px;
+            border-radius: 18px;
+          }
+
+          .privacySection h2 {
+            margin-bottom: 10px;
+            font-size: 1.12rem;
+          }
+
+          .privacySection p {
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            line-height: 1.62;
+          }
+
+          .privacyActions {
+            margin-top: 12px;
+            padding: 20px 16px;
+            border-radius: 18px;
+          }
+
+          .privacyActions h2 {
+            font-size: 1.65rem;
+          }
+
+          .privacyActions p {
+            font-size: 0.88rem;
+            line-height: 1.55;
+          }
+
+          .privacyActionLinks {
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+
+          .privacyActionLinks a {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .privacyHero h1 {
+            font-size: 2.45rem;
+          }
+
+          .privacySection {
+            padding: 16px;
+          }
+
+          .privacySection p {
+            font-size: 0.9rem;
+          }
+        }
+      `}</style>
     </main>
   );
 }

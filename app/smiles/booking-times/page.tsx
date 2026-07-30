@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
 import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -247,38 +248,24 @@ export default function SmilesBookingTimesPage() {
   return (
     <main className="fromone-posts-page fromone-booking-times-page bookingTimesPage" data-fromone-smiles-times="simple-v2">
       <section id="fromone-standard-shell" className="bookingTimesShell">
-      <section className="posts-create-hero bookingTimesHero">
-        <Link
-          href="/smiles"
-          className="backPill"
-          style={{
-            width: "fit-content",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "42px",
-            marginBottom: "24px",
-            borderRadius: "999px",
-            padding: "0 16px",
-            color: "#071b49",
-            background: "#ffffff",
-            border: "1.5px solid #dfe5f1",
-            boxShadow: "0 10px 24px rgba(7, 27, 73, 0.06)",
-            fontWeight: 800,
-            textDecoration: "none",
-          }}
-        >
-          Back to Smiles
-        </Link>
-        <span className="posts-create-eyebrow">Opening & booking hours</span>
-        <h1>When are you open?</h1>
-        <p>
-          These hours appear on your Smiles venue page and control when
-          customers can request bookings.
-        </p>
-      </section>
+      <SmilezSectionHeader
+        eyebrow="Opening & booking hours"
+        title="When are you open?"
+        description={
+          <>
+            These hours appear on your Smilez venue page and control when
+            customers can request bookings.
+          </>
+        }
+        listingName={profile?.business_name}
+        listingStatus={
+          profile?.smiles_listing_venue_id
+            ? "Live on Smilez"
+            : "Waiting for listing setup"
+        }
+      />
 
-      {loading ? (
+{loading ? (
         <section className="simplePanel">
           <h2>Loading opening & booking hours...</h2>
           <p>Checking your current Smiles hours.</p>

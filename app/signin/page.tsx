@@ -418,10 +418,7 @@ export default function SignInPage() {
       <section className="signin-card" aria-label={mode === 'signin' ? 'Sign in' : 'Create account'}>
         <div className="signin-brand">
           <img src="/fromone-logo.png" alt="FromOne" />
-          <div>
-            <strong>FromOne</strong>
-            <span>Upload it. Post it. Done.</span>
-          </div>
+          <span>Upload it. Post it. Done.</span>
         </div>
 
         <div className="signin-heading">
@@ -429,8 +426,8 @@ export default function SignInPage() {
           <h1>{mode === 'signin' ? 'Sign in.' : 'Create account.'}</h1>
           <p>
             {mode === 'signin'
-              ? 'Open your workspace to create posts, review drafts and manage Smiles offers and events.'
-              : 'Create your account to make Facebook and Instagram posts, plus Smiles offers and events where relevant.'}
+              ? 'Open your workspace to create posts, review drafts and manage Smilez offers and events.'
+              : 'Create your account to make Facebook and Instagram posts, plus Smilez offers and events where relevant.'}
           </p>
         </div>
 
@@ -583,19 +580,23 @@ export default function SignInPage() {
       </section>
 
       <style jsx global>{`
-        body:has(.fromone-signin-page) {
-          background: #f5f7fb !important;
-          overflow-x: hidden !important;
-        }
-
-        body:has(.fromone-signin-page)::before {
-          display: none !important;
-          content: none !important;
-        }
-
+        body:has(.fromone-signin-page),
         body:has(.fromone-signin-page) .app-shell,
         body:has(.fromone-signin-page) .main-content {
-          background: #f5f7fb !important;
+          background: #ffffff !important;
+          background-image: none !important;
+        }
+
+        body:has(.fromone-signin-page)::before,
+        body:has(.fromone-signin-page)::after,
+        body:has(.fromone-signin-page) .app-shell::before,
+        body:has(.fromone-signin-page) .app-shell::after,
+        body:has(.fromone-signin-page) .main-content::before,
+        body:has(.fromone-signin-page) .main-content::after {
+          display: none !important;
+          content: none !important;
+          background: none !important;
+          background-image: none !important;
         }
 
         body:has(.fromone-signin-page) .main-content {
@@ -603,88 +604,68 @@ export default function SignInPage() {
           max-width: none !important;
           margin: 0 !important;
           padding: 0 !important;
-          box-sizing: border-box !important;
           overflow-x: hidden !important;
         }
 
         .fromone-signin-page.signin-page {
           width: 100% !important;
-          min-height: 100vh !important;
+          min-height: calc(100vh - 92px) !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          padding: 32px 16px !important;
-          background:
-            radial-gradient(circle at 15% 0%, rgba(247, 37, 133, 0.10), transparent 30rem),
-            radial-gradient(circle at 90% 10%, rgba(255, 193, 7, 0.18), transparent 28rem),
-            #f5f7fb !important;
+          padding: clamp(38px, 6vw, 84px) 20px !important;
+          background: #ffffff !important;
           color: #071b49 !important;
-          font-family:
-            var(--font-main),
-            "Plus Jakarta Sans",
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
           box-sizing: border-box !important;
         }
 
         .fromone-signin-page .signin-card {
-          width: min(520px, 100%) !important;
+          width: min(760px, 100%) !important;
           margin: 0 auto !important;
-          padding: clamp(28px, 4vw, 42px) !important;
+          padding: clamp(34px, 5vw, 56px) !important;
           border: 1px solid #dfe5f1 !important;
-          border-radius: 32px !important;
+          border-radius: 28px !important;
           background: #ffffff !important;
-          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.12) !important;
+          box-shadow: 0 18px 48px rgba(7, 27, 73, 0.07) !important;
           box-sizing: border-box !important;
         }
 
         .fromone-signin-page .signin-brand {
-          display: flex !important;
-          align-items: center !important;
-          gap: 12px !important;
-          margin-bottom: 28px !important;
+          display: grid !important;
+          justify-items: start !important;
+          gap: 10px !important;
+          margin-bottom: 34px !important;
         }
 
         .fromone-signin-page .signin-brand img {
-          width: 54px !important;
-          height: 54px !important;
-          object-fit: contain !important;
-          border-radius: 16px !important;
-          box-shadow: 0 14px 30px rgba(255, 193, 7, 0.24) !important;
-        }
-
-        .fromone-signin-page .signin-brand strong {
           display: block !important;
-          color: #071b49 !important;
-          font-size: 1.35rem !important;
-          line-height: 1 !important;
-          font-weight: 900 !important;
-          letter-spacing: -0.055em !important;
+          width: min(250px, 72vw) !important;
+          max-width: 100% !important;
+          height: auto !important;
+          max-height: 82px !important;
+          object-fit: contain !important;
+          object-position: left center !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
         }
 
         .fromone-signin-page .signin-brand span {
-          display: block !important;
-          margin-top: 5px !important;
           color: #52617a !important;
-          font-size: 0.82rem !important;
-          line-height: 1 !important;
+          font-size: 0.84rem !important;
+          line-height: 1.3 !important;
           font-weight: 800 !important;
         }
 
         .fromone-signin-page .signin-heading {
-          margin-bottom: 20px !important;
+          margin-bottom: 24px !important;
         }
 
         .fromone-signin-page .signin-eyebrow {
-          margin: 0 0 10px !important;
+          margin: 0 0 12px !important;
           color: #f72585 !important;
-          font-size: 0.78rem !important;
+          font-size: 0.76rem !important;
           line-height: 1 !important;
-          font-weight: 850 !important;
+          font-weight: 900 !important;
           letter-spacing: 0.14em !important;
           text-transform: uppercase !important;
         }
@@ -692,17 +673,18 @@ export default function SignInPage() {
         .fromone-signin-page .signin-heading h1 {
           margin: 0 !important;
           color: #071b49 !important;
-          font-size: clamp(2.8rem, 8vw, 4.1rem) !important;
+          font-size: clamp(3rem, 7vw, 4.8rem) !important;
           line-height: 0.94 !important;
-          font-weight: 850 !important;
+          font-weight: 900 !important;
           letter-spacing: -0.065em !important;
         }
 
         .fromone-signin-page .signin-heading p:not(.signin-eyebrow) {
-          margin: 14px 0 0 !important;
+          max-width: 620px !important;
+          margin: 16px 0 0 !important;
           color: #52617a !important;
           font-size: 1rem !important;
-          line-height: 1.5 !important;
+          line-height: 1.55 !important;
           font-weight: 650 !important;
         }
 
@@ -710,19 +692,25 @@ export default function SignInPage() {
           display: grid !important;
           grid-template-columns: 1fr 1fr !important;
           gap: 8px !important;
-          margin-bottom: 18px !important;
+          margin-bottom: 20px !important;
           padding: 6px !important;
           border: 1px solid #dfe5f1 !important;
           border-radius: 999px !important;
           background: #f7f9fd !important;
+          background-image: none !important;
+          box-shadow: none !important;
+          filter: none !important;
         }
 
         .fromone-signin-page .signin-mode-tabs button {
-          min-height: 44px !important;
+          min-height: 46px !important;
           border: 0 !important;
           border-radius: 999px !important;
           background: transparent !important;
+          background-image: none !important;
           color: #52617a !important;
+          box-shadow: none !important;
+          filter: none !important;
           font: inherit !important;
           font-weight: 850 !important;
           cursor: pointer !important;
@@ -731,7 +719,8 @@ export default function SignInPage() {
         .fromone-signin-page .signin-mode-tabs button.is-active {
           background: #f72585 !important;
           color: #ffffff !important;
-          box-shadow: 0 14px 30px rgba(247, 37, 133, 0.18) !important;
+          box-shadow: 0 10px 22px rgba(247, 37, 133, 0.16) !important;
+          filter: none !important;
         }
 
         .fromone-signin-page .signin-message {
@@ -754,7 +743,7 @@ export default function SignInPage() {
         .fromone-signin-page .signin-field {
           display: grid !important;
           gap: 8px !important;
-          margin-top: 14px !important;
+          margin-top: 15px !important;
         }
 
         .fromone-signin-page .signin-field span {
@@ -786,9 +775,9 @@ export default function SignInPage() {
           display: flex !important;
           align-items: center !important;
           justify-content: space-between !important;
-          gap: 12px !important;
+          gap: 14px !important;
           flex-wrap: wrap !important;
-          margin: 14px 0 18px !important;
+          margin: 16px 0 20px !important;
         }
 
         .fromone-signin-page .signin-options label {
@@ -815,8 +804,8 @@ export default function SignInPage() {
           color: #ffffff !important;
           font: inherit !important;
           font-size: 1rem !important;
-          font-weight: 850 !important;
-          box-shadow: 0 18px 42px rgba(247, 37, 133, 0.22) !important;
+          font-weight: 900 !important;
+          box-shadow: 0 14px 30px rgba(247, 37, 133, 0.18) !important;
           cursor: pointer !important;
         }
 
@@ -834,19 +823,22 @@ export default function SignInPage() {
 
         .fromone-signin-page .signin-help > button {
           border: 0 !important;
+          border-radius: 999px !important;
           background: transparent !important;
           color: #f72585 !important;
+          padding: 8px 14px !important;
           font: inherit !important;
           font-size: 0.92rem !important;
           font-weight: 850 !important;
           cursor: pointer !important;
+          box-shadow: none !important;
         }
 
         .fromone-signin-page .signin-help-panel {
           margin-top: 10px !important;
-          padding: 14px !important;
+          padding: 16px !important;
           border: 1px solid #dfe5f1 !important;
-          border-radius: 18px !important;
+          border-radius: 20px !important;
           background: #f7f9fd !important;
           text-align: left !important;
         }
@@ -868,34 +860,34 @@ export default function SignInPage() {
           font: inherit !important;
           font-weight: 850 !important;
           cursor: pointer !important;
+          box-shadow: none !important;
         }
 
         @media (max-width: 620px) {
           .fromone-signin-page.signin-page {
             align-items: flex-start !important;
-            padding: 24px 14px !important;
+            padding: 22px 12px 42px !important;
           }
 
           .fromone-signin-page .signin-card {
-            padding: 26px 22px !important;
-            border-radius: 28px !important;
+            padding: 28px 20px !important;
+            border-radius: 24px !important;
           }
 
           .fromone-signin-page .signin-brand {
-            justify-content: center !important;
-            text-align: left !important;
+            margin-bottom: 28px !important;
           }
 
-          .fromone-signin-page .signin-heading {
-            text-align: center !important;
+          .fromone-signin-page .signin-brand img {
+            width: min(220px, 70vw) !important;
           }
 
           .fromone-signin-page .signin-heading h1 {
-            font-size: clamp(2.7rem, 14vw, 3.7rem) !important;
+            font-size: clamp(2.8rem, 14vw, 3.8rem) !important;
           }
 
           .fromone-signin-page .signin-options {
-            justify-content: center !important;
+            justify-content: flex-start !important;
           }
         }
       `}</style>

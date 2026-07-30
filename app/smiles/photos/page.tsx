@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
 import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -263,44 +264,19 @@ export default function SmilesPhotosPage() {
   return (
     <main className="fromone-posts-page fromone-smiles-photos-page smilesPhotosPage">
       <section id="fromone-standard-shell" className="photosShell">
-        <div className="heroTop">
-          <Link
-            href="/smiles"
-            className="backLink"
-            style={{
-              minHeight: 42,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "fit-content",
-              padding: "0 16px",
-              border: "1px solid rgba(7, 27, 73, 0.14)",
-              borderRadius: 999,
-              background: "#ffffff",
-              color: "var(--posts-navy)",
-              fontSize: "0.84rem",
-              fontWeight: 900,
-              lineHeight: 1,
-              textDecoration: "none",
-              boxShadow: "none",
-            }}
-          >
-            Back to Smiles
-          </Link>
-        </div>
+        <SmilezSectionHeader
+          eyebrow="Customer photos"
+          title="Review customer photos."
+          description="Approve or reject photos customers have linked to your venue."
+          listingName={profile?.business_name}
+          listingStatus={
+            profile?.smiles_listing_venue_id
+              ? "Live on Smilez"
+              : "Waiting for listing setup"
+          }
+        />
 
-        <div className="posts-create-hero heroGrid">
-          <div>
-            <span className="posts-create-eyebrow eyebrow">Customer photos</span>
-            <h1>Review customer photos.</h1>
-            <p className="intro">
-              Approve or reject photos customers have linked to your venue.
-            </p>
-          </div>
-
-        </div>
-
-        {loading ? (
+{loading ? (
           <section className="simplePanel">
             <h2>Loading customer photos...</h2>
           </section>

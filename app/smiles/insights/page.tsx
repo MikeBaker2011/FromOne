@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import "../posts/posts-companion-shared.css";
+import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
+import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
 
@@ -361,20 +362,22 @@ export default function CustomerInsightsPage() {
 
   return (
     <main className="customer-insights-page">
-      <header className="customer-insights-hero">
-        <div>
-          <span className="customer-insights-eyebrow">Customer insights</span>
-          <h1>See the activity around your business.</h1>
-          <p>
+      <SmilezSectionHeader
+        eyebrow="Customer insights"
+        title="See the activity around your business."
+        description={
+          <>
             A simple view of the real bookings, reviews, customer photos, offers and
             events already connected to your Smilez listing.
-          </p>
-        </div>
-
-        <Link href="/smiles" className="customer-insights-secondary-action">
-          Open Smilez hub
-        </Link>
-      </header>
+          </>
+        }
+        listingName={profile?.business_name}
+        listingStatus={
+          profile?.smiles_listing_venue_id
+            ? "Live on Smilez"
+            : "Waiting for listing setup"
+        }
+      />
 
       {loading ? (
         <section className="customer-insights-state">
@@ -816,6 +819,17 @@ export default function CustomerInsightsPage() {
             flex-direction: column;
           }
 
+
+          .customer-insights-range {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+
+          .customer-insights-range button {
+            width: 100%;
+          }
+
           .customer-insights-grid {
             grid-template-columns: 1fr;
           }
@@ -828,6 +842,24 @@ export default function CustomerInsightsPage() {
             min-height: 230px;
           }
         }
+
+        /* SMILEZ INSIGHTS — CONSISTENT PILL BUTTONS */
+        .customer-insights-page .customer-insights-secondary-action,
+        .customer-insights-page .customer-insights-state a,
+        .customer-insights-page .customer-insights-next a,
+        .customer-insights-page .customer-insights-listing button,
+        .customer-insights-page .customer-insights-range button {
+          border-radius: 999px !important;
+        }
+
+        .customer-insights-page .customer-insights-state a,
+        .customer-insights-page .customer-insights-next a,
+        .customer-insights-page .customer-insights-range button.isActive {
+          background: #f72585 !important;
+          border-color: #f72585 !important;
+          color: #ffffff !important;
+        }
+
       `}</style>
     </main>
   );

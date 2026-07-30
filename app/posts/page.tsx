@@ -1,5 +1,7 @@
 "use client";
 
+
+import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import "./posts.css";
 import "./posts-companion-shared.css";
 
@@ -3002,6 +3004,7 @@ Important:
 
   return (
     <main className="fromone-posts-page settings-create-style-page" data-fromone-posts-redesign="v1">
+      <BackToDashboardButton />
       <section id="fromone-standard-shell" className="posts-create-style-card">
         <header className="posts-create-hero">
           <div className="posts-create-eyebrow">Posts</div>
@@ -5505,6 +5508,25 @@ Important:
             font-size: 0.92rem !important;
           }
         }
+
+        /* POSTS PAGE — FULLY ROUNDED BUTTONS */
+        .posts-page button,
+        .posts-shell button,
+        .posts-wrap button,
+        .posts-card button,
+        .posts-panel button,
+        .posts-toolbar button,
+        .post-card button,
+        .weekly-post-card button,
+        .queue-post-card button,
+        .posts-modal button,
+        .posts-dialog button,
+        .confirm-dialog button,
+        .review-modal button,
+        .fromone-post-card-actions button {
+          border-radius: 999px !important;
+        }
+
       `}</style>
     </div>
   );

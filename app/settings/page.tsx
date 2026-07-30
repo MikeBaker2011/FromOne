@@ -1,5 +1,7 @@
 'use client';
 
+
+import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '@/app/components/ToastProvider';
 import '../posts/posts-companion-shared.css';
@@ -239,6 +241,8 @@ export default function SettingsPage() {
   const [showDangerZone, setShowDangerZone] = useState(false);
   const [isOnboardingSetup, setIsOnboardingSetup] = useState(false);
   const [settingsMode, setSettingsMode] = useState<'simple' | 'advanced'>('simple');
+  const [activeImageTab, setActiveImageTab] = useState<'main' | 'gallery'>('main');
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'business' | 'smilez'>('business');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -513,7 +517,7 @@ export default function SettingsPage() {
     const requestedView = params.get('view');
     const metaConnected = params.get('meta_connected');
 
-    setSettingsMode(requestedView === 'advanced' ? 'advanced' : 'simple');
+    setSettingsMode('simple');
     const metaError = params.get('meta_error');
 
     if (setup === 'business') {
@@ -1935,6 +1939,8 @@ export default function SettingsPage() {
           accessibility_info: accessibilityInfo.trim(),
           galleryImageUrls,
           gallery_image_urls: galleryImageUrls,
+          logoUrl: null,
+          logo_url: null,
           acceptsBookings,
           accepts_bookings: acceptsBookings,
           bookingUrl:
@@ -1953,8 +1959,14 @@ export default function SettingsPage() {
           booking_blocks: bookingBlocks,
           venueType: industry.trim(),
           websiteUrl: normaliseWebsiteUrl(websiteUrl) || '',
-          mediaUrl: brandLogoUrl.trim() || null,
-          media_url: brandLogoUrl.trim() || null,
+          mediaUrl:
+            brandLogoUrl.trim() ||
+            galleryImageUrls[0]?.trim() ||
+            null,
+          media_url:
+            brandLogoUrl.trim() ||
+            galleryImageUrls[0]?.trim() ||
+            null,
         }),
       });
 
@@ -2181,6 +2193,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <main className="fromone-posts-page fromone-settings-page settings-create-style-page">
+      <BackToDashboardButton />
         <section id="fromone-standard-shell" className="settings-create-style-card settings-loading-card" aria-label="Settings loading">
           <span className="posts-create-eyebrow settings-create-eyebrow">Settings</span>
           <h1>Loading settings.</h1>
@@ -2192,192 +2205,940 @@ export default function SettingsPage() {
 
   if (settingsMode === 'simple') {
     return (
-      <main className="fromone-posts-page fromone-settings-page settings-simple-client-page" data-settings-page="client-simple-v1">
-        <section id="fromone-standard-shell" className="settings-simple-client-shell">
-          <header className="settings-simple-client-header">
+      <main
+        className="fromone-posts-page fromone-settings-page settings-simple-business-page"
+        data-settings-page="simple-business-v1"
+      >
+      <BackToDashboardButton />
+        <section id="fromone-standard-shell" className="settings-simple-business-shell">
+          <header className="settings-simple-business-header">
+            <span className="posts-create-eyebrow">Settings</span>
+            <h1>Your business</h1>
+            <p>
+              Add the details customers need. Smilez uses this same information
+              automatically, so nothing needs entering twice.
+            </p>
+          </header>
+
+          <section className="settings-simple-card settings-simple-scan-card">
+            <div className="settings-simple-card-heading">
+              <div>
+                <span>Quick setup</span>
+                <h2>Scan your website</h2>
+              </div>
+              <small>Automatically fills the business profile</small>
+            </div>
+
+            <div className="settings-simple-scan-row">
+              <label>
+                <strong>Website address</strong>
+                <input
+                  value={websiteUrl}
+                  onChange={(event) => setWebsiteUrl(event.target.value)}
+                  placeholder="https://yourbusiness.co.uk"
+                />
+              </label>
+
+              <button
+                type="button"
+                className="settings-simple-primary"
+                onClick={handleScanWebsite}
+                disabled={scanningWebsite}
+              >
+                {scanningWebsite ? 'Scanning...' : 'Scan website'}
+              </button>
+            </div>
+
+            {scanMessage ? (
+              <p className="settings-simple-scan-message">{scanMessage}</p>
+            ) : null}
+          </section>
+
+          <section className="settings-simple-card">
+            <div className="settings-simple-card-heading">
+              <div>
+                <span>Business profile</span>
+                <h2>Main details</h2>
+              </div>
+              <small>Used across FromOne and Smilez</small>
+            </div>
+
+            <div className="settings-simple-grid">
+              <label>
+                <strong>Business name</strong>
+                <input
+                  value={businessName}
+                  onChange={(event) => setBusinessName(event.target.value)}
+                  placeholder="Your business name"
+                />
+              </label>
+
+              <label>
+                <strong>Business type</strong>
+                <input
+                  value={industry}
+                  onChange={(event) => setIndustry(event.target.value)}
+                  placeholder="Cafe, salon, retailer..."
+                />
+              </label>
+
+              <label className="settings-simple-wide">
+                <strong>Website</strong>
+                <input
+                  value={websiteUrl}
+                  onChange={(event) => setWebsiteUrl(event.target.value)}
+                  placeholder="https://..."
+                />
+              </label>
+
+              <label className="settings-simple-wide">
+                <strong>Address</strong>
+                <input
+                  value={address}
+                  onChange={(event) => setAddress(event.target.value)}
+                  placeholder="Street and venue address"
+                />
+              </label>
+
+              <label>
+                <strong>Postcode</strong>
+                <input
+                  value={postcode}
+                  onChange={(event) => handlePostcodeChange(event.target.value)}
+                  onBlur={handlePostcodeBlur}
+                  placeholder="SK1 1AA"
+                />
+                <small>
+                  {isLookingUpLocation
+                    ? 'Finding the map location...'
+                    : geoMessage || 'Map location is found automatically from the postcode.'}
+                </small>
+              </label>
+
+              <label>
+                <strong>Town or area</strong>
+                <input
+                  value={location}
+                  onChange={(event) => setLocation(event.target.value)}
+                  placeholder="Stockport"
+                />
+              </label>
+
+              <div className="settings-simple-geo-card settings-simple-wide">
+                <div className="settings-simple-geo-heading">
+                  <div>
+                    <strong>Map location</strong>
+                    <span>
+                      Entering a postcode automatically finds these coordinates.
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="settings-simple-secondary settings-simple-full-width-button"
+                    onClick={lookupPostcodeCoordinates}
+                    disabled={isLookingUpLocation || !postcode.trim()}
+                  >
+                    {isLookingUpLocation ? 'Finding...' : 'Refresh location'}
+                  </button>
+                </div>
+
+                <div className="settings-simple-geo-values">
+                  <label>
+                    <strong>Latitude</strong>
+                    <input
+                      value={latitude}
+                      readOnly
+                      placeholder="Found automatically"
+                    />
+                  </label>
+
+                  <label>
+                    <strong>Longitude</strong>
+                    <input
+                      value={longitude}
+                      readOnly
+                      placeholder="Found automatically"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <label>
+                <strong>Phone</strong>
+                <input
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="Customer contact number"
+                />
+              </label>
+
+              <label>
+                <strong>Email</strong>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="Customer contact email"
+                />
+              </label>
+
+              <label className="settings-simple-wide">
+                <strong>What do you offer?</strong>
+                <textarea
+                  value={services}
+                  onChange={(event) => setServices(event.target.value)}
+                  placeholder="Coffee, lunches, haircuts, private events..."
+                  rows={3}
+                />
+              </label>
+
+              <label className="settings-simple-wide">
+                <strong>Opening hours</strong>
+                <textarea
+                  value={openingHours}
+                  onChange={(event) => setOpeningHours(event.target.value)}
+                  placeholder="Mon-Fri 9am-5pm, Sat 10am-4pm"
+                  rows={3}
+                />
+              </label>
+            </div>
+          </section>
+
+          <section className="settings-simple-card">
+            <div className="settings-simple-card-heading">
+              <div>
+                <span>Business images</span>
+                <h2>Main image and gallery</h2>
+              </div>
+              <small>Used on Smilez venue cards and business pages</small>
+            </div>
+
+            <div className="settings-image-tabs" role="tablist" aria-label="Business images">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeImageTab === 'main'}
+                className={activeImageTab === 'main' ? 'is-active' : ''}
+                onClick={() => setActiveImageTab('main')}
+              >
+                Main image
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeImageTab === 'gallery'}
+                className={activeImageTab === 'gallery' ? 'is-active' : ''}
+                onClick={() => setActiveImageTab('gallery')}
+              >
+                Gallery
+                {galleryImageUrls.length > 0 ? ` (${galleryImageUrls.length})` : ''}
+              </button>
+            </div>
+
+            <input
+              ref={businessImageInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleBusinessImageUpload}
+              hidden
+            />
+
+            <input
+              ref={galleryImageInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              onChange={handleGalleryImagesUpload}
+              hidden
+            />
+
+            {activeImageTab === 'main' ? (
+              brandLogoUrl ? (
+                <div className="settings-simple-image-row">
+                  <img src={brandLogoUrl} alt="Main business image preview" />
+                  <div>
+                    <strong>Main image ready</strong>
+                    <span>Shown first on Smilez venue cards and the venue page.</span>
+                  </div>
+                  <div className="settings-image-actions">
+                    <button
+                      type="button"
+                      className="settings-simple-secondary"
+                      onClick={() => businessImageInputRef.current?.click()}
+                      disabled={uploadingBusinessImage}
+                    >
+                      {uploadingBusinessImage ? 'Uploading...' : 'Change image'}
+                    </button>
+                    <button
+                      type="button"
+                      className="settings-simple-secondary"
+                      onClick={removeBusinessImage}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="settings-simple-upload"
+                  onClick={() => businessImageInputRef.current?.click()}
+                  disabled={uploadingBusinessImage}
+                >
+                  {uploadingBusinessImage ? 'Uploading image...' : 'Upload main business image'}
+                </button>
+              )
+            ) : (
+              <div style={{ display: 'grid', gap: 14 }}>
+                <p className="settings-simple-help" style={{ margin: 0 }}>
+                  Add up to 6 additional venue photos. These appear in the Gallery tab
+                  on the Smilez business page.
+                </p>
+
+                {galleryImageUrls.length > 0 ? (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                      gap: 12,
+                    }}
+                  >
+                    {galleryImageUrls.map((imageUrl, index) => (
+                      <div
+                        key={`${imageUrl}-${index}`}
+                        style={{
+                          position: 'relative',
+                          overflow: 'hidden',
+                          minHeight: 120,
+                          aspectRatio: '4 / 3',
+                          border: '1px solid #dfe7f2',
+                          borderRadius: 16,
+                          background: '#f8fafc',
+                        }}
+                      >
+                        <img
+                          src={imageUrl}
+                          alt={`${businessName || 'Business'} gallery image ${index + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'block',
+                            objectFit: 'cover',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="settings-simple-secondary"
+                          onClick={() => removeGalleryImage(imageUrl)}
+                          disabled={uploadingGalleryImages}
+                          aria-label={`Remove gallery image ${index + 1}`}
+                          style={{
+                            position: 'absolute',
+                            right: 8,
+                            bottom: 8,
+                            minHeight: 34,
+                            padding: '0 12px',
+                            background: 'rgba(255,255,255,0.94)',
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="settings-simple-help">
+                    No gallery photos uploaded yet.
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="settings-simple-upload"
+                  onClick={() => galleryImageInputRef.current?.click()}
+                  disabled={uploadingGalleryImages || galleryImageUrls.length >= 6}
+                >
+                  {uploadingGalleryImages
+                    ? 'Uploading photos...'
+                    : galleryImageUrls.length >= 6
+                      ? 'Gallery full'
+                      : galleryImageUrls.length > 0
+                        ? 'Add gallery photos'
+                        : 'Upload gallery photos'}
+                </button>
+              </div>
+            )}
+          </section>
+
+          <section className="settings-simple-card">
+            <div className="settings-simple-card-heading">
+              <div>
+                <span>Smilez</span>
+                <h2>Bookings</h2>
+              </div>
+              <small>{getSmilesListingStatusLabel()}</small>
+            </div>
+
+            <p className="settings-simple-help">
+              Smilez automatically uses the business details above. Only choose
+              whether customers can book.
+            </p>
+
+            <label className="settings-simple-toggle">
+              <input
+                type="checkbox"
+                checked={acceptsBookings}
+                onChange={(event) => setAcceptsBookings(event.target.checked)}
+              />
+              <span>
+                <strong>Accept bookings</strong>
+                <small>Customers will see booking information on your Smilez listing.</small>
+              </span>
+            </label>
+
+            {acceptsBookings ? (
+              <label className="settings-simple-booking-link">
+                <strong>Booking link</strong>
+                <input
+                  value={bookingUrl}
+                  onChange={(event) => setBookingUrl(event.target.value)}
+                  placeholder="https://..."
+                />
+              </label>
+            ) : null}
+          </section>
+
+          <section className="settings-simple-card settings-simple-connect-card">
             <div>
-              <span className="posts-create-eyebrow">Settings</span>
-              <h1>Business settings</h1>
-              <p>Just the essentials. You can start creating posts without filling in everything.</p>
+              <span>Social accounts</span>
+              <h2>Facebook and Instagram</h2>
+              <p>Connect once to publish directly from FromOne.</p>
+            </div>
+
+            {hasMetaConnection ? (
+              <button
+                type="button"
+                className="settings-simple-secondary settings-simple-full-width-button"
+                onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
+                disabled={metaConnectionBusy}
+              >
+                {metaConnectionBusy ? 'Working...' : 'Disconnect accounts'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="settings-simple-primary"
+                onClick={connectMetaAccount}
+              >
+                Connect accounts
+              </button>
+            )}
+          </section>
+
+          <div className="settings-simple-save-bar">
+            <div>
+              <strong>One profile, used everywhere</strong>
+              <span>Postcode lookup, map coordinates and Smilez syncing happen automatically.</span>
             </div>
             <button
               type="button"
-              className="settings-simple-link-button"
-              onClick={() => {
-                setSettingsMode('advanced');
-                window.history.replaceState({}, '', '/settings?view=advanced');
-              }}
+              className="settings-simple-primary"
+              onClick={handleSaveProfile}
+              disabled={saving}
             >
-              Advanced settings
+              {saving ? 'Saving...' : 'Save settings'}
             </button>
-          </header>
-
-          <section className="settings-simple-status-row" aria-label="Setup status">
-            <div><span>Profile</span><strong>{businessProfileReady ? 'Ready' : 'Needs details'}</strong></div>
-            <div><span>Facebook</span><strong>{hasFacebookConnection ? 'Connected' : 'Optional'}</strong></div>
-            <div><span>Instagram</span><strong>{hasInstagramConnection ? 'Connected' : 'Optional'}</strong></div>
-            <div><span>Smilez</span><strong>{hasLinkedSmilesListing ? 'Live' : 'Not live yet'}</strong></div>
-          </section>
-
-          <section className="settings-simple-section">
-            <div className="settings-simple-section-heading">
-              <div>
-                <span>Business</span>
-                <h2>Tell FromOne the basics</h2>
-              </div>
-              <small>About two minutes</small>
-            </div>
-
-            <div className="settings-simple-essential-grid">
-              <label>
-                <strong>Business name</strong>
-                <input value={businessName} onChange={(event) => setBusinessName(event.target.value)} placeholder="Your business name" />
-              </label>
-              <label>
-                <strong>Business type</strong>
-                <input value={industry} onChange={(event) => setIndustry(event.target.value)} placeholder="Cafe, salon, retailer..." />
-              </label>
-              <label>
-                <strong>Location</strong>
-                <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Town or area" />
-              </label>
-              <label>
-                <strong>Website</strong>
-                <input value={websiteUrl} onChange={(event) => setWebsiteUrl(event.target.value)} placeholder="https://..." />
-              </label>
-              <label className="settings-simple-wide">
-                <strong>What do you offer?</strong>
-                <input value={services} onChange={(event) => setServices(event.target.value)} placeholder="Coffee, lunches, private events..." />
-              </label>
-              <label className="settings-simple-wide">
-                <strong>Who are your customers?</strong>
-                <input value={targetAudience} onChange={(event) => setTargetAudience(event.target.value)} placeholder="Local families, office workers, visitors..." />
-              </label>
-            </div>
-
-            <div className="settings-simple-actions">
-              <button type="button" className="settings-simple-primary" onClick={handleSaveProfile} disabled={saving}>
-                {saving ? 'Saving...' : 'Save business settings'}
-              </button>
-            </div>
-          </section>
-
-          <section className="settings-simple-section">
-            <div className="settings-simple-section-heading">
-              <div>
-                <span>Publishing</span>
-                <h2>Facebook and Instagram</h2>
-              </div>
-              <small>Optional</small>
-            </div>
-
-            <div className="settings-simple-connection-list">
-              <article>
-                <div><strong>Facebook</strong><span>{primaryMetaConnection?.page_name || 'Connect a Page for direct publishing.'}</span></div>
-                <em className={hasFacebookConnection ? 'is-ready' : ''}>{hasFacebookConnection ? 'Connected' : 'Not connected'}</em>
-              </article>
-              <article>
-                <div><strong>Instagram</strong><span>{primaryMetaConnection?.instagram_username ? `@${primaryMetaConnection.instagram_username}` : 'Connect a business account for direct publishing.'}</span></div>
-                <em className={hasInstagramConnection ? 'is-ready' : ''}>{hasInstagramConnection ? 'Connected' : 'Not connected'}</em>
-              </article>
-            </div>
-
-            <div className="settings-simple-actions">
-              {hasMetaConnection ? (
-                <button type="button" className="settings-simple-secondary" onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)} disabled={metaConnectionBusy}>
-                  {metaConnectionBusy ? 'Working...' : 'Disconnect accounts'}
-                </button>
-              ) : (
-                <button type="button" className="settings-simple-primary" onClick={connectMetaAccount}>Connect Facebook and Instagram</button>
-              )}
-            </div>
-          </section>
-
-          <section className="settings-simple-section settings-simple-two-column">
-            <div className="settings-simple-summary-card">
-              <span>Smilez listing</span>
-              <h2>{hasLinkedSmilesListing ? 'Your listing is live' : 'Ready when you are'}</h2>
-              <p>{getSmilesListingStatusLabel()}</p>
-              <button type="button" className="settings-simple-secondary" onClick={() => { setSettingsMode('advanced'); setOpenExtraSection('smiles'); setShowBusinessDetails(true); window.history.replaceState({}, '', '/settings?view=advanced'); }}>Manage Smilez details</button>
-            </div>
-
-            <div className="settings-simple-summary-card">
-              <span>Bookings</span>
-              <h2>{acceptsBookings ? 'Bookings are on' : 'Bookings are off'}</h2>
-              <p>{acceptsBookings ? 'Customers can use your saved booking setup.' : 'Turn this on only when you need it.'}</p>
-              <label className="settings-simple-toggle-row">
-                <input type="checkbox" checked={acceptsBookings} onChange={(event) => setAcceptsBookings(event.target.checked)} />
-                <strong>Accept bookings</strong>
-              </label>
-              <button type="button" className="settings-simple-secondary" onClick={() => { setSettingsMode('advanced'); setOpenExtraSection('bookings'); setShowBusinessDetails(true); window.history.replaceState({}, '', '/settings?view=advanced'); }}>Manage booking details</button>
-            </div>
-          </section>
-
-          <p className="settings-simple-reassurance">You do not need to complete advanced settings before using FromOne.</p>
+          </div>
         </section>
 
-        {confirmDialog && (() => {
-          const activeConfirmDialog = confirmDialog!;
-          return (
-            <div className="settings-confirm-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-confirm-title">
-              <section className="settings-confirm-card">
-                <div className="settings-create-eyebrow">Please confirm</div>
-                <h2 id="settings-confirm-title">{activeConfirmDialog.title}</h2>
-                <p>{activeConfirmDialog.message}</p>
-                <div className="settings-action-row">
-                  <button type="button" className="settings-secondary-action" onClick={closeConfirmDialog}>Cancel</button>
-                  <button type="button" className="settings-primary-action" onClick={() => activeConfirmDialog.type === 'disconnectMeta' && confirmDisconnectMetaAccount(activeConfirmDialog.connectionId)} disabled={metaConnectionBusy}>
-                    {metaConnectionBusy ? 'Working...' : activeConfirmDialog.confirmLabel}
-                  </button>
-                </div>
-              </section>
-            </div>
-          );
-        })()}
+        {confirmDialog &&
+          (() => {
+            const activeConfirmDialog = confirmDialog!;
+
+            return (
+              <div
+                className="settings-confirm-backdrop"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="settings-confirm-title"
+              >
+                <section className="settings-confirm-card">
+                  <div className="settings-create-eyebrow">Please confirm</div>
+                  <h2 id="settings-confirm-title">{activeConfirmDialog.title}</h2>
+                  <p>{activeConfirmDialog.message}</p>
+
+                  <div className="settings-action-row">
+                    <button
+                      type="button"
+                      className="settings-secondary-action"
+                      onClick={closeConfirmDialog}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      className="settings-primary-action"
+                      onClick={() =>
+                        activeConfirmDialog.type === 'disconnectMeta' &&
+                        confirmDisconnectMetaAccount(activeConfirmDialog.connectionId)
+                      }
+                      disabled={metaConnectionBusy}
+                    >
+                      {metaConnectionBusy
+                        ? 'Working...'
+                        : activeConfirmDialog.confirmLabel}
+                    </button>
+                  </div>
+                </section>
+              </div>
+            );
+          })()}
 
         <style jsx global>{`
-          body:has(.settings-simple-client-page) { background: var(--posts-bg, #f5f7fb) !important; }
-          body:has(.settings-simple-client-page) .main-content { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 38px clamp(24px, 4vw, 54px) 90px !important; }
-          .settings-simple-client-shell { width: 100%; max-width: 1040px; margin: 0 auto; display: grid; gap: 16px; color: #071b49; }
-          .settings-simple-client-header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; padding-bottom: 8px; }
-          .settings-simple-client-header h1 { margin: 5px 0 8px; font-size: clamp(2.35rem, 5vw, 4rem); line-height: .96; letter-spacing: -.055em; }
-          .settings-simple-client-header p { margin: 0; color: #52617a; font-weight: 600; }
-          .settings-simple-link-button, .settings-simple-primary, .settings-simple-secondary { min-height: 44px; padding: 0 16px; border-radius: 14px; font: inherit; font-size: .88rem; font-weight: 900; cursor: pointer; }
-          .settings-simple-link-button, .settings-simple-secondary { border: 1px solid #dfe7f2; background: #fff; color: #071b49; }
-          .settings-simple-primary { border: 0; background: #f72585; color: #fff; box-shadow: 0 10px 24px rgba(247,37,133,.18); }
-          .settings-simple-status-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
-          .settings-simple-status-row div { padding: 11px 13px; border: 1px solid #dfe7f2; border-radius: 14px; background: rgba(255,255,255,.8); }
-          .settings-simple-status-row span, .settings-simple-section-heading span, .settings-simple-summary-card > span { display: block; color: #f72585; font-size: .68rem; font-weight: 900; letter-spacing: .11em; text-transform: uppercase; }
-          .settings-simple-status-row strong { display: block; margin-top: 4px; font-size: .88rem; }
-          .settings-simple-section { padding: 18px; border: 1px solid #dfe7f2; border-radius: 20px; background: rgba(255,255,255,.88); box-shadow: 0 10px 30px rgba(7,27,73,.05); }
-          .settings-simple-section-heading { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 14px; }
-          .settings-simple-section-heading h2, .settings-simple-summary-card h2 { margin: 5px 0 0; font-size: 1.35rem; line-height: 1.05; }
-          .settings-simple-section-heading small { color: #68758c; font-weight: 800; }
-          .settings-simple-essential-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
-          .settings-simple-essential-grid label { display: grid; gap: 6px; color: #071b49; font-size: .85rem; }
-          .settings-simple-essential-grid input { width: 100%; min-height: 43px; padding: 0 12px; border: 1px solid #dfe7f2; border-radius: 12px; background: #fff; color: #071b49; font: inherit; }
-          .settings-simple-wide { grid-column: 1 / -1; }
-          .settings-simple-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
-          .settings-simple-connection-list { display: grid; gap: 8px; }
-          .settings-simple-connection-list article { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 14px; align-items: center; padding: 11px 13px; border: 1px solid #e5eaf2; border-radius: 14px; background: #f8fafc; }
-          .settings-simple-connection-list article div { display: grid; gap: 3px; }
-          .settings-simple-connection-list article span { color: #68758c; font-size: .84rem; }
-          .settings-simple-connection-list em { padding: 6px 9px; border-radius: 999px; background: #fff3d6; color: #855d00; font-size: .68rem; font-style: normal; font-weight: 900; text-transform: uppercase; }
-          .settings-simple-connection-list em.is-ready { background: #e9fbf3; color: #087443; }
-          .settings-simple-two-column { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 0; border: 0; background: transparent; box-shadow: none; }
-          .settings-simple-summary-card { padding: 18px; border: 1px solid #dfe7f2; border-radius: 20px; background: rgba(255,255,255,.88); }
-          .settings-simple-summary-card p { min-height: 42px; margin: 8px 0 13px; color: #52617a; font-size: .88rem; line-height: 1.45; }
-          .settings-simple-toggle-row { display: flex; align-items: center; gap: 8px; margin: 0 0 13px; font-size: .88rem; }
-          .settings-simple-reassurance { margin: 0; text-align: center; color: #68758c; font-size: .86rem; font-weight: 700; }
-          @media (max-width: 760px) {
-            body:has(.settings-simple-client-page) .main-content { padding: 24px 14px 100px !important; }
-            .settings-simple-client-header { display: grid; align-items: start; }
-            .settings-simple-link-button { width: 100%; }
-            .settings-simple-status-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
-            .settings-simple-essential-grid, .settings-simple-two-column { grid-template-columns: 1fr; }
-            .settings-simple-wide { grid-column: auto; }
-            .settings-simple-actions { display: grid; }
-            .settings-simple-actions button { width: 100%; }
+          body:has(.settings-simple-business-page),
+          body:has(.settings-simple-business-page) .app-shell,
+          body:has(.settings-simple-business-page) .main-content,
+          body:has(.settings-simple-business-page) .main-content.fromone-mobile-bottom-safe,
+          body:has(.settings-simple-business-page) .fromone-universal-mobile-page-frame,
+          .settings-simple-business-page {
+            background: #ffffff !important;
+            background-image: none !important;
+          }
+
+          body:has(.settings-simple-business-page) .main-content {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 38px clamp(20px, 4vw, 54px) 110px !important;
+          }
+
+          .settings-simple-business-shell {
+            width: 100%;
+            max-width: 940px;
+            margin: 0 auto;
+            display: grid;
+            gap: 24px;
+            color: #071b49;
+          }
+
+          .settings-simple-business-header h1 {
+            margin: 8px 0 10px;
+            color: #071b49;
+            font-size: clamp(2.5rem, 5vw, 4.1rem);
+            line-height: 0.96;
+            letter-spacing: -0.06em;
+          }
+
+          .settings-simple-business-header p {
+            max-width: 680px;
+            margin: 0;
+            color: #52617a;
+            line-height: 1.55;
+          }
+
+          .settings-simple-card {
+            padding: 19px;
+            border: 1px solid #dfe7f2;
+            border-radius: 20px;
+            background: #ffffff;
+            box-shadow: 0 10px 28px rgba(7, 27, 73, 0.05);
+          }
+
+          .settings-simple-card-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 18px;
+            margin-bottom: 15px;
+          }
+
+          .settings-simple-card-heading span,
+          .settings-simple-connect-card > div > span {
+            display: block;
+            color: #f72585;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+          }
+
+          .settings-simple-card-heading h2,
+          .settings-simple-connect-card h2 {
+            margin: 5px 0 0;
+            color: #071b49;
+            font-size: 1.35rem;
+            line-height: 1.05;
+          }
+
+          .settings-simple-card-heading small {
+            max-width: 310px;
+            color: #68758c;
+            font-weight: 800;
+            text-align: right;
+          }
+
+          .settings-simple-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+          }
+
+          .settings-simple-grid label,
+          .settings-simple-booking-link {
+            display: grid;
+            gap: 6px;
+            color: #071b49;
+            font-size: 0.86rem;
+          }
+
+          .settings-simple-grid input,
+          .settings-simple-grid textarea,
+          .settings-simple-booking-link input {
+            width: 100%;
+            min-height: 44px;
+            padding: 10px 12px;
+            border: 1px solid #dfe7f2;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #071b49;
+            font: inherit;
+            box-sizing: border-box;
+            resize: vertical;
+          }
+
+          .settings-simple-grid label small {
+            color: #68758c;
+            font-size: 0.76rem;
+            font-weight: 700;
+          }
+
+          .settings-simple-wide {
+            grid-column: 1 / -1;
+          }
+
+          .settings-simple-scan-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: end;
+            gap: 12px;
+          }
+
+          .settings-simple-scan-row label {
+            display: grid;
+            gap: 6px;
+            color: #071b49;
+            font-size: 0.86rem;
+          }
+
+          .settings-simple-scan-row input {
+            width: 100%;
+            height: 46px;
+            min-height: 46px;
+            padding: 10px 12px;
+            border: 1px solid #dfe7f2;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #071b49;
+            font: inherit;
+            box-sizing: border-box;
+          }
+
+          .settings-simple-scan-row > button {
+            align-self: end;
+            height: 46px;
+            min-height: 46px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            position: relative;
+            top: -8px;
+          }
+
+          .settings-simple-scan-message {
+            margin: 12px 0 0;
+            color: #52617a;
+            font-size: 0.86rem;
+            font-weight: 700;
+          }
+
+          .settings-simple-geo-card {
+            padding: 14px;
+            border: 1px solid #dfe7f2;
+            border-radius: 15px;
+            background: #f8fafc;
+          }
+
+          .settings-simple-geo-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+          }
+
+          .settings-simple-geo-heading > div {
+            display: grid;
+            gap: 4px;
+          }
+
+          .settings-simple-geo-heading span {
+            color: #68758c;
+            font-size: 0.78rem;
+          }
+
+          .settings-simple-geo-values {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+          }
+
+          .settings-simple-geo-values input[readonly] {
+            background: #ffffff;
+            color: #52617a;
+          }
+
+          .settings-image-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+            padding: 5px;
+            border: 1px solid #dfe7f2;
+            border-radius: 14px;
+            background: #f8fafc;
+          }
+
+          .settings-image-tabs button {
+            min-height: 42px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: transparent;
+            color: #68758c;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+          }
+
+          .settings-image-tabs button.is-active {
+            border-color: #ffd2e5;
+            background: #ffffff;
+            color: #c71363;
+          }
+
+          .settings-simple-image-row {
+            display: grid;
+            grid-template-columns: 72px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 14px;
+          }
+
+          .settings-image-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+          }
+
+          .settings-simple-image-row img {
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 1px solid #dfe7f2;
+          }
+
+          .settings-simple-image-row div {
+            display: grid;
+            gap: 4px;
+          }
+
+          .settings-simple-image-row span,
+          .settings-simple-help,
+          .settings-simple-connect-card p,
+          .settings-simple-save-bar span {
+            color: #68758c;
+            line-height: 1.45;
+          }
+
+          .settings-simple-upload {
+            width: 100%;
+            min-height: 92px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 16px;
+            background: #f8fafc;
+            color: #071b49;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+          }
+
+          .settings-simple-help {
+            margin: -2px 0 14px;
+          }
+
+          .settings-simple-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid #e4eaf3;
+            border-radius: 14px;
+            background: #f8fafc;
+          }
+
+          .settings-simple-toggle input {
+            width: 21px;
+            height: 21px;
+          }
+
+          .settings-simple-toggle span {
+            display: grid;
+            gap: 3px;
+          }
+
+          .settings-simple-toggle small {
+            color: #68758c;
+          }
+
+          .settings-simple-booking-link {
+            margin-top: 13px;
+          }
+
+          .settings-simple-connect-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 22px;
+            padding-top: 22px;
+            padding-bottom: 22px;
+          }
+
+          .settings-simple-connect-card p {
+            margin: 8px 0 0;
+          }
+
+          .settings-simple-primary,
+          .settings-simple-secondary {
+            min-height: 46px;
+            padding: 0 17px;
+            border-radius: 14px;
+            font: inherit;
+            font-size: 0.86rem;
+            font-weight: 900;
+            cursor: pointer;
+          }
+
+          .settings-simple-primary {
+            border: 0;
+            background: #f72585;
+            color: #ffffff;
+            box-shadow: 0 10px 24px rgba(247, 37, 133, 0.18);
+          }
+
+          .settings-simple-secondary {
+            border: 1px solid #dfe7f2;
+            background: #ffffff;
+            color: #071b49;
+          }
+
+          .settings-simple-full-width-button {
+            width: auto;
+          }
+
+          .settings-simple-save-bar {
+            position: sticky;
+            bottom: 18px;
+            margin-top: 4px;
+            z-index: 5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            padding: 14px 16px;
+            border: 1px solid #dfe7f2;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 14px 38px rgba(7, 27, 73, 0.12);
+            backdrop-filter: blur(12px);
+          }
+
+          .settings-simple-save-bar > div {
+            display: grid;
+            gap: 3px;
+          }
+
+          @media (max-width: 720px) {
+            body:has(.settings-simple-business-page) .main-content {
+              padding: 24px 14px 110px !important;
+            }
+
+            .settings-simple-grid,
+            .settings-simple-scan-row,
+            .settings-simple-geo-values {
+              grid-template-columns: 1fr;
+            }
+
+            .settings-simple-scan-row button,
+            .settings-simple-geo-heading button {
+              width: 100%;
+            }
+
+            .settings-simple-scan-row > button {
+              position: static;
+              top: auto;
+            }
+
+            .settings-simple-geo-heading {
+              display: grid;
+              align-items: start;
+            }
+
+            .settings-simple-card-heading,
+            .settings-simple-connect-card,
+            .settings-simple-save-bar {
+              display: grid;
+              align-items: start;
+            }
+
+            .settings-simple-card-heading small {
+              text-align: left;
+            }
+
+            .settings-simple-image-row {
+              grid-template-columns: 64px minmax(0, 1fr);
+            }
+
+            .settings-simple-image-row img {
+              width: 64px;
+              height: 64px;
+            }
+
+            .settings-image-actions {
+              grid-column: 1 / -1;
+              display: grid;
+              grid-template-columns: 1fr;
+            }
+
+            .settings-simple-image-row button {
+              width: 100%;
+            }
+
+            .settings-simple-connect-card button,
+            .settings-simple-save-bar button,
+            .settings-simple-full-width-button {
+              width: 100%;
+            }
+
+            .settings-simple-business-shell {
+              gap: 18px;
+            }
+
+            .settings-simple-save-bar {
+              bottom: 12px;
+              margin-top: 2px;
+            }
           }
         `}</style>
       </main>
@@ -2386,6 +3147,7 @@ export default function SettingsPage() {
 
   return (
     <main className="fromone-posts-page fromone-settings-page settings-create-style-page" data-settings-page="create-style-v1">
+      <BackToDashboardButton />
       <section id="fromone-standard-shell" className="settings-create-style-card">
         <header className="posts-create-hero settings-create-hero">
           <span className="posts-create-eyebrow settings-create-eyebrow">Settings</span>
@@ -6161,6 +6923,17 @@ export default function SettingsPage() {
             padding: 17px !important;
             border-radius: 21px !important;
           }
+        }
+
+
+
+        /* SETTINGS — FULL PILL ACTION BUTTONS */
+        .fromone-settings-page button:not([role="switch"]),
+        .fromone-settings-page a[class*="button"],
+        .fromone-settings-page a[class*="action"],
+        .fromone-settings-page .button-row a,
+        .fromone-settings-page .settings-social-button-row a {
+          border-radius: 999px !important;
         }
 
       `}</style>
@@ -11831,51 +12604,6 @@ export default function SettingsPage() {
           body:has(.fromone-settings-page) .main-content.fromone-mobile-bottom-safe {
             padding-top: 14px !important;
           }
-        }
-
-        body:has(.fromone-settings-page),
-        body:has(.fromone-settings-page) .app-shell,
-        body:has(.fromone-settings-page) .main-content,
-        body:has(.fromone-settings-page) .main-content.fromone-mobile-bottom-safe,
-        body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame,
-        .fromone-route-settings,
-        .fromone-settings-page,
-        .fromone-settings-page.settings-create-style-page {
-          background: #ffffff !important;
-          background-image: none !important;
-        }
-
-        @media (max-width: 900px) {
-          html,
-          body:has(.fromone-settings-page),
-          body:has(.fromone-settings-page) .app-shell,
-          body:has(.fromone-settings-page) .main-content,
-          body:has(.fromone-settings-page) .main-content.fromone-mobile-bottom-safe,
-          body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame,
-          .fromone-route-settings,
-          .fromone-settings-page,
-          .fromone-settings-page.settings-create-style-page {
-            background: #ffffff !important;
-            background-image: none !important;
-          }
-        }
-
-        body:has(.fromone-settings-page)::before,
-        body:has(.fromone-settings-page)::after,
-        body:has(.fromone-settings-page) .app-shell::before,
-        body:has(.fromone-settings-page) .app-shell::after,
-        body:has(.fromone-settings-page) .main-content::before,
-        body:has(.fromone-settings-page) .main-content::after,
-        body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame::before,
-        body:has(.fromone-settings-page) .fromone-universal-mobile-page-frame::after,
-        .fromone-route-settings::before,
-        .fromone-route-settings::after,
-        .fromone-settings-page::before,
-        .fromone-settings-page::after {
-          display: none !important;
-          content: none !important;
-          background: none !important;
-          background-image: none !important;
         }
 
       `}</style>

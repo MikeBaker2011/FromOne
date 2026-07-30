@@ -1341,3 +1341,22 @@ body,
     box-sizing: border-box !important;
   }
 }
+
+/* ABSOLUTE FINAL — CURRENT POSTS ACTION BUTTONS */
+.posts-summary-actions > a,
+a.posts-primary-action,
+.posts-primary-action {
+  border-radius: 999px !important;
+  color: #ffffff !important;
+}
+
+/* Keep the same pill shape and white text on mobile. */
+@media (max-width: 900px) {
+  .posts-summary-actions > a,
+  a.posts-primary-action,
+  .posts-primary-action,
+  .fromone-mobile-actions > * {
+    border-radius: 999px !important;
+    color: #ffffff !important;
+  }
+}

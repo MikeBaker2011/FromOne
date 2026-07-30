@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
 import "../../../../posts/posts-companion-shared.css";
 import { useParams, useRouter } from "next/navigation";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
@@ -489,40 +490,18 @@ export default function SmilesDirectEditPage() {
   return (
     <main className="fromone-posts-page fromone-smiles-edit-page settings-create-style-page">
       <section id="fromone-standard-shell" className="smiles-edit-card">
-        <Link
-          className="smiles-edit-back"
-          href="/smiles"
-          style={{
-            width: "fit-content",
-            minHeight: "52px",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "0 20px",
-            border: "1px solid #dfe5f1",
-            borderRadius: "999px",
-            background: "#ffffff",
-            color: "#071b49",
-            boxShadow: "0 10px 24px rgba(7, 27, 73, 0.06)",
-            fontSize: "0.98rem",
-            fontWeight: 800,
-            lineHeight: 1,
-            textDecoration: "none",
-          }}
-        >
-          Back to Smiles
-        </Link>
+        <SmilezSectionHeader
+          eyebrow="Live Smilez listing"
+          title={<>Edit live {itemLabel} listing.</>}
+          description={
+            <>
+              Changes here update the public Smilez {itemLabel} card and detail page.
+              They do not edit the original Facebook, Instagram or source post.
+            </>
+          }
+        />
 
-        <header className="posts-create-hero smiles-edit-hero">
-          <span className="posts-create-eyebrow smiles-edit-eyebrow">Live Smiles listing</span>
-          <h1>Edit live {itemLabel} listing.</h1>
-          <p>
-            Changes here update the public Smiles {itemLabel} card and detail page. They do
-            not edit the original Facebook, Instagram or source post.
-          </p>
-        </header>
-
-        {message ? <div className="smiles-edit-message">{message}</div> : null}
+{message ? <div className="smiles-edit-message">{message}</div> : null}
 
         {loading ? (
           <section className="smiles-edit-panel">

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
 import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -382,19 +383,24 @@ export default function SmilesBookingsPage() {
   return (
     <main className="fromone-posts-page fromone-bookings-page">
       <section id="fromone-standard-shell">
-        <header className="posts-create-hero">
-          <Link href="/smiles" className="bookings-back-link">
-            ← Back to Smilez
-          </Link>
-          <span className="posts-create-eyebrow">Bookings</span>
-          <h1>Manage bookings</h1>
-          <p>
-            Review new requests, confirm the bookings you can accept, and check
-            previous bookings.
-          </p>
-        </header>
+        <SmilezSectionHeader
+          eyebrow="Bookings"
+          title="Manage bookings"
+          description={
+            <>
+              Review new requests, confirm the bookings you can accept, and check
+              previous bookings.
+            </>
+          }
+          listingName={profile?.business_name}
+          listingStatus={
+            profile?.smiles_listing_venue_id
+              ? "Live on Smilez"
+              : "Waiting for listing setup"
+          }
+        />
 
-        {loading ? (
+{loading ? (
           <section className="posts-summary-panel bookings-notice">
             <div className="posts-panel-head">
               <span className="posts-step-badge">1</span>

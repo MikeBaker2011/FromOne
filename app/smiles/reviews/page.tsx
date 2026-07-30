@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
 import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -237,54 +238,22 @@ export default function SmilesReviewsPage() {
   return (
     <main className="fromone-posts-page fromone-smiles-reviews-page smilesReviewsPage" data-fromone-smiles-reviews="simple-v2">
       <section id="fromone-standard-shell" className="reviewsShell">
-        <div className="heroTop">
-          <Link
-            href="/smiles"
-            className="backLink"
-            style={{
-              width: "fit-content",
-              minHeight: "52px",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "0 20px",
-              border: "1px solid #dfe5f1",
-              borderRadius: "999px",
-              background: "#ffffff",
-              color: "#071b49",
-              boxShadow: "0 10px 24px rgba(7, 27, 73, 0.06)",
-              fontSize: "0.98rem",
-              fontWeight: 800,
-              lineHeight: 1,
-              textDecoration: "none",
-            }}
-          >
-            Back to Smiles
-          </Link>
-        </div>
-
-        <div className="posts-create-hero heroGrid">
-          <div>
-            <span className="posts-create-eyebrow eyebrow">Reviews</span>
-            <h1>Customer reviews. Keep it simple.</h1>
-            <p className="intro">
+        <SmilezSectionHeader
+          eyebrow="Reviews"
+          title="Customer reviews. Keep it simple."
+          description={
+            <>
               Reply to public customer reviews from one clear place. Keep replies
               short, polite and useful.
-            </p>
-          </div>
-
-          {profile?.business_name ? (
-            <div className="listingCard">
-              <span>Your listing</span>
-              <strong>{profile.business_name}</strong>
-              <p>
-                {profile.smiles_listing_venue_id
-                  ? "Live on Smiles"
-                  : "Waiting for listing setup"}
-              </p>
-            </div>
-          ) : null}
-        </div>
+            </>
+          }
+          listingName={profile?.business_name}
+          listingStatus={
+            profile?.smiles_listing_venue_id
+              ? "Live on Smilez"
+              : "Waiting for listing setup"
+          }
+        />
 
         {loading ? (
           <section className="simplePanel">

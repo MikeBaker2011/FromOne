@@ -1,5 +1,7 @@
 ﻿'use client';
 
+
+import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import { useEffect, useState } from 'react';
 import { useToast } from '@/app/components/ToastProvider';
 import '../posts/posts-companion-shared.css';
@@ -826,6 +828,7 @@ export default function SubscriptionPage() {
   return (
     <>
       <main id="fromone-standard-shell" className="fromone-posts-page fromone-subscription-page subscription-simple-page">
+      <BackToDashboardButton />
         <header className="posts-create-hero subscription-simple-header">
           <span className="posts-create-eyebrow page-eyebrow">Subscription</span>
           <h1>{isDemoExpired ? 'Demo ended.' : 'Plans for posting.'}</h1>
@@ -1933,6 +1936,48 @@ export default function SubscriptionPage() {
           .fromone-subscription-page .subscription-simple-alert,
           .fromone-subscription-page .subscription-simple-notice {
             border-radius: 21px !important;
+          }
+        }
+
+
+        /* Final subscription page background override */
+        html,
+        body:has(.fromone-subscription-page),
+        body:has(.fromone-subscription-page) .app-shell,
+        body:has(.fromone-subscription-page) .main-content,
+        body:has(.fromone-subscription-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-subscription-page) .fromone-universal-mobile-page-frame,
+        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          background-image: none !important;
+        }
+
+        body:has(.fromone-subscription-page)::before,
+        body:has(.fromone-subscription-page)::after,
+        body:has(.fromone-subscription-page) .app-shell::before,
+        body:has(.fromone-subscription-page) .app-shell::after,
+        body:has(.fromone-subscription-page) .main-content::before,
+        body:has(.fromone-subscription-page) .main-content::after,
+        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page::before,
+        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page::after {
+          display: none !important;
+          content: none !important;
+          background: none !important;
+          background-image: none !important;
+        }
+
+        @media (max-width: 820px) {
+          html,
+          body:has(.fromone-subscription-page),
+          body:has(.fromone-subscription-page) .app-shell,
+          body:has(.fromone-subscription-page) .main-content,
+          body:has(.fromone-subscription-page) .main-content.fromone-mobile-bottom-safe,
+          body:has(.fromone-subscription-page) .fromone-universal-mobile-page-frame,
+          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            background-image: none !important;
           }
         }
 

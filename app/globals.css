@@ -14028,3 +14028,77 @@ body:has(.fromone-navbar) .fromone-universal-mobile-page-frame canvas {
     overflow-x: clip;
   }
 }
+
+
+/* FROMONE — REMOVE LEGACY GOLD/YELLOW BUTTON GLOW */
+
+/* Sign-in controls */
+body:has(.fromone-signin-page) .signin-mode-tabs,
+body:has(.fromone-signin-page) .signin-mode-tabs:hover,
+body:has(.fromone-signin-page) .signin-mode-tabs:focus-within {
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+body:has(.fromone-signin-page) .signin-mode-tabs button,
+body:has(.fromone-signin-page) .signin-mode-tabs button:hover,
+body:has(.fromone-signin-page) .signin-mode-tabs button:focus,
+body:has(.fromone-signin-page) .signin-mode-tabs button:focus-visible,
+body:has(.fromone-signin-page) .signin-mode-tabs button:active {
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+body:has(.fromone-signin-page) .signin-mode-tabs button.is-active,
+body:has(.fromone-signin-page) .signin-mode-tabs button.is-active:hover,
+body:has(.fromone-signin-page) .signin-mode-tabs button.is-active:focus,
+body:has(.fromone-signin-page) .signin-mode-tabs button.is-active:focus-visible,
+body:has(.fromone-signin-page) .signin-mode-tabs button.is-active:active {
+  background: #f72585 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 22px rgba(247, 37, 133, 0.16) !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+/* Smilez insights date-range controls */
+body:has(.customer-insights-page) .customer-insights-range,
+body:has(.customer-insights-page) .customer-insights-range:hover,
+body:has(.customer-insights-page) .customer-insights-range:focus-within {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+body:has(.customer-insights-page) .customer-insights-range button,
+body:has(.customer-insights-page) .customer-insights-range button:hover,
+body:has(.customer-insights-page) .customer-insights-range button:focus,
+body:has(.customer-insights-page) .customer-insights-range button:focus-visible,
+body:has(.customer-insights-page) .customer-insights-range button:active {
+  background: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #dfe5f1 !important;
+  color: #071b49 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+body:has(.customer-insights-page) .customer-insights-range button.isActive,
+body:has(.customer-insights-page) .customer-insights-range button.isActive:hover,
+body:has(.customer-insights-page) .customer-insights-range button.isActive:focus,
+body:has(.customer-insights-page) .customer-insights-range button.isActive:focus-visible,
+body:has(.customer-insights-page) .customer-insights-range button.isActive:active {
+  background: #f72585 !important;
+  background-image: none !important;
+  border-color: #f72585 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+}

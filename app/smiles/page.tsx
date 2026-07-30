@@ -1,5 +1,7 @@
 "use client";
 
+
+import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import "../posts/posts-companion-shared.css";
@@ -237,7 +239,7 @@ export default function SmilesDashboardPage() {
         cleanText(offer.short_description) ||
         cleanText(offer.saving_text) ||
         cleanText(offer.description) ||
-        "Offer sent to Stockport Smiles.",
+        "Offer sent to Stockport Smilez.",
       referenceCode: cleanText(offer.reference_code),
       href: offer.slug ? `${baseUrl}/offers/${offer.slug}` : "",
       editHref: getDirectSmilesEditHref("offer", offer.id),
@@ -254,7 +256,7 @@ export default function SmilesDashboardPage() {
         cleanText(event.short_description) ||
         cleanText(event.location_name) ||
         cleanText(event.description) ||
-        "Event sent to Stockport Smiles.",
+        "Event sent to Stockport Smilez.",
       referenceCode: cleanText(event.reference_code),
       href: event.slug ? `${baseUrl}/events/${event.slug}` : "",
       editHref: getDirectSmilesEditHref("event", event.id),
@@ -304,8 +306,8 @@ export default function SmilesDashboardPage() {
         } catch {
           throw new Error(
             response.ok
-              ? "Smiles returned an unreadable response. Please refresh and try again."
-              : `Smiles request failed with status ${response.status}.`
+              ? "Smilez returned an unreadable response. Please refresh and try again."
+              : `Smilez request failed with status ${response.status}.`
           );
         }
       }
@@ -313,7 +315,7 @@ export default function SmilesDashboardPage() {
       if (!response.ok || result.success === false) {
         throw new Error(
           result.message ||
-            `Could not load Stockport Smiles${
+            `Could not load Stockport Smilez${
               response.status ? ` (${response.status})` : ""
             }.`
         );
@@ -331,11 +333,11 @@ export default function SmilesDashboardPage() {
       setSentOffers(result.sentOffers || result.offers || []);
       setSentEvents(result.sentEvents || result.events || []);
     } catch (error: any) {
-      const errorMessage = error?.message || "Could not load Stockport Smiles.";
+      const errorMessage = error?.message || "Could not load Stockport Smilez.";
       setMessage(errorMessage);
       showToast({
         type: "error",
-        title: "Smiles unavailable",
+        title: "Smilez unavailable",
         message: errorMessage,
       });
     } finally {
@@ -356,10 +358,11 @@ export default function SmilesDashboardPage() {
       className="fromone-posts-page fromone-smiles-page settings-create-style-page"
       data-fromone-smiles-redesign="v1"
     >
+      <BackToDashboardButton />
       <section id="fromone-standard-shell" className="smiles-create-style-card">
         <header className="posts-create-hero smiles-create-hero">
-          <span className="posts-create-eyebrow smiles-create-eyebrow">Stockport Smiles</span>
-          <h1>Smiles hub.</h1>
+          <span className="posts-create-eyebrow smiles-create-eyebrow">Stockport Smilez</span>
+          <h1>Smilez hub.</h1>
           <p>
             Keep bookings, reviews, customer photos, offers and events tidy from one simple place.
           </p>
@@ -368,13 +371,13 @@ export default function SmilesDashboardPage() {
         {loading ? (
           <section
             className="smiles-simple-panel smiles-loading-panel"
-            aria-label="Smiles loading"
+            aria-label="Smilez loading"
           >
             <div className="smiles-panel-head">
               <span className="smiles-step-badge">...</span>
               <div>
-                <h2>Loading Smiles</h2>
-                <p>Checking your Stockport Smiles listing.</p>
+                <h2>Loading Smilez</h2>
+                <p>Checking your Stockport Smilez listing.</p>
               </div>
             </div>
           </section>
@@ -388,7 +391,7 @@ export default function SmilesDashboardPage() {
                 <h2>Your listing is not live yet</h2>
                 <p>
                   {message ||
-                    "Once Smiles admin publishes your business listing, bookings and reviews will appear here."}
+                    "Once Smilez admin publishes your business listing, bookings and reviews will appear here."}
                 </p>
               </div>
             </div>
@@ -404,7 +407,7 @@ export default function SmilesDashboardPage() {
               <div>
                 <span>Your listing</span>
                 <h2>{profile.business_name || "Your business"}</h2>
-                <p>Live on Stockport Smiles</p>
+                <p>Live on Stockport Smilez</p>
               </div>
               <Link href="/settings">Listing settings</Link>
             </section>
@@ -413,12 +416,12 @@ export default function SmilesDashboardPage() {
               <div className="smiles-panel-head">
                 <span className="smiles-step-badge">01</span>
                 <div>
-                  <h2>Today on Smiles</h2>
+                  <h2>Today on Smilez</h2>
                   <p>Open the item you need, deal with it, then carry on.</p>
                 </div>
               </div>
 
-              <div className="smiles-action-grid" aria-label="Smiles actions">
+              <div className="smiles-action-grid" aria-label="Smilez actions">
                 <Link
                   href="/smiles/bookings"
                   className={`smiles-action-card ${
@@ -459,6 +462,17 @@ export default function SmilesDashboardPage() {
                       : `${pendingReviews.length} waiting for approval and ${reviewsNeedingReply.length} needing a reply.`}
                   </p>
                   <em>Manage reviews</em>
+                </Link>
+
+                <Link href="/smiles/insights" className="smiles-action-card">
+                  <span>Customer insights</span>
+                  <strong>↗</strong>
+                  <h3>See customer activity</h3>
+                  <p>
+                    Review bookings, reviews, photos and engagement connected to
+                    your Smilez listing.
+                  </p>
+                  <em>View insights</em>
                 </Link>
 
                 <Link
@@ -514,7 +528,7 @@ export default function SmilesDashboardPage() {
                   <p>
                     {sentSmilesItems.length > 0
                       ? "Open Posts to create another offer or event."
-                      : "No offers or events have been sent to Smiles yet."}
+                      : "No offers or events have been sent to Smilez yet."}
                   </p>
                   <em>Review posts</em>
                 </Link>
@@ -531,7 +545,7 @@ export default function SmilesDashboardPage() {
                       : "Bookings are closed"}
                   </h3>
                   <p>
-                    These hours show on your Smiles venue page and control when
+                    These hours show on your Smilez venue page and control when
                     customers can request bookings.
                   </p>
                   <em>Edit hours</em>
@@ -543,16 +557,16 @@ export default function SmilesDashboardPage() {
               <summary>
                 <span className="smiles-step-badge">02</span>
                 <div>
-                  <h2>Smiles offers and events</h2>
+                  <h2>Smilez offers and events</h2>
                   <p>
                     {sentSmilesItems.length > 0
                       ? `${sentSmilesItems.length} sent item${
                           sentSmilesItems.length === 1 ? "" : "s"
                         } with references.`
-                      : "Nothing has been sent to Smiles yet."}
+                      : "Nothing has been sent to Smilez yet."}
                   </p>
                   <p className="smiles-history-help">
-                    View or edit the live Smiles listings for your venue.
+                    View or edit the live Smilez listings for your venue.
                   </p>
                 </div>
                 <strong>Open</strong>
@@ -597,7 +611,7 @@ export default function SmilesDashboardPage() {
                         {item.editHref ? (
                           <Link
                             href={item.editHref}
-                            title="Edit this live Stockport Smiles listing directly."
+                            title="Edit this live Stockport Smilez listing directly."
                           >
                             Edit live listing
                           </Link>
@@ -615,7 +629,7 @@ export default function SmilesDashboardPage() {
                   <h3>No offers or events sent yet</h3>
                   <p>
                     Create a post, choose Offer or Event, then send the live
-                    listing to Smiles.
+                    listing to Smilez.
                   </p>
                   <Link href="/posts">Review posts</Link>
                 </div>
@@ -1434,6 +1448,26 @@ export default function SmilesDashboardPage() {
           .fromone-smiles-page .smiles-history-grid {
             grid-template-columns: 1fr !important;
           }
+        }
+
+
+        /* SMILEZ HUB — FULL PILL ACTIONS */
+        .fromone-smiles-page .smiles-listing-strip a,
+        .fromone-smiles-page .smiles-primary-action,
+        .fromone-smiles-page .smiles-action-card em,
+        .fromone-smiles-page .smiles-history-card a,
+        .fromone-smiles-page .smiles-empty-history a,
+        .fromone-smiles-page .smiles-history-actions a,
+        .fromone-smiles-page .smiles-history-actions button,
+        .fromone-smiles-page .smiles-history-panel summary > strong {
+          border-radius: 999px !important;
+        }
+
+        .fromone-smiles-page .smiles-primary-action,
+        .fromone-smiles-page .smiles-action-card em,
+        .fromone-smiles-page .smiles-history-card a:first-child,
+        .fromone-smiles-page .smiles-empty-history a {
+          color: #ffffff !important;
         }
 
       `}</style>

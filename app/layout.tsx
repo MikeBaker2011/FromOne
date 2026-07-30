@@ -2,6 +2,7 @@ import './globals.css';
 import './companion.css';
 import AppShell from './components/AppShell';
 import CookieBanner from './components/CookieBanner';
+import PublicFooter from './components/PublicFooter';
 import ToastProvider from '@/app/components/ToastProvider';
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
@@ -92,6 +93,7 @@ export default function RootLayout({
       <body>
         <ToastProvider>
           <AppShell>{children}</AppShell>
+          <PublicFooter />
           <CookieBanner />
         </ToastProvider>
       </body>

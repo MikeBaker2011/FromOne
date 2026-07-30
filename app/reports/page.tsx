@@ -1,5 +1,7 @@
 "use client";
 
+
+import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import Link from "next/link";
 import "../posts/posts-companion-shared.css";
 import { useEffect, useMemo, useState } from "react";
@@ -504,6 +506,7 @@ export default function ReportsPage() {
   if (loading) {
     return (
       <main className="fromone-posts-page fromone-reports-page">
+      <BackToDashboardButton />
         <section id="fromone-standard-shell">
           <header className="posts-create-hero">
             <span className="posts-create-eyebrow">Reports</span>
@@ -517,6 +520,7 @@ export default function ReportsPage() {
 
   return (
     <main className="fromone-posts-page fromone-reports-page">
+      <BackToDashboardButton />
       <section id="fromone-standard-shell">
         <header className="posts-create-hero reports-shared-hero">
           <span className="posts-create-eyebrow">Reports</span>
@@ -854,7 +858,7 @@ export default function ReportsPage() {
           min-height: 46px;
           padding: 0 17px;
           border: 1px solid var(--posts-border);
-          border-radius: 15px;
+          border-radius: 999px;
           background: #fff;
           color: var(--posts-navy);
           font-size: 0.86rem;
@@ -908,6 +912,11 @@ export default function ReportsPage() {
           font: inherit;
           font-weight: 900;
           cursor: pointer;
+        }
+
+        .reports-shared-actions button,
+        .reports-shared-actions .posts-primary-action {
+          border-radius: 999px !important;
         }
 
         .reports-shared-filter button.is-active {
