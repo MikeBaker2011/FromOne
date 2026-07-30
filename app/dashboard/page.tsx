@@ -278,7 +278,7 @@ export default function DashboardPage() {
           padding: 0 20px;
           border-radius: 999px;
           background: #f72585;
-          color: #ffffff;
+          color: #ffffff !important;
           font-size: 0.84rem;
           font-weight: 900;
           text-decoration: none;
