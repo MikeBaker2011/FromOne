@@ -1,5 +1,7 @@
 "use client";
 
+
+import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { supabaseBrowser as supabase } from "../../lib/supabase/browser";
 import { useRouter } from "next/navigation";
@@ -2866,6 +2868,8 @@ If uploads are supplied:
             background: "#f4f7fb",
           }}
         >
+          <BackToDashboardButton />
+
           <header
             className="create-topbar"
             style={{
@@ -2937,6 +2941,8 @@ If uploads are supplied:
   return (
     <main className="fromone-create-page" data-create-page>
       <div className="create-page-shell">
+        <BackToDashboardButton />
+
         <header className="create-topbar">
           <div>
             <span className="create-kicker">Create</span>
@@ -3772,7 +3778,7 @@ If uploads are supplied:
           width: 100%;
           min-height: 54px;
           border: 0;
-          border-radius: 16px;
+          border-radius: 999px;
           color: #fff;
           background: linear-gradient(135deg, var(--create-pink), #de176d);
           box-shadow: 0 12px 26px rgba(247, 37, 133, 0.24);
@@ -4156,7 +4162,7 @@ If uploads are supplied:
 
           .create-submit {
             min-height: 50px;
-            border-radius: 14px;
+            border-radius: 999px;
           }
 
           .create-review-note,
