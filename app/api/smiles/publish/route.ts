@@ -62,6 +62,8 @@ type SmilesPublishBody = {
   short_description?: string;
   mediaUrl?: string;
   media_url?: string;
+  logoUrl?: string;
+  logo_url?: string;
   websiteUrl?: string;
   website_url?: string;
   bookingUrl?: string;
@@ -988,6 +990,7 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
   const email = cleanNullableText(body.email);
   const websiteUrl = cleanNullableText(body.websiteUrl || body.website_url);
   const mainImageUrl = cleanNullableText(body.mediaUrl || body.media_url);
+  const logoUrl = cleanNullableText(body.logoUrl || body.logo_url);
   const weeklyBookingHours = getWeeklyBookingHours(body);
   const openingHours = buildOpeningHoursText(body, weeklyBookingHours);
   const parkingInfo = cleanNullableText(body.parkingInfo || body.parking_info);
@@ -1052,6 +1055,7 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
     accepts_bookings: acceptsBookings,
     booking_url: bookingUrl,
     main_image_url: mainImageUrl,
+    logo_url: logoUrl,
   };
 
   const venueUpdates = {
@@ -1274,6 +1278,7 @@ async function createVenueDraft(body: SmilesPublishBody, userId = "") {
     booking_settings: getBookingSettings(body),
     booking_blocks: getBookingBlocks(body) || [],
     main_image_url: cleanNullableText(body.mediaUrl || body.media_url),
+    logo_url: cleanNullableText(body.logoUrl || body.logo_url),
     source: "fromone",
     fromone_source: "business_profile",
     fromone_user_id: userId || null,
@@ -1362,7 +1367,7 @@ async function createOfferDraft(
     fromone_post_id: cleanNullableText(postId),
     fromone_profile_id: cleanNullableText(getFromOneProfileId(body)),
     is_featured: Boolean(existingOffer?.is_featured),
-    is_published: existingOffer ? true : false,
+    is_published: true,
     updated_at: now,
   };
 
@@ -1450,7 +1455,7 @@ async function createEventDraft(
     fromone_post_id: cleanNullableText(postId),
     fromone_profile_id: cleanNullableText(getFromOneProfileId(body)),
     is_featured: Boolean(existingEvent?.is_featured),
-    is_published: existingEvent ? true : false,
+    is_published: true,
     updated_at: now,
   };
 
@@ -1653,7 +1658,7 @@ export async function POST(req: NextRequest) {
       syncedClientId: null,
       syncedVenueId: null,
       directSyncReason: null,
-      isPublished: Boolean((result as any).updatedExisting),
+      isPublished: true,
       updatedExisting,
     });
   } catch (error: any) {
