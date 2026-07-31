@@ -1267,19 +1267,39 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
     }
   }
 
-  if (smilesClientId && acceptsBookings && !bookingUrl) {
-    const { error: settingsError } = await smiles
-      .from("client_booking_settings")
-      .upsert(
-        {
-          client_id: smilesClientId,
-          ...bookingSettings,
-          updated_at: now,
-        },
-        {
-          onConflict: "client_id",
-        }
-      );
+  if (acceptsBookings && !bookingUrl) {
+    const { data: existingVenueSettings, error: existingSettingsError } =
+      await smiles
+        .from("client_booking_settings")
+        .select("id")
+        .eq("venue_id", smilesVenueId)
+        .limit(1)
+        .maybeSingle();
+
+    if (existingSettingsError) {
+      throw new Error(existingSettingsError.message);
+    }
+
+    const settingsPayload = {
+      client_id: smilesClientId || null,
+      venue_id: smilesVenueId,
+      ...bookingSettings,
+      updated_at: now,
+    };
+
+    const settingsQuery = existingVenueSettings?.id
+      ? smiles
+          .from("client_booking_settings")
+          .update(settingsPayload)
+          .eq("id", existingVenueSettings.id)
+      : smiles
+          .from("client_booking_settings")
+          .insert({
+            ...settingsPayload,
+            created_at: now,
+          });
+
+    const { error: settingsError } = await settingsQuery;
 
     if (settingsError) {
       throw new Error(settingsError.message);
