@@ -2611,8 +2611,28 @@ export default function SettingsPage() {
                 </label>
 
                 {!bookingUrl.trim() ? (
-                  <section className="settings-smilez-booking-editor settings-smilez-hours-card settings-simple-booking-hours">
-                    <div className="settings-smilez-card-head">
+                  <section
+                    className="settings-smilez-booking-editor settings-smilez-hours-card settings-simple-booking-hours"
+                    style={{
+                      display: 'grid',
+                      gap: 18,
+                      marginTop: 18,
+                      padding: 22,
+                      border: '1px solid #dfe5f1',
+                      borderRadius: 20,
+                      background: '#f8faff',
+                    }}
+                  >
+                    <div
+                      className="settings-smilez-card-head"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 16,
+                        flexWrap: 'wrap',
+                      }}
+                    >
                       <div>
                         <span>Booking request hours</span>
                         <h4>Set your weekly availability</h4>
@@ -2622,7 +2642,16 @@ export default function SettingsPage() {
                       </strong>
                     </div>
 
-                    <div className="settings-smilez-day-cards" role="list">
+                    <div
+                      className="settings-smilez-day-cards"
+                      role="list"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))',
+                        gap: 10,
+                        width: '100%',
+                      }}
+                    >
                       {bookingHours.map((row) => {
                         const selected =
                           row.day_of_week === selectedBookingDay;
@@ -2634,6 +2663,21 @@ export default function SettingsPage() {
                             className={`${selected ? 'is-selected' : ''} ${
                               row.is_closed ? 'is-closed' : ''
                             }`}
+                            style={{
+                              display: 'grid',
+                              gap: 5,
+                              minHeight: 86,
+                              padding: '13px 10px',
+                              border: selected
+                                ? '1px solid #f72585'
+                                : '1px solid #dfe5f1',
+                              borderRadius: 15,
+                              background: selected ? '#fff3f8' : '#ffffff',
+                              color: '#071b49',
+                              textAlign: 'center',
+                              opacity: row.is_closed ? 0.65 : 1,
+                              cursor: 'pointer',
+                            }}
                             onClick={() =>
                               setSelectedBookingDay(row.day_of_week)
                             }
@@ -2655,7 +2699,19 @@ export default function SettingsPage() {
                       if (!selected) return null;
 
                       return (
-                        <div className="settings-smilez-selected-day">
+                        <div
+                          className="settings-smilez-selected-day"
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'minmax(130px, 0.7fr) auto minmax(260px, 1.3fr)',
+                            alignItems: 'center',
+                            gap: 16,
+                            padding: 18,
+                            border: '1px solid #dfe5f1',
+                            borderRadius: 18,
+                            background: '#ffffff',
+                          }}
+                        >
                           <div>
                             <span>Editing</span>
                             <h5>{dayLabels[selected.day_of_week]}</h5>
@@ -2677,11 +2733,27 @@ export default function SettingsPage() {
                           </label>
 
                           {!selected.is_closed ? (
-                            <div className="settings-smilez-selected-times">
+                            <div
+                              className="settings-smilez-selected-times"
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                gap: 12,
+                              }}
+                            >
                               <label>
                                 <span>Opens</span>
                                 <input
                                   className="settings-simple-input"
+                                  style={{
+                                    width: '100%',
+                                    minHeight: 46,
+                                    padding: '10px 12px',
+                                    border: '1px solid #dfe5f1',
+                                    borderRadius: 12,
+                                    background: '#ffffff',
+                                    color: '#071b49',
+                                  }}
                                   type="time"
                                   value={selected.opens_at || ''}
                                   onChange={(event) =>
