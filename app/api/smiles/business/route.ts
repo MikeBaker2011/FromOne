@@ -71,6 +71,9 @@ const emailFrom =
   process.env.EMAIL_FROM ||
   process.env.FROM_EMAIL ||
   (smtpUser ? `Stockport Smilez <${smtpUser}>` : "Stockport Smilez");
+const emailLogoUrl =
+  process.env.EMAIL_LOGO_URL ||
+  "https://www.stockportsmilez.co.uk/images/logo/stockport-smiles-logo.png";
 
 function cleanText(value: unknown) {
   return String(value || "").trim();
@@ -327,29 +330,131 @@ async function sendBookingConfirmedEmail({
   const bookingDate = formatDisplayDate(booking?.booking_date);
   const bookingTime = formatDisplayTime(booking?.booking_time);
   const partySize = Number(booking?.party_size || 0);
+  const bookingReference =
+    cleanText(booking?.reference_code || booking?.booking_reference) ||
+    `SM-BK-${cleanText(booking?.id).replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase()}`;
+
   const safeBusinessName = escapeHtml(businessName || "the venue");
   const safeCustomerName = escapeHtml(customerName);
+  const safeBookingDate = escapeHtml(bookingDate);
+  const safeBookingTime = escapeHtml(bookingTime);
+  const safeBookingReference = escapeHtml(bookingReference);
 
   const subject = `Your booking with ${businessName} is confirmed`;
+
   const html = `
-    <div style="font-family: Arial, sans-serif; color: #172554; line-height: 1.6;">
-      <h1 style="margin: 0 0 12px;">Booking confirmed</h1>
-      <p>Hi ${safeCustomerName},</p>
-      <p>Good news — <strong>${safeBusinessName}</strong> has confirmed your booking request.</p>
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>${escapeHtml(subject)}</title>
+      </head>
+      <body style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#071b49;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f7fb;padding:28px 12px;">
+          <tr>
+            <td align="center">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:24px;overflow:hidden;box-shadow:0 18px 45px rgba(7,27,73,0.10);">
+                <tr>
+                  <td style="padding:24px 28px;background:#ffffff;border-bottom:1px solid #edf1f7;text-align:center;">
+                    <img
+                      src="${escapeHtml(emailLogoUrl)}"
+                      width="170"
+                      alt="Stockport Smilez"
+                      style="display:block;width:170px;max-width:100%;height:auto;margin:0 auto;border:0;"
+                    />
+                  </td>
+                </tr>
 
-      <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 18px; margin: 20px 0;">
-        <p><strong>Venue:</strong> ${safeBusinessName}</p>
-        <p><strong>Date:</strong> ${bookingDate}</p>
-        <p><strong>Time:</strong> ${bookingTime}</p>
-        ${partySize > 0 ? `<p><strong>Party size:</strong> ${partySize}</p>` : ""}
-      </div>
+                <tr>
+                  <td style="padding:34px 30px 18px;text-align:center;">
+                    <div style="display:inline-block;padding:8px 14px;border-radius:999px;background:#fff1f7;color:#f72585;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">
+                      Booking confirmed
+                    </div>
 
-      <p>The venue manages this booking directly. Contact them if you need to change or cancel it.</p>
+                    <h1 style="margin:18px 0 10px;color:#071b49;font-size:32px;line-height:1.15;letter-spacing:-0.04em;">
+                      You’re booked in
+                    </h1>
 
-      <p style="color: #64748b; font-size: 14px;">
-        Stockport Smilez helps local people discover venues, offers and events across Stockport.
-      </p>
-    </div>
+                    <p style="margin:0;color:#5f6f89;font-size:17px;line-height:1.65;">
+                      Hi ${safeCustomerName}, good news — <strong style="color:#071b49;">${safeBusinessName}</strong> has confirmed your booking.
+                    </p>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:10px 30px 28px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8faff;border:1px solid #dfe6f1;border-radius:18px;">
+                      <tr>
+                        <td style="padding:22px 22px 10px;">
+                          <p style="margin:0 0 4px;color:#f72585;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">
+                            Booking details
+                          </p>
+                          <h2 style="margin:0;color:#071b49;font-size:22px;line-height:1.3;">
+                            ${safeBusinessName}
+                          </h2>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td style="padding:8px 22px 22px;">
+                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="padding:12px 0;border-bottom:1px solid #e5eaf2;color:#64748b;font-size:14px;">Date</td>
+                              <td align="right" style="padding:12px 0;border-bottom:1px solid #e5eaf2;color:#071b49;font-size:15px;font-weight:800;">${safeBookingDate}</td>
+                            </tr>
+                            <tr>
+                              <td style="padding:12px 0;border-bottom:1px solid #e5eaf2;color:#64748b;font-size:14px;">Time</td>
+                              <td align="right" style="padding:12px 0;border-bottom:1px solid #e5eaf2;color:#071b49;font-size:15px;font-weight:800;">${safeBookingTime}</td>
+                            </tr>
+                            ${
+                              partySize > 0
+                                ? `<tr>
+                                    <td style="padding:12px 0;border-bottom:1px solid #e5eaf2;color:#64748b;font-size:14px;">Party size</td>
+                                    <td align="right" style="padding:12px 0;border-bottom:1px solid #e5eaf2;color:#071b49;font-size:15px;font-weight:800;">${partySize}</td>
+                                  </tr>`
+                                : ""
+                            }
+                            <tr>
+                              <td style="padding:12px 0 0;color:#64748b;font-size:14px;">Reference</td>
+                              <td align="right" style="padding:12px 0 0;color:#071b49;font-size:15px;font-weight:800;">${safeBookingReference}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:0 30px 30px;">
+                    <div style="padding:18px 20px;border-radius:16px;background:#fff7fb;border:1px solid #ffd6e8;">
+                      <p style="margin:0;color:#34425c;font-size:14px;line-height:1.65;">
+                        The venue manages this booking directly. Contact them if you need to change or cancel your booking.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:24px 30px;background:#071b49;text-align:center;">
+                    <p style="margin:0 0 7px;color:#ffffff;font-size:15px;font-weight:800;">
+                      Stockport Smilez
+                    </p>
+                    <p style="margin:0;color:#cbd5e1;font-size:12px;line-height:1.6;">
+                      Food, drink, events and good times across Stockport.
+                    </p>
+                    <p style="margin:12px 0 0;color:#94a3b8;font-size:11px;line-height:1.5;">
+                      This is an automated booking confirmation sent by Stockport Smilez.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
   `;
 
   const result = await sendSmtpEmail({
