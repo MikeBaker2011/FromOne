@@ -12720,7 +12720,177 @@ export default function SettingsPage() {
           }
         }
 
+        /* Final booking editor layout — deliberately last so nothing overrides it. */
+        .fromone-settings-page .settings-simple-booking-hours {
+          display: grid !important;
+          gap: 18px !important;
+          margin-top: 18px !important;
+          padding: 22px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 20px !important;
+          background: #f8faff !important;
+          box-shadow: none !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-card-head {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          gap: 16px !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-card-head span {
+          display: block !important;
+          margin-bottom: 5px !important;
+          color: #f72585 !important;
+          font-size: 0.72rem !important;
+          font-weight: 900 !important;
+          letter-spacing: 0.08em !important;
+          text-transform: uppercase !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-card-head h4 {
+          margin: 0 !important;
+          color: #071b49 !important;
+          font-size: 1.25rem !important;
+          line-height: 1.15 !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-card-head > strong {
+          display: inline-flex !important;
+          align-items: center !important;
+          min-height: 36px !important;
+          padding: 0 13px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 999px !important;
+          background: #ffffff !important;
+          color: #52617a !important;
+          font-size: 0.76rem !important;
+          white-space: nowrap !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-day-cards {
+          display: grid !important;
+          grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+          gap: 9px !important;
+          width: 100% !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-day-cards button {
+          display: grid !important;
+          gap: 5px !important;
+          min-width: 0 !important;
+          min-height: 86px !important;
+          padding: 13px 8px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 15px !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          text-align: center !important;
+          box-shadow: none !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-day-cards button strong {
+          font-size: 0.8rem !important;
+          font-weight: 900 !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-day-cards button em {
+          color: #6d7b91 !important;
+          font-size: 0.68rem !important;
+          font-style: normal !important;
+          font-weight: 700 !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-day-cards button span {
+          overflow: hidden !important;
+          color: #52617a !important;
+          font-size: 0.68rem !important;
+          font-weight: 800 !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-day-cards button.is-selected {
+          border-color: #f72585 !important;
+          background: #fff3f8 !important;
+          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.12) !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-day-cards button.is-closed {
+          opacity: 0.62 !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-selected-day {
+          display: grid !important;
+          grid-template-columns: minmax(130px, 0.7fr) auto minmax(260px, 1.3fr) !important;
+          align-items: center !important;
+          gap: 16px !important;
+          padding: 18px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 18px !important;
+          background: #ffffff !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-selected-day h5 {
+          margin: 4px 0 0 !important;
+          color: #071b49 !important;
+          font-size: 1rem !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-selected-times {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 12px !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-selected-times label {
+          display: grid !important;
+          gap: 7px !important;
+        }
+
+        .fromone-settings-page .settings-simple-booking-hours .settings-smilez-selected-times input {
+          width: 100% !important;
+          min-height: 46px !important;
+          padding: 10px 12px !important;
+          border: 1px solid #dfe5f1 !important;
+          border-radius: 12px !important;
+          background: #ffffff !important;
+          color: #071b49 !important;
+          font: inherit !important;
+        }
+
+        @media (max-width: 900px) {
+          .fromone-settings-page .settings-simple-booking-hours .settings-smilez-day-cards {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+          }
+
+          .fromone-settings-page .settings-simple-booking-hours .settings-smilez-selected-day {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (max-width: 620px) {
+          .fromone-settings-page .settings-simple-booking-hours {
+            padding: 16px !important;
+          }
+
+          .fromone-settings-page .settings-simple-booking-hours .settings-smilez-card-head {
+            align-items: flex-start !important;
+            flex-direction: column !important;
+          }
+
+          .fromone-settings-page .settings-simple-booking-hours .settings-smilez-day-cards {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+
+          .fromone-settings-page .settings-simple-booking-hours .settings-smilez-selected-times {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
       `}</style>
+
 
       {confirmDialog && (() => {
         const activeConfirmDialog = confirmDialog!;
