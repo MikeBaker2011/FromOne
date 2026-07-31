@@ -2703,7 +2703,7 @@ export default function SettingsPage() {
                           className="settings-smilez-selected-day"
                           style={{
                             display: 'grid',
-                            gridTemplateColumns: 'minmax(130px, 0.7fr) auto minmax(260px, 1.3fr)',
+                            gridTemplateColumns: 'minmax(170px, 0.8fr) minmax(180px, auto) minmax(420px, 1.6fr)',
                             alignItems: 'center',
                             gap: 16,
                             padding: 18,
@@ -2737,8 +2737,9 @@ export default function SettingsPage() {
                               className="settings-smilez-selected-times"
                               style={{
                                 display: 'grid',
-                                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                                gap: 12,
+                                gridTemplateColumns: 'repeat(2, minmax(180px, 1fr))',
+                                gap: 16,
+                                alignItems: 'end',
                               }}
                             >
                               <label>
@@ -2770,6 +2771,15 @@ export default function SettingsPage() {
                                 <span>Closes</span>
                                 <input
                                   className="settings-simple-input"
+                                  style={{
+                                    width: '100%',
+                                    minHeight: 46,
+                                    padding: '10px 12px',
+                                    border: '1px solid #dfe5f1',
+                                    borderRadius: 12,
+                                    background: '#ffffff',
+                                    color: '#071b49',
+                                  }}
                                   type="time"
                                   value={selected.closes_at || ''}
                                   onChange={(event) =>
