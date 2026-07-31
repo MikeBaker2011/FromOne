@@ -1245,17 +1245,25 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
       is_closed: row.is_closed,
       opens_at: row.is_closed ? null : row.opens_at,
       closes_at: row.is_closed ? null : row.closes_at,
+      created_at: now,
       updated_at: now,
     }));
 
-    const { error: bookingHoursError } = await smiles
+    const { error: deleteBookingHoursError } = await smiles
       .from("client_booking_hours")
-      .upsert(bookingHourRows, {
-        onConflict: "client_id,day_of_week",
-      });
+      .delete()
+      .eq("venue_id", smilesVenueId);
 
-    if (bookingHoursError) {
-      throw new Error(bookingHoursError.message);
+    if (deleteBookingHoursError) {
+      throw new Error(deleteBookingHoursError.message);
+    }
+
+    const { error: insertBookingHoursError } = await smiles
+      .from("client_booking_hours")
+      .insert(bookingHourRows);
+
+    if (insertBookingHoursError) {
+      throw new Error(insertBookingHoursError.message);
     }
   }
 
