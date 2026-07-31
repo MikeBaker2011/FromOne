@@ -2597,14 +2597,130 @@ export default function SettingsPage() {
             </label>
 
             {acceptsBookings ? (
-              <label className="settings-simple-booking-link">
-                <strong>Booking link</strong>
-                <input
-                  value={bookingUrl}
-                  onChange={(event) => setBookingUrl(event.target.value)}
-                  placeholder="https://..."
-                />
-              </label>
+              <>
+                <label className="settings-simple-booking-link">
+                  <strong>Booking link <small>Optional</small></strong>
+                  <input
+                    value={bookingUrl}
+                    onChange={(event) => setBookingUrl(event.target.value)}
+                    placeholder="https://..."
+                  />
+                  <span className="settings-field-help">
+                    Leave this blank to use Smilez booking requests and set your weekly booking times below.
+                  </span>
+                </label>
+
+                {!bookingUrl.trim() ? (
+                  <section className="settings-smilez-hours-card settings-simple-booking-hours">
+                    <div className="settings-smilez-card-head">
+                      <div>
+                        <span>Booking request hours</span>
+                        <h4>Set your weekly availability</h4>
+                      </div>
+                      <strong>
+                        {bookingSettings.slot_interval_minutes}-minute slots
+                      </strong>
+                    </div>
+
+                    <div className="settings-smilez-day-cards" role="list">
+                      {bookingHours.map((row) => {
+                        const selected =
+                          row.day_of_week === selectedBookingDay;
+
+                        return (
+                          <button
+                            type="button"
+                            key={row.day_of_week}
+                            className={`${selected ? 'is-selected' : ''} ${
+                              row.is_closed ? 'is-closed' : ''
+                            }`}
+                            onClick={() =>
+                              setSelectedBookingDay(row.day_of_week)
+                            }
+                          >
+                            <strong>{shortDayLabels[row.day_of_week]}</strong>
+                            <em>{getNextDateForDay(row.day_of_week)}</em>
+                            <span>{formatBookingHourDisplay(row)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {(() => {
+                      const selected =
+                        bookingHours.find(
+                          (row) => row.day_of_week === selectedBookingDay,
+                        ) || bookingHours[0];
+
+                      if (!selected) return null;
+
+                      return (
+                        <div className="settings-smilez-selected-day">
+                          <div>
+                            <span>Editing</span>
+                            <h5>{dayLabels[selected.day_of_week]}</h5>
+                          </div>
+
+                          <label className="settings-smilez-closed-toggle">
+                            <input
+                              type="checkbox"
+                              checked={selected.is_closed}
+                              onChange={(event) =>
+                                updateBookingHour(
+                                  selected.day_of_week,
+                                  'is_closed',
+                                  event.target.checked,
+                                )
+                              }
+                            />
+                            Closed this day
+                          </label>
+
+                          {!selected.is_closed ? (
+                            <div className="settings-smilez-selected-times">
+                              <label>
+                                <span>Opens</span>
+                                <input
+                                  className="settings-simple-input"
+                                  type="time"
+                                  value={selected.opens_at || ''}
+                                  onChange={(event) =>
+                                    updateBookingHour(
+                                      selected.day_of_week,
+                                      'opens_at',
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </label>
+
+                              <label>
+                                <span>Closes</span>
+                                <input
+                                  className="settings-simple-input"
+                                  type="time"
+                                  value={selected.closes_at || ''}
+                                  onChange={(event) =>
+                                    updateBookingHour(
+                                      selected.day_of_week,
+                                      'closes_at',
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <p className="settings-field-help">
+                              This day will not show any customer booking request slots.
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </section>
+                ) : null}
+              </>
             ) : null}
           </section>
 
