@@ -2611,7 +2611,7 @@ export default function SettingsPage() {
                 </label>
 
                 {!bookingUrl.trim() ? (
-                  <section className="settings-smilez-hours-card settings-simple-booking-hours">
+                  <section className="settings-smilez-booking-editor settings-smilez-hours-card settings-simple-booking-hours">
                     <div className="settings-smilez-card-head">
                       <div>
                         <span>Booking request hours</span>
