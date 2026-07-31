@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import nodemailer from "nodemailer";
 
 type SmilesBusinessAction =
   | {
@@ -60,11 +61,16 @@ const fromOneServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const smilesSupabaseUrl = process.env.STOCKPORT_SMILES_SUPABASE_URL || "";
 const smilesServiceRoleKey =
   process.env.STOCKPORT_SMILES_SUPABASE_SERVICE_ROLE_KEY || "";
-const resendApiKey = process.env.RESEND_API_KEY || "";
+const smtpHost = process.env.SMTP_HOST || "";
+const smtpPort = Number(process.env.SMTP_PORT || "587");
+const smtpSecure =
+  String(process.env.SMTP_SECURE || "").trim().toLowerCase() === "true";
+const smtpUser = process.env.SMTP_USER || "";
+const smtpPassword = process.env.SMTP_PASSWORD || "";
 const emailFrom =
   process.env.EMAIL_FROM ||
   process.env.FROM_EMAIL ||
-  "Stockport Smilez <onboarding@resend.dev>";
+  (smtpUser ? `Stockport Smilez <${smtpUser}>` : "Stockport Smilez");
 
 function cleanText(value: unknown) {
   return String(value || "").trim();
@@ -179,7 +185,7 @@ async function logSmilesEmail({
   }
 }
 
-async function sendResendEmail({
+async function sendSmtpEmail({
   smiles,
   to,
   subject,
@@ -196,81 +202,9 @@ async function sendResendEmail({
   entityType?: string | null;
   entityId?: string | null;
 }) {
-  if (!resendApiKey) {
-    await logSmilesEmail({
-      smiles,
-      recipient: to,
-      subject,
-      template,
-      status: "failed",
-      errorMessage: "RESEND_API_KEY is missing in FromOne.",
-      entityType,
-      entityId,
-    });
-
-    return {
-      sent: false,
-      error: "RESEND_API_KEY is missing in FromOne.",
-    };
-  }
-
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: emailFrom,
-        to,
-        subject,
-        html,
-      }),
-    });
-
-    const result = await response.json().catch(() => ({}));
-
-    if (!response.ok || !result?.id) {
-      const errorMessage =
-        cleanText(result?.message) ||
-        cleanText(result?.error) ||
-        `Resend returned ${response.status}`;
-
-      await logSmilesEmail({
-        smiles,
-        recipient: to,
-        subject,
-        template,
-        status: "failed",
-        errorMessage,
-        entityType,
-        entityId,
-      });
-
-      return {
-        sent: false,
-        error: errorMessage,
-      };
-    }
-
-    await logSmilesEmail({
-      smiles,
-      recipient: to,
-      subject,
-      template,
-      status: "sent",
-      providerMessageId: cleanText(result.id),
-      entityType,
-      entityId,
-    });
-
-    return {
-      sent: true,
-      error: null,
-    };
-  } catch (error) {
-    const errorMessage = getEmailErrorMessage(error) || "Unknown email error";
+  if (!smtpHost || !smtpUser || !smtpPassword) {
+    const errorMessage =
+      "SMTP_HOST, SMTP_USER or SMTP_PASSWORD is missing in FromOne.";
 
     await logSmilesEmail({
       smiles,
@@ -281,6 +215,90 @@ async function sendResendEmail({
       errorMessage,
       entityType,
       entityId,
+    });
+
+    return {
+      sent: false,
+      error: errorMessage,
+    };
+  }
+
+  if (!Number.isFinite(smtpPort) || smtpPort <= 0) {
+    const errorMessage = "SMTP_PORT is invalid in FromOne.";
+
+    await logSmilesEmail({
+      smiles,
+      recipient: to,
+      subject,
+      template,
+      status: "failed",
+      errorMessage,
+      entityType,
+      entityId,
+    });
+
+    return {
+      sent: false,
+      error: errorMessage,
+    };
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: smtpUser,
+        pass: smtpPassword,
+      },
+      tls: {
+        minVersion: "TLSv1.2",
+      },
+    });
+
+    const result = await transporter.sendMail({
+      from: emailFrom,
+      to,
+      subject,
+      html,
+    });
+
+    const providerMessageId = cleanText(result.messageId);
+
+    await logSmilesEmail({
+      smiles,
+      recipient: to,
+      subject,
+      template,
+      status: "sent",
+      providerMessageId: providerMessageId || null,
+      entityType,
+      entityId,
+    });
+
+    return {
+      sent: true,
+      error: null,
+    };
+  } catch (error) {
+    const errorMessage = getEmailErrorMessage(error) || "Unknown SMTP error";
+
+    await logSmilesEmail({
+      smiles,
+      recipient: to,
+      subject,
+      template,
+      status: "failed",
+      errorMessage,
+      entityType,
+      entityId,
+    });
+
+    console.error("SMTP email failed:", {
+      recipient: to,
+      template,
+      error: errorMessage,
     });
 
     return {
@@ -334,7 +352,7 @@ async function sendBookingConfirmedEmail({
     </div>
   `;
 
-  const result = await sendResendEmail({
+  const result = await sendSmtpEmail({
     smiles,
     to: customerEmail,
     subject,
