@@ -1939,8 +1939,8 @@ export default function SettingsPage() {
           accessibility_info: accessibilityInfo.trim(),
           galleryImageUrls,
           gallery_image_urls: galleryImageUrls,
-          logoUrl: null,
-          logo_url: null,
+          logoUrl: brandLogoUrl.trim() || null,
+          logo_url: brandLogoUrl.trim() || null,
           acceptsBookings,
           accepts_bookings: acceptsBookings,
           bookingUrl:
@@ -3429,15 +3429,15 @@ export default function SettingsPage() {
             </label>
 
             <label className="settings-wide-field">
-              <strong>Public business description</strong>
+              <strong>About your business</strong>
               <span className="settings-field-help">
-                A short customer-facing description shown on the Smilez venue page.
+                Write a short introduction for customers. This appears in the About section of your Smilez venue page.
               </span>
               <textarea
                 className="settings-simple-input"
                 value={brandSummary}
                 onChange={(event) => setBrandSummary(event.target.value)}
-                placeholder="Explain what makes the business worth visiting or booking."
+                placeholder="Example: Ember & Thyme is a relaxed modern British restaurant serving seasonal dishes in the heart of Stockport."
                 rows={4}
                 maxLength={800}
               />
@@ -7467,15 +7467,15 @@ export default function SettingsPage() {
                           </label>
 
                           <label className="settings-wide-field">
-                            <strong>Public business description</strong>
+                            <strong>About your business</strong>
                             <span>
-                              Customer-facing copy for the Smilez venue page.
+                              Add a welcoming customer introduction for the About section of your Smilez venue page.
                             </span>
                             <textarea
                               className="input"
                               value={brandSummary}
                               onChange={(event) => setBrandSummary(event.target.value)}
-                              placeholder="Explain what the business offers and why local customers should choose it."
+                              placeholder="Example: Ember & Thyme is a relaxed modern British restaurant serving seasonal dishes in the heart of Stockport."
                               rows={4}
                               maxLength={800}
                             />
