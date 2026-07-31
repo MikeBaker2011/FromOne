@@ -271,18 +271,53 @@ function buildSelectedPlatformPlan(platforms: string[], postCount = 7) {
   }));
 }
 
-function getFallbackHashtags(marketReach = 'Local customers') {
+function getFallbackHashtags(
+  marketReach = 'Local customers',
+  profile?: Partial<BusinessProfileResult>
+) {
   const reach = marketReach.toLowerCase();
+  const businessTag = cleanText(profile?.business_name)
+    .replace(/&/g, ' and ')
+    .replace(/[^a-zA-Z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+  const locationTag = cleanText(profile?.location)
+    .replace(/[^a-zA-Z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+  const industry = cleanText(profile?.industry).toLowerCase();
+  const tags = [
+    businessTag ? `#${businessTag}` : '',
+    locationTag ? `#${locationTag}` : '',
+  ];
 
-  if (reach.includes('nationwide')) {
-    return ['#UKBusiness', '#SmallBusiness', '#BusinessGrowth', '#Marketing'];
+  if (industry.includes('restaurant') || industry.includes('food')) {
+    tags.push('#DiningOut', '#RestaurantOffer');
+  } else if (industry.includes('bar') || industry.includes('cocktail')) {
+    tags.push('#CocktailBar', '#NightOut');
+  } else if (industry.includes('salon') || industry.includes('beauty')) {
+    tags.push('#BeautyBusiness', '#BookNow');
+  } else if (industry) {
+    const industryTag = industry
+      .replace(/[^a-zA-Z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join('');
+
+    if (industryTag) tags.push(`#${industryTag}`);
   }
 
-  if (reach.includes('online')) {
-    return ['#OnlineBusiness', '#SmallBusiness', '#DigitalMarketing', '#Marketing'];
-  }
+  if (reach.includes('nationwide')) tags.push('#UKBusiness');
+  else if (reach.includes('online')) tags.push('#OnlineBusiness');
+  else if (reach.includes('regional')) tags.push('#RegionalBusiness');
+  else tags.push('#SupportLocal');
 
-  return ['#LocalBusiness', '#SmallBusiness', '#SupportLocal', '#Marketing'];
+  return Array.from(new Set(tags.filter(Boolean))).slice(0, 6);
 }
 
 function cleanWebsiteText(html: string) {
@@ -1012,13 +1047,15 @@ function buildFallbackPosts(
     const post = {
       day: `Post ${index + 1}`,
       platform,
-      title: weeklyAngles[index] || `${platform} Post`,
+      title: profile.main_offer || `Discover ${profile.business_name}`,
       caption: enforcePlatformCaptionLimit(
-        `A useful ${platform} post for ${profile.business_name}, focused on ${profile.industry} and designed to turn this week's photo, flyer, offer, or business update into a clear reason for ${marketReach.toLowerCase()} to enquire.`,
+        profile.main_offer
+          ? `${profile.main_offer} Find out more from ${profile.business_name}${profile.location ? ` in ${profile.location}` : ''}.`
+          : `${profile.business_name} offers ${profile.industry.toLowerCase()} services${profile.location ? ` in ${profile.location}` : ''}. Get in touch to find out more.`,
         platform
       ),
-      cta: profile.main_offer || 'Contact us today to find out more.',
-      hashtags: getFallbackHashtags(marketReach),
+      cta: profile.main_offer || 'Get in touch to find out more.',
+      hashtags: getFallbackHashtags(marketReach, profile),
       image_prompt: `Use the uploaded photo or flyer where available. Otherwise use a realistic ${profile.industry} image for ${profile.business_name} that supports the post and matches the brand style.`,
     };
 
@@ -1049,7 +1086,7 @@ function normalisePost(
       title: weeklyAngles[index] || `${fallbackPlatform} Post`,
       caption: enforcePlatformCaptionLimit(value, fallbackPlatform),
       cta: fallbackProfile.main_offer || 'Contact us today to find out more.',
-      hashtags: getFallbackHashtags(marketReach),
+      hashtags: getFallbackHashtags(marketReach, fallbackProfile),
       image_prompt: 'Use a clean, professional image that matches the business and post message.',
     };
 
@@ -1495,6 +1532,22 @@ Strict platform rule:
 - If only one platform is selected, all posts should use that platform.
 - Facebook and Instagram can be published/scheduled where Meta is connected.
 - TikTok is manual posting for now, so provide copy/open friendly wording with a hook/script where useful.
+
+Customer-facing advert rules:
+- Write the advert itself. Never describe the task, upload, platform, prompt, strategy or generation process.
+- Never use phrases such as "a useful post", "focused on", "designed to turn", "this week's photo", "uploaded media spotlight", "helpful business post" or "clear enquiry driver" in customer-facing fields.
+- The post title must be a real headline based on the visible offer, event, product, food, drink, venue, service, result or benefit.
+- smilesDraft.title must be a public advert or listing headline.
+- smilesDraft.description must be polished public sales copy for the venue, offer or event.
+- smilesDraft.shortDescription must be a natural customer-facing summary under 180 characters. It must not explain what FromOne generated.
+- When an offer is visible, lead with the offer and only include prices, days, times and conditions that are visible or supplied.
+- Never invent details.
+
+Hashtag quality rules:
+- Use 4 to 6 focused hashtags only.
+- Prioritise the exact business name, exact location, cuisine or service, and the specific offer or event.
+- Do not use filler hashtags such as #Marketing, #BusinessGrowth or #GeneralBusiness.
+- Do not turn a long industry description into one unusable hashtag.
 
 Industry quality rules:
 - Write with industry knowledge, not generic marketing fluff.
