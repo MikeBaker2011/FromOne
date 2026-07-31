@@ -573,13 +573,11 @@ export default function SettingsPage() {
   const getPostcodePrefix = (value: string) => {
     const cleanPostcode = normalisePostcode(value).replace(/\s+/g, '');
 
-    if (!cleanPostcode) {
-      return '';
+    if (cleanPostcode.length <= 3) {
+      return cleanPostcode;
     }
 
-    const outwardCode = cleanPostcode.match(/^[A-Z]{1,2}\d[A-Z\d]?/);
-
-    return outwardCode?.[0] || '';
+    return cleanPostcode.slice(0, -3);
   };
 
   const isValidPostcodePrefix = (value: string) => {

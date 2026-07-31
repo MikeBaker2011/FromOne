@@ -222,13 +222,11 @@ function normalisePostcode(value: unknown) {
 function getPostcodePrefixFromValue(value: unknown) {
   const postcode = normalisePostcode(value).replace(/\s+/g, "");
 
-  if (!postcode) {
-    return "";
+  if (postcode.length <= 3) {
+    return postcode;
   }
 
-  const outwardCode = postcode.match(/^[A-Z]{1,2}\d[A-Z\d]?/);
-
-  return outwardCode?.[0] || "";
+  return postcode.slice(0, -3);
 }
 
 function getPostcodePrefix(body: SmilesPublishBody) {
@@ -1096,11 +1094,14 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
       profile?.gallery_image_urls,
     )
   );
-  const acceptsBookings = firstDefinedBoolean(
-    body.acceptsBookings,
-    body.accepts_bookings,
-    profile?.accepts_bookings,
-  );
+  const acceptsBookings =
+    firstDefinedBoolean(
+      body.acceptsBookings,
+      body.accepts_bookings,
+      profile?.accepts_bookings,
+    ) ||
+    weeklyBookingHours.length > 0 ||
+    Boolean(firstText(body.bookingUrl, body.booking_url, profile?.booking_url));
   const bookingUrl = acceptsBookings
     ? cleanNullableText(
         firstText(body.bookingUrl, body.booking_url, profile?.booking_url)
