@@ -311,6 +311,33 @@ function cleanBoolean(value: unknown) {
   return cleaned === 'true' || cleaned === '1' || cleaned === 'yes';
 }
 
+function firstText(...values: unknown[]) {
+  for (const value of values) {
+    const cleaned = cleanText(value);
+    if (cleaned) return cleaned;
+  }
+
+  return "";
+}
+
+function firstArray<T = unknown>(...values: unknown[]): T[] {
+  for (const value of values) {
+    if (Array.isArray(value)) return value as T[];
+  }
+
+  return [];
+}
+
+function firstDefinedBoolean(...values: unknown[]) {
+  for (const value of values) {
+    if (value !== undefined && value !== null && cleanText(value) !== "") {
+      return cleanBoolean(value);
+    }
+  }
+
+  return false;
+}
+
 function getWeeklyBookingHours(body: SmilesPublishBody) {
   const supplied = body.bookingHours || body.booking_hours;
 
@@ -911,28 +938,30 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
   const fromOneProfileId = getFromOneProfileId(body);
   let smilesClientId = getExplicitSmilesClientId(body);
   let smilesVenueId = getExplicitSmilesVenueId(body);
+  let profile: any = null;
 
-  if (fromOneProfileId && (!smilesClientId || !smilesVenueId)) {
-    const { data: profile, error: profileError } = await fromOne
+  if (fromOneProfileId) {
+    const { data, error: profileError } = await fromOne
       .from("business_profiles")
-      .select("smiles_listing_client_id, smiles_listing_venue_id")
+      .select("*")
       .eq("id", fromOneProfileId)
       .maybeSingle();
 
     if (profileError) {
       console.error(
-        "Could not load linked Smilez ids from business profile:",
+        "Could not load linked Smilez business profile:",
         profileError.message
       );
       throw new Error(profileError.message);
     }
 
+    profile = data;
     smilesClientId =
       smilesClientId ||
-      cleanText((profile as any)?.smiles_listing_client_id);
+      cleanText(profile?.smiles_listing_client_id);
     smilesVenueId =
       smilesVenueId ||
-      cleanText((profile as any)?.smiles_listing_venue_id);
+      cleanText(profile?.smiles_listing_venue_id);
   }
 
   if (!smilesClientId || !smilesVenueId) {
@@ -949,7 +978,8 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
   const latitude = cleanCoordinate(
     body.mapLatitude ??
       body.map_latitude ??
-      body.latitude,
+      body.latitude ??
+      profile?.latitude,
     -90,
     90,
     "Latitude",
@@ -957,19 +987,23 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
   const longitude = cleanCoordinate(
     body.mapLongitude ??
       body.map_longitude ??
-      body.longitude,
+      body.longitude ??
+      profile?.longitude,
     -180,
     180,
     "Longitude",
   );
-  const geoEnabled = cleanBoolean(
-    body.mapLocationVerified ??
-      body.map_location_verified ??
-      body.geoEnabled ??
-      body.geo_enabled,
+  const geoEnabled = firstDefinedBoolean(
+    body.mapLocationVerified,
+    body.map_location_verified,
+    body.geoEnabled,
+    body.geo_enabled,
+    profile?.geo_enabled,
   );
   const serviceRadiusMiles = cleanServiceRadius(
-    body.serviceRadiusMiles ?? body.service_radius_miles
+    body.serviceRadiusMiles ??
+      body.service_radius_miles ??
+      profile?.service_radius_miles
   );
 
   if (geoEnabled && (latitude === null || longitude === null)) {
@@ -978,54 +1012,139 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
     );
   }
 
-  const name = cleanText(body.name || body.title);
-  const description = buildDescription(body);
-  const shortDescription = buildShortDescription(body, description);
+  const name = firstText(body.name, body.title, profile?.business_name);
+  const description = firstText(
+    body.description,
+    body.caption,
+    profile?.brand_summary,
+    profile?.main_offer,
+    Array.isArray(profile?.services) ? profile.services.join(", ") : "",
+    name ? `${name} is a local business.` : "",
+  );
+  const shortDescription = buildShortDescription(
+    {
+      ...body,
+      shortDescription: firstText(
+        body.shortDescription,
+        body.short_description,
+        profile?.brand_summary,
+      ),
+    },
+    description,
+  );
   const venueType =
-    cleanNullableText(body.venueType || body.venue_type) || "Business";
-  const area = cleanNullableText(body.locationArea || body.location_area);
-  const postcode = normalisePostcode(body.postcode);
-  const postcodePrefix = getPostcodePrefix(body);
-  const phone = cleanNullableText(body.phone);
-  const email = cleanNullableText(body.email);
-  const websiteUrl = cleanNullableText(body.websiteUrl || body.website_url);
-  const mainImageUrl = cleanNullableText(body.mediaUrl || body.media_url);
-  const logoUrl = cleanNullableText(body.logoUrl || body.logo_url);
-  const weeklyBookingHours = getWeeklyBookingHours(body);
-  const openingHours = buildOpeningHoursText(body, weeklyBookingHours);
-  const parkingInfo = cleanNullableText(body.parkingInfo || body.parking_info);
+    cleanNullableText(
+      firstText(body.venueType, body.venue_type, profile?.industry)
+    ) || "Business";
+  const area = cleanNullableText(
+    firstText(body.locationArea, body.location_area, profile?.location)
+  );
+  const postcode = normalisePostcode(
+    firstText(body.postcode, profile?.postcode)
+  );
+  const postcodePrefix =
+    getPostcodePrefix(body) ||
+    getPostcodePrefixFromValue(profile?.postcode_prefix) ||
+    getPostcodePrefixFromValue(profile?.postcode);
+  const phone = cleanNullableText(firstText(body.phone, profile?.phone));
+  const email = cleanNullableText(firstText(body.email, profile?.email));
+  const websiteUrl = cleanNullableText(
+    firstText(body.websiteUrl, body.website_url, profile?.website_url)
+  );
+  const mainImageUrl = cleanNullableText(
+    firstText(
+      body.mediaUrl,
+      body.media_url,
+      profile?.brand_logo_url,
+      firstArray<string>(profile?.gallery_image_urls)[0],
+    )
+  );
+  const logoUrl = cleanNullableText(
+    firstText(body.logoUrl, body.logo_url, profile?.brand_logo_url)
+  );
+  const weeklyBookingHours = getWeeklyBookingHours({
+    ...body,
+    bookingHours: firstArray<WeeklyBookingHour>(
+      body.bookingHours,
+      body.booking_hours,
+      profile?.booking_hours,
+    ),
+  });
+  const openingHours = buildOpeningHoursText(
+    {
+      ...body,
+      openingHours: firstText(
+        body.openingHours,
+        body.opening_hours,
+        profile?.opening_hours,
+      ),
+    },
+    weeklyBookingHours,
+  );
+  const parkingInfo = cleanNullableText(
+    firstText(body.parkingInfo, body.parking_info, profile?.parking_info)
+  );
   const accessibilityInfo = cleanNullableText(
-    body.accessibilityInfo || body.accessibility_info
+    firstText(
+      body.accessibilityInfo,
+      body.accessibility_info,
+      profile?.accessibility_info,
+    )
   );
   const galleryImageUrls = cleanImageUrlList(
-    body.galleryImageUrls || body.gallery_image_urls
+    firstArray<string>(
+      body.galleryImageUrls,
+      body.gallery_image_urls,
+      profile?.gallery_image_urls,
+    )
   );
-  const acceptsBookings = cleanBoolean(
-    body.acceptsBookings ?? body.accepts_bookings
+  const acceptsBookings = firstDefinedBoolean(
+    body.acceptsBookings,
+    body.accepts_bookings,
+    profile?.accepts_bookings,
   );
   const bookingUrl = acceptsBookings
-    ? cleanNullableText(body.bookingUrl || body.booking_url)
+    ? cleanNullableText(
+        firstText(body.bookingUrl, body.booking_url, profile?.booking_url)
+      )
     : null;
-  const bookingSettings = getBookingSettings(body);
-  const bookingBlocks = getBookingBlocks(body);
+  const bookingSettings = getBookingSettings({
+    ...body,
+    bookingSettings:
+      body.bookingSettings ||
+      body.booking_settings ||
+      profile?.booking_settings,
+  });
+  const bookingBlocks = getBookingBlocks({
+    ...body,
+    bookingBlocks:
+      body.bookingBlocks ||
+      body.booking_blocks ||
+      profile?.booking_blocks,
+  });
   const now = new Date().toISOString();
   const geoUpdatedAt =
     cleanNullableText(
       body.mapLocationVerifiedAt ||
         body.map_location_verified_at ||
         body.geoUpdatedAt ||
-        body.geo_updated_at,
+        body.geo_updated_at ||
+        profile?.geo_updated_at,
     ) || (latitude !== null && longitude !== null ? now : null);
 
   const sharedLocationUpdates = {
-    address: cleanNullableText(body.address),
+    address: cleanNullableText(firstText(body.address, profile?.address)),
     postcode: postcode || null,
     postcode_prefix: postcodePrefix || null,
     latitude,
     longitude,
     geo_enabled: geoEnabled,
-    geo_accuracy: cleanNullableText(body.geoAccuracy || body.geo_accuracy),
-    geo_source: cleanNullableText(body.geoSource || body.geo_source),
+    geo_accuracy: cleanNullableText(
+      firstText(body.geoAccuracy, body.geo_accuracy, profile?.geo_accuracy)
+    ),
+    geo_source: cleanNullableText(
+      firstText(body.geoSource, body.geo_source, profile?.geo_source)
+    ),
     service_radius_miles: serviceRadiusMiles,
     geo_updated_at: geoUpdatedAt,
     updated_at: now,
@@ -1120,6 +1239,7 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
   if (weeklyBookingHours.length > 0) {
     const bookingHourRows = weeklyBookingHours.map((row) => ({
       client_id: smilesClientId,
+      venue_id: smilesVenueId,
       day_of_week: row.day_of_week,
       is_closed: row.is_closed,
       opens_at: row.is_closed ? null : row.opens_at,
