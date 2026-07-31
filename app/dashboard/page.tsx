@@ -66,6 +66,7 @@ const cards: DashboardCard[] = [
 export default function DashboardPage() {
   const [checkingSetup, setCheckingSetup] = useState(true);
   const [setupComplete, setSetupComplete] = useState(true);
+  const [missingSetupItems, setMissingSetupItems] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -95,18 +96,27 @@ export default function DashboardPage() {
           return;
         }
 
-        const servicesReady =
-          Array.isArray(data?.services) && data.services.length > 0;
+        const missingItems: string[] = [];
 
-        const complete = Boolean(
-          data?.business_name?.trim() &&
-            data?.industry?.trim() &&
-            data?.location?.trim() &&
-            servicesReady,
-        );
+        if (!data?.business_name?.trim()) {
+          missingItems.push("Add your business name");
+        }
+
+        if (!data?.industry?.trim()) {
+          missingItems.push("Choose your business type");
+        }
+
+        if (!data?.location?.trim()) {
+          missingItems.push("Add your business location");
+        }
+
+        if (!Array.isArray(data?.services) || data.services.length === 0) {
+          missingItems.push("Add at least one service");
+        }
 
         if (active) {
-          setSetupComplete(complete);
+          setMissingSetupItems(missingItems);
+          setSetupComplete(missingItems.length === 0);
         }
       } finally {
         if (active) {
@@ -139,9 +149,18 @@ export default function DashboardPage() {
             <span className="companion-setup-eyebrow">Finish your setup</span>
             <h2>Complete your business profile.</h2>
             <p>
-              Add your business name, type, location and services so FromOne can
+              Your profile is nearly ready. Complete the items below so FromOne can
               create better content and prepare your Smilez presence correctly.
             </p>
+
+            <div className="companion-setup-checklist">
+              <strong>Still needed:</strong>
+              <ul>
+                {missingSetupItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           <Link href="/settings?setup=business">
@@ -267,6 +286,51 @@ export default function DashboardPage() {
           font-size: 0.96rem;
           line-height: 1.55;
           font-weight: 600;
+        }
+
+        .companion-setup-checklist {
+          margin-top: 16px;
+          padding: 15px 17px;
+          border: 1px solid #ffd2e5;
+          border-radius: 17px;
+          background: #ffffff;
+        }
+
+        .companion-setup-checklist strong {
+          display: block;
+          margin-bottom: 8px;
+          color: #071b49;
+          font-size: 0.9rem;
+          font-weight: 900;
+        }
+
+        .companion-setup-checklist ul {
+          display: grid;
+          gap: 7px;
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+
+        .companion-setup-checklist li {
+          position: relative;
+          padding-left: 21px;
+          color: #52617a;
+          font-size: 0.9rem;
+          line-height: 1.4;
+          font-weight: 700;
+        }
+
+        .companion-setup-checklist li::before {
+          content: "";
+          position: absolute;
+          top: 0.52em;
+          left: 2px;
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: #f72585;
+          transform: translateY(-50%);
         }
 
         .companion-setup-panel > a {
