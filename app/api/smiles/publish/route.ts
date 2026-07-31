@@ -964,14 +964,12 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
       cleanText(profile?.smiles_listing_venue_id);
   }
 
-  if (!smilesClientId || !smilesVenueId) {
+  if (!smilesVenueId) {
     return {
       synced: false,
       clientId: smilesClientId || null,
-      venueId: smilesVenueId || null,
-      reason: !smilesClientId
-        ? "missing_smiles_client_id"
-        : "missing_smiles_venue_id",
+      venueId: null,
+      reason: "missing_smiles_venue_id",
     };
   }
 
@@ -1194,25 +1192,27 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
     main_image_url: mainImageUrl,
   };
 
-  const { data: updatedClient, error: clientUpdateError } = await smiles
-    .from("clients")
-    .update(clientUpdates)
-    .eq("id", smilesClientId)
-    .select("id")
-    .maybeSingle();
+  if (smilesClientId) {
+    const { data: updatedClient, error: clientUpdateError } = await smiles
+      .from("clients")
+      .update(clientUpdates)
+      .eq("id", smilesClientId)
+      .select("id")
+      .maybeSingle();
 
-  if (clientUpdateError) {
-    console.error("Linked Smilez client update failed:", {
-      clientId: smilesClientId,
-      message: clientUpdateError.message,
-    });
-    throw new Error(
-      `The linked Smilez client record could not be updated: ${clientUpdateError.message}`
-    );
-  }
+    if (clientUpdateError) {
+      console.error("Linked Smilez client update failed:", {
+        clientId: smilesClientId,
+        message: clientUpdateError.message,
+      });
+      throw new Error(
+        `The linked Smilez client record could not be updated: ${clientUpdateError.message}`
+      );
+    }
 
-  if (!updatedClient?.id) {
-    throw new Error("The linked Smilez client record could not be found.");
+    if (!updatedClient?.id) {
+      throw new Error("The linked Smilez client record could not be found.");
+    }
   }
 
   const { data: updatedVenue, error: venueUpdateError } = await smiles
@@ -1238,7 +1238,7 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
 
   if (weeklyBookingHours.length > 0) {
     const bookingHourRows = weeklyBookingHours.map((row) => ({
-      client_id: smilesClientId,
+      client_id: smilesClientId || null,
       venue_id: smilesVenueId,
       day_of_week: row.day_of_week,
       is_closed: row.is_closed,
@@ -1258,7 +1258,7 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
     }
   }
 
-  if (acceptsBookings && !bookingUrl) {
+  if (smilesClientId && acceptsBookings && !bookingUrl) {
     const { error: settingsError } = await smiles
       .from("client_booking_settings")
       .upsert(
@@ -1278,10 +1278,16 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
   }
 
   if (bookingBlocks !== null) {
-    const { error: deleteBlocksError } = await smiles
+    let deleteBlocksQuery = smiles
       .from("client_booking_blocks")
       .delete()
-      .eq("client_id", smilesClientId);
+      .eq("venue_id", smilesVenueId);
+
+    if (smilesClientId) {
+      deleteBlocksQuery = deleteBlocksQuery.eq("client_id", smilesClientId);
+    }
+
+    const { error: deleteBlocksError } = await deleteBlocksQuery;
 
     if (deleteBlocksError) {
       throw new Error(deleteBlocksError.message);
@@ -1292,7 +1298,8 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
         .from("client_booking_blocks")
         .insert(
           bookingBlocks.map((block) => ({
-            client_id: smilesClientId,
+            client_id: smilesClientId || null,
+            venue_id: smilesVenueId,
             ...block,
             updated_at: now,
           }))
