@@ -2088,7 +2088,7 @@ export default function PostReviewPage() {
       return;
     }
 
-    showSmilesActionMessage("Preparing your Smilez review draft...", "info");
+    showSmilesActionMessage("Preparing your Smilez listing...", "info");
 
     const clientDraft = buildClientSmilesDraft();
     const savedDraft = getSmilesDraft(post);
@@ -2199,7 +2199,7 @@ export default function PostReviewPage() {
     showSmilesActionMessage(
       isUpdatingSmilesPost
         ? "Updating linked Smilez listing..."
-        : "Sending draft to Smilez for approval...",
+        : "Publishing to Smilez...",
       "info",
     );
 
@@ -2298,7 +2298,7 @@ export default function PostReviewPage() {
         throw new Error(
           result?.error ||
             result?.message ||
-            "Could not send this draft to Smiles.",
+            "Could not publish this item to Smilez.",
         );
       }
 
@@ -2329,12 +2329,12 @@ export default function PostReviewPage() {
       showSmilesActionMessage(
         isUpdatingSmilesPost
           ? "Linked Smilez listing updated successfully."
-          : "Draft sent to Smilez for approval.",
+          : "Published to Smilez successfully.",
         "success",
       );
     } catch (error: any) {
       const message =
-        error?.message || "Could not send this draft to Smiles.";
+        error?.message || "Could not publish this item to Smilez.";
 
       const updates = {
         smiles_status: "failed",
@@ -4278,8 +4278,28 @@ Do not return the same caption.`,
                       onClick={handleSmilesActionClick}
                       disabled={Boolean(sendingToSmilesPostId)}
                     >
-                      {sendingToSmilesPostId ? "Sending..." : "Send to Smilez for approval"}
+                      {sendingToSmilesPostId ? "Publishing..." : "Publish to Smilez"}
                     </button>
+
+                    {smilesActionMessage ? (
+                      <p
+                        role={smilesActionTone === "error" ? "alert" : "status"}
+                        aria-live="polite"
+                        style={{
+                          margin: "12px 0 0",
+                          textAlign: "center",
+                          fontWeight: 800,
+                          color:
+                            smilesActionTone === "error"
+                              ? "#b42318"
+                              : smilesActionTone === "success"
+                                ? "#047857"
+                                : "#536078",
+                        }}
+                      >
+                        {smilesActionMessage}
+                      </p>
+                    ) : null}
                   </div>
                 )}
               </>
