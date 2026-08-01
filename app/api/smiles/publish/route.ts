@@ -1268,6 +1268,7 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
     email,
     website_url: websiteUrl,
     booking_url: bookingUrl,
+    opening_hours: openingHours,
     parking_info: parkingInfo,
     accessibility_info: accessibilityInfo,
     gallery_images: galleryImageUrls,
