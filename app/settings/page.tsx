@@ -200,6 +200,9 @@ export default function SettingsPage() {
   const [bookingHours, setBookingHours] =
     useState<WeeklyBookingHour[]>(defaultBookingHours);
   const [selectedBookingDay, setSelectedBookingDay] = useState(1);
+  const [bookingSettingsTab, setBookingSettingsTab] = useState<
+    'hours' | 'capacity' | 'blocked'
+  >('hours');
   const [bookingSettings, setBookingSettings] =
     useState<BookingSettings>(defaultBookingSettings);
   const [bookingBlocks, setBookingBlocks] = useState<BookingBlock[]>([]);
@@ -2786,10 +2789,67 @@ export default function SettingsPage() {
                       </strong>
                     </div>
 
+                    <div
+                      role="tablist"
+                      aria-label="Booking settings"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                        gap: 8,
+                        padding: 6,
+                        border: '1px solid rgba(7, 27, 73, 0.09)',
+                        borderRadius: 18,
+                        background: '#eef2f8',
+                      }}
+                    >
+                      {[
+                        { id: 'hours' as const, label: 'Hours', helper: 'Weekly times' },
+                        { id: 'capacity' as const, label: 'Capacity', helper: 'Slots and covers' },
+                        { id: 'blocked' as const, label: 'Blocked times', helper: 'Dates unavailable' },
+                      ].map((tab) => {
+                        const active = bookingSettingsTab === tab.id;
+
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={active}
+                            onClick={() => setBookingSettingsTab(tab.id)}
+                            style={{
+                              minHeight: 58,
+                              display: 'grid',
+                              placeItems: 'center',
+                              gap: 2,
+                              padding: '8px 12px',
+                              border: active
+                                ? '1px solid rgba(247, 37, 133, 0.22)'
+                                : '1px solid transparent',
+                              borderRadius: 13,
+                              background: active ? '#ffffff' : 'transparent',
+                              color: active ? '#071b49' : '#647087',
+                              font: 'inherit',
+                              cursor: 'pointer',
+                              boxShadow: active
+                                ? '0 8px 20px rgba(7, 27, 73, 0.08)'
+                                : 'none',
+                            }}
+                          >
+                            <strong style={{ fontSize: 13, fontWeight: 950 }}>
+                              {tab.label}
+                            </strong>
+                            <small style={{ fontSize: 10.5, fontWeight: 750 }}>
+                              {tab.helper}
+                            </small>
+                          </button>
+                        );
+                      })}
+                    </div>
+
                     <section
                       className="settings-smilez-capacity-card"
                       style={{
-                        display: 'grid',
+                        display: bookingSettingsTab === 'capacity' ? 'grid' : 'none',
                         gap: 18,
                         marginTop: 18,
                         marginBottom: 18,
@@ -3050,7 +3110,7 @@ export default function SettingsPage() {
 
                     <section
                       style={{
-                        display: 'grid',
+                        display: bookingSettingsTab === 'capacity' ? 'grid' : 'none',
                         gap: 16,
                         marginBottom: 18,
                         padding: 22,
@@ -3275,7 +3335,7 @@ export default function SettingsPage() {
                       className="settings-smilez-day-cards"
                       role="list"
                       style={{
-                        display: 'grid',
+                        display: bookingSettingsTab === 'hours' ? 'grid' : 'none',
                         gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))',
                         gap: 10,
                         width: '100%',
@@ -3331,7 +3391,7 @@ export default function SettingsPage() {
                         <div
                           className="settings-smilez-selected-day"
                           style={{
-                            display: 'grid',
+                            display: bookingSettingsTab === 'hours' ? 'grid' : 'none',
                             gridTemplateColumns: 'minmax(170px, 0.8fr) minmax(180px, auto) minmax(420px, 1.6fr)',
                             alignItems: 'center',
                             gap: 16,
@@ -3429,6 +3489,137 @@ export default function SettingsPage() {
                         </div>
                       );
                     })()}
+
+                    <section
+                      className="settings-smilez-blocks-card"
+                      style={{
+                        display: bookingSettingsTab === 'blocked' ? 'grid' : 'none',
+                        gap: 16,
+                        padding: 20,
+                        border: '1px solid rgba(7, 27, 73, 0.10)',
+                        borderRadius: 18,
+                        background: '#ffffff',
+                      }}
+                    >
+                      <div className="settings-smilez-card-head">
+                        <div>
+                          <span>Blocked times</span>
+                          <h4>Dates customers cannot book</h4>
+                        </div>
+                        <strong>Optional</strong>
+                      </div>
+
+                      <div className="settings-smilez-quick-dates">
+                        <button type="button" onClick={() => updateNewBookingBlock('blockDate', getTodayDateValue())}>
+                          Today
+                        </button>
+                        <button type="button" onClick={() => updateNewBookingBlock('blockDate', getTomorrowDateValue())}>
+                          Tomorrow
+                        </button>
+                        <button type="button" onClick={() => updateNewBookingBlock('blockDate', getNextSaturdayDateValue())}>
+                          Saturday
+                        </button>
+                      </div>
+
+                      <div className="settings-smilez-block-form">
+                        <label>
+                          <span>Date</span>
+                          <input
+                            className="settings-simple-input"
+                            type="date"
+                            value={newBookingBlock.blockDate}
+                            onChange={(event) =>
+                              updateNewBookingBlock('blockDate', event.target.value)
+                            }
+                          />
+                        </label>
+
+                        <label>
+                          <span>Full day?</span>
+                          <select
+                            className="settings-simple-input"
+                            value={newBookingBlock.isFullDay ? 'yes' : 'no'}
+                            onChange={(event) =>
+                              updateNewBookingBlock(
+                                'isFullDay',
+                                event.target.value === 'yes',
+                              )
+                            }
+                          >
+                            <option value="no">No, block selected times</option>
+                            <option value="yes">Yes, block the full day</option>
+                          </select>
+                        </label>
+
+                        {!newBookingBlock.isFullDay ? (
+                          <>
+                            <label>
+                              <span>Starts</span>
+                              <input
+                                className="settings-simple-input"
+                                type="time"
+                                value={newBookingBlock.startTime}
+                                onChange={(event) =>
+                                  updateNewBookingBlock('startTime', event.target.value)
+                                }
+                              />
+                            </label>
+
+                            <label>
+                              <span>Ends</span>
+                              <input
+                                className="settings-simple-input"
+                                type="time"
+                                value={newBookingBlock.endTime}
+                                onChange={(event) =>
+                                  updateNewBookingBlock('endTime', event.target.value)
+                                }
+                              />
+                            </label>
+                          </>
+                        ) : null}
+
+                        <label className="is-wide">
+                          <span>Reason optional</span>
+                          <input
+                            className="settings-simple-input"
+                            value={newBookingBlock.reason}
+                            onChange={(event) =>
+                              updateNewBookingBlock('reason', event.target.value)
+                            }
+                            placeholder="Example: Private event"
+                          />
+                        </label>
+
+                        <button type="button" onClick={addBookingBlock}>
+                          Add blocked time
+                        </button>
+                      </div>
+
+                      {bookingBlocks.length > 0 ? (
+                        <div className="settings-smilez-block-list">
+                          {bookingBlocks.map((block) => (
+                            <article key={block.id}>
+                              <div>
+                                <strong>{formatBookingBlockDate(block.block_date)}</strong>
+                                <span>{formatBookingBlockDisplay(block)}</span>
+                                {block.reason ? <em>{block.reason}</em> : null}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeBookingBlock(block.id)}
+                              >
+                                Remove
+                              </button>
+                            </article>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="settings-field-help">
+                          No blocked dates or times added yet.
+                        </p>
+                      )}
+                    </section>
                   </section>
                 ) : null}
               </>
