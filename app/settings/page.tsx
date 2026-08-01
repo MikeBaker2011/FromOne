@@ -4159,7 +4159,188 @@ export default function SettingsPage() {
             }
           }
         `}</style>
-      </main>
+      
+        <style jsx global>{`
+          .fromone-settings-page .booking-blocked-panel-v2 {
+            width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            display: grid !important;
+            gap: 18px !important;
+            padding: 22px !important;
+            border: 1px solid rgba(7, 27, 73, 0.1) !important;
+            border-radius: 20px !important;
+            background: #ffffff !important;
+            box-shadow: 0 12px 30px rgba(7, 27, 73, 0.045) !important;
+          }
+
+          .fromone-settings-page .booking-blocked-panel-v2 .settings-smilez-card-head {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 14px !important;
+            flex-wrap: wrap !important;
+          }
+
+          .fromone-settings-page .booking-blocked-panel-v2 .settings-smilez-card-head h4 {
+            margin: 6px 0 0 !important;
+            color: #071b49 !important;
+            font-size: 1.15rem !important;
+            letter-spacing: -0.025em !important;
+          }
+
+          .fromone-settings-page .booking-blocked-panel-v2 .settings-smilez-card-head > strong {
+            display: inline-flex !important;
+            align-items: center !important;
+            min-height: 34px !important;
+            padding: 0 12px !important;
+            border: 1px solid rgba(7, 27, 73, 0.1) !important;
+            border-radius: 999px !important;
+            background: #f6f8fc !important;
+            color: #647087 !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+          }
+
+          .fromone-settings-page .booking-blocked-quick-v2 {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            width: 100% !important;
+          }
+
+          .fromone-settings-page .booking-blocked-quick-v2 button {
+            min-height: 42px !important;
+            padding: 0 16px !important;
+            border: 1px solid rgba(247, 37, 133, 0.22) !important;
+            border-radius: 12px !important;
+            background: #fff4f9 !important;
+            color: #d91872 !important;
+            box-shadow: none !important;
+            font: inherit !important;
+            font-size: 0.78rem !important;
+            font-weight: 900 !important;
+            cursor: pointer !important;
+          }
+
+          .fromone-settings-page .booking-blocked-form-v2 {
+            width: 100% !important;
+            min-width: 0 !important;
+            display: grid !important;
+            grid-template-columns:
+              minmax(155px, 0.8fr)
+              minmax(240px, 1.25fr)
+              minmax(145px, 0.7fr)
+              minmax(145px, 0.7fr) !important;
+            gap: 12px !important;
+            align-items: end !important;
+          }
+
+          .fromone-settings-page .booking-blocked-form-v2 label,
+          .fromone-settings-page .booking-blocked-form-v2 label.is-wide {
+            min-width: 0 !important;
+            display: grid !important;
+            grid-column: auto !important;
+            gap: 7px !important;
+            color: #071b49 !important;
+            font-size: 0.79rem !important;
+            font-weight: 900 !important;
+          }
+
+          .fromone-settings-page .booking-blocked-form-v2 label.is-wide {
+            grid-column: span 3 !important;
+          }
+
+          .fromone-settings-page .booking-blocked-form-v2 .settings-simple-input {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 48px !important;
+            box-sizing: border-box !important;
+            padding: 0 14px !important;
+            border: 1px solid rgba(7, 27, 73, 0.15) !important;
+            border-radius: 13px !important;
+            background-color: #ffffff !important;
+            color: #071b49 !important;
+            font: inherit !important;
+            font-size: 0.88rem !important;
+            font-weight: 800 !important;
+            outline: none !important;
+          }
+
+          .fromone-settings-page .booking-blocked-form-v2 select.settings-simple-input {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            padding-right: 42px !important;
+            background-image:
+              linear-gradient(45deg, transparent 50%, #647087 50%),
+              linear-gradient(135deg, #647087 50%, transparent 50%) !important;
+            background-position:
+              calc(100% - 19px) 21px,
+              calc(100% - 14px) 21px !important;
+            background-size: 5px 5px, 5px 5px !important;
+            background-repeat: no-repeat !important;
+          }
+
+          .fromone-settings-page .booking-blocked-form-v2 .settings-simple-input:focus {
+            border-color: #f72585 !important;
+            box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1) !important;
+          }
+
+          .fromone-settings-page .booking-blocked-form-v2 > button {
+            width: 100% !important;
+            min-height: 48px !important;
+            padding: 0 18px !important;
+            border: 0 !important;
+            border-radius: 13px !important;
+            background: linear-gradient(135deg, #f72585, #ff9f1c) !important;
+            color: #ffffff !important;
+            font: inherit !important;
+            font-size: 0.84rem !important;
+            font-weight: 950 !important;
+            cursor: pointer !important;
+            box-shadow: 0 11px 24px rgba(247, 37, 133, 0.18) !important;
+          }
+
+          @media (max-width: 1050px) {
+            .fromone-settings-page .booking-blocked-form-v2 {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+
+            .fromone-settings-page .booking-blocked-form-v2 label.is-wide {
+              grid-column: 1 / -1 !important;
+            }
+          }
+
+          @media (max-width: 720px) {
+            .fromone-settings-page .booking-blocked-panel-v2 {
+              padding: 16px !important;
+              border-radius: 17px !important;
+            }
+
+            .fromone-settings-page .booking-blocked-form-v2 {
+              grid-template-columns: 1fr !important;
+            }
+
+            .fromone-settings-page .booking-blocked-form-v2 label,
+            .fromone-settings-page .booking-blocked-form-v2 label.is-wide,
+            .fromone-settings-page .booking-blocked-form-v2 > button {
+              grid-column: 1 !important;
+              width: 100% !important;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .fromone-settings-page .booking-blocked-quick-v2 {
+              display: grid !important;
+              grid-template-columns: 1fr !important;
+            }
+
+            .fromone-settings-page .booking-blocked-quick-v2 button {
+              width: 100% !important;
+            }
+          }
+        `}</style>
+</main>
     );
   }
 
