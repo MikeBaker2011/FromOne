@@ -262,6 +262,9 @@ export default function SettingsPage() {
   const [settingsMode, setSettingsMode] = useState<'simple' | 'advanced'>('simple');
   const [activeImageTab, setActiveImageTab] = useState<'main' | 'gallery'>('main');
   const [activeSettingsTab, setActiveSettingsTab] = useState<'business' | 'smilez'>('business');
+  const [simpleSettingsSection, setSimpleSettingsSection] = useState<
+    'business' | 'images' | 'bookings' | 'connections'
+  >('business');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -2351,7 +2354,7 @@ export default function SettingsPage() {
   if (settingsMode === 'simple') {
     return (
       <main
-        className="fromone-posts-page fromone-settings-page settings-simple-business-page"
+        className="fromone-posts-page fromone-settings-page settings-simple-business-page settings-redesign-v2"
         data-settings-page="simple-business-v1"
       >
       <BackToDashboardButton />
@@ -2365,6 +2368,51 @@ export default function SettingsPage() {
             </p>
           </header>
 
+          <nav
+            className="settings-redesign-nav"
+            aria-label="Settings sections"
+          >
+            {[
+              {
+                id: 'business' as const,
+                label: 'Business',
+                helper: 'Details and location',
+              },
+              {
+                id: 'images' as const,
+                label: 'Images',
+                helper: 'Main image and gallery',
+              },
+              {
+                id: 'bookings' as const,
+                label: 'Bookings',
+                helper: 'Hours and capacity',
+              },
+              {
+                id: 'connections' as const,
+                label: 'Connections',
+                helper: 'Facebook and Instagram',
+              },
+            ].map((item) => {
+              const active = simpleSettingsSection === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={active ? 'is-active' : ''}
+                  aria-current={active ? 'page' : undefined}
+                  onClick={() => setSimpleSettingsSection(item.id)}
+                >
+                  <strong>{item.label}</strong>
+                  <small>{item.helper}</small>
+                </button>
+              );
+            })}
+          </nav>
+
+          {simpleSettingsSection === 'business' ? (
+            <div className="settings-redesign-section">
           <section className="settings-simple-card settings-simple-scan-card">
             <div className="settings-simple-card-heading">
               <div>
@@ -2550,6 +2598,11 @@ export default function SettingsPage() {
             </div>
           </section>
 
+            </div>
+          ) : null}
+
+          {simpleSettingsSection === 'images' ? (
+            <div className="settings-redesign-section">
           <section className="settings-simple-card">
             <div className="settings-simple-card-heading">
               <div>
@@ -2717,6 +2770,11 @@ export default function SettingsPage() {
             )}
           </section>
 
+            </div>
+          ) : null}
+
+          {simpleSettingsSection === 'bookings' ? (
+            <div className="settings-redesign-section">
           <section className="settings-simple-card">
             <div className="settings-simple-card-heading">
               <div>
@@ -3628,6 +3686,11 @@ export default function SettingsPage() {
             ) : null}
           </section>
 
+            </div>
+          ) : null}
+
+          {simpleSettingsSection === 'connections' ? (
+            <div className="settings-redesign-section">
           <section className="settings-simple-card settings-simple-connect-card">
             <div>
               <span>Social accounts</span>
@@ -3655,7 +3718,10 @@ export default function SettingsPage() {
             )}
           </section>
 
-          <div className="settings-simple-save-bar">
+            </div>
+          ) : null}
+
+          <div className="settings-simple-save-bar settings-redesign-save-bar">
             <div>
               <strong>One profile, used everywhere</strong>
               <span>Postcode lookup, map coordinates and Smilez syncing happen automatically.</span>
@@ -4336,6 +4402,619 @@ export default function SettingsPage() {
             }
 
             .fromone-settings-page .booking-blocked-quick-v2 button {
+              width: 100% !important;
+            }
+          }
+        `}</style>
+
+        <style jsx global>{`
+          .settings-redesign-v2 {
+            --settings-navy: #071b49;
+            --settings-pink: #f72585;
+            --settings-soft-pink: #fff4f9;
+            --settings-border: rgba(7, 27, 73, 0.1);
+            --settings-muted: #647087;
+            width: 100%;
+            min-width: 0;
+            overflow-x: hidden;
+          }
+
+          .settings-redesign-v2 *,
+          .settings-redesign-v2 *::before,
+          .settings-redesign-v2 *::after {
+            box-sizing: border-box;
+          }
+
+          .settings-redesign-v2 .settings-simple-business-shell {
+            width: min(1180px, calc(100% - 40px));
+            margin: 0 auto;
+            padding-bottom: 120px;
+          }
+
+          .settings-redesign-v2 .settings-simple-business-header {
+            max-width: 760px;
+            margin-bottom: 22px;
+          }
+
+          .settings-redesign-v2 .settings-simple-business-header h1 {
+            margin: 6px 0 8px;
+            color: var(--settings-navy);
+            font-size: clamp(2.5rem, 6vw, 4.6rem);
+            line-height: 0.96;
+            letter-spacing: -0.055em;
+          }
+
+          .settings-redesign-v2 .settings-simple-business-header p {
+            margin: 0;
+            color: var(--settings-muted);
+            font-size: 0.96rem;
+            font-weight: 700;
+            line-height: 1.6;
+          }
+
+          .settings-redesign-v2 .settings-redesign-nav {
+            position: sticky;
+            top: 74px;
+            z-index: 20;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 18px;
+            padding: 7px;
+            border: 1px solid var(--settings-border);
+            border-radius: 18px;
+            background: rgba(247, 249, 253, 0.96);
+            box-shadow: 0 12px 30px rgba(7, 27, 73, 0.08);
+            backdrop-filter: blur(16px);
+          }
+
+          .settings-redesign-v2 .settings-redesign-nav button {
+            min-width: 0;
+            min-height: 62px;
+            display: grid;
+            place-items: center;
+            gap: 2px;
+            padding: 9px 12px;
+            border: 1px solid transparent;
+            border-radius: 13px;
+            background: transparent;
+            color: var(--settings-muted);
+            font: inherit;
+            cursor: pointer;
+            transition:
+              border-color 160ms ease,
+              background-color 160ms ease,
+              color 160ms ease,
+              box-shadow 160ms ease,
+              transform 160ms ease;
+          }
+
+          .settings-redesign-v2 .settings-redesign-nav button:hover {
+            background: rgba(255, 255, 255, 0.76);
+            color: var(--settings-navy);
+          }
+
+          .settings-redesign-v2 .settings-redesign-nav button.is-active {
+            border-color: rgba(247, 37, 133, 0.22);
+            background: #ffffff;
+            color: var(--settings-navy);
+            box-shadow: 0 9px 24px rgba(7, 27, 73, 0.09);
+          }
+
+          .settings-redesign-v2 .settings-redesign-nav strong {
+            font-size: 0.82rem;
+            font-weight: 950;
+          }
+
+          .settings-redesign-v2 .settings-redesign-nav small {
+            font-size: 0.66rem;
+            font-weight: 750;
+          }
+
+          .settings-redesign-v2 .settings-redesign-section {
+            display: grid;
+            gap: 16px;
+            animation: settingsSectionIn 180ms ease;
+          }
+
+          @keyframes settingsSectionIn {
+            from {
+              opacity: 0;
+              transform: translateY(4px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .settings-redesign-v2 .settings-simple-card {
+            width: 100%;
+            min-width: 0;
+            padding: 24px;
+            border: 1px solid var(--settings-border);
+            border-radius: 22px;
+            background: #ffffff;
+            box-shadow: 0 14px 38px rgba(7, 27, 73, 0.055);
+          }
+
+          .settings-redesign-v2 .settings-simple-card-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+          }
+
+          .settings-redesign-v2 .settings-simple-card-heading h2 {
+            margin: 5px 0 0;
+            color: var(--settings-navy);
+            font-size: clamp(1.35rem, 3vw, 1.9rem);
+            letter-spacing: -0.04em;
+          }
+
+          .settings-redesign-v2 .settings-simple-card-heading > div > span,
+          .settings-redesign-v2 .settings-simple-connect-card > div > span {
+            color: var(--settings-pink);
+            font-size: 0.68rem;
+            font-weight: 950;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }
+
+          .settings-redesign-v2 .settings-simple-card-heading > small {
+            color: var(--settings-muted);
+            font-size: 0.75rem;
+            font-weight: 750;
+          }
+
+          .settings-redesign-v2 .settings-simple-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+          }
+
+          .settings-redesign-v2 .settings-simple-wide {
+            grid-column: 1 / -1;
+          }
+
+          .settings-redesign-v2 label {
+            min-width: 0;
+          }
+
+          .settings-redesign-v2 label > strong,
+          .settings-redesign-v2 label > span {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--settings-navy);
+            font-size: 0.78rem;
+            font-weight: 900;
+          }
+
+          .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]),
+          .settings-redesign-v2 select,
+          .settings-redesign-v2 textarea {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            border: 1px solid rgba(7, 27, 73, 0.14);
+            border-radius: 13px;
+            background: #ffffff;
+            color: var(--settings-navy);
+            font: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            outline: none;
+            transition:
+              border-color 160ms ease,
+              box-shadow 160ms ease,
+              background-color 160ms ease;
+          }
+
+          .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]),
+          .settings-redesign-v2 select {
+            min-height: 48px;
+            padding: 0 14px;
+          }
+
+          .settings-redesign-v2 textarea {
+            min-height: 102px;
+            padding: 13px 14px;
+            line-height: 1.5;
+            resize: vertical;
+          }
+
+          .settings-redesign-v2 select {
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 42px;
+            background-image:
+              linear-gradient(45deg, transparent 50%, #647087 50%),
+              linear-gradient(135deg, #647087 50%, transparent 50%);
+            background-position:
+              calc(100% - 19px) 21px,
+              calc(100% - 14px) 21px;
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+          }
+
+          .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]):hover,
+          .settings-redesign-v2 select:hover,
+          .settings-redesign-v2 textarea:hover {
+            border-color: rgba(7, 27, 73, 0.26);
+            background: #fbfcff;
+          }
+
+          .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]):focus,
+          .settings-redesign-v2 select:focus,
+          .settings-redesign-v2 textarea:focus {
+            border-color: var(--settings-pink);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1);
+          }
+
+          .settings-redesign-v2 .settings-simple-scan-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: end;
+          }
+
+          .settings-redesign-v2 .settings-simple-primary,
+          .settings-redesign-v2 .settings-simple-secondary,
+          .settings-redesign-v2 .settings-simple-upload,
+          .settings-redesign-v2 .settings-smilez-block-form > button {
+            min-height: 46px;
+            padding: 0 18px;
+            border-radius: 12px;
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 950;
+            cursor: pointer;
+          }
+
+          .settings-redesign-v2 .settings-simple-primary,
+          .settings-redesign-v2 .settings-simple-upload,
+          .settings-redesign-v2 .settings-smilez-block-form > button {
+            border: 1px solid var(--settings-pink);
+            background: var(--settings-pink);
+            color: #ffffff;
+            box-shadow: 0 10px 24px rgba(247, 37, 133, 0.18);
+          }
+
+          .settings-redesign-v2 .settings-simple-secondary {
+            border: 1px solid rgba(7, 27, 73, 0.12);
+            background: #ffffff;
+            color: var(--settings-navy);
+          }
+
+          .settings-redesign-v2 .settings-simple-geo-card,
+          .settings-redesign-v2 .settings-simple-toggle {
+            border: 1px solid rgba(7, 27, 73, 0.08);
+            border-radius: 16px;
+            background: #f7f9fc;
+          }
+
+          .settings-redesign-v2 .settings-simple-geo-card {
+            padding: 16px;
+          }
+
+          .settings-redesign-v2 .settings-simple-geo-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+          }
+
+          .settings-redesign-v2 .settings-simple-geo-values {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+          }
+
+          .settings-redesign-v2 .settings-image-tabs,
+          .settings-redesign-v2 .settings-booking-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px;
+            margin-bottom: 18px;
+            padding: 6px;
+            border: 1px solid var(--settings-border);
+            border-radius: 16px;
+            background: #eef2f8;
+          }
+
+          .settings-redesign-v2 .settings-booking-tabs {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+
+          .settings-redesign-v2 .settings-image-tabs button,
+          .settings-redesign-v2 .settings-booking-tabs button {
+            min-width: 0;
+            min-height: 52px;
+            border: 1px solid transparent;
+            border-radius: 11px;
+            background: transparent;
+            color: var(--settings-muted);
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 900;
+            cursor: pointer;
+          }
+
+          .settings-redesign-v2 .settings-image-tabs button.is-active,
+          .settings-redesign-v2 .settings-booking-tabs button[aria-selected="true"] {
+            border-color: rgba(247, 37, 133, 0.22);
+            background: #ffffff;
+            color: var(--settings-navy);
+            box-shadow: 0 8px 20px rgba(7, 27, 73, 0.08);
+          }
+
+          .settings-redesign-v2 .settings-simple-image-row {
+            display: grid;
+            grid-template-columns: 92px minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+          }
+
+          .settings-redesign-v2 .settings-simple-image-row > img {
+            width: 92px;
+            height: 72px;
+            border-radius: 14px;
+            object-fit: cover;
+          }
+
+          .settings-redesign-v2 .settings-image-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+
+          .settings-redesign-v2 .settings-simple-booking-hours {
+            width: 100%;
+            min-width: 0;
+            padding: 20px !important;
+            border-radius: 18px !important;
+          }
+
+          .settings-redesign-v2 .settings-smilez-capacity-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+            gap: 12px !important;
+          }
+
+          .settings-redesign-v2 .settings-smilez-day-cards {
+            display: grid !important;
+            grid-template-columns: repeat(7, minmax(98px, 1fr)) !important;
+            gap: 8px !important;
+            overflow-x: auto;
+            padding-bottom: 4px;
+          }
+
+          .settings-redesign-v2 .settings-smilez-day-cards > * {
+            min-width: 98px;
+          }
+
+          .settings-redesign-v2 .booking-blocked-form-v2 {
+            display: grid !important;
+            grid-template-columns:
+              minmax(150px, 0.8fr)
+              minmax(220px, 1.2fr)
+              minmax(140px, 0.7fr)
+              minmax(140px, 0.7fr) !important;
+            gap: 12px !important;
+            align-items: end !important;
+          }
+
+          .settings-redesign-v2 .booking-blocked-form-v2 label,
+          .settings-redesign-v2 .booking-blocked-form-v2 label.is-wide {
+            display: grid !important;
+            grid-column: auto !important;
+            gap: 7px !important;
+          }
+
+          .settings-redesign-v2 .booking-blocked-form-v2 label.is-wide {
+            grid-column: span 3 !important;
+          }
+
+          .settings-redesign-v2 .booking-blocked-quick-v2 {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+          }
+
+          .settings-redesign-v2 .booking-blocked-quick-v2 button {
+            min-height: 40px !important;
+            padding: 0 14px !important;
+            border: 1px solid rgba(247, 37, 133, 0.2) !important;
+            border-radius: 11px !important;
+            background: var(--settings-soft-pink) !important;
+            color: #d91872 !important;
+            box-shadow: none !important;
+            font: inherit !important;
+            font-size: 0.76rem !important;
+            font-weight: 900 !important;
+          }
+
+          .settings-redesign-v2 .settings-simple-connect-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+          }
+
+          .settings-redesign-v2 .settings-redesign-save-bar {
+            position: sticky;
+            bottom: 14px;
+            z-index: 25;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 18px;
+            padding: 14px 16px;
+            border: 1px solid rgba(7, 27, 73, 0.1);
+            border-radius: 17px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 16px 38px rgba(7, 27, 73, 0.14);
+            backdrop-filter: blur(16px);
+          }
+
+          .settings-redesign-v2 .settings-redesign-save-bar > div {
+            min-width: 0;
+            display: grid;
+            gap: 3px;
+          }
+
+          .settings-redesign-v2 .settings-redesign-save-bar strong {
+            color: var(--settings-navy);
+          }
+
+          .settings-redesign-v2 .settings-redesign-save-bar span {
+            color: var(--settings-muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+          }
+
+          @media (max-width: 980px) {
+            .settings-redesign-v2 .settings-redesign-nav {
+              top: 64px;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .settings-redesign-v2 .booking-blocked-form-v2 {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+
+            .settings-redesign-v2 .booking-blocked-form-v2 label.is-wide {
+              grid-column: 1 / -1 !important;
+            }
+
+            .settings-redesign-v2 .settings-smilez-day-cards {
+              grid-template-columns: repeat(4, minmax(105px, 1fr)) !important;
+            }
+          }
+
+          @media (max-width: 720px) {
+            .settings-redesign-v2 .settings-simple-business-shell {
+              width: min(100%, calc(100% - 24px));
+              padding-bottom: 104px;
+            }
+
+            .settings-redesign-v2 .settings-redesign-nav {
+              position: static;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .settings-redesign-v2 .settings-simple-card {
+              padding: 17px;
+              border-radius: 18px;
+            }
+
+            .settings-redesign-v2 .settings-simple-grid,
+            .settings-redesign-v2 .settings-simple-geo-values,
+            .settings-redesign-v2 .settings-simple-scan-row {
+              grid-template-columns: 1fr;
+            }
+
+            .settings-redesign-v2 .settings-simple-wide {
+              grid-column: 1;
+            }
+
+            .settings-redesign-v2 .settings-simple-scan-row > button,
+            .settings-redesign-v2 .settings-simple-full-width-button {
+              width: 100%;
+            }
+
+            .settings-redesign-v2 .settings-simple-image-row {
+              grid-template-columns: 72px minmax(0, 1fr);
+            }
+
+            .settings-redesign-v2 .settings-simple-image-row > img {
+              width: 72px;
+              height: 62px;
+            }
+
+            .settings-redesign-v2 .settings-image-actions {
+              grid-column: 1 / -1;
+              display: grid;
+              grid-template-columns: 1fr;
+            }
+
+            .settings-redesign-v2 .settings-booking-tabs {
+              grid-template-columns: 1fr;
+            }
+
+            .settings-redesign-v2 .settings-smilez-day-cards {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+              overflow: visible;
+            }
+
+            .settings-redesign-v2 .settings-smilez-day-cards > * {
+              min-width: 0;
+            }
+
+            .settings-redesign-v2 .booking-blocked-form-v2 {
+              grid-template-columns: 1fr !important;
+            }
+
+            .settings-redesign-v2 .booking-blocked-form-v2 label,
+            .settings-redesign-v2 .booking-blocked-form-v2 label.is-wide,
+            .settings-redesign-v2 .booking-blocked-form-v2 > button {
+              grid-column: 1 !important;
+              width: 100% !important;
+            }
+
+            .settings-redesign-v2 .settings-simple-connect-card {
+              display: grid;
+              grid-template-columns: 1fr;
+            }
+
+            .settings-redesign-v2 .settings-simple-connect-card button {
+              width: 100%;
+            }
+
+            .settings-redesign-v2 .settings-redesign-save-bar {
+              display: grid;
+              grid-template-columns: 1fr;
+              bottom: 8px;
+            }
+
+            .settings-redesign-v2 .settings-redesign-save-bar button {
+              width: 100%;
+            }
+
+            .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]),
+            .settings-redesign-v2 select,
+            .settings-redesign-v2 textarea {
+              font-size: 16px;
+            }
+          }
+
+          @media (max-width: 420px) {
+            .settings-redesign-v2 .settings-simple-business-shell {
+              width: min(100%, calc(100% - 16px));
+            }
+
+            .settings-redesign-v2 .settings-redesign-nav {
+              grid-template-columns: 1fr;
+            }
+
+            .settings-redesign-v2 .settings-image-tabs {
+              grid-template-columns: 1fr;
+            }
+
+            .settings-redesign-v2 .booking-blocked-quick-v2 {
+              display: grid !important;
+              grid-template-columns: 1fr !important;
+            }
+
+            .settings-redesign-v2 .booking-blocked-quick-v2 button {
               width: 100% !important;
             }
           }
