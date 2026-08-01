@@ -1,6 +1,3 @@
-'use client';
-
-
 import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '@/app/components/ToastProvider';
@@ -2191,8 +2188,8 @@ export default function SettingsPage() {
     try {
       const freshUserId = await getFreshAuthUserId();
       const description =
-        brandSummary.trim() ||
         services.trim() ||
+        brandSummary.trim() ||
         mainOffer.trim() ||
         `${businessName.trim()} is a local ${industry.trim()} business.`;
 
@@ -2734,12 +2731,16 @@ export default function SettingsPage() {
               </label>
 
               <label className="settings-simple-wide">
-                <strong>What do you offer?</strong>
+                <strong>About your business</strong>
+                <span className="settings-field-help">
+                  This customer-facing introduction appears in the About section of your Smilez venue page.
+                </span>
                 <textarea
                   value={services}
                   onChange={(event) => setServices(event.target.value)}
-                  placeholder="Coffee, lunches, haircuts, private events..."
-                  rows={3}
+                  placeholder="Describe what customers can enjoy and the atmosphere."
+                  rows={4}
+                  maxLength={800}
                 />
               </label>
 
