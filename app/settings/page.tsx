@@ -200,6 +200,7 @@ export default function SettingsPage() {
   const [bookingHours, setBookingHours] =
     useState<WeeklyBookingHour[]>(defaultBookingHours);
   const [selectedBookingDay, setSelectedBookingDay] = useState(1);
+  const [selectedOpeningHoursDay, setSelectedOpeningHoursDay] = useState(1);
   const [bookingSettingsTab, setBookingSettingsTab] = useState<
     'hours' | 'capacity' | 'blocked'
   >('hours');
@@ -662,6 +663,158 @@ export default function SettingsPage() {
     const closesAt = normaliseTime(row.closes_at);
 
     return opensAt && closesAt ? `${opensAt}-${closesAt}` : 'Not set';
+  };
+
+  const openingHoursTimeOptions = Array.from({ length: 48 }, (_, index) => {
+    const minutes = index * 30;
+    const hour = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+    const value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    const date = new Date(2020, 0, 1, hour, minute);
+
+    return {
+      value,
+      label: new Intl.DateTimeFormat('en-GB', {
+        hour: 'numeric',
+        minute: '2-digit',
+      }).format(date),
+    };
+  });
+
+  const parseOpeningHoursTime = (value: string) => {
+    const clean = value.trim().toLowerCase().replace(/\./g, '');
+
+    if (/^\d{1,2}:\d{2}$/.test(clean)) {
+      const [hourText, minuteText] = clean.split(':');
+      const hour = Number(hourText);
+      const minute = Number(minuteText);
+
+      if (
+        Number.isInteger(hour) &&
+        Number.isInteger(minute) &&
+        hour >= 0 &&
+        hour <= 23 &&
+        minute >= 0 &&
+        minute <= 59
+      ) {
+        return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+      }
+    }
+
+    const match = clean.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
+
+    if (!match) return '';
+
+    let hour = Number(match[1]);
+    const minute = Number(match[2] || '0');
+    const period = match[3];
+
+    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return '';
+
+    if (period === 'am') {
+      if (hour === 12) hour = 0;
+    } else if (hour !== 12) {
+      hour += 12;
+    }
+
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  };
+
+  const getOpeningHoursForDay = (dayOfWeek: number) => {
+    const day = dayLabels[dayOfWeek];
+    const line = openingHours
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .find((item) => item.toLowerCase().startsWith(day.toLowerCase()));
+
+    if (!line) {
+      return {
+        isClosed: false,
+        opensAt: '09:00',
+        closesAt: '17:00',
+      };
+    }
+
+    const remainder = line.slice(day.length).trim();
+
+    if (/closed/i.test(remainder)) {
+      return {
+        isClosed: true,
+        opensAt: '09:00',
+        closesAt: '17:00',
+      };
+    }
+
+    const parts = remainder
+      .split(/\s*[–—-]\s*/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return {
+      isClosed: false,
+      opensAt: parseOpeningHoursTime(parts[0] || '') || '09:00',
+      closesAt: parseOpeningHoursTime(parts[1] || '') || '17:00',
+    };
+  };
+
+  const formatOpeningHoursTime = (value: string) => {
+    const [hourText, minuteText] = value.split(':');
+    const hour = Number(hourText);
+    const minute = Number(minuteText);
+
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)) return value;
+
+    return new Intl.DateTimeFormat('en-GB', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(2020, 0, 1, hour, minute));
+  };
+
+  const updateOpeningHoursDay = (
+    dayOfWeek: number,
+    next: {
+      isClosed?: boolean;
+      opensAt?: string;
+      closesAt?: string;
+    },
+  ) => {
+    const current = getOpeningHoursForDay(dayOfWeek);
+    const updated = {
+      ...current,
+      ...next,
+    };
+    const day = dayLabels[dayOfWeek];
+    const newLine = updated.isClosed
+      ? `${day} Closed`
+      : `${day} ${formatOpeningHoursTime(updated.opensAt)}-${formatOpeningHoursTime(
+          updated.closesAt,
+        )}`;
+
+    const existingLines = openingHours
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const otherLines = existingLines.filter(
+      (item) => !item.toLowerCase().startsWith(day.toLowerCase()),
+    );
+    const linesByDay = new Map<number, string>();
+
+    for (const line of [...otherLines, newLine]) {
+      const index = dayLabels.findIndex((label) =>
+        line.toLowerCase().startsWith(label.toLowerCase()),
+      );
+
+      if (index >= 0) {
+        linesByDay.set(index, line);
+      }
+    }
+
+    setOpeningHours(
+      dayLabels
+        .map((_, index) => linesByDay.get(index))
+        .filter(Boolean)
+        .join('\n'),
+    );
   };
 
   const formatBookingBlockDate = (value: string) => {
@@ -1479,7 +1632,7 @@ export default function SettingsPage() {
           clientName: businessName || 'the business',
           industry: industry || 'general business',
           description:
-            'Scan this website and return a business profile only. The posts can be ignored on this settings page.',
+            'Scan this website and return a business profile only. Write main_offer and brand_summary as concise customer-facing venue copy describing what the business is, what customers can enjoy, and the atmosphere. Do not include marketing objectives, internal business goals, awareness, enquiries, trust-building, lead generation, growth targets, or advice to the owner. The posts can be ignored on this settings page.',
           selectedPlatforms: ['Facebook'],
           platforms: ['Facebook'],
           marketReach: location ? `Local customers in and around ${location}` : 'Local customers',
@@ -2038,9 +2191,9 @@ export default function SettingsPage() {
     try {
       const freshUserId = await getFreshAuthUserId();
       const description =
+        mainOffer.trim() ||
         brandSummary.trim() ||
         services.trim() ||
-        mainOffer.trim() ||
         `${businessName.trim()} is a local ${industry.trim()} business.`;
 
       const response = await fetch('/api/smiles/publish', {
@@ -2597,18 +2750,114 @@ export default function SettingsPage() {
                     <strong>Opening times shown on your Smilez profile</strong>
                   </div>
                   <p>
-                    Add the general opening times customers should see on your
-                    business profile. Booking availability is managed separately.
+                    Choose a day, then set the public opening and closing time.
+                    Booking availability is managed separately.
                   </p>
                 </div>
 
-                <textarea
-                  value={openingHours}
-                  onChange={(event) => setOpeningHours(event.target.value)}
-                  placeholder="Example: Mon-Fri 9am-5pm, Sat 10am-4pm"
-                  rows={3}
-                  aria-label="Business opening hours"
-                />
+                {(() => {
+                  const selectedHours =
+                    getOpeningHoursForDay(selectedOpeningHoursDay);
+
+                  return (
+                    <div className="settings-opening-hours-editor-v5">
+                      <label>
+                        <span>Day</span>
+                        <select
+                          value={selectedOpeningHoursDay}
+                          onChange={(event) =>
+                            setSelectedOpeningHoursDay(Number(event.target.value))
+                          }
+                        >
+                          {dayLabels.map((label, index) => (
+                            <option key={label} value={index}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="settings-opening-hours-closed-v5">
+                        <input
+                          type="checkbox"
+                          checked={selectedHours.isClosed}
+                          onChange={(event) =>
+                            updateOpeningHoursDay(selectedOpeningHoursDay, {
+                              isClosed: event.target.checked,
+                            })
+                          }
+                        />
+                        <span>Closed this day</span>
+                      </label>
+
+                      {!selectedHours.isClosed ? (
+                        <>
+                          <label>
+                            <span>Opens</span>
+                            <select
+                              value={selectedHours.opensAt}
+                              onChange={(event) =>
+                                updateOpeningHoursDay(selectedOpeningHoursDay, {
+                                  opensAt: event.target.value,
+                                })
+                              }
+                            >
+                              {openingHoursTimeOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span>Closes</span>
+                            <select
+                              value={selectedHours.closesAt}
+                              onChange={(event) =>
+                                updateOpeningHoursDay(selectedOpeningHoursDay, {
+                                  closesAt: event.target.value,
+                                })
+                              }
+                            >
+                              {openingHoursTimeOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </>
+                      ) : null}
+                    </div>
+                  );
+                })()}
+
+                <div className="settings-opening-hours-summary-v5">
+                  {dayLabels.map((label, index) => {
+                    const hours = getOpeningHoursForDay(index);
+
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        className={
+                          selectedOpeningHoursDay === index ? 'is-active' : ''
+                        }
+                        onClick={() => setSelectedOpeningHoursDay(index)}
+                      >
+                        <strong>{shortDayLabels[index]}</strong>
+                        <span>
+                          {hours.isClosed
+                            ? 'Closed'
+                            : `${formatOpeningHoursTime(
+                                hours.opensAt,
+                              )}-${formatOpeningHoursTime(hours.closesAt)}`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
                 <button
                   type="button"
@@ -4708,6 +4957,112 @@ export default function SettingsPage() {
 
             .settings-redesign-v2 .settings-opening-hours-link-v4 {
               width: 100%;
+            }
+          }
+        `}</style>
+
+        <style jsx global>{`
+          .settings-redesign-v2 .settings-opening-hours-editor-v5 {
+            display: grid;
+            grid-template-columns:
+              minmax(170px, 1fr)
+              minmax(170px, auto)
+              minmax(160px, 0.9fr)
+              minmax(160px, 0.9fr);
+            gap: 12px;
+            align-items: end;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-editor-v5 > label {
+            min-width: 0;
+            display: grid;
+            gap: 7px;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-editor-v5 > label > span {
+            margin: 0;
+            color: #071b49;
+            font-size: 0.76rem;
+            font-weight: 900;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-closed-v5 {
+            min-height: 48px;
+            display: flex !important;
+            align-items: center;
+            gap: 8px !important;
+            padding: 0 13px;
+            border: 1px solid rgba(7, 27, 73, 0.12);
+            border-radius: 13px;
+            background: #ffffff;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-closed-v5 input {
+            width: 17px;
+            height: 17px;
+            flex: 0 0 auto;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-closed-v5 span {
+            margin: 0 !important;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-summary-v5 {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 7px;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-summary-v5 button {
+            min-width: 0;
+            min-height: 64px;
+            display: grid;
+            place-items: center;
+            gap: 3px;
+            padding: 8px 6px;
+            border: 1px solid rgba(7, 27, 73, 0.09);
+            border-radius: 11px;
+            background: #ffffff;
+            color: #647087;
+            font: inherit;
+            cursor: pointer;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-summary-v5 button.is-active {
+            border-color: rgba(247, 37, 133, 0.32);
+            background: #fff7fb;
+            color: #071b49;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-summary-v5 strong {
+            font-size: 0.72rem;
+            font-weight: 950;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-summary-v5 span {
+            margin: 0;
+            font-size: 0.64rem;
+            font-weight: 800;
+            text-align: center;
+          }
+
+          @media (max-width: 900px) {
+            .settings-redesign-v2 .settings-opening-hours-editor-v5 {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .settings-redesign-v2 .settings-opening-hours-summary-v5 {
+              grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+          }
+
+          @media (max-width: 620px) {
+            .settings-redesign-v2 .settings-opening-hours-editor-v5 {
+              grid-template-columns: 1fr;
+            }
+
+            .settings-redesign-v2 .settings-opening-hours-summary-v5 {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
             }
           }
         `}</style>
