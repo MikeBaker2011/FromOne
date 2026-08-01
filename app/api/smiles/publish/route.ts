@@ -4,12 +4,26 @@ import { createClient } from "@supabase/supabase-js";
 type SmilesDraftType = "venue" | "offer" | "event";
 type SmilesReferencePrefix = "OF" | "EV";
 
+type BookingCapacityRuleInput = {
+  id?: string;
+  day_of_week?: number | string;
+  dayOfWeek?: number | string;
+  start_time?: string;
+  startTime?: string;
+  end_time?: string;
+  endTime?: string;
+  max_covers?: number | string;
+  maxCovers?: number | string;
+};
+
 type BookingSettingsInput = {
   slot_interval_minutes?: number | string;
   max_covers_per_slot?: number | string;
   max_party_size?: number | string;
   minimum_notice_minutes?: number | string;
   advance_booking_days?: number | string;
+  capacity_rules?: BookingCapacityRuleInput[];
+  capacityRules?: BookingCapacityRuleInput[];
 };
 
 type BookingBlockInput = {
@@ -410,6 +424,67 @@ function getBookingSettings(body: SmilesPublishBody) {
   }
 
   return settings;
+}
+
+function getBookingCapacityRules(body: SmilesPublishBody) {
+  const suppliedSettings =
+    body.bookingSettings || body.booking_settings || {};
+  const supplied =
+    suppliedSettings.capacity_rules || suppliedSettings.capacityRules;
+
+  if (!Array.isArray(supplied)) {
+    return [];
+  }
+
+  const rules = supplied.map((rule) => {
+    const dayOfWeek = Number(rule.day_of_week ?? rule.dayOfWeek);
+    const startTime = cleanTime(rule.start_time ?? rule.startTime);
+    const endTime = cleanTime(rule.end_time ?? rule.endTime);
+    const maxCovers = Number(rule.max_covers ?? rule.maxCovers);
+
+    if (
+      !Number.isInteger(dayOfWeek) ||
+      dayOfWeek < 0 ||
+      dayOfWeek > 6 ||
+      !startTime ||
+      !endTime ||
+      startTime >= endTime ||
+      !Number.isInteger(maxCovers) ||
+      maxCovers < 1 ||
+      maxCovers > 200
+    ) {
+      throw new Error("An advanced booking capacity rule is not valid.");
+    }
+
+    return {
+      day_of_week: dayOfWeek,
+      start_time: startTime,
+      end_time: endTime,
+      max_covers: maxCovers,
+    };
+  });
+
+  const sortedRules = [...rules].sort(
+    (first, second) =>
+      first.day_of_week - second.day_of_week ||
+      first.start_time.localeCompare(second.start_time),
+  );
+
+  for (let index = 1; index < sortedRules.length; index += 1) {
+    const previous = sortedRules[index - 1];
+    const current = sortedRules[index];
+
+    if (
+      previous.day_of_week === current.day_of_week &&
+      current.start_time < previous.end_time
+    ) {
+      throw new Error(
+        "Advanced booking capacity rules cannot overlap on the same day.",
+      );
+    }
+  }
+
+  return rules;
 }
 
 function getBookingBlocks(body: SmilesPublishBody) {
@@ -1107,12 +1182,18 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
         firstText(body.bookingUrl, body.booking_url, profile?.booking_url)
       )
     : null;
+  const resolvedBookingSettings =
+    body.bookingSettings ||
+    body.booking_settings ||
+    profile?.booking_settings;
+
   const bookingSettings = getBookingSettings({
     ...body,
-    bookingSettings:
-      body.bookingSettings ||
-      body.booking_settings ||
-      profile?.booking_settings,
+    bookingSettings: resolvedBookingSettings,
+  });
+  const bookingCapacityRules = getBookingCapacityRules({
+    ...body,
+    bookingSettings: resolvedBookingSettings,
   });
   const bookingBlocks = getBookingBlocks({
     ...body,
@@ -1303,6 +1384,36 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
 
     if (settingsError) {
       throw new Error(settingsError.message);
+    }
+  }
+
+  const { error: deleteCapacityRulesError } = await smiles
+    .from("client_booking_capacity_rules")
+    .delete()
+    .eq("venue_id", smilesVenueId);
+
+  if (deleteCapacityRulesError) {
+    throw new Error(deleteCapacityRulesError.message);
+  }
+
+  if (bookingCapacityRules.length > 0) {
+    const { error: insertCapacityRulesError } = await smiles
+      .from("client_booking_capacity_rules")
+      .insert(
+        bookingCapacityRules.map((rule) => ({
+          client_id: smilesClientId || null,
+          venue_id: smilesVenueId,
+          day_of_week: rule.day_of_week,
+          start_time: rule.start_time,
+          end_time: rule.end_time,
+          max_covers: rule.max_covers,
+          created_at: now,
+          updated_at: now,
+        })),
+      );
+
+    if (insertCapacityRulesError) {
+      throw new Error(insertCapacityRulesError.message);
     }
   }
 
