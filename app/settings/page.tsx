@@ -4750,170 +4750,6 @@ export default function SettingsPage() {
                     })()}
                   </section>
 
-                  <section className="settings-smilez-blocks-card">
-                    <div className="settings-smilez-card-head">
-                      <div>
-                        <span>Blocked dates &amp; times</span>
-                        <h4>Unavailable slots</h4>
-                      </div>
-                      <strong>Optional</strong>
-                    </div>
-
-                    <div className="settings-smilez-quick-dates">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateNewBookingBlock(
-                            'blockDate',
-                            getTodayDateValue(),
-                          )
-                        }
-                      >
-                        Today
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateNewBookingBlock(
-                            'blockDate',
-                            getTomorrowDateValue(),
-                          )
-                        }
-                      >
-                        Tomorrow
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateNewBookingBlock(
-                            'blockDate',
-                            getNextSaturdayDateValue(),
-                          )
-                        }
-                      >
-                        Saturday
-                      </button>
-                    </div>
-
-                    <div className="settings-smilez-block-form">
-                      <label>
-                        <span>Date</span>
-                        <input
-                          className="settings-simple-input"
-                          type="date"
-                          value={newBookingBlock.blockDate}
-                          onChange={(event) =>
-                            updateNewBookingBlock(
-                              'blockDate',
-                              event.target.value,
-                            )
-                          }
-                        />
-                      </label>
-
-                      <label>
-                        <span>Full day?</span>
-                        <select
-                          className="settings-simple-input"
-                          value={
-                            newBookingBlock.isFullDay ? 'yes' : 'no'
-                          }
-                          onChange={(event) =>
-                            updateNewBookingBlock(
-                              'isFullDay',
-                              event.target.value === 'yes',
-                            )
-                          }
-                        >
-                          <option value="no">No, block times</option>
-                          <option value="yes">Yes, full day</option>
-                        </select>
-                      </label>
-
-                      {!newBookingBlock.isFullDay ? (
-                        <>
-                          <label>
-                            <span>Start</span>
-                            <input
-                              className="settings-simple-input"
-                              type="time"
-                              value={newBookingBlock.startTime}
-                              onChange={(event) =>
-                                updateNewBookingBlock(
-                                  'startTime',
-                                  event.target.value,
-                                )
-                              }
-                            />
-                          </label>
-
-                          <label>
-                            <span>End</span>
-                            <input
-                              className="settings-simple-input"
-                              type="time"
-                              value={newBookingBlock.endTime}
-                              onChange={(event) =>
-                                updateNewBookingBlock(
-                                  'endTime',
-                                  event.target.value,
-                                )
-                              }
-                            />
-                          </label>
-                        </>
-                      ) : null}
-
-                      <label className="is-wide">
-                        <span>Reason optional</span>
-                        <input
-                          className="settings-simple-input"
-                          value={newBookingBlock.reason}
-                          onChange={(event) =>
-                            updateNewBookingBlock(
-                              'reason',
-                              event.target.value,
-                            )
-                          }
-                          placeholder="Example: Private party"
-                        />
-                      </label>
-
-                      <button type="button" onClick={addBookingBlock}>
-                        Add block
-                      </button>
-                    </div>
-
-                    {bookingBlocks.length > 0 ? (
-                      <div className="settings-smilez-block-list">
-                        {bookingBlocks.map((block) => (
-                          <article key={block.id}>
-                            <div>
-                              <strong>
-                                {formatBookingBlockDate(block.block_date)}
-                              </strong>
-                              <span>
-                                {formatBookingBlockDisplay(block)}
-                              </span>
-                              {block.reason ? <em>{block.reason}</em> : null}
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => removeBookingBlock(block.id)}
-                              aria-label="Remove booking block"
-                            >
-                              Remove
-                            </button>
-                          </article>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="settings-field-help">
-                        No blocked dates or times added yet.
-                      </p>
-                    )}
-                  </section>
                 </>
               ) : null}
 
@@ -14032,6 +13868,137 @@ export default function SettingsPage() {
           }
 
           .settings-smilez-quick-dates button {
+            width: 100% !important;
+          }
+        }
+
+
+        /* Booking tabs: scoped overrides that beat the older settings-page CSS */
+        .fromone-settings-page .settings-booking-tabs {
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        .fromone-settings-page .settings-booking-tabs button {
+          min-width: 0 !important;
+        }
+
+        .fromone-settings-page .settings-smilez-blocks-card {
+          width: 100% !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
+        }
+
+        .fromone-settings-page .settings-smilez-blocks-card .settings-smilez-card-head {
+          display: flex !important;
+          align-items: flex-start !important;
+          justify-content: space-between !important;
+          gap: 16px !important;
+          flex-wrap: wrap !important;
+        }
+
+        .fromone-settings-page .settings-smilez-quick-dates {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          gap: 8px !important;
+        }
+
+        .fromone-settings-page .settings-smilez-quick-dates button {
+          min-height: 42px !important;
+          padding: 0 16px !important;
+          border: 1px solid rgba(247, 37, 133, 0.22) !important;
+          border-radius: 12px !important;
+          background: #fff4f9 !important;
+          color: #d91872 !important;
+          box-shadow: none !important;
+          font-size: 0.78rem !important;
+          font-weight: 900 !important;
+        }
+
+        .fromone-settings-page .settings-smilez-block-form {
+          display: grid !important;
+          grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+          gap: 12px !important;
+          align-items: end !important;
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+
+        .fromone-settings-page .settings-smilez-block-form label,
+        .fromone-settings-page .settings-smilez-block-form label.is-wide {
+          min-width: 0 !important;
+          display: grid !important;
+          grid-column: auto !important;
+          gap: 7px !important;
+        }
+
+        .fromone-settings-page .settings-smilez-block-form .settings-simple-input,
+        .fromone-settings-page .settings-smilez-capacity-card .settings-simple-input {
+          width: 100% !important;
+          min-width: 0 !important;
+          min-height: 48px !important;
+          box-sizing: border-box !important;
+          padding: 0 14px !important;
+          border: 1px solid rgba(7, 27, 73, 0.15) !important;
+          border-radius: 13px !important;
+          background-color: #ffffff !important;
+          color: #071b49 !important;
+          font: inherit !important;
+          font-size: 0.88rem !important;
+          font-weight: 800 !important;
+          outline: none !important;
+        }
+
+        .fromone-settings-page .settings-smilez-block-form select.settings-simple-input,
+        .fromone-settings-page .settings-smilez-capacity-card select.settings-simple-input {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          padding-right: 42px !important;
+          background-image:
+            linear-gradient(45deg, transparent 50%, #647087 50%),
+            linear-gradient(135deg, #647087 50%, transparent 50%) !important;
+          background-position:
+            calc(100% - 19px) 21px,
+            calc(100% - 14px) 21px !important;
+          background-size: 5px 5px, 5px 5px !important;
+          background-repeat: no-repeat !important;
+        }
+
+        .fromone-settings-page .settings-smilez-block-form .settings-simple-input:focus,
+        .fromone-settings-page .settings-smilez-capacity-card .settings-simple-input:focus {
+          border-color: #f72585 !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.10) !important;
+        }
+
+        .fromone-settings-page .settings-smilez-block-form > button {
+          min-height: 48px !important;
+          width: 100% !important;
+          padding: 0 18px !important;
+          border: 0 !important;
+          border-radius: 13px !important;
+          background: linear-gradient(135deg, #f72585, #ff9f1c) !important;
+          color: #ffffff !important;
+          font: inherit !important;
+          font-weight: 950 !important;
+          cursor: pointer !important;
+          box-shadow: 0 11px 24px rgba(247, 37, 133, 0.18) !important;
+        }
+
+        @media (max-width: 720px) {
+          .fromone-settings-page .settings-booking-tabs {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-settings-page .settings-smilez-block-form {
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-settings-page .settings-smilez-quick-dates {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+          }
+
+          .fromone-settings-page .settings-smilez-quick-dates button {
             width: 100% !important;
           }
         }
