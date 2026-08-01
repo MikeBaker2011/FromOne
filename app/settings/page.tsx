@@ -2792,6 +2792,7 @@ export default function SettingsPage() {
                     <div
                       role="tablist"
                       aria-label="Booking settings"
+                      className="settings-booking-tabs"
                       style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
@@ -2816,6 +2817,7 @@ export default function SettingsPage() {
                             role="tab"
                             aria-selected={active}
                             onClick={() => setBookingSettingsTab(tab.id)}
+                            className={active ? 'is-active' : ''}
                             style={{
                               minHeight: 58,
                               display: 'grid',
@@ -13788,6 +13790,249 @@ export default function SettingsPage() {
 
           .fromone-settings-page .settings-simple-booking-hours .settings-smilez-selected-times {
             grid-template-columns: 1fr !important;
+          }
+        }
+
+
+        /* Booking settings: final responsive layout and polished controls */
+        .settings-booking-tabs {
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .settings-booking-tabs button {
+          min-width: 0;
+          transition:
+            background-color 160ms ease,
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            color 160ms ease,
+            transform 160ms ease;
+        }
+
+        .settings-booking-tabs button:hover {
+          background: rgba(255, 255, 255, 0.72) !important;
+          color: #071b49 !important;
+        }
+
+        .settings-booking-tabs button.is-active {
+          background: #ffffff !important;
+          border-color: rgba(247, 37, 133, 0.28) !important;
+          box-shadow: 0 9px 24px rgba(7, 27, 73, 0.09) !important;
+        }
+
+        .settings-smilez-capacity-card,
+        .settings-smilez-blocks-card {
+          width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+        }
+
+        .settings-smilez-blocks-card .settings-smilez-card-head {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        .settings-smilez-blocks-card .settings-smilez-card-head > strong {
+          display: inline-flex;
+          align-items: center;
+          min-height: 34px;
+          padding: 0 12px;
+          border: 1px solid rgba(7, 27, 73, 0.10);
+          border-radius: 999px;
+          background: #f6f8fc;
+          color: #647087;
+          font-size: 0.72rem;
+          font-weight: 900;
+        }
+
+        .settings-smilez-quick-dates {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          gap: 8px !important;
+        }
+
+        .settings-smilez-quick-dates button {
+          min-height: 42px !important;
+          padding: 0 16px !important;
+          border: 1px solid rgba(247, 37, 133, 0.20) !important;
+          border-radius: 12px !important;
+          background: #fff4f9 !important;
+          color: #d91872 !important;
+          box-shadow: none !important;
+          font-size: 0.78rem !important;
+          font-weight: 900 !important;
+        }
+
+        .settings-smilez-quick-dates button:hover {
+          background: #ffe9f3 !important;
+          border-color: rgba(247, 37, 133, 0.36) !important;
+        }
+
+        .settings-smilez-block-form {
+          display: grid !important;
+          grid-template-columns:
+            minmax(150px, 0.85fr)
+            minmax(230px, 1.25fr)
+            minmax(135px, 0.75fr)
+            minmax(135px, 0.75fr) !important;
+          gap: 12px !important;
+          align-items: end !important;
+          width: 100%;
+          min-width: 0;
+        }
+
+        .settings-smilez-block-form label {
+          min-width: 0;
+          display: grid !important;
+          gap: 7px !important;
+          color: #071b49;
+          font-size: 0.8rem;
+          font-weight: 900;
+        }
+
+        .settings-smilez-block-form label.is-wide {
+          grid-column: span 3 !important;
+        }
+
+        .settings-smilez-block-form .settings-simple-input,
+        .settings-smilez-capacity-card .settings-simple-input {
+          width: 100% !important;
+          min-width: 0 !important;
+          min-height: 48px !important;
+          box-sizing: border-box !important;
+          padding: 0 14px !important;
+          border: 1px solid rgba(7, 27, 73, 0.15) !important;
+          border-radius: 13px !important;
+          background-color: #ffffff !important;
+          color: #071b49 !important;
+          font: inherit !important;
+          font-size: 0.88rem !important;
+          font-weight: 800 !important;
+          line-height: 1.2 !important;
+          outline: none !important;
+          box-shadow: 0 1px 2px rgba(7, 27, 73, 0.02) !important;
+          transition:
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            background-color 160ms ease !important;
+        }
+
+        .settings-smilez-block-form select.settings-simple-input,
+        .settings-smilez-capacity-card select.settings-simple-input {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          padding-right: 42px !important;
+          background-image:
+            linear-gradient(45deg, transparent 50%, #647087 50%),
+            linear-gradient(135deg, #647087 50%, transparent 50%) !important;
+          background-position:
+            calc(100% - 19px) 21px,
+            calc(100% - 14px) 21px !important;
+          background-size: 5px 5px, 5px 5px !important;
+          background-repeat: no-repeat !important;
+          cursor: pointer !important;
+        }
+
+        .settings-smilez-block-form input[type="date"],
+        .settings-smilez-block-form input[type="time"] {
+          color-scheme: light;
+        }
+
+        .settings-smilez-block-form .settings-simple-input:hover,
+        .settings-smilez-capacity-card .settings-simple-input:hover {
+          border-color: rgba(7, 27, 73, 0.28) !important;
+          background-color: #fbfcff !important;
+        }
+
+        .settings-smilez-block-form .settings-simple-input:focus,
+        .settings-smilez-capacity-card .settings-simple-input:focus {
+          border-color: #f72585 !important;
+          background-color: #ffffff !important;
+          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.10) !important;
+        }
+
+        .settings-smilez-block-form > button {
+          min-height: 48px !important;
+          align-self: end !important;
+          padding: 0 18px !important;
+          border: 0 !important;
+          border-radius: 13px !important;
+          background: linear-gradient(135deg, #f72585, #ff9f1c) !important;
+          color: #ffffff !important;
+          font: inherit !important;
+          font-size: 0.84rem !important;
+          font-weight: 950 !important;
+          cursor: pointer !important;
+          box-shadow: 0 11px 24px rgba(247, 37, 133, 0.18) !important;
+        }
+
+        .settings-smilez-block-list article {
+          min-width: 0;
+        }
+
+        @media (max-width: 1050px) {
+          .settings-smilez-block-form {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+
+          .settings-smilez-block-form label.is-wide {
+            grid-column: 1 / -1 !important;
+          }
+
+          .settings-smilez-block-form > button {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 720px) {
+          .settings-booking-tabs {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-booking-tabs button {
+            min-height: 52px !important;
+          }
+
+          .settings-smilez-capacity-card,
+          .settings-smilez-blocks-card {
+            padding: 16px !important;
+            border-radius: 18px !important;
+          }
+
+          .settings-smilez-block-form {
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-smilez-block-form label,
+          .settings-smilez-block-form label.is-wide,
+          .settings-smilez-block-form > button {
+            grid-column: 1 !important;
+            width: 100% !important;
+          }
+
+          .settings-smilez-block-list article {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            align-items: stretch !important;
+          }
+
+          .settings-smilez-block-list article > button {
+            width: 100% !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .settings-smilez-quick-dates {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+          }
+
+          .settings-smilez-quick-dates button {
+            width: 100% !important;
           }
         }
 
