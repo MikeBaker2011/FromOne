@@ -59,6 +59,14 @@ type BookingBlock = {
   reason: string | null;
 };
 
+type BookingCapacityRule = {
+  id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  max_covers: number;
+};
+
 type ResolvedVenueLocation = {
   postcode: string;
   latitude: number;
@@ -195,6 +203,14 @@ export default function SettingsPage() {
   const [bookingSettings, setBookingSettings] =
     useState<BookingSettings>(defaultBookingSettings);
   const [bookingBlocks, setBookingBlocks] = useState<BookingBlock[]>([]);
+  const [bookingCapacityRules, setBookingCapacityRules] =
+    useState<BookingCapacityRule[]>([]);
+  const [newCapacityRule, setNewCapacityRule] = useState({
+    dayOfWeek: 1,
+    startTime: '12:00',
+    endTime: '16:00',
+    maxCovers: 20,
+  });
   const [newBookingBlock, setNewBookingBlock] = useState({
     blockDate: '',
     isFullDay: false,
@@ -668,6 +684,59 @@ export default function SettingsPage() {
       ...current,
       [field]: value,
     }));
+  };
+
+  const addBookingCapacityRule = () => {
+    if (
+      newCapacityRule.startTime >= newCapacityRule.endTime ||
+      newCapacityRule.maxCovers < 1 ||
+      newCapacityRule.maxCovers > 200
+    ) {
+      notify(
+        'Choose a valid time range and a cover limit between 1 and 200.',
+        'warning',
+        'Capacity rule needed',
+      );
+      return;
+    }
+
+    const overlaps = bookingCapacityRules.some(
+      (rule) =>
+        rule.day_of_week === newCapacityRule.dayOfWeek &&
+        newCapacityRule.startTime < rule.end_time &&
+        newCapacityRule.endTime > rule.start_time,
+    );
+
+    if (overlaps) {
+      notify(
+        'That time overlaps another capacity rule for the same day.',
+        'warning',
+        'Capacity rules overlap',
+      );
+      return;
+    }
+
+    const nextRule: BookingCapacityRule = {
+      id: `new-${crypto.randomUUID()}`,
+      day_of_week: newCapacityRule.dayOfWeek,
+      start_time: newCapacityRule.startTime,
+      end_time: newCapacityRule.endTime,
+      max_covers: newCapacityRule.maxCovers,
+    };
+
+    setBookingCapacityRules((current) =>
+      [...current, nextRule].sort(
+        (first, second) =>
+          first.day_of_week - second.day_of_week ||
+          first.start_time.localeCompare(second.start_time),
+      ),
+    );
+  };
+
+  const removeBookingCapacityRule = (ruleId: string) => {
+    setBookingCapacityRules((current) =>
+      current.filter((rule) => rule.id !== ruleId),
+    );
   };
 
   const updateNewBookingBlock = (
@@ -1567,6 +1636,29 @@ export default function SettingsPage() {
       setBookingBlocks(
         Array.isArray(data.booking_blocks) ? data.booking_blocks : [],
       );
+      setBookingCapacityRules(
+        Array.isArray(data.booking_settings?.capacity_rules)
+          ? data.booking_settings.capacity_rules
+              .map((rule: any) => ({
+                id: String(rule?.id || `saved-${crypto.randomUUID()}`),
+                day_of_week: Number(rule?.day_of_week),
+                start_time: normaliseTime(rule?.start_time),
+                end_time: normaliseTime(rule?.end_time),
+                max_covers: Number(rule?.max_covers),
+              }))
+              .filter(
+                (rule: BookingCapacityRule) =>
+                  Number.isInteger(rule.day_of_week) &&
+                  rule.day_of_week >= 0 &&
+                  rule.day_of_week <= 6 &&
+                  Boolean(rule.start_time) &&
+                  Boolean(rule.end_time) &&
+                  rule.start_time < rule.end_time &&
+                  Number.isFinite(rule.max_covers) &&
+                  rule.max_covers >= 1,
+              )
+          : [],
+      );
       setServices(joinList(data.services));
       setTargetAudience(joinList(data.target_audience));
       setToneOfVoice(data.tone_of_voice || 'Professional');
@@ -1666,7 +1758,10 @@ export default function SettingsPage() {
           ? normaliseWebsiteUrl(bookingUrl)
           : null,
       booking_hours: bookingHours,
-      booking_settings: bookingSettings,
+      booking_settings: {
+        ...bookingSettings,
+        capacity_rules: bookingCapacityRules,
+      },
       booking_blocks: bookingBlocks,
       services: splitList(services),
       target_audience: splitList(targetAudience),
@@ -1768,6 +1863,49 @@ export default function SettingsPage() {
             `${dayLabels[row.day_of_week]} must have a valid opening and closing time.`,
             'warning',
             'Opening hours needed',
+          );
+          return false;
+        }
+      }
+
+      for (const rule of bookingCapacityRules) {
+        if (
+          !Number.isInteger(rule.day_of_week) ||
+          rule.day_of_week < 0 ||
+          rule.day_of_week > 6 ||
+          !rule.start_time ||
+          !rule.end_time ||
+          rule.start_time >= rule.end_time ||
+          rule.max_covers < 1 ||
+          rule.max_covers > 200
+        ) {
+          notify(
+            'Check the advanced capacity rules before saving.',
+            'warning',
+            'Capacity rule needs attention',
+          );
+          return false;
+        }
+      }
+
+      const sortedRules = [...bookingCapacityRules].sort(
+        (first, second) =>
+          first.day_of_week - second.day_of_week ||
+          first.start_time.localeCompare(second.start_time),
+      );
+
+      for (let index = 1; index < sortedRules.length; index += 1) {
+        const previous = sortedRules[index - 1];
+        const current = sortedRules[index];
+
+        if (
+          previous.day_of_week === current.day_of_week &&
+          current.start_time < previous.end_time
+        ) {
+          notify(
+            `${dayLabels[current.day_of_week]} has overlapping capacity rules.`,
+            'warning',
+            'Capacity rules overlap',
           );
           return false;
         }
@@ -1951,8 +2089,14 @@ export default function SettingsPage() {
               : '',
           bookingHours,
           booking_hours: bookingHours,
-          bookingSettings,
-          booking_settings: bookingSettings,
+          bookingSettings: {
+            ...bookingSettings,
+            capacity_rules: bookingCapacityRules,
+          },
+          booking_settings: {
+            ...bookingSettings,
+            capacity_rules: bookingCapacityRules,
+          },
           bookingBlocks,
           booking_blocks: bookingBlocks,
           venueType: industry.trim(),
@@ -2902,6 +3046,229 @@ export default function SettingsPage() {
                         Covers are shared across active requests and confirmed
                         bookings in the same time slot.
                       </div>
+                    </section>
+
+                    <section
+                      style={{
+                        display: 'grid',
+                        gap: 16,
+                        marginBottom: 18,
+                        padding: 22,
+                        border: '1px solid rgba(7, 27, 73, 0.10)',
+                        borderRadius: 22,
+                        background: '#ffffff',
+                        boxShadow: '0 12px 30px rgba(7, 27, 73, 0.045)',
+                      }}
+                    >
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        <span
+                          style={{
+                            width: 'fit-content',
+                            padding: '6px 10px',
+                            borderRadius: 999,
+                            background: 'rgba(7, 27, 73, 0.06)',
+                            color: '#071b49',
+                            fontSize: 11,
+                            fontWeight: 950,
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          Advanced capacity
+                        </span>
+                        <h4
+                          style={{
+                            margin: 0,
+                            color: '#071b49',
+                            fontSize: 'clamp(1.1rem, 2vw, 1.35rem)',
+                            letterSpacing: '-0.025em',
+                          }}
+                        >
+                          Different cover limits by day and time
+                        </h4>
+                        <p
+                          style={{
+                            maxWidth: 720,
+                            margin: 0,
+                            color: '#647087',
+                            fontSize: 13.5,
+                            fontWeight: 700,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          These rules override the general covers-per-slot limit
+                          during the selected time range.
+                        </p>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns:
+                            'minmax(150px, 1fr) repeat(2, minmax(130px, 0.8fr)) minmax(150px, 0.8fr) auto',
+                          gap: 10,
+                          alignItems: 'end',
+                        }}
+                      >
+                        <label style={{ display: 'grid', gap: 7 }}>
+                          <span>Day</span>
+                          <select
+                            className="settings-simple-input"
+                            value={newCapacityRule.dayOfWeek}
+                            onChange={(event) =>
+                              setNewCapacityRule((current) => ({
+                                ...current,
+                                dayOfWeek: Number(event.target.value),
+                              }))
+                            }
+                          >
+                            {dayLabels.map((label, dayIndex) => (
+                              <option key={label} value={dayIndex}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <label style={{ display: 'grid', gap: 7 }}>
+                          <span>Starts</span>
+                          <input
+                            className="settings-simple-input"
+                            type="time"
+                            value={newCapacityRule.startTime}
+                            onChange={(event) =>
+                              setNewCapacityRule((current) => ({
+                                ...current,
+                                startTime: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+
+                        <label style={{ display: 'grid', gap: 7 }}>
+                          <span>Ends</span>
+                          <input
+                            className="settings-simple-input"
+                            type="time"
+                            value={newCapacityRule.endTime}
+                            onChange={(event) =>
+                              setNewCapacityRule((current) => ({
+                                ...current,
+                                endTime: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+
+                        <label style={{ display: 'grid', gap: 7 }}>
+                          <span>Maximum covers</span>
+                          <input
+                            className="settings-simple-input"
+                            type="number"
+                            min={1}
+                            max={200}
+                            value={newCapacityRule.maxCovers}
+                            onChange={(event) =>
+                              setNewCapacityRule((current) => ({
+                                ...current,
+                                maxCovers: Number(event.target.value),
+                              }))
+                            }
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={addBookingCapacityRule}
+                          style={{
+                            minHeight: 46,
+                            padding: '0 17px',
+                            border: 0,
+                            borderRadius: 13,
+                            background: '#071b49',
+                            color: '#ffffff',
+                            fontWeight: 900,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Add rule
+                        </button>
+                      </div>
+
+                      {bookingCapacityRules.length > 0 ? (
+                        <div style={{ display: 'grid', gap: 9 }}>
+                          {bookingCapacityRules.map((rule) => (
+                            <div
+                              key={rule.id}
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns:
+                                  'minmax(130px, 1fr) minmax(180px, 1fr) minmax(120px, auto) auto',
+                                alignItems: 'center',
+                                gap: 12,
+                                padding: '13px 14px',
+                                border: '1px solid rgba(7, 27, 73, 0.09)',
+                                borderRadius: 14,
+                                background: '#f8faff',
+                              }}
+                            >
+                              <strong style={{ color: '#071b49' }}>
+                                {dayLabels[rule.day_of_week]}
+                              </strong>
+                              <span style={{ color: '#536078', fontWeight: 800 }}>
+                                {normaliseTime(rule.start_time)}–
+                                {normaliseTime(rule.end_time)}
+                              </span>
+                              <span
+                                style={{
+                                  width: 'fit-content',
+                                  padding: '6px 10px',
+                                  borderRadius: 999,
+                                  background: 'rgba(247, 37, 133, 0.09)',
+                                  color: '#d91872',
+                                  fontSize: 12,
+                                  fontWeight: 900,
+                                }}
+                              >
+                                {rule.max_covers} covers
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeBookingCapacityRule(rule.id)
+                                }
+                                style={{
+                                  minHeight: 36,
+                                  padding: '0 12px',
+                                  border:
+                                    '1px solid rgba(181, 22, 98, 0.18)',
+                                  borderRadius: 10,
+                                  background: '#fff5f8',
+                                  color: '#a91257',
+                                  fontWeight: 900,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            padding: '13px 14px',
+                            borderRadius: 14,
+                            background: 'rgba(7, 27, 73, 0.045)',
+                            color: '#647087',
+                            fontSize: 12.5,
+                            fontWeight: 750,
+                          }}
+                        >
+                          No advanced rules yet. The general covers-per-slot
+                          limit applies to every booking time.
+                        </div>
+                      )}
                     </section>
 
                     <div
