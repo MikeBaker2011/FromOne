@@ -2590,15 +2590,34 @@ export default function SettingsPage() {
                 />
               </label>
 
-              <label className="settings-simple-wide">
-                <strong>Opening hours</strong>
+              <div className="settings-simple-wide settings-opening-hours-card-v4">
+                <div className="settings-opening-hours-copy-v4">
+                  <div>
+                    <span>Business opening hours</span>
+                    <strong>Opening times shown on your Smilez profile</strong>
+                  </div>
+                  <p>
+                    Add the general opening times customers should see on your
+                    business profile. Booking availability is managed separately.
+                  </p>
+                </div>
+
                 <textarea
                   value={openingHours}
                   onChange={(event) => setOpeningHours(event.target.value)}
-                  placeholder="Mon-Fri 9am-5pm, Sat 10am-4pm"
+                  placeholder="Example: Mon-Fri 9am-5pm, Sat 10am-4pm"
                   rows={3}
+                  aria-label="Business opening hours"
                 />
-              </label>
+
+                <button
+                  type="button"
+                  className="settings-opening-hours-link-v4"
+                  onClick={() => setSimpleSettingsSection('bookings')}
+                >
+                  Set booking times in Bookings
+                </button>
+              </div>
             </div>
           </section>
 
@@ -4194,9 +4213,9 @@ export default function SettingsPage() {
             padding: 14px 16px;
             border: 1px solid rgba(7, 27, 73, 0.1);
             border-radius: 17px;
-            background: rgba(255, 255, 255, 0.96);
-            box-shadow: 0 16px 38px rgba(7, 27, 73, 0.14);
-            backdrop-filter: blur(16px);
+            background: #ffffff;
+            box-shadow: none;
+            backdrop-filter: none;
           }
 
           .settings-redesign-v2 .settings-redesign-save-bar > div {
@@ -4607,6 +4626,88 @@ export default function SettingsPage() {
             .settings-redesign-v2 .settings-basic-times-v3 {
               grid-column: 1;
               grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+
+        <style jsx global>{`
+          .settings-redesign-v2 .settings-opening-hours-card-v4 {
+            display: grid;
+            gap: 14px;
+            padding: 16px;
+            border: 1px solid rgba(7, 27, 73, 0.1);
+            border-radius: 16px;
+            background: #f8faff;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-copy-v4 {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-copy-v4 > div {
+            display: grid;
+            gap: 4px;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-copy-v4 span {
+            margin: 0;
+            color: #f72585;
+            font-size: 0.67rem;
+            font-weight: 950;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-copy-v4 strong {
+            color: #071b49;
+            font-size: 0.92rem;
+            font-weight: 900;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-copy-v4 p {
+            max-width: 560px;
+            margin: 0;
+            color: #647087;
+            font-size: 0.78rem;
+            font-weight: 700;
+            line-height: 1.5;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-card-v4 textarea {
+            min-height: 92px;
+            background: #ffffff;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-link-v4 {
+            width: fit-content;
+            min-height: 42px;
+            padding: 0 14px;
+            border: 1px solid rgba(247, 37, 133, 0.22);
+            border-radius: 11px;
+            background: #ffffff;
+            color: #d91872;
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 900;
+            cursor: pointer;
+          }
+
+          .settings-redesign-v2 .settings-opening-hours-link-v4:hover {
+            border-color: rgba(247, 37, 133, 0.4);
+            background: #fff7fb;
+          }
+
+          @media (max-width: 620px) {
+            .settings-redesign-v2 .settings-opening-hours-card-v4 {
+              padding: 14px;
+            }
+
+            .settings-redesign-v2 .settings-opening-hours-link-v4 {
+              width: 100%;
             }
           }
         `}</style>
