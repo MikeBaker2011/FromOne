@@ -589,7 +589,11 @@ export default function SettingsPage() {
   };
 
   const normalisePostcode = (value: string) => {
-    return value.replace(/\s+/g, ' ').trim().toUpperCase();
+    return value
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toUpperCase()
+      .replace(/^SKI(?=\s|\d|$)/, 'SK1');
   };
 
   const getPostcodePrefix = (value: string) => {
@@ -2775,240 +2779,66 @@ export default function SettingsPage() {
 
           {simpleSettingsSection === 'bookings' ? (
             <div className="settings-redesign-section">
-          <section className="settings-simple-card">
-            <div className="settings-simple-card-heading">
-              <div>
-                <span>Smilez</span>
-                <h2>Bookings</h2>
-              </div>
-              <small>{getSmilesListingStatusLabel()}</small>
-            </div>
+              <section className="settings-simple-card settings-basic-bookings-v3">
+                <div className="settings-simple-card-heading">
+                  <div>
+                    <span>Smilez</span>
+                    <h2>Bookings</h2>
+                  </div>
+                  <small>{getSmilesListingStatusLabel()}</small>
+                </div>
 
-            <p className="settings-simple-help">
-              Smilez automatically uses the business details above. Only choose
-              whether customers can book.
-            </p>
+                <p className="settings-simple-help">
+                  Turn booking requests on, set your weekly times and choose how
+                  many guests each booking slot can hold.
+                </p>
 
-            <label className="settings-simple-toggle">
-              <input
-                type="checkbox"
-                checked={acceptsBookings}
-                onChange={(event) => setAcceptsBookings(event.target.checked)}
-              />
-              <span>
-                <strong>Accept bookings</strong>
-                <small>Customers will see booking information on your Smilez listing.</small>
-              </span>
-            </label>
-
-            {acceptsBookings ? (
-              <>
-                <label className="settings-simple-booking-link">
-                  <strong>Booking link <small>Optional</small></strong>
+                <label className="settings-simple-toggle">
                   <input
-                    value={bookingUrl}
-                    onChange={(event) => setBookingUrl(event.target.value)}
-                    placeholder="https://..."
+                    type="checkbox"
+                    checked={acceptsBookings}
+                    onChange={(event) => setAcceptsBookings(event.target.checked)}
                   />
-                  <span className="settings-field-help">
-                    Leave this blank to use Smilez booking requests and set your weekly booking times below.
+                  <span>
+                    <strong>Accept bookings</strong>
+                    <small>
+                      Customers can request a table from your Smilez listing.
+                    </small>
                   </span>
                 </label>
 
-                {!bookingUrl.trim() ? (
-                  <section
-                    className="settings-smilez-booking-editor settings-smilez-hours-card settings-simple-booking-hours"
-                    style={{
-                      display: 'grid',
-                      gap: 18,
-                      marginTop: 18,
-                      padding: 22,
-                      border: '1px solid #dfe5f1',
-                      borderRadius: 20,
-                      background: '#f8faff',
-                    }}
-                  >
-                    <div
-                      className="settings-smilez-card-head"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 16,
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <div>
-                        <span>Booking request hours</span>
-                        <h4>Set your weekly availability</h4>
-                      </div>
+                {acceptsBookings ? (
+                  <>
+                    <label className="settings-simple-booking-link">
                       <strong>
-                        {bookingSettings.slot_interval_minutes}-minute slots
+                        Booking link <small>Optional</small>
                       </strong>
-                    </div>
+                      <input
+                        value={bookingUrl}
+                        onChange={(event) => setBookingUrl(event.target.value)}
+                        placeholder="https://..."
+                      />
+                      <span className="settings-field-help">
+                        Leave this blank to use the built-in Smilez table booking
+                        form.
+                      </span>
+                    </label>
 
-                    <div
-                      role="tablist"
-                      aria-label="Booking settings"
-                      className="settings-booking-tabs"
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                        gap: 8,
-                        padding: 6,
-                        border: '1px solid rgba(7, 27, 73, 0.09)',
-                        borderRadius: 18,
-                        background: '#eef2f8',
-                      }}
-                    >
-                      {[
-                        { id: 'hours' as const, label: 'Hours', helper: 'Weekly times' },
-                        { id: 'capacity' as const, label: 'Capacity', helper: 'Slots and covers' },
-                        { id: 'blocked' as const, label: 'Blocked times', helper: 'Dates unavailable' },
-                      ].map((tab) => {
-                        const active = bookingSettingsTab === tab.id;
+                    {!bookingUrl.trim() ? (
+                      <div className="settings-basic-booking-stack-v3">
+                        <section className="settings-basic-capacity-v3">
+                          <div>
+                            <span>Basic booking setup</span>
+                            <h3>Table booking limits</h3>
+                            <p>
+                              These settings apply to every available booking time.
+                            </p>
+                          </div>
 
-                        return (
-                          <button
-                            key={tab.id}
-                            type="button"
-                            role="tab"
-                            aria-selected={active}
-                            onClick={() => setBookingSettingsTab(tab.id)}
-                            className={active ? 'is-active' : ''}
-                            style={{
-                              minHeight: 58,
-                              display: 'grid',
-                              placeItems: 'center',
-                              gap: 2,
-                              padding: '8px 12px',
-                              border: active
-                                ? '1px solid rgba(247, 37, 133, 0.22)'
-                                : '1px solid transparent',
-                              borderRadius: 13,
-                              background: active ? '#ffffff' : 'transparent',
-                              color: active ? '#071b49' : '#647087',
-                              font: 'inherit',
-                              cursor: 'pointer',
-                              boxShadow: active
-                                ? '0 8px 20px rgba(7, 27, 73, 0.08)'
-                                : 'none',
-                            }}
-                          >
-                            <strong style={{ fontSize: 13, fontWeight: 950 }}>
-                              {tab.label}
-                            </strong>
-                            <small style={{ fontSize: 10.5, fontWeight: 750 }}>
-                              {tab.helper}
-                            </small>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <section
-                      className="settings-smilez-capacity-card"
-                      style={{
-                        display: bookingSettingsTab === 'capacity' ? 'grid' : 'none',
-                        gap: 18,
-                        marginTop: 18,
-                        marginBottom: 18,
-                        padding: '22px',
-                        border: '1px solid rgba(7, 27, 73, 0.10)',
-                        borderRadius: 22,
-                        background:
-                          'linear-gradient(180deg, #ffffff 0%, #f8faff 100%)',
-                        boxShadow: '0 12px 30px rgba(7, 27, 73, 0.055)',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          justifyContent: 'space-between',
-                          gap: 16,
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <div style={{ display: 'grid', gap: 6 }}>
-                          <span
-                            style={{
-                              width: 'fit-content',
-                              padding: '6px 10px',
-                              borderRadius: 999,
-                              background: 'rgba(247, 37, 133, 0.09)',
-                              color: '#d91872',
-                              fontSize: 11,
-                              fontWeight: 950,
-                              letterSpacing: '0.06em',
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            Booking capacity
-                          </span>
-
-                          <h4
-                            style={{
-                              margin: 0,
-                              color: '#071b49',
-                              fontSize: 'clamp(1.15rem, 2vw, 1.4rem)',
-                              letterSpacing: '-0.025em',
-                            }}
-                          >
-                            Control availability without overbooking
-                          </h4>
-
-                          <p
-                            style={{
-                              maxWidth: 700,
-                              margin: 0,
-                              color: '#647087',
-                              fontSize: 14,
-                              fontWeight: 700,
-                              lineHeight: 1.55,
-                            }}
-                          >
-                            Set how long each slot lasts, how many guests it can
-                            hold and how far ahead customers can request a table.
-                          </p>
-                        </div>
-
-                        <div
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            minHeight: 38,
-                            padding: '0 13px',
-                            border: '1px solid rgba(22, 128, 74, 0.16)',
-                            borderRadius: 999,
-                            background: 'rgba(22, 128, 74, 0.08)',
-                            color: '#167348',
-                            fontSize: 12,
-                            fontWeight: 900,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          Capacity protection on
-                        </div>
-                      </div>
-
-                      <div
-                        className="settings-smilez-capacity-grid"
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns:
-                            'repeat(auto-fit, minmax(210px, 1fr))',
-                          gap: 12,
-                        }}
-                      >
-                        {[
-                          {
-                            label: 'Slot length',
-                            help: 'How often a booking time appears.',
-                            control: (
+                          <div className="settings-basic-capacity-grid-v3">
+                            <label>
+                              <span>Slot length</span>
                               <select
-                                className="settings-simple-input"
                                 value={bookingSettings.slot_interval_minutes}
                                 onChange={(event) =>
                                   updateBookingSetting(
@@ -3022,14 +2852,11 @@ export default function SettingsPage() {
                                 <option value={45}>45 minutes</option>
                                 <option value={60}>60 minutes</option>
                               </select>
-                            ),
-                          },
-                          {
-                            label: 'Covers per slot',
-                            help: 'Total guests allowed at the same time.',
-                            control: (
+                            </label>
+
+                            <label>
+                              <span>Covers per slot</span>
                               <input
-                                className="settings-simple-input"
                                 type="number"
                                 min={1}
                                 max={200}
@@ -3041,14 +2868,14 @@ export default function SettingsPage() {
                                   )
                                 }
                               />
-                            ),
-                          },
-                          {
-                            label: 'Maximum party size',
-                            help: 'Largest single booking request.',
-                            control: (
+                              <small>
+                                Total guests allowed at the same booking time.
+                              </small>
+                            </label>
+
+                            <label>
+                              <span>Maximum party size</span>
                               <input
-                                className="settings-simple-input"
                                 type="number"
                                 min={1}
                                 max={30}
@@ -3060,632 +2887,139 @@ export default function SettingsPage() {
                                   )
                                 }
                               />
-                            ),
-                          },
-                          {
-                            label: 'Minimum notice',
-                            help: 'How soon before arrival customers can book.',
-                            control: (
-                              <select
-                                className="settings-simple-input"
-                                value={bookingSettings.minimum_notice_minutes}
-                                onChange={(event) =>
-                                  updateBookingSetting(
-                                    'minimum_notice_minutes',
-                                    Number(event.target.value),
-                                  )
-                                }
-                              >
-                                <option value={0}>No minimum</option>
-                                <option value={30}>30 minutes</option>
-                                <option value={60}>1 hour</option>
-                                <option value={120}>2 hours</option>
-                                <option value={240}>4 hours</option>
-                                <option value={720}>12 hours</option>
-                                <option value={1440}>24 hours</option>
-                                <option value={2880}>48 hours</option>
-                              </select>
-                            ),
-                          },
-                          {
-                            label: 'Booking window',
-                            help: 'How far ahead customers can request.',
-                            control: (
-                              <select
-                                className="settings-simple-input"
-                                value={bookingSettings.advance_booking_days}
-                                onChange={(event) =>
-                                  updateBookingSetting(
-                                    'advance_booking_days',
-                                    Number(event.target.value),
-                                  )
-                                }
-                              >
-                                <option value={7}>7 days ahead</option>
-                                <option value={14}>14 days ahead</option>
-                                <option value={30}>30 days ahead</option>
-                                <option value={60}>60 days ahead</option>
-                                <option value={90}>90 days ahead</option>
-                              </select>
-                            ),
-                          },
-                        ].map((item) => (
-                          <label
-                            key={item.label}
-                            style={{
-                              minWidth: 0,
-                              display: 'grid',
-                              alignContent: 'start',
-                              gap: 8,
-                              padding: 15,
-                              border: '1px solid rgba(7, 27, 73, 0.09)',
-                              borderRadius: 16,
-                              background: '#ffffff',
-                            }}
-                          >
-                            <span
-                              style={{
-                                color: '#071b49',
-                                fontSize: 13,
-                                fontWeight: 900,
-                              }}
-                            >
-                              {item.label}
-                            </span>
+                              <small>
+                                Largest single table request customers can make.
+                              </small>
+                            </label>
+                          </div>
+                        </section>
 
-                            {item.control}
-
-                            <small
-                              style={{
-                                color: '#77839a',
-                                fontSize: 11.5,
-                                fontWeight: 700,
-                                lineHeight: 1.4,
-                              }}
-                            >
-                              {item.help}
-                            </small>
-                          </label>
-                        ))}
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 9,
-                          padding: '12px 14px',
-                          borderRadius: 14,
-                          background: 'rgba(7, 27, 73, 0.045)',
-                          color: '#536078',
-                          fontSize: 12.5,
-                          fontWeight: 750,
-                          lineHeight: 1.45,
-                        }}
-                      >
-                        Covers are shared across active requests and confirmed
-                        bookings in the same time slot.
-                      </div>
-                    </section>
-
-                    <section
-                      style={{
-                        display: bookingSettingsTab === 'capacity' ? 'grid' : 'none',
-                        gap: 16,
-                        marginBottom: 18,
-                        padding: 22,
-                        border: '1px solid rgba(7, 27, 73, 0.10)',
-                        borderRadius: 22,
-                        background: '#ffffff',
-                        boxShadow: '0 12px 30px rgba(7, 27, 73, 0.045)',
-                      }}
-                    >
-                      <div style={{ display: 'grid', gap: 6 }}>
-                        <span
-                          style={{
-                            width: 'fit-content',
-                            padding: '6px 10px',
-                            borderRadius: 999,
-                            background: 'rgba(7, 27, 73, 0.06)',
-                            color: '#071b49',
-                            fontSize: 11,
-                            fontWeight: 950,
-                            letterSpacing: '0.06em',
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          Advanced capacity
-                        </span>
-                        <h4
-                          style={{
-                            margin: 0,
-                            color: '#071b49',
-                            fontSize: 'clamp(1.1rem, 2vw, 1.35rem)',
-                            letterSpacing: '-0.025em',
-                          }}
-                        >
-                          Different cover limits by day and time
-                        </h4>
-                        <p
-                          style={{
-                            maxWidth: 720,
-                            margin: 0,
-                            color: '#647087',
-                            fontSize: 13.5,
-                            fontWeight: 700,
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          These rules override the general covers-per-slot limit
-                          during the selected time range.
-                        </p>
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns:
-                            'minmax(150px, 1fr) repeat(2, minmax(130px, 0.8fr)) minmax(150px, 0.8fr) auto',
-                          gap: 10,
-                          alignItems: 'end',
-                        }}
-                      >
-                        <label style={{ display: 'grid', gap: 7 }}>
-                          <span>Day</span>
-                          <select
-                            className="settings-simple-input"
-                            value={newCapacityRule.dayOfWeek}
-                            onChange={(event) =>
-                              setNewCapacityRule((current) => ({
-                                ...current,
-                                dayOfWeek: Number(event.target.value),
-                              }))
-                            }
-                          >
-                            {dayLabels.map((label, dayIndex) => (
-                              <option key={label} value={dayIndex}>
-                                {label}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-
-                        <label style={{ display: 'grid', gap: 7 }}>
-                          <span>Starts</span>
-                          <input
-                            className="settings-simple-input"
-                            type="time"
-                            value={newCapacityRule.startTime}
-                            onChange={(event) =>
-                              setNewCapacityRule((current) => ({
-                                ...current,
-                                startTime: event.target.value,
-                              }))
-                            }
-                          />
-                        </label>
-
-                        <label style={{ display: 'grid', gap: 7 }}>
-                          <span>Ends</span>
-                          <input
-                            className="settings-simple-input"
-                            type="time"
-                            value={newCapacityRule.endTime}
-                            onChange={(event) =>
-                              setNewCapacityRule((current) => ({
-                                ...current,
-                                endTime: event.target.value,
-                              }))
-                            }
-                          />
-                        </label>
-
-                        <label style={{ display: 'grid', gap: 7 }}>
-                          <span>Maximum covers</span>
-                          <input
-                            className="settings-simple-input"
-                            type="number"
-                            min={1}
-                            max={200}
-                            value={newCapacityRule.maxCovers}
-                            onChange={(event) =>
-                              setNewCapacityRule((current) => ({
-                                ...current,
-                                maxCovers: Number(event.target.value),
-                              }))
-                            }
-                          />
-                        </label>
-
-                        <button
-                          type="button"
-                          onClick={addBookingCapacityRule}
-                          style={{
-                            minHeight: 46,
-                            padding: '0 17px',
-                            border: 0,
-                            borderRadius: 13,
-                            background: '#071b49',
-                            color: '#ffffff',
-                            fontWeight: 900,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Add rule
-                        </button>
-                      </div>
-
-                      {bookingCapacityRules.length > 0 ? (
-                        <div style={{ display: 'grid', gap: 9 }}>
-                          {bookingCapacityRules.map((rule) => (
-                            <div
-                              key={rule.id}
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns:
-                                  'minmax(130px, 1fr) minmax(180px, 1fr) minmax(120px, auto) auto',
-                                alignItems: 'center',
-                                gap: 12,
-                                padding: '13px 14px',
-                                border: '1px solid rgba(7, 27, 73, 0.09)',
-                                borderRadius: 14,
-                                background: '#f8faff',
-                              }}
-                            >
-                              <strong style={{ color: '#071b49' }}>
-                                {dayLabels[rule.day_of_week]}
-                              </strong>
-                              <span style={{ color: '#536078', fontWeight: 800 }}>
-                                {normaliseTime(rule.start_time)}–
-                                {normaliseTime(rule.end_time)}
-                              </span>
-                              <span
-                                style={{
-                                  width: 'fit-content',
-                                  padding: '6px 10px',
-                                  borderRadius: 999,
-                                  background: 'rgba(247, 37, 133, 0.09)',
-                                  color: '#d91872',
-                                  fontSize: 12,
-                                  fontWeight: 900,
-                                }}
-                              >
-                                {rule.max_covers} covers
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  removeBookingCapacityRule(rule.id)
-                                }
-                                style={{
-                                  minHeight: 36,
-                                  padding: '0 12px',
-                                  border:
-                                    '1px solid rgba(181, 22, 98, 0.18)',
-                                  borderRadius: 10,
-                                  background: '#fff5f8',
-                                  color: '#a91257',
-                                  fontWeight: 900,
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Remove
-                              </button>
+                        <section className="settings-basic-hours-v3">
+                          <div className="settings-basic-hours-heading-v3">
+                            <div>
+                              <span>Booking hours</span>
+                              <h3>Weekly availability</h3>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            padding: '13px 14px',
-                            borderRadius: 14,
-                            background: 'rgba(7, 27, 73, 0.045)',
-                            color: '#647087',
-                            fontSize: 12.5,
-                            fontWeight: 750,
-                          }}
-                        >
-                          No advanced rules yet. The general covers-per-slot
-                          limit applies to every booking time.
-                        </div>
-                      )}
-                    </section>
-
-                    <div
-                      className="settings-smilez-day-cards"
-                      role="list"
-                      style={{
-                        display: bookingSettingsTab === 'hours' ? 'grid' : 'none',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))',
-                        gap: 10,
-                        width: '100%',
-                      }}
-                    >
-                      {bookingHours.map((row) => {
-                        const selected =
-                          row.day_of_week === selectedBookingDay;
-
-                        return (
-                          <button
-                            type="button"
-                            key={row.day_of_week}
-                            className={`${selected ? 'is-selected' : ''} ${
-                              row.is_closed ? 'is-closed' : ''
-                            }`}
-                            style={{
-                              display: 'grid',
-                              gap: 5,
-                              minHeight: 86,
-                              padding: '13px 10px',
-                              border: selected
-                                ? '1px solid #f72585'
-                                : '1px solid #dfe5f1',
-                              borderRadius: 15,
-                              background: selected ? '#fff3f8' : '#ffffff',
-                              color: '#071b49',
-                              textAlign: 'center',
-                              opacity: row.is_closed ? 0.65 : 1,
-                              cursor: 'pointer',
-                            }}
-                            onClick={() =>
-                              setSelectedBookingDay(row.day_of_week)
-                            }
-                          >
-                            <strong>{shortDayLabels[row.day_of_week]}</strong>
-                            <em>{getNextDateForDay(row.day_of_week)}</em>
-                            <span>{formatBookingHourDisplay(row)}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {(() => {
-                      const selected =
-                        bookingHours.find(
-                          (row) => row.day_of_week === selectedBookingDay,
-                        ) || bookingHours[0];
-
-                      if (!selected) return null;
-
-                      return (
-                        <div
-                          className="settings-smilez-selected-day"
-                          style={{
-                            display: bookingSettingsTab === 'hours' ? 'grid' : 'none',
-                            gridTemplateColumns: 'minmax(170px, 0.8fr) minmax(180px, auto) minmax(420px, 1.6fr)',
-                            alignItems: 'center',
-                            gap: 16,
-                            padding: 18,
-                            border: '1px solid #dfe5f1',
-                            borderRadius: 18,
-                            background: '#ffffff',
-                          }}
-                        >
-                          <div>
-                            <span>Editing</span>
-                            <h5>{dayLabels[selected.day_of_week]}</h5>
+                            <strong>
+                              {bookingSettings.slot_interval_minutes}-minute slots
+                            </strong>
                           </div>
 
-                          <label className="settings-smilez-closed-toggle">
-                            <input
-                              type="checkbox"
-                              checked={selected.is_closed}
-                              onChange={(event) =>
-                                updateBookingHour(
-                                  selected.day_of_week,
-                                  'is_closed',
-                                  event.target.checked,
-                                )
-                              }
-                            />
-                            Closed this day
-                          </label>
-
-                          {!selected.is_closed ? (
-                            <div
-                              className="settings-smilez-selected-times"
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(2, minmax(180px, 1fr))',
-                                gap: 16,
-                                alignItems: 'end',
-                              }}
-                            >
-                              <label>
-                                <span>Opens</span>
-                                <input
-                                  className="settings-simple-input"
-                                  style={{
-                                    width: '100%',
-                                    minHeight: 46,
-                                    padding: '10px 12px',
-                                    border: '1px solid #dfe5f1',
-                                    borderRadius: 12,
-                                    background: '#ffffff',
-                                    color: '#071b49',
-                                  }}
-                                  type="time"
-                                  value={selected.opens_at || ''}
-                                  onChange={(event) =>
-                                    updateBookingHour(
-                                      selected.day_of_week,
-                                      'opens_at',
-                                      event.target.value,
-                                    )
-                                  }
-                                />
-                              </label>
-
-                              <label>
-                                <span>Closes</span>
-                                <input
-                                  className="settings-simple-input"
-                                  style={{
-                                    width: '100%',
-                                    minHeight: 46,
-                                    padding: '10px 12px',
-                                    border: '1px solid #dfe5f1',
-                                    borderRadius: 12,
-                                    background: '#ffffff',
-                                    color: '#071b49',
-                                  }}
-                                  type="time"
-                                  value={selected.closes_at || ''}
-                                  onChange={(event) =>
-                                    updateBookingHour(
-                                      selected.day_of_week,
-                                      'closes_at',
-                                      event.target.value,
-                                    )
-                                  }
-                                />
-                              </label>
-                            </div>
-                          ) : (
-                            <p className="settings-field-help">
-                              This day will not show any customer booking request slots.
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })()}
-
-                    <section
-                      className="settings-smilez-blocks-card booking-blocked-panel-v2"
-                      style={{
-                        display: bookingSettingsTab === 'blocked' ? 'grid' : 'none',
-                        gap: 16,
-                        padding: 20,
-                        border: '1px solid rgba(7, 27, 73, 0.10)',
-                        borderRadius: 18,
-                        background: '#ffffff',
-                      }}
-                    >
-                      <div className="settings-smilez-card-head">
-                        <div>
-                          <span>Blocked times</span>
-                          <h4>Dates customers cannot book</h4>
-                        </div>
-                        <strong>Optional</strong>
-                      </div>
-
-                      <div className="settings-smilez-quick-dates booking-blocked-quick-v2">
-                        <button type="button" onClick={() => updateNewBookingBlock('blockDate', getTodayDateValue())}>
-                          Today
-                        </button>
-                        <button type="button" onClick={() => updateNewBookingBlock('blockDate', getTomorrowDateValue())}>
-                          Tomorrow
-                        </button>
-                        <button type="button" onClick={() => updateNewBookingBlock('blockDate', getNextSaturdayDateValue())}>
-                          Saturday
-                        </button>
-                      </div>
-
-                      <div className="settings-smilez-block-form booking-blocked-form-v2">
-                        <label>
-                          <span>Date</span>
-                          <input
-                            className="settings-simple-input"
-                            type="date"
-                            value={newBookingBlock.blockDate}
-                            onChange={(event) =>
-                              updateNewBookingBlock('blockDate', event.target.value)
-                            }
-                          />
-                        </label>
-
-                        <label>
-                          <span>Full day?</span>
-                          <select
-                            className="settings-simple-input"
-                            value={newBookingBlock.isFullDay ? 'yes' : 'no'}
-                            onChange={(event) =>
-                              updateNewBookingBlock(
-                                'isFullDay',
-                                event.target.value === 'yes',
-                              )
-                            }
+                          <div
+                            className="settings-basic-day-grid-v3"
+                            role="list"
+                            aria-label="Weekly booking hours"
                           >
-                            <option value="no">No, block selected times</option>
-                            <option value="yes">Yes, block the full day</option>
-                          </select>
-                        </label>
+                            {bookingHours.map((row) => {
+                              const active =
+                                row.day_of_week === selectedBookingDay;
 
-                        {!newBookingBlock.isFullDay ? (
-                          <>
-                            <label>
-                              <span>Starts</span>
-                              <input
-                                className="settings-simple-input"
-                                type="time"
-                                value={newBookingBlock.startTime}
-                                onChange={(event) =>
-                                  updateNewBookingBlock('startTime', event.target.value)
-                                }
-                              />
-                            </label>
+                              return (
+                                <button
+                                  key={row.day_of_week}
+                                  type="button"
+                                  role="listitem"
+                                  className={active ? 'is-active' : ''}
+                                  onClick={() =>
+                                    setSelectedBookingDay(row.day_of_week)
+                                  }
+                                >
+                                  <strong>
+                                    {shortDayLabels[row.day_of_week]}
+                                  </strong>
+                                  <span>
+                                    {formatBookingHourDisplay(row)}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
 
-                            <label>
-                              <span>Ends</span>
-                              <input
-                                className="settings-simple-input"
-                                type="time"
-                                value={newBookingBlock.endTime}
-                                onChange={(event) =>
-                                  updateNewBookingBlock('endTime', event.target.value)
-                                }
-                              />
-                            </label>
-                          </>
-                        ) : null}
+                          {(() => {
+                            const selected =
+                              bookingHours.find(
+                                (row) =>
+                                  row.day_of_week === selectedBookingDay,
+                              ) || bookingHours[0];
 
-                        <label className="is-wide">
-                          <span>Reason optional</span>
-                          <input
-                            className="settings-simple-input"
-                            value={newBookingBlock.reason}
-                            onChange={(event) =>
-                              updateNewBookingBlock('reason', event.target.value)
-                            }
-                            placeholder="Example: Private event"
-                          />
-                        </label>
+                            if (!selected) return null;
 
-                        <button type="button" onClick={addBookingBlock}>
-                          Add blocked time
-                        </button>
-                      </div>
+                            return (
+                              <div className="settings-basic-day-editor-v3">
+                                <div>
+                                  <span>Editing</span>
+                                  <h4>
+                                    {dayLabels[selected.day_of_week]}
+                                  </h4>
+                                </div>
 
-                      {bookingBlocks.length > 0 ? (
-                        <div className="settings-smilez-block-list booking-blocked-list-v2">
-                          {bookingBlocks.map((block) => (
-                            <article key={block.id}>
-                              <div>
-                                <strong>{formatBookingBlockDate(block.block_date)}</strong>
-                                <span>{formatBookingBlockDisplay(block)}</span>
-                                {block.reason ? <em>{block.reason}</em> : null}
+                                <label className="settings-basic-closed-v3">
+                                  <input
+                                    type="checkbox"
+                                    checked={selected.is_closed}
+                                    onChange={(event) =>
+                                      updateBookingHour(
+                                        selected.day_of_week,
+                                        'is_closed',
+                                        event.target.checked,
+                                      )
+                                    }
+                                  />
+                                  <span>Closed this day</span>
+                                </label>
+
+                                {!selected.is_closed ? (
+                                  <div className="settings-basic-times-v3">
+                                    <label>
+                                      <span>Opens</span>
+                                      <input
+                                        type="time"
+                                        value={selected.opens_at || ''}
+                                        onChange={(event) =>
+                                          updateBookingHour(
+                                            selected.day_of_week,
+                                            'opens_at',
+                                            event.target.value,
+                                          )
+                                        }
+                                      />
+                                    </label>
+
+                                    <label>
+                                      <span>Closes</span>
+                                      <input
+                                        type="time"
+                                        value={selected.closes_at || ''}
+                                        onChange={(event) =>
+                                          updateBookingHour(
+                                            selected.day_of_week,
+                                            'closes_at',
+                                            event.target.value,
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                  </div>
+                                ) : (
+                                  <p>
+                                    Customers will not see booking times for this
+                                    day.
+                                  </p>
+                                )}
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => removeBookingBlock(block.id)}
-                              >
-                                Remove
-                              </button>
-                            </article>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="settings-field-help">
-                          No blocked dates or times added yet.
-                        </p>
-                      )}
-                    </section>
-                  </section>
-                ) : null}
-              </>
-            ) : null}
-          </section>
+                            );
+                          })()}
+                        </section>
 
+                        <p className="settings-basic-booking-note-v3">
+                          Full booking slots are hidden automatically from
+                          customers.
+                        </p>
+                      </div>
+                    ) : null}
+                  </>
+                ) : null}
+              </section>
             </div>
           ) : null}
 
@@ -5016,6 +4350,263 @@ export default function SettingsPage() {
 
             .settings-redesign-v2 .booking-blocked-quick-v2 button {
               width: 100% !important;
+            }
+          }
+        `}</style>
+
+        <style jsx global>{`
+          .settings-redesign-v2 .settings-simple-grid > label {
+            align-content: start;
+          }
+
+          .settings-redesign-v2 .settings-simple-grid > label > input {
+            height: 48px;
+          }
+
+          .settings-redesign-v2 .settings-basic-bookings-v3 {
+            display: grid;
+            gap: 18px;
+          }
+
+          .settings-redesign-v2 .settings-basic-booking-stack-v3 {
+            display: grid;
+            gap: 16px;
+          }
+
+          .settings-redesign-v2 .settings-basic-capacity-v3,
+          .settings-redesign-v2 .settings-basic-hours-v3 {
+            display: grid;
+            gap: 18px;
+            padding: 20px;
+            border: 1px solid rgba(7, 27, 73, 0.1);
+            border-radius: 18px;
+            background: #f8faff;
+          }
+
+          .settings-redesign-v2 .settings-basic-capacity-v3 h3,
+          .settings-redesign-v2 .settings-basic-hours-v3 h3 {
+            margin: 4px 0 0;
+            color: #071b49;
+            font-size: 1.15rem;
+            letter-spacing: -0.025em;
+          }
+
+          .settings-redesign-v2 .settings-basic-capacity-v3 p,
+          .settings-redesign-v2 .settings-basic-hours-v3 p {
+            margin: 5px 0 0;
+            color: #647087;
+            font-size: 0.82rem;
+            font-weight: 700;
+            line-height: 1.5;
+          }
+
+          .settings-redesign-v2 .settings-basic-capacity-v3 > div > span,
+          .settings-redesign-v2 .settings-basic-hours-heading-v3 > div > span {
+            color: #f72585;
+            font-size: 0.67rem;
+            font-weight: 950;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }
+
+          .settings-redesign-v2 .settings-basic-capacity-grid-v3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+          }
+
+          .settings-redesign-v2 .settings-basic-capacity-grid-v3 label {
+            min-width: 0;
+            display: grid;
+            align-content: start;
+            gap: 7px;
+            padding: 14px;
+            border: 1px solid rgba(7, 27, 73, 0.09);
+            border-radius: 14px;
+            background: #ffffff;
+          }
+
+          .settings-redesign-v2 .settings-basic-capacity-grid-v3 label > span {
+            margin: 0;
+            color: #071b49;
+            font-size: 0.78rem;
+            font-weight: 900;
+          }
+
+          .settings-redesign-v2 .settings-basic-capacity-grid-v3 label > small {
+            color: #647087;
+            font-size: 0.7rem;
+            font-weight: 700;
+            line-height: 1.4;
+          }
+
+          .settings-redesign-v2 .settings-basic-hours-heading-v3 {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+          }
+
+          .settings-redesign-v2 .settings-basic-hours-heading-v3 > strong {
+            display: inline-flex;
+            align-items: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border: 1px solid rgba(7, 27, 73, 0.1);
+            border-radius: 999px;
+            background: #ffffff;
+            color: #071b49;
+            font-size: 0.72rem;
+            font-weight: 900;
+          }
+
+          .settings-redesign-v2 .settings-basic-day-grid-v3 {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 8px;
+          }
+
+          .settings-redesign-v2 .settings-basic-day-grid-v3 button {
+            min-width: 0;
+            min-height: 78px;
+            display: grid;
+            place-items: center;
+            gap: 4px;
+            padding: 10px 8px;
+            border: 1px solid rgba(7, 27, 73, 0.1);
+            border-radius: 13px;
+            background: #ffffff;
+            color: #647087;
+            font: inherit;
+            cursor: pointer;
+          }
+
+          .settings-redesign-v2 .settings-basic-day-grid-v3 button.is-active {
+            border-color: rgba(247, 37, 133, 0.35);
+            background: #fff7fb;
+            color: #071b49;
+            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.08);
+          }
+
+          .settings-redesign-v2 .settings-basic-day-grid-v3 button strong {
+            font-size: 0.78rem;
+            font-weight: 950;
+          }
+
+          .settings-redesign-v2 .settings-basic-day-grid-v3 button span {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-align: center;
+          }
+
+          .settings-redesign-v2 .settings-basic-day-editor-v3 {
+            display: grid;
+            grid-template-columns: minmax(130px, 0.7fr) minmax(160px, auto) minmax(340px, 1.5fr);
+            gap: 16px;
+            align-items: center;
+            padding: 17px;
+            border: 1px solid rgba(7, 27, 73, 0.1);
+            border-radius: 15px;
+            background: #ffffff;
+          }
+
+          .settings-redesign-v2 .settings-basic-day-editor-v3 h4 {
+            margin: 4px 0 0;
+            color: #071b49;
+            font-size: 1rem;
+          }
+
+          .settings-redesign-v2 .settings-basic-day-editor-v3 > div > span {
+            color: #647087;
+            font-size: 0.7rem;
+            font-weight: 800;
+          }
+
+          .settings-redesign-v2 .settings-basic-closed-v3 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #071b49;
+            font-size: 0.78rem;
+            font-weight: 850;
+          }
+
+          .settings-redesign-v2 .settings-basic-closed-v3 input {
+            width: 17px;
+            height: 17px;
+            flex: 0 0 auto;
+          }
+
+          .settings-redesign-v2 .settings-basic-closed-v3 span {
+            margin: 0;
+          }
+
+          .settings-redesign-v2 .settings-basic-times-v3 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+          }
+
+          .settings-redesign-v2 .settings-basic-times-v3 label {
+            min-width: 0;
+            display: grid;
+            gap: 7px;
+          }
+
+          .settings-redesign-v2 .settings-basic-times-v3 label > span {
+            margin: 0;
+            color: #071b49;
+            font-size: 0.76rem;
+            font-weight: 900;
+          }
+
+          .settings-redesign-v2 .settings-basic-booking-note-v3 {
+            margin: 0;
+            padding: 12px 14px;
+            border-radius: 13px;
+            background: #f3f6fb;
+            color: #536078;
+            font-size: 0.76rem;
+            font-weight: 800;
+          }
+
+          @media (max-width: 900px) {
+            .settings-redesign-v2 .settings-basic-capacity-grid-v3 {
+              grid-template-columns: 1fr;
+            }
+
+            .settings-redesign-v2 .settings-basic-day-grid-v3 {
+              grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .settings-redesign-v2 .settings-basic-day-editor-v3 {
+              grid-template-columns: 1fr 1fr;
+            }
+
+            .settings-redesign-v2 .settings-basic-times-v3 {
+              grid-column: 1 / -1;
+            }
+          }
+
+          @media (max-width: 620px) {
+            .settings-redesign-v2 .settings-basic-capacity-v3,
+            .settings-redesign-v2 .settings-basic-hours-v3 {
+              padding: 15px;
+              border-radius: 16px;
+            }
+
+            .settings-redesign-v2 .settings-basic-day-grid-v3 {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .settings-redesign-v2 .settings-basic-day-editor-v3 {
+              grid-template-columns: 1fr;
+            }
+
+            .settings-redesign-v2 .settings-basic-times-v3 {
+              grid-column: 1;
+              grid-template-columns: 1fr;
             }
           }
         `}</style>
