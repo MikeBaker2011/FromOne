@@ -207,6 +207,121 @@ async function clearPostLimitOverride(userId: string) {
   }
 }
 
+
+async function deleteCurrentWeek(userId: string) {
+  const supabase = getSupabaseAdmin();
+
+  const { data: allowanceData, error: allowanceError } = await supabase.rpc(
+    'get_weekly_campaign_post_allowance',
+    {
+      requested_user_id: userId,
+    },
+  );
+
+  if (allowanceError) {
+    throw allowanceError;
+  }
+
+  const allowance = Array.isArray(allowanceData)
+    ? allowanceData[0]
+    : allowanceData;
+
+  const weekStart = cleanText(allowance?.week_start);
+  const weekEnd = cleanText(allowance?.week_end);
+
+  if (!weekStart || !weekEnd) {
+    throw new Error('Could not determine the current weekly post window.');
+  }
+
+  const { data: currentWeekPosts, error: currentWeekError } = await supabase
+    .from('campaign_posts')
+    .select('id, campaign_id')
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .gte('scheduled_at', weekStart)
+    .lte('scheduled_at', weekEnd);
+
+  if (currentWeekError) {
+    throw currentWeekError;
+  }
+
+  const postRows = currentWeekPosts || [];
+
+  if (postRows.length === 0) {
+    return {
+      deletedPosts: 0,
+      deletedCampaigns: 0,
+      weekStart,
+      weekEnd,
+    };
+  }
+
+  const postIds = postRows
+    .map((post: any) => cleanText(post.id))
+    .filter(Boolean);
+
+  const campaignIds = Array.from(
+    new Set(
+      postRows
+        .map((post: any) => cleanText(post.campaign_id))
+        .filter(Boolean),
+    ),
+  );
+
+  const deletedAt = new Date().toISOString();
+
+  const { error: deletePostsError } = await supabase
+    .from('campaign_posts')
+    .update({
+      deleted_at: deletedAt,
+      updated_at: deletedAt,
+    })
+    .eq('user_id', userId)
+    .in('id', postIds);
+
+  if (deletePostsError) {
+    throw deletePostsError;
+  }
+
+  let deletedCampaigns = 0;
+
+  for (const campaignId of campaignIds) {
+    const { count, error: activeCountError } = await supabase
+      .from('campaign_posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('campaign_id', campaignId)
+      .is('deleted_at', null);
+
+    if (activeCountError) {
+      throw activeCountError;
+    }
+
+    if ((count || 0) > 0) {
+      continue;
+    }
+
+    const { error: deleteCampaignError } = await supabase
+      .from('campaigns')
+      .delete()
+      .eq('id', campaignId)
+      .eq('user_id', userId);
+
+    if (deleteCampaignError) {
+      throw deleteCampaignError;
+    }
+
+    deletedCampaigns += 1;
+  }
+
+  return {
+    deletedPosts: postIds.length,
+    deletedCampaigns,
+    weekStart,
+    weekEnd,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin(request);
@@ -260,6 +375,23 @@ export async function POST(request: NextRequest) {
         message: `Weekly post limit reset to the default of ${DEFAULT_WEEKLY_POST_LIMIT}.`,
         post_limit_override: null,
         effective_post_limit: DEFAULT_WEEKLY_POST_LIMIT,
+      });
+    }
+
+
+    if (action === 'delete_current_week') {
+      const result = await deleteCurrentWeek(userId);
+
+      return NextResponse.json({
+        ok: true,
+        message:
+          result.deletedPosts > 0
+            ? `Deleted ${result.deletedPosts} current-week post${result.deletedPosts === 1 ? '' : 's'} and reset the allowance.`
+            : 'No active posts were found in the current week.',
+        deleted_posts: result.deletedPosts,
+        deleted_campaigns: result.deletedCampaigns,
+        week_start: result.weekStart,
+        week_end: result.weekEnd,
       });
     }
 
@@ -480,7 +612,8 @@ export async function POST(request: NextRequest) {
         : message.includes('required') ||
             message.includes('whole number') ||
             message.includes('between') ||
-            message.includes('does not have a business profile')
+            message.includes('does not have a business profile') ||
+            message.includes('current weekly post window')
           ? 400
           : 500;
 

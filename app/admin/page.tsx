@@ -205,6 +205,8 @@ export default function AdminPage() {
   const [actingUserId, setActingUserId] = useState<string | null>(null);
   const [confirmExpireCustomer, setConfirmExpireCustomer] =
     useState<AdminCustomer | null>(null);
+  const [confirmDeleteWeekCustomer, setConfirmDeleteWeekCustomer] =
+    useState<AdminCustomer | null>(null);
   const [adminNotesByUserId, setAdminNotesByUserId] = useState<
     Record<string, string>
   >({});
@@ -508,6 +510,14 @@ export default function AdminPage() {
 
   const clearPostLimit = async (customer: AdminCustomer) => {
     await runAction(customer.id, "clear_post_limit_override");
+  };
+
+  const confirmDeleteCurrentWeek = async () => {
+    if (!confirmDeleteWeekCustomer) return;
+
+    const customer = confirmDeleteWeekCustomer;
+    setConfirmDeleteWeekCustomer(null);
+    await runAction(customer.id, "delete_current_week");
   };
 
   const confirmExpireAccess = async () => {
@@ -1154,6 +1164,28 @@ export default function AdminPage() {
                   >
                     Reset to default 4
                   </button>
+
+
+                  <button
+                    type="button"
+                    className="admin-danger-button"
+                    onClick={() => setConfirmDeleteWeekCustomer(customer)}
+                    disabled={
+                      busy ||
+                      (customer.posts_used_this_week ??
+                        customer.weekly_allowance?.posts_used ??
+                        0) === 0
+                    }
+                    title={
+                      (customer.posts_used_this_week ??
+                        customer.weekly_allowance?.posts_used ??
+                        0) === 0
+                        ? "This customer has no active posts in the current week."
+                        : "Delete this customer's current weekly post set and reset their allowance."
+                    }
+                  >
+                    Delete current week
+                  </button>
                 </div>
 
                 <div className="admin-post-limit-meta">
@@ -1325,6 +1357,38 @@ export default function AdminPage() {
           );
         })}
       </section>
+
+      {confirmDeleteWeekCustomer && (
+        <div className="admin-confirm-overlay" role="dialog" aria-modal="true">
+          <section className="admin-panel admin-confirm-card">
+            <div className="admin-eyebrow">Please confirm</div>
+            <h2>Delete the current week?</h2>
+            <p>
+              This will remove the active FromOne posts scheduled in the current
+              week for <strong>{confirmDeleteWeekCustomer.email}</strong> and
+              reset their weekly allowance. Posts already published to external
+              platforms will not be removed from those platforms.
+            </p>
+
+            <div className="admin-button-row is-end">
+              <button
+                type="button"
+                className="admin-ghost-button"
+                onClick={() => setConfirmDeleteWeekCustomer(null)}
+              >
+                Keep current week
+              </button>
+              <button
+                type="button"
+                className="admin-danger-button"
+                onClick={confirmDeleteCurrentWeek}
+              >
+                Delete current week
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {confirmExpireCustomer && (
         <div className="admin-confirm-overlay" role="dialog" aria-modal="true">
