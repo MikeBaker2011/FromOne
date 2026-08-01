@@ -1632,7 +1632,7 @@ export default function SettingsPage() {
           clientName: businessName || 'the business',
           industry: industry || 'general business',
           description:
-            'Scan this website and return a business profile only. Write main_offer and brand_summary as concise customer-facing venue copy describing what the business is, what customers can enjoy, and the atmosphere. Do not include marketing objectives, internal business goals, awareness, enquiries, trust-building, lead generation, growth targets, or advice to the owner. The posts can be ignored on this settings page.',
+            'Scan this website and return a business profile only. Write brand_summary as a concise customer-facing introduction for the public About section: what the business is, what customers can enjoy, and the atmosphere. Write main_offer only as a short call to action, such as Book a table or Visit us. Never put marketing objectives, internal business goals, awareness, enquiries, trust-building, lead generation, growth targets, or advice to the owner in brand_summary. The posts can be ignored on this settings page.',
           selectedPlatforms: ['Facebook'],
           platforms: ['Facebook'],
           marketReach: location ? `Local customers in and around ${location}` : 'Local customers',
@@ -2191,9 +2191,9 @@ export default function SettingsPage() {
     try {
       const freshUserId = await getFreshAuthUserId();
       const description =
-        mainOffer.trim() ||
         brandSummary.trim() ||
         services.trim() ||
+        mainOffer.trim() ||
         `${businessName.trim()} is a local ${industry.trim()} business.`;
 
       const response = await fetch('/api/smiles/publish', {

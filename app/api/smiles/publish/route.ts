@@ -1088,8 +1088,8 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
     body.description,
     body.caption,
     profile?.brand_summary,
-    profile?.main_offer,
     Array.isArray(profile?.services) ? profile.services.join(", ") : "",
+    profile?.main_offer,
     name ? `${name} is a local business.` : "",
   );
   const shortDescription = buildShortDescription(
