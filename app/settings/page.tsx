@@ -2646,28 +2646,87 @@ export default function SettingsPage() {
                       className="settings-smilez-capacity-card"
                       style={{
                         display: 'grid',
-                        gap: 16,
-                        padding: 18,
-                        border: '1px solid #dfe5f1',
-                        borderRadius: 16,
-                        background: '#ffffff',
+                        gap: 18,
+                        marginTop: 18,
+                        marginBottom: 18,
+                        padding: '22px',
+                        border: '1px solid rgba(7, 27, 73, 0.10)',
+                        borderRadius: 22,
+                        background:
+                          'linear-gradient(180deg, #ffffff 0%, #f8faff 100%)',
+                        boxShadow: '0 12px 30px rgba(7, 27, 73, 0.055)',
                       }}
                     >
                       <div
-                        className="settings-smilez-card-head"
                         style={{
                           display: 'flex',
-                          alignItems: 'center',
+                          alignItems: 'flex-start',
                           justifyContent: 'space-between',
-                          gap: 12,
+                          gap: 16,
                           flexWrap: 'wrap',
                         }}
                       >
-                        <div>
-                          <span>Booking capacity</span>
-                          <h4>Control slots, notice and covers</h4>
+                        <div style={{ display: 'grid', gap: 6 }}>
+                          <span
+                            style={{
+                              width: 'fit-content',
+                              padding: '6px 10px',
+                              borderRadius: 999,
+                              background: 'rgba(247, 37, 133, 0.09)',
+                              color: '#d91872',
+                              fontSize: 11,
+                              fontWeight: 950,
+                              letterSpacing: '0.06em',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            Booking capacity
+                          </span>
+
+                          <h4
+                            style={{
+                              margin: 0,
+                              color: '#071b49',
+                              fontSize: 'clamp(1.15rem, 2vw, 1.4rem)',
+                              letterSpacing: '-0.025em',
+                            }}
+                          >
+                            Control availability without overbooking
+                          </h4>
+
+                          <p
+                            style={{
+                              maxWidth: 700,
+                              margin: 0,
+                              color: '#647087',
+                              fontSize: 14,
+                              fontWeight: 700,
+                              lineHeight: 1.55,
+                            }}
+                          >
+                            Set how long each slot lasts, how many guests it can
+                            hold and how far ahead customers can request a table.
+                          </p>
                         </div>
-                        <strong>Prevent overbooking</strong>
+
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            minHeight: 38,
+                            padding: '0 13px',
+                            border: '1px solid rgba(22, 128, 74, 0.16)',
+                            borderRadius: 999,
+                            background: 'rgba(22, 128, 74, 0.08)',
+                            color: '#167348',
+                            fontSize: 12,
+                            fontWeight: 900,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Capacity protection on
+                        </div>
                       </div>
 
                       <div
@@ -2675,114 +2734,174 @@ export default function SettingsPage() {
                         style={{
                           display: 'grid',
                           gridTemplateColumns:
-                            'repeat(auto-fit, minmax(180px, 1fr))',
-                          gap: 14,
+                            'repeat(auto-fit, minmax(210px, 1fr))',
+                          gap: 12,
                         }}
                       >
-                        <label style={{ display: 'grid', gap: 7 }}>
-                          <span>Slot length</span>
-                          <select
-                            className="settings-simple-input"
-                            value={bookingSettings.slot_interval_minutes}
-                            onChange={(event) =>
-                              updateBookingSetting(
-                                'slot_interval_minutes',
-                                Number(event.target.value),
-                              )
-                            }
+                        {[
+                          {
+                            label: 'Slot length',
+                            help: 'How often a booking time appears.',
+                            control: (
+                              <select
+                                className="settings-simple-input"
+                                value={bookingSettings.slot_interval_minutes}
+                                onChange={(event) =>
+                                  updateBookingSetting(
+                                    'slot_interval_minutes',
+                                    Number(event.target.value),
+                                  )
+                                }
+                              >
+                                <option value={15}>15 minutes</option>
+                                <option value={30}>30 minutes</option>
+                                <option value={45}>45 minutes</option>
+                                <option value={60}>60 minutes</option>
+                              </select>
+                            ),
+                          },
+                          {
+                            label: 'Covers per slot',
+                            help: 'Total guests allowed at the same time.',
+                            control: (
+                              <input
+                                className="settings-simple-input"
+                                type="number"
+                                min={1}
+                                max={200}
+                                value={bookingSettings.max_covers_per_slot}
+                                onChange={(event) =>
+                                  updateBookingSetting(
+                                    'max_covers_per_slot',
+                                    Number(event.target.value),
+                                  )
+                                }
+                              />
+                            ),
+                          },
+                          {
+                            label: 'Maximum party size',
+                            help: 'Largest single booking request.',
+                            control: (
+                              <input
+                                className="settings-simple-input"
+                                type="number"
+                                min={1}
+                                max={30}
+                                value={bookingSettings.max_party_size}
+                                onChange={(event) =>
+                                  updateBookingSetting(
+                                    'max_party_size',
+                                    Number(event.target.value),
+                                  )
+                                }
+                              />
+                            ),
+                          },
+                          {
+                            label: 'Minimum notice',
+                            help: 'How soon before arrival customers can book.',
+                            control: (
+                              <select
+                                className="settings-simple-input"
+                                value={bookingSettings.minimum_notice_minutes}
+                                onChange={(event) =>
+                                  updateBookingSetting(
+                                    'minimum_notice_minutes',
+                                    Number(event.target.value),
+                                  )
+                                }
+                              >
+                                <option value={0}>No minimum</option>
+                                <option value={30}>30 minutes</option>
+                                <option value={60}>1 hour</option>
+                                <option value={120}>2 hours</option>
+                                <option value={240}>4 hours</option>
+                                <option value={720}>12 hours</option>
+                                <option value={1440}>24 hours</option>
+                                <option value={2880}>48 hours</option>
+                              </select>
+                            ),
+                          },
+                          {
+                            label: 'Booking window',
+                            help: 'How far ahead customers can request.',
+                            control: (
+                              <select
+                                className="settings-simple-input"
+                                value={bookingSettings.advance_booking_days}
+                                onChange={(event) =>
+                                  updateBookingSetting(
+                                    'advance_booking_days',
+                                    Number(event.target.value),
+                                  )
+                                }
+                              >
+                                <option value={7}>7 days ahead</option>
+                                <option value={14}>14 days ahead</option>
+                                <option value={30}>30 days ahead</option>
+                                <option value={60}>60 days ahead</option>
+                                <option value={90}>90 days ahead</option>
+                              </select>
+                            ),
+                          },
+                        ].map((item) => (
+                          <label
+                            key={item.label}
+                            style={{
+                              minWidth: 0,
+                              display: 'grid',
+                              alignContent: 'start',
+                              gap: 8,
+                              padding: 15,
+                              border: '1px solid rgba(7, 27, 73, 0.09)',
+                              borderRadius: 16,
+                              background: '#ffffff',
+                            }}
                           >
-                            <option value={15}>15 minutes</option>
-                            <option value={30}>30 minutes</option>
-                            <option value={45}>45 minutes</option>
-                            <option value={60}>60 minutes</option>
-                          </select>
-                        </label>
+                            <span
+                              style={{
+                                color: '#071b49',
+                                fontSize: 13,
+                                fontWeight: 900,
+                              }}
+                            >
+                              {item.label}
+                            </span>
 
-                        <label style={{ display: 'grid', gap: 7 }}>
-                          <span>Maximum covers per slot</span>
-                          <input
-                            className="settings-simple-input"
-                            type="number"
-                            min={1}
-                            max={200}
-                            value={bookingSettings.max_covers_per_slot}
-                            onChange={(event) =>
-                              updateBookingSetting(
-                                'max_covers_per_slot',
-                                Number(event.target.value),
-                              )
-                            }
-                          />
-                        </label>
+                            {item.control}
 
-                        <label style={{ display: 'grid', gap: 7 }}>
-                          <span>Maximum party size</span>
-                          <input
-                            className="settings-simple-input"
-                            type="number"
-                            min={1}
-                            max={30}
-                            value={bookingSettings.max_party_size}
-                            onChange={(event) =>
-                              updateBookingSetting(
-                                'max_party_size',
-                                Number(event.target.value),
-                              )
-                            }
-                          />
-                        </label>
-
-                        <label style={{ display: 'grid', gap: 7 }}>
-                          <span>Minimum notice</span>
-                          <select
-                            className="settings-simple-input"
-                            value={bookingSettings.minimum_notice_minutes}
-                            onChange={(event) =>
-                              updateBookingSetting(
-                                'minimum_notice_minutes',
-                                Number(event.target.value),
-                              )
-                            }
-                          >
-                            <option value={0}>No minimum</option>
-                            <option value={30}>30 minutes</option>
-                            <option value={60}>1 hour</option>
-                            <option value={120}>2 hours</option>
-                            <option value={240}>4 hours</option>
-                            <option value={720}>12 hours</option>
-                            <option value={1440}>24 hours</option>
-                            <option value={2880}>48 hours</option>
-                          </select>
-                        </label>
-
-                        <label style={{ display: 'grid', gap: 7 }}>
-                          <span>Booking window</span>
-                          <select
-                            className="settings-simple-input"
-                            value={bookingSettings.advance_booking_days}
-                            onChange={(event) =>
-                              updateBookingSetting(
-                                'advance_booking_days',
-                                Number(event.target.value),
-                              )
-                            }
-                          >
-                            <option value={7}>7 days ahead</option>
-                            <option value={14}>14 days ahead</option>
-                            <option value={30}>30 days ahead</option>
-                            <option value={60}>60 days ahead</option>
-                            <option value={90}>90 days ahead</option>
-                          </select>
-                        </label>
+                            <small
+                              style={{
+                                color: '#77839a',
+                                fontSize: 11.5,
+                                fontWeight: 700,
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              {item.help}
+                            </small>
+                          </label>
+                        ))}
                       </div>
 
-                      <p
-                        className="settings-field-help"
-                        style={{ margin: 0 }}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 9,
+                          padding: '12px 14px',
+                          borderRadius: 14,
+                          background: 'rgba(7, 27, 73, 0.045)',
+                          color: '#536078',
+                          fontSize: 12.5,
+                          fontWeight: 750,
+                          lineHeight: 1.45,
+                        }}
                       >
-                        Covers are counted across active requests and confirmed
+                        Covers are shared across active requests and confirmed
                         bookings in the same time slot.
-                      </p>
+                      </div>
                     </section>
 
                     <div
