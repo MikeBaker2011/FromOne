@@ -1,3 +1,5 @@
+"use client";
+
 import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '@/app/components/ToastProvider';

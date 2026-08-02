@@ -45,11 +45,16 @@ type SmilesResponse = {
   bookings?: SmilesBooking[];
 };
 
-const confirmedBookingStatuses = ["handled", "completed", "confirmed"];
+const confirmedBookingStatuses = ["handled", "completed", "confirmed", "accepted"];
+const declinedBookingStatuses = ["declined", "rejected", "cancelled", "canceled"];
 const CONFIRMED_BOOKINGS_PER_PAGE = 8;
 
 function isBookingConfirmed(status: string | null) {
   return confirmedBookingStatuses.includes(String(status || "").toLowerCase());
+}
+
+function isBookingDeclined(status: string | null) {
+  return declinedBookingStatuses.includes(String(status || "").toLowerCase());
 }
 
 function formatDate(value: string | null) {
@@ -202,7 +207,11 @@ export default function SmilesBookingsPage() {
     "Stockport Smiles is for Stockport businesses. You can still use FromOne for Facebook and Instagram posts.";
 
   const newBookings = useMemo(
-    () => bookings.filter((booking) => !isBookingConfirmed(booking.status)),
+    () =>
+      bookings.filter(
+        (booking) =>
+          !isBookingConfirmed(booking.status) && !isBookingDeclined(booking.status)
+      ),
     [bookings]
   );
 
@@ -360,7 +369,7 @@ export default function SmilesBookingsPage() {
         title: "Booking confirmed",
         message:
           result.message ||
-          "The booking is confirmed and this time has been blocked.",
+          "The booking is confirmed and its guest count now uses the slot capacity.",
       });
 
       await loadBookings();
@@ -369,6 +378,54 @@ export default function SmilesBookingsPage() {
         type: "error",
         title: "Booking not confirmed",
         message: error?.message || "Could not confirm booking.",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const declineBooking = async (bookingId: string) => {
+    const confirmed = window.confirm(
+      "Decline this booking? It will stop using capacity for this time."
+    );
+
+    if (!confirmed) return;
+
+    setBusyId(bookingId);
+
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch("/api/smiles/business", {
+        method: "POST",
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "decline_booking",
+          bookingId,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok || result.success === false) {
+        throw new Error(result.message || "Could not decline booking.");
+      }
+
+      showToast({
+        type: "success",
+        title: "Booking declined",
+        message:
+          result.message ||
+          "The booking was declined and no longer uses slot capacity.",
+      });
+
+      await loadBookings();
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Booking not declined",
+        message: error?.message || "Could not decline booking.",
       });
     } finally {
       setBusyId(null);
@@ -538,14 +595,24 @@ export default function SmilesBookingsPage() {
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        className="posts-review-action bookings-confirm-button"
-                        onClick={() => confirmBooking(booking.id)}
-                        disabled={busyId === booking.id}
-                      >
-                        {busyId === booking.id ? "Confirming…" : "Confirm booking"}
-                      </button>
+                      <div className="bookings-card-actions">
+                        <button
+                          type="button"
+                          className="posts-review-action bookings-confirm-button"
+                          onClick={() => confirmBooking(booking.id)}
+                          disabled={busyId === booking.id}
+                        >
+                          {busyId === booking.id ? "Working…" : "Confirm booking"}
+                        </button>
+                        <button
+                          type="button"
+                          className="bookings-decline-button"
+                          onClick={() => declineBooking(booking.id)}
+                          disabled={busyId === booking.id}
+                        >
+                          Decline
+                        </button>
+                      </div>
                     </article>
                   ))}
                 </div>
@@ -624,6 +691,15 @@ export default function SmilesBookingsPage() {
                                     <BookingNoteDetails booking={booking} />
                                   </div>
                                 </div>
+
+                                <button
+                                  type="button"
+                                  className="bookings-decline-button"
+                                  onClick={() => declineBooking(booking.id)}
+                                  disabled={busyId === booking.id}
+                                >
+                                  {busyId === booking.id ? "Working…" : "Decline booking"}
+                                </button>
                               </article>
                             ))}
                           </div>
@@ -804,7 +880,7 @@ export default function SmilesBookingsPage() {
         }
 
         .fromone-bookings-page .bookings-confirmed-card {
-          grid-template-columns: 180px minmax(0, 1fr);
+          grid-template-columns: 180px minmax(0, 1fr) 170px;
         }
 
         .fromone-bookings-page .bookings-review-time {
@@ -885,9 +961,33 @@ export default function SmilesBookingsPage() {
           overflow-wrap: anywhere;
         }
 
-        .fromone-bookings-page .bookings-confirm-button {
+        .fromone-bookings-page .bookings-card-actions {
+          display: grid;
+          gap: 9px;
+        }
+
+        .fromone-bookings-page .bookings-confirm-button,
+        .fromone-bookings-page .bookings-decline-button {
           width: 100%;
           margin: 0;
+        }
+
+        .fromone-bookings-page .bookings-decline-button {
+          min-height: 46px;
+          padding: 0 15px;
+          border: 1px solid #efb7c9;
+          border-radius: 15px;
+          background: #fff7fa;
+          color: #a91257;
+          font: inherit;
+          font-size: 0.86rem;
+          font-weight: 900;
+          cursor: pointer;
+        }
+
+        .fromone-bookings-page .bookings-decline-button:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
         }
 
         .fromone-bookings-page .bookings-history-head {
@@ -958,7 +1058,8 @@ export default function SmilesBookingsPage() {
             grid-template-columns: 150px minmax(0, 1fr);
           }
 
-          .fromone-bookings-page .bookings-confirm-button {
+          .fromone-bookings-page .bookings-card-actions,
+          .fromone-bookings-page .bookings-confirmed-card > .bookings-decline-button {
             grid-column: 1 / -1;
           }
         }
@@ -984,11 +1085,13 @@ export default function SmilesBookingsPage() {
 
           .fromone-bookings-page .bookings-search-row button,
           .fromone-bookings-page .bookings-secondary-button,
-          .fromone-bookings-page .bookings-confirm-button {
+          .fromone-bookings-page .bookings-confirm-button,
+          .fromone-bookings-page .bookings-decline-button {
             width: 100%;
           }
 
-          .fromone-bookings-page .bookings-confirm-button {
+          .fromone-bookings-page .bookings-card-actions,
+          .fromone-bookings-page .bookings-confirmed-card > .bookings-decline-button {
             grid-column: auto;
           }
 

@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
 
 type SmilesBusinessAction =
   | {
-      action?: "mark_booking_handled";
+      action?: "mark_booking_handled" | "decline_booking";
       bookingId?: string;
       booking_id?: string;
     }
@@ -631,20 +631,6 @@ async function attachFromOnePostIds({
   };
 }
 
-function addMinutesToTime(value: unknown, minutesToAdd: number) {
-  const cleaned = cleanTime(value);
-
-  if (!cleaned) return null;
-
-  const [hours, minutes] = cleaned.split(":").map((part) => Number(part));
-  const date = new Date("2000-01-01T00:00:00");
-  date.setHours(hours, minutes + minutesToAdd, 0, 0);
-
-  return `${String(date.getHours()).padStart(2, "0")}:${String(
-    date.getMinutes(),
-  ).padStart(2, "0")}:00`;
-}
-
 function getFromOneSupabaseForUser(req: NextRequest) {
   if (!fromOneSupabaseUrl || !fromOneAnonKey) {
     throw new Error("Missing FromOne public Supabase environment variables.");
@@ -723,6 +709,40 @@ async function updateBookingStatusWithFallback({
   }
 
   throw new Error(lastError || "Booking was not updated. Please try again.");
+}
+
+async function declineBookingStatusWithFallback({
+  smiles,
+  bookingId,
+  venueId,
+}: {
+  smiles: ReturnType<typeof getSmilesSupabaseAdmin>;
+  bookingId: string;
+  venueId: string;
+}) {
+  const statusesToTry = ["declined", "rejected", "cancelled"];
+  let lastError = "";
+
+  for (const status of statusesToTry) {
+    const { data, error } = await smiles
+      .from("bookings")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", bookingId)
+      .eq("venue_id", venueId)
+      .select("id, status, booking_date, booking_time")
+      .single();
+
+    if (!error && data?.id) {
+      return data;
+    }
+
+    lastError = error?.message || "Booking was not declined.";
+  }
+
+  throw new Error(lastError || "Booking was not declined. Please try again.");
 }
 
 async function getOwnedSmilesVenueId(req: NextRequest) {
@@ -1027,31 +1047,6 @@ export async function POST(req: NextRequest) {
         venueId: ownedVenue.smilesVenueId,
       });
 
-      const bookingDate = cleanDate((data as any).booking_date);
-      const bookingStartTime = cleanTime((data as any).booking_time);
-      const bookingEndTime = addMinutesToTime(bookingStartTime, 120);
-
-      if (bookingDate && bookingStartTime && bookingEndTime) {
-        const { error: blockError } = await smiles
-          .from("client_booking_blocks")
-          .insert({
-            client_id: null,
-            venue_id: ownedVenue.smilesVenueId,
-            block_date: bookingDate,
-            is_full_day: false,
-            start_time: bookingStartTime,
-            end_time: bookingEndTime,
-            reason: "Confirmed booking",
-          });
-
-        if (blockError) {
-          console.error(
-            "Confirmed booking was saved but auto-block failed:",
-            blockError.message,
-          );
-        }
-      }
-
       const emailResult = await sendBookingConfirmedEmail({
         smiles,
         booking: data,
@@ -1064,10 +1059,60 @@ export async function POST(req: NextRequest) {
         ok: true,
         success: true,
         message: emailResult.sent
-          ? "Booking confirmed, customer emailed and time blocked."
-          : "Booking confirmed and time blocked. Customer confirmation email was not sent.",
+          ? "Booking confirmed and customer emailed."
+          : "Booking confirmed. Customer confirmation email was not sent.",
         booking: data,
         customerEmailSent: emailResult.sent,
+      });
+    }
+
+    if (action === "decline_booking") {
+      const bookingId = cleanText(
+        (body as any).bookingId || (body as any).booking_id,
+      );
+
+      if (!bookingId) {
+        return NextResponse.json(
+          {
+            ok: false,
+            success: false,
+            message: "Missing booking id.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const data = await declineBookingStatusWithFallback({
+        smiles,
+        bookingId,
+        venueId: ownedVenue.smilesVenueId,
+      });
+
+      const bookingDate = cleanDate((data as any).booking_date);
+      const bookingStartTime = cleanTime((data as any).booking_time);
+
+      if (bookingDate && bookingStartTime) {
+        const { error: legacyBlockError } = await smiles
+          .from("client_booking_blocks")
+          .delete()
+          .eq("venue_id", ownedVenue.smilesVenueId)
+          .eq("block_date", bookingDate)
+          .eq("start_time", bookingStartTime)
+          .eq("reason", "Confirmed booking");
+
+        if (legacyBlockError) {
+          console.error(
+            "Booking was declined but its legacy auto-block could not be removed:",
+            legacyBlockError.message,
+          );
+        }
+      }
+
+      return NextResponse.json({
+        ok: true,
+        success: true,
+        message: "Booking declined and slot capacity released.",
+        booking: data,
       });
     }
 
