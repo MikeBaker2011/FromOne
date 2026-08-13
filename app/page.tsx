@@ -14,7 +14,19 @@ export default function HomePage() {
 
       <section className="foHeroOnly">
         <div className="foHeroContent">
-          <span className="foHeroEyebrow">FROMONE + SMILEZ</span>
+          <div className="foHeroBrands" aria-label="FromOne and Smilez">
+            <img
+              src="/fromone-logo.png"
+              alt="FromOne"
+              className="foHeroBrandLogo foHeroFromOneLogo"
+            />
+            <span className="foHeroBrandPlus" aria-hidden="true">+</span>
+            <img
+              src="/stockport-smiles-logo.png"
+              alt="Smilez"
+              className="foHeroBrandLogo foHeroSmilezLogo"
+            />
+          </div>
 
           <h1>
             One upload.
@@ -95,6 +107,38 @@ export default function HomePage() {
           width: min(900px, 100%);
           margin: 0 auto;
           text-align: center;
+        }
+
+        .foHeroBrands {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 20px;
+          margin: 0 auto 24px;
+        }
+
+        .foHeroBrandLogo {
+          display: block;
+          width: auto;
+          height: auto;
+          object-fit: contain;
+        }
+
+        .foHeroFromOneLogo {
+          max-width: 320px;
+          max-height: 108px;
+        }
+
+        .foHeroSmilezLogo {
+          max-width: 320px;
+          max-height: 126px;
+        }
+
+        .foHeroBrandPlus {
+          color: #001b57;
+          font-size: 1.45rem;
+          line-height: 1;
+          font-weight: 900;
         }
 
         .foHeroEyebrow {
@@ -198,6 +242,26 @@ export default function HomePage() {
         }
 
         @media (max-width: 700px) {
+          .foHeroBrands {
+            gap: 12px;
+            margin-bottom: 20px;
+          }
+
+          .foHeroFromOneLogo {
+            max-width: min(180px, 42vw);
+            max-height: 72px;
+          }
+
+          .foHeroSmilezLogo {
+            max-width: min(180px, 42vw);
+            max-height: 82px;
+          }
+
+          .foHeroBrandPlus {
+            font-size: 1rem;
+          }
+
+
           .foHeroOnly {
             min-height: calc(100vh - 64px);
             padding: 58px 18px 72px;
