@@ -3511,7 +3511,16 @@ Reach instruction: ${reachInstruction}
 
 Important:
 Rewrite the current caption using a regional and local customer focus by default.
-Do not return the same caption.`,
+Do not return the same caption.
+
+Opening-line quality rules:
+- The first sentence must be specific, natural and immediately useful. Lead with the strongest real detail from the current post, uploaded media, offer, event, service, product, result or customer benefit.
+- Never start with vague lifestyle marketing or generic AI copy.
+- Do not use openings such as "Elevate your...", "Elevate your evenings...", "Discover...", "Experience...", "Transform...", "Unlock...", "Step into...", "Looking for...", "Treat yourself..." or similar stock phrases.
+- Avoid generic filler such as "perfect for", "whether you're", "something for everyone", "unforgettable", "ultimate", "vibrant", "stunning" or "amazing" unless the supplied content genuinely supports it.
+- For bars, restaurants, hospitality and events, open with the actual reason to visit: the food, drinks, offer, event, atmosphere, date, entertainment or booking opportunity that is genuinely present in the source content.
+- Prefer a strong concrete hook over a polished slogan. It should sound like a real local business wrote it, not an advertising template.
+- Do not invent prices, dates, offers, ingredients, products, services, claims or event details that are not in the current post or supplied source material.`,
         }),
       });
 

@@ -409,7 +409,6 @@ export default function CreatePage() {
     nextPost: null,
   });
 
-  const [socialConnections, setSocialConnections] = useState<any[]>([]);
   const [hasScheduledPost, setHasScheduledPost] = useState(false);
 
   const [accessInfo, setAccessInfo] = useState<AccessInfo | null>(null);
@@ -428,6 +427,12 @@ export default function CreatePage() {
   const [selectedPostingFrequency, setSelectedPostingFrequency] = useState(3);
   const [weeklyUploads, setWeeklyUploads] = useState<WeeklyUpload[]>([]);
   const [weeklyPostNote, setWeeklyPostNote] = useState("");
+
+  const [creationMode, setCreationMode] = useState<"ai" | "manual">("ai");
+  const [manualPostTitle, setManualPostTitle] = useState("");
+  const [manualPostCaption, setManualPostCaption] = useState("");
+  const [manualPostCta, setManualPostCta] = useState("");
+  const [manualPostHashtags, setManualPostHashtags] = useState("");
 
   const mobilePhotoInputRef = useRef<HTMLInputElement | null>(null);
   const mobileVideoInputRef = useRef<HTMLInputElement | null>(null);
@@ -875,25 +880,6 @@ export default function CreatePage() {
     });
   };
 
-  const loadSocialConnections = async (userId: string) => {
-    try {
-      const params = new URLSearchParams();
-      params.set("user_id", userId);
-
-      const response = await fetch(`/api/social-connections?${params.toString()}`);
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result?.error || "Could not load connected accounts.");
-      }
-
-      setSocialConnections(result?.connections || []);
-    } catch (error: any) {
-      console.error("Error loading connected accounts:", error?.message || error);
-      setSocialConnections([]);
-    }
-  };
-
   const loadScheduledPostStatus = async (userId: string) => {
     const { count, error } = await supabase
       .from("campaign_posts")
@@ -992,7 +978,6 @@ export default function CreatePage() {
       loadWeeklyPostAllowance(userId),
       loadOrCreateAccess(userId),
       loadWeeklyProgress(userId),
-      loadSocialConnections(userId),
       loadScheduledPostStatus(userId),
     ]);
 
@@ -2153,9 +2138,7 @@ Important flyer-to-wording rule: the generated caption, CTA and hashtags must be
     const contentDayCount =
       weeklyUploads.length > 0
         ? Math.min(weeklyUploads.length, 7)
-        : platformDistributionMode === "every_platform"
-          ? 1
-          : selectedPlatforms.length;
+        : 1;
 
     const existingCampaignStats = addToCampaignId
       ? await getExistingCampaignStats(addToCampaignId)
@@ -2171,12 +2154,9 @@ Important flyer-to-wording rule: the generated caption, CTA and hashtags must be
     }
 
     const postCount = contentDayCount;
-    // In every_platform mode, each uploaded media item/base idea becomes one post per selected platform.
-    // Example: Facebook + Instagram selected = one Facebook post and one Instagram post.
-    const totalPlatformPostsToCreate =
-      platformDistributionMode === "every_platform"
-        ? contentDayCount * selectedPlatforms.length
-        : contentDayCount;
+    // Create exactly one review draft per uploaded item/base idea.
+    // Facebook, Instagram and Smilez are chosen later from the review page.
+    const totalPlatformPostsToCreate = contentDayCount;
 
     const weeklyPostLimitAllowed = await checkWeeklyPostAllowance(
       userId,
@@ -2277,7 +2257,9 @@ If uploads are supplied:
 - For videos, the API will try to send the actual video to Gemini. If available, the generated post must be about the visible footage itself, not a generic business message.
 - For videos, write about the specific scene, action, atmosphere, event, product, service, job progress, result, behind-the-scenes moment, offer or booking/enquiry angle shown or strongly supported.
 - If the model cannot inspect a video, it must use the quick description and filename carefully without pretending it saw exact details.
-- Platform distribution mode: ${platformDistributionMode === "every_platform" ? "create each base post for every selected platform" : "split base posts across selected platforms"}.
+- Create one review draft per content item. Do not duplicate a draft for multiple destinations.
+- The final destination is chosen later on the review page, where the user can publish to Facebook, Instagram or send suitable content to Smilez.
+- Keep the wording broadly usable across those destinations unless the uploaded media clearly requires platform-specific wording.
 - Do not only describe the image, flyer or video.
 - Use the business profile to add quality, local angle, industry relevance, tone, CTA and sales angle, but never to invent product specifics.`,
       provider: "gemini",
@@ -2289,7 +2271,7 @@ If uploads are supplied:
       weeklyUploads: uploadedMediaItems,
       uploads: uploadedMediaItems,
       requestedOutput: {
-        posts: `Return exactly ${postCount} scheduled post object${postCount === 1 ? "" : "s"} with day, platform, title, caption, cta, hashtags, image_prompt. Use only Facebook, Instagram and Stockport Smiles. If mediaItems are supplied, create exactly one post per uploaded item in the same order. Do not create 7 posts unless 7 items were uploaded or 7 profile-only posts were requested. If no mediaItems are supplied, create profile-led draft posts. Platform distribution mode: ${platformDistributionMode}.`,
+        posts: `Return exactly ${postCount} scheduled post object${postCount === 1 ? "" : "s"} with day, platform, title, caption, cta, hashtags, image_prompt. If mediaItems are supplied, create exactly one post per uploaded item in the same order. Do not duplicate a post for multiple destinations. If no mediaItems are supplied, create exactly ${postCount} profile-led review draft${postCount === 1 ? "" : "s"}. The user chooses Facebook, Instagram or Smilez later on the review page. Keep the wording broadly reusable across destinations.`,
         selected_platforms: selectedPlatforms,
         market_reach: marketReachContext,
         uploaded_media: uploadedMediaItems,
@@ -2405,7 +2387,7 @@ If uploads are supplied:
           campaign_area: detectedLocation,
           tone: detectedTone,
           posting_frequency: `${totalPlatformPostsToCreate} posts`,
-          platform_plan: `${buildPlatformPlanText(selectedPlatforms, totalPlatformPostsToCreate)}. Market reach: ${marketReachContext}. Platform mode: ${platformDistributionMode === "every_platform" ? "each post for every platform" : "split across platforms"}`,
+          platform_plan: `Destinations chosen during review. Available: Facebook, Instagram and Smilez. Market reach: ${marketReachContext}.`,
         })
         .select()
         .single();
@@ -2429,14 +2411,14 @@ If uploads are supplied:
         const mediaItem = uploadedMediaItems[i] || null;
         const baseGeneratedPost = posts[i];
 
-        const platformsForThisPost =
-          platformDistributionMode === "every_platform"
-            ? selectedPlatforms
-            : [
-                selectedPlatforms[baseContentDayIndex % selectedPlatforms.length] ||
-                  platformFallback[baseContentDayIndex % platformFallback.length] ||
-                  "Facebook",
-              ];
+        // Keep one internal platform value for existing scheduling/media behaviour.
+        // The review page can still explicitly publish the same draft to Facebook
+        // or Instagram, and can send suitable content to Smilez.
+        const platformsForThisPost = [
+          selectedPlatforms[baseContentDayIndex % selectedPlatforms.length] ||
+            platformFallback[baseContentDayIndex % platformFallback.length] ||
+            "Facebook",
+        ];
 
         for (const selectedPlatform of platformsForThisPost) {
           const scheduleIndex = existingCampaignStats.contentDays + createdPostIndex;
@@ -2448,10 +2430,7 @@ If uploads are supplied:
                 : baseGeneratedPost),
               platform: selectedPlatform,
               day: `Post ${contentDayNumber}`,
-              title:
-                platformDistributionMode === "every_platform"
-                  ? `${selectedPlatform} Version ${contentDayNumber}`
-                  : `${selectedPlatform} Post ${contentDayNumber}`,
+              title: `Post ${contentDayNumber}`,
             },
             scheduleIndex,
             activeClient,
@@ -2601,6 +2580,267 @@ If uploads are supplied:
     router.push(`/posts?created=true&campaign=${campaign.id}`);
   };
 
+  const createManualDraft = async () => {
+    navigatingToPostsRef.current = false;
+    setCreationProgressMessage("Saving your draft...");
+    setScanning(true);
+
+    if (!ensureAccessAllowed()) {
+      setScanning(false);
+      return;
+    }
+
+    try {
+      const activeClient = client;
+
+      if (!activeClient?.business_name || !activeClient?.industry) {
+        notify(
+          "Set up the Business Profile in Settings first. Then come back here to create your post.",
+          "warning",
+          "Finish your business profile",
+        );
+        return;
+      }
+
+      if (!manualPostCaption.trim() && !manualPostTitle.trim()) {
+        notify(
+          "Add a caption or title before saving your manual draft.",
+          "warning",
+          "Post wording needed",
+        );
+        return;
+      }
+
+      if (weeklyUploads.length > 1) {
+        notify(
+          "Manual creation is one post at a time. Keep one image, video or flyer attached.",
+          "warning",
+          "One upload per manual post",
+        );
+        return;
+      }
+
+      const user = await getSafeAuthUser();
+      const userId = user?.id;
+
+      if (!userId) {
+        notify("You need to sign in before saving posts.", "warning", "Sign in needed");
+        return;
+      }
+
+      const weeklyPostLimitAllowed = await checkWeeklyPostAllowance(userId, 1);
+      if (!weeklyPostLimitAllowed) return;
+
+      const campaignLimitAllowed = addToCampaignId
+        ? true
+        : await checkSavedCampaignLimit(userId);
+
+      if (!campaignLimitAllowed) return;
+
+      const existingCampaignStats = addToCampaignId
+        ? await getExistingCampaignStats(addToCampaignId)
+        : { postRecords: 0, contentDays: 0 };
+
+      if (addToCampaignId && existingCampaignStats.contentDays + 1 > 7) {
+        notify(
+          "This weekly set already has 7 content days. Start a new set before adding another post.",
+          "warning",
+          "Weekly set full",
+        );
+        return;
+      }
+
+      const uploadedMediaItems =
+        weeklyUploads.length > 0 ? await uploadWeeklyMediaToStorage(userId) : [];
+      const mediaItem = uploadedMediaItems[0] || null;
+
+      const detectedBusinessName = activeClient.business_name || "Weekly Posts";
+      const detectedIndustry = activeClient.industry || "General";
+      const detectedLocation =
+        activeClient.location ||
+        getBusinessLocation(activeClient) ||
+        getMarketReachContext(activeClient);
+      const detectedAudience = Array.isArray(activeClient.target_audience)
+        ? activeClient.target_audience.join(", ")
+        : getMarketReachContext(activeClient);
+      const detectedTone = activeClient.tone_of_voice || "Professional";
+
+      let campaign: any = null;
+      let createdCampaignId: string | null = null;
+
+      if (addToCampaignId) {
+        const { data: existingCampaign, error: existingCampaignError } = await supabase
+          .from("campaigns")
+          .select("*")
+          .eq("id", addToCampaignId)
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (existingCampaignError) throwSupabaseError(existingCampaignError);
+
+        if (!existingCampaign) {
+          notify(
+            "Could not find the weekly post set to add to.",
+            "error",
+            "Weekly set not found",
+          );
+          return;
+        }
+
+        campaign = existingCampaign;
+      } else {
+        const { data: newCampaign, error: campaignError } = await supabase
+          .from("campaigns")
+          .insert({
+            user_id: userId,
+            name: buildCampaignName(detectedBusinessName),
+            business_type: detectedIndustry,
+            location: detectedLocation,
+            is_active: true,
+            keywords: [],
+            selected_keywords: [],
+            client_id: activeClient.id,
+            business_name: detectedBusinessName,
+            target_audience: detectedAudience,
+            campaign_idea: "Manual post",
+            audience: detectedAudience,
+            drafts: 1,
+            scheduled: 1,
+            assets: uploadedMediaItems.length,
+            posted: 0,
+            launch_date: new Date().toISOString().split("T")[0],
+            campaign_area: detectedLocation,
+            tone: detectedTone,
+            posting_frequency: "1 post",
+            platform_plan:
+              "Manual draft. Destination chosen during review: Facebook, Instagram or Smilez.",
+          })
+          .select()
+          .single();
+
+        if (campaignError) throwSupabaseError(campaignError);
+
+        campaign = newCampaign;
+        createdCampaignId = newCampaign.id;
+      }
+
+      const contentDayNumber = existingCampaignStats.contentDays + 1;
+      const scheduleIndex = existingCampaignStats.contentDays;
+      const internalPlatform = "Facebook";
+      const suggestedPublishTime = getSuggestedPostTime(
+        scheduleIndex,
+        internalPlatform,
+        activeClient,
+        detectedIndustry,
+      );
+
+      const hashtagArray = manualPostHashtags
+        .split(/[\s,]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => (item.startsWith("#") ? item : `#${item}`));
+
+      const title =
+        manualPostTitle.trim() ||
+        manualPostCaption.trim().split(/[.!?]/)[0]?.slice(0, 80) ||
+        `Post ${contentDayNumber}`;
+
+      const { error: postError } = await supabase.from("campaign_posts").insert({
+        user_id: userId,
+        campaign_id: campaign.id,
+        keyword: detectedIndustry || "business",
+        title,
+        caption: manualPostCaption.trim(),
+        cta: manualPostCta.trim(),
+        hashtags: hashtagArray,
+        platform: internalPlatform,
+        type: "manual",
+        scheduled_day: `Post ${contentDayNumber}`,
+        scheduled_at: suggestedPublishTime.toISOString(),
+        scheduled_publish_at: suggestedPublishTime.toISOString(),
+        publish_status: "ready",
+        status: "needs_review",
+        is_posted: false,
+        client_id: activeClient.id,
+        image_prompt: "",
+        media_url: mediaItem?.media_url || null,
+        media_path: mediaItem?.media_path || null,
+        media_type: mediaItem?.media_type || null,
+        prepared_media_url:
+          mediaItem?.converted_from_pdf ? mediaItem?.media_url || null : null,
+        prepared_media_width: null,
+        prepared_media_height: null,
+        original_media_url: mediaItem?.original_media_url || null,
+        original_media_path: mediaItem?.original_media_path || null,
+        original_media_type: mediaItem?.original_media_type || null,
+        converted_from_pdf: Boolean(mediaItem?.converted_from_pdf),
+        conversion_warning: mediaItem?.conversion_warning || null,
+        media_prepare_status:
+          mediaItem?.media_prepare_status ||
+          (mediaItem?.media_type === "image" ? "prepared" : "ready"),
+        media_prepare_error: mediaItem?.media_prepare_error || null,
+        media_prepared_at: mediaItem?.media_prepared_at || null,
+        smiles_draft: null,
+        smiles_status: "not_recommended",
+        smiles_draft_id: null,
+        smiles_table: null,
+        smiles_sent_at: null,
+        smiles_error: null,
+        approval_status: "needs_review",
+        approved_at: null,
+        reach: 0,
+        clicks: 0,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        saves: 0,
+      });
+
+      if (postError) {
+        await deleteEmptyCampaignIfNeeded(createdCampaignId);
+        throwSupabaseError(postError);
+      }
+
+      if (addToCampaignId) {
+        await supabase
+          .from("campaigns")
+          .update({
+            drafts: existingCampaignStats.postRecords + 1,
+            scheduled: existingCampaignStats.postRecords + 1,
+            assets: (Number(campaign.assets) || 0) + uploadedMediaItems.length,
+            posting_frequency: `${existingCampaignStats.postRecords + 1} posts`,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", campaign.id)
+          .eq("user_id", userId);
+      }
+
+      updateCreationProgress("Opening your review board...");
+
+      localStorage.setItem("fromone_has_new_posts", "true");
+      window.dispatchEvent(new Event("fromone-new-posts-updated"));
+
+      await Promise.all([
+        loadSavedCampaignCount(userId),
+        loadWeeklyProgress(userId),
+        loadScheduledPostStatus(userId),
+      ]);
+
+      navigatingToPostsRef.current = true;
+      router.push(`/posts?created=true&campaign=${campaign.id}`);
+    } catch (error: any) {
+      const message = getErrorMessage(error);
+      console.error("Manual draft error:", error);
+      notify(message, "error");
+    } finally {
+      if (!navigatingToPostsRef.current) {
+        setPreparingFlyers(false);
+        setScanning(false);
+        setCreationProgressMessage("");
+      }
+    }
+  };
+
   const handleGeneratePosts = async () => {
     navigatingToPostsRef.current = false;
     setCreationProgressMessage("Getting your posts ready...");
@@ -2655,10 +2895,17 @@ If uploads are supplied:
     }
 
     setWeeklyUploads((currentUploads) => {
-      const remainingSlots = Math.max(7 - currentUploads.length, 0);
+      const maxUploads = creationMode === "manual" ? 1 : 7;
+      const remainingSlots = Math.max(maxUploads - currentUploads.length, 0);
 
       if (remainingSlots <= 0) {
-        notify("You can upload up to 7 items for one weekly post set.", "warning", "Upload limit reached");
+        notify(
+          creationMode === "manual"
+            ? "Manual creation is one post at a time. Remove the current upload before choosing another."
+            : "You can upload up to 7 items for one weekly post set.",
+          "warning",
+          "Upload limit reached",
+        );
         return currentUploads;
       }
 
@@ -2666,9 +2913,11 @@ If uploads are supplied:
 
       if (selectedFiles.length > remainingSlots) {
         notify(
-          `Only ${remainingSlots} more upload${remainingSlots === 1 ? "" : "s"} can be added to this weekly set.`,
+          creationMode === "manual"
+            ? "Manual creation uses one upload per post. Only the first file was added."
+            : `Only ${remainingSlots} more upload${remainingSlots === 1 ? "" : "s"} can be added to this weekly set.`,
           "warning",
-          "Upload limit reached"
+          "Upload limit reached",
         );
       }
 
@@ -2791,11 +3040,11 @@ If uploads are supplied:
 
   const uploadDrivenPostCount = weeklyUploads.length;
   const createdPostTotal =
-    uploadDrivenPostCount > 0
-      ? platformDistributionMode === "every_platform"
-        ? uploadDrivenPostCount * selectedPlatforms.length
-        : uploadDrivenPostCount
-      : selectedPlatforms.length;
+    creationMode === "manual"
+      ? 1
+      : uploadDrivenPostCount > 0
+        ? uploadDrivenPostCount
+        : 1;
   const uploadLabel =
     weeklyUploads.length > 0
       ? `${weeklyUploads.length} upload${weeklyUploads.length === 1 ? "" : "s"} added`
@@ -2811,11 +3060,6 @@ If uploads are supplied:
       ? `${selectedPlatforms.slice(0, 3).join(", ")} +${selectedPlatforms.length - 3} more`
       : selectedPlatforms.join(", ");
 
-  const primaryMetaConnection =
-    socialConnections.find((connection) => connection.provider === "meta") || null;
-
-  const hasFacebookConnection = Boolean(primaryMetaConnection?.page_id);
-  const hasInstagramConnection = Boolean(primaryMetaConnection?.instagram_business_account_id);
   const hasPaidPlan =
     billingPlan === "starter" || isPaidSubscription(accessInfo?.subscription_status);
 
@@ -2947,7 +3191,7 @@ If uploads are supplied:
           <div>
             <span className="create-kicker">Create</span>
             <h1>Make something worth sharing.</h1>
-            <p>Upload your media, choose where it goes, then review the drafts before publishing.</p>
+            <p>Upload your media, create your drafts, then choose where to publish during review.</p>
           </div>
 
           <div className="create-usage" aria-label="Creation allowance">
@@ -2962,6 +3206,40 @@ If uploads are supplied:
           </div>
         </header>
 
+        <section className="create-mode-switcher" aria-label="Choose how to create your post">
+          <button
+            type="button"
+            className={creationMode === "ai" ? "is-active" : ""}
+            onClick={() => {
+              setCreationMode("ai");
+              setManualPostTitle("");
+              setManualPostCaption("");
+              setManualPostCta("");
+              setManualPostHashtags("");
+            }}
+          >
+            <strong>Create with AI</strong>
+            <span>Upload your media and let FromOne create the first draft.</span>
+          </button>
+
+          <button
+            type="button"
+            className={creationMode === "manual" ? "is-active" : ""}
+            onClick={() => {
+              setCreationMode("manual");
+              setWeeklyPostNote("");
+              setWeeklyUploads((currentUploads) => {
+                const [firstUpload, ...extraUploads] = currentUploads;
+                extraUploads.forEach((upload) => URL.revokeObjectURL(upload.previewUrl));
+                return firstUpload ? [firstUpload] : [];
+              });
+            }}
+          >
+            <strong>Create manually</strong>
+            <span>Use your own image or video and write the post yourself. No AI scan.</span>
+          </button>
+        </section>
+
         {addToCampaignId && (
           <div className="create-inline-status">Adding these drafts to an existing weekly set.</div>
         )}
@@ -2969,7 +3247,7 @@ If uploads are supplied:
         {weeklyPostAllowanceExceeded && (
           <div className="create-alert">
             This would create {createdPostTotal} posts, but only {weeklyPostsRemaining} remain this week.
-            Reduce the uploads or destinations.
+            Reduce the uploads.
           </div>
         )}
 
@@ -3092,26 +3370,33 @@ If uploads are supplied:
 
                     <div className="create-media-details">
                       <strong className="create-media-name">{upload.file.name}</strong>
-                      <label>
-                        <span>
-                          {upload.mediaType === "flyer"
-                            ? "Anything we should know?"
-                            : `What is this ${upload.mediaType === "video" ? "video" : "image"} about?`}
-                        </span>
-                        <textarea
-                          value={upload.note}
-                          onChange={(event) =>
-                            updateWeeklyUploadNote(upload.id, event.target.value)
-                          }
-                          disabled={scanning}
-                          rows={3}
-                          placeholder={
-                            upload.mediaType === "flyer"
-                              ? "Optional tone, audience or extra detail"
-                              : "Example: New stock available in store today"
-                          }
-                        />
-                      </label>
+
+                      {creationMode === "ai" ? (
+                        <label>
+                          <span>
+                            {upload.mediaType === "flyer"
+                              ? "Anything we should know?"
+                              : `What is this ${upload.mediaType === "video" ? "video" : "image"} about?`}
+                          </span>
+                          <textarea
+                            value={upload.note}
+                            onChange={(event) =>
+                              updateWeeklyUploadNote(upload.id, event.target.value)
+                            }
+                            disabled={scanning}
+                            rows={3}
+                            placeholder={
+                              upload.mediaType === "flyer"
+                                ? "Optional tone, audience or extra detail"
+                                : "Example: New stock available in store today"
+                            }
+                          />
+                        </label>
+                      ) : (
+                        <p className="create-manual-media-note">
+                          This media will be attached as-is. FromOne will not scan it with AI.
+                        </p>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -3119,66 +3404,78 @@ If uploads are supplied:
             )}
           </section>
 
-          <aside className="create-publish-panel" aria-labelledby="create-destinations-title">
-            <div className="create-section-heading create-publish-heading">
+          <section className="create-review-action" aria-labelledby="create-review-action-title">
+            <div className="create-review-action-copy">
               <div>
                 <span className="create-step">2</span>
-                <h2 id="create-destinations-title">Publish to</h2>
+                <div>
+                  <h2 id="create-review-action-title">
+                    {creationMode === "ai" ? "Create your drafts" : "Write your post"}
+                  </h2>
+                  <p>
+                    {creationMode === "ai"
+                      ? "One upload creates one review draft. Choose Facebook, Instagram or Smilez after you have checked the wording and media."
+                      : "Write the post yourself. No AI scan is used. You can still choose Facebook, Instagram or Smilez on the review page."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="create-review-destination-note" aria-label="Destinations available during review">
+                <span>Facebook</span>
+                <span>Instagram</span>
+                <span>Smilez</span>
               </div>
             </div>
 
-            <div className="create-destination-list">
-              {[
-                {
-                  name: "Facebook",
-                  title: "Facebook",
-                  description: hasFacebookConnection
-                    ? "Connected and ready"
-                    : "Connect Meta in Business",
-                  badge: "f",
-                },
-                {
-                  name: "Instagram",
-                  title: "Instagram",
-                  description: hasInstagramConnection
-                    ? "Connected and ready"
-                    : "Connect Meta in Business",
-                  badge: "◎",
-                },
-                {
-                  name: "Stockport Smiles",
-                  title: "Smilez",
-                  description: "Offers and events for approval",
-                  badge: "S",
-                },
-              ].map((platform) => {
-                const selected = selectedPlatforms.includes(platform.name);
+            {creationMode === "manual" && (
+              <div className="create-manual-fields">
+                <label>
+                  <span>Post title <small>optional</small></span>
+                  <input
+                    type="text"
+                    value={manualPostTitle}
+                    onChange={(event) => setManualPostTitle(event.target.value)}
+                    placeholder="Give your post a short title"
+                    maxLength={120}
+                    disabled={scanning}
+                  />
+                </label>
 
-                return (
-                  <button
-                    key={platform.name}
-                    type="button"
-                    className={`create-destination ${selected ? "is-selected" : ""}`}
-                    onClick={() => togglePlatform(platform.name)}
-                    aria-pressed={selected}
-                  >
-                    <span className="create-destination-badge" aria-hidden="true">
-                      {platform.badge}
-                    </span>
-                    <span className="create-destination-copy">
-                      <strong>{platform.title}</strong>
-                      <small>{platform.description}</small>
-                    </span>
-                    <span className="create-switch" aria-hidden="true">
-                      <span />
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                <label className="create-manual-caption">
+                  <span>Caption</span>
+                  <textarea
+                    value={manualPostCaption}
+                    onChange={(event) => setManualPostCaption(event.target.value)}
+                    placeholder="Write exactly what you want customers to see..."
+                    rows={6}
+                    disabled={scanning}
+                  />
+                </label>
 
-            {selectedPlatforms.length === 0 && (
-              <div className="create-alert create-alert-small">Choose at least one destination.</div>
+                <div className="create-manual-field-grid">
+                  <label>
+                    <span>Call to action <small>optional</small></span>
+                    <input
+                      type="text"
+                      value={manualPostCta}
+                      onChange={(event) => setManualPostCta(event.target.value)}
+                      placeholder="Book now, message us, visit today..."
+                      disabled={scanning}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Hashtags <small>optional</small></span>
+                    <input
+                      type="text"
+                      value={manualPostHashtags}
+                      onChange={(event) => setManualPostHashtags(event.target.value)}
+                      placeholder="#Stockport #LocalBusiness"
+                      disabled={scanning}
+                    />
+                  </label>
+                </div>
+              </div>
             )}
 
             {!businessProfileReady && (
@@ -3196,46 +3493,53 @@ If uploads are supplied:
               </div>
             )}
 
-            <div className="create-summary">
-              <div>
-                <span>Uploads</span>
-                <strong>{weeklyUploads.length}</strong>
+            <div className="create-review-action-controls">
+              <div className="create-summary">
+                <div>
+                  <span>Uploads</span>
+                  <strong>{weeklyUploads.length}</strong>
+                </div>
+                <div>
+                  <span>{creationMode === "ai" ? "Drafts" : "Draft"}</span>
+                  <strong>{createdPostTotal}</strong>
+                </div>
               </div>
-              <div>
-                <span>Destinations</span>
-                <strong>{selectedPlatforms.length}</strong>
-              </div>
-              <div>
-                <span>Posts</span>
-                <strong>{createdPostTotal}</strong>
-              </div>
+
+              <button
+                type="button"
+                className="create-submit"
+                onClick={creationMode === "ai" ? handleGeneratePosts : createManualDraft}
+                disabled={
+                  !canCreatePosts ||
+                  savingWebsite ||
+                  savingManualProfile ||
+                  (creationMode === "manual" &&
+                    !manualPostCaption.trim() &&
+                    !manualPostTitle.trim())
+                }
+              >
+                {creationProgressMessage
+                  ? creationProgressMessage
+                  : preparingFlyers
+                    ? "Preparing media..."
+                    : scanning
+                      ? creationMode === "ai"
+                        ? "Creating drafts..."
+                        : "Saving draft..."
+                      : addToCampaignId
+                        ? "Add draft to set"
+                        : creationMode === "ai"
+                          ? "Create drafts"
+                          : "Save manual draft"}
+              </button>
             </div>
 
-            <button
-              type="button"
-              className="create-submit"
-              onClick={handleGeneratePosts}
-              disabled={!canCreatePosts || savingWebsite || savingManualProfile}
-            >
-              {creationProgressMessage
-                ? creationProgressMessage
-                : preparingFlyers
-                  ? "Preparing flyers..."
-                  : scanning
-                    ? "Creating drafts..."
-                    : addToCampaignId
-                      ? "Add drafts to set"
-                      : "Create drafts"}
-            </button>
-
             <p className="create-review-note">
-              Nothing publishes immediately. You review every draft first.
+              {creationMode === "ai"
+                ? "Nothing publishes immediately. You choose the destination on the review page."
+                : "No AI is used for the wording or media. Review it, then choose where to publish."}
             </p>
-
-            <Link href="/settings" className="create-manage-link">
-              Manage connections and saved sets
-            </Link>
-          </aside>
+          </section>
         </div>
       </div>
 
@@ -3247,9 +3551,15 @@ If uploads are supplied:
               <span />
               <span />
             </div>
-            <span className="create-kicker">Creating drafts</span>
-            <h2>{creationProgressMessage || "Building your posts."}</h2>
-            <p>Your media and business details are being turned into drafts for review.</p>
+            <span className="create-kicker">
+              {creationMode === "ai" ? "Creating drafts" : "Saving draft"}
+            </span>
+            <h2>{creationProgressMessage || (creationMode === "ai" ? "Building your posts." : "Saving your post.")}</h2>
+            <p>
+              {creationMode === "ai"
+                ? "Your media and business details are being turned into drafts for review."
+                : "Your post and media are being saved without an AI scan."}
+            </p>
           </section>
         </div>
       )}
@@ -3375,15 +3685,209 @@ If uploads are supplied:
           line-height: 1.45;
         }
 
+        .create-mode-switcher {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+          margin: 18px 0 20px;
+        }
+
+        .create-mode-switcher button {
+          min-width: 0;
+          display: grid;
+          gap: 4px;
+          padding: 16px 18px;
+          text-align: left;
+          border: 1px solid var(--create-border);
+          border-radius: 18px;
+          background: #ffffff;
+          color: var(--create-navy);
+          cursor: pointer;
+          box-shadow: 0 8px 24px rgba(7, 27, 73, 0.04);
+          transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+
+        .create-mode-switcher button:hover {
+          transform: translateY(-1px);
+          border-color: rgba(247, 37, 133, 0.24);
+        }
+
+        .create-mode-switcher button.is-active {
+          border-color: rgba(247, 37, 133, 0.42);
+          background: #fff7fb;
+          box-shadow: 0 10px 28px rgba(247, 37, 133, 0.1);
+        }
+
+        .create-mode-switcher strong {
+          font-size: 0.9rem;
+          font-weight: 950;
+        }
+
+        .create-mode-switcher span {
+          color: var(--create-muted);
+          font-size: 0.73rem;
+          font-weight: 700;
+          line-height: 1.4;
+        }
+
+        .create-manual-media-note {
+          margin: 0;
+          color: var(--create-muted);
+          font-size: 0.72rem;
+          font-weight: 700;
+          line-height: 1.45;
+        }
+
+        .create-manual-fields {
+          display: grid;
+          gap: 12px;
+          padding: 16px;
+          border: 1px solid rgba(7, 27, 73, 0.08);
+          border-radius: 18px;
+          background: #f9fbff;
+        }
+
+        .create-manual-fields label {
+          display: grid;
+          gap: 7px;
+        }
+
+        .create-manual-fields label > span {
+          color: var(--create-navy);
+          font-size: 0.72rem;
+          font-weight: 900;
+        }
+
+        .create-manual-fields label > span small {
+          color: var(--create-muted);
+          font-size: 0.65rem;
+          font-weight: 700;
+        }
+
+        .create-manual-fields input,
+        .create-manual-fields textarea {
+          width: 100%;
+          border: 1px solid rgba(7, 27, 73, 0.13);
+          border-radius: 13px;
+          background: #ffffff;
+          color: var(--create-navy);
+          font: inherit;
+          font-size: 0.8rem;
+          font-weight: 700;
+          line-height: 1.45;
+          outline: none;
+        }
+
+        .create-manual-fields input {
+          min-height: 44px;
+          padding: 0 12px;
+        }
+
+        .create-manual-fields textarea {
+          min-height: 126px;
+          padding: 11px 12px;
+          resize: vertical;
+        }
+
+        .create-manual-fields input:focus,
+        .create-manual-fields textarea:focus {
+          border-color: rgba(247, 37, 133, 0.46);
+          box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.08);
+        }
+
+        .create-manual-field-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+
         .create-workspace {
           display: grid;
-          grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.75fr);
+          grid-template-columns: minmax(0, 1fr);
           align-items: start;
-          gap: 22px;
+          gap: 18px;
         }
 
         .create-media-workspace {
           min-width: 0;
+        }
+
+        .create-review-action {
+          display: grid;
+          gap: 14px;
+          padding: 18px 20px;
+          border: 1px solid var(--create-border);
+          border-radius: 22px;
+          background: #ffffff;
+          box-shadow: 0 12px 34px rgba(7, 27, 73, 0.055);
+        }
+
+        .create-review-action-copy {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 18px;
+        }
+
+        .create-review-action-copy > div:first-child {
+          min-width: 0;
+          display: flex;
+          align-items: flex-start;
+          gap: 11px;
+        }
+
+        .create-review-action-copy h2 {
+          margin: 0;
+          color: var(--create-navy);
+          font-size: 1.08rem;
+          line-height: 1.2;
+        }
+
+        .create-review-action-copy p {
+          max-width: 680px;
+          margin: 4px 0 0;
+          color: var(--create-muted);
+          font-size: 0.82rem;
+          font-weight: 700;
+          line-height: 1.45;
+        }
+
+        .create-review-destination-note {
+          flex: 0 0 auto;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 6px;
+        }
+
+        .create-review-destination-note span {
+          min-height: 28px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 9px;
+          border: 1px solid rgba(247, 37, 133, 0.16);
+          border-radius: 999px;
+          background: #fff7fb;
+          color: var(--create-navy);
+          font-size: 0.66rem;
+          font-weight: 900;
+        }
+
+        .create-review-action-controls {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(190px, 250px);
+          align-items: stretch;
+          gap: 12px;
+        }
+
+        .create-review-action .create-summary {
+          margin: 0;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .create-review-action .create-submit {
+          min-height: 100%;
         }
 
         .create-section-heading {
@@ -3901,12 +4405,29 @@ If uploads are supplied:
             width: 100%;
           }
 
+          .create-mode-switcher {
+            grid-template-columns: 1fr;
+          }
+
+          .create-manual-field-grid {
+            grid-template-columns: 1fr;
+          }
+
           .create-workspace {
             grid-template-columns: 1fr;
           }
 
-          .create-publish-panel {
-            position: static;
+          .create-review-action-copy {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+
+          .create-review-destination-note {
+            justify-content: flex-start;
+          }
+
+          .create-review-action-controls {
+            grid-template-columns: 1fr;
           }
         }
 
@@ -3992,7 +4513,7 @@ If uploads are supplied:
             order: 1;
           }
 
-          .create-publish-panel {
+          .create-review-action {
             order: 2;
             width: 100%;
             padding: 15px;
