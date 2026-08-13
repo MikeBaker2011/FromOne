@@ -310,13 +310,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const primaryLinks = [
     { href: "/dashboard", label: "Home" },
     { href: "/create", label: "Create" },
-    { href: "/posts", label: "Posts" },
     { href: "/smiles", label: "Smilez" },
-    { href: "/reports", label: "Track my social" },
   ];
 
   const secondaryLinks = [
-    { href: "/settings", label: "Business" },
+    { href: "/settings", label: "Settings" },
     { href: "/subscription", label: "Plan" },
   ];
 
@@ -381,9 +379,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <span />
-            <span />
-            <span />
+            <svg
+              className="fromone-navbar-menu-icon"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M3 6.5H21" />
+              <path d="M3 12H21" />
+              <path d="M3 17.5H21" />
+            </svg>
           </button>
         </div>
 
@@ -633,27 +640,47 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             display: none;
           }
 
-          .fromone-navbar-menu {
-            display: grid;
+          .fromone-navbar-menu,
+          .fromone-navbar-menu:hover,
+          .fromone-navbar-menu:focus,
+          .fromone-navbar-menu:focus-visible,
+          .fromone-navbar-menu:active {
+            display: grid !important;
             grid-column: 2;
             justify-self: end;
-            place-items: center;
-            width: 48px;
-            height: 48px;
-            padding: 11px;
-            border: 1px solid #ffd2e5;
-            border-radius: 16px;
-            background: #fff8fc;
+            place-items: center !important;
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            min-height: 38px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            background-image: none !important;
+            color: #071b49 !important;
+            box-shadow: none !important;
+            filter: none !important;
+            outline: none !important;
+            appearance: none !important;
+            transform: none !important;
             cursor: pointer;
           }
 
-          .fromone-navbar-menu span {
-            display: block;
-            width: 22px;
-            height: 2px;
-            margin: 2px 0;
-            border-radius: 999px;
-            background: #071b49;
+          .fromone-navbar-menu-icon {
+            display: block !important;
+            width: 24px !important;
+            height: 24px !important;
+            overflow: visible !important;
+          }
+
+          .fromone-navbar-menu-icon path {
+            fill: none !important;
+            stroke: #071b49 !important;
+            stroke-width: 2 !important;
+            stroke-linecap: round !important;
+            stroke-linejoin: round !important;
+            vector-effect: non-scaling-stroke !important;
           }
 
           .fromone-mobile-nav {
@@ -730,11 +757,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             max-height: 60px;
           }
 
-          .fromone-navbar-menu {
-            width: 46px;
-            height: 46px;
-            border-radius: 15px;
-          }
         }
 
         @media (max-width: 360px) {

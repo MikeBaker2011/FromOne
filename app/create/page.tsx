@@ -1,7 +1,6 @@
 "use client";
 
 
-import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { supabaseBrowser as supabase } from "../../lib/supabase/browser";
 import { useRouter } from "next/navigation";
@@ -3112,9 +3111,7 @@ If uploads are supplied:
             background: "#f4f7fb",
           }}
         >
-          <BackToDashboardButton />
-
-          <header
+            <header
             className="create-topbar"
             style={{
               minHeight: "122px",
@@ -3185,23 +3182,18 @@ If uploads are supplied:
   return (
     <main className="fromone-create-page" data-create-page>
       <div className="create-page-shell">
-        <BackToDashboardButton />
 
         <header className="create-topbar">
           <div>
             <span className="create-kicker">Create</span>
-            <h1>Make something worth sharing.</h1>
-            <p>Upload your media, create your drafts, then choose where to publish during review.</p>
+            <h1>Create content.</h1>
+            <p>Add your media, choose AI or manual, then review before publishing.</p>
           </div>
 
           <div className="create-usage" aria-label="Creation allowance">
             <div>
               <span>Posts left</span>
               <strong>{weeklyPostsRemaining}/{weeklyPostLimit}</strong>
-            </div>
-            <div>
-              <span>Saved sets</span>
-              <strong>{savedCampaignsCount}/{MAX_SAVED_CAMPAIGNS}</strong>
             </div>
           </div>
         </header>
@@ -3218,8 +3210,8 @@ If uploads are supplied:
               setManualPostHashtags("");
             }}
           >
-            <strong>Create with AI</strong>
-            <span>Upload your media and let FromOne create the first draft.</span>
+            <strong>AI draft</strong>
+            <span>FromOne writes it</span>
           </button>
 
           <button
@@ -3235,8 +3227,8 @@ If uploads are supplied:
               });
             }}
           >
-            <strong>Create manually</strong>
-            <span>Use your own image or video and write the post yourself. No AI scan.</span>
+            <strong>Manual</strong>
+            <span>Write it yourself</span>
           </button>
         </section>
 
@@ -3255,8 +3247,7 @@ If uploads are supplied:
           <section className="create-media-workspace" aria-labelledby="create-media-title">
             <div className="create-section-heading">
               <div>
-                <span className="create-step">1</span>
-                <h2 id="create-media-title">Your media</h2>
+                <h2 id="create-media-title">Add media</h2>
               </div>
               <span className="create-file-count">
                 {weeklyUploads.length} {weeklyUploads.length === 1 ? "item" : "items"}
@@ -3281,8 +3272,8 @@ If uploads are supplied:
                   <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
                 </svg>
               </span>
-              <strong>Drop photos, videos or flyers here</strong>
-              <span>or tap to choose files</span>
+              <strong>Add photos, videos or flyers</strong>
+              <span>Tap to choose files</span>
               <small>JPG, PNG, WEBP, MP4, MOV or PDF</small>
             </label>
 
@@ -3332,12 +3323,7 @@ If uploads are supplied:
               }}
             />
 
-            {weeklyUploads.length === 0 ? (
-              <div className="create-empty-state">
-                <strong>No media added yet</strong>
-                <p>Each upload becomes its own draft, ready for you to review.</p>
-              </div>
-            ) : (
+            {weeklyUploads.length > 0 && (
               <div className="create-media-grid">
                 {weeklyUploads.map((upload, index) => (
                   <article key={upload.id} className="create-media-card">
@@ -3374,9 +3360,7 @@ If uploads are supplied:
                       {creationMode === "ai" ? (
                         <label>
                           <span>
-                            {upload.mediaType === "flyer"
-                              ? "Anything we should know?"
-                              : `What is this ${upload.mediaType === "video" ? "video" : "image"} about?`}
+                            Add context <small>optional</small>
                           </span>
                           <textarea
                             value={upload.note}
@@ -3407,23 +3391,16 @@ If uploads are supplied:
           <section className="create-review-action" aria-labelledby="create-review-action-title">
             <div className="create-review-action-copy">
               <div>
-                <span className="create-step">2</span>
                 <div>
                   <h2 id="create-review-action-title">
-                    {creationMode === "ai" ? "Create your drafts" : "Write your post"}
+                    {creationMode === "ai" ? "Ready to create" : "Write your post"}
                   </h2>
                   <p>
                     {creationMode === "ai"
-                      ? "One upload creates one review draft. Choose Facebook, Instagram or Smilez after you have checked the wording and media."
-                      : "Write the post yourself. No AI scan is used. You can still choose Facebook, Instagram or Smilez on the review page."}
+                      ? "FromOne creates one draft per upload. You review everything before publishing."
+                      : "Write your wording below, then save it for review."}
                   </p>
                 </div>
-              </div>
-
-              <div className="create-review-destination-note" aria-label="Destinations available during review">
-                <span>Facebook</span>
-                <span>Instagram</span>
-                <span>Smilez</span>
               </div>
             </div>
 
@@ -3494,17 +3471,6 @@ If uploads are supplied:
             )}
 
             <div className="create-review-action-controls">
-              <div className="create-summary">
-                <div>
-                  <span>Uploads</span>
-                  <strong>{weeklyUploads.length}</strong>
-                </div>
-                <div>
-                  <span>{creationMode === "ai" ? "Drafts" : "Draft"}</span>
-                  <strong>{createdPostTotal}</strong>
-                </div>
-              </div>
-
               <button
                 type="button"
                 className="create-submit"
@@ -3529,15 +3495,13 @@ If uploads are supplied:
                       : addToCampaignId
                         ? "Add draft to set"
                         : creationMode === "ai"
-                          ? "Create drafts"
-                          : "Save manual draft"}
+                          ? "Create draft"
+                          : "Save draft"}
               </button>
             </div>
 
             <p className="create-review-note">
-              {creationMode === "ai"
-                ? "Nothing publishes immediately. You choose the destination on the review page."
-                : "No AI is used for the wording or media. Review it, then choose where to publish."}
+              Nothing publishes until you choose Publish on the review page.
             </p>
           </section>
         </div>
@@ -4738,6 +4702,191 @@ If uploads are supplied:
 
           .create-summary span {
             margin: 0;
+          }
+        }
+
+
+        /* SIMPLE AGENCY CREATE FLOW — final presentation overrides */
+        .create-page-shell {
+          max-width: 980px;
+          margin: 0 auto;
+        }
+
+        .create-topbar {
+          align-items: center;
+          margin-bottom: 18px;
+        }
+
+        .create-topbar h1 {
+          max-width: none;
+          font-size: clamp(2.35rem, 4vw, 3.55rem);
+        }
+
+        .create-usage {
+          gap: 0;
+        }
+
+        .create-usage > div {
+          min-width: 96px;
+          padding: 10px 13px;
+          border-radius: 999px;
+          background: #ffffff;
+          text-align: center;
+          box-shadow: none;
+        }
+
+        .create-mode-switcher {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+          margin-bottom: 16px;
+          padding: 4px;
+          border: 1px solid var(--create-border);
+          border-radius: 999px;
+          background: #f6f8fb;
+        }
+
+        .create-mode-switcher button {
+          min-height: 52px;
+          padding: 8px 14px;
+          border: 0 !important;
+          border-radius: 999px !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          text-align: center;
+        }
+
+        .create-mode-switcher button.is-active {
+          background: #ffffff !important;
+          box-shadow: 0 2px 8px rgba(7, 27, 73, 0.08) !important;
+        }
+
+        .create-mode-switcher button strong,
+        .create-mode-switcher button span {
+          display: block;
+        }
+
+        .create-mode-switcher button strong {
+          color: var(--create-navy);
+          font-size: 0.86rem;
+        }
+
+        .create-mode-switcher button span {
+          margin-top: 2px;
+          color: var(--create-muted);
+          font-size: 0.68rem;
+          font-weight: 700;
+        }
+
+        .create-mode-switcher button.is-active strong {
+          color: var(--create-pink);
+        }
+
+        .create-media-workspace,
+        .create-review-action {
+          border: 1px solid var(--create-border);
+          border-radius: 20px;
+          background: #ffffff;
+          box-shadow: none;
+        }
+
+        .create-media-workspace {
+          padding: 18px;
+        }
+
+        .create-review-action {
+          padding: 18px;
+        }
+
+        .create-section-heading {
+          margin-bottom: 12px;
+        }
+
+        .create-section-heading h2,
+        .create-review-action-copy h2 {
+          font-size: 1.12rem;
+          letter-spacing: -0.025em;
+        }
+
+        .create-dropzone {
+          min-height: 160px;
+          border-radius: 16px;
+          background: #fbfcfe;
+        }
+
+        .create-review-action-copy {
+          align-items: flex-start;
+        }
+
+        .create-review-action-controls {
+          display: block;
+        }
+
+        .create-submit {
+          min-height: 50px;
+          box-shadow: none !important;
+        }
+
+        .create-review-note {
+          margin-top: 8px;
+        }
+
+        @media (max-width: 640px) {
+          .create-page-shell {
+            max-width: 100%;
+          }
+
+          .create-topbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 12px;
+            margin-bottom: 14px;
+          }
+
+          .create-topbar h1 {
+            font-size: 2rem;
+          }
+
+          .create-topbar p {
+            font-size: 0.86rem;
+          }
+
+          .create-usage {
+            width: auto;
+          }
+
+          .create-usage > div {
+            min-width: 82px;
+            padding: 8px 10px;
+          }
+
+          .create-mode-switcher {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 4px;
+            margin-bottom: 14px;
+          }
+
+          .create-mode-switcher button {
+            min-height: 48px;
+            padding: 7px 8px;
+          }
+
+          .create-media-workspace {
+            padding: 14px;
+            border-radius: 18px;
+          }
+
+          .create-review-action {
+            padding: 14px;
+            border-radius: 18px;
+          }
+
+          .create-mobile-capture {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+
+          .create-review-action-copy {
+            display: block;
           }
         }
 
