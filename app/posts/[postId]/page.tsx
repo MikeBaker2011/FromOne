@@ -920,6 +920,69 @@ function buildLocationHashtagText(post: any, reach: string) {
   return ["#LocalBusiness", "#SmallBusiness", "#SupportLocal", industryTag].join(" ");
 }
 
+function detectSmilezType(post: any, caption: string): "venue" | "offer" | "event" {
+  const savedDraft = post?.smiles_draft || post?.smilesDraft || null;
+  if (
+    savedDraft?.type === "venue" ||
+    savedDraft?.type === "offer" ||
+    savedDraft?.type === "event"
+  ) {
+    return savedDraft.type;
+  }
+
+  const text = [
+    post?.title,
+    post?.caption,
+    caption,
+    post?.cta,
+    post?.hashtags,
+  ]
+    .map(cleanText)
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const eventSignals = [
+    "live music",
+    "quiz night",
+    "dj ",
+    " dj",
+    "event",
+    "tickets",
+    "ticket",
+    "doors open",
+    "this friday",
+    "this saturday",
+    "this sunday",
+    "tonight",
+    "starts at",
+    "from 7pm",
+    "from 8pm",
+    "from 9pm",
+  ];
+
+  const offerSignals = [
+    "2 for 1",
+    "two for one",
+    "buy one get one",
+    "bogo",
+    "% off",
+    "discount",
+    "special offer",
+    "offer",
+    "deal",
+    "save £",
+    "save ",
+    "half price",
+    "free with",
+    "happy hour",
+  ];
+
+  if (eventSignals.some((signal) => text.includes(signal))) return "event";
+  if (offerSignals.some((signal) => text.includes(signal))) return "offer";
+  return "venue";
+}
+
 export default function PostReviewPage() {
   const router = useRouter();
   const params = useParams();
@@ -965,6 +1028,11 @@ export default function PostReviewPage() {
   >("info");
   const [lastPublishedPlatform, setLastPublishedPlatform] = useState("");
   const [smilesChoice, setSmilesChoice] = useState<"no" | "venue" | "offer" | "event">("no");
+  const [showSmilezDetails, setShowSmilezDetails] = useState(false);
+  const [publishToFacebook, setPublishToFacebook] = useState(true);
+  const [publishToInstagram, setPublishToInstagram] = useState(true);
+  const [publishToSmilez, setPublishToSmilez] = useState(false);
+  const [publishingSelected, setPublishingSelected] = useState(false);
   const [smilesTitle, setSmilesTitle] = useState("");
   const [smilesDescription, setSmilesDescription] = useState("");
   const [smilesShortDescription, setSmilesShortDescription] = useState("");
@@ -1306,6 +1374,7 @@ export default function PostReviewPage() {
   ) => {
     if (nextChoice === "no") {
       setSmilesChoice("no");
+      setShowSmilezDetails(false);
       return;
     }
 
@@ -1338,6 +1407,24 @@ export default function PostReviewPage() {
       post,
       nextChoice,
     );
+  };
+
+  const handleSmilezShareToggle = () => {
+    if (post?.smiles_status === "sent") {
+      setShowSmilezDetails((current) => !current);
+      return;
+    }
+
+    if (smilesChoice !== "no") {
+      handleSmilesChoiceChange("no");
+      setPublishToSmilez(false);
+      return;
+    }
+
+    const detectedType = detectSmilezType(post, caption);
+    handleSmilesChoiceChange(detectedType);
+    setPublishToSmilez(true);
+    setShowSmilezDetails(false);
   };
 
   const buildSmilesDraftFromLiveItem = (
@@ -3638,6 +3725,40 @@ Opening-line quality rules:
     }
   };
 
+  const publishSelected = async () => {
+    if (publishingSelected) return;
+
+    const facebookNeeded = publishToFacebook && !facebookPublished;
+    const instagramNeeded = publishToInstagram && !instagramPublished;
+    const smilezNeeded =
+      publishToSmilez &&
+      post?.smiles_status !== "sent" &&
+      smilesChoice !== "no";
+
+    if (!facebookNeeded && !instagramNeeded && !smilezNeeded) {
+      setMessage("Choose at least one destination that has not already been published.");
+      return;
+    }
+
+    setPublishingSelected(true);
+
+    try {
+      if (facebookNeeded) {
+        await autopublishNow("Facebook");
+      }
+
+      if (instagramNeeded) {
+        await autopublishNow("Instagram");
+      }
+
+      if (smilezNeeded) {
+        await sendPostToSmiles();
+      }
+    } finally {
+      setPublishingSelected(false);
+    }
+  };
+
   if (loading) {
     return null;
   }
@@ -3678,9 +3799,9 @@ Opening-line quality rules:
 
         <header className="app-page-header">
           <span className="app-page-eyebrow">Publish post</span>
-          <h1 className="app-page-title">Choose where to publish.</h1>
+          <h1 className="app-page-title">Ready to publish.</h1>
           <p className="app-page-description">
-            Publish this post to Facebook, Instagram, or send it to Smilez.
+            Check the wording, choose the destinations, then publish once.
           </p>
         </header>
 
@@ -3705,7 +3826,7 @@ Opening-line quality rules:
           <div className="publish-only-copy">
             <span className="app-page-eyebrow">Edit post</span>
             <h2>{cleanText(post?.title) || "Social media post"}</h2>
-            <p>Update the wording before publishing.</p>
+            <p>Edit only if you want to.</p>
 
             <div className="app-form-stack publish-only-edit-form">
               <label>
@@ -3752,793 +3873,753 @@ Opening-line quality rules:
                   onClick={() => quickImprove("different_version")}
                   disabled={Boolean(rewriting)}
                 >
-                  {rewriting ? "Improving..." : "Improve wording"}
+                  {rewriting ? "Rewriting..." : "Rewrite caption"}
                 </button>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="publish-only-grid">
-          <article className="app-card app-section publish-only-option">
+        <section className="app-card app-section publish-pill-section">
+          <div className="publish-pill-header">
             <div>
-              <span className="app-page-eyebrow">Facebook</span>
-              <h2>Publish to Facebook</h2>
-              <p>Send this post directly to the connected Facebook account.</p>
+              <span className="app-page-eyebrow">Publish</span>
+              <h2>Publish to</h2>
+              <p>Choose where this post should go.</p>
             </div>
 
-            <button
-              type="button"
-              className="app-button app-button-primary"
-              onClick={() => autopublishNow("Facebook")}
-              disabled={autoPublishing || saving || facebookPublished}
-            >
-              {facebookPublished
-                ? "Published to Facebook"
-                : autoPublishing
-                  ? "Publishing..."
-                  : "Publish to Facebook"}
-            </button>
-          </article>
+          </div>
 
-          <article className="app-card app-section publish-only-option">
-            <div>
-              <span className="app-page-eyebrow">Instagram</span>
-              <h2>Publish to Instagram</h2>
-              <p>Send this post directly to the connected Instagram account.</p>
-            </div>
+          <div className="publish-pill-list" aria-label="Publishing channels">
+            <label className={`publish-channel-pill ${publishToFacebook || facebookPublished ? "is-selected" : ""}`}>
+              <input
+                type="checkbox"
+                checked={facebookPublished ? true : publishToFacebook}
+                onChange={(event) => setPublishToFacebook(event.target.checked)}
+                disabled={facebookPublished}
+              />
+              <span className="publish-channel-pill-tick">✓</span>
+              <strong>Facebook</strong>
+            </label>
 
-            <button
-              type="button"
-              className="app-button app-button-primary"
-              onClick={() => autopublishNow("Instagram")}
-              disabled={autoPublishing || saving || instagramPublished}
-            >
-              {instagramPublished
-                ? "Published to Instagram"
-                : autoPublishing
-                  ? "Publishing..."
-                  : "Publish to Instagram"}
-            </button>
-          </article>
+            <label className={`publish-channel-pill ${publishToInstagram || instagramPublished ? "is-selected" : ""}`}>
+              <input
+                type="checkbox"
+                checked={instagramPublished ? true : publishToInstagram}
+                onChange={(event) => setPublishToInstagram(event.target.checked)}
+                disabled={instagramPublished}
+              />
+              <span className="publish-channel-pill-tick">✓</span>
+              <strong>Instagram</strong>
+            </label>
 
-          <article className="app-card app-section publish-only-option publish-only-smilez">
-            <div>
-              <span className="app-page-eyebrow">Smilez</span>
-              <h2>Review for Smilez</h2>
-              <p>FromOne has filled this from the uploaded image or flyer. Check every detail before sending it to Smilez for approval.</p>
-            </div>
+            <label className={`publish-channel-pill ${publishToSmilez || post?.smiles_status === "sent" ? "is-selected" : ""}`}>
+              <input
+                type="checkbox"
+                checked={post?.smiles_status === "sent" ? true : publishToSmilez}
+                disabled={post?.smiles_status === "sent"}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+                  setPublishToSmilez(checked);
 
-            <div className="publish-only-choice publish-only-smilez-status-choice" aria-label="Smilez status">
-              <button
-                type="button"
-                className={
-                  post?.smiles_status === "sent"
-                    ? "app-button app-button-primary is-published"
-                    : "app-button app-button-secondary"
-                }
-                disabled
-              >
-                Already published
-              </button>
-
-              {post?.smiles_status !== "sent" && (
-                <button
-                  type="button"
-                  className={
-                    smilesChoice === "no"
-                      ? "app-button app-button-primary"
-                      : "app-button app-button-secondary"
+                  if (checked && smilesChoice === "no") {
+                    handleSmilesChoiceChange(detectSmilezType(post, caption));
                   }
-                  onClick={() => handleSmilesChoiceChange("no")}
-                >
-                  Don't publish to Smilez
-                </button>
-              )}
 
-              <button
-                type="button"
-                className={
-                  smilesChoice === "venue"
-                    ? "app-button app-button-primary"
-                    : "app-button app-button-secondary"
-                }
-                onClick={() => handleSmilesChoiceChange("venue")}
-              >
-                Venue
-              </button>
+                  if (!checked) {
+                    handleSmilesChoiceChange("no");
+                    setShowSmilezDetails(false);
+                  }
+                }}
+              />
+              <span className="publish-channel-pill-tick">✓</span>
+              <strong>Smilez</strong>
+            </label>
+          </div>
 
-              <button
-                type="button"
-                className={
-                  smilesChoice === "offer"
-                    ? "app-button app-button-primary"
-                    : "app-button app-button-secondary"
-                }
-                onClick={() => handleSmilesChoiceChange("offer")}
-              >
-                Offer
-              </button>
+          <button
+            type="button"
+            className="app-button app-button-primary publish-pill-primary publish-pill-primary-bottom"
+            onClick={publishSelected}
+            disabled={
+              publishingSelected ||
+              autoPublishing ||
+              saving ||
+              Boolean(sendingToSmilesPostId)
+            }
+          >
+            {publishingSelected || autoPublishing || Boolean(sendingToSmilesPostId)
+              ? "Publishing..."
+              : "Publish now"}
+          </button>
 
-              <button
-                type="button"
-                className={
-                  smilesChoice === "event"
-                    ? "app-button app-button-primary"
-                    : "app-button app-button-secondary"
-                }
-                onClick={() => handleSmilesChoiceChange("event")}
-              >
-                Event
-              </button>
-            </div>
-
-            {post?.smiles_status === "sent" ? (
-              <div className="publish-only-status">
+          {(publishToSmilez || post?.smiles_status === "sent") ? (
+            <div className="publish-pill-smilez-row">
+              <div>
                 <strong>
-                  Already published{" "}
-                  {smilesChoice === "venue"
-                    ? "venue"
-                    : smilesChoice === "event"
-                      ? "event"
-                      : "offer"}
+                  {post?.smiles_status === "sent"
+                    ? "Smilez"
+                    : `Smilez: ${
+                        smilesChoice === "offer"
+                          ? "Offer"
+                          : smilesChoice === "event"
+                            ? "Event"
+                            : "Venue update"
+                      }`}
                 </strong>
                 <span>
-                  {getSmilesSentInfo(post).referenceCode
-                    ? `Reference: ${getSmilesSentInfo(post).referenceCode}`
-                    : "This listing is already live on Smilez."}
+                  {post?.smiles_status === "sent"
+                    ? `${cleanText(smilesTitle) || "Published listing"} · Live`
+                    : "FromOne detected the listing type automatically."}
                 </span>
-
-                <div className="app-form-stack publish-only-smilez-fields">
-                  <label>
-                    <strong>
-                      {smilesChoice === "venue"
-                        ? "Venue name"
-                        : smilesChoice === "event"
-                          ? "Event title"
-                          : "Offer title"}
-                    </strong>
-                    <input
-                      value={smilesTitle}
-                      onChange={(event) => setSmilesTitle(event.target.value)}
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Public description</strong>
-                    <textarea
-                      value={smilesDescription}
-                      onChange={(event) => setSmilesDescription(event.target.value)}
-                    />
-                  </label>
-
-                  {smilesChoice === "venue" && (
-                    <div className="publish-only-details-grid">
-                      <label>
-                        <strong>Venue type</strong>
-                        <input
-                          value={smilesVenueType}
-                          onChange={(event) => setSmilesVenueType(event.target.value)}
-                          placeholder="Nightclub, bar, restaurant..."
-                        />
-                      </label>
-                      <label>
-                        <strong>Venue / location name</strong>
-                        <input
-                          value={smilesLocationName}
-                          onChange={(event) => setSmilesLocationName(event.target.value)}
-                          placeholder="Neon Yard Stockport"
-                        />
-                      </label>
-                      <label>
-                        <strong>Area</strong>
-                        <input
-                          value={smilesLocationArea}
-                          onChange={(event) => setSmilesLocationArea(event.target.value)}
-                          placeholder="Stockport"
-                        />
-                      </label>
-                      <label>
-                        <strong>Address</strong>
-                        <input
-                          value={smilesAddress}
-                          onChange={(event) => setSmilesAddress(event.target.value)}
-                          placeholder="Full public address"
-                        />
-                      </label>
-                      <label className="publish-only-wide-field">
-                        <strong>Website URL</strong>
-                        <input
-                          type="url"
-                          value={smilesWebsiteUrl}
-                          onChange={(event) => setSmilesWebsiteUrl(event.target.value)}
-                          placeholder="https://"
-                        />
-                      </label>
-                      <label className="publish-only-wide-field">
-                        <strong>Booking URL</strong>
-                        <input
-                          type="url"
-                          value={smilesBookingUrl}
-                          onChange={(event) => setSmilesBookingUrl(event.target.value)}
-                          placeholder="https://"
-                        />
-                      </label>
-                    </div>
-                  )}
-
-                  {smilesChoice === "event" && (
-                    <div className="publish-only-details-grid">
-                      <label>
-                        <strong>Ticket type</strong>
-                        <select value={smilesTicketType} onChange={(event) => setSmilesTicketType(event.target.value)}>
-                          {eventTicketOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
-                      </label>
-                      <label>
-                        <strong>Ticket price</strong>
-                        <input value={smilesTicketPrice} onChange={(event) => setSmilesTicketPrice(event.target.value)} placeholder="£10" />
-                      </label>
-                      <label>
-                        <strong>Event date</strong>
-                        <input type="date" value={smilesEventDate} onChange={(event) => setSmilesEventDate(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>End date</strong>
-                        <input type="date" value={smilesEventEndDate} onChange={(event) => setSmilesEventEndDate(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>Start time</strong>
-                        <input type="time" value={smilesStartTime} onChange={(event) => setSmilesStartTime(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>End time</strong>
-                        <input type="time" value={smilesEndTime} onChange={(event) => setSmilesEndTime(event.target.value)} />
-                      </label>
-                      <label className="publish-only-wide-field">
-                        <strong>Booking URL</strong>
-                        <input type="url" value={smilesBookingUrl} onChange={(event) => setSmilesBookingUrl(event.target.value)} placeholder="https://" />
-                      </label>
-                    </div>
-                  )}
-
-                  <label>
-                    <strong>Short card summary</strong>
-                    <textarea
-                      className="publish-only-smilez-summary"
-                      value={smilesShortDescription}
-                      onChange={(event) =>
-                        setSmilesShortDescription(event.target.value.slice(0, 180))
-                      }
-                    />
-                    <small>{smilesShortDescription.length}/180 characters</small>
-                  </label>
-                  {smilesChoice === "offer" && (
-                    <div className="publish-only-price-grid">
-                      <label>
-                        <strong>Pricing label</strong>
-                        <select
-                          value={smilesPricingLabel}
-                          onChange={(event) => setSmilesPricingLabel(event.target.value)}
-                        >
-                          {offerPricingOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <label>
-                        <strong>Price or saving</strong>
-                        <input
-                          value={smilesPriceValue}
-                          onChange={(event) => setSmilesPriceValue(event.target.value)}
-                          placeholder="For example £12 or 20% off"
-                        />
-                      </label>
-                    </div>
-                  )}
-                  {smilesChoice === "offer" && (
-                    <div className="publish-only-details-grid">
-                      <label>
-                        <strong>Start date</strong>
-                        <input type="date" value={smilesStartDate} onChange={(event) => setSmilesStartDate(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>End date</strong>
-                        <input type="date" value={smilesEndDate} onChange={(event) => setSmilesEndDate(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>Valid days</strong>
-                        <input value={smilesValidDays} onChange={(event) => setSmilesValidDays(event.target.value)} placeholder="Friday and Saturday" />
-                      </label>
-                      <label>
-                        <strong>Valid times</strong>
-                        <input value={smilesValidTimes} onChange={(event) => setSmilesValidTimes(event.target.value)} placeholder="5 PM to 8 PM" />
-                      </label>
-                      <label className="publish-only-wide-field">
-                        <strong>Terms and conditions</strong>
-                        <input value={smilesTerms} onChange={(event) => setSmilesTerms(event.target.value)} placeholder="Subject to availability" />
-                      </label>
-                    </div>
-                  )}
-                </div>
-
-                <div className="publish-only-status-actions">
-                  <button
-                    type="button"
-                    className="app-button app-button-primary"
-                    onClick={handleSmilesActionClick}
-                    disabled={Boolean(sendingToSmilesPostId)}
-                  >
-                    {sendingToSmilesPostId
-                      ? "Updating..."
-                      : "Update linked Smilez listing"}
-                  </button>
-
-                  {getSmilesSentInfo(post).href && (
-                    <a
-                      className="app-button app-button-secondary"
-                      href={getSmilesSentInfo(post).href}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      View live listing
-                    </a>
-                  )}
-                </div>
               </div>
-            ) : (
-              <>
-                {smilesChoice === "no" ? (
-                  <div className="publish-only-no-smilez">
-                    <strong>Smilez publishing is turned off</strong>
-                    <span>This post will only be available for Facebook and Instagram.</span>
-                  </div>
-                ) : (
-                  <div className="app-form-stack publish-only-smilez-fields">
-                    <div className="publish-only-ai-review-note">
-                      <strong>AI-filled draft — check before sending</strong>
-                      <span>
-                        Dates, times, prices and small-print details can be misread from an image.
-                        Nothing is sent until you press the approval button below.
-                      </span>
-                    </div>
 
-                    <label>
-                      <strong>
-                        {smilesChoice === "venue"
-                          ? "Venue name"
-                          : smilesChoice === "offer"
-                            ? "Offer title"
-                            : "Event title"}
-                      </strong>
-                      <input
-                        value={smilesTitle}
-                        onChange={(event) => setSmilesTitle(event.target.value)}
-                      />
-                    </label>
+              <div className="publish-pill-smilez-actions">
+                {post?.smiles_status !== "sent" ? (
+                  <select
+                    value={smilesChoice === "no" ? "venue" : smilesChoice}
+                    onChange={(event) =>
+                      handleSmilesChoiceChange(
+                        event.target.value as "venue" | "offer" | "event",
+                      )
+                    }
+                    aria-label="Smilez type"
+                  >
+                    <option value="venue">Venue update</option>
+                    <option value="offer">Offer</option>
+                    <option value="event">Event</option>
+                  </select>
+                ) : null}
 
-                    <label>
-                      <strong>Public description</strong>
-                      <textarea
-                        value={smilesDescription}
-                        onChange={(event) => setSmilesDescription(event.target.value)}
-                      />
-                    </label>
+                <button
+                  type="button"
+                  className="publish-pill-link"
+                  onClick={() => setShowSmilezDetails((current) => !current)}
+                >
+                  {showSmilezDetails
+                    ? "Close"
+                    : post?.smiles_status === "sent"
+                      ? "Edit"
+                      : "Details"}
+                </button>
 
-                    <label>
-                      <strong>Short card summary</strong>
-                      <textarea
-                        className="publish-only-smilez-summary"
-                        value={smilesShortDescription}
-                        onChange={(event) =>
-                          setSmilesShortDescription(event.target.value.slice(0, 180))
-                        }
-                      />
-                      <small>{smilesShortDescription.length}/180 characters</small>
-                    </label>
+                {post?.smiles_status === "sent" && getSmilesSentInfo(post).href ? (
+                  <a
+                    className="publish-pill-link"
+                    href={getSmilesSentInfo(post).href}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View live
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
+          {showSmilezDetails ? (
+            <div className="publish-pill-details">
+              <label>
+                <span>Title</span>
+                <input
+                  value={smilesTitle}
+                  onChange={(event) => setSmilesTitle(event.target.value)}
+                />
+              </label>
 
-                    {smilesChoice === "venue" && (
-                      <div className="publish-only-details-grid">
-                        <label>
-                          <strong>Venue type</strong>
-                          <input
-                            value={smilesVenueType}
-                            onChange={(event) => setSmilesVenueType(event.target.value)}
-                            placeholder="Nightclub, bar, restaurant..."
-                          />
-                        </label>
-                        <label>
-                          <strong>Venue / location name</strong>
-                          <input
-                            value={smilesLocationName}
-                            onChange={(event) => setSmilesLocationName(event.target.value)}
-                            placeholder="Neon Yard Stockport"
-                          />
-                        </label>
-                        <label>
-                          <strong>Area</strong>
-                          <input
-                            value={smilesLocationArea}
-                            onChange={(event) => setSmilesLocationArea(event.target.value)}
-                            placeholder="Stockport"
-                          />
-                        </label>
-                        <label>
-                          <strong>Address</strong>
-                          <input
-                            value={smilesAddress}
-                            onChange={(event) => setSmilesAddress(event.target.value)}
-                            placeholder="Full public address"
-                          />
-                        </label>
-                        <label className="publish-only-wide-field">
-                          <strong>Website URL</strong>
-                          <input
-                            type="url"
-                            value={smilesWebsiteUrl}
-                            onChange={(event) => setSmilesWebsiteUrl(event.target.value)}
-                            placeholder="https://"
-                          />
-                        </label>
-                        <label className="publish-only-wide-field">
-                          <strong>Booking URL</strong>
-                          <input
-                            type="url"
-                            value={smilesBookingUrl}
-                            onChange={(event) => setSmilesBookingUrl(event.target.value)}
-                            placeholder="https://"
-                          />
-                        </label>
-                      </div>
-                    )}
+              <label className="publish-pill-wide">
+                <span>Description</span>
+                <textarea
+                  value={smilesDescription}
+                  onChange={(event) => setSmilesDescription(event.target.value)}
+                  rows={3}
+                />
+              </label>
 
-                    {smilesChoice === "event" && (
-                    <div className="publish-only-details-grid">
-                      <label>
-                        <strong>Ticket type</strong>
-                        <select value={smilesTicketType} onChange={(event) => setSmilesTicketType(event.target.value)}>
-                          {eventTicketOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
-                      </label>
-                      <label>
-                        <strong>Ticket price</strong>
-                        <input value={smilesTicketPrice} onChange={(event) => setSmilesTicketPrice(event.target.value)} placeholder="£10" />
-                      </label>
-                      <label>
-                        <strong>Event date</strong>
-                        <input type="date" value={smilesEventDate} onChange={(event) => setSmilesEventDate(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>End date</strong>
-                        <input type="date" value={smilesEventEndDate} onChange={(event) => setSmilesEventEndDate(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>Start time</strong>
-                        <input type="time" value={smilesStartTime} onChange={(event) => setSmilesStartTime(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>End time</strong>
-                        <input type="time" value={smilesEndTime} onChange={(event) => setSmilesEndTime(event.target.value)} />
-                      </label>
-                      <label className="publish-only-wide-field">
-                        <strong>Booking URL</strong>
-                        <input type="url" value={smilesBookingUrl} onChange={(event) => setSmilesBookingUrl(event.target.value)} placeholder="https://" />
-                      </label>
-                    </div>
-                  )}
-                    {smilesChoice === "offer" && (
-                      <div className="publish-only-price-grid">
-                        <label>
-                          <strong>Pricing label</strong>
-                          <select
-                            value={smilesPricingLabel}
-                            onChange={(event) => setSmilesPricingLabel(event.target.value)}
-                          >
-                            {offerPricingOptions.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
+              {smilesChoice === "offer" ? (
+                <>
+                  <label>
+                    <span>Price / saving</span>
+                    <input
+                      value={smilesPriceValue}
+                      onChange={(event) => setSmilesPriceValue(event.target.value)}
+                      placeholder="e.g. 2 for 1"
+                    />
+                  </label>
+                  <label>
+                    <span>Valid days</span>
+                    <input
+                      value={smilesValidDays}
+                      onChange={(event) => setSmilesValidDays(event.target.value)}
+                      placeholder="e.g. Thursday–Saturday"
+                    />
+                  </label>
+                  <label>
+                    <span>Valid times</span>
+                    <input
+                      value={smilesValidTimes}
+                      onChange={(event) => setSmilesValidTimes(event.target.value)}
+                      placeholder="e.g. 5PM–8PM"
+                    />
+                  </label>
+                </>
+              ) : null}
 
-                        <label>
-                          <strong>Price or saving</strong>
-                          <input
-                            value={smilesPriceValue}
-                            onChange={(event) => setSmilesPriceValue(event.target.value)}
-                            placeholder="For example £12 or 20% off"
-                          />
-                        </label>
-                      </div>
-                    )}
-                    {smilesChoice === "offer" && (
-                    <div className="publish-only-details-grid">
-                      <label>
-                        <strong>Start date</strong>
-                        <input type="date" value={smilesStartDate} onChange={(event) => setSmilesStartDate(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>End date</strong>
-                        <input type="date" value={smilesEndDate} onChange={(event) => setSmilesEndDate(event.target.value)} />
-                      </label>
-                      <label>
-                        <strong>Valid days</strong>
-                        <input value={smilesValidDays} onChange={(event) => setSmilesValidDays(event.target.value)} placeholder="Friday and Saturday" />
-                      </label>
-                      <label>
-                        <strong>Valid times</strong>
-                        <input value={smilesValidTimes} onChange={(event) => setSmilesValidTimes(event.target.value)} placeholder="5 PM to 8 PM" />
-                      </label>
-                      <label className="publish-only-wide-field">
-                        <strong>Terms and conditions</strong>
-                        <input value={smilesTerms} onChange={(event) => setSmilesTerms(event.target.value)} placeholder="Subject to availability" />
-                      </label>
-                    </div>
-                  )}
+              {smilesChoice === "event" ? (
+                <>
+                  <label>
+                    <span>Date</span>
+                    <input
+                      type="date"
+                      value={smilesEventDate}
+                      onChange={(event) => setSmilesEventDate(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Start time</span>
+                    <input
+                      type="time"
+                      value={smilesStartTime}
+                      onChange={(event) => setSmilesStartTime(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Ticket price</span>
+                    <input
+                      value={smilesTicketPrice}
+                      onChange={(event) => setSmilesTicketPrice(event.target.value)}
+                      placeholder="Optional"
+                    />
+                  </label>
+                </>
+              ) : null}
 
-                    <button
-                      type="button"
-                      className="app-button app-button-primary"
-                      onClick={handleSmilesActionClick}
-                      disabled={Boolean(sendingToSmilesPostId)}
-                    >
-                      {sendingToSmilesPostId ? "Publishing..." : "Publish to Smilez"}
-                    </button>
+              {smilesChoice === "venue" ? (
+                <>
+                  <label>
+                    <span>Venue type</span>
+                    <input
+                      value={smilesVenueType}
+                      onChange={(event) => setSmilesVenueType(event.target.value)}
+                      placeholder="Bar, restaurant, salon..."
+                    />
+                  </label>
+                  <label>
+                    <span>Location</span>
+                    <input
+                      value={smilesLocationArea}
+                      onChange={(event) => setSmilesLocationArea(event.target.value)}
+                      placeholder="Stockport"
+                    />
+                  </label>
+                </>
+              ) : null}
 
-                    {smilesActionMessage ? (
-                      <p
-                        role={smilesActionTone === "error" ? "alert" : "status"}
-                        aria-live="polite"
-                        style={{
-                          margin: "12px 0 0",
-                          textAlign: "center",
-                          fontWeight: 800,
-                          color:
-                            smilesActionTone === "error"
-                              ? "#b42318"
-                              : smilesActionTone === "success"
-                                ? "#047857"
-                                : "#536078",
-                        }}
-                      >
-                        {smilesActionMessage}
-                      </p>
-                    ) : null}
-                  </div>
-                )}
-              </>
-            )}
-          </article>
+              {post?.smiles_status === "sent" ? (
+                <button
+                  type="button"
+                  className="app-button app-button-primary publish-pill-wide"
+                  onClick={handleSmilesActionClick}
+                  disabled={Boolean(sendingToSmilesPostId)}
+                >
+                  {sendingToSmilesPostId ? "Updating..." : "Update Smilez listing"}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </section>
       </section>
 
       <style jsx global>{`
+        /* Review page: mobile-first clean white canvas. */
+        html,
+        body:has(.fromone-post-review-page),
+        body:has(.fromone-post-review-page) .app-shell,
+        body:has(.fromone-post-review-page) .main-content,
+        body:has(.fromone-post-review-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-post-review-page) .fromone-universal-mobile-page-frame,
+        body:has(.fromone-post-review-page) #fromone-standard-shell,
+        .fromone-post-review-page,
+        .fromone-post-review-page.app-page,
+        .fromone-post-review-page .app-page-stack {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          background-image: none !important;
+        }
+
+        body:has(.fromone-post-review-page)::before,
+        body:has(.fromone-post-review-page)::after,
+        body:has(.fromone-post-review-page) .app-shell::before,
+        body:has(.fromone-post-review-page) .app-shell::after,
+        body:has(.fromone-post-review-page) .main-content::before,
+        body:has(.fromone-post-review-page) .main-content::after,
+        body:has(.fromone-post-review-page) .fromone-universal-mobile-page-frame::before,
+        body:has(.fromone-post-review-page) .fromone-universal-mobile-page-frame::after,
+        .fromone-post-review-page::before,
+        .fromone-post-review-page::after {
+          display: none !important;
+          content: none !important;
+          background: none !important;
+          background-image: none !important;
+        }
+
+        body:has(.fromone-post-review-page) .main-content {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+
+        .fromone-post-review-page .app-page-stack {
+          width: 100% !important;
+          max-width: 100% !important;
+          gap: 18px !important;
+        }
+
+        .fromone-post-review-page .app-toolbar {
+          padding: 0 !important;
+          border: 0 !important;
+          box-shadow: none !important;
+          background: transparent !important;
+        }
+
+        .fromone-post-review-page .app-page-header {
+          padding: 0 2px !important;
+        }
+
+        .fromone-post-review-page .app-page-title {
+          font-size: clamp(2rem, 10vw, 3rem) !important;
+          line-height: 0.98 !important;
+        }
+
         .publish-only-preview {
-          display: grid;
-          grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-          gap: 24px;
-          align-items: center;
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 16px !important;
+          padding: 16px !important;
+          border-radius: 18px !important;
         }
 
         .publish-only-media {
-          min-width: 0;
+          width: 100% !important;
+          min-height: 0 !important;
+          aspect-ratio: 4 / 5;
+          border-radius: 14px !important;
           overflow: hidden;
-          border-radius: 20px;
-          background: #071126;
         }
 
         .publish-only-media img,
-        .publish-only-media video,
-        .publish-only-media canvas {
-          display: block;
-          width: 100%;
-          height: auto;
-          max-height: 560px;
-          object-fit: contain;
+        .publish-only-media video {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
         }
 
-        .publish-only-empty {
-          min-height: 280px;
-          display: grid;
-          place-items: center;
-          color: rgba(255, 255, 255, 0.72);
-        }
-
-        .publish-only-copy h2,
-        .publish-only-option h2 {
-          margin: 0 0 10px;
-          color: var(--fo-text);
-          font-size: clamp(1.55rem, 2.5vw, 2.15rem);
-          line-height: 1;
-          letter-spacing: -0.04em;
-        }
-
-        .publish-only-copy p,
-        .publish-only-option p {
-          margin: 0 0 12px;
-          color: var(--fo-muted);
-          line-height: 1.55;
-        }
-
-        .publish-only-hashtags {
-          color: var(--fo-pink-dark) !important;
-          font-weight: 800;
-        }
-        .publish-only-edit-form {
-          margin-top: 18px;
-        }
-
-        .publish-only-edit-form textarea {
-          min-height: 130px;
-        }
-
-        .publish-only-hashtags-field {
-          min-height: 92px !important;
+        .publish-only-copy h2 {
+          font-size: 1.3rem !important;
         }
 
         .publish-only-edit-actions {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 12px;
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 9px !important;
         }
 
         .publish-only-edit-actions .app-button {
-          width: 100%;
+          width: 100% !important;
+          min-height: 46px !important;
         }
 
-
-        .publish-only-grid {
+        .publish-pill-section {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 20px;
+          gap: 14px;
+          padding: 16px !important;
+          border: 1px solid rgba(7, 27, 73, 0.08) !important;
+          border-radius: 18px !important;
+          background: #ffffff !important;
+          box-shadow: none !important;
         }
 
-        .publish-only-option {
+        .publish-pill-header {
           display: grid;
-          gap: 20px;
-          align-content: space-between;
+          grid-template-columns: 1fr;
+          gap: 12px;
+          align-items: stretch;
         }
 
-        .publish-only-option > .app-button {
-          width: 100%;
+        .publish-pill-header h2 {
+          margin: 3px 0 3px;
+          color: #071b49;
+          font-size: 1.12rem;
+          line-height: 1.2;
         }
 
-        .publish-only-smilez {
+        .publish-pill-header p {
+          margin: 0;
+          color: #758096;
+          font-size: 0.8rem;
+        }
+
+        .publish-pill-primary {
+          width: 100% !important;
+          min-height: 46px;
+          border-radius: 12px !important;
+          box-shadow: none !important;
+        }
+
+        .publish-pill-primary-bottom {
+          margin-top: 2px;
+        }
+
+        .publish-pill-list {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .publish-channel-pill {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          min-height: 40px;
+          padding: 0 14px;
+          border: 1px solid rgba(7, 27, 73, 0.13);
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49;
+          cursor: pointer;
+          box-sizing: border-box;
+          flex: 1 1 calc(50% - 4px);
+          min-width: 0;
+        }
+
+        .publish-channel-pill:last-child {
+          flex-basis: 100%;
+        }
+
+        .publish-channel-pill input {
+          position: absolute !important;
+          width: 1px !important;
+          height: 1px !important;
+          margin: 0 !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
+
+        .publish-channel-pill strong {
+          color: inherit;
+          font-size: 0.82rem;
+          font-weight: 850;
+          text-transform: none;
+          white-space: nowrap;
+        }
+
+        .publish-channel-pill-tick {
+          display: none;
+          width: 17px;
+          height: 17px;
+          align-items: center;
+          justify-content: center;
+          flex: 0 0 auto;
+          border-radius: 50%;
+          background: #f72585;
+          color: #ffffff;
+          font-size: 0.68rem;
+          font-weight: 950;
+          line-height: 1;
+        }
+
+        .publish-channel-pill.is-selected {
+          border-color: rgba(247, 37, 133, 0.42);
+          background: rgba(247, 37, 133, 0.045);
+        }
+
+        .publish-channel-pill.is-selected .publish-channel-pill-tick {
+          display: inline-flex;
+        }
+
+        .publish-pill-smilez-row {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 8px;
+          padding-top: 9px;
+          border-top: 1px solid rgba(7, 27, 73, 0.06);
+        }
+
+        .publish-pill-smilez-row > div:first-child {
+          display: grid;
+          gap: 2px;
+        }
+
+        .publish-pill-smilez-row strong {
+          color: #071b49;
+          font-size: 0.82rem;
+        }
+
+        .publish-pill-smilez-row span {
+          color: #7a8497;
+          font-size: 0.74rem;
+        }
+
+        .publish-pill-smilez-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          align-items: stretch;
+        }
+
+        .publish-pill-smilez-actions select {
           grid-column: 1 / -1;
-        }
-
-        .publish-only-choice {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 12px;
-        }
-        .publish-only-smilez-status-choice {
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-          margin-bottom: 18px;
-        }
-
-        .publish-only-smilez-status-choice .is-published {
-          background: var(--fo-success);
-          border-color: var(--fo-success);
-        }
-
-        .publish-only-no-smilez {
-          display: grid;
-          gap: 6px;
-          padding: 16px;
-          border: 1px solid var(--fo-border);
-          border-radius: 16px;
-          color: var(--fo-text);
-          background: var(--fo-surface-soft);
-        }
-
-        .publish-only-no-smilez span {
-          color: var(--fo-muted);
-          line-height: 1.45;
-        }
-
-
-        .publish-only-smilez-fields {
-          margin-top: 16px;
-        }
-
-        .publish-only-ai-review-note {
-          display: grid;
-          gap: 6px;
-          padding: 15px 16px;
-          border: 1px solid #ffd2e5;
-          border-radius: 16px;
-          background: var(--fo-surface-pink);
-          color: var(--fo-text);
-        }
-
-        .publish-only-ai-review-note span {
-          color: var(--fo-muted);
-          line-height: 1.45;
-        }
-
-        .publish-only-status {
-          display: grid;
-          gap: 10px;
-          padding: 16px;
-          border: 1px solid #ffd2e5;
-          border-radius: 16px;
-          background: var(--fo-surface-pink);
-        }
-        .publish-only-smilez-summary {
-          min-height: 96px !important;
-        }
-        .publish-only-price-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 12px;
-        }
-
-        .publish-only-details-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 12px;
-        }
-
-        .publish-only-wide-field {
-          grid-column: 1 / -1;
-        }
-
-
-        .publish-only-smilez-fields small {
-          display: block;
-          margin-top: 6px;
-          color: var(--fo-muted);
+          width: 100%;
+          min-height: 40px;
+          padding: 7px 30px 7px 10px;
+          border: 1px solid rgba(7, 27, 73, 0.1);
+          border-radius: 10px;
+          background: #ffffff;
+          color: #071b49;
           font-size: 0.76rem;
+          font-weight: 800;
         }
 
-        .publish-only-status-actions {
+        .publish-pill-link {
+          min-height: 38px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(7, 27, 73, 0.09);
+          border-radius: 10px;
+          padding: 0 10px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
+          font-size: 0.74rem;
+          font-weight: 850;
+          text-decoration: none;
+          cursor: pointer;
+        }
+
+        .publish-pill-details {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 12px;
-          margin-top: 4px;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 12px;
+          border: 1px solid rgba(7, 27, 73, 0.07);
+          border-radius: 12px;
+          background: #fafbfc;
         }
 
-        .publish-only-status-actions .app-button {
+        .publish-pill-details label {
+          display: grid;
+          gap: 5px;
+        }
+
+        .publish-pill-details label span {
+          color: #59657a;
+          font-size: 0.7rem;
+          font-weight: 850;
+        }
+
+        .publish-pill-details input,
+        .publish-pill-details textarea {
           width: 100%;
+          box-sizing: border-box;
+          border: 1px solid rgba(7, 27, 73, 0.09);
+          border-radius: 9px;
+          padding: 10px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
         }
 
+        .publish-pill-wide {
+          grid-column: auto;
+        }
 
-        @media (max-width: 900px) {
-          .publish-only-preview,
-          .publish-only-grid {
-            grid-template-columns: 1fr;
+        @media (min-width: 760px) {
+          body:has(.fromone-post-review-page) .main-content {
+            padding-left: clamp(24px, 4vw, 54px) !important;
+            padding-right: clamp(24px, 4vw, 54px) !important;
           }
 
+          .publish-only-preview {
+            grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr) !important;
+            gap: 22px !important;
+            padding: 20px !important;
+          }
 
-          .publish-only-smilez {
-            grid-column: 1;
+          .publish-only-media {
+            aspect-ratio: auto;
+            min-height: 360px !important;
+          }
+
+          .publish-only-edit-actions {
+            grid-template-columns: 1fr 1fr !important;
+          }
+
+          .publish-pill-section {
+            padding: 20px 22px !important;
+          }
+
+          .publish-pill-header {
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+          }
+
+          .publish-pill-primary {
+            width: auto !important;
+            min-width: 158px;
+          }
+
+          .publish-channel-pill {
+            flex: 0 0 auto;
+            min-width: 128px;
+          }
+
+          .publish-channel-pill:last-child {
+            flex-basis: auto;
+          }
+
+          .publish-pill-smilez-row {
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+          }
+
+          .publish-pill-smilez-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+
+          .publish-pill-smilez-actions select {
+            grid-column: auto;
+            width: auto;
+            min-width: 142px;
+          }
+
+          .publish-pill-details {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            padding: 14px;
+          }
+
+          .publish-pill-wide {
+            grid-column: 1 / -1;
           }
         }
 
-        @media (max-width: 520px) {
-          .publish-only-choice,
-          .publish-only-smilez-status-choice,
-          .publish-only-edit-actions,
-          .publish-only-status-actions,
-          .publish-only-price-grid,
-          .publish-only-details-grid {
-            grid-template-columns: 1fr;
-          }
+        /* Remove any inherited cream/yellow tint from legacy Smilez/review containers. */
+        .fromone-post-review-page .publish-only-smilez,
+        .fromone-post-review-page .publish-only-status,
+        .fromone-post-review-page .publish-only-smilez-fields,
+        .fromone-post-review-page .publish-only-smilez-status-choice,
+        .fromone-post-review-page .publish-pill-section,
+        .fromone-post-review-page .publish-pill-smilez-row,
+        .fromone-post-review-page .publish-pill-details,
+        .fromone-post-review-page .app-card,
+        .fromone-post-review-page .app-section {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          background-image: none !important;
+        }
 
-          .publish-only-wide-field {
-            grid-column: 1;
-          }
+        .fromone-post-review-page .publish-pill-link,
+        .fromone-post-review-page .app-button-secondary {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          background-image: none !important;
+        }
 
-          .publish-only-preview,
-          .publish-only-option {
-            gap: 16px;
-          }
+        /* FINAL visual cleanup: remove the remaining cream/yellow glow completely. */
+        html:has(.fromone-post-review-page),
+        body:has(.fromone-post-review-page),
+        body:has(.fromone-post-review-page) .app-shell,
+        body:has(.fromone-post-review-page) .main-content,
+        body:has(.fromone-post-review-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-post-review-page) .fromone-universal-mobile-page-frame,
+        body:has(.fromone-post-review-page) #fromone-standard-shell,
+        body:has(.fromone-post-review-page) main,
+        body:has(.fromone-post-review-page) section,
+        .fromone-post-review-page,
+        .fromone-post-review-page.app-page,
+        .fromone-post-review-page .app-page-stack {
+          background-color: #ffffff !important;
+          background-image: none !important;
+          filter: none !important;
+        }
+
+        .fromone-post-review-page .publish-pill-section,
+        .fromone-post-review-page .publish-pill-smilez-row,
+        .fromone-post-review-page .publish-pill-details,
+        .fromone-post-review-page .publish-only-preview,
+        .fromone-post-review-page .app-card,
+        .fromone-post-review-page .app-section {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          background-image: none !important;
+          filter: none !important;
+        }
+
+        .fromone-post-review-page .publish-pill-section {
+          box-shadow: none !important;
+        }
+
+        .fromone-post-review-page .publish-pill-smilez-row {
+          box-shadow: none !important;
+        }
+
+        body:has(.fromone-post-review-page) .app-shell::before,
+        body:has(.fromone-post-review-page) .app-shell::after,
+        body:has(.fromone-post-review-page) .main-content::before,
+        body:has(.fromone-post-review-page) .main-content::after,
+        body:has(.fromone-post-review-page) .fromone-universal-mobile-page-frame::before,
+        body:has(.fromone-post-review-page) .fromone-universal-mobile-page-frame::after,
+        body:has(.fromone-post-review-page) #fromone-standard-shell::before,
+        body:has(.fromone-post-review-page) #fromone-standard-shell::after,
+        .fromone-post-review-page::before,
+        .fromone-post-review-page::after,
+        .fromone-post-review-page .app-page-stack::before,
+        .fromone-post-review-page .app-page-stack::after,
+        .fromone-post-review-page .publish-pill-section::before,
+        .fromone-post-review-page .publish-pill-section::after {
+          content: none !important;
+          display: none !important;
+          background: none !important;
+          background-image: none !important;
+          box-shadow: none !important;
+          filter: none !important;
+        }
+
+        /* FINAL REVIEW-PAGE BACKGROUND OVERRIDE — intentionally last. */
+        html:has(.fromone-post-review-page),
+        body:has(.fromone-post-review-page),
+        body:has(.fromone-post-review-page) .app-shell,
+        body:has(.fromone-post-review-page) .main-content,
+        body:has(.fromone-post-review-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-post-review-page) .fromone-universal-mobile-page-frame,
+        body:has(.fromone-post-review-page) #fromone-standard-shell,
+        body:has(.fromone-post-review-page) main,
+        .fromone-post-review-page,
+        .fromone-post-review-page.app-page,
+        .fromone-post-review-page .app-page-stack {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          background-image: none !important;
+        }
+
+        body:has(.fromone-post-review-page)::before,
+        body:has(.fromone-post-review-page)::after,
+        body:has(.fromone-post-review-page) .app-shell::before,
+        body:has(.fromone-post-review-page) .app-shell::after,
+        body:has(.fromone-post-review-page) .main-content::before,
+        body:has(.fromone-post-review-page) .main-content::after,
+        body:has(.fromone-post-review-page) .fromone-universal-mobile-page-frame::before,
+        body:has(.fromone-post-review-page) .fromone-universal-mobile-page-frame::after,
+        body:has(.fromone-post-review-page) #fromone-standard-shell::before,
+        body:has(.fromone-post-review-page) #fromone-standard-shell::after {
+          display: none !important;
+          content: none !important;
+          background: none !important;
+          background-image: none !important;
         }
       `}</style>
     </main>

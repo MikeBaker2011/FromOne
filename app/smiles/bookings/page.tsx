@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
+import SmilezBackButton from "@/app/components/SmilezBackButton";
 import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -440,84 +440,51 @@ export default function SmilesBookingsPage() {
   return (
     <main className="fromone-posts-page fromone-bookings-page">
       <section id="fromone-standard-shell">
-        <SmilezSectionHeader
-          eyebrow="Bookings"
-          title="Manage bookings"
-          description={
-            <>
-              Review new requests, confirm the bookings you can accept, and check
-              previous bookings.
-            </>
-          }
-          listingName={profile?.business_name}
-          listingStatus={
-            profile?.smiles_listing_venue_id
-              ? "Live on Smilez"
-              : "Waiting for listing setup"
-          }
-        />
+        <header className="bookings-simple-hero">
+          <div>
+            <span className="bookings-eyebrow">Smilez</span>
+            <h1>Bookings.</h1>
+            <p>Confirm new requests and check accepted bookings.</p>
+          </div>
+          <SmilezBackButton />
+        </header>
 
-{loading ? (
-          <section className="posts-summary-panel bookings-notice">
-            <div className="posts-panel-head">
-              <span className="posts-step-badge">1</span>
-              <div>
-                <h2>Loading bookings…</h2>
-                <p>Checking your Smilez booking requests.</p>
-              </div>
-            </div>
+        {loading ? (
+          <section className="bookings-status-card">
+            <strong>Loading bookings…</strong>
+            <span>Checking your latest requests.</span>
           </section>
         ) : null}
 
         {!loading && isSmilesLocked ? (
-          <section className="posts-summary-panel bookings-notice">
-            <div className="posts-panel-head">
-              <span className="posts-step-badge">!</span>
-              <div>
-                <h2>{smilesLockedTitle}</h2>
-                <p>{smilesLockedMessage}</p>
-              </div>
+          <section className="bookings-status-card is-warning">
+            <div>
+              <strong>{smilesLockedTitle}</strong>
+              <span>{smilesLockedMessage}</span>
             </div>
-            <div className="posts-summary-actions bookings-link-actions">
-              <Link href="/settings">Update business address</Link>
-              <Link href="/posts">Create a normal post</Link>
-            </div>
+            <Link href="/settings">Business settings</Link>
           </section>
         ) : null}
 
         {!loading && !isSmilesLocked && !profile?.smiles_listing_venue_id ? (
-          <section className="posts-summary-panel bookings-notice">
-            <div className="posts-panel-head">
-              <span className="posts-step-badge">1</span>
-              <div>
-                <h2>Your Smilez listing is not live yet</h2>
-                <p>Bookings will appear here once your Smilez venue listing is live.</p>
-              </div>
+          <section className="bookings-status-card is-warning">
+            <div>
+              <strong>Your Smilez listing is not live yet</strong>
+              <span>Bookings will appear here once your venue listing is live.</span>
             </div>
-            <div className="posts-summary-actions bookings-link-actions">
-              <Link href="/settings">Check business details</Link>
-              <Link href="/smiles">Back to Smilez</Link>
-            </div>
+            <Link href="/settings">Check listing</Link>
           </section>
         ) : null}
 
         {!loading && !isSmilesLocked && profile?.smiles_listing_venue_id ? (
           <>
-            <section className="posts-summary-panel bookings-summary-panel">
-              <div className="posts-panel-head">
-                <span className="posts-step-badge">1</span>
-                <div>
-                  <h2>Find a booking</h2>
-                  <p>Search by customer name or booking reference.</p>
-                </div>
-              </div>
-
+            <section className="bookings-toolbar">
               <div className="bookings-search-row">
                 <input
                   type="search"
                   value={bookingSearch}
                   onChange={(event) => setBookingSearch(event.target.value)}
-                  placeholder="Name or booking number"
+                  placeholder="Search name or booking number"
                   aria-label="Search bookings by name or booking number"
                 />
                 {bookingSearch ? (
@@ -526,25 +493,18 @@ export default function SmilesBookingsPage() {
                   </button>
                 ) : null}
               </div>
+
+              <div className="bookings-counts" aria-label="Booking totals">
+                <span><strong>{newBookings.length}</strong> to confirm</span>
+                <span><strong>{confirmedBookings.length}</strong> confirmed</span>
+              </div>
             </section>
 
-            <section className="bookings-count-row" aria-label="Booking totals">
-              <article>
-                <span>To confirm</span>
-                <strong>{newBookings.length}</strong>
-              </article>
-              <article>
-                <span>Confirmed</span>
-                <strong>{confirmedBookings.length}</strong>
-              </article>
-            </section>
-
-            <section className="posts-list-panel bookings-list-panel">
-              <div className="posts-panel-head">
-                <span className="posts-step-badge">2</span>
+            <section className="bookings-section">
+              <div className="bookings-section-head">
                 <div>
                   <h2>New bookings</h2>
-                  <p>Confirm the requests you can accept.</p>
+                  <p>{newBookings.length > 0 ? "Confirm or decline each request." : "Nothing needs attention."}</p>
                 </div>
               </div>
 
@@ -556,53 +516,48 @@ export default function SmilesBookingsPage() {
               ) : null}
 
               {filteredNewBookings.length === 0 ? (
-                <div className="posts-empty-panel">
-                  <div className="posts-panel-head">
-                    <span className="posts-step-badge">✓</span>
-                    <div>
-                      <h2>
-                        {normalisedBookingSearch
-                          ? "No matching new bookings"
-                          : "You’re all caught up"}
-                      </h2>
-                      <p>
-                        {normalisedBookingSearch
-                          ? "Try a different customer name or booking reference."
-                          : "New booking requests from Smilez will appear here."}
-                      </p>
-                    </div>
-                  </div>
+                <div className="bookings-empty">
+                  <strong>
+                    {normalisedBookingSearch ? "No matching new bookings" : "You’re all caught up"}
+                  </strong>
+                  <span>
+                    {normalisedBookingSearch
+                      ? "Try a different name or booking reference."
+                      : "New booking requests will appear here."}
+                  </span>
                 </div>
               ) : (
                 <div className="bookings-review-list">
                   {filteredNewBookings.map((booking) => (
                     <article className="bookings-review-card" key={booking.id}>
-                      <div className="bookings-review-time">
-                        <strong>{formatTime(booking.booking_time)}</strong>
-                        <span>{formatDate(booking.booking_date)}</span>
-                      </div>
-
-                      <div className="bookings-review-copy">
-                        <div className="posts-review-meta">
-                          <span>{formatPartySize(booking.party_size)}</span>
-                          <span>{makeBookingReference(booking)}</span>
+                      <div className="bookings-booking-main">
+                        <div className="bookings-time-block">
+                          <strong>{formatTime(booking.booking_time)}</strong>
+                          <span>{formatDate(booking.booking_date)}</span>
                         </div>
-                        <h3>{booking.customer_name || "Customer"}</h3>
 
-                        <div className="bookings-detail-grid">
-                          <BookingContactDetails booking={booking} />
-                          <BookingNoteDetails booking={booking} />
+                        <div className="bookings-review-copy">
+                          <div className="bookings-meta-row">
+                            <span>{formatPartySize(booking.party_size)}</span>
+                            <span>{makeBookingReference(booking)}</span>
+                          </div>
+                          <h3>{booking.customer_name || "Customer"}</h3>
+
+                          <div className="bookings-detail-grid">
+                            <BookingContactDetails booking={booking} />
+                            <BookingNoteDetails booking={booking} />
+                          </div>
                         </div>
                       </div>
 
                       <div className="bookings-card-actions">
                         <button
                           type="button"
-                          className="posts-review-action bookings-confirm-button"
+                          className="bookings-confirm-button"
                           onClick={() => confirmBooking(booking.id)}
                           disabled={busyId === booking.id}
                         >
-                          {busyId === booking.id ? "Working…" : "Confirm booking"}
+                          {busyId === booking.id ? "Working…" : "Confirm"}
                         </button>
                         <button
                           type="button"
@@ -619,41 +574,26 @@ export default function SmilesBookingsPage() {
               )}
             </section>
 
-            <section className="posts-list-panel bookings-list-panel">
-              <div className="bookings-history-head">
-                <div className="posts-panel-head">
-                  <span className="posts-step-badge">3</span>
-                  <div>
-                    <h2>Confirmed bookings</h2>
-                    <p>Check bookings you have already accepted.</p>
-                  </div>
+            <details className="bookings-history" open={Boolean(normalisedBookingSearch) || showConfirmed}>
+              <summary
+                onClick={(event) => {
+                  event.preventDefault();
+                  setShowConfirmed((current) => !current);
+                  setConfirmedPage(1);
+                }}
+              >
+                <div>
+                  <strong>Confirmed bookings</strong>
+                  <span>{confirmedBookings.length} accepted</span>
                 </div>
+                <b>{showConfirmed || normalisedBookingSearch ? "Hide" : "View"}</b>
+              </summary>
 
-                <button
-                  type="button"
-                  className="bookings-secondary-button"
-                  onClick={() => {
-                    setShowConfirmed((current) => {
-                      const next = !current;
-                      if (next) setConfirmedPage(1);
-                      return next;
-                    });
-                  }}
-                >
-                  {showConfirmed ? "Hide bookings" : `Show ${confirmedBookings.length}`}
-                </button>
-              </div>
-
-              {showConfirmed ? (
+              {(showConfirmed || normalisedBookingSearch) ? (
                 confirmedBookings.length === 0 ? (
-                  <div className="posts-empty-panel">
-                    <div className="posts-panel-head">
-                      <span className="posts-step-badge">✓</span>
-                      <div>
-                        <h2>No confirmed bookings yet</h2>
-                        <p>Confirmed bookings will be kept here.</p>
-                      </div>
-                    </div>
+                  <div className="bookings-empty is-history">
+                    <strong>No confirmed bookings yet</strong>
+                    <span>Accepted bookings will appear here.</span>
                   </div>
                 ) : (
                   <>
@@ -671,35 +611,39 @@ export default function SmilesBookingsPage() {
                           <div className="bookings-review-list">
                             {group.bookings.map((booking) => (
                               <article
-                                className="bookings-review-card bookings-confirmed-card"
+                                className="bookings-review-card is-confirmed"
                                 key={booking.id}
                               >
-                                <div className="bookings-review-time">
-                                  <strong>{formatTime(booking.booking_time)}</strong>
-                                  <span>{formatPartySize(booking.party_size)}</span>
+                                <div className="bookings-booking-main">
+                                  <div className="bookings-time-block">
+                                    <strong>{formatTime(booking.booking_time)}</strong>
+                                    <span>{formatPartySize(booking.party_size)}</span>
+                                  </div>
+
+                                  <div className="bookings-review-copy">
+                                    <div className="bookings-meta-row">
+                                      <span>{formatDate(booking.booking_date)}</span>
+                                      <span>{makeBookingReference(booking)}</span>
+                                    </div>
+                                    <h3>{booking.customer_name || "Customer"}</h3>
+
+                                    <div className="bookings-detail-grid">
+                                      <BookingContactDetails booking={booking} />
+                                      <BookingNoteDetails booking={booking} />
+                                    </div>
+                                  </div>
                                 </div>
 
-                                <div className="bookings-review-copy">
-                                  <div className="posts-review-meta">
-                                    <span>{formatDate(booking.booking_date)}</span>
-                                    <span>{makeBookingReference(booking)}</span>
-                                  </div>
-                                  <h3>{booking.customer_name || "Customer"}</h3>
-
-                                  <div className="bookings-detail-grid">
-                                    <BookingContactDetails booking={booking} />
-                                    <BookingNoteDetails booking={booking} />
-                                  </div>
+                                <div className="bookings-card-actions">
+                                  <button
+                                    type="button"
+                                    className="bookings-decline-button"
+                                    onClick={() => declineBooking(booking.id)}
+                                    disabled={busyId === booking.id}
+                                  >
+                                    {busyId === booking.id ? "Working…" : "Decline"}
+                                  </button>
                                 </div>
-
-                                <button
-                                  type="button"
-                                  className="bookings-decline-button"
-                                  onClick={() => declineBooking(booking.id)}
-                                  disabled={busyId === booking.id}
-                                >
-                                  {busyId === booking.id ? "Working…" : "Decline booking"}
-                                </button>
                               </article>
                             ))}
                           </div>
@@ -719,7 +663,7 @@ export default function SmilesBookingsPage() {
                           Previous
                         </button>
                         <span>
-                          Page {confirmedPage} of {confirmedPageCount}
+                          {confirmedPage} / {confirmedPageCount}
                         </span>
                         <button
                           type="button"
@@ -736,374 +680,560 @@ export default function SmilesBookingsPage() {
                     ) : null}
                   </>
                 )
-              ) : (
-                <p className="bookings-help">
-                  Open this section whenever you need to check an older booking.
-                </p>
-              )}
-            </section>
+              ) : null}
+            </details>
           </>
         ) : null}
       </section>
 
       <style jsx global>{`
-        body:has(.fromone-bookings-page) {
-          background: var(--posts-bg) !important;
+        body:has(.fromone-bookings-page),
+        body:has(.fromone-bookings-page) .app-shell,
+        body:has(.fromone-bookings-page) .main-content,
+        body:has(.fromone-bookings-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-bookings-page) .fromone-universal-mobile-page-frame {
+          background: #ffffff !important;
+          background-image: none !important;
+        }
+
+        body:has(.fromone-bookings-page)::before {
+          display: none !important;
+          content: none !important;
         }
 
         body:has(.fromone-bookings-page) .main-content {
           width: 100% !important;
           max-width: none !important;
-          min-width: 0 !important;
           margin: 0 !important;
-          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
-          background: var(--posts-bg) !important;
+          padding: 34px clamp(24px, 4vw, 54px) 90px !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
         }
 
-        .fromone-bookings-page .bookings-back-link {
-          display: inline-flex;
-          align-items: center;
-          min-height: 46px;
-          margin-bottom: 24px;
-          padding: 0 17px;
-          border: 1px solid var(--posts-border);
-          border-radius: 15px;
-          background: #fff;
-          color: var(--posts-navy);
-          font-size: 0.86rem;
-          font-weight: 900;
-          text-decoration: none;
-        }
-
-        .fromone-bookings-page .bookings-summary-panel {
-          align-items: center;
-        }
-
-        .fromone-bookings-page .bookings-search-row {
-          display: grid;
-          grid-template-columns: minmax(280px, 430px) auto;
-          gap: 10px;
-        }
-
-        .fromone-bookings-page .bookings-search-row input {
+        .fromone-bookings-page {
           width: 100%;
-          min-height: 46px;
-          padding: 0 14px;
-          border: 1px solid var(--posts-border);
-          border-radius: 15px;
-          background: #fff;
-          color: var(--posts-navy);
-          font: inherit;
-          font-weight: 700;
-          outline: none;
+          max-width: 100%;
+          margin: 0;
+          color: #071b49;
+          background: transparent !important;
         }
 
-        .fromone-bookings-page .bookings-search-row input:focus {
-          border-color: var(--posts-pink);
-          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1);
-        }
-
-        .fromone-bookings-page .bookings-search-row button,
-        .fromone-bookings-page .bookings-secondary-button,
-        .fromone-bookings-page .bookings-pagination button {
-          min-height: 46px;
-          padding: 0 17px;
-          border: 1px solid var(--posts-border);
-          border-radius: 15px;
-          background: #fff;
-          color: var(--posts-navy);
-          font: inherit;
-          font-size: 0.86rem;
-          font-weight: 900;
-          cursor: pointer;
-        }
-
-        .fromone-bookings-page .bookings-count-row {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 16px;
-          margin-bottom: 22px;
-        }
-
-        .fromone-bookings-page .bookings-count-row article {
-          padding: 18px 20px;
-          border: 1px solid var(--posts-border);
-          border-radius: 22px;
-          background: rgba(255, 255, 255, 0.9);
-          box-shadow: var(--posts-shadow);
-        }
-
-        .fromone-bookings-page .bookings-count-row span {
-          display: block;
-          color: var(--posts-pink);
-          font-size: 0.74rem;
-          font-weight: 900;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-        }
-
-        .fromone-bookings-page .bookings-count-row strong {
-          display: block;
-          margin-top: 7px;
-          color: var(--posts-navy);
-          font-size: 2rem;
-          line-height: 1;
-        }
-
-        .fromone-bookings-page .bookings-list-panel + .bookings-list-panel {
-          margin-top: 22px;
-        }
-
-        .fromone-bookings-page .bookings-search-results {
-          margin: -6px 0 16px;
-          color: var(--posts-muted);
-          font-size: 0.86rem;
-          font-weight: 800;
-        }
-
-        .fromone-bookings-page .bookings-review-list {
+        .fromone-bookings-page #fromone-standard-shell {
+          width: 100%;
+          max-width: 980px;
+          margin: 0 auto;
           display: grid;
           gap: 14px;
         }
 
-        .fromone-bookings-page .bookings-review-card {
-          display: grid;
-          grid-template-columns: 180px minmax(0, 1fr) 170px;
+        .bookings-simple-hero {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
           gap: 18px;
+          margin-bottom: 2px;
+        }
+
+        .bookings-eyebrow {
+          display: block;
+          margin-bottom: 8px;
+          color: #f72585;
+          font-size: 0.72rem;
+          font-weight: 900;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+        }
+
+        .bookings-simple-hero h1 {
+          margin: 0 0 9px;
+          color: #071b49;
+          font-size: clamp(2.4rem, 5vw, 3.9rem);
+          line-height: 0.98;
+          letter-spacing: -0.06em;
+          font-weight: 900;
+        }
+
+        .bookings-simple-hero p {
+          margin: 0;
+          color: #66728a;
+          font-size: 0.98rem;
+          line-height: 1.45;
+          font-weight: 600;
+        }
+
+        .bookings-status-card a {
+          min-height: 40px;
+          display: inline-flex;
           align-items: center;
-          min-width: 0;
-          padding: 18px;
-          border: 1px solid var(--posts-border);
-          border-radius: 22px;
-          background: #fff;
-          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055);
+          justify-content: center;
+          padding: 0 14px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49 !important;
+          font-size: 0.8rem;
+          font-weight: 900;
+          text-decoration: none;
+          box-shadow: none !important;
+          white-space: nowrap;
         }
 
-        .fromone-bookings-page .bookings-confirmed-card {
-          grid-template-columns: 180px minmax(0, 1fr) 170px;
-        }
-
-        .fromone-bookings-page .bookings-review-time {
-          display: grid;
-          gap: 7px;
-          min-width: 0;
-          padding: 16px;
-          border: 1px solid #ffd4e8;
+        .bookings-status-card,
+        .bookings-toolbar,
+        .bookings-section,
+        .bookings-history {
+          border: 1px solid #dfe5f1;
           border-radius: 18px;
+          background: #ffffff;
+          box-shadow: none;
+        }
+
+        .bookings-status-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 16px;
+        }
+
+        .bookings-status-card > div,
+        .bookings-status-card {
+          color: #66728a;
+        }
+
+        .bookings-status-card strong {
+          color: #071b49;
+          font-size: 0.95rem;
+          font-weight: 900;
+        }
+
+        .bookings-status-card span {
+          display: block;
+          margin-top: 3px;
+          font-size: 0.82rem;
+          line-height: 1.4;
+          font-weight: 600;
+        }
+
+        .bookings-status-card.is-warning {
+          border-color: #ffd2e5;
+          background: #fffafd;
+        }
+
+        .bookings-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 12px;
+        }
+
+        .bookings-search-row {
+          flex: 1 1 auto;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 8px;
+        }
+
+        .bookings-search-row input {
+          width: 100%;
+          min-height: 42px;
+          padding: 0 13px;
+          border: 1px solid #dfe5f1;
+          border-radius: 12px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
+          font-size: 0.86rem;
+          font-weight: 700;
+          outline: none;
+        }
+
+        .bookings-search-row input:focus {
+          border-color: #f72585;
+          box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.08);
+        }
+
+        .bookings-search-row button,
+        .bookings-pagination button {
+          min-height: 42px;
+          padding: 0 13px;
+          border: 1px solid #dfe5f1;
+          border-radius: 12px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
+          font-size: 0.8rem;
+          font-weight: 900;
+          cursor: pointer;
+          box-shadow: none !important;
+        }
+
+        .bookings-counts {
+          display: flex;
+          gap: 8px;
+          flex: 0 0 auto;
+        }
+
+        .bookings-counts span {
+          min-height: 42px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 0 11px;
+          border-radius: 999px;
+          background: #f7f9fc;
+          color: #66728a;
+          font-size: 0.76rem;
+          font-weight: 750;
+          white-space: nowrap;
+        }
+
+        .bookings-counts strong {
+          color: #071b49;
+          font-size: 0.9rem;
+          font-weight: 900;
+        }
+
+        .bookings-section {
+          padding: 16px;
+        }
+
+        .bookings-section-head {
+          margin-bottom: 12px;
+        }
+
+        .bookings-section-head h2 {
+          margin: 0 0 4px;
+          color: #071b49;
+          font-size: 1.18rem;
+          line-height: 1.1;
+          letter-spacing: -0.03em;
+          font-weight: 900;
+        }
+
+        .bookings-section-head p {
+          margin: 0;
+          color: #718096;
+          font-size: 0.82rem;
+          font-weight: 600;
+        }
+
+        .bookings-search-results {
+          margin: 0 0 10px;
+          color: #718096;
+          font-size: 0.78rem;
+          font-weight: 800;
+        }
+
+        .bookings-review-list {
+          display: grid;
+          gap: 9px;
+        }
+
+        .bookings-review-card {
+          padding: 14px;
+          border: 1px solid #e3e8f1;
+          border-radius: 15px;
+          background: #fbfcfe;
+        }
+
+        .bookings-booking-main {
+          display: grid;
+          grid-template-columns: 130px minmax(0, 1fr);
+          gap: 14px;
+          align-items: start;
+        }
+
+        .bookings-time-block {
+          display: grid;
+          gap: 5px;
+          padding: 12px;
+          border-radius: 13px;
           background: #fff5fa;
         }
 
-        .fromone-bookings-page .bookings-review-time strong {
-          color: var(--posts-pink);
-          font-size: 1.7rem;
+        .bookings-time-block strong {
+          color: #f72585;
+          font-size: 1.35rem;
           line-height: 1;
+          font-weight: 900;
         }
 
-        .fromone-bookings-page .bookings-review-time span {
-          color: var(--posts-muted);
-          font-size: 0.88rem;
-          line-height: 1.4;
+        .bookings-time-block span {
+          color: #66728a;
+          font-size: 0.78rem;
+          line-height: 1.35;
           font-weight: 700;
         }
 
-        .fromone-bookings-page .bookings-review-copy {
-          min-width: 0;
+        .bookings-review-copy h3 {
+          margin: 7px 0 9px;
+          color: #071b49;
+          font-size: 1.05rem;
+          line-height: 1.15;
+          font-weight: 900;
         }
 
-        .fromone-bookings-page .bookings-review-copy h3 {
-          margin: 0 0 12px;
-          color: var(--posts-navy);
-          font-size: 1.3rem;
-          line-height: 1.12;
-          letter-spacing: -0.035em;
+        .bookings-meta-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
         }
 
-        .fromone-bookings-page .bookings-detail-grid {
+        .bookings-meta-row span {
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #f4f7fb;
+          color: #52617a;
+          font-size: 0.7rem;
+          font-weight: 800;
+        }
+
+        .bookings-detail-grid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 12px;
+          gap: 8px;
         }
 
         .fromone-bookings-page .detailBox {
-          padding: 13px;
-          border: 1px solid var(--posts-border);
-          border-radius: 15px;
-          background: #f8fafc;
+          padding: 10px;
+          border: 1px solid #e3e8f1;
+          border-radius: 12px;
+          background: #ffffff;
         }
 
         .fromone-bookings-page .detailBox > span {
-          color: var(--posts-pink);
-          font-size: 0.7rem;
+          color: #f72585;
+          font-size: 0.66rem;
           font-weight: 900;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.07em;
           text-transform: uppercase;
         }
 
         .fromone-bookings-page .detailBox p {
-          margin: 8px 0 0;
-          color: var(--posts-muted);
-          font-size: 0.86rem;
-          line-height: 1.45;
+          margin: 6px 0 0;
+          color: #66728a;
+          font-size: 0.76rem;
+          line-height: 1.4;
           font-weight: 600;
         }
 
         .fromone-bookings-page .contactRow {
           display: grid;
-          gap: 5px;
-          margin-top: 8px;
+          gap: 4px;
+          margin-top: 6px;
         }
 
         .fromone-bookings-page .contactRow a {
-          color: var(--posts-navy);
-          font-size: 0.84rem;
+          color: #071b49;
+          font-size: 0.76rem;
           font-weight: 800;
           text-decoration: none;
           overflow-wrap: anywhere;
         }
 
-        .fromone-bookings-page .bookings-card-actions {
-          display: grid;
-          gap: 9px;
+        .bookings-card-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 10px;
         }
 
-        .fromone-bookings-page .bookings-confirm-button,
-        .fromone-bookings-page .bookings-decline-button {
-          width: 100%;
-          margin: 0;
-        }
-
-        .fromone-bookings-page .bookings-decline-button {
-          min-height: 46px;
-          padding: 0 15px;
-          border: 1px solid #efb7c9;
-          border-radius: 15px;
-          background: #fff7fa;
-          color: #a91257;
+        .bookings-confirm-button,
+        .bookings-decline-button {
+          min-height: 40px;
+          padding: 0 14px;
+          border-radius: 999px;
           font: inherit;
-          font-size: 0.86rem;
+          font-size: 0.8rem;
           font-weight: 900;
           cursor: pointer;
+          box-shadow: none !important;
         }
 
-        .fromone-bookings-page .bookings-decline-button:disabled {
+        .bookings-confirm-button {
+          border: 1px solid #f72585;
+          background: #f72585;
+          color: #ffffff;
+        }
+
+        .bookings-decline-button {
+          border: 1px solid #efb7c9;
+          background: #ffffff;
+          color: #a91257;
+        }
+
+        .bookings-confirm-button:disabled,
+        .bookings-decline-button:disabled {
           opacity: 0.55;
           cursor: not-allowed;
         }
 
-        .fromone-bookings-page .bookings-history-head {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 18px;
-          margin-bottom: 18px;
-        }
-
-        .fromone-bookings-page .bookings-confirmed-groups {
+        .bookings-empty {
           display: grid;
-          gap: 24px;
+          gap: 3px;
+          padding: 14px;
+          border-radius: 13px;
+          background: #f8fafc;
         }
 
-        .fromone-bookings-page .bookings-confirmed-group {
-          display: grid;
-          gap: 10px;
+        .bookings-empty strong {
+          color: #071b49;
+          font-size: 0.9rem;
+          font-weight: 900;
         }
 
-        .fromone-bookings-page .bookings-group-heading {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 0 4px;
+        .bookings-empty span {
+          color: #718096;
+          font-size: 0.78rem;
+          font-weight: 600;
         }
 
-        .fromone-bookings-page .bookings-group-heading strong {
-          color: var(--posts-navy);
-          font-size: 1.05rem;
+        .bookings-history {
+          overflow: hidden;
         }
 
-        .fromone-bookings-page .bookings-group-heading span,
-        .fromone-bookings-page .bookings-help,
-        .fromone-bookings-page .bookings-pagination span {
-          color: var(--posts-muted);
-          font-size: 0.86rem;
-          font-weight: 800;
-        }
-
-        .fromone-bookings-page .bookings-pagination {
+        .bookings-history summary {
+          min-height: 64px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 12px;
-          margin-top: 18px;
-          padding-top: 18px;
-          border-top: 1px solid var(--posts-border);
+          padding: 12px 16px;
+          cursor: pointer;
+          list-style: none;
         }
 
-        .fromone-bookings-page .bookings-link-actions {
+        .bookings-history summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .bookings-history summary > div {
+          display: grid;
+          gap: 2px;
+        }
+
+        .bookings-history summary strong {
+          color: #071b49;
+          font-size: 0.94rem;
+          font-weight: 900;
+        }
+
+        .bookings-history summary span {
+          color: #718096;
+          font-size: 0.76rem;
+          font-weight: 650;
+        }
+
+        .bookings-history summary b {
+          color: #f72585;
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+
+        .bookings-confirmed-groups {
+          display: grid;
+          gap: 14px;
+          padding: 0 12px 12px;
+        }
+
+        .bookings-confirmed-group {
+          display: grid;
+          gap: 8px;
+        }
+
+        .bookings-group-heading {
           display: flex;
-          flex-wrap: wrap;
+          align-items: baseline;
+          justify-content: space-between;
           gap: 10px;
+          padding: 0 2px;
         }
 
-        .fromone-bookings-page .bookings-link-actions a + a {
-          color: var(--posts-navy);
-          background: #fff;
-          border: 1px solid var(--posts-border);
-          box-shadow: none;
+        .bookings-group-heading strong {
+          color: #071b49;
+          font-size: 0.9rem;
+          font-weight: 900;
         }
 
-        @media (max-width: 980px) {
-          .fromone-bookings-page .bookings-review-card,
-          .fromone-bookings-page .bookings-confirmed-card {
-            grid-template-columns: 150px minmax(0, 1fr);
-          }
+        .bookings-group-heading span {
+          color: #718096;
+          font-size: 0.72rem;
+          font-weight: 750;
+        }
 
-          .fromone-bookings-page .bookings-card-actions,
-          .fromone-bookings-page .bookings-confirmed-card > .bookings-decline-button {
-            grid-column: 1 / -1;
-          }
+        .bookings-pagination {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin: 0 12px 12px;
+          padding-top: 10px;
+          border-top: 1px solid #edf1f7;
+        }
+
+        .bookings-pagination span {
+          color: #718096;
+          font-size: 0.76rem;
+          font-weight: 800;
+        }
+
+        .bookings-empty.is-history {
+          margin: 0 12px 12px;
         }
 
         @media (max-width: 700px) {
-          body:has(.fromone-bookings-page) .main-content {
-            padding: 24px 16px 100px !important;
+          body:has(.fromone-bookings-page) .main-content,
+          body:has(.fromone-bookings-page) .main-content.fromone-mobile-bottom-safe {
+            padding: 18px 10px 100px !important;
           }
 
-          .fromone-bookings-page .bookings-summary-panel,
-          .fromone-bookings-page .bookings-history-head {
+          .fromone-bookings-page #fromone-standard-shell {
+            max-width: 100%;
+            gap: 12px;
+          }
+
+          .bookings-simple-hero {
+            display: grid;
+            gap: 12px;
+          }
+
+          .bookings-simple-hero h1 {
+            font-size: 2.2rem;
+          }
+
+          .bookings-toolbar {
             align-items: stretch;
             flex-direction: column;
           }
 
-          .fromone-bookings-page .bookings-search-row,
-          .fromone-bookings-page .bookings-count-row,
-          .fromone-bookings-page .bookings-review-card,
-          .fromone-bookings-page .bookings-confirmed-card,
-          .fromone-bookings-page .bookings-detail-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .fromone-bookings-page .bookings-search-row button,
-          .fromone-bookings-page .bookings-secondary-button,
-          .fromone-bookings-page .bookings-confirm-button,
-          .fromone-bookings-page .bookings-decline-button {
+          .bookings-counts {
             width: 100%;
           }
 
-          .fromone-bookings-page .bookings-card-actions,
-          .fromone-bookings-page .bookings-confirmed-card > .bookings-decline-button {
-            grid-column: auto;
+          .bookings-counts span {
+            flex: 1 1 0;
+            justify-content: center;
           }
 
-          .fromone-bookings-page .bookings-pagination {
+          .bookings-booking-main,
+          .bookings-detail-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .bookings-time-block {
+            grid-template-columns: auto 1fr;
+            align-items: baseline;
+          }
+
+          .bookings-card-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
           }
 
-          .fromone-bookings-page .bookings-pagination span {
-            grid-column: 1 / -1;
-            grid-row: 1;
-            text-align: center;
+          .bookings-confirm-button,
+          .bookings-decline-button {
+            width: 100%;
           }
         }
       `}</style>

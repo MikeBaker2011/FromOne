@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
+import SmilezBackButton from "@/app/components/SmilezBackButton";
 import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -246,105 +246,86 @@ export default function SmilesBookingTimesPage() {
   }, []);
 
   return (
-    <main className="fromone-posts-page fromone-booking-times-page bookingTimesPage" data-fromone-smiles-times="simple-v2">
+    <main
+      className="fromone-posts-page fromone-booking-times-page bookingTimesPage"
+      data-fromone-smiles-times="simple-agency"
+    >
       <section id="fromone-standard-shell" className="bookingTimesShell">
-      <SmilezSectionHeader
-        eyebrow="Opening & booking hours"
-        title="When are you open?"
-        description={
+        <header className="bookingTimesSimpleHero">
+          <div>
+            <span className="bookingTimesEyebrow">Smilez</span>
+            <h1>Opening hours.</h1>
+            <p>Set when customers can request bookings.</p>
+          </div>
+          <SmilezBackButton />
+        </header>
+
+        {loading ? (
+          <section className="bookingTimesStatusCard">
+            <strong>Loading hours…</strong>
+            <span>Checking your current Smilez settings.</span>
+          </section>
+        ) : null}
+
+        {!loading && !profile?.smiles_listing_venue_id ? (
+          <section className="bookingTimesStatusCard isWarning">
+            <div>
+              <strong>Your Smilez listing is not live yet</strong>
+              <span>
+                {message ||
+                  "Opening and booking hours can be changed once your Smilez listing is live."}
+              </span>
+            </div>
+            <Link href="/settings">Check listing</Link>
+          </section>
+        ) : null}
+
+        {!loading && profile?.smiles_listing_venue_id ? (
           <>
-            These hours appear on your Smilez venue page and control when
-            customers can request bookings.
-          </>
-        }
-        listingName={profile?.business_name}
-        listingStatus={
-          profile?.smiles_listing_venue_id
-            ? "Live on Smilez"
-            : "Waiting for listing setup"
-        }
-      />
-
-{loading ? (
-        <section className="simplePanel">
-          <h2>Loading opening & booking hours...</h2>
-          <p>Checking your current Smiles hours.</p>
-        </section>
-      ) : null}
-
-      {!loading && !profile?.smiles_listing_venue_id ? (
-        <section className="simplePanel">
-          <h2>Your Smiles listing is not live yet</h2>
-          <p>
-            {message ||
-              "Opening and booking hours can be changed once your Smiles listing is live."}
-          </p>
-          <Link href="/settings">Check listing status</Link>
-        </section>
-      ) : null}
-
-      {!loading && profile?.smiles_listing_venue_id ? (
-        <>
-          <section className="timesSummary">
-            <article>
-              <span>Current hours</span>
-              <strong>{getHoursSummary(bookingHours)}</strong>
-            </article>
-            <article>
-              <span>Days shown open</span>
-              <strong>{openDays}</strong>
-            </article>
-          </section>
-
-          <section className="simplePanel">
-            <div className="sectionTop">
-              <div>
-                <span>Quick setup</span>
-                <h2>Use a preset</h2>
+            <section className="bookingTimesToolbar">
+              <div className="bookingTimesSummary">
+                <span>
+                  <strong>{openDays}</strong> days open
+                </span>
+                <span>{getHoursSummary(bookingHours)}</span>
               </div>
-            </div>
 
-            <div className="presetGrid">
-              <button type="button" onClick={applyWeekdayPreset}>
-                Same hours Monday to Friday
-              </button>
-              <button type="button" onClick={applyClosedWeekendsPreset}>
-                Closed weekends
-              </button>
-              <button type="button" onClick={applyEveryDayPreset}>
-                Open every day
-              </button>
-            </div>
-          </section>
-
-          <section className="simplePanel priority">
-            <div className="sectionTop">
-              <div>
-                <span>Fine tune</span>
-                <h2>Each day</h2>
-                <p>
-                  Mark closed days and set the opening window customers should
-                  see. The same times are used for Smiles booking request slots.
-                </p>
+              <div className="bookingTimesPresets" aria-label="Quick hour presets">
+                <button type="button" onClick={applyWeekdayPreset}>
+                  Mon–Fri
+                </button>
+                <button type="button" onClick={applyClosedWeekendsPreset}>
+                  Closed weekends
+                </button>
+                <button type="button" onClick={applyEveryDayPreset}>
+                  Every day
+                </button>
               </div>
-            </div>
+            </section>
 
-            <div className="dayGrid">
-              {bookingHours.map((hour) => {
-                const closed = Boolean(hour.is_closed);
+            <section className="bookingTimesMainSection">
+              <div className="bookingTimesSectionHead">
+                <div>
+                  <h2>Set each day</h2>
+                  <p>Turn a day on or off, then choose opening and closing times.</p>
+                </div>
+              </div>
 
-                return (
-                  <article
-                    className={closed ? "dayCard closed" : "dayCard"}
-                    key={hour.day_of_week}
-                  >
-                    <div className="dayTop">
-                      <div>
+              <div className="bookingTimesDayList">
+                {bookingHours.map((hour) => {
+                  const closed = Boolean(hour.is_closed);
+
+                  return (
+                    <article
+                      className={closed ? "bookingTimesDayRow isClosed" : "bookingTimesDayRow"}
+                      key={hour.day_of_week}
+                    >
+                      <div className="bookingTimesDayName">
+                        <strong>{dayLabels[hour.day_of_week]}</strong>
                         <span>{closed ? "Closed" : "Open"}</span>
-                        <h3>{dayLabels[hour.day_of_week]}</h3>
                       </div>
 
-                      <label className="switchLabel">
+                      <label className="bookingTimesSwitch">
                         <input
                           type="checkbox"
                           checked={!closed}
@@ -362,743 +343,458 @@ export default function SmilesBookingTimesPage() {
                         />
                         <span>{closed ? "Closed" : "Open"}</span>
                       </label>
-                    </div>
 
-                    {!closed ? (
-                      <div className="timeGrid">
-                        <label>
-                          Opens
-                          <input
-                            type="time"
-                            value={toTimeInput(hour.opens_at)}
-                            onChange={(event) =>
-                              updateBookingHour(hour.day_of_week, {
-                                opens_at: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
+                      {!closed ? (
+                        <div className="bookingTimesInputs">
+                          <label>
+                            <span>Opens</span>
+                            <input
+                              type="time"
+                              value={toTimeInput(hour.opens_at)}
+                              onChange={(event) =>
+                                updateBookingHour(hour.day_of_week, {
+                                  opens_at: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
 
-                        <label>
-                          Closes
-                          <input
-                            type="time"
-                            value={toTimeInput(hour.closes_at)}
-                            onChange={(event) =>
-                              updateBookingHour(hour.day_of_week, {
-                                closes_at: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                      </div>
-                    ) : (
-                      <p>This day will show as closed on Smiles.</p>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
+                          <label>
+                            <span>Closes</span>
+                            <input
+                              type="time"
+                              value={toTimeInput(hour.closes_at)}
+                              onChange={(event) =>
+                                updateBookingHour(hour.day_of_week, {
+                                  closes_at: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="bookingTimesClosedText">No bookings this day</div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
 
-            <button
-              className="saveButton"
-              type="button"
-              onClick={saveBookingTimes}
-              disabled={saving}
-            >
-              {saving ? "Saving..." : "Save opening & booking hours"}
-            </button>
-          </section>
-        </>
-      ) : null}
-
+              <button
+                className="bookingTimesSaveButton"
+                type="button"
+                onClick={saveBookingTimes}
+                disabled={saving}
+              >
+                {saving ? "Saving…" : "Save hours"}
+              </button>
+            </section>
+          </>
+        ) : null}
       </section>
 
-      <style jsx>{`
-        /* -------------------------------------------------------------- */
-        /* FROMONE SMILES BOOKING TIMES — APPROVED STANDARD                */
-        /* Desktop: main-content 38px + shell margin-top 28px              */
-        /* Mobile: same fixed width/gap as finished mobile pages           */
-        /* -------------------------------------------------------------- */
-        :global(body:has(.fromone-booking-times-page)) {
-          background: #f5f7fb !important;
-          overflow-x: hidden !important;
+      <style jsx global>{`
+        body:has(.fromone-booking-times-page),
+        body:has(.fromone-booking-times-page) .app-shell,
+        body:has(.fromone-booking-times-page) .main-content,
+        body:has(.fromone-booking-times-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-booking-times-page) .fromone-universal-mobile-page-frame {
+          background: #ffffff !important;
+          background-image: none !important;
         }
 
-        :global(body:has(.fromone-booking-times-page)::before) {
+        body:has(.fromone-booking-times-page)::before {
           display: none !important;
           content: none !important;
         }
 
-        :global(body:has(.fromone-booking-times-page) .app-shell),
-        :global(body:has(.fromone-booking-times-page) .main-content) {
-          background: #f5f7fb !important;
-        }
-
-        :global(body:has(.fromone-booking-times-page) .main-content) {
+        body:has(.fromone-booking-times-page) .main-content {
           width: 100% !important;
           max-width: none !important;
           margin: 0 !important;
-          padding-top: 38px !important;
-          padding-left: 0 !important;
-          padding-right: 0 !important;
+          padding: 34px clamp(24px, 4vw, 54px) 90px !important;
           box-sizing: border-box !important;
           overflow-x: hidden !important;
         }
 
         .bookingTimesPage,
         .bookingTimesPage * {
-          font-family:
-            var(--font-main),
-            "Plus Jakarta Sans",
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
+          box-sizing: border-box;
         }
 
         .bookingTimesPage {
-          width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          min-height: 100vh !important;
-          margin: 0 !important;
-          padding: 0 16px 92px !important;
-          box-sizing: border-box !important;
-          overflow-x: hidden !important;
-          background: #f5f7fb !important;
-          color: #071b49 !important;
-          font-weight: 500 !important;
-          letter-spacing: -0.01em !important;
+          width: 100%;
+          max-width: 100%;
+          margin: 0;
+          color: #071b49;
+          background: transparent !important;
+          font-family: var(--font-main), "Plus Jakarta Sans", ui-sans-serif, system-ui,
+            -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         .bookingTimesShell {
-          width: 1040px !important;
-          max-width: calc(100% - 32px) !important;
-          min-width: 0 !important;
-          min-height: 620px !important;
-          margin: 28px auto 0 !important;
-          padding: clamp(30px, 4vw, 48px) !important;
-          box-sizing: border-box !important;
-          overflow: hidden !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 32px !important;
-          background: #ffffff !important;
-          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
+          width: 100%;
+          max-width: 980px;
+          margin: 0 auto;
+          display: grid;
+          gap: 14px;
+        }
+
+        .bookingTimesSimpleHero {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+        }
+
+        .bookingTimesEyebrow {
+          display: block;
+          margin-bottom: 8px;
+          color: #f72585;
+          font-size: 0.72rem;
+          line-height: 1;
+          font-weight: 900;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+        }
+
+        .bookingTimesSimpleHero h1 {
+          margin: 0 0 9px;
+          color: #071b49;
+          font-size: clamp(2.4rem, 5vw, 3.9rem);
+          line-height: 0.98;
+          letter-spacing: -0.06em;
+          font-weight: 900;
+        }
+
+        .bookingTimesSimpleHero p {
+          margin: 0;
+          color: #66728a;
+          font-size: 0.96rem;
+          line-height: 1.45;
+          font-weight: 600;
+        }
+
+        .bookingTimesStatusCard,
+        .bookingTimesToolbar,
+        .bookingTimesMainSection {
+          border: 1px solid #dfe5f1;
+          border-radius: 18px;
+          background: #ffffff;
+          box-shadow: none;
+        }
+
+        .bookingTimesStatusCard {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 16px;
+        }
+
+        .bookingTimesStatusCard > div {
+          display: grid;
+          gap: 3px;
+        }
+
+        .bookingTimesStatusCard strong {
+          color: #071b49;
+          font-size: 0.94rem;
+          font-weight: 900;
+        }
+
+        .bookingTimesStatusCard span {
+          color: #66728a;
+          font-size: 0.8rem;
+          line-height: 1.4;
+          font-weight: 600;
+        }
+
+        .bookingTimesStatusCard.isWarning {
+          border-color: #ffd2e5;
+          background: #fffafd;
+        }
+
+        .bookingTimesStatusCard a {
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 14px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
           color: #071b49 !important;
+          font-size: 0.8rem;
+          font-weight: 900;
+          text-decoration: none;
+          box-shadow: none !important;
+          white-space: nowrap;
         }
 
-        .bookingTimesHero,
-        .timesSummary,
-        .simplePanel {
-          max-width: 100% !important;
-          margin-inline: 0 !important;
+        .bookingTimesToolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 10px;
         }
 
-        .bookingTimesHero {
-          margin: 0 0 26px !important;
-          padding: 0 !important;
-          border: 0 !important;
-          border-radius: 0 !important;
-          background: transparent !important;
+        .bookingTimesSummary {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
+        }
+
+        .bookingTimesSummary span {
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 0 11px;
+          border-radius: 999px;
+          background: #f7f9fc;
+          color: #66728a;
+          font-size: 0.76rem;
+          font-weight: 750;
+        }
+
+        .bookingTimesSummary strong {
+          color: #071b49;
+          font-size: 0.9rem;
+          font-weight: 900;
+        }
+
+        .bookingTimesPresets {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 7px;
+        }
+
+        .bookingTimesPresets button {
+          min-height: 40px;
+          padding: 0 12px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
+          font-size: 0.76rem;
+          font-weight: 900;
+          cursor: pointer;
           box-shadow: none !important;
         }
 
-        .bookingTimesHero .backPill,
-        .simplePanel a {
-          width: fit-content !important;
-          min-height: 52px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          margin: 0 0 22px !important;
-          border-radius: 999px !important;
-          padding: 0 22px !important;
-          color: #071b49 !important;
-          background: #ffffff !important;
-          border: 1px solid #dfe5f1 !important;
-          box-shadow: 0 10px 24px rgba(7, 27, 73, 0.06) !important;
-          font-weight: 800 !important;
-          text-decoration: none !important;
+        .bookingTimesMainSection {
+          padding: 16px;
         }
 
-        .simplePanel a {
-          margin: 4px 0 0 !important;
-          color: #ffffff !important;
-          background: #f72585 !important;
-          border-color: #f72585 !important;
-          box-shadow: 0 16px 34px rgba(247, 37, 133, 0.22) !important;
+        .bookingTimesSectionHead {
+          margin-bottom: 12px;
         }
 
-        .bookingTimesHero > span,
-        .bookingTimesHero span,
-        .sectionTop span,
-        .timesSummary span,
-        .dayTop span {
-          color: #f72585 !important;
-          font-size: 0.78rem !important;
-          line-height: 1 !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.13em !important;
-          text-transform: uppercase !important;
+        .bookingTimesSectionHead h2 {
+          margin: 0 0 4px;
+          color: #071b49;
+          font-size: 1.18rem;
+          line-height: 1.1;
+          letter-spacing: -0.03em;
+          font-weight: 900;
         }
 
-        .bookingTimesHero h1 {
-          max-width: 760px !important;
-          margin: 12px 0 14px !important;
-          color: #071b49 !important;
-          font-size: clamp(3rem, 5.2vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.055em !important;
-          font-weight: 800 !important;
-          text-align: left !important;
-          overflow: visible !important;
+        .bookingTimesSectionHead p {
+          margin: 0;
+          color: #718096;
+          font-size: 0.8rem;
+          font-weight: 600;
         }
 
-        .bookingTimesHero p,
-        .simplePanel p,
-        .dayCard p {
-          max-width: 720px !important;
-          margin: 0 !important;
-          color: #52617a !important;
-          font-size: 1.02rem !important;
-          line-height: 1.5 !important;
-          font-weight: 600 !important;
+        .bookingTimesDayList {
+          display: grid;
+          gap: 8px;
         }
 
-        .timesSummary {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 14px !important;
-          margin-bottom: 18px !important;
+        .bookingTimesDayRow {
+          min-height: 74px;
+          display: grid;
+          grid-template-columns: 150px auto minmax(0, 1fr);
+          align-items: center;
+          gap: 14px;
+          padding: 12px 14px;
+          border: 1px solid #e3e8f1;
+          border-radius: 15px;
+          background: #fbfcfe;
         }
 
-        .timesSummary article,
-        .simplePanel {
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 24px !important;
-          background: #ffffff !important;
-          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
-          box-sizing: border-box !important;
+        .bookingTimesDayRow.isClosed {
+          background: #f8fafc;
         }
 
-        .timesSummary article {
-          padding: 22px !important;
-          background: #fff8fc !important;
-          border-color: #ffd2e5 !important;
+        .bookingTimesDayName {
+          display: grid;
+          gap: 3px;
         }
 
-        .timesSummary strong {
-          display: block !important;
-          margin-top: 8px !important;
-          color: #071b49 !important;
-          font-size: clamp(1.75rem, 3.4vw, 2.2rem) !important;
-          line-height: 1 !important;
-          font-weight: 800 !important;
-          letter-spacing: -0.045em !important;
+        .bookingTimesDayName strong {
+          color: #071b49;
+          font-size: 0.94rem;
+          font-weight: 900;
         }
 
-        .simplePanel {
-          display: grid !important;
-          gap: 16px !important;
-          margin-bottom: 18px !important;
-          padding: clamp(20px, 3vw, 30px) !important;
-          background: #f7f9fd !important;
+        .bookingTimesDayName span {
+          color: #718096;
+          font-size: 0.72rem;
+          font-weight: 750;
         }
 
-        .simplePanel.priority {
-          border-color: #ffd2e5 !important;
-          background: #fff8fc !important;
+        .bookingTimesSwitch {
+          min-height: 38px;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 0 10px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49;
+          font-size: 0.76rem;
+          font-weight: 900;
+          cursor: pointer;
+          white-space: nowrap;
         }
 
-        .sectionTop {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) auto !important;
-          gap: 16px !important;
-          align-items: start !important;
+        .bookingTimesSwitch input {
+          width: 16px;
+          height: 16px;
+          accent-color: #f72585;
         }
 
-        .sectionTop h2 {
-          margin: 8px 0 0 !important;
-          color: #071b49 !important;
-          font-size: clamp(1.75rem, 3.4vw, 2.25rem) !important;
-          line-height: 1 !important;
-          letter-spacing: -0.048em !important;
-          font-weight: 800 !important;
+        .bookingTimesInputs {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
         }
 
-        .presetGrid {
-          display: grid !important;
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          gap: 10px !important;
+        .bookingTimesInputs label {
+          display: grid;
+          gap: 4px;
         }
 
-        .presetGrid button,
-        .saveButton {
-          min-height: 54px !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 999px !important;
-          padding: 0 20px !important;
-          color: #071b49 !important;
-          background: #ffffff !important;
-          font: inherit !important;
-          font-size: 1rem !important;
-          font-weight: 800 !important;
-          cursor: pointer !important;
-          box-shadow: 0 10px 24px rgba(7, 27, 73, 0.06) !important;
+        .bookingTimesInputs label > span {
+          color: #718096;
+          font-size: 0.68rem;
+          font-weight: 800;
         }
 
-        .presetGrid button:first-child,
-        .saveButton {
-          border-color: #f72585 !important;
-          background: #f72585 !important;
-          color: #ffffff !important;
-          box-shadow: 0 16px 34px rgba(247, 37, 133, 0.20) !important;
+        .bookingTimesInputs input {
+          width: 100%;
+          min-height: 40px;
+          padding: 0 10px;
+          border: 1px solid #dfe5f1;
+          border-radius: 11px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
+          font-size: 0.82rem;
+          font-weight: 700;
+          outline: none;
         }
 
-        .presetGrid button:disabled,
-        .saveButton:disabled {
-          cursor: not-allowed !important;
-          opacity: 0.65 !important;
+        .bookingTimesInputs input:focus {
+          border-color: #f72585;
+          box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.08);
         }
 
-        .dayGrid {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 14px !important;
+        .bookingTimesClosedText {
+          color: #8a96a8;
+          font-size: 0.78rem;
+          font-weight: 650;
         }
 
-        .dayCard {
-          display: grid !important;
-          gap: 16px !important;
-          padding: 20px !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 24px !important;
-          background: #ffffff !important;
-          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
-        }
-
-        .dayCard.closed {
-          background: #ffffff !important;
-        }
-
-        .dayTop {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) auto !important;
-          gap: 14px !important;
-          align-items: center !important;
-        }
-
-        .dayTop h3 {
-          margin: 7px 0 0 !important;
-          color: #071b49 !important;
-          font-size: clamp(1.55rem, 3vw, 1.95rem) !important;
-          line-height: 1.05 !important;
-          letter-spacing: -0.04em !important;
-          font-weight: 800 !important;
-        }
-
-        .switchLabel {
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 8px !important;
-          border-radius: 999px !important;
-          padding: 10px 13px !important;
-          color: #071b49 !important;
-          background: #f5f7fb !important;
-          border: 1px solid #dfe5f1 !important;
-          font-size: 0.88rem !important;
-          font-weight: 800 !important;
-          cursor: pointer !important;
-        }
-
-        .switchLabel input {
-          width: 20px !important;
-          height: 20px !important;
-          accent-color: #f72585 !important;
-        }
-
-        .timeGrid {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 10px !important;
-        }
-
-        .timeGrid label {
-          display: grid !important;
-          gap: 7px !important;
-          color: #52617a !important;
-          font-size: 0.82rem !important;
-          font-weight: 800 !important;
-        }
-
-        .timeGrid input {
-          width: 100% !important;
-          min-height: 52px !important;
-          border: 1px solid #d7e0ee !important;
-          border-radius: 18px !important;
-          padding: 0 14px !important;
-          color: #071b49 !important;
-          background: #ffffff !important;
-          box-sizing: border-box !important;
-          font: inherit !important;
-          font-size: 1rem !important;
-          font-weight: 600 !important;
-          outline: none !important;
-        }
-
-        .timeGrid input:focus {
-          border-color: #f72585 !important;
-          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.11) !important;
-        }
-
-        .dayCard p {
-          max-width: none !important;
-          padding: 14px !important;
-          border-radius: 16px !important;
-          background: #f5f7fb !important;
-        }
-
-        .saveButton {
-          width: 100% !important;
-          min-height: 60px !important;
-          font-size: 1.05rem !important;
-        }
-
-        @media (max-width: 760px) {
-          :global(body:has(.fromone-booking-times-page) .main-content) {
-            padding-top: 0 !important;
-          }
-
-          .bookingTimesPage {
-            padding: 0 0 130px !important;
-          }
-
-          .bookingTimesShell {
-            width: calc(100% - 72px) !important;
-            max-width: 468px !important;
-            min-height: auto !important;
-            margin: 24px auto 0 !important;
-            padding: 28px 26px 26px !important;
-            border-radius: 26px !important;
-          }
-
-          .bookingTimesHero {
-            margin-bottom: 32px !important;
-          }
-
-          .bookingTimesHero h1 {
-            margin: 14px 0 18px !important;
-            font-size: clamp(2.75rem, 11vw, 3.6rem) !important;
-            line-height: 0.94 !important;
-            letter-spacing: -0.058em !important;
-          }
-
-          .bookingTimesHero p {
-            font-size: 1rem !important;
-            line-height: 1.45 !important;
-          }
-
-          .bookingTimesHero .backPill,
-          .simplePanel a {
-            width: 100% !important;
-          }
-
-          .timesSummary,
-          .presetGrid,
-          .dayGrid,
-          .sectionTop,
-          .dayTop,
-          .timeGrid {
-            grid-template-columns: 1fr !important;
-          }
-
-          .timesSummary {
-            gap: 14px !important;
-          }
-
-          .simplePanel {
-            padding: 20px !important;
-            border-radius: 24px !important;
-          }
-
-          .presetGrid button,
-          .saveButton {
-            width: 100% !important;
-          }
-
-          .switchLabel {
-            justify-self: start !important;
-          }
-        }
-
-        @media (max-width: 420px) {
-          .bookingTimesShell {
-            width: calc(100% - 48px) !important;
-            padding: 26px 22px 24px !important;
-          }
-        }
-
-        /* -------------------------------------------------------------- */
-        /* BOOKING TIMES HERO FIX — keep back button separate              */
-        /* -------------------------------------------------------------- */
-        .bookingTimesHero .backPill {
-          display: inline-flex !important;
-          width: fit-content !important;
-          margin: 0 0 26px 0 !important;
-        }
-
-        .bookingTimesHero > span {
-          display: block !important;
-          width: 100% !important;
-          clear: both !important;
-          margin: 0 0 0 0 !important;
-        }
-
-        @media (max-width: 760px) {
-          .bookingTimesHero .backPill {
-            width: fit-content !important;
-            max-width: 100% !important;
-            margin-bottom: 26px !important;
-          }
-
-          .bookingTimesHero > span {
-            display: block !important;
-            width: 100% !important;
-          }
-        }
-
-
-        /* FINAL SHARED FROMONE PAGE SYSTEM */
-        :global(body:has(.fromone-booking-times-page)) {
-          background: var(--posts-bg) !important;
-        }
-
-        :global(body:has(.fromone-booking-times-page) .app-shell),
-        :global(body:has(.fromone-booking-times-page) .main-content) {
-          background: var(--posts-bg) !important;
-        }
-
-        :global(body:has(.fromone-booking-times-page) .main-content) {
-          width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          margin: 0 !important;
-          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
-          overflow-x: hidden !important;
-        }
-
-        .bookingTimesPage {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          min-height: 0 !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          background: transparent !important;
-          overflow: visible !important;
-        }
-
-        .bookingTimesShell {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          min-height: 0 !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          display: grid !important;
-          gap: 22px !important;
-          overflow: visible !important;
-          border: 0 !important;
-          border-radius: 0 !important;
-          background: transparent !important;
-          background-image: none !important;
+        .bookingTimesSaveButton {
+          width: 100%;
+          min-height: 44px;
+          margin-top: 12px;
+          padding: 0 16px;
+          border: 1px solid #f72585;
+          border-radius: 999px;
+          background: #f72585;
+          color: #ffffff;
+          font: inherit;
+          font-size: 0.82rem;
+          font-weight: 900;
+          cursor: pointer;
           box-shadow: none !important;
         }
 
-        .bookingTimesHero {
-          width: 100% !important;
-          max-width: 790px !important;
-          margin: 0 0 6px !important;
-          padding: 0 !important;
-          border: 0 !important;
-          background: transparent !important;
-          box-shadow: none !important;
-        }
-
-        .bookingTimesHero .backPill {
-          min-height: 46px !important;
-          margin: 0 0 24px !important;
-          padding: 0 17px !important;
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 15px !important;
-          background: #fff !important;
-          color: var(--posts-navy) !important;
-          box-shadow: none !important;
-          font-size: 0.86rem !important;
-          font-weight: 900 !important;
-        }
-
-        .bookingTimesHero > span {
-          display: block !important;
-          margin: 0 0 10px !important;
-          color: var(--posts-pink) !important;
-          font-size: 0.74rem !important;
-          line-height: 1 !important;
-          font-weight: 900 !important;
-          letter-spacing: 0.14em !important;
-          text-transform: uppercase !important;
-        }
-
-        .bookingTimesHero h1 {
-          max-width: 760px !important;
-          margin: 0 0 12px !important;
-          color: var(--posts-navy) !important;
-          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.06em !important;
-          font-weight: 800 !important;
-        }
-
-        .bookingTimesHero p {
-          max-width: 720px !important;
-          margin: 0 !important;
-          color: var(--posts-muted) !important;
-          font-size: 1.03rem !important;
-          line-height: 1.56 !important;
-          font-weight: 500 !important;
-        }
-
-        .timesSummary {
-          gap: 16px !important;
-          margin: 0 !important;
-        }
-
-        .timesSummary article,
-        .simplePanel {
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 26px !important;
-          background: rgba(255, 255, 255, 0.84) !important;
-          box-shadow: var(--posts-shadow) !important;
-          backdrop-filter: blur(10px) !important;
-        }
-
-        .timesSummary article {
-          padding: 20px !important;
-          background: rgba(255, 255, 255, 0.9) !important;
-          border-color: var(--posts-border) !important;
-        }
-
-        .simplePanel {
-          margin: 0 !important;
-          padding: 22px !important;
-          background: rgba(255, 255, 255, 0.84) !important;
-        }
-
-        .simplePanel.priority {
-          border-color: var(--posts-border) !important;
-          background: rgba(255, 255, 255, 0.84) !important;
-        }
-
-        .presetGrid {
-          gap: 10px !important;
-        }
-
-        .presetGrid button,
-        .saveButton {
-          min-height: 46px !important;
-          padding: 0 17px !important;
-          border-radius: 15px !important;
-          font-size: 0.86rem !important;
-          font-weight: 900 !important;
-        }
-
-        .presetGrid button {
-          border: 1px solid var(--posts-border) !important;
-          background: #fff !important;
-          color: var(--posts-navy) !important;
-          box-shadow: none !important;
-        }
-
-        .presetGrid button:first-child,
-        .saveButton {
-          border: 0 !important;
-          background: var(--posts-pink) !important;
-          color: #fff !important;
-          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21) !important;
-        }
-
-        .dayGrid {
-          gap: 14px !important;
-        }
-
-        .dayCard {
-          padding: 18px !important;
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 22px !important;
-          background: #fff !important;
-          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055) !important;
-        }
-
-        .switchLabel {
-          border: 1px solid var(--posts-border) !important;
-          background: #f8fafc !important;
-          color: var(--posts-navy) !important;
-        }
-
-        .timeGrid input {
-          min-height: 48px !important;
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 14px !important;
-          color: var(--posts-navy) !important;
-          background: #fff !important;
-        }
-
-        .timeGrid input:focus {
-          border-color: var(--posts-pink) !important;
-          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1) !important;
+        .bookingTimesSaveButton:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         @media (max-width: 700px) {
-          :global(body:has(.fromone-booking-times-page) .main-content) {
-            padding: 24px 16px 100px !important;
+          body:has(.fromone-booking-times-page) .main-content,
+          body:has(.fromone-booking-times-page) .main-content.fromone-mobile-bottom-safe {
+            padding: 18px 10px 100px !important;
           }
 
-          .bookingTimesPage {
-            padding: 0 !important;
+          .bookingTimesShell {
+            max-width: 100%;
+            gap: 12px;
           }
 
-          .bookingTimesHero h1 {
-            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          .bookingTimesSimpleHero {
+            display: grid;
+            gap: 12px;
           }
 
-          .bookingTimesHero p {
-            font-size: 0.95rem !important;
+          .bookingTimesSimpleHero h1 {
+            font-size: 2.2rem;
           }
 
-          .timesSummary,
-          .presetGrid,
-          .dayGrid,
-          .sectionTop,
-          .dayTop,
-          .timeGrid {
-            grid-template-columns: 1fr !important;
+          .bookingTimesToolbar {
+            align-items: stretch;
+            flex-direction: column;
           }
 
-          .timesSummary article,
-          .simplePanel {
-            padding: 17px !important;
-            border-radius: 21px !important;
+          .bookingTimesSummary {
+            width: 100%;
           }
 
-          .presetGrid button,
-          .saveButton {
-            width: 100% !important;
+          .bookingTimesSummary span {
+            flex: 1 1 0;
+            justify-content: center;
+          }
+
+          .bookingTimesPresets {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+
+          .bookingTimesPresets button {
+            width: 100%;
+            padding: 0 8px;
+            font-size: 0.7rem;
+          }
+
+          .bookingTimesDayRow {
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            padding: 12px;
+          }
+
+          .bookingTimesInputs,
+          .bookingTimesClosedText {
+            grid-column: 1 / -1;
           }
         }
 
+        @media (max-width: 430px) {
+          .bookingTimesPresets {
+            grid-template-columns: 1fr;
+          }
+        }
       `}</style>
     </main>
   );

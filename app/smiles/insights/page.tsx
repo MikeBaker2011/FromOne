@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
+import SmilezBackButton from "@/app/components/SmilezBackButton";
 import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -361,505 +361,513 @@ export default function CustomerInsightsPage() {
   }, [rangeDays]);
 
   return (
-    <main className="customer-insights-page">
-      <SmilezSectionHeader
-        eyebrow="Customer insights"
-        title="See the activity around your business."
-        description={
-          <>
-            A simple view of the real bookings, reviews, customer photos, offers and
-            events already connected to your Smilez listing.
-          </>
-        }
-        listingName={profile?.business_name}
-        listingStatus={
-          profile?.smiles_listing_venue_id
-            ? "Live on Smilez"
-            : "Waiting for listing setup"
-        }
-      />
+    <main className="customer-insights-page fromone-smiles-insights-page">
+      <section id="fromone-standard-shell" className="customerInsightsShell">
+        <header className="customerInsightsHero">
+          <div>
+            <span className="customerInsightsEyebrow">Smilez</span>
+            <h1>Customer insights.</h1>
+            <p>See what customers are doing around your Smilez listing.</p>
+          </div>
+          <SmilezBackButton />
+        </header>
 
-      {loading ? (
-        <section className="customer-insights-state">
-          <span>Loading</span>
-          <h2>Checking your customer activity</h2>
-          <p>Your latest Smilez information is being collected.</p>
-        </section>
-      ) : null}
+        {loading ? (
+          <section className="customerInsightsStatus">
+            <strong>Loading insights…</strong>
+            <span>Checking your latest Smilez activity.</span>
+          </section>
+        ) : null}
 
-      {!loading && !profile?.smiles_listing_venue_id ? (
-        <section className="customer-insights-state customer-insights-warning">
-          <span>Listing needed</span>
-          <h2>Customer insights will appear when your Smilez listing is connected.</h2>
-          <p>
-            {message ||
-              "Once your business listing is live, FromOne will show the real activity connected to it."}
-          </p>
-          <Link href="/settings">Check business settings</Link>
-        </section>
-      ) : null}
-
-      {!loading && profile?.smiles_listing_venue_id ? (
-        <>
-          <section className="customer-insights-listing">
+        {!loading && !profile?.smiles_listing_venue_id ? (
+          <section className="customerInsightsStatus isWarning">
             <div>
-              <span>Live business</span>
-              <h2>{profile.business_name || "Your business"}</h2>
-              <p>Current totals from your connected Smilez listing.</p>
+              <strong>Your Smilez listing is not live yet</strong>
+              <span>
+                {message ||
+                  "Customer insights will appear once your business listing is live."}
+              </span>
             </div>
-            <button type="button" onClick={() => void loadInsights()}>
-              Refresh insights
-            </button>
+            <Link href="/settings">Check listing</Link>
           </section>
+        ) : null}
 
-          <section className="customer-insights-grid" aria-label="Customer insight totals">
-            {insightCards.map((card) => (
-              <article className="customer-insight-card" key={card.label}>
-                <span>{card.label}</span>
-                <strong>{card.value}</strong>
-                <p>{card.description}</p>
+        {!loading && profile?.smiles_listing_venue_id ? (
+          <>
+            <section className="customerInsightsToolbar">
+              <div className="customerInsightsListing">
+                <strong>{profile.business_name || "Your business"}</strong>
+                <span>Live on Smilez</span>
+              </div>
+
+              <button type="button" onClick={() => void loadInsights()}>
+                Refresh
+              </button>
+            </section>
+
+            <section className="customerInsightsPrimary" aria-label="Customer activity">
+              <article>
+                <span>Bookings</span>
+                <strong>{bookings.length}</strong>
+                <small>{confirmedBookings} confirmed</small>
               </article>
-            ))}
-          </section>
 
-          <section className="customer-insights-summary-grid">
-            <article className="customer-insights-summary">
-              <span>Strongest result</span>
-              <div className="customer-insights-result-number">
-                {strongestResult.value}
-              </div>
-              <h2>{strongestResult.title}</h2>
-              <p>
-                {strongestResult.value > 0
-                  ? strongestResult.text
-                  : "Customer activity will build here as people interact with your listing."}
-              </p>
-            </article>
+              <article>
+                <span>Reviews</span>
+                <strong>{reviews.length}</strong>
+                <small>{approvedReviews} approved</small>
+              </article>
 
-            <article className="customer-insights-summary customer-insights-next">
-              <span>Suggested next action</span>
-              <h2>{suggestedAction.title}</h2>
-              <p>{suggestedAction.text}</p>
-              <Link href={suggestedAction.href}>{suggestedAction.action}</Link>
-            </article>
-          </section>
+              <article>
+                <span>Photos</span>
+                <strong>{customerPhotos.length}</strong>
+                <small>{approvedPhotos} approved</small>
+              </article>
 
-          <section className="customer-insights-engagement">
-            <div className="customer-insights-engagement-head">
+              <article>
+                <span>Live content</span>
+                <strong>{liveOffers + liveEvents}</strong>
+                <small>{liveOffers} offers · {liveEvents} events</small>
+              </article>
+            </section>
+
+            <section className="customerInsightsNext">
               <div>
-                <span>Smilez engagement</span>
-                <h2>How customers are discovering and planning with you</h2>
+                <span className="customerInsightsEyebrow">Next action</span>
+                <h2>{suggestedAction.title}</h2>
+                <p>{suggestedAction.text}</p>
               </div>
-              <div className="customer-insights-range" aria-label="Insight date range">
+              <Link href={suggestedAction.href}>{suggestedAction.action}</Link>
+            </section>
+
+            <section className="customerInsightsEngagement">
+              <div className="customerInsightsSectionHead">
+                <div>
+                  <h2>Smilez engagement</h2>
+                  <p>How customers are discovering and planning with your business.</p>
+                </div>
+
+                <div className="customerInsightsRange" aria-label="Insight date range">
+                  {[
+                    { label: "7 days", value: 7 },
+                    { label: "30 days", value: 30 },
+                    { label: "All time", value: 0 },
+                  ].map((range) => (
+                    <button
+                      key={range.value}
+                      type="button"
+                      className={rangeDays === range.value ? "isActive" : ""}
+                      onClick={() => setRangeDays(range.value)}
+                    >
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="customerInsightsRows">
                 {[
-                  { label: "7 days", value: 7 },
-                  { label: "30 days", value: 30 },
-                  { label: "All time", value: 0 },
-                ].map((range) => (
-                  <button
-                    key={range.value}
-                    type="button"
-                    className={rangeDays === range.value ? "isActive" : ""}
-                    onClick={() => setRangeDays(range.value)}
-                  >
-                    {range.label}
-                  </button>
+                  ["Venue views", engagement.venue_views],
+                  ["Offer views", engagement.offer_views],
+                  ["Event views", engagement.event_views],
+                  ["Favourites", engagement.favourites],
+                  ["Plan additions", engagement.plan_additions],
+                  ["Booking starts", engagement.booking_starts],
+                ].map(([label, value]) => (
+                  <div className="customerInsightsRow" key={String(label)}>
+                    <span>{label}</span>
+                    <strong>{Number(value)}</strong>
+                  </div>
                 ))}
               </div>
-            </div>
-
-            <div className="customer-insights-grid">
-              {[
-                ["Venue views", engagement.venue_views, "People who opened your venue page."],
-                ["Offer views", engagement.offer_views, "People who opened one of your offers."],
-                ["Event views", engagement.event_views, "People who opened one of your events."],
-                ["Favourites", engagement.favourites, "Times customers saved your content."],
-                ["Plan additions", engagement.plan_additions, "Times customers added you to a day or night plan."],
-                ["Booking starts", engagement.booking_starts, "Times customers started a booking journey."],
-              ].map(([label, value, description]) => (
-                <article className="customer-insight-card" key={String(label)}>
-                  <span>{label}</span>
-                  <strong>{Number(value)}</strong>
-                  <p>{description}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-        </>
-      ) : null}
+            </section>
+          </>
+        ) : null}
+      </section>
 
       <style jsx global>{`
-        body:has(.customer-insights-page) {
-          background: #f5f7fb !important;
+        body:has(.fromone-smiles-insights-page),
+        body:has(.fromone-smiles-insights-page) .app-shell,
+        body:has(.fromone-smiles-insights-page) .main-content,
+        body:has(.fromone-smiles-insights-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-smiles-insights-page) .fromone-universal-mobile-page-frame {
+          background: #ffffff !important;
+          background-image: none !important;
         }
 
-        body:has(.customer-insights-page) .main-content {
+        body:has(.fromone-smiles-insights-page)::before {
+          display: none !important;
+          content: none !important;
+        }
+
+        body:has(.fromone-smiles-insights-page) .main-content {
           width: 100% !important;
           max-width: none !important;
           margin: 0 !important;
-          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
+          padding: 34px clamp(24px, 4vw, 54px) 90px !important;
           box-sizing: border-box !important;
-          background: #f5f7fb !important;
+          overflow-x: hidden !important;
         }
 
         .customer-insights-page {
           width: 100%;
+          max-width: 100%;
+          margin: 0;
           color: #071b49;
+          background: transparent !important;
           font-family: var(--font-main), "Plus Jakarta Sans", ui-sans-serif, system-ui,
             -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
-        .customer-insights-hero {
+        .customerInsightsShell {
+          width: 100%;
+          max-width: 980px;
+          margin: 0 auto;
+          display: grid;
+          gap: 14px;
+        }
+
+        .customerInsightsHero {
           display: flex;
-          align-items: flex-end;
+          align-items: flex-start;
           justify-content: space-between;
-          gap: 24px;
-          margin-bottom: 26px;
+          gap: 18px;
         }
 
-        .customer-insights-hero > div {
-          max-width: 780px;
-        }
-
-        .customer-insights-eyebrow,
-        .customer-insights-listing span,
-        .customer-insight-card span,
-        .customer-insights-summary > span,
-        .customer-insights-note span,
-        .customer-insights-state > span {
+        .customerInsightsEyebrow {
           display: block;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
           color: #f72585;
-          font-size: 0.74rem;
+          font-size: 0.72rem;
           line-height: 1;
           font-weight: 900;
-          letter-spacing: 0.14em;
+          letter-spacing: 0.13em;
           text-transform: uppercase;
         }
 
-        .customer-insights-hero h1 {
-          max-width: 760px;
-          margin: 0 0 14px;
+        .customerInsightsHero h1 {
+          margin: 0 0 9px;
           color: #071b49;
-          font-size: clamp(2.6rem, 5vw, 4.45rem);
-          line-height: 0.96;
+          font-size: clamp(2.4rem, 5vw, 3.9rem);
+          line-height: 0.98;
           letter-spacing: -0.06em;
           font-weight: 900;
         }
 
-        .customer-insights-hero p,
-        .customer-insights-listing p,
-        .customer-insight-card p,
-        .customer-insights-summary p,
-        .customer-insights-note p,
-        .customer-insights-state p {
+        .customerInsightsHero p {
           margin: 0;
-          color: #52617a;
-          font-size: 1rem;
-          line-height: 1.55;
+          color: #66728a;
+          font-size: 0.96rem;
+          line-height: 1.45;
           font-weight: 600;
         }
 
-        .customer-insights-secondary-action,
-        .customer-insights-state a,
-        .customer-insights-next a,
-        .customer-insights-listing button {
-          min-height: 46px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 17px;
-          border-radius: 15px;
-          font: inherit;
-          font-size: 0.86rem;
-          font-weight: 900;
-          text-decoration: none;
-          cursor: pointer;
-        }
-
-        .customer-insights-secondary-action,
-        .customer-insights-listing button {
+        .customerInsightsStatus,
+        .customerInsightsToolbar,
+        .customerInsightsNext,
+        .customerInsightsEngagement {
           border: 1px solid #dfe5f1;
+          border-radius: 18px;
           background: #ffffff;
-          color: #071b49;
           box-shadow: none;
         }
 
-        .customer-insights-listing,
-        .customer-insights-state,
-        .customer-insights-note,
-        .customer-insights-engagement {
-          padding: 22px;
-          border: 1px solid #dfe5f1;
-          border-radius: 24px;
-          background: #ffffff;
-          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055);
-        }
-
-        .customer-insights-listing {
+        .customerInsightsStatus {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 20px;
-          margin-bottom: 18px;
-        }
-
-        .customer-insights-listing h2,
-        .customer-insights-summary h2,
-        .customer-insights-note h2,
-        .customer-insights-state h2 {
-          margin: 0 0 8px;
-          color: #071b49;
-          font-size: clamp(1.55rem, 3vw, 2rem);
-          line-height: 1.04;
-          letter-spacing: -0.045em;
-          font-weight: 900;
-        }
-
-        .customer-insights-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 16px;
+          padding: 16px;
         }
 
-        .customer-insight-card {
-          min-height: 210px;
-          display: flex;
-          flex-direction: column;
-          padding: 22px;
-          border: 1px solid #dfe5f1;
-          border-radius: 22px;
-          background: #ffffff;
-          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055);
+        .customerInsightsStatus > div {
+          display: grid;
+          gap: 3px;
         }
 
-        .customer-insight-card strong {
-          margin: 6px 0 18px;
+        .customerInsightsStatus strong {
           color: #071b49;
-          font-size: clamp(3rem, 6vw, 4.75rem);
-          line-height: 0.9;
-          letter-spacing: -0.065em;
-          font-weight: 900;
-        }
-
-        .customer-insight-card p {
-          margin-top: auto;
           font-size: 0.94rem;
+          font-weight: 900;
         }
 
-        .customer-insights-summary-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 16px;
-          margin-top: 16px;
+        .customerInsightsStatus span {
+          color: #66728a;
+          font-size: 0.8rem;
+          line-height: 1.4;
+          font-weight: 600;
         }
 
-        .customer-insights-summary {
-          min-height: 250px;
-          padding: 24px;
-          border: 1px solid #dfe5f1;
-          border-radius: 24px;
-          background: #ffffff;
-          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055);
+        .customerInsightsStatus.isWarning {
+          border-color: #ffd2e5;
+          background: #fffafd;
         }
 
-        .customer-insights-result-number {
-          width: 66px;
-          height: 66px;
+        .customerInsightsStatus a,
+        .customerInsightsNext a {
+          min-height: 40px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          margin: 4px 0 22px;
+          padding: 0 14px;
           border-radius: 999px;
-          background: #f72585;
-          color: #ffffff;
-          font-size: 1.55rem;
+          text-decoration: none;
+          font-size: 0.8rem;
           font-weight: 900;
+          white-space: nowrap;
+          box-shadow: none !important;
         }
 
-        .customer-insights-next {
+        .customerInsightsStatus a {
+          border: 1px solid #dfe5f1;
+          background: #ffffff;
+          color: #071b49 !important;
+        }
+
+        .customerInsightsToolbar {
+          min-height: 60px;
           display: flex;
-          flex-direction: column;
-          background: #fff8fc;
-          border-color: #ffd2e5;
-        }
-
-        .customer-insights-next a,
-        .customer-insights-state a {
-          width: fit-content;
-          margin-top: auto;
-          border: 0;
-          background: #f72585;
-          color: #ffffff;
-          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21);
-        }
-
-        .customer-insights-engagement {
-          margin-top: 16px;
-        }
-
-        .customer-insights-engagement-head {
-          display: flex;
-          align-items: flex-end;
+          align-items: center;
           justify-content: space-between;
-          gap: 18px;
-          margin-bottom: 18px;
+          gap: 12px;
+          padding: 10px 12px;
         }
 
-        .customer-insights-engagement-head span {
-          display: block;
-          margin-bottom: 10px;
-          color: #f72585;
-          font-size: 0.74rem;
-          line-height: 1;
-          font-weight: 900;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
+        .customerInsightsListing {
+          display: grid;
+          gap: 2px;
         }
 
-        .customer-insights-engagement-head h2 {
-          margin: 0;
+        .customerInsightsListing strong {
           color: #071b49;
-          font-size: clamp(1.55rem, 3vw, 2rem);
-          line-height: 1.04;
-          letter-spacing: -0.045em;
+          font-size: 0.92rem;
           font-weight: 900;
         }
 
-        .customer-insights-range {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
+        .customerInsightsListing span {
+          color: #138a5b;
+          font-size: 0.74rem;
+          font-weight: 800;
         }
 
-        .customer-insights-range button {
+        .customerInsightsToolbar button {
           min-height: 40px;
           padding: 0 13px;
           border: 1px solid #dfe5f1;
           border-radius: 999px;
-          background: #fff;
+          background: #ffffff;
           color: #071b49;
           font: inherit;
-          font-size: 0.82rem;
+          font-size: 0.78rem;
           font-weight: 900;
           cursor: pointer;
+          box-shadow: none !important;
         }
 
-        .customer-insights-range button.isActive {
-          border-color: #f72585;
-          background: #f72585;
-          color: #fff;
-        }
-
-        .customer-insights-note {
+        .customerInsightsPrimary {
           display: grid;
-          grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-          gap: 24px;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 8px;
+        }
+
+        .customerInsightsPrimary article {
+          min-height: 112px;
+          display: grid;
+          align-content: center;
+          gap: 5px;
+          padding: 14px;
+          border: 1px solid #e3e8f1;
+          border-radius: 16px;
+          background: #fbfcfe;
+        }
+
+        .customerInsightsPrimary span {
+          color: #718096;
+          font-size: 0.72rem;
+          font-weight: 800;
+        }
+
+        .customerInsightsPrimary strong {
+          color: #071b49;
+          font-size: 1.8rem;
+          line-height: 1;
+          font-weight: 900;
+          letter-spacing: -0.04em;
+        }
+
+        .customerInsightsPrimary small {
+          color: #718096;
+          font-size: 0.7rem;
+          font-weight: 700;
+        }
+
+        .customerInsightsNext {
+          display: flex;
           align-items: center;
-          margin-top: 16px;
-          background: #f7f9fd;
-          box-shadow: none;
+          justify-content: space-between;
+          gap: 18px;
+          padding: 16px;
         }
 
-        .customer-insights-note h2 {
-          margin-bottom: 0;
+        .customerInsightsNext h2 {
+          margin: 0 0 4px;
+          color: #071b49;
+          font-size: 1.08rem;
+          line-height: 1.1;
+          letter-spacing: -0.03em;
+          font-weight: 900;
         }
 
-        .customer-insights-state {
-          max-width: 760px;
+        .customerInsightsNext p {
+          max-width: 620px;
+          margin: 0;
+          color: #718096;
+          font-size: 0.8rem;
+          line-height: 1.4;
+          font-weight: 600;
         }
 
-        .customer-insights-warning {
-          border-color: #ffd2e5;
-          background: #fff8fc;
-        }
-
-        .customer-insights-state a {
-          margin-top: 18px;
-        }
-
-        @media (max-width: 900px) {
-          body:has(.customer-insights-page) .main-content,
-          body:has(.customer-insights-page) .main-content.fromone-mobile-bottom-safe {
-            padding: 24px 16px 100px !important;
-          }
-
-          .customer-insights-hero {
-            align-items: flex-start;
-            flex-direction: column;
-          }
-
-          .customer-insights-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
-        @media (max-width: 650px) {
-          .customer-insights-hero h1 {
-            font-size: clamp(2.25rem, 11vw, 3rem);
-          }
-
-          .customer-insights-secondary-action,
-          .customer-insights-listing button {
-            width: 100%;
-          }
-
-          .customer-insights-listing,
-          .customer-insights-summary-grid,
-          .customer-insights-note {
-            grid-template-columns: 1fr;
-          }
-
-          .customer-insights-listing {
-            display: grid;
-          }
-
-          .customer-insights-engagement-head {
-            align-items: flex-start;
-            flex-direction: column;
-          }
-
-
-          .customer-insights-range {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-
-          .customer-insights-range button {
-            width: 100%;
-          }
-
-          .customer-insights-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .customer-insight-card {
-            min-height: 180px;
-          }
-
-          .customer-insights-summary {
-            min-height: 230px;
-          }
-        }
-
-        /* SMILEZ INSIGHTS — CONSISTENT PILL BUTTONS */
-        .customer-insights-page .customer-insights-secondary-action,
-        .customer-insights-page .customer-insights-state a,
-        .customer-insights-page .customer-insights-next a,
-        .customer-insights-page .customer-insights-listing button,
-        .customer-insights-page .customer-insights-range button {
-          border-radius: 999px !important;
-        }
-
-        .customer-insights-page .customer-insights-state a,
-        .customer-insights-page .customer-insights-next a,
-        .customer-insights-page .customer-insights-range button.isActive {
-          background: #f72585 !important;
-          border-color: #f72585 !important;
+        .customerInsightsNext a {
+          border: 1px solid #f72585;
+          background: #f72585;
           color: #ffffff !important;
         }
 
+        .customerInsightsEngagement {
+          padding: 16px;
+        }
+
+        .customerInsightsSectionHead {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 12px;
+        }
+
+        .customerInsightsSectionHead h2 {
+          margin: 0 0 4px;
+          color: #071b49;
+          font-size: 1.18rem;
+          line-height: 1.1;
+          letter-spacing: -0.03em;
+          font-weight: 900;
+        }
+
+        .customerInsightsSectionHead p {
+          margin: 0;
+          color: #718096;
+          font-size: 0.8rem;
+          font-weight: 600;
+        }
+
+        .customerInsightsRange {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+
+        .customerInsightsRange button {
+          min-height: 36px;
+          padding: 0 11px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
+          font-size: 0.72rem;
+          font-weight: 900;
+          cursor: pointer;
+          box-shadow: none !important;
+        }
+
+        .customerInsightsRange button.isActive {
+          border-color: #f72585;
+          background: #f72585;
+          color: #ffffff;
+        }
+
+        .customerInsightsRows {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 7px;
+        }
+
+        .customerInsightsRow {
+          min-height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 0 12px;
+          border: 1px solid #edf1f7;
+          border-radius: 12px;
+          background: #fbfcfe;
+        }
+
+        .customerInsightsRow span {
+          color: #52617a;
+          font-size: 0.78rem;
+          font-weight: 750;
+        }
+
+        .customerInsightsRow strong {
+          color: #071b49;
+          font-size: 0.92rem;
+          font-weight: 900;
+        }
+
+        @media (max-width: 700px) {
+          body:has(.fromone-smiles-insights-page) .main-content,
+          body:has(.fromone-smiles-insights-page) .main-content.fromone-mobile-bottom-safe {
+            padding: 18px 10px 100px !important;
+          }
+
+          .customerInsightsShell {
+            max-width: 100%;
+            gap: 12px;
+          }
+
+          .customerInsightsHero {
+            display: grid;
+            gap: 12px;
+          }
+
+          .customerInsightsHero h1 {
+            font-size: 2.2rem;
+          }
+
+          .customerInsightsPrimary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .customerInsightsNext {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .customerInsightsNext a {
+            width: 100%;
+          }
+
+          .customerInsightsSectionHead {
+            flex-direction: column;
+          }
+
+          .customerInsightsRange {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+
+          .customerInsightsRange button {
+            width: 100%;
+          }
+
+          .customerInsightsRows {
+            grid-template-columns: 1fr;
+          }
+        }
       `}</style>
     </main>
   );

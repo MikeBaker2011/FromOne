@@ -14102,3 +14102,21 @@ body:has(.customer-insights-page) .customer-insights-range button.isActive:activ
   filter: none !important;
   transform: none !important;
 }
+
+/* POST REVIEW — remove legacy global gold button glow */
+body:has(.fromone-post-review-page) .fromone-post-review-page button,
+body:has(.fromone-post-review-page) .fromone-post-review-page .app-button,
+body:has(.fromone-post-review-page) .fromone-post-review-page a[class*="button"],
+body:has(.fromone-post-review-page) .fromone-post-review-page a[class*="Button"] {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+body:has(.fromone-post-review-page) .fromone-post-review-page button:hover,
+body:has(.fromone-post-review-page) .fromone-post-review-page .app-button:hover,
+body:has(.fromone-post-review-page) .fromone-post-review-page a[class*="button"]:hover,
+body:has(.fromone-post-review-page) .fromone-post-review-page a[class*="Button"]:hover {
+  box-shadow: none !important;
+  filter: none !important;
+}
+

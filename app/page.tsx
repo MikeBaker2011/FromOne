@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PublicNav from "./components/PublicNav";
 
 export const metadata = {
   title: "FromOne | One upload. Posts, offers and events.",
@@ -6,131 +7,136 @@ export const metadata = {
     "FromOne turns business photos, videos and flyers into ready-to-review Facebook and Instagram posts, plus Smilez offers and events when relevant.",
 };
 
+const tutorialSteps = [
+  {
+    number: "1",
+    title: "Add your business",
+    text: "Add your business name, type, address, postcode and website in Settings.",
+  },
+  {
+    number: "2",
+    title: "Connect social accounts",
+    text: "Connect Facebook and Instagram once. You can skip this if you only want to use Smilez.",
+  },
+  {
+    number: "3",
+    title: "Add one upload",
+    text: "Open Create and add a photo, video or flyer.",
+  },
+  {
+    number: "4",
+    title: "Create the draft",
+    text: "Choose AI draft or Manual, then create your post.",
+  },
+  {
+    number: "5",
+    title: "Review it",
+    text: "Check the wording and choose Facebook, Instagram or Smilez.",
+  },
+  {
+    number: "6",
+    title: "Publish",
+    text: "Press Publish now. FromOne sends it to the destinations you selected.",
+  },
+];
+
 export default function HomePage() {
   return (
-    <main className="fo-page">
-      <nav className="fo-nav" aria-label="FromOne landing navigation">
-        <Link href="/" className="fo-brand" aria-label="FromOne home">
-          <img src="/fromone-logo.png" alt="FromOne" />
-        </Link>
+    <main className="foHomePage">
+      <PublicNav />
 
-        <div className="fo-nav-actions">
-          <Link href="/signin" className="fo-nav-secondary">
-            Open app
-          </Link>
-          <Link href="/signin" className="fo-nav-primary">
-            Start 7-day trial
-          </Link>
-        </div>
-      </nav>
-
-      <section className="fo-hero">
-        <div className="fo-hero-main">
-          <p className="fo-eyebrow">FROMONE + SMILEZ</p>
-          <h1>
-            Turn one upload into posts, offers and events.
-          </h1>
-          <p className="fo-intro">
-            FromOne creates ready-to-review Facebook and Instagram posts from
-            your photos, videos and flyers. Suitable offers and events can also
-            be sent to Smilez for approval.
+      <section className="foHomeShell">
+        <section className="foHero">
+          <span className="foEyebrow">FROMONE + SMILEZ</span>
+          <h1>One upload. Ready to publish.</h1>
+          <p>
+            Turn a photo, video or flyer into a ready-to-review post for
+            Facebook, Instagram and Smilez.
           </p>
 
-          <div className="fo-actions">
-            <Link href="/signin" className="fo-primary">
-              Start 7-day trial
+          <div className="foHeroActions">
+            <Link href="/signin" className="primary">
+              Start free demo
             </Link>
-            <Link href="/subscription" className="fo-secondary">
-              View plans
-            </Link>
+            <a href="#how-it-works" className="secondary">
+              See how it works
+            </a>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="fo-section fo-three">
-        <article>
-          <span>01</span>
-          <h3>Upload anything useful</h3>
-          <p>
-            Add an image, video or flyer. FromOne understands the content and
-            prepares a practical post.
-          </p>
-        </article>
-
-        <article>
-          <span>02</span>
-          <h3>Review before posting</h3>
-          <p>
-            Captions, hashtags and calls to action are created for Facebook and
-            Instagram. Nothing is published until it is checked.
-          </p>
-        </article>
-
-        <article>
-          <span>03</span>
-          <h3>Publish or send</h3>
-          <p>
-            Publish to Facebook or Instagram after review. If the post is an
-            offer or event, it can also be sent to Smilez for approval.
-          </p>
-        </article>
-      </section>
-
-      <section className="fo-section fo-smiles-sell">
-        <div className="fo-smiles-copy">
-          <p className="fo-eyebrow">WHY SMILES MATTERS</p>
-          <h2>Social posts are seen. Smilez listings are found.</h2>
-          <p>
-            FromOne gives local offers and events a proper route into Smilez,
-            with clear references, approval status and view links.
-          </p>
-        </div>
-
-        <div className="fo-smiles-logo-card">
-          <img src="/stockport-smiles-logo.png" alt="Smilez" />
-        </div>
-      </section>
-
-      <section className="fo-section fo-proof">
-        <div>
-          <p className="fo-eyebrow">BUILT FOR REAL USERS</p>
-          <h2>Big buttons. Clear steps. No accidental publishing.</h2>
-        </div>
-
-        <div className="fo-proof-list">
-          <article>
+        <section className="foQuickFlow" aria-label="FromOne workflow">
+          <div>
             <strong>1</strong>
-            <span>Add image, video or flyer</span>
-          </article>
-          <article>
+            <span>Create</span>
+          </div>
+          <div>
             <strong>2</strong>
-            <span>Choose Facebook, Instagram and Smilez if it fits</span>
-          </article>
-          <article>
+            <span>Review</span>
+          </div>
+          <div>
             <strong>3</strong>
-            <span>Check the wording and image</span>
-          </article>
-          <article>
-            <strong>4</strong>
-            <span>Publish to Facebook or Instagram, or send suitable offers and events to Smilez</span>
-          </article>
-        </div>
+            <span>Publish</span>
+          </div>
+        </section>
+
+        <section id="how-it-works" className="foTutorial">
+          <header className="foSectionHead">
+            <span className="foEyebrow">FIRST TIME?</span>
+            <h2>How to use FromOne.</h2>
+            <p>Follow these six steps. You do not need to set up everything at once.</p>
+          </header>
+
+          <div className="foTutorialStart">
+            <strong>Before you start</strong>
+            <span>You only need your business details and one photo, video or flyer.</span>
+          </div>
+
+          <div className="foTutorialSteps">
+            {tutorialSteps.map((step) => (
+              <article key={step.number} className="foTutorialStep">
+                <span className="foTutorialNumber">{step.number}</span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="foTutorialDone">
+            <strong>That’s it.</strong>
+            <span>Create → Review → Publish.</span>
+          </div>
+        </section>
+
+        <section className="foSmilez">
+          <div>
+            <span className="foEyebrow">SMILEZ</span>
+            <h2>More than social posts.</h2>
+            <p>
+              Suitable offers and events can also go to Smilez, where customers
+              can discover your business locally.
+            </p>
+          </div>
+
+          <img src="/stockport-smiles-logo.png" alt="Smilez" />
+        </section>
+
+        <section className="foFinal">
+          <div>
+            <span className="foEyebrow">READY?</span>
+            <h2>Start with one upload.</h2>
+            <p>
+              Add your business, upload something useful and create your first post.
+            </p>
+          </div>
+
+          <Link href="/signin" className="primary">
+            Start free demo
+          </Link>
+        </section>
       </section>
 
-      <section className="fo-final">
-        <div>
-          <p className="fo-eyebrow">START WITH ONE UPLOAD</p>
-          <h2>Upload it. Post it. Done.</h2>
-          <p>
-            Create posts for Facebook and Instagram, and send suitable offers
-            and events to Smilez.
-          </p>
-        </div>
-
-        <Link href="/signin" className="fo-primary">
-          Start 7-day trial
-        </Link>
-      </section>
 
       <style>{`
         :root {
@@ -141,20 +147,20 @@ export default function HomePage() {
           box-sizing: border-box;
         }
 
-        body {
-          margin: 0;
-          background: #f5f7fb;
+        html {
+          scroll-behavior: smooth;
         }
 
-        .fo-page {
+        body {
+          margin: 0;
+          background: #ffffff;
+        }
+
+        .foHomePage {
           min-height: 100vh;
-          padding: 24px;
           overflow-x: hidden;
           color: #071b49;
-          background:
-            radial-gradient(circle at 6% 0%, rgba(247, 37, 133, 0.16), transparent 32rem),
-            radial-gradient(circle at 94% 3%, rgba(255, 193, 7, 0.24), transparent 30rem),
-            linear-gradient(180deg, #f8f9fd 0%, #edf2f8 100%);
+          background: #ffffff;
           font-family:
             var(--font-main),
             "Plus Jakarta Sans",
@@ -164,365 +170,327 @@ export default function HomePage() {
             BlinkMacSystemFont,
             "Segoe UI",
             sans-serif;
-          font-weight: 500;
-          letter-spacing: -0.01em;
         }
 
-        .fo-nav,
-        .fo-hero,
-        .fo-section,
-        .fo-final {
-          width: min(1180px, 100%);
-          margin-left: auto;
-          margin-right: auto;
+        .foHomeShell {
+          width: min(820px, calc(100% - 32px));
+          margin: 0 auto;
+          padding: 54px 0 72px;
+          display: grid;
+          gap: 14px;
         }
 
-        .fo-nav {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 18px;
-          margin-bottom: 22px;
-          padding: 14px;
-          border: 1px solid #dfe5f1;
-          border-radius: 28px;
-          background: rgba(255, 255, 255, 0.92);
-          box-shadow: 0 18px 50px rgba(7, 27, 73, 0.08);
-          backdrop-filter: blur(14px);
+        .foHero {
+          padding: 8px 0 18px;
+          text-align: center;
         }
 
-        .fo-brand {
-          display: inline-flex;
-          align-items: center;
-          color: #071b49;
-          text-decoration: none;
-        }
-
-        .fo-brand img {
-          width: clamp(180px, 21vw, 280px);
-          height: auto;
+        .foEyebrow {
           display: block;
-          object-fit: contain;
-        }
-
-        .fo-nav-actions,
-        .fo-actions {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-
-        .fo-nav-primary,
-        .fo-nav-secondary,
-        .fo-primary,
-        .fo-secondary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 48px;
-          padding: 0 20px;
-          border-radius: 999px;
-          text-decoration: none;
-          font-weight: 850;
-          letter-spacing: -0.02em;
-        }
-
-        .fo-nav-primary,
-        .fo-primary {
-          border: 1px solid #f72585;
-          background: #f72585;
-          color: #ffffff;
-          box-shadow: 0 18px 42px rgba(247, 37, 133, 0.24);
-        }
-
-        .fo-nav-secondary,
-        .fo-secondary {
-          border: 1px solid #dfe5f1;
-          background: #ffffff;
-          color: #071b49;
-        }
-
-        .fo-hero {
-          display: block;
-        }
-
-        .fo-hero-main,
-        .fo-section,
-        .fo-final {
-          border: 1px solid #dfe5f1;
-          border-radius: 34px;
-          background: #ffffff;
-          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10);
-        }
-
-        .fo-hero-main {
-          min-height: 560px;
-          padding: clamp(42px, 5vw, 66px);
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          background:
-            radial-gradient(circle at right, rgba(247, 37, 133, 0.10), transparent 38%),
-            #ffffff;
-        }
-
-        .fo-eyebrow {
-          margin: 0 0 14px;
+          margin-bottom: 8px;
           color: #f72585;
-          font-size: 0.78rem;
-          line-height: 1;
-          font-weight: 850;
-          letter-spacing: 0.14em;
+          font-size: 0.72rem;
+          font-weight: 900;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
         }
 
-        .fo-hero h1,
-        .fo-section h2,
-        .fo-final h2 {
-          margin: 0;
-          color: #071b49;
-          font-weight: 850;
-          letter-spacing: -0.067em;
-          text-wrap: balance;
-        }
-
-        .fo-hero h1 {
-          max-width: 980px;
-          font-size: clamp(4.4rem, 7vw, 7.4rem);
-          line-height: 0.88;
-        }
-
-        .fo-intro {
-          max-width: 720px;
-          margin: 28px 0 0;
-          color: #52617a;
-          font-size: clamp(1.12rem, 1.75vw, 1.4rem);
-          line-height: 1.48;
-          font-weight: 650;
-        }
-
-        .fo-actions {
-          margin-top: 34px;
-        }
-
-        .fo-primary,
-        .fo-secondary {
-          min-height: 56px;
-          padding: 0 26px;
-        }
-
-        .fo-section,
-        .fo-final {
-          margin-top: 18px;
-          padding: clamp(32px, 4vw, 50px);
-        }
-
-        .fo-section h2,
-        .fo-final h2 {
-          max-width: 900px;
-          font-size: clamp(2.8rem, 5vw, 4.8rem);
-          line-height: 0.94;
-        }
-
-        .fo-section p,
-        .fo-final p {
-          margin: 0;
-          color: #52617a;
-          line-height: 1.48;
-          font-weight: 650;
-        }
-
-        .fo-section > div > p:not(.fo-eyebrow),
-        .fo-final p {
-          margin-top: 16px;
+        .foHero h1 {
           max-width: 760px;
-          font-size: 1.06rem;
+          margin: 0 auto;
+          color: #071b49;
+          font-size: clamp(3rem, 8vw, 5.8rem);
+          line-height: 0.92;
+          letter-spacing: -0.07em;
+          font-weight: 900;
         }
 
-        .fo-three {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 12px;
+        .foHero p,
+        .foSectionHead p,
+        .foSmilez p,
+        .foFinal p {
+          max-width: 660px;
+          margin: 16px auto 0;
+          color: #66728a;
+          font-size: 1rem;
+          line-height: 1.5;
+          font-weight: 600;
         }
 
-        .fo-three article,
-        .fo-proof-list article,
-        .fo-smiles-logo-card {
-          min-width: 0;
-          padding: 24px;
-          border: 1px solid #dfe5f1;
-          border-radius: 26px;
-          background: #f7f9fd;
+        .foHeroActions {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 22px;
         }
 
-        .fo-three span,
-        .fo-proof-list strong {
+        .foHeroActions a,
+        .foFinal > a {
+          min-height: 44px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
+          padding: 0 16px;
           border-radius: 999px;
+          font-size: 0.8rem;
+          font-weight: 900;
+          text-decoration: none;
+        }
+
+        .primary {
+          border: 1px solid #f72585;
           background: #f72585;
           color: #ffffff;
-          font-size: 0.84rem;
+        }
+
+        .secondary {
+          border: 1px solid #dfe5f1;
+          background: #ffffff;
+          color: #071b49;
+        }
+
+        .foQuickFlow {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+          padding: 10px;
+          border: 1px solid #dfe5f1;
+          border-radius: 16px;
+          background: #fbfcfe;
+        }
+
+        .foQuickFlow div {
+          min-height: 54px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 0 10px;
+          text-align: center;
+          border-radius: 11px;
+          background: #ffffff;
+        }
+
+        .foQuickFlow strong {
+          width: 28px;
+          height: 28px;
+          flex: 0 0 28px;
+          display: grid;
+          place-items: center;
+          border-radius: 999px;
+          background: #fff1f7;
+          color: #c71363;
+          font-size: 0.7rem;
           font-weight: 900;
-          box-shadow: 0 16px 34px rgba(247, 37, 133, 0.18);
         }
 
-        .fo-three h3 {
-          margin: 20px 0 10px;
+        .foQuickFlow span {
           color: #071b49;
-          font-size: 1.48rem;
-          line-height: 1.05;
-          font-weight: 850;
-          letter-spacing: -0.045em;
+          font-size: 0.78rem;
+          font-weight: 900;
         }
 
-        .fo-smiles-sell,
-        .fo-proof,
-        .fo-final {
-          display: grid;
-          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-          gap: 24px;
-          align-items: center;
-        }
-
-        .fo-smiles-sell {
-          background:
-            radial-gradient(circle at right, rgba(247, 37, 133, 0.10), transparent 38%),
-            #ffffff;
-        }
-
-        .fo-smiles-logo-card {
+        .foTutorial,
+        .foSmilez,
+        .foFinal {
+          border: 1px solid #dfe5f1;
+          border-radius: 18px;
           background: #ffffff;
-          box-shadow: 0 18px 50px rgba(7, 27, 73, 0.08);
+          box-shadow: none;
         }
 
-        .fo-smiles-logo-card img {
-          width: 100%;
-          max-height: 240px;
-          object-fit: contain;
-          display: block;
+        .foTutorial {
+          padding: 18px;
+          scroll-margin-top: 86px;
+          text-align: center;
         }
 
-        .fo-proof-list {
+        .foSectionHead h2,
+        .foSmilez h2,
+        .foFinal h2 {
+          margin: 0;
+          color: #071b49;
+          font-size: clamp(1.8rem, 4vw, 2.7rem);
+          line-height: 1;
+          letter-spacing: -0.05em;
+          font-weight: 900;
+        }
+
+        .foTutorialStart {
           display: grid;
+          gap: 3px;
+          text-align: center;
+          margin: 16px 0 10px;
+          padding: 12px 13px;
+          border: 1px solid #ffd2e5;
+          border-radius: 13px;
+          background: #fffafd;
+        }
+
+        .foTutorialStart strong {
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+
+        .foTutorialStart span {
+          color: #66728a;
+          font-size: 0.75rem;
+          line-height: 1.4;
+          font-weight: 600;
+        }
+
+        .foTutorialSteps {
+          display: grid;
+          gap: 7px;
+        }
+
+        .foTutorialStep {
+          display: grid;
+          grid-template-columns: 36px minmax(0, 1fr);
           gap: 10px;
+          align-items: start;
+          padding: 11px 0;
+          text-align: left;
+          border-bottom: 1px solid #edf1f7;
         }
 
-        .fo-proof-list article {
+        .foTutorialStep:last-child {
+          border-bottom: 0;
+        }
+
+        .foTutorialNumber {
+          width: 32px;
+          height: 32px;
           display: grid;
-          grid-template-columns: 44px 1fr;
-          align-items: center;
-          gap: 14px;
-          background: #ffffff;
+          place-items: center;
+          border-radius: 999px;
+          background: #fff1f7;
+          color: #c71363;
+          font-size: 0.7rem;
+          font-weight: 900;
         }
 
-        .fo-proof-list span {
+        .foTutorialStep h3 {
+          margin: 1px 0 3px;
           color: #071b49;
-          font-size: 1.08rem;
+          font-size: 0.9rem;
           line-height: 1.2;
-          font-weight: 850;
-          letter-spacing: -0.025em;
+          font-weight: 900;
         }
 
-        .fo-final {
-          background:
-            radial-gradient(circle at right, rgba(247, 37, 133, 0.11), transparent 40%),
-            #ffffff;
+        .foTutorialStep p {
+          margin: 0;
+          color: #66728a;
+          font-size: 0.78rem;
+          line-height: 1.45;
+          font-weight: 600;
         }
 
-        .fo-final .fo-primary {
-          justify-self: end;
-          min-width: 190px;
+        .foTutorialDone {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-top: 10px;
+          padding-top: 12px;
+          border-top: 1px solid #edf1f7;
         }
 
-        @media (max-width: 980px) {
-          .fo-page {
-            padding: 18px;
-          }
-
-          .fo-smiles-sell,
-          .fo-proof,
-          .fo-final {
-            grid-template-columns: 1fr;
-          }
-
-          .fo-hero-main {
-            min-height: auto;
-          }
-
-          .fo-three {
-            grid-template-columns: 1fr;
-          }
-
-          .fo-final .fo-primary {
-            justify-self: start;
-          }
+        .foTutorialDone strong {
+          font-size: 0.82rem;
+          font-weight: 900;
         }
 
-        @media (max-width: 620px) {
-          .fo-page {
-            padding: 12px;
+        .foTutorialDone span {
+          color: #f72585;
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+
+        .foSmilez {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+          align-items: center;
+          justify-items: center;
+          padding: 18px;
+          text-align: center;
+        }
+
+        .foSmilez img {
+          width: min(180px, 60%);
+          max-height: 90px;
+          margin: 0 auto;
+          display: block;
+          justify-self: center;
+          object-fit: contain;
+        }
+
+        .foFinal {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          gap: 18px;
+          padding: 18px;
+          background: #fbfcfe;
+          text-align: center;
+        }
+
+        .foFinal p {
+          margin-top: 7px;
+          font-size: 0.85rem;
+        }
+
+        .foFinal > a {
+          flex: 0 0 auto;
+        }
+
+        @media (max-width: 700px) {
+          .foHomeShell {
+            width: calc(100% - 20px);
+            padding: 34px 0 54px;
           }
 
-          .fo-nav {
+          .foHero h1 {
+            font-size: clamp(2.8rem, 14vw, 4rem);
+          }
+
+          .foHero p {
+            font-size: 0.94rem;
+          }
+
+          .foHeroActions {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-            border-radius: 24px;
           }
 
-          .fo-brand {
-            justify-content: center;
-          }
-
-          .fo-brand img {
-            width: min(240px, 78vw);
-          }
-
-          .fo-nav-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+          .foHeroActions a {
             width: 100%;
           }
 
-          .fo-nav-primary,
-          .fo-nav-secondary {
-            width: 100%;
-            padding: 0 12px;
-          }
-
-          .fo-hero-main,
-          .fo-section,
-          .fo-final {
-            border-radius: 26px;
-            padding: 24px;
-          }
-
-          .fo-hero h1 {
-            font-size: clamp(3.1rem, 15vw, 4.8rem);
-          }
-
-          .fo-section h2,
-          .fo-final h2 {
-            font-size: clamp(2.4rem, 12vw, 3.65rem);
-          }
-
-          .fo-actions {
-            display: grid;
+          .foQuickFlow {
             grid-template-columns: 1fr;
           }
 
-          .fo-primary,
-          .fo-secondary,
-          .fo-final .fo-primary {
-            width: 100%;
-            justify-self: stretch;
+          .foSmilez {
+            grid-template-columns: 1fr;
           }
 
+          .foSmilez img {
+            width: min(180px, 60%);
+            margin: 0 auto;
+            justify-self: center;
+          }
+
+          .foFinal {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .foFinal > a {
+            width: 100%;
+          }
         }
       `}</style>
     </main>

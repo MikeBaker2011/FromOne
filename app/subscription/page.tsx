@@ -1,7 +1,6 @@
 ﻿'use client';
 
 
-import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import { useEffect, useState } from 'react';
 import { useToast } from '@/app/components/ToastProvider';
 import '../posts/posts-companion-shared.css';
@@ -827,1160 +826,647 @@ export default function SubscriptionPage() {
 
   return (
     <>
-      <main id="fromone-standard-shell" className="fromone-posts-page fromone-subscription-page subscription-simple-page">
-      <BackToDashboardButton />
-        <header className="posts-create-hero subscription-simple-header">
-          <span className="posts-create-eyebrow page-eyebrow">Subscription</span>
-          <h1>{isDemoExpired ? 'Demo ended.' : 'Plans for posting.'}</h1>
-          <p>
-            Choose the plan for uploads, social posts, Smilez offers and events, and Facebook and Instagram publishing.
-          </p>
-        </header>
+      <main className="fromone-posts-page fromone-subscription-page subscriptionLitePage">
+        <section id="fromone-standard-shell" className="subscriptionLiteShell">
+          <header className="subscriptionLiteHero">
+            <span>Plan</span>
+            <h1>Your plan.</h1>
+            <p>See your access or manage Starter.</p>
+          </header>
 
-        {confirmingPayment && (
-          <section className="subscription-simple-notice">
-            <strong>Checking payment...</strong>
-            <span>FromOne is confirming your subscription with the payment provider and updating your access.</span>
-          </section>
-        )}
+          {confirmingPayment ? (
+            <section className="subscriptionLiteNotice">
+              <strong>Checking payment…</strong>
+              <span>Confirming your subscription.</span>
+            </section>
+          ) : null}
 
-        {loading ? (
-          <section className="subscription-simple-card subscription-simple-loading">
-            Loading subscription...
-          </section>
-        ) : (
-          <>
-            {(isDemoExpired || isCancelled) && (
-              <section className="subscription-simple-alert">
-                <strong>{isDemoExpired ? 'Demo ended' : 'Subscription cancelled'}</strong>
-                <span>
-                  {isDemoExpired
-                    ? 'Choose Starter to keep creating posts, Smilez offers and events from your uploads.'
-                    : 'Future renewals have been stopped. You can restart Starter anytime.'}
+          {loading ? (
+            <section className="subscriptionLiteStatus">
+              <strong>Loading your plan…</strong>
+            </section>
+          ) : (
+            <>
+              <section className="subscriptionLiteStatus">
+                <div>
+                  <span>Current access</span>
+                  <strong>{getAccessTitle()}</strong>
+                  {isDemoActive ? (
+                    <small>Your free demo ends {formatDate(trialEndsAt)}.</small>
+                  ) : null}
+                  {hasPaidAccess ? (
+                    <small>Starter is active.</small>
+                  ) : null}
+                  {isPendingPayment ? (
+                    <small>Your checkout is waiting for confirmation.</small>
+                  ) : null}
+                  {isCancelled ? (
+                    <small>Your subscription will not renew.</small>
+                  ) : null}
+                </div>
+
+                <span
+                  className={`subscriptionLiteBadge ${
+                    hasPaidAccess
+                      ? 'isActive'
+                      : isPendingPayment
+                        ? 'isPending'
+                        : isDemoExpired || isCancelled
+                          ? 'isWarning'
+                          : ''
+                  }`}
+                >
+                  {hasPaidAccess
+                    ? 'Active'
+                    : isPendingPayment
+                      ? 'Pending'
+                      : isDemoExpired
+                        ? 'Expired'
+                        : isCancelled
+                          ? 'Cancelled'
+                          : 'Demo'}
                 </span>
               </section>
-            )}
 
-            <section className="subscription-current-strip">
-              <div>
-                <span>Current access</span>
-                <strong>{getAccessTitle()}</strong>
-              </div>
-
-              <div className="subscription-current-meta">
-                <span>Plan: {currentPlan === 'starter' ? 'Starter' : 'Demo'}</span>
-                <span>Status: {status}</span>
-                {currentPlan === 'demo' && <span>Ends: {formatDate(trialEndsAt)}</span>}
-              </div>
-            </section>
-
-            <section className="subscription-simple-card subscription-smiles-focus-card">
-              <div>
-                <span>What Starter unlocks</span>
-                <h2>One workflow for posts and Smilez.</h2>
-                <p>
-                  Upload an image, video or flyer. FromOne prepares the social post and, when relevant, the Smilez offer or event. You review everything before it is published or sent for approval.
-                </p>
-              </div>
-
-              <div className="subscription-smiles-focus-grid">
-                <strong>Image to posts</strong>
-                <strong>Smilez offers</strong>
-                <strong>Smilez events</strong>
-                <strong>Facebook and Instagram</strong>
-              </div>
-            </section>
-
-            <section className="subscription-plan-grid">
-              {plans.map((plan) => {
-                const isSelected = selectedPlan === plan.id;
-                const isCurrent = currentPlan === plan.id && !isPendingPayment && !isCancelled;
-
-                return (
-                  <article
-                    key={plan.id}
-                    className={`subscription-simple-card subscription-plan-option ${
-                      isSelected ? 'is-selected' : ''
-                    } ${plan.disabled ? 'is-disabled' : ''}`}
-                  >
-                    <div className="subscription-plan-head">
-                      <span>{plan.name}</span>
-                      {isCurrent && <em>Current</em>}
-                      {isSelected && !isCurrent && <em>Selected</em>}
+              {!hasPaidAccess ? (
+                <section className="subscriptionLiteStarter">
+                  <div className="subscriptionLiteStarterHead">
+                    <div>
+                      <span>Starter</span>
+                      <h2>Everything you need to publish.</h2>
                     </div>
-
-                    <div className="subscription-plan-price">
-                      <strong>{plan.price}</strong>
-                      <span>{plan.priceNote}</span>
+                    <div className="subscriptionLitePrice">
+                      <strong>£49.99</strong>
+                      <span>/ month</span>
                     </div>
+                  </div>
 
-                    <p>{plan.valueNote}</p>
-                    <p>{plan.description}</p>
+                  <div className="subscriptionLiteFeatures">
+                    <span>AI & manual post creation</span>
+                    <span>Facebook & Instagram publishing</span>
+                    <span>Smilez offers & events</span>
+                    <span>Business listing management</span>
+                  </div>
 
-                    <ul>
-                      {plan.features.map((feature) => (
-                        <li key={feature}>{feature}</li>
-                      ))}
-                    </ul>
-
+                  {isPendingPayment ? (
+                    <div className="subscriptionLiteActions">
+                      <button type="button" className="primary" disabled>
+                        Payment pending
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary danger"
+                        onClick={cancelPendingPayment}
+                        disabled={saving || cancelling}
+                      >
+                        {cancelling ? 'Cancelling…' : 'Cancel pending payment'}
+                      </button>
+                    </div>
+                  ) : (
                     <button
                       type="button"
-                      className={isSelected ? undefined : 'secondary-button'}
-                      disabled={
-                        plan.disabled ||
-                        saving ||
-                        cancelling ||
-                        (plan.id === 'starter' && (hasPaidAccess || isPendingPayment))
-                      }
-                      onClick={async () => {
-                        if (plan.disabled || saving || cancelling) return;
-
-                        if (plan.id === 'starter' && isSelected) {
-                          await savePlan(plan.id);
-                          return;
-                        }
-
-                        setSelectedPlan(plan.id);
-                      }}
+                      className="subscriptionLiteMainButton"
+                      onClick={() => savePlan('starter')}
+                      disabled={saving || cancelling}
                     >
-                      {plan.disabled
-                        ? 'Demo ended'
-                        : isSelected
-                          ? plan.buttonText
-                          : `Choose ${plan.name}`}
+                      {saving
+                        ? 'Opening Revolut…'
+                        : isCancelled
+                          ? 'Restart Starter'
+                          : 'Start Starter'}
                     </button>
-                  </article>
-                );
-              })}
-            </section>
+                  )}
+                </section>
+              ) : (
+                <section className="subscriptionLiteStarter isActivePlan">
+                  <div className="subscriptionLiteStarterHead">
+                    <div>
+                      <span>Starter</span>
+                      <h2>Your subscription is active.</h2>
+                    </div>
+                    <div className="subscriptionLitePrice">
+                      <strong>£49.99</strong>
+                      <span>/ month</span>
+                    </div>
+                  </div>
 
-            <section className="subscription-simple-card subscription-billing-card">
-              <div className="subscription-billing-title">
-                <div>
-                  <span>Starter access</span>
-                  <h2>Starter includes</h2>
-                </div>
+                  <p className="subscriptionLiteActiveCopy">
+                    Posting, Smilez and publishing features are available.
+                  </p>
 
-                <strong>{hasPaidAccess ? 'Active' : '£49.99/month'}</strong>
-              </div>
-
-              <p>
-                Starter includes upload-to-post creation, Smilez offer and event workflows, and Facebook and Instagram publishing. Revolut handles new monthly subscriptions.
-              </p>
-
-              <div className="subscription-billing-grid">
-                <div>
-                  <span>Status</span>
-                  <strong>{paymentStatusLabel}</strong>
-                </div>
-
-                <div>
-                  <span>Next payment</span>
-                  <strong>{nextPaymentLabel}</strong>
-                </div>
-
-                <div>
-                  <span>Payment provider</span>
-                  <strong>{providerName}{paymentReference ? ` · ${paymentReferenceLabel}` : ''}</strong>
-                </div>
-              </div>
-
-              {isPendingPayment && (
-                <p className="subscription-simple-warning">
-                  Your checkout has started but the subscription has not been confirmed yet.
-                </p>
+                  {canCancel ? (
+                    <button
+                      type="button"
+                      className="subscriptionLiteCancel"
+                      onClick={cancelSubscription}
+                      disabled={saving || cancelling}
+                    >
+                      {cancelling ? 'Cancelling…' : 'Cancel subscription'}
+                    </button>
+                  ) : null}
+                </section>
               )}
 
-              {hasPaidAccess && (
-                <p className="subscription-simple-success">
-                  {effectiveProvider === 'paypal'
-                    ? 'Your legacy PayPal Starter subscription is active. Posting, Smilez workflows and publishing features are available.'
-                    : effectiveProvider === 'revolut'
-                      ? 'Your Revolut Starter subscription is active. Posting, Smilez workflows and publishing features are available.'
-                      : 'Starter access is active. Post creation, Smilez workflows and publishing features are available.'}
-                </p>
-              )}
-
-              {!hasPaidAccess && !isPendingPayment && (
-                <p className="subscription-simple-muted">
-                  {isCancelled
-                    ? 'Restart Starter above or continue below to open Revolut and begin a new £49.99 monthly subscription.'
-                    : 'Choose Starter above, then continue to Revolut to unlock posts, Smilez workflows and publishing.'}
-                </p>
-              )}
-
-              <div className="subscription-action-row">
-                <button onClick={() => savePlan()} disabled={saving || cancelling || (selectedPlan === 'starter' && (hasPaidAccess || isPendingPayment))}>
-                  {saving
-                    ? selectedPlan === 'starter'
-                      ? 'Opening Revolut...'
-                      : 'Saving...'
-                    : selectedPlan === 'starter'
-                      ? hasPaidAccess
-                        ? 'Starter active'
-                        : isPendingPayment
-                          ? 'Payment pending'
-                          : isCancelled
-                            ? 'Restart with Revolut'
-                            : 'Continue with Revolut'
-                      : 'Save Demo Plan'}
-                </button>
-
-                {isPendingPayment && (
-                  <button
-                    type="button"
-                    className="secondary-button danger-button"
-                    onClick={cancelPendingPayment}
-                    disabled={saving || cancelling}
-                  >
-                    {cancelling ? 'Cancelling...' : 'Cancel pending payment'}
-                  </button>
-                )}
-
-                {canCancel && (
-                  <button
-                    type="button"
-                    className="secondary-button danger-button"
-                    onClick={cancelSubscription}
-                    disabled={saving || cancelling}
-                  >
-                    {cancelling ? 'Cancelling...' : 'Cancel subscription'}
-                  </button>
-                )}
-              </div>
-            </section>
-          </>
-        )}
+              <details className="subscriptionLiteDetails">
+                <summary>Billing details</summary>
+                <div className="subscriptionLiteDetailRows">
+                  <div>
+                    <span>Plan</span>
+                    <strong>{currentPlan === 'starter' ? 'Starter' : 'Demo'}</strong>
+                  </div>
+                  <div>
+                    <span>Status</span>
+                    <strong>{paymentStatusLabel}</strong>
+                  </div>
+                  {currentPlan === 'demo' ? (
+                    <div>
+                      <span>Demo ends</span>
+                      <strong>{formatDate(trialEndsAt)}</strong>
+                    </div>
+                  ) : null}
+                  {currentPlan === 'starter' ? (
+                    <>
+                      <div>
+                        <span>Provider</span>
+                        <strong>{providerName}</strong>
+                      </div>
+                      <div>
+                        <span>Next payment</span>
+                        <strong>{nextPaymentLabel}</strong>
+                      </div>
+                      {paymentReference ? (
+                        <div>
+                          <span>Reference</span>
+                          <strong>{paymentReferenceLabel}</strong>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : null}
+                </div>
+              </details>
+            </>
+          )}
+        </section>
       </main>
 
-      {confirmDialog && (() => {
-        const activeConfirmDialog = confirmDialog!;
+      {confirmDialog &&
+        (() => {
+          const activeConfirmDialog = confirmDialog!;
 
-        return (
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="subscription-confirm-title"
-            className="subscription-dialog-backdrop"
-          >
-            <div className="subscription-dialog-card">
-              <div className="page-eyebrow">
-                {activeConfirmDialog.danger ? 'Please confirm' : 'Confirm action'}
-              </div>
+          return (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="subscription-confirm-title"
+              className="subscriptionLiteBackdrop"
+            >
+              <section className="subscriptionLiteDialog">
+                <span>Please confirm</span>
+                <h2 id="subscription-confirm-title">{activeConfirmDialog.title}</h2>
+                <p>{activeConfirmDialog.message}</p>
 
-              <h2 id="subscription-confirm-title">{activeConfirmDialog.title}</h2>
+                <div>
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={closeConfirmDialog}
+                    disabled={cancelling || saving}
+                  >
+                    Keep as is
+                  </button>
 
-              <p>{activeConfirmDialog.message}</p>
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={() => {
+                      if (activeConfirmDialog.type === 'cancelPendingPayment') {
+                        void confirmCancelPendingPayment();
+                        return;
+                      }
 
-              <div className="subscription-action-row subscription-dialog-actions">
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={closeConfirmDialog}
-                  disabled={cancelling || saving}
-                >
-                  Keep as is
-                </button>
-
-                <button
-                  type="button"
-                  className={activeConfirmDialog.danger ? 'secondary-button danger-button' : undefined}
-                  onClick={() => {
-                    if (activeConfirmDialog.type === 'cancelPendingPayment') {
-                      confirmCancelPendingPayment();
-                      return;
-                    }
-
-                    if (activeConfirmDialog.type === 'cancelSubscription') {
-                      confirmCancelSubscription();
-                    }
-                  }}
-                  disabled={cancelling || saving}
-                >
-                  {cancelling ? 'Cancelling...' : activeConfirmDialog.confirmLabel}
-                </button>
-              </div>
+                      if (activeConfirmDialog.type === 'cancelSubscription') {
+                        void confirmCancelSubscription();
+                      }
+                    }}
+                    disabled={cancelling || saving}
+                  >
+                    {cancelling ? 'Working…' : activeConfirmDialog.confirmLabel}
+                  </button>
+                </div>
+              </section>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       <style jsx global>{`
-        /* -------------------------------------------------------------- */
-        /* FROMONE SUBSCRIPTION — CLEAN APPROVED STANDARD                  */
-        /* Desktop: main-content 38px + shell margin-top 28px              */
-        /* Mobile: Posts/Help width + gap                                  */
-        /* -------------------------------------------------------------- */
-        body:has(.fromone-subscription-page) {
-          background: #f5f7fb !important;
-          overflow-x: hidden !important;
+        body:has(.subscriptionLitePage),
+        body:has(.subscriptionLitePage) .app-shell,
+        body:has(.subscriptionLitePage) .main-content,
+        body:has(.subscriptionLitePage) .main-content.fromone-mobile-bottom-safe,
+        body:has(.subscriptionLitePage) .fromone-universal-mobile-page-frame {
+          background: #ffffff !important;
+          background-image: none !important;
         }
 
-        body:has(.fromone-subscription-page)::before {
+        body:has(.subscriptionLitePage)::before {
           display: none !important;
           content: none !important;
         }
 
-        body:has(.fromone-subscription-page) .app-shell,
-        body:has(.fromone-subscription-page) .main-content {
-          background: #f5f7fb !important;
-        }
-
-        body:has(.fromone-subscription-page) .main-content {
+        body:has(.subscriptionLitePage) .main-content {
           width: 100% !important;
           max-width: none !important;
           margin: 0 !important;
-          padding-top: 38px !important;
-          padding-left: 0 !important;
-          padding-right: 0 !important;
+          padding: 34px clamp(24px, 4vw, 54px) 100px !important;
           box-sizing: border-box !important;
           overflow-x: hidden !important;
         }
 
-        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-          width: 1040px !important;
-          max-width: calc(100% - 32px) !important;
-          min-width: 0 !important;
-          min-height: 620px !important;
-          margin: 28px auto 64px !important;
-          padding: clamp(30px, 4vw, 48px) !important;
-          display: grid !important;
-          gap: 18px !important;
-          box-sizing: border-box !important;
-          overflow: hidden !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 32px !important;
-          background: #ffffff !important;
-          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
-          color: #071b49 !important;
-          font-family:
-            var(--font-main),
-            "Plus Jakarta Sans",
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
-          backdrop-filter: none !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-header {
-          width: 100% !important;
-          max-width: 760px !important;
-          margin: 0 0 8px !important;
-          padding: 0 !important;
-          text-align: left !important;
-        }
-
-        .fromone-subscription-page .page-eyebrow {
-          color: #f72585 !important;
-          font-size: 0.78rem !important;
-          line-height: 1 !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.13em !important;
-          text-transform: uppercase !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-header h1 {
-          max-width: 760px !important;
-          margin: 12px 0 14px !important;
-          color: #071b49 !important;
-          font-size: clamp(3rem, 5.2vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.055em !important;
-          font-weight: 800 !important;
-          text-align: left !important;
-          overflow: visible !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-header p,
-        .fromone-subscription-page .subscription-plan-option p,
-        .fromone-subscription-page .subscription-billing-card > p {
-          margin: 0 !important;
-          color: #52617a !important;
-          font-size: 1.02rem !important;
-          line-height: 1.5 !important;
-          font-weight: 600 !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-card,
-        .fromone-subscription-page .subscription-current-strip,
-        .fromone-subscription-page .subscription-simple-alert,
-        .fromone-subscription-page .subscription-simple-notice {
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 24px !important;
-          background: #ffffff !important;
-          box-shadow: none !important;
-          box-sizing: border-box !important;
-        }
-
-        .fromone-subscription-page .subscription-current-strip {
-          width: 100% !important;
-          margin: 0 !important;
-          padding: 18px !important;
-          display: grid !important;
-          gap: 14px !important;
-          text-align: left !important;
-          justify-items: start !important;
-          background: #fff8fc !important;
-          border-color: #ffd2e5 !important;
-        }
-
-        .fromone-subscription-page .subscription-current-strip span,
-        .fromone-subscription-page .subscription-plan-head span,
-        .fromone-subscription-page .subscription-billing-title span,
-        .fromone-subscription-page .subscription-billing-grid span {
-          color: #f72585 !important;
-          font-size: 0.72rem !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.13em !important;
-          text-transform: uppercase !important;
-        }
-
-        .fromone-subscription-page .subscription-current-strip strong {
-          display: block !important;
-          margin-top: 7px !important;
-          color: #071b49 !important;
-          font-size: clamp(1.6rem, 3.4vw, 2.15rem) !important;
-          line-height: 1 !important;
-          font-weight: 800 !important;
-          letter-spacing: -0.045em !important;
-        }
-
-        .fromone-subscription-page .subscription-current-meta {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          justify-content: flex-start !important;
-          gap: 8px !important;
-        }
-
-        .fromone-subscription-page .subscription-current-meta span {
-          min-height: 32px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          padding: 0 12px !important;
-          border: 1px solid #dfe7f2 !important;
-          border-radius: 999px !important;
-          background: #ffffff !important;
-          color: #52617a !important;
-          font-size: 0.82rem !important;
-          font-weight: 700 !important;
-          letter-spacing: 0 !important;
-          text-transform: none !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-grid {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 16px !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-option {
-          min-height: 0 !important;
-          padding: 20px !important;
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 14px !important;
-          background: #ffffff !important;
-          border-color: #dfe7f2 !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-option.is-selected {
-          border-color: #f72585 !important;
-          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.08) !important;
-          transform: none !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-option.is-disabled {
-          opacity: 0.58 !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-head {
-          display: flex !important;
-          justify-content: space-between !important;
-          gap: 12px !important;
-          align-items: center !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-head em {
-          min-height: 28px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          padding: 0 10px !important;
-          border-radius: 999px !important;
-          color: #ffffff !important;
-          background: #f72585 !important;
-          font-size: 0.75rem !important;
-          font-style: normal !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-price {
-          display: grid !important;
-          gap: 5px !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-price strong {
-          display: block !important;
-          color: #071b49 !important;
-          font-size: clamp(2.1rem, 4vw, 3rem) !important;
-          line-height: 0.9 !important;
-          font-weight: 800 !important;
-          letter-spacing: -0.075em !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-price span {
-          display: block !important;
-          color: #52617a !important;
-          font-size: 1rem !important;
-          line-height: 1.1 !important;
-          font-weight: 600 !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-option ul {
-          display: grid !important;
-          gap: 9px !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          list-style: none !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-option li {
-          position: relative !important;
-          padding-left: 22px !important;
-          color: #52617a !important;
-          line-height: 1.45 !important;
-          font-weight: 600 !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-option li::before {
-          content: "✓" !important;
-          position: absolute !important;
-          left: 0 !important;
-          color: #f72585 !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-subscription-page .subscription-plan-option button {
-          width: 100% !important;
-          margin-top: auto !important;
-        }
-
-        .fromone-subscription-page .subscription-billing-card {
-          padding: clamp(18px, 3vw, 26px) !important;
-          display: grid !important;
-          gap: 14px !important;
-          background: #ffffff !important;
-          border-color: #dfe7f2 !important;
-        }
-
-        .fromone-subscription-page .subscription-billing-title {
-          display: flex !important;
-          justify-content: space-between !important;
-          gap: 16px !important;
-          align-items: start !important;
-        }
-
-        .fromone-subscription-page .subscription-billing-title h2 {
-          margin: 7px 0 0 !important;
-          color: #071b49 !important;
-          font-size: clamp(1.55rem, 3vw, 2.05rem) !important;
-          line-height: 1 !important;
-          letter-spacing: -0.055em !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-subscription-page .subscription-billing-title > strong {
-          color: #f72585 !important;
-          font-size: clamp(1.25rem, 2.8vw, 1.7rem) !important;
-          line-height: 1 !important;
-          white-space: nowrap !important;
-          letter-spacing: -0.045em !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-subscription-page .subscription-billing-grid {
-          display: grid !important;
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          gap: 10px !important;
-        }
-
-        .fromone-subscription-page .subscription-billing-grid div {
-          padding: 14px !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 18px !important;
-          background: #fff8fc !important;
-        }
-
-        .fromone-subscription-page .subscription-billing-grid strong {
-          display: block !important;
-          margin-top: 7px !important;
-          color: #071b49 !important;
-          font-size: 0.95rem !important;
-          line-height: 1.25 !important;
-          font-weight: 700 !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-success,
-        .fromone-subscription-page .subscription-simple-warning,
-        .fromone-subscription-page .subscription-simple-muted {
-          padding: 13px 14px !important;
-          border-radius: 18px !important;
-          line-height: 1.45 !important;
-          font-weight: 600 !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-success {
-          color: #071b49 !important;
-          background: #f1fff8 !important;
-          border: 1px solid rgba(61, 220, 151, 0.28) !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-warning,
-        .fromone-subscription-page .subscription-simple-alert {
-          color: #9f1239 !important;
-          background: #fff1f2 !important;
-          border-color: #fecdd3 !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-alert,
-        .fromone-subscription-page .subscription-simple-notice {
-          padding: 16px 18px !important;
-          display: grid !important;
-          gap: 4px !important;
-          text-align: center !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-alert strong,
-        .fromone-subscription-page .subscription-simple-notice strong {
-          color: #071b49 !important;
-          font-size: 1.08rem !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-alert span,
-        .fromone-subscription-page .subscription-simple-notice span {
-          color: #52617a !important;
-          font-weight: 500 !important;
-        }
-
-        .fromone-subscription-page .subscription-simple-muted {
-          color: #52617a !important;
-          background: #f5f7fb !important;
-          border: 1px solid #dfe7f2 !important;
-        }
-
-        .fromone-subscription-page .subscription-action-row {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 10px !important;
-        }
-
-        .fromone-subscription-page .subscription-action-row button,
-        .fromone-subscription-page .subscription-plan-option button {
-          min-height: 54px !important;
-          padding: 0 22px !important;
-          border-radius: 999px !important;
-          font: inherit !important;
-          font-weight: 800 !important;
-          cursor: pointer !important;
-          transition:
-            transform 160ms ease,
-            box-shadow 160ms ease,
-            border-color 160ms ease !important;
-        }
-
-        .fromone-subscription-page .subscription-action-row button:not(.secondary-button),
-        .fromone-subscription-page .subscription-plan-option button:not(.secondary-button) {
-          border: 1px solid #f72585 !important;
-          background: #f72585 !important;
-          color: #ffffff !important;
-          box-shadow: 0 16px 34px rgba(247, 37, 133, 0.22) !important;
-        }
-
-        .fromone-subscription-page .subscription-action-row .secondary-button,
-        .fromone-subscription-page .subscription-plan-option .secondary-button {
-          border: 1px solid #ffd2e5 !important;
-          background: #ffffff !important;
-          color: #071b49 !important;
-        }
-
-        .fromone-subscription-page .danger-button {
-          color: #9f1239 !important;
-          border-color: #fecdd3 !important;
-          background: #fff1f2 !important;
-          box-shadow: none !important;
-        }
-
-        .subscription-dialog-backdrop {
-          position: fixed !important;
-          inset: 0 !important;
-          z-index: 10000 !important;
-          display: grid !important;
-          place-items: center !important;
-          padding: 18px !important;
-          background: rgba(7, 27, 73, 0.42) !important;
-          backdrop-filter: blur(10px) !important;
-        }
-
-        .subscription-dialog-card {
-          width: min(520px, 100%) !important;
-          padding: 26px !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 24px !important;
-          background: #ffffff !important;
-          box-shadow: 0 28px 80px rgba(7, 27, 73, 0.22) !important;
-          font-family:
-            var(--font-main),
-            "Plus Jakarta Sans",
-            ui-sans-serif,
-            system-ui,
-            sans-serif !important;
-        }
-
-        .subscription-dialog-card h2 {
-          margin: 6px 0 10px !important;
-          color: #071b49 !important;
-          font-size: clamp(1.55rem, 3vw, 2rem) !important;
-          line-height: 1 !important;
-          letter-spacing: -0.045em !important;
-          font-weight: 800 !important;
-        }
-
-        .subscription-dialog-card p {
-          margin: 0 0 20px !important;
-          color: #52617a !important;
-          line-height: 1.55 !important;
-          font-weight: 500 !important;
-        }
-
-        .subscription-dialog-actions {
-          justify-content: flex-end !important;
-        }
-
-        @media (max-width: 820px) {
-          body:has(.fromone-subscription-page) .main-content {
-            padding-top: 0 !important;
-          }
-
-          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-            width: calc(100% - 32px) !important;
-            max-width: 500px !important;
-            min-height: auto !important;
-            margin: 24px auto 112px !important;
-            padding: 28px 26px 26px !important;
-            border-radius: 26px !important;
-            gap: 16px !important;
-          }
-
-          .fromone-subscription-page .subscription-simple-header {
-            margin-bottom: 18px !important;
-          }
-
-          .fromone-subscription-page .subscription-simple-header h1 {
-            margin: 14px 0 18px !important;
-            font-size: clamp(2.75rem, 11vw, 3.6rem) !important;
-            line-height: 0.94 !important;
-            letter-spacing: -0.058em !important;
-          }
-
-          .fromone-subscription-page .subscription-simple-header p {
-            font-size: 1rem !important;
-            line-height: 1.45 !important;
-          }
-
-          .fromone-subscription-page .subscription-plan-grid,
-          .fromone-subscription-page .subscription-billing-grid {
-            grid-template-columns: 1fr !important;
-          }
-
-          .fromone-subscription-page .subscription-billing-title {
-            display: grid !important;
-          }
-
-          .fromone-subscription-page .subscription-action-row {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-
-          .fromone-subscription-page .subscription-action-row button {
-            width: 100% !important;
-          }
-        }
-
-        @media (max-width: 420px) {
-          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-            width: calc(100% - 18px) !important;
-            padding: 26px 22px 24px !important;
-          }
-        }
-
-        /* -------------------------------------------------------------- */
-        /* SUBSCRIPTION MOBILE WIDTH TWEAK — desktop unchanged             */
-        /* -------------------------------------------------------------- */
-        @media (max-width: 820px) {
-          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-            width: calc(100% - 48px) !important;
-            max-width: 500px !important;
-            margin: 24px auto 112px !important;
-          }
-        }
-
-        @media (max-width: 420px) {
-          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-            width: calc(100% - 34px) !important;
-          }
-        }
-
-
-        /* -------------------------------------------------------------- */
-        /* SUBSCRIPTION MOBILE WIDTH FINAL — match Posts card width        */
-        /* Desktop unchanged                                              */
-        /* -------------------------------------------------------------- */
-        @media (max-width: 820px) {
-          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-            width: calc(100% - 72px) !important;
-            max-width: 468px !important;
-            margin: 24px auto 112px !important;
-          }
-        }
-
-        @media (max-width: 420px) {
-          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-            width: calc(100% - 48px) !important;
-            max-width: 468px !important;
-          }
-        }
-
-
-        .fromone-subscription-page .subscription-smiles-focus-card {
-          padding: clamp(18px, 3vw, 26px) !important;
-          display: grid !important;
-          gap: 16px !important;
-          background: #fff8fc !important;
-          border-color: #ffd2e5 !important;
-        }
-
-        .fromone-subscription-page .subscription-smiles-focus-card span {
-          color: #f72585 !important;
-          font-size: 0.72rem !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.13em !important;
-          text-transform: uppercase !important;
-        }
-
-        .fromone-subscription-page .subscription-smiles-focus-card h2 {
-          margin: 8px 0 8px !important;
-          color: #071b49 !important;
-          font-size: clamp(1.65rem, 3vw, 2.15rem) !important;
-          line-height: 1 !important;
-          letter-spacing: -0.055em !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-subscription-page .subscription-smiles-focus-card p {
-          margin: 0 !important;
-          color: #52617a !important;
-          font-size: 1.02rem !important;
-          line-height: 1.5 !important;
-          font-weight: 600 !important;
-        }
-
-        .fromone-subscription-page .subscription-smiles-focus-grid {
-          display: grid !important;
-          grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-          gap: 10px !important;
-        }
-
-        .fromone-subscription-page .subscription-smiles-focus-grid strong {
-          min-height: 44px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 10px 12px !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 999px !important;
-          background: #ffffff !important;
-          color: #071b49 !important;
-          font-size: 0.86rem !important;
-          line-height: 1.15 !important;
-          font-weight: 800 !important;
-          text-align: center !important;
-        }
-
-        @media (max-width: 820px) {
-          .fromone-subscription-page .subscription-smiles-focus-grid {
-            grid-template-columns: 1fr 1fr !important;
-          }
-
-          .fromone-subscription-page .subscription-smiles-focus-card {
-            padding: 20px !important;
-          }
-        }
-
-
-        /* FINAL SHARED MOBILE WIDTH — matches Settings and Smilez */
-        @media (max-width: 820px) {
-          body:has(.fromone-subscription-page) .main-content {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            margin: 0 !important;
-            padding-left: 10px !important;
-            padding-right: 10px !important;
-            box-sizing: border-box !important;
-            overflow-x: hidden !important;
-          }
-
-          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            margin: 24px 0 112px !important;
-            box-sizing: border-box !important;
-          }
-        }
-
-
-        /*
-         * OUTER MOBILE LAYOUT IS OWNED BY AppShell.
-         * Billing keeps its internal card styling only.
-         */
-        @media (max-width: 900px) {
-          body:has(.fromone-subscription-page) .main-content {
-            padding-top: 0 !important;
-            padding-left: 10px !important;
-            padding-right: 10px !important;
-          }
-
-          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            margin: 0 0 112px !important;
-            box-sizing: border-box !important;
-          }
-        }
-
-
-        /* FINAL SHARED FROMONE PAGE SYSTEM */
-        body:has(.fromone-subscription-page) {
-          background: var(--posts-bg) !important;
-        }
-
-        body:has(.fromone-subscription-page) .app-shell,
-        body:has(.fromone-subscription-page) .main-content {
-          background: var(--posts-bg) !important;
-        }
-
-        body:has(.fromone-subscription-page) .main-content {
-          width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          margin: 0 !important;
-          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
-          overflow-x: hidden !important;
-        }
-
-        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          min-height: 0 !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          display: grid !important;
-          gap: 22px !important;
-          overflow: visible !important;
-          border: 0 !important;
-          border-radius: 0 !important;
+        .subscriptionLitePage {
+          width: 100%;
+          margin: 0;
+          color: #071b49;
           background: transparent !important;
-          background-image: none !important;
+          font-family: var(--font-main), "Plus Jakarta Sans", ui-sans-serif, system-ui,
+            -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .subscriptionLiteShell {
+          width: 100%;
+          max-width: 720px;
+          margin: 0 auto;
+          display: grid;
+          gap: 12px;
+        }
+
+        .subscriptionLiteHero {
+          margin-bottom: 3px;
+        }
+
+        .subscriptionLiteHero > span,
+        .subscriptionLiteStarterHead > div:first-child > span,
+        .subscriptionLiteDialog > span {
+          display: block;
+          margin-bottom: 7px;
+          color: #f72585;
+          font-size: 0.7rem;
+          font-weight: 900;
+          letter-spacing: 0.11em;
+          text-transform: uppercase;
+        }
+
+        .subscriptionLiteHero h1 {
+          margin: 0 0 8px;
+          color: #071b49;
+          font-size: clamp(2.35rem, 5vw, 3.7rem);
+          line-height: 0.98;
+          letter-spacing: -0.06em;
+          font-weight: 900;
+        }
+
+        .subscriptionLiteHero p {
+          margin: 0;
+          color: #66728a;
+          font-size: 0.94rem;
+          line-height: 1.45;
+          font-weight: 600;
+        }
+
+        .subscriptionLiteStatus,
+        .subscriptionLiteStarter,
+        .subscriptionLiteDetails,
+        .subscriptionLiteNotice {
+          border: 1px solid #dfe5f1;
+          border-radius: 18px;
+          background: #ffffff;
+          box-shadow: none;
+        }
+
+        .subscriptionLiteStatus {
+          min-height: 74px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 14px 16px;
+        }
+
+        .subscriptionLiteStatus > div {
+          display: grid;
+          gap: 2px;
+        }
+
+        .subscriptionLiteStatus > div > span {
+          color: #718096;
+          font-size: 0.7rem;
+          font-weight: 800;
+        }
+
+        .subscriptionLiteStatus > div > strong {
+          color: #071b49;
+          font-size: 1rem;
+          font-weight: 900;
+        }
+
+        .subscriptionLiteStatus small {
+          color: #718096;
+          font-size: 0.72rem;
+          font-weight: 600;
+        }
+
+        .subscriptionLiteBadge {
+          min-height: 30px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 10px;
+          border-radius: 999px;
+          background: #f7f9fc;
+          color: #52617a;
+          font-size: 0.68rem;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .subscriptionLiteBadge.isActive {
+          background: #e8f8ef;
+          color: #147a4d;
+        }
+
+        .subscriptionLiteBadge.isPending {
+          background: #fff3d7;
+          color: #9a5a00;
+        }
+
+        .subscriptionLiteBadge.isWarning {
+          background: #fff1f2;
+          color: #9f1239;
+        }
+
+        .subscriptionLiteNotice {
+          display: grid;
+          gap: 2px;
+          padding: 12px 14px;
+        }
+
+        .subscriptionLiteNotice strong {
+          font-size: 0.84rem;
+          font-weight: 900;
+        }
+
+        .subscriptionLiteNotice span {
+          color: #718096;
+          font-size: 0.72rem;
+          font-weight: 600;
+        }
+
+        .subscriptionLiteStarter {
+          padding: 16px;
+        }
+
+        .subscriptionLiteStarter.isActivePlan {
+          border-color: #cfeadb;
+          background: #fbfffd;
+        }
+
+        .subscriptionLiteStarterHead {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+        }
+
+        .subscriptionLiteStarterHead h2 {
+          margin: 0;
+          color: #071b49;
+          font-size: 1.18rem;
+          line-height: 1.12;
+          letter-spacing: -0.03em;
+          font-weight: 900;
+        }
+
+        .subscriptionLitePrice {
+          display: flex;
+          align-items: baseline;
+          gap: 4px;
+          white-space: nowrap;
+        }
+
+        .subscriptionLitePrice strong {
+          color: #071b49;
+          font-size: 1.5rem;
+          line-height: 1;
+          font-weight: 900;
+          letter-spacing: -0.04em;
+        }
+
+        .subscriptionLitePrice span {
+          color: #718096;
+          font-size: 0.72rem;
+          font-weight: 700;
+        }
+
+        .subscriptionLiteFeatures {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 7px;
+          margin: 14px 0;
+        }
+
+        .subscriptionLiteFeatures span {
+          min-height: 38px;
+          display: flex;
+          align-items: center;
+          padding: 0 10px;
+          border-radius: 10px;
+          background: #f7f9fc;
+          color: #52617a;
+          font-size: 0.74rem;
+          font-weight: 700;
+        }
+
+        .subscriptionLiteFeatures span::before {
+          content: "✓";
+          margin-right: 7px;
+          color: #f72585;
+          font-weight: 900;
+        }
+
+        .subscriptionLiteActiveCopy {
+          margin: 12px 0 0;
+          color: #52617a;
+          font-size: 0.8rem;
+          font-weight: 600;
+        }
+
+        .subscriptionLiteMainButton,
+        .subscriptionLiteActions button,
+        .subscriptionLiteCancel,
+        .subscriptionLiteDialog button {
+          min-height: 42px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 15px;
+          border-radius: 999px;
+          font: inherit;
+          font-size: 0.78rem;
+          font-weight: 900;
+          cursor: pointer;
           box-shadow: none !important;
-          backdrop-filter: none !important;
         }
 
-        .fromone-subscription-page .subscription-simple-header {
-          width: 100% !important;
-          max-width: 790px !important;
-          margin: 0 0 6px !important;
-          padding: 0 !important;
-          border: 0 !important;
-          background: transparent !important;
-          box-shadow: none !important;
+        .subscriptionLiteMainButton,
+        .subscriptionLiteActions .primary {
+          width: 100%;
+          border: 1px solid #f72585;
+          background: #f72585;
+          color: #ffffff;
         }
 
-        .fromone-subscription-page .subscription-simple-header h1 {
-          max-width: 760px !important;
-          margin: 0 0 12px !important;
-          color: var(--posts-navy) !important;
-          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.06em !important;
-          font-weight: 800 !important;
+        .subscriptionLiteActions {
+          display: grid;
+          gap: 7px;
+          margin-top: 14px;
         }
 
-        .fromone-subscription-page .subscription-simple-header p {
-          max-width: 720px !important;
-          margin: 0 !important;
-          color: var(--posts-muted) !important;
-          font-size: 1.03rem !important;
-          line-height: 1.56 !important;
-          font-weight: 500 !important;
+        .subscriptionLiteActions .secondary,
+        .subscriptionLiteCancel,
+        .subscriptionLiteDialog .secondary {
+          border: 1px solid #dfe5f1;
+          background: #ffffff;
+          color: #071b49;
         }
 
-        .fromone-subscription-page .page-eyebrow {
-          display: block !important;
-          margin: 0 0 10px !important;
-          color: var(--posts-pink) !important;
-          font-size: 0.74rem !important;
-          font-weight: 900 !important;
-          letter-spacing: 0.14em !important;
-          text-transform: uppercase !important;
+        .subscriptionLiteActions .danger,
+        .subscriptionLiteCancel,
+        .subscriptionLiteDialog .danger {
+          border-color: #fecdd3;
+          color: #9f1239;
+          background: #fffafa;
         }
 
-        .fromone-subscription-page .subscription-current-strip,
-        .fromone-subscription-page .subscription-simple-card,
-        .fromone-subscription-page .subscription-simple-alert,
-        .fromone-subscription-page .subscription-simple-notice {
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 26px !important;
-          background: rgba(255, 255, 255, 0.84) !important;
-          box-shadow: var(--posts-shadow) !important;
-          backdrop-filter: blur(10px) !important;
+        .subscriptionLiteCancel {
+          margin-top: 14px;
         }
 
-        .fromone-subscription-page .subscription-current-strip {
-          padding: 20px !important;
-          background: rgba(255, 255, 255, 0.9) !important;
-          border-color: var(--posts-border) !important;
+        button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
-        .fromone-subscription-page .subscription-smiles-focus-card,
-        .fromone-subscription-page .subscription-billing-card {
-          padding: 22px !important;
-          background: rgba(255, 255, 255, 0.84) !important;
-          border-color: var(--posts-border) !important;
+        .subscriptionLiteDetails {
+          overflow: hidden;
         }
 
-        .fromone-subscription-page .subscription-plan-grid {
-          gap: 16px !important;
+        .subscriptionLiteDetails summary {
+          min-height: 50px;
+          display: flex;
+          align-items: center;
+          padding: 0 14px;
+          color: #52617a;
+          font-size: 0.76rem;
+          font-weight: 900;
+          cursor: pointer;
+          list-style: none;
         }
 
-        .fromone-subscription-page .subscription-plan-option {
-          padding: 22px !important;
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 22px !important;
-          background: #fff !important;
-          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055) !important;
+        .subscriptionLiteDetails summary::-webkit-details-marker {
+          display: none;
         }
 
-        .fromone-subscription-page .subscription-plan-option.is-selected {
-          border-color: rgba(247, 37, 133, 0.28) !important;
-          box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.08), 0 14px 34px rgba(7, 27, 73, 0.07) !important;
+        .subscriptionLiteDetailRows {
+          display: grid;
+          padding: 0 14px 12px;
         }
 
-        .fromone-subscription-page .subscription-action-row button,
-        .fromone-subscription-page .subscription-plan-option button {
-          min-height: 46px !important;
-          padding: 0 17px !important;
-          border-radius: 15px !important;
-          font-size: 0.86rem !important;
-          font-weight: 900 !important;
+        .subscriptionLiteDetailRows > div {
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          border-top: 1px solid #edf1f7;
         }
 
-        .fromone-subscription-page .subscription-action-row button:not(.secondary-button),
-        .fromone-subscription-page .subscription-plan-option button:not(.secondary-button) {
-          border: 0 !important;
-          background: var(--posts-pink) !important;
-          color: #fff !important;
-          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21) !important;
+        .subscriptionLiteDetailRows span {
+          color: #718096;
+          font-size: 0.72rem;
+          font-weight: 700;
         }
 
-        .fromone-subscription-page .subscription-action-row .secondary-button,
-        .fromone-subscription-page .subscription-plan-option .secondary-button {
-          border: 1px solid var(--posts-border) !important;
-          background: #fff !important;
-          color: var(--posts-navy) !important;
-          box-shadow: none !important;
+        .subscriptionLiteDetailRows strong {
+          color: #071b49;
+          font-size: 0.76rem;
+          font-weight: 900;
+          text-align: right;
         }
 
-        .fromone-subscription-page .subscription-billing-grid div,
-        .fromone-subscription-page .subscription-smiles-focus-grid strong {
-          border: 1px solid var(--posts-border) !important;
-          background: #f8fafc !important;
+        .subscriptionLiteBackdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 10000;
+          display: grid;
+          place-items: center;
+          padding: 18px;
+          background: rgba(7, 27, 73, 0.38);
+        }
+
+        .subscriptionLiteDialog {
+          width: min(100%, 420px);
+          padding: 18px;
+          border-radius: 18px;
+          background: #ffffff;
+        }
+
+        .subscriptionLiteDialog h2 {
+          margin: 0;
+          color: #071b49;
+          font-size: 1.1rem;
+          line-height: 1.15;
+          font-weight: 900;
+        }
+
+        .subscriptionLiteDialog p {
+          margin: 8px 0 16px;
+          color: #66728a;
+          font-size: 0.8rem;
+          line-height: 1.45;
+          font-weight: 600;
+        }
+
+        .subscriptionLiteDialog > div {
+          display: flex;
+          justify-content: flex-end;
+          gap: 7px;
         }
 
         @media (max-width: 700px) {
-          body:has(.fromone-subscription-page) .main-content {
-            padding: 24px 16px 100px !important;
+          body:has(.subscriptionLitePage) .main-content,
+          body:has(.subscriptionLitePage) .main-content.fromone-mobile-bottom-safe {
+            padding: 18px 10px 100px !important;
           }
 
-          .fromone-subscription-page .subscription-simple-header h1 {
-            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          .subscriptionLiteShell {
+            max-width: 100%;
           }
 
-          .fromone-subscription-page .subscription-simple-header p {
-            font-size: 0.95rem !important;
+          .subscriptionLiteHero h1 {
+            font-size: 2.2rem;
           }
 
-          .fromone-subscription-page .subscription-plan-grid,
-          .fromone-subscription-page .subscription-billing-grid,
-          .fromone-subscription-page .subscription-smiles-focus-grid {
-            grid-template-columns: 1fr !important;
+          .subscriptionLiteStarterHead {
+            display: grid;
           }
 
-          .fromone-subscription-page .subscription-current-strip,
-          .fromone-subscription-page .subscription-simple-card,
-          .fromone-subscription-page .subscription-simple-alert,
-          .fromone-subscription-page .subscription-simple-notice {
-            border-radius: 21px !important;
+          .subscriptionLiteFeatures {
+            grid-template-columns: 1fr;
           }
-        }
 
-
-        /* Final subscription page background override */
-        html,
-        body:has(.fromone-subscription-page),
-        body:has(.fromone-subscription-page) .app-shell,
-        body:has(.fromone-subscription-page) .main-content,
-        body:has(.fromone-subscription-page) .main-content.fromone-mobile-bottom-safe,
-        body:has(.fromone-subscription-page) .fromone-universal-mobile-page-frame,
-        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-          background: #ffffff !important;
-          background-color: #ffffff !important;
-          background-image: none !important;
-        }
-
-        body:has(.fromone-subscription-page)::before,
-        body:has(.fromone-subscription-page)::after,
-        body:has(.fromone-subscription-page) .app-shell::before,
-        body:has(.fromone-subscription-page) .app-shell::after,
-        body:has(.fromone-subscription-page) .main-content::before,
-        body:has(.fromone-subscription-page) .main-content::after,
-        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page::before,
-        #fromone-standard-shell.fromone-subscription-page.subscription-simple-page::after {
-          display: none !important;
-          content: none !important;
-          background: none !important;
-          background-image: none !important;
-        }
-
-        @media (max-width: 820px) {
-          html,
-          body:has(.fromone-subscription-page),
-          body:has(.fromone-subscription-page) .app-shell,
-          body:has(.fromone-subscription-page) .main-content,
-          body:has(.fromone-subscription-page) .main-content.fromone-mobile-bottom-safe,
-          body:has(.fromone-subscription-page) .fromone-universal-mobile-page-frame,
-          #fromone-standard-shell.fromone-subscription-page.subscription-simple-page {
-            background: #ffffff !important;
-            background-color: #ffffff !important;
-            background-image: none !important;
+          .subscriptionLiteCancel {
+            width: 100%;
           }
         }
-
       `}</style>
     </>
   );

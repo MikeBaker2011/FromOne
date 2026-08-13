@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
+import SmilezBackButton from "@/app/components/SmilezBackButton";
 import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -264,201 +264,161 @@ export default function SmilesPhotosPage() {
   return (
     <main className="fromone-posts-page fromone-smiles-photos-page smilesPhotosPage">
       <section id="fromone-standard-shell" className="photosShell">
-        <SmilezSectionHeader
-          eyebrow="Customer photos"
-          title="Review customer photos."
-          description="Approve or reject photos customers have linked to your venue."
-          listingName={profile?.business_name}
-          listingStatus={
-            profile?.smiles_listing_venue_id
-              ? "Live on Smilez"
-              : "Waiting for listing setup"
-          }
-        />
+        <header className="photosSimpleHero">
+          <div>
+            <span className="photosEyebrow">Smilez</span>
+            <h1>Customer photos.</h1>
+            <p>Approve new photos and deal with reports.</p>
+          </div>
+          <SmilezBackButton />
+        </header>
 
-{loading ? (
-          <section className="simplePanel">
-            <h2>Loading customer photos...</h2>
+        {loading ? (
+          <section className="photosStatusCard">
+            <strong>Loading photos…</strong>
+            <span>Checking customer submissions.</span>
           </section>
         ) : null}
 
         {!loading && !profile?.smiles_listing_venue_id ? (
-          <section className="simplePanel">
-            <span className="panelEyebrow">Not live yet</span>
-            <h2>Your Smiles listing is not live yet</h2>
-            <p>Customer photos will appear here once your listing is live.</p>
+          <section className="photosStatusCard isWarning">
+            <div>
+              <strong>Your Smilez listing is not live yet</strong>
+              <span>Customer photos will appear here once your listing is live.</span>
+            </div>
+            <Link href="/settings">Check listing</Link>
           </section>
         ) : null}
 
         {!loading && profile?.smiles_listing_venue_id ? (
           <>
-            <section className="photoSummary" aria-label="Photo summary">
-              <article>
-                <span>Waiting</span>
-                <strong>{pendingPhotos.length}</strong>
-              </article>
-              <article>
-                <span>Approved</span>
-                <strong>{approvedPhotos.length}</strong>
-              </article>
-              <article>
-                <span>Rejected</span>
-                <strong>{rejectedPhotos.length}</strong>
-              </article>
-              <article className={pendingReports.length > 0 ? "hasReports" : ""}>
-                <span>Reports</span>
-                <strong>{pendingReports.length}</strong>
-              </article>
+            <section className="photosToolbar">
+              <div className="photosCounts">
+                <span><strong>{pendingPhotos.length}</strong> waiting</span>
+                <span><strong>{pendingReports.length}</strong> reports</span>
+              </div>
+              <button type="button" onClick={() => setShowAll((current) => !current)}>
+                {showAll ? "Show waiting only" : `View all ${photos.length}`}
+              </button>
             </section>
 
             {pendingReports.length > 0 ? (
-              <section className="simplePanel reportsPanel">
-                <div className="sectionTop">
+              <details className="photosReports" open>
+                <summary>
                   <div>
-                    <span>Customer reports</span>
-                    <h2>Reported photos needing review</h2>
+                    <strong>Reported photos</strong>
+                    <span>{pendingReports.length} need review</span>
                   </div>
-                </div>
+                  <b>Review</b>
+                </summary>
 
-                <div className="reportGrid">
+                <div className="reportList">
                   {pendingReports.map((report) => {
                     const photo = photos.find((item) => item.id === report.photo_id);
-                    const title =
-                      String(photo?.title || "").trim() || "Reported customer photo";
+                    const title = String(photo?.title || "").trim() || "Reported customer photo";
 
                     return (
-                      <article className="reportCard" key={report.id}>
-                        <div className="reportImage">
+                      <article className="reportRow" key={report.id}>
+                        <div className="reportThumb">
                           {photo?.image_url ? (
                             <img
                               src={photo.image_url}
                               alt={String(photo.image_alt || "").trim() || title}
                             />
                           ) : (
-                            <div className="photoFallback">Photo preview unavailable</div>
+                            <div className="photoFallback">No preview</div>
                           )}
                         </div>
 
-                        <div className="reportBody">
-                          <span className="reportFlag">Report received</span>
-                          <h3>{title}</h3>
-                          <strong>{getReportReasonLabel(report.reason)}</strong>
+                        <div className="reportCopy">
+                          <strong>{title}</strong>
+                          <span>{getReportReasonLabel(report.reason)}</span>
                           {report.details ? <p>{report.details}</p> : null}
-                          <small>{formatSubmittedAt(report.created_at)}</small>
+                        </div>
 
-                          <div className="reportActions">
-                            <button
-                              type="button"
-                              className="dismissReportButton"
-                              disabled={busyId === report.id}
-                              onClick={() =>
-                                reviewReport(report.id, "dismiss_customer_photo_report")
-                              }
-                            >
-                              {busyId === report.id ? "Saving..." : "Dismiss report"}
-                            </button>
-                            <button
-                              type="button"
-                              className="removeReportedPhotoButton"
-                              disabled={busyId === report.id}
-                              onClick={() =>
-                                reviewReport(report.id, "remove_reported_customer_photo")
-                              }
-                            >
-                              {busyId === report.id
-                                ? "Saving..."
-                                : "Remove photo from public view"}
-                            </button>
-                          </div>
+                        <div className="reportActions">
+                          <button
+                            type="button"
+                            className="dismissReportButton"
+                            disabled={busyId === report.id}
+                            onClick={() =>
+                              reviewReport(report.id, "dismiss_customer_photo_report")
+                            }
+                          >
+                            {busyId === report.id ? "Saving…" : "Dismiss"}
+                          </button>
+                          <button
+                            type="button"
+                            className="removeReportedPhotoButton"
+                            disabled={busyId === report.id}
+                            onClick={() =>
+                              reviewReport(report.id, "remove_reported_customer_photo")
+                            }
+                          >
+                            {busyId === report.id ? "Saving…" : "Remove photo"}
+                          </button>
                         </div>
                       </article>
                     );
                   })}
                 </div>
-              </section>
+              </details>
             ) : null}
 
-            <section className="simplePanel priority">
-              <div className="sectionTop">
+            <section className="photosMainSection">
+              <div className="photosSectionHead">
                 <div>
-                  <span>{showAll ? "All customer photos" : "Do this first"}</span>
-                  <h2>
-                    {showAll ? "All customer photos" : "Photos needing a decision"}
-                  </h2>
+                  <h2>{showAll ? "All customer photos" : "Photos to review"}</h2>
+                  <p>
+                    {showAll
+                      ? `${approvedPhotos.length} approved · ${rejectedPhotos.length} rejected`
+                      : pendingPhotos.length > 0
+                        ? "Approve or reject each new photo."
+                        : "Nothing needs attention."}
+                  </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowAll((current) => !current)}
-                >
-                  {showAll ? "Show waiting only" : "View all photos"}
-                </button>
               </div>
 
               {photosToShow.length === 0 ? (
-                <div className="emptyState">
-                  <h3>
+                <div className="photosEmpty">
+                  <strong>{showAll ? "No customer photos yet" : "You’re all caught up"}</strong>
+                  <span>
                     {showAll
-                      ? "No customer photos yet"
-                      : "No photos need a decision"}
-                  </h3>
-                  <p>
-                    {showAll
-                      ? "Photos linked to your venue will appear here."
-                      : "New pending customer photos will appear here."}
-                  </p>
+                      ? "Customer photos linked to your venue will appear here."
+                      : "New photos will appear here when they need a decision."}
+                  </span>
                 </div>
               ) : (
-                <div className="photoGrid">
+                <div className="photoList">
                   {photosToShow.map((photo) => {
-                    const title =
-                      String(photo.title || "").trim() || "Customer photo";
-                    const caption =
-                      String(photo.caption || "").trim() ||
-                      "No caption was supplied.";
+                    const title = String(photo.title || "").trim() || "Customer photo";
+                    const caption = String(photo.caption || "").trim();
 
                     return (
-                      <article className="photoCard" key={photo.id}>
-                        <div className="photoImage">
+                      <article className="photoRow" key={photo.id}>
+                        <div className="photoThumb">
                           {photo.image_url ? (
                             <img
                               src={photo.image_url}
-                              alt={
-                                String(photo.image_alt || "").trim() ||
-                                title
-                              }
+                              alt={String(photo.image_alt || "").trim() || title}
                             />
                           ) : (
-                            <div className="photoFallback">
-                              Photo preview unavailable
-                            </div>
+                            <div className="photoFallback">No preview</div>
                           )}
-
-                          <span className={`statusBadge is-${photo.status || "pending"}`}>
-                            {getStatusLabel(photo.status)}
-                          </span>
                         </div>
 
-                        <div className="photoBody">
-                          <div>
-                            <span className="photoVenue">
-                              {photo.linked_item_title ||
-                                profile.business_name ||
-                                "Your venue"}
+                        <div className="photoCopy">
+                          <div className="photoTopline">
+                            <span className={`statusBadge is-${photo.status || "pending"}`}>
+                              {getStatusLabel(photo.status)}
                             </span>
-                            <h3>{title}</h3>
-                            <p>{caption}</p>
+                            <small>{formatSubmittedAt(photo.created_at)}</small>
                           </div>
+                          <h3>{title}</h3>
+                          {caption ? <p>{caption}</p> : null}
 
-                          <div className="photoMeta">
-                            <span>{formatSubmittedAt(photo.created_at)}</span>
-                          </div>
-
-                          {photo.status === "rejected" &&
-                          photo.rejection_reason ? (
-                            <p className="rejectedReason">
-                              {photo.rejection_reason}
-                            </p>
+                          {photo.status === "rejected" && photo.rejection_reason ? (
+                            <p className="rejectedReason">{photo.rejection_reason}</p>
                           ) : null}
 
                           {photo.status === "pending" ? (
@@ -467,43 +427,35 @@ export default function SmilesPhotosPage() {
                                 type="button"
                                 className="approveButton"
                                 disabled={busyId === photo.id}
-                                onClick={() =>
-                                  moderatePhoto(photo.id, "approved")
-                                }
+                                onClick={() => moderatePhoto(photo.id, "approved")}
                               >
-                                {busyId === photo.id
-                                  ? "Saving..."
-                                  : "Approve photo"}
+                                {busyId === photo.id ? "Saving…" : "Approve"}
                               </button>
 
-                              <label htmlFor={`reject-${photo.id}`}>
-                                Reason if rejecting
-                              </label>
-                              <textarea
-                                id={`reject-${photo.id}`}
-                                value={rejectionReasons[photo.id] || ""}
-                                onChange={(event) =>
-                                  setRejectionReasons((current) => ({
-                                    ...current,
-                                    [photo.id]: event.target.value,
-                                  }))
-                                }
-                                placeholder="Example: The photo is too dark or does not clearly show this venue."
-                                maxLength={280}
-                              />
-
-                              <button
-                                type="button"
-                                className="rejectButton"
-                                disabled={busyId === photo.id}
-                                onClick={() =>
-                                  moderatePhoto(photo.id, "rejected")
-                                }
-                              >
-                                {busyId === photo.id
-                                  ? "Saving..."
-                                  : "Reject photo"}
-                              </button>
+                              <details className="rejectDetails">
+                                <summary>Reject</summary>
+                                <label htmlFor={`reject-${photo.id}`}>Reason</label>
+                                <textarea
+                                  id={`reject-${photo.id}`}
+                                  value={rejectionReasons[photo.id] || ""}
+                                  onChange={(event) =>
+                                    setRejectionReasons((current) => ({
+                                      ...current,
+                                      [photo.id]: event.target.value,
+                                    }))
+                                  }
+                                  placeholder="Add a short reason"
+                                  maxLength={280}
+                                />
+                                <button
+                                  type="button"
+                                  className="rejectButton"
+                                  disabled={busyId === photo.id}
+                                  onClick={() => moderatePhoto(photo.id, "rejected")}
+                                >
+                                  {busyId === photo.id ? "Saving…" : "Reject photo"}
+                                </button>
+                              </details>
                             </div>
                           ) : null}
                         </div>
@@ -518,21 +470,26 @@ export default function SmilesPhotosPage() {
       </section>
 
       <style jsx>{`
-        :global(body:has(.fromone-smiles-photos-page)) {
-          background: var(--posts-bg) !important;
-          overflow-x: hidden !important;
+        :global(body:has(.fromone-smiles-photos-page)),
+        :global(body:has(.fromone-smiles-photos-page) .app-shell),
+        :global(body:has(.fromone-smiles-photos-page) .main-content),
+        :global(body:has(.fromone-smiles-photos-page) .main-content.fromone-mobile-bottom-safe),
+        :global(body:has(.fromone-smiles-photos-page) .fromone-universal-mobile-page-frame) {
+          background: #ffffff !important;
+          background-image: none !important;
         }
 
-        :global(body:has(.fromone-smiles-photos-page) .app-shell),
-        :global(body:has(.fromone-smiles-photos-page) .main-content) {
-          background: var(--posts-bg) !important;
+        :global(body:has(.fromone-smiles-photos-page)::before) {
+          display: none !important;
+          content: none !important;
         }
 
         :global(body:has(.fromone-smiles-photos-page) .main-content) {
           width: 100% !important;
           max-width: none !important;
           margin: 0 !important;
-          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
+          padding: 34px clamp(24px, 4vw, 54px) 90px !important;
+          box-sizing: border-box !important;
           overflow-x: hidden !important;
         }
 
@@ -543,454 +500,612 @@ export default function SmilesPhotosPage() {
 
         .smilesPhotosPage {
           width: 100%;
-          min-width: 0;
-          color: var(--posts-navy);
+          margin: 0;
+          color: #071b49;
+          background: transparent !important;
         }
 
         .photosShell {
           width: 100%;
+          max-width: 980px;
+          margin: 0 auto;
           display: grid;
-          gap: 22px;
+          gap: 14px;
         }
 
-        .heroTop {
-          margin-bottom: 2px;
+        .photosSimpleHero {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
         }
 
-        .backLink {
-          min-height: 42px;
+        .photosEyebrow {
+          display: block;
+          margin-bottom: 8px;
+          color: #f72585;
+          font-size: 0.72rem;
+          line-height: 1;
+          font-weight: 900;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+        }
+
+        .photosSimpleHero h1 {
+          margin: 0 0 9px;
+          color: #071b49;
+          font-size: clamp(2.4rem, 5vw, 3.9rem);
+          line-height: 0.98;
+          letter-spacing: -0.06em;
+          font-weight: 900;
+        }
+
+        .photosSimpleHero p {
+          margin: 0;
+          color: #66728a;
+          font-size: 0.96rem;
+          line-height: 1.45;
+          font-weight: 600;
+        }
+
+        .photosStatusCard a {
+          min-height: 40px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          padding: 0 16px;
-          border: 1px solid rgba(7, 27, 73, 0.12);
+          padding: 0 14px;
+          border: 1px solid #dfe5f1;
           border-radius: 999px;
           background: #ffffff;
-          color: var(--posts-navy);
-          font-size: 0.84rem;
+          color: #071b49 !important;
+          font-size: 0.8rem;
           font-weight: 900;
           text-decoration: none;
+          box-shadow: none !important;
+          white-space: nowrap;
+        }
+
+
+        .photosStatusCard,
+        .photosToolbar,
+        .photosReports,
+        .photosMainSection {
+          border: 1px solid #dfe5f1;
+          border-radius: 18px;
+          background: #ffffff;
           box-shadow: none;
         }
 
-        .backLink:hover {
-          border-color: rgba(247, 37, 133, 0.28);
-          background: #fff7fb;
-          color: var(--posts-pink);
+        .photosStatusCard {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 16px;
         }
 
-        .heroGrid {
-          display: block;
+        .photosStatusCard > div {
+          display: grid;
+          gap: 3px;
         }
 
-        .heroGrid > div:first-child {
-          min-width: 0;
-          max-width: 900px;
-        }
-
-        .eyebrow,
-        .panelEyebrow,
-        .sectionTop span,
-        .photoSummary span,
-        .photoVenue {
-          color: var(--posts-pink);
-          font-size: 0.74rem;
+        .photosStatusCard strong {
+          color: #071b49;
+          font-size: 0.94rem;
           font-weight: 900;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
         }
 
-        h1 {
-          max-width: 900px;
-          margin: 0 0 14px;
-          color: var(--posts-navy);
-          font-size: clamp(2.7rem, 4.2vw, 4rem);
-          line-height: 0.98;
-          letter-spacing: -0.055em;
-          text-wrap: balance;
-        }
-
-        .intro,
-        .simplePanel p,
-        .photoCard p,
-        .emptyState p {
-          margin: 0;
-          color: var(--posts-muted);
+        .photosStatusCard span {
+          color: #66728a;
+          font-size: 0.8rem;
+          line-height: 1.4;
           font-weight: 600;
-          line-height: 1.55;
         }
 
-        .photoSummary article,
-        .simplePanel {
-          border: 1px solid var(--posts-border);
-          border-radius: 26px;
-          background: rgba(255, 255, 255, 0.9);
-          box-shadow: var(--posts-shadow);
+        .photosStatusCard.isWarning {
+          border-color: #ffd2e5;
+          background: #fffafd;
         }
 
-        .photoSummary {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 16px;
+        .photosToolbar {
+          min-height: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 8px 10px;
         }
 
-        .photoSummary article {
-          padding: 20px;
+        .photosCounts {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
         }
 
-        .photoSummary strong {
-          display: block;
-          margin-top: 8px;
-          color: var(--posts-navy);
-          font-size: 2.1rem;
+        .photosCounts span {
+          min-height: 38px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 0 11px;
+          border-radius: 999px;
+          background: #f7f9fc;
+          color: #66728a;
+          font-size: 0.75rem;
+          font-weight: 750;
         }
 
-        .simplePanel {
-          display: grid;
-          gap: 18px;
-          padding: 22px;
+        .photosCounts strong {
+          color: #071b49;
+          font-size: 0.88rem;
+          font-weight: 900;
         }
 
-        .sectionTop {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
-          gap: 16px;
-          align-items: start;
-        }
-
-        .sectionTop h2,
-        .simplePanel h2 {
-          margin: 8px 0 0;
-          color: var(--posts-navy);
-          font-size: clamp(1.75rem, 3.4vw, 2.25rem);
-          line-height: 1;
-          letter-spacing: -0.048em;
-        }
-
-        .sectionTop button,
-        .approveButton,
-        .rejectButton,
-        .dismissReportButton,
-        .removeReportedPhotoButton {
-          min-height: 46px;
-          padding: 0 17px;
-          border-radius: 15px;
+        .photosToolbar > button {
+          min-height: 40px;
+          padding: 0 13px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49;
           font: inherit;
-          font-size: 0.86rem;
+          font-size: 0.78rem;
           font-weight: 900;
           cursor: pointer;
+          box-shadow: none !important;
         }
 
-        .sectionTop button {
-          border: 1px solid var(--posts-border);
-          background: #fff;
-          color: var(--posts-navy);
-        }
-
-        .photoSummary article.hasReports {
-          border-color: rgba(247, 37, 133, 0.28);
-          background: #fff7fb;
-        }
-
-        .reportsPanel {
-          border-color: rgba(247, 37, 133, 0.24);
-        }
-
-        .reportGrid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 14px;
-        }
-
-        .reportCard {
-          min-width: 0;
+        .photosReports {
           overflow: hidden;
+        }
+
+        .photosReports summary {
+          min-height: 62px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 16px;
+          cursor: pointer;
+          list-style: none;
+        }
+
+        .photosReports summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .photosReports summary > div {
           display: grid;
-          grid-template-columns: minmax(150px, 0.75fr) minmax(0, 1.25fr);
-          border: 1px solid var(--posts-border);
-          border-radius: 22px;
-          background: #fff;
+          gap: 2px;
         }
 
-        .reportImage {
-          min-height: 230px;
-          background: #f8fafc;
+        .photosReports summary strong {
+          color: #071b49;
+          font-size: 0.94rem;
+          font-weight: 900;
         }
 
-        .reportImage img {
+        .photosReports summary span {
+          color: #a91257;
+          font-size: 0.76rem;
+          font-weight: 750;
+        }
+
+        .photosReports summary b {
+          color: #f72585;
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+
+        .reportList {
+          display: grid;
+          gap: 8px;
+          padding: 0 12px 12px;
+        }
+
+        .reportRow {
+          display: grid;
+          grid-template-columns: 92px minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 12px;
+          padding: 10px;
+          border: 1px solid #ffd2e5;
+          border-radius: 14px;
+          background: #fffafd;
+        }
+
+        .reportThumb,
+        .photoThumb {
+          overflow: hidden;
+          border-radius: 11px;
+          background: #f4f7fb;
+        }
+
+        .reportThumb {
+          width: 92px;
+          height: 76px;
+        }
+
+        .reportThumb img,
+        .photoThumb img {
           width: 100%;
           height: 100%;
-          min-height: 230px;
           display: block;
           object-fit: cover;
         }
 
-        .reportBody {
-          display: grid;
-          align-content: start;
-          gap: 10px;
-          padding: 18px;
+        .reportCopy {
+          min-width: 0;
         }
 
-        .reportFlag {
-          color: var(--posts-pink);
-          font-size: 0.74rem;
+        .reportCopy strong {
+          display: block;
+          color: #071b49;
+          font-size: 0.88rem;
           font-weight: 900;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
         }
 
-        .reportBody h3 {
-          margin: 0;
-          color: var(--posts-navy);
-          font-size: 1.35rem;
-          line-height: 1.05;
-          letter-spacing: -0.04em;
-        }
-
-        .reportBody strong {
-          color: var(--posts-navy);
-          font-size: 0.94rem;
-        }
-
-        .reportBody small {
-          color: var(--posts-muted);
+        .reportCopy span {
+          display: block;
+          margin-top: 3px;
+          color: #a91257;
+          font-size: 0.74rem;
           font-weight: 800;
+        }
+
+        .reportCopy p {
+          margin: 5px 0 0;
+          color: #66728a;
+          font-size: 0.75rem;
+          line-height: 1.35;
+          font-weight: 600;
         }
 
         .reportActions {
-          display: grid;
-          gap: 9px;
-          margin-top: 4px;
+          display: flex;
+          gap: 7px;
+        }
+
+        .reportActions button,
+        .approveButton,
+        .rejectButton {
+          min-height: 38px;
+          padding: 0 12px;
+          border-radius: 999px;
+          font: inherit;
+          font-size: 0.76rem;
+          font-weight: 900;
+          cursor: pointer;
+          box-shadow: none !important;
         }
 
         .dismissReportButton {
-          border: 1px solid var(--posts-border);
-          background: #fff;
-          color: var(--posts-navy);
+          border: 1px solid #dfe5f1;
+          background: #ffffff;
+          color: #071b49;
         }
 
         .removeReportedPhotoButton {
-          border: 0;
-          background: var(--posts-pink);
-          color: #fff;
+          border: 1px solid #f72585;
+          background: #f72585;
+          color: #ffffff;
         }
 
-        .photoGrid {
+        .photosMainSection {
+          padding: 16px;
+        }
+
+        .photosSectionHead {
+          margin-bottom: 12px;
+        }
+
+        .photosSectionHead h2 {
+          margin: 0 0 4px;
+          color: #071b49;
+          font-size: 1.18rem;
+          line-height: 1.1;
+          letter-spacing: -0.03em;
+          font-weight: 900;
+        }
+
+        .photosSectionHead p {
+          margin: 0;
+          color: #718096;
+          font-size: 0.8rem;
+          font-weight: 600;
+        }
+
+        .photoList {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 9px;
+        }
+
+        .photoRow {
+          display: grid;
+          grid-template-columns: 150px minmax(0, 1fr);
           gap: 14px;
+          padding: 12px;
+          border: 1px solid #e3e8f1;
+          border-radius: 15px;
+          background: #fbfcfe;
         }
 
-        .photoCard {
+        .photoThumb {
+          width: 150px;
+          height: 130px;
+        }
+
+        .photoCopy {
           min-width: 0;
-          overflow: hidden;
+        }
+
+        .photoTopline {
           display: flex;
-          flex-direction: column;
-          border: 1px solid var(--posts-border);
-          border-radius: 22px;
-          background: #fff;
-        }
-
-        .photoImage {
-          position: relative;
-          min-height: 190px;
-          background: #f8fafc;
-        }
-
-        .photoImage img {
-          width: 100%;
-          height: 210px;
-          display: block;
-          object-fit: cover;
-        }
-
-        .photoFallback {
-          min-height: 190px;
-          display: grid;
-          place-items: center;
-          padding: 20px;
-          color: var(--posts-muted);
-          font-weight: 800;
-          text-align: center;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
         }
 
         .statusBadge {
-          position: absolute;
-          top: 14px;
-          left: 14px;
-          min-height: 34px;
+          min-height: 28px;
           display: inline-flex;
           align-items: center;
-          padding: 0 12px;
-          border: 1px solid rgba(7, 27, 73, 0.12);
+          padding: 0 9px;
           border-radius: 999px;
-          background: #fff;
-          color: var(--posts-navy);
-          font-size: 0.76rem;
+          background: #fff4f9;
+          color: #a91257;
+          font-size: 0.68rem;
           font-weight: 900;
         }
 
         .statusBadge.is-approved {
-          border-color: rgba(4, 120, 87, 0.2);
+          background: #edf9f4;
           color: #047857;
         }
 
         .statusBadge.is-rejected {
-          border-color: rgba(181, 22, 98, 0.2);
+          background: #fff3f6;
           color: #b51662;
         }
 
-        .photoBody {
-          flex: 1;
-          display: grid;
-          gap: 11px;
-          padding: 16px;
+        .photoTopline small {
+          color: #8a96a8;
+          font-size: 0.68rem;
+          font-weight: 700;
         }
 
-        .photoBody h3 {
-          margin: 7px 0 7px;
-          color: var(--posts-navy);
-          font-size: 1.28rem;
-          line-height: 1;
-          letter-spacing: -0.04em;
+        .photoCopy h3 {
+          margin: 8px 0 5px;
+          color: #071b49;
+          font-size: 1rem;
+          line-height: 1.15;
+          font-weight: 900;
         }
 
-        .photoMeta {
-          padding-top: 12px;
-          border-top: 1px solid var(--posts-border);
-          color: var(--posts-muted);
-          font-size: 0.82rem;
-          font-weight: 800;
+        .photoCopy > p {
+          margin: 0;
+          color: #66728a;
+          font-size: 0.78rem;
+          line-height: 1.4;
+          font-weight: 600;
         }
 
         .rejectedReason {
-          padding: 12px 14px;
-          border: 1px solid rgba(181, 22, 98, 0.16);
-          border-radius: 14px;
-          background: #fff5f8;
+          margin-top: 8px !important;
+          padding: 8px 10px;
+          border-radius: 10px;
+          background: #fff3f6;
           color: #b51662 !important;
-          font-weight: 800 !important;
+          font-weight: 750 !important;
         }
 
         .moderationBox {
-          display: grid;
-          gap: 10px;
-          margin-top: auto;
-          padding-top: 4px;
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          margin-top: 10px;
         }
 
-        .moderationBox label {
-          color: var(--posts-navy);
+        .approveButton {
+          border: 1px solid #f72585;
+          background: #f72585;
+          color: #ffffff;
+        }
+
+        .rejectDetails {
+          position: relative;
+        }
+
+        .rejectDetails > summary {
+          min-height: 38px;
+          display: inline-flex;
+          align-items: center;
+          padding: 0 12px;
+          border: 1px solid #efb7c9;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #a91257;
+          font-size: 0.76rem;
+          font-weight: 900;
+          cursor: pointer;
+          list-style: none;
+        }
+
+        .rejectDetails > summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .rejectDetails[open] {
+          width: min(360px, 100%);
+          display: grid;
+          gap: 7px;
+        }
+
+        .rejectDetails label {
+          margin-top: 6px;
+          color: #071b49;
+          font-size: 0.72rem;
+          font-weight: 900;
+        }
+
+        .rejectDetails textarea {
+          width: 100%;
+          min-height: 72px;
+          resize: vertical;
+          padding: 10px;
+          border: 1px solid #dfe5f1;
+          border-radius: 11px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
+          font-size: 0.78rem;
+          line-height: 1.4;
+          outline: none;
+        }
+
+        .rejectButton {
+          width: fit-content;
+          border: 1px solid #efb7c9;
+          background: #ffffff;
+          color: #a91257;
+        }
+
+        .photoFallback {
+          width: 100%;
+          height: 100%;
+          display: grid;
+          place-items: center;
+          padding: 10px;
+          color: #7b8798;
+          font-size: 0.72rem;
+          font-weight: 800;
+          text-align: center;
+        }
+
+        .photosEmpty {
+          display: grid;
+          gap: 3px;
+          padding: 14px;
+          border-radius: 13px;
+          background: #f8fafc;
+        }
+
+        .photosEmpty strong {
+          color: #071b49;
           font-size: 0.9rem;
           font-weight: 900;
         }
 
-        .moderationBox textarea {
-          width: 100%;
-          min-height: 88px;
-          resize: vertical;
-          padding: 14px;
-          border: 1px solid var(--posts-border);
-          border-radius: 14px;
-          background: #fff;
-          color: var(--posts-navy);
-          font: inherit;
-          line-height: 1.5;
-          outline: none;
-        }
-
-        .moderationBox textarea:focus {
-          border-color: var(--posts-pink);
-          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1);
-        }
-
-        .approveButton {
-          border: 0;
-          background: var(--posts-pink);
-          color: #fff;
-        }
-
-        .rejectButton {
-          border: 1px solid var(--posts-border);
-          background: #fff;
-          color: var(--posts-navy);
+        .photosEmpty span {
+          color: #718096;
+          font-size: 0.78rem;
+          font-weight: 600;
         }
 
         button:disabled {
-          opacity: 0.65;
+          opacity: 0.55;
           cursor: not-allowed;
         }
 
-        .emptyState {
-          padding: 24px;
-          border: 1px dashed var(--posts-border);
-          border-radius: 20px;
-          background: #fff;
-          text-align: center;
-        }
 
-        .emptyState h3 {
-          margin: 0 0 7px;
-          color: var(--posts-navy);
-          font-size: 1.6rem;
-        }
 
-        @media (max-width: 980px) {
-          .heroGrid > div:first-child {
-            max-width: 900px;
+        @media (max-width: 700px) {
+          :global(body:has(.fromone-smiles-photos-page) .main-content),
+          :global(body:has(.fromone-smiles-photos-page) .main-content.fromone-mobile-bottom-safe) {
+            padding: 18px 10px 100px !important;
           }
 
-          .photoGrid,
-          .reportGrid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+          .photosShell {
+            max-width: 100%;
+            gap: 12px;
           }
 
-          .reportCard {
-            grid-template-columns: 1fr;
+          .photosSimpleHero {
+            display: grid;
+            gap: 12px;
           }
 
-          .reportImage,
-          .reportImage img {
-            min-height: 210px;
-            height: 210px;
-          }
-        }
-
-        @media (max-width: 760px) {
-          :global(body:has(.fromone-smiles-photos-page) .main-content) {
-            padding: 24px 16px 100px !important;
+          .photosSimpleHero h1 {
+            font-size: 2.2rem;
           }
 
-          .photoSummary,
-          .sectionTop,
-          .photoGrid,
-          .reportGrid {
-            grid-template-columns: 1fr;
+          .photosToolbar {
+            align-items: stretch;
+            flex-direction: column;
           }
 
-          h1 {
-            font-size: clamp(2.25rem, 11vw, 3rem);
-          }
-
-          .listingCard,
-          .photoSummary article,
-          .simplePanel,
-          .photoBody {
-            padding: 17px;
-            border-radius: 21px;
-          }
-
-          .sectionTop button,
-          .approveButton,
-          .rejectButton,
-          .dismissReportButton,
-          .removeReportedPhotoButton {
+          .photosCounts {
             width: 100%;
           }
 
-          .photoImage img {
-            height: 230px;
+          .photosCounts span {
+            flex: 1 1 0;
+            justify-content: center;
+          }
+
+          .photosToolbar > button {
+            width: 100%;
+          }
+
+          .reportRow {
+            grid-template-columns: 72px minmax(0, 1fr);
+          }
+
+          .reportThumb {
+            width: 72px;
+            height: 72px;
+          }
+
+          .reportActions {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .reportActions button {
+            width: 100%;
+          }
+
+          .photoRow {
+            grid-template-columns: 100px minmax(0, 1fr);
+            gap: 10px;
+          }
+
+          .photoThumb {
+            width: 100px;
+            height: 100px;
+          }
+
+          .photoTopline {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 4px;
+          }
+
+          .moderationBox {
+            flex-wrap: wrap;
+          }
+
+          .approveButton {
+            flex: 1 1 0;
+          }
+
+          .rejectDetails {
+            flex: 1 1 0;
+          }
+
+          .rejectDetails > summary {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .rejectDetails[open] {
+            flex-basis: 100%;
+            width: 100%;
+          }
+
+          .rejectButton {
+            width: 100%;
           }
         }
       `}</style>

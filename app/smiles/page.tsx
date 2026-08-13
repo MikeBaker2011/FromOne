@@ -1,7 +1,6 @@
 "use client";
 
 
-import BackToDashboardButton from "@/app/components/BackToDashboardButton";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import "../posts/posts-companion-shared.css";
@@ -356,282 +355,161 @@ export default function SmilesDashboardPage() {
   return (
     <main
       className="fromone-posts-page fromone-smiles-page settings-create-style-page"
-      data-fromone-smiles-redesign="v1"
+      data-fromone-smiles-redesign="simple-agency"
     >
-      <BackToDashboardButton />
       <section id="fromone-standard-shell" className="smiles-create-style-card">
-        <header className="posts-create-hero smiles-create-hero">
-          <span className="posts-create-eyebrow smiles-create-eyebrow">Stockport Smilez</span>
-          <h1>Smilez hub.</h1>
-          <p>
-            Keep bookings, reviews, customer photos, offers and events tidy from one simple place.
-          </p>
+        <header className="smiles-simple-hero">
+          <span className="smiles-eyebrow">Smilez</span>
+          <h1>Manage Smilez.</h1>
+          <p>Bookings, reviews, photos and your live listings in one place.</p>
         </header>
 
         {loading ? (
-          <section
-            className="smiles-simple-panel smiles-loading-panel"
-            aria-label="Smilez loading"
-          >
-            <div className="smiles-panel-head">
-              <span className="smiles-step-badge">...</span>
-              <div>
-                <h2>Loading Smilez</h2>
-                <p>Checking your Stockport Smilez listing.</p>
-              </div>
-            </div>
+          <section className="smiles-status-card" aria-label="Smilez loading">
+            <strong>Loading Smilez…</strong>
+            <span>Checking your listing.</span>
           </section>
         ) : null}
 
         {!loading && !profile?.smiles_listing_venue_id ? (
-          <section className="smiles-simple-panel smiles-warning-panel">
-            <div className="smiles-panel-head">
-              <span className="smiles-step-badge">01</span>
-              <div>
-                <h2>Your listing is not live yet</h2>
-                <p>
-                  {message ||
-                    "Once Smilez admin publishes your business listing, bookings and reviews will appear here."}
-                </p>
-              </div>
+          <section className="smiles-status-card is-warning">
+            <div>
+              <strong>Your listing is not live yet</strong>
+              <span>
+                {message ||
+                  "Once your Smilez listing is published, bookings, reviews and customer activity will appear here."}
+              </span>
             </div>
-            <Link className="smiles-primary-action" href="/settings">
-              Check listing status
-            </Link>
+            <Link href="/settings">Check listing</Link>
           </section>
         ) : null}
 
         {!loading && profile?.smiles_listing_venue_id ? (
           <>
-            <section className="smiles-listing-strip">
+            <section className="smiles-listing-summary">
               <div>
-                <span>Your listing</span>
+                <span className="smiles-eyebrow">Your listing</span>
                 <h2>{profile.business_name || "Your business"}</h2>
-                <p>Live on Stockport Smilez</p>
+                <p>Live on Smilez</p>
               </div>
-              <Link href="/settings">Listing settings</Link>
+              <Link href="/settings">Settings</Link>
             </section>
 
-            <section className="smiles-simple-panel">
-              <div className="smiles-panel-head">
-                <span className="smiles-step-badge">01</span>
+            <section className="smiles-action-list" aria-label="Smilez actions">
+              <Link
+                href="/smiles/bookings"
+                className={`smiles-action-row ${newBookings.length > 0 ? "is-priority" : ""}`}
+              >
                 <div>
-                  <h2>Today on Smilez</h2>
-                  <p>Open the item you need, deal with it, then carry on.</p>
+                  <strong>Bookings</strong>
+                  <span>
+                    {newBookings.length > 0
+                      ? `${newBookings.length} need confirmation`
+                      : "Nothing needs attention"}
+                  </span>
                 </div>
-              </div>
+                <b>{bookings.length}</b>
+                <em>→</em>
+              </Link>
 
-              <div className="smiles-action-grid" aria-label="Smilez actions">
-                <Link
-                  href="/smiles/bookings"
-                  className={`smiles-action-card ${
-                    newBookings.length > 0 ? "is-priority" : ""
-                  }`}
-                >
-                  <span>Bookings</span>
-                  <strong>{bookings.length}</strong>
-                  <h3>
-                    {bookings.length === 1
-                      ? "1 booking in total"
-                      : `${bookings.length} bookings in total`}
-                  </h3>
-                  <p>
-                    {newBookings.length === 1
-                      ? "1 booking still needs confirmation."
-                      : `${newBookings.length} bookings still need confirmation.`}
-                  </p>
-                  <em>Manage bookings</em>
-                </Link>
+              <Link
+                href="/smiles/reviews"
+                className={`smiles-action-row ${reviewsNeedingAttention > 0 ? "is-priority" : ""}`}
+              >
+                <div>
+                  <strong>Reviews</strong>
+                  <span>
+                    {reviewsNeedingAttention > 0
+                      ? `${reviewsNeedingAttention} need attention`
+                      : "Nothing needs attention"}
+                  </span>
+                </div>
+                <b>{reviews.length}</b>
+                <em>→</em>
+              </Link>
 
-                <Link
-                  href="/smiles/reviews"
-                  className={`smiles-action-card ${
-                    reviewsNeedingAttention > 0 ? "is-priority" : ""
-                  }`}
-                >
-                  <span>Reviews</span>
-                  <strong>{reviews.length}</strong>
-                  <h3>
-                    {reviews.length === 1
-                      ? "1 review in total"
-                      : `${reviews.length} reviews in total`}
-                  </h3>
-                  <p>
-                    {reviewsNeedingAttention === 0
-                      ? "No reviews need attention."
-                      : `${pendingReviews.length} waiting for approval and ${reviewsNeedingReply.length} needing a reply.`}
-                  </p>
-                  <em>Manage reviews</em>
-                </Link>
+              <Link
+                href="/smiles/photos"
+                className={`smiles-action-row ${
+                  pendingCustomerPhotos.length > 0 || pendingCustomerPhotoReports.length > 0
+                    ? "is-priority"
+                    : ""
+                }`}
+              >
+                <div>
+                  <strong>Customer photos</strong>
+                  <span>
+                    {pendingCustomerPhotos.length > 0 || pendingCustomerPhotoReports.length > 0
+                      ? `${pendingCustomerPhotos.length + pendingCustomerPhotoReports.length} need review`
+                      : "Nothing needs attention"}
+                  </span>
+                </div>
+                <b>{customerPhotos.length}</b>
+                <em>→</em>
+              </Link>
 
-                <Link href="/smiles/insights" className="smiles-action-card">
-                  <span>Customer insights</span>
-                  <strong>↗</strong>
-                  <h3>See customer activity</h3>
-                  <p>
-                    Review bookings, reviews, photos and engagement connected to
-                    your Smilez listing.
-                  </p>
-                  <em>View insights</em>
-                </Link>
-
-                <Link
-                  href="/smiles/photos"
-                  className={`smiles-action-card ${
-                    pendingCustomerPhotos.length > 0 ? "is-priority" : ""
-                  }`}
-                >
-                  <span>Customer photos</span>
-                  <strong>{customerPhotos.length}</strong>
-                  <h3>
-                    {customerPhotos.length === 1
-                      ? "1 customer photo in total"
-                      : `${customerPhotos.length} customer photos in total`}
-                  </h3>
-                  <p>
-                    {pendingCustomerPhotos.length > 0
-                      ? `${pendingCustomerPhotos.length} waiting, ${approvedCustomerPhotos.length} approved and ${rejectedCustomerPhotos.length} rejected.`
-                      : `${approvedCustomerPhotos.length} approved and ${rejectedCustomerPhotos.length} rejected. Nothing is waiting.`}
-                  </p>
-                  <em>Review photos</em>
-                </Link>
-
-                <Link
-                  href="/smiles/photos"
-                  className={`smiles-action-card ${
-                    pendingCustomerPhotoReports.length > 0 ? "is-priority" : ""
-                  }`}
-                >
-                  <span>Photo reports</span>
-                  <strong>{pendingCustomerPhotoReports.length}</strong>
-                  <h3>
-                    {pendingCustomerPhotoReports.length === 1
-                      ? "1 photo report needs review"
-                      : `${pendingCustomerPhotoReports.length} photo reports need review`}
-                  </h3>
-                  <p>
-                    {pendingCustomerPhotoReports.length > 0
-                      ? "Open customer photos to review reported content."
-                      : "No customer photo reports need attention."}
-                  </p>
-                  <em>Review reports</em>
-                </Link>
-
-                <Link href="/posts" className="smiles-action-card">
-                  <span>Offers & events</span>
-                  <strong>{sentSmilesItems.length}</strong>
-                  <h3>
-                    {sentSmilesItems.length === 1
-                      ? "1 sent item in total"
-                      : `${sentSmilesItems.length} sent items in total`}
-                  </h3>
-                  <p>
-                    {sentSmilesItems.length > 0
-                      ? "Open Posts to create another offer or event."
-                      : "No offers or events have been sent to Smilez yet."}
-                  </p>
-                  <em>Review posts</em>
-                </Link>
-
-                <Link
-                  href="/smiles/booking-times"
-                  className="smiles-action-card"
-                >
-                  <span>Opening & booking hours</span>
-                  <strong>{openDays || 0}</strong>
-                  <h3>
-                    {openDays > 0
-                      ? `${openDays} days open`
-                      : "Bookings are closed"}
-                  </h3>
-                  <p>
-                    These hours show on your Smilez venue page and control when
-                    customers can request bookings.
-                  </p>
-                  <em>Edit hours</em>
-                </Link>
-              </div>
+              <Link href="/smiles/booking-times" className="smiles-action-row">
+                <div>
+                  <strong>Opening & booking hours</strong>
+                  <span>{openDays > 0 ? `${openDays} days open` : "Bookings are closed"}</span>
+                </div>
+                <em>→</em>
+              </Link>
             </section>
 
-            <details className="smiles-simple-panel smiles-history-panel">
+            <section className="smiles-secondary-links" aria-label="More Smilez options">
+              <Link href="/smiles/insights">
+                <strong>Customer insights</strong>
+                <span>View activity</span>
+              </Link>
+            </section>
+
+            <details className="smiles-history">
               <summary>
-                <span className="smiles-step-badge">02</span>
                 <div>
-                  <h2>Smilez offers and events</h2>
-                  <p>
-                    {sentSmilesItems.length > 0
-                      ? `${sentSmilesItems.length} sent item${
-                          sentSmilesItems.length === 1 ? "" : "s"
-                        } with references.`
-                      : "Nothing has been sent to Smilez yet."}
-                  </p>
-                  <p className="smiles-history-help">
-                    View or edit the live Smilez listings for your venue.
-                  </p>
+                  <strong>Offers & events</strong>
+                  <span>
+                    {sentSmilesItems.length === 0
+                      ? "No live items yet"
+                      : `${sentSmilesItems.length} item${sentSmilesItems.length === 1 ? "" : "s"}`}
+                  </span>
                 </div>
-                <strong>Open</strong>
+                <b>View</b>
               </summary>
 
               {sentSmilesItems.length > 0 ? (
-                <div className="smiles-history-grid">
+                <div className="smiles-history-list">
                   {sentSmilesItems.map((item) => (
-                    <article
-                      key={`${item.type}-${item.id}`}
-                      className="smiles-history-card"
-                    >
-                      <div>
-                        <span>{item.type === "offer" ? "Offer" : "Event"}</span>
+                    <article key={`${item.type}-${item.id}`} className="smiles-history-item">
+                      <div className="smiles-history-copy">
+                        <span className="smiles-eyebrow">{item.type === "offer" ? "Offer" : "Event"}</span>
                         <h3>{item.title}</h3>
                         <p>{item.description}</p>
-                      </div>
-
-                      <div className="smiles-history-meta">
-                        <strong>{item.referenceCode || "Reference pending"}</strong>
-                        <small>{formatSentDate(item.createdAt)}</small>
                         <small>
                           {item.isExpired
                             ? "Expired"
                             : item.isPublished
                               ? "Live"
                               : "Waiting approval"}
+                          {item.createdAt ? ` · ${formatSentDate(item.createdAt)}` : ""}
                         </small>
                       </div>
 
                       <div className="smiles-history-actions">
+                        {item.editHref ? <Link href={item.editHref}>Edit</Link> : null}
                         {item.href && item.isPublished && !item.isExpired ? (
                           <a href={item.href} target="_blank" rel="noreferrer">
-                            View live page
+                            View live
                           </a>
-                        ) : (
-                          <button type="button" disabled>
-                            {item.isExpired ? "Expired" : "Not live"}
-                          </button>
-                        )}
-
-                        {item.editHref ? (
-                          <Link
-                            href={item.editHref}
-                            title="Edit this live Stockport Smilez listing directly."
-                          >
-                            Edit live listing
-                          </Link>
-                        ) : (
-                          <button type="button" disabled>
-                            Edit unavailable
-                          </button>
-                        )}
+                        ) : null}
                       </div>
                     </article>
                   ))}
                 </div>
               ) : (
-                <div className="smiles-empty-history">
-                  <h3>No offers or events sent yet</h3>
-                  <p>
-                    Create a post, choose Offer or Event, then send the live
-                    listing to Smilez.
-                  </p>
-                  <Link href="/posts">Review posts</Link>
+                <div className="smiles-history-empty">
+                  <p>Create an offer or event from the Create flow, then publish it to Smilez during review.</p>
+                  <Link href="/create">Create content</Link>
                 </div>
               )}
             </details>
@@ -640,9 +518,13 @@ export default function SmilesDashboardPage() {
       </section>
 
       <style jsx global>{`
-        body:has(.fromone-smiles-page) {
-          background: #f5f7fb !important;
-          overflow-x: hidden !important;
+        body:has(.fromone-smiles-page),
+        body:has(.fromone-smiles-page) .app-shell,
+        body:has(.fromone-smiles-page) .main-content,
+        body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-smiles-page) .fromone-universal-mobile-page-frame {
+          background: #ffffff !important;
+          background-image: none !important;
         }
 
         body:has(.fromone-smiles-page)::before {
@@ -650,826 +532,438 @@ export default function SmilesDashboardPage() {
           content: none !important;
         }
 
-        body:has(.fromone-smiles-page) .app-shell,
-        body:has(.fromone-smiles-page) .main-content {
-          background: #f5f7fb !important;
-        }
-
         body:has(.fromone-smiles-page) .main-content {
           width: 100% !important;
           max-width: none !important;
           margin: 0 !important;
-          padding-top: 38px !important;
-          padding-left: 0 !important;
-          padding-right: 0 !important;
+          padding: 34px clamp(24px, 4vw, 54px) 90px !important;
           box-sizing: border-box !important;
           overflow-x: hidden !important;
         }
 
         .fromone-smiles-page.settings-create-style-page {
           width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          min-height: 100vh !important;
-          margin: 0 !important;
-          padding: 0 16px 104px !important;
-          box-sizing: border-box !important;
-          overflow-x: hidden !important;
-          background: #f5f7fb !important;
-          color: #071b49 !important;
-          font-family:
-            var(--font-main),
-            "Plus Jakarta Sans",
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
-          font-weight: 500 !important;
-          letter-spacing: -0.01em !important;
-        }
-
-        .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
-          width: 1040px !important;
-          max-width: calc(100% - 32px) !important;
-          min-width: 0 !important;
-          min-height: 620px !important;
-          margin: 28px auto 0 !important;
-          padding: clamp(30px, 4vw, 48px) !important;
-          box-sizing: border-box !important;
-          overflow: hidden !important;
-          display: block !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 32px !important;
-          background: #ffffff !important;
-          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.1) !important;
-          color: #071b49 !important;
-          backdrop-filter: none !important;
-        }
-
-        .fromone-smiles-page .smiles-create-hero {
-          width: 100% !important;
-          max-width: 760px !important;
-          margin: 0 0 26px !important;
-          padding: 0 !important;
-          text-align: left !important;
-        }
-
-        .fromone-smiles-page .smiles-create-eyebrow,
-        .fromone-smiles-page .smiles-listing-strip span,
-        .fromone-smiles-page .smiles-action-card span,
-        .fromone-smiles-page .smiles-history-card span {
-          color: #f72585 !important;
-          font-size: 0.78rem !important;
-          line-height: 1 !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.13em !important;
-          text-transform: uppercase !important;
-        }
-
-        .fromone-smiles-page .smiles-create-hero h1 {
-          max-width: 760px !important;
-          margin: 12px 0 14px !important;
-          color: #071b49 !important;
-          font-size: clamp(3rem, 5.2vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.055em !important;
-          font-weight: 800 !important;
-          text-align: left !important;
-          overflow: visible !important;
-        }
-
-        .fromone-smiles-page p {
-          color: #52617a !important;
-          font-size: 1rem !important;
-          line-height: 1.5 !important;
-          font-weight: 600 !important;
-        }
-
-        .fromone-smiles-page .smiles-create-hero p {
-          max-width: 720px !important;
-          margin: 0 !important;
-          font-size: 1.02rem !important;
-        }
-
-        .fromone-smiles-page .smiles-simple-panel,
-        .fromone-smiles-page .smiles-listing-strip {
-          width: 100% !important;
           max-width: 100% !important;
-          margin-top: 18px !important;
-          padding: clamp(20px, 3vw, 30px) !important;
-          box-sizing: border-box !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 24px !important;
-          background: #f7f9fd !important;
-        }
-
-        .fromone-smiles-page .smiles-listing-strip {
-          display: flex !important;
-          gap: 18px !important;
-          align-items: center !important;
-          justify-content: space-between !important;
-          background:
-            linear-gradient(135deg, rgba(247, 37, 133, 0.045), transparent 46%),
-            #fff8fc !important;
-          border-color: #ffd2e5 !important;
-        }
-
-        .fromone-smiles-page .smiles-listing-strip h2,
-        .fromone-smiles-page .smiles-panel-head h2,
-        .fromone-smiles-page .smiles-history-panel summary h2 {
-          margin: 0 0 6px !important;
-          color: #071b49 !important;
-          font-size: clamp(1.65rem, 3.4vw, 2.15rem) !important;
-          font-weight: 800 !important;
-          line-height: 1.05 !important;
-          letter-spacing: -0.045em !important;
-        }
-
-        .fromone-smiles-page .smiles-listing-strip p,
-        .fromone-smiles-page .smiles-panel-head p,
-        .fromone-smiles-page .smiles-history-panel summary p {
-          margin: 0 !important;
-        }
-
-        .fromone-smiles-page .smiles-listing-strip p {
-          color: #047857 !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-smiles-page .smiles-listing-strip a,
-        .fromone-smiles-page .smiles-primary-action,
-        .fromone-smiles-page .smiles-action-card em,
-        .fromone-smiles-page .smiles-history-card a,
-        .fromone-smiles-page .smiles-empty-history a {
-          min-height: 54px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 22px !important;
-          border: 1px solid #f72585 !important;
-          border-radius: 999px !important;
-          background: #f72585 !important;
-          color: #ffffff !important;
-          box-shadow: 0 18px 38px rgba(247, 37, 133, 0.24) !important;
-          font: inherit !important;
-          font-weight: 800 !important;
-          text-decoration: none !important;
-        }
-
-        .fromone-smiles-page .smiles-panel-head,
-        .fromone-smiles-page .smiles-history-panel summary {
-          display: flex !important;
-          gap: 12px !important;
-          align-items: flex-start !important;
-          margin-bottom: 18px !important;
-        }
-
-        .fromone-smiles-page .smiles-step-badge {
-          display: inline-flex !important;
-          width: 34px !important;
-          height: 34px !important;
-          flex: 0 0 34px !important;
-          align-items: center !important;
-          justify-content: center !important;
-          border-radius: 50% !important;
-          background: #f72585 !important;
-          color: #ffffff !important;
-          font-size: 0.78rem !important;
-          font-weight: 800 !important;
-          box-shadow: 0 12px 26px rgba(247, 37, 133, 0.18) !important;
-        }
-
-        .fromone-smiles-page .smiles-action-grid {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 14px !important;
-        }
-
-        .fromone-smiles-page .smiles-action-card {
-          display: grid !important;
-          gap: 8px !important;
-          min-height: 220px !important;
-          padding: 18px !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 22px !important;
-          background: #ffffff !important;
-          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
-          color: #071b49 !important;
-          text-decoration: none !important;
-        }
-
-        .fromone-smiles-page .smiles-action-card.is-priority {
-          border-color: #ffc2dc !important;
-          background: linear-gradient(
-            145deg,
-            rgba(247, 37, 133, 0.055),
-            #ffffff
-          ) !important;
-        }
-
-        .fromone-smiles-page .smiles-action-card strong {
-          width: 52px !important;
-          height: 52px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          border-radius: 999px !important;
-          background: #f72585 !important;
-          color: #ffffff !important;
-          font-size: 1.3rem !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-smiles-page .smiles-action-card h3,
-        .fromone-smiles-page .smiles-history-card h3,
-        .fromone-smiles-page .smiles-empty-history h3 {
-          margin: 0 !important;
-          color: #071b49 !important;
-          font-size: clamp(1.35rem, 2.6vw, 1.65rem) !important;
-          font-weight: 800 !important;
-          line-height: 1.05 !important;
-          letter-spacing: -0.035em !important;
-        }
-
-        .fromone-smiles-page .smiles-action-card p,
-        .fromone-smiles-page .smiles-history-card p,
-        .fromone-smiles-page .smiles-empty-history p {
-          margin: 0 !important;
-        }
-
-        .fromone-smiles-page .smiles-action-card em {
-          width: 100% !important;
-          margin-top: auto !important;
-          box-shadow: 0 12px 26px rgba(247, 37, 133, 0.18) !important;
-          font-style: normal !important;
-        }
-
-        .fromone-smiles-page .smiles-history-panel {
-          overflow: hidden !important;
-        }
-
-        .fromone-smiles-page .smiles-history-panel summary {
-          margin-bottom: 0 !important;
-          cursor: pointer !important;
-          list-style: none !important;
-        }
-
-        .fromone-smiles-page .smiles-history-panel summary::-webkit-details-marker {
-          display: none !important;
-        }
-
-        .fromone-smiles-page .smiles-history-panel summary > div {
-          flex: 1 1 auto !important;
-          min-width: 0 !important;
-        }
-
-        .fromone-smiles-page .smiles-history-panel summary > strong {
-          min-height: 44px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 16px !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 999px !important;
-          background: #ffffff !important;
-          color: #071b49 !important;
-          font-size: 0.92rem !important;
-          font-weight: 800 !important;
-          white-space: nowrap !important;
-        }
-
-        .fromone-smiles-page .smiles-history-panel[open] summary {
-          margin-bottom: 18px !important;
-        }
-
-        .fromone-smiles-page .smiles-history-panel[open] summary > strong {
-          background: #f72585 !important;
-          color: #ffffff !important;
-          border-color: #f72585 !important;
-        }
-
-        .fromone-smiles-page .smiles-history-grid {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 14px !important;
-        }
-
-        .fromone-smiles-page .smiles-history-card,
-        .fromone-smiles-page .smiles-empty-history {
-          display: grid !important;
-          gap: 12px !important;
-          padding: 18px !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 22px !important;
-          background: #ffffff !important;
-          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
-        }
-
-        .fromone-smiles-page .smiles-history-card p {
-          display: -webkit-box !important;
-          overflow: hidden !important;
-          -webkit-line-clamp: 3 !important;
-          -webkit-box-orient: vertical !important;
-        }
-
-        .fromone-smiles-page .smiles-history-meta {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 8px !important;
-        }
-
-        .fromone-smiles-page .smiles-history-meta strong,
-        .fromone-smiles-page .smiles-history-meta small {
-          width: fit-content !important;
-          border-radius: 999px !important;
-          padding: 7px 10px !important;
-          border: 1px solid #dfe5f1 !important;
-          background: #f7f9fd !important;
-          color: #071b49 !important;
-          font-size: 0.82rem !important;
-          font-weight: 800 !important;
-          line-height: 1 !important;
-        }
-
-        .fromone-smiles-page .smiles-history-meta strong {
-          border-color: #ffd2e5 !important;
-          background: #fff8fc !important;
-        }
-
-        .fromone-smiles-page .smiles-history-help {
-          margin-top: 6px !important;
-          color: #52617a !important;
-          font-size: 0.95rem !important;
-          font-weight: 700 !important;
-        }
-
-        .fromone-smiles-page .smiles-history-actions {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 10px !important;
-          margin-top: 4px !important;
-        }
-
-        .fromone-smiles-page .smiles-history-actions a,
-        .fromone-smiles-page .smiles-history-actions button {
-          min-height: 48px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 16px !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 999px !important;
-          font: inherit !important;
-          font-weight: 950 !important;
-          font-size: 0.95rem !important;
-          line-height: 1 !important;
-          text-decoration: none !important;
-        }
-
-        .fromone-smiles-page .smiles-history-actions a:first-child {
-          background: #f72585 !important;
-          border-color: #f72585 !important;
-          color: #ffffff !important;
-        }
-
-        .fromone-smiles-page .smiles-history-actions a:last-child {
-          background: #ffffff !important;
-          border-color: #dfe5f1 !important;
-          color: #071b49 !important;
-          box-shadow: none !important;
-        }
-
-        .fromone-smiles-page .smiles-history-actions button:disabled {
-          background: #f8fafc !important;
-          color: #7d8ca3 !important;
-          cursor: not-allowed !important;
-          opacity: 1 !important;
-        }
-
-        @media (max-width: 760px) {
-          body:has(.fromone-smiles-page) .main-content {
-            width: 100% !important;
-            max-width: none !important;
-            min-width: 0 !important;
-            margin: 0 !important;
-            padding-top: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            padding-bottom: 0 !important;
-            display: block !important;
-            box-sizing: border-box !important;
-            background: #ffffff !important;
-            overflow-x: hidden !important;
-          }
-
-          html,
-          body {
-            overflow-x: hidden !important;
-            background: #ffffff !important;
-          }
-
-          .fromone-smiles-page.settings-create-style-page {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            min-height: 100vh !important;
-            margin: 0 !important;
-            padding: 0 10px 112px !important;
-            box-sizing: border-box !important;
-            background: #ffffff !important;
-            display: block !important;
-            box-sizing: border-box !important;
-            overflow-x: hidden !important;
-          }
-
-          .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            min-height: auto !important;
-            margin: 24px 0 0 !important;
-            padding: 28px 26px 26px !important;
-            box-sizing: border-box !important;
-            border-radius: 26px !important;
-          }
-
-          .fromone-smiles-page .smiles-create-hero {
-            margin-bottom: 32px !important;
-          }
-
-          .fromone-smiles-page .smiles-create-hero h1 {
-            margin: 14px 0 18px !important;
-            font-size: clamp(2.75rem, 11vw, 3.6rem) !important;
-            line-height: 0.94 !important;
-            letter-spacing: -0.058em !important;
-          }
-
-          .fromone-smiles-page .smiles-create-hero p {
-            font-size: 1rem !important;
-            line-height: 1.45 !important;
-          }
-
-          .fromone-smiles-page .smiles-simple-panel,
-          .fromone-smiles-page .smiles-listing-strip {
-            margin-top: 18px !important;
-            padding: 20px !important;
-            border-radius: 24px !important;
-          }
-
-          .fromone-smiles-page .smiles-panel-head {
-            margin-bottom: 22px !important;
-          }
-
-          .fromone-smiles-page .smiles-panel-head h2,
-          .fromone-smiles-page .smiles-history-panel summary h2 {
-            font-size: clamp(1.75rem, 7vw, 2.15rem) !important;
-            line-height: 0.98 !important;
-          }
-
-          .fromone-smiles-page .smiles-listing-strip,
-          .fromone-smiles-page .smiles-action-grid,
-          .fromone-smiles-page .smiles-history-grid {
-            grid-template-columns: 1fr !important;
-          }
-
-          .fromone-smiles-page .smiles-listing-strip {
-            display: grid !important;
-          }
-
-          .fromone-smiles-page .smiles-listing-strip a,
-          .fromone-smiles-page .smiles-primary-action {
-            width: 100% !important;
-          }
-
-          .fromone-smiles-page .smiles-action-grid {
-            gap: 14px !important;
-          }
-
-          .fromone-smiles-page .smiles-action-card {
-            min-height: auto !important;
-          }
-
-          .fromone-smiles-page .smiles-history-panel summary {
-            align-items: flex-start !important;
-          }
-
-          .fromone-smiles-page .smiles-history-panel summary > strong {
-            display: none !important;
-          }
-        }
-
-        @media (max-width: 420px) {
-          .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
-            width: 100% !important;
-            max-width: 100% !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-            padding: 26px 22px 24px !important;
-          }
-        }
-
-        /*
-         * OUTER MOBILE LAYOUT IS OWNED BY AppShell.
-         * Smilez keeps its internal card styling only.
-         */
-        @media (max-width: 900px) {
-          body:has(.fromone-smiles-page) .main-content {
-            padding-top: 0 !important;
-            padding-left: 10px !important;
-            padding-right: 10px !important;
-          }
-
-          .fromone-smiles-page.settings-create-style-page {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            margin: 0 !important;
-            padding: 0 0 112px !important;
-            box-sizing: border-box !important;
-          }
-
-          .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            margin: 0 !important;
-            box-sizing: border-box !important;
-          }
-        }
-
-
-        /*
-         * FINAL SMILEZ ALIGNMENT
-         * AppShell owns all outer spacing. Remove Smilez-only mobile gutter/margin.
-         */
-        @media (max-width: 900px) {
-          body:has(.fromone-smiles-page) .main-content,
-          body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe {
-            padding-top: 14px !important;
-            padding-left: 10px !important;
-            padding-right: 10px !important;
-            box-sizing: border-box !important;
-          }
-
-          .fromone-smiles-page.settings-create-style-page {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            margin: 0 !important;
-            padding: 0 0 112px !important;
-            box-sizing: border-box !important;
-          }
-
-          .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            margin: 0 !important;
-            box-sizing: border-box !important;
-          }
-        }
-
-
-        /*
-         * Smilez was receiving the 14px mobile top gap twice:
-         * once from main-content and once from the universal page frame.
-         */
-        @media (max-width: 900px) {
-          .fromone-route-smiles .fromone-universal-mobile-page-frame {
-            padding-top: 0 !important;
-          }
-
-          body:has(.fromone-smiles-page) .main-content,
-          body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe {
-            padding-top: 14px !important;
-          }
-        }
-
-
-        /* FINAL SHARED FROMONE PAGE SYSTEM */
-        body:has(.fromone-smiles-page) {
-          background: #ffffff !important;
-        }
-
-        body:has(.fromone-smiles-page) .app-shell,
-        body:has(.fromone-smiles-page) .main-content {
-          background: #ffffff !important;
-        }
-
-        body:has(.fromone-smiles-page) .main-content {
-          width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          margin: 0 !important;
-          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
-          overflow-x: hidden !important;
-        }
-
-        .fromone-smiles-page.settings-create-style-page {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          min-height: 0 !important;
           margin: 0 !important;
           padding: 0 !important;
+          color: #071b49 !important;
           background: transparent !important;
-          overflow: visible !important;
+          font-family: var(--font-main), "Plus Jakarta Sans", ui-sans-serif, system-ui,
+            -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         }
 
         .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
           width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          min-height: 0 !important;
-          margin: 0 !important;
+          max-width: 980px !important;
+          margin: 0 auto !important;
           padding: 0 !important;
-          overflow: visible !important;
           display: grid !important;
-          gap: 22px !important;
-          border: 0 !important;
-          border-radius: 0 !important;
-          background: transparent !important;
-          background-image: none !important;
-          box-shadow: none !important;
-          backdrop-filter: none !important;
-        }
-
-        .fromone-smiles-page .smiles-create-hero {
-          width: 100% !important;
-          max-width: 790px !important;
-          margin: 0 0 6px !important;
-          padding: 0 !important;
-          border: 0 !important;
-          background: transparent !important;
-          box-shadow: none !important;
-        }
-
-        .fromone-smiles-page .smiles-create-hero h1 {
-          max-width: 760px !important;
-          margin: 0 0 12px !important;
-          color: var(--posts-navy) !important;
-          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.06em !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-smiles-page .smiles-create-hero p {
-          max-width: 720px !important;
-          margin: 0 !important;
-          color: var(--posts-muted) !important;
-          font-size: 1.03rem !important;
-          line-height: 1.56 !important;
-          font-weight: 500 !important;
-        }
-
-        .fromone-smiles-page .smiles-create-eyebrow {
-          display: block !important;
-          margin: 0 0 10px !important;
-          color: var(--posts-pink) !important;
-          font-size: 0.74rem !important;
-          line-height: 1 !important;
-          font-weight: 900 !important;
-          letter-spacing: 0.14em !important;
-          text-transform: uppercase !important;
-        }
-
-        .fromone-smiles-page .smiles-simple-panel,
-        .fromone-smiles-page .smiles-listing-strip {
-          width: 100% !important;
-          max-width: 100% !important;
-          margin: 0 !important;
-          padding: 22px !important;
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 26px !important;
-          background: #ffffff !important;
-          box-shadow: none !important;
-          backdrop-filter: none !important;
-        }
-
-        .fromone-smiles-page .smiles-listing-strip {
-          background: rgba(255, 255, 255, 0.9) !important;
-          border-color: var(--posts-border) !important;
-        }
-
-        .fromone-smiles-page .smiles-action-grid,
-        .fromone-smiles-page .smiles-history-grid {
           gap: 16px !important;
-        }
-
-        .fromone-smiles-page .smiles-action-card,
-        .fromone-smiles-page .smiles-history-card,
-        .fromone-smiles-page .smiles-empty-history {
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 22px !important;
-          background: #fff !important;
-          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055) !important;
-        }
-
-        .fromone-smiles-page .smiles-action-card.is-priority {
-          border-color: rgba(247, 37, 133, 0.28) !important;
-          background: #fff !important;
-          box-shadow:
-            0 0 0 3px rgba(247, 37, 133, 0.08),
-            0 14px 34px rgba(7, 27, 73, 0.07) !important;
-        }
-
-        .fromone-smiles-page .smiles-listing-strip a,
-        .fromone-smiles-page .smiles-primary-action,
-        .fromone-smiles-page .smiles-action-card em,
-        .fromone-smiles-page .smiles-history-card a,
-        .fromone-smiles-page .smiles-empty-history a {
-          min-height: 46px !important;
-          padding: 0 17px !important;
-          border-radius: 15px !important;
           border: 0 !important;
-          background: var(--posts-pink) !important;
-          color: #fff !important;
-          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21) !important;
-          font-size: 0.86rem !important;
-          font-weight: 900 !important;
-        }
-
-        .fromone-smiles-page .smiles-history-actions a,
-        .fromone-smiles-page .smiles-history-actions button,
-        .fromone-smiles-page .smiles-history-panel summary > strong {
-          min-height: 46px !important;
-          padding: 0 17px !important;
-          border-radius: 15px !important;
-          font-size: 0.86rem !important;
-          font-weight: 900 !important;
-        }
-
-        .fromone-smiles-page .smiles-history-actions a:last-child,
-        .fromone-smiles-page .smiles-history-panel summary > strong {
-          border: 1px solid var(--posts-border) !important;
-          background: #fff !important;
-          color: var(--posts-navy) !important;
+          background: transparent !important;
           box-shadow: none !important;
+        }
+
+        .smiles-simple-hero {
+          margin: 0 0 4px;
+        }
+
+        .smiles-eyebrow {
+          display: block;
+          margin-bottom: 8px;
+          color: #f72585;
+          font-size: 0.72rem;
+          line-height: 1;
+          font-weight: 900;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+        }
+
+        .smiles-simple-hero h1 {
+          margin: 0 0 10px;
+          color: #071b49;
+          font-size: clamp(2.45rem, 5vw, 4rem);
+          line-height: 0.98;
+          letter-spacing: -0.06em;
+          font-weight: 900;
+        }
+
+        .smiles-simple-hero p {
+          max-width: 650px;
+          margin: 0;
+          color: #66728a;
+          font-size: 1rem;
+          line-height: 1.5;
+          font-weight: 600;
+        }
+
+        .smiles-status-card,
+        .smiles-listing-summary,
+        .smiles-action-row,
+        .smiles-secondary-links,
+        .smiles-history {
+          border: 1px solid #dfe5f1;
+          background: #ffffff;
+          box-shadow: none;
+        }
+
+        .smiles-status-card,
+        .smiles-listing-summary {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 18px;
+          border-radius: 18px;
+        }
+
+        .smiles-status-card {
+          color: #52617a;
+        }
+
+        .smiles-status-card > div {
+          display: grid;
+          gap: 4px;
+        }
+
+        .smiles-status-card strong {
+          color: #071b49;
+          font-size: 1rem;
+          font-weight: 900;
+        }
+
+        .smiles-status-card span {
+          font-size: 0.88rem;
+          line-height: 1.4;
+          font-weight: 600;
+        }
+
+        .smiles-status-card.is-warning {
+          border-color: #ffd2e5;
+          background: #fffafd;
+        }
+
+        .smiles-status-card a,
+        .smiles-listing-summary a,
+        .smiles-history-empty a {
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 15px;
+          border: 1px solid #f72585;
+          border-radius: 999px;
+          background: #f72585;
+          color: #ffffff !important;
+          font-size: 0.8rem;
+          font-weight: 900;
+          text-decoration: none;
+          box-shadow: none !important;
+          white-space: nowrap;
+        }
+
+        .smiles-listing-summary h2 {
+          margin: 0 0 4px;
+          color: #071b49;
+          font-size: 1.45rem;
+          line-height: 1.05;
+          letter-spacing: -0.04em;
+          font-weight: 900;
+        }
+
+        .smiles-listing-summary p {
+          margin: 0;
+          color: #138a5b;
+          font-size: 0.84rem;
+          font-weight: 800;
+        }
+
+        .smiles-action-list {
+          display: grid;
+          gap: 8px;
+        }
+
+        .smiles-action-row {
+          min-height: 76px;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto auto;
+          align-items: center;
+          gap: 14px;
+          padding: 14px 16px;
+          border-radius: 16px;
+          color: #071b49;
+          text-decoration: none;
+          transition: border-color 140ms ease, background 140ms ease;
+        }
+
+        .smiles-action-row:hover {
+          border-color: rgba(247, 37, 133, 0.35);
+        }
+
+        .smiles-action-row.is-priority {
+          border-color: #ffc6df;
+          background: #fffafd;
+        }
+
+        .smiles-action-row > div {
+          min-width: 0;
+          display: grid;
+          gap: 3px;
+        }
+
+        .smiles-action-row strong {
+          color: #071b49;
+          font-size: 0.98rem;
+          font-weight: 900;
+        }
+
+        .smiles-action-row span {
+          color: #718096;
+          font-size: 0.8rem;
+          line-height: 1.35;
+          font-weight: 650;
+        }
+
+        .smiles-action-row b {
+          min-width: 32px;
+          height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          background: #f7f9fc;
+          color: #071b49;
+          font-size: 0.82rem;
+          font-weight: 900;
+        }
+
+        .smiles-action-row.is-priority b {
+          background: #f72585;
+          color: #ffffff;
+        }
+
+        .smiles-action-row em {
+          color: #f72585;
+          font-size: 1rem;
+          font-style: normal;
+          font-weight: 900;
+        }
+
+        .smiles-secondary-links {
+          padding: 4px;
+          border-radius: 16px;
+        }
+
+        .smiles-secondary-links a {
+          min-height: 58px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          color: #071b49;
+          text-decoration: none;
+        }
+
+        .smiles-secondary-links a strong {
+          font-size: 0.9rem;
+          font-weight: 900;
+        }
+
+        .smiles-secondary-links a span {
+          color: #f72585;
+          font-size: 0.8rem;
+          font-weight: 850;
+        }
+
+        .smiles-history {
+          overflow: hidden;
+          border-radius: 18px;
+        }
+
+        .smiles-history summary {
+          min-height: 72px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 14px 16px;
+          cursor: pointer;
+          list-style: none;
+        }
+
+        .smiles-history summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .smiles-history summary > div {
+          display: grid;
+          gap: 3px;
+        }
+
+        .smiles-history summary strong {
+          color: #071b49;
+          font-size: 0.96rem;
+          font-weight: 900;
+        }
+
+        .smiles-history summary span {
+          color: #718096;
+          font-size: 0.8rem;
+          font-weight: 650;
+        }
+
+        .smiles-history summary b {
+          color: #f72585;
+          font-size: 0.8rem;
+          font-weight: 900;
+        }
+
+        .smiles-history-list {
+          display: grid;
+          gap: 8px;
+          padding: 0 12px 12px;
+        }
+
+        .smiles-history-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 14px;
+          border: 1px solid #e5e9f1;
+          border-radius: 14px;
+          background: #fbfcfe;
+        }
+
+        .smiles-history-copy {
+          min-width: 0;
+        }
+
+        .smiles-history-copy h3 {
+          margin: 0 0 5px;
+          color: #071b49;
+          font-size: 1rem;
+          line-height: 1.2;
+          font-weight: 900;
+        }
+
+        .smiles-history-copy p {
+          display: -webkit-box;
+          margin: 0 0 6px;
+          overflow: hidden;
+          color: #66728a;
+          font-size: 0.8rem;
+          line-height: 1.4;
+          font-weight: 600;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+
+        .smiles-history-copy small {
+          color: #7d8ca3;
+          font-size: 0.72rem;
+          font-weight: 750;
+        }
+
+        .smiles-history-actions {
+          flex: 0 0 auto;
+          display: flex;
+          gap: 7px;
+        }
+
+        .smiles-history-actions a {
+          min-height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 12px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49 !important;
+          font-size: 0.75rem;
+          font-weight: 900;
+          text-decoration: none;
+          box-shadow: none !important;
+        }
+
+        .smiles-history-actions a:last-child {
+          border-color: #f72585;
+          background: #f72585;
+          color: #ffffff !important;
+        }
+
+        .smiles-history-empty {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 0 16px 16px;
+        }
+
+        .smiles-history-empty p {
+          margin: 0;
+          color: #66728a;
+          font-size: 0.82rem;
+          line-height: 1.4;
+          font-weight: 600;
         }
 
         @media (max-width: 700px) {
-          body:has(.fromone-smiles-page),
-          body:has(.fromone-smiles-page) .app-shell,
-          body:has(.fromone-smiles-page) .main-content,
-          body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe,
-          .fromone-smiles-page.settings-create-style-page,
-          .fromone-route-smiles .fromone-universal-mobile-page-frame {
-            background: #ffffff !important;
-            background-image: none !important;
-          }
-
           body:has(.fromone-smiles-page) .main-content,
           body:has(.fromone-smiles-page) .main-content.fromone-mobile-bottom-safe {
-            padding: 24px 16px 100px !important;
+            padding: 18px 10px 100px !important;
           }
 
-          .fromone-smiles-page.settings-create-style-page {
-            padding: 0 !important;
+          .fromone-smiles-page #fromone-standard-shell.smiles-create-style-card {
+            max-width: 100% !important;
+            gap: 12px !important;
           }
 
-          .fromone-smiles-page .smiles-create-hero h1 {
-            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          .smiles-simple-hero h1 {
+            font-size: 2.25rem;
           }
 
-          .fromone-smiles-page .smiles-create-hero p {
-            font-size: 0.95rem !important;
+          .smiles-simple-hero p {
+            font-size: 0.9rem;
           }
 
-          .fromone-smiles-page .smiles-simple-panel,
-          .fromone-smiles-page .smiles-listing-strip {
-            padding: 17px !important;
-            border-radius: 21px !important;
+          .smiles-listing-summary,
+          .smiles-status-card {
+            padding: 15px;
+            border-radius: 16px;
           }
 
-          .fromone-smiles-page .smiles-action-grid,
-          .fromone-smiles-page .smiles-history-grid {
-            grid-template-columns: 1fr !important;
+          .smiles-action-row {
+            min-height: 70px;
+            gap: 10px;
+            padding: 12px 14px;
+          }
+
+          .smiles-history-item {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+
+          .smiles-history-actions {
+            width: 100%;
+          }
+
+          .smiles-history-actions a {
+            flex: 1 1 0;
+          }
+
+          .smiles-history-empty {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .smiles-history-empty a {
+            width: 100%;
           }
         }
-
-
-        /* SMILEZ HUB — FULL PILL ACTIONS */
-        .fromone-smiles-page .smiles-listing-strip a,
-        .fromone-smiles-page .smiles-primary-action,
-        .fromone-smiles-page .smiles-action-card em,
-        .fromone-smiles-page .smiles-history-card a,
-        .fromone-smiles-page .smiles-empty-history a,
-        .fromone-smiles-page .smiles-history-actions a,
-        .fromone-smiles-page .smiles-history-actions button,
-        .fromone-smiles-page .smiles-history-panel summary > strong {
-          border-radius: 999px !important;
-        }
-
-        .fromone-smiles-page .smiles-primary-action,
-        .fromone-smiles-page .smiles-action-card em,
-        .fromone-smiles-page .smiles-history-card a:first-child,
-        .fromone-smiles-page .smiles-empty-history a {
-          color: #ffffff !important;
-        }
-
       `}</style>
     </main>
   );

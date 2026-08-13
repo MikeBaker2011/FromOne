@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import SmilezSectionHeader from "@/app/components/SmilezSectionHeader";
+import SmilezBackButton from "@/app/components/SmilezBackButton";
 import "../../posts/posts-companion-shared.css";
 import { supabaseBrowser as supabase } from "@/lib/supabase/browser";
 import { useToast } from "@/app/components/ToastProvider";
@@ -236,174 +236,175 @@ export default function SmilesReviewsPage() {
   }, []);
 
   return (
-    <main className="fromone-posts-page fromone-smiles-reviews-page smilesReviewsPage" data-fromone-smiles-reviews="simple-v2">
+    <main
+      className="fromone-posts-page fromone-smiles-reviews-page smilesReviewsPage"
+      data-fromone-smiles-reviews="simple-agency"
+    >
       <section id="fromone-standard-shell" className="reviewsShell">
-        <SmilezSectionHeader
-          eyebrow="Reviews"
-          title="Customer reviews. Keep it simple."
-          description={
-            <>
-              Reply to public customer reviews from one clear place. Keep replies
-              short, polite and useful.
-            </>
-          }
-          listingName={profile?.business_name}
-          listingStatus={
-            profile?.smiles_listing_venue_id
-              ? "Live on Smilez"
-              : "Waiting for listing setup"
-          }
-        />
+        <header className="reviews-simple-hero">
+          <div>
+            <span className="reviews-eyebrow">Smilez</span>
+            <h1>Reviews.</h1>
+            <p>Reply to customer reviews and check anything still waiting for approval.</p>
+          </div>
+<SmilezBackButton />
+        </header>
 
         {loading ? (
-          <section className="simplePanel">
-            <h2>Loading reviews...</h2>
+          <section className="reviews-status-card">
+            <strong>Loading reviews…</strong>
+            <span>Checking your latest customer feedback.</span>
           </section>
         ) : null}
 
-        {!loading && !profile?.smiles_listing_venue_id ? (
-          <section className="simplePanel">
-            <span className="panelEyebrow">Not live yet</span>
-            <h2>Your Smiles listing is not live yet</h2>
-            <p>Reviews will appear here once your listing is live.</p>
+        {!loading && isSmilesLocked ? (
+          <section className="reviews-status-card is-warning">
+            <div>
+              <strong>{smilesLockedTitle}</strong>
+              <span>{smilesLockedMessage}</span>
+            </div>
+            <Link href="/settings">Business settings</Link>
           </section>
         ) : null}
 
-        {!loading && profile?.smiles_listing_venue_id ? (
+        {!loading && !isSmilesLocked && !profile?.smiles_listing_venue_id ? (
+          <section className="reviews-status-card is-warning">
+            <div>
+              <strong>Your Smilez listing is not live yet</strong>
+              <span>Reviews will appear here once your listing is live.</span>
+            </div>
+            <Link href="/settings">Check listing</Link>
+          </section>
+        ) : null}
+
+        {!loading && !isSmilesLocked && profile?.smiles_listing_venue_id ? (
           <>
-            <section className="reviewSummary" aria-label="Review summary">
-              <article>
-                <span>Waiting for approval</span>
-                <strong>{pendingReviews.length}</strong>
-              </article>
-              <article>
-                <span>Needs reply</span>
-                <strong>{reviewsNeedingReply.length}</strong>
-              </article>
-              <article>
-                <span>Approved reviews</span>
-                <strong>{approvedReviews.length}</strong>
-              </article>
+            <section className="reviews-toolbar" aria-label="Review summary">
+              <span>
+                <strong>{reviewsNeedingReply.length}</strong> need reply
+              </span>
+              <span>
+                <strong>{pendingReviews.length}</strong> waiting approval
+              </span>
+              <button type="button" onClick={() => setShowAll((current) => !current)}>
+                {showAll ? "Show replies needed" : "View all"}
+              </button>
             </section>
 
             {pendingReviews.length > 0 ? (
-              <section className="simplePanel pendingReviewsPanel">
-                <div className="sectionTop">
+              <details className="reviews-pending">
+                <summary>
                   <div>
-                    <span>Waiting for Smiles admin</span>
-                    <h2>Reviews awaiting approval</h2>
+                    <strong>Waiting for approval</strong>
+                    <span>{pendingReviews.length} review{pendingReviews.length === 1 ? "" : "s"}</span>
                   </div>
-                </div>
+                  <b>View</b>
+                </summary>
 
-                <div className="reviewList">
+                <div className="reviews-list">
                   {pendingReviews.map((review) => (
-                    <article className="reviewCard pendingReviewCard" key={review.id}>
-                      <div className="reviewTop">
+                    <article className="review-card is-pending" key={review.id}>
+                      <div className="review-card-head">
                         <div>
-                          <span>{getReviewLabel(review.status)}</span>
+                          <span className="review-status">{getReviewLabel(review.status)}</span>
                           <h3>{review.customer_name || "Customer"}</h3>
-                          <p>{review.review_text || "No review text."}</p>
                         </div>
-                        <strong aria-label={`${review.rating || 0} out of 5`}>
-                          <span>{renderStars(review.rating)}</span>
-                          {review.rating || 0}/5
+                        <strong className="review-rating" aria-label={`${review.rating || 0} out of 5`}>
+                          {formatRating(review.rating)}
                         </strong>
                       </div>
 
-                      <div className="pillRow">
+                      <p className="review-text">{review.review_text || "No review text."}</p>
+
+                      <div className="review-meta">
                         <span>{formatSubmittedAt(review.created_at)}</span>
+                        <span>{makeReviewReference(review)}</span>
                         {review.customer_email ? (
-                          <a href={`mailto:${review.customer_email}`}>
-                            Email {review.customer_email}
-                          </a>
+                          <a href={`mailto:${review.customer_email}`}>Email customer</a>
                         ) : null}
                       </div>
 
-                      <div className="reviewReference">
-                        Reference: <strong>{makeReviewReference(review)}</strong>
-                      </div>
-
-                      <p className="pendingReviewHelp">
-                        This review is visible here for awareness, but it cannot receive
-                        a public business reply until Smiles admin approves it.
+                      <p className="review-note">
+                        You can reply once Smilez approves this review.
                       </p>
                     </article>
                   ))}
                 </div>
-              </section>
+              </details>
             ) : null}
 
-            <section className="simplePanel priority">
-              <div className="sectionTop">
+            <section className="reviews-main-section">
+              <div className="reviews-section-head">
                 <div>
-                  <span>{showAll ? "All reviews" : "Do this first"}</span>
                   <h2>{showAll ? "All reviews" : "Reviews to reply to"}</h2>
+                  <p>
+                    {showAll
+                      ? `${reviews.length} review${reviews.length === 1 ? "" : "s"} in total.`
+                      : reviewsNeedingReply.length > 0
+                        ? "Reply to the reviews that still need you."
+                        : "Nothing needs a reply."}
+                  </p>
                 </div>
-                <button type="button" onClick={() => setShowAll((item) => !item)}>
-                  {showAll ? "Show replies needed" : "View all reviews"}
-                </button>
               </div>
 
               {reviewsToShow.length === 0 ? (
-                <div className="emptyState">
-                  <h3>{showAll ? "No reviews yet" : "No reviews need a reply"}</h3>
-                  <p>
+                <div className="reviews-empty">
+                  <strong>{showAll ? "No reviews yet" : "You’re all caught up"}</strong>
+                  <span>
                     {showAll
-                      ? "Customer reviews from Smiles will appear here."
-                      : "Reviews without a business reply will appear here."}
-                  </p>
+                      ? "Customer reviews will appear here."
+                      : "New approved reviews without a reply will appear here."}
+                  </span>
                 </div>
               ) : (
-                <div className="reviewList">
+                <div className="reviews-list">
                   {reviewsToShow.map((review) => (
-                    <article className="reviewCard" key={review.id}>
-                      <div className="reviewTop">
+                    <article className="review-card" key={review.id}>
+                      <div className="review-card-head">
                         <div>
-                          <span>{getReviewLabel(review.status)}</span>
+                          <span className="review-status">{getReviewLabel(review.status)}</span>
                           <h3>{review.customer_name || "Customer"}</h3>
-                          <p>{review.review_text || "No review text."}</p>
                         </div>
-                        <strong aria-label={`${review.rating || 0} out of 5`}>
-                          <span>{renderStars(review.rating)}</span>
-                          {review.rating || 0}/5
+                        <strong className="review-rating" aria-label={`${review.rating || 0} out of 5`}>
+                          {formatRating(review.rating)}
                         </strong>
                       </div>
 
-                      <div className="pillRow">
+                      <p className="review-text">{review.review_text || "No review text."}</p>
+
+                      <div className="review-meta">
                         <span>{formatSubmittedAt(review.created_at)}</span>
+                        <span>{makeReviewReference(review)}</span>
                         {review.customer_email ? (
-                          <a href={`mailto:${review.customer_email}`}>
-                            Email {review.customer_email}
-                          </a>
+                          <a href={`mailto:${review.customer_email}`}>Email customer</a>
                         ) : null}
                       </div>
 
-                      <div className="reviewReference">
-                        Reference: <strong>{makeReviewReference(review)}</strong>
-                      </div>
+                      {review.status === "approved" ? (
+                        <>
+                          <label htmlFor={`reply-${review.id}`}>Your reply</label>
+                          <textarea
+                            id={`reply-${review.id}`}
+                            value={replyDrafts[review.id] || ""}
+                            onChange={(event) =>
+                              setReplyDrafts((current) => ({
+                                ...current,
+                                [review.id]: event.target.value,
+                              }))
+                            }
+                            placeholder="Write a short, useful reply..."
+                          />
 
-                      <label htmlFor={`reply-${review.id}`}>
-                        Public business reply
-                      </label>
-                      <textarea
-                        id={`reply-${review.id}`}
-                        value={replyDrafts[review.id] || ""}
-                        onChange={(event) =>
-                          setReplyDrafts((current) => ({
-                            ...current,
-                            [review.id]: event.target.value,
-                          }))
-                        }
-                        placeholder="Example: Thank you for taking the time to leave us a lovely review. We hope to see you again soon."
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() => saveReviewReply(review.id)}
-                        disabled={busyId === review.id}
-                      >
-                        {busyId === review.id ? "Saving..." : "Save reply"}
-                      </button>
+                          <button
+                            type="button"
+                            className="review-save-button"
+                            onClick={() => saveReviewReply(review.id)}
+                            disabled={busyId === review.id}
+                          >
+                            {busyId === review.id ? "Saving…" : "Save reply"}
+                          </button>
+                        </>
+                      ) : null}
                     </article>
                   ))}
                 </div>
@@ -413,996 +414,466 @@ export default function SmilesReviewsPage() {
         ) : null}
       </section>
 
-      <style jsx>{`
-        /* -------------------------------------------------------------- */
-        /* FROMONE SMILES REVIEWS — CLEAN MOBILE + DESKTOP STANDARD         */
-        /* Desktop: main-content 38px + shell margin-top 28px              */
-        /* Mobile: same fixed width/gap as finished mobile pages           */
-        /* -------------------------------------------------------------- */
-        :global(body:has(.fromone-smiles-reviews-page)) {
-          background: #f5f7fb !important;
-          overflow-x: hidden !important;
+      <style jsx global>{`
+        body:has(.fromone-smiles-reviews-page),
+        body:has(.fromone-smiles-reviews-page) .app-shell,
+        body:has(.fromone-smiles-reviews-page) .main-content,
+        body:has(.fromone-smiles-reviews-page) .main-content.fromone-mobile-bottom-safe,
+        body:has(.fromone-smiles-reviews-page) .fromone-universal-mobile-page-frame {
+          background: #ffffff !important;
+          background-image: none !important;
         }
 
-        :global(body:has(.fromone-smiles-reviews-page)::before) {
+        body:has(.fromone-smiles-reviews-page)::before {
           display: none !important;
           content: none !important;
         }
 
-        :global(body:has(.fromone-smiles-reviews-page) .app-shell),
-        :global(body:has(.fromone-smiles-reviews-page) .main-content) {
-          background: #f5f7fb !important;
-        }
-
-        :global(body:has(.fromone-smiles-reviews-page) .main-content) {
+        body:has(.fromone-smiles-reviews-page) .main-content {
           width: 100% !important;
           max-width: none !important;
           margin: 0 !important;
-          padding-top: 38px !important;
-          padding-left: 0 !important;
-          padding-right: 0 !important;
+          padding: 34px clamp(24px, 4vw, 54px) 90px !important;
           box-sizing: border-box !important;
-          overflow-x: hidden !important;
-        }
-
-        .smilesReviewsPage,
-        .smilesReviewsPage * {
-          box-sizing: border-box !important;
-          font-family:
-            var(--font-main),
-            "Plus Jakarta Sans",
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif !important;
-        }
-
-        .smilesReviewsPage {
-          width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          min-height: 100vh !important;
-          margin: 0 !important;
-          padding: 0 16px 96px !important;
-          overflow-x: hidden !important;
-          background: #f5f7fb !important;
-          color: #071b49 !important;
-        }
-
-        .reviewsShell {
-          width: 1040px !important;
-          max-width: calc(100% - 32px) !important;
-          min-width: 0 !important;
-          min-height: 620px !important;
-          margin: 28px auto 0 !important;
-          padding: clamp(30px, 4vw, 48px) !important;
-          overflow: hidden !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 32px !important;
-          background: #ffffff !important;
-          box-shadow: 0 24px 70px rgba(7, 27, 73, 0.10) !important;
-          color: #071b49 !important;
-        }
-
-        .heroTop {
-          display: flex !important;
-          margin-bottom: 26px !important;
-        }
-
-        .backLink {
-          width: fit-content !important;
-          min-height: 52px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 999px !important;
-          padding: 0 22px !important;
-          color: #071b49 !important;
-          background: #ffffff !important;
-          box-shadow: 0 10px 24px rgba(7, 27, 73, 0.06) !important;
-          font-size: 0.98rem !important;
-          font-weight: 800 !important;
-          text-decoration: none !important;
-        }
-
-        .heroGrid {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) 260px !important;
-          gap: 24px !important;
-          align-items: start !important;
-          margin-bottom: 30px !important;
-        }
-
-        .heroGrid > div:first-child {
-          max-width: 760px !important;
-        }
-
-        .eyebrow,
-        .panelEyebrow,
-        .sectionTop span,
-        .reviewSummary span,
-        .listingCard span {
-          margin: 0 !important;
-          color: #f72585 !important;
-          font-size: 0.78rem !important;
-          line-height: 1 !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.13em !important;
-          text-transform: uppercase !important;
-        }
-
-        h1,
-        h2,
-        h3,
-        p {
-          margin-top: 0 !important;
-        }
-
-        h1 {
-          max-width: 760px !important;
-          margin: 12px 0 14px !important;
-          color: #071b49 !important;
-          font-size: clamp(3rem, 5.2vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.055em !important;
-          font-weight: 800 !important;
-          text-align: left !important;
-          overflow: visible !important;
-        }
-
-        .intro,
-        .simplePanel p,
-        .reviewTop p,
-        .emptyState p {
-          margin: 0 !important;
-          color: #52617a !important;
-          font-size: 1.02rem !important;
-          line-height: 1.5 !important;
-          font-weight: 600 !important;
-        }
-
-        .listingCard {
-          display: grid !important;
-          gap: 7px !important;
-          padding: 20px !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 24px !important;
-          background: #fff8fc !important;
-        }
-
-        .listingCard strong {
-          color: #071b49 !important;
-          font-size: 1.6rem !important;
-          line-height: 1 !important;
-          letter-spacing: -0.04em !important;
-          font-weight: 800 !important;
-        }
-
-        .listingCard p {
-          margin: 0 !important;
-          color: #047857 !important;
-          font-size: 0.95rem !important;
-          font-weight: 800 !important;
-        }
-
-        .reviewSummary {
-          display: grid !important;
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          gap: 14px !important;
-          margin-bottom: 18px !important;
-        }
-
-        .reviewSummary article,
-        .simplePanel {
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 24px !important;
-          background: #ffffff !important;
-          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
-        }
-
-        .reviewSummary article {
-          padding: 22px !important;
-          background: #fff8fc !important;
-          border-color: #ffd2e5 !important;
-        }
-
-        .reviewSummary strong {
-          display: block !important;
-          margin-top: 8px !important;
-          color: #071b49 !important;
-          font-size: clamp(1.85rem, 3.4vw, 2.25rem) !important;
-          line-height: 1 !important;
-          letter-spacing: -0.045em !important;
-          font-weight: 800 !important;
-        }
-
-        .simplePanel {
-          display: grid !important;
-          gap: 16px !important;
-          padding: clamp(20px, 3vw, 30px) !important;
-          background: #f7f9fd !important;
-        }
-
-        .simplePanel.priority {
-          background: #ffffff !important;
-          border-color: #dfe5f1 !important;
-        }
-
-        .simplePanel h2 {
-          margin: 8px 0 0 !important;
-          color: #071b49 !important;
-          font-size: clamp(1.75rem, 3.4vw, 2.25rem) !important;
-          line-height: 1 !important;
-          letter-spacing: -0.048em !important;
-          font-weight: 800 !important;
-        }
-
-        .sectionTop,
-        .reviewTop {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) auto !important;
-          gap: 16px !important;
-          align-items: start !important;
-        }
-
-        .sectionTop h2 {
-          margin: 8px 0 0 !important;
-        }
-
-        .sectionTop button,
-        .reviewCard button {
-          min-height: 56px !important;
-          border-radius: 999px !important;
-          padding: 0 24px !important;
-          font: inherit !important;
-          font-size: 1rem !important;
-          font-weight: 800 !important;
-          cursor: pointer !important;
-        }
-
-        .reviewCard button {
-          border: 1px solid #f72585 !important;
-          color: #ffffff !important;
-          background: #f72585 !important;
-          box-shadow: 0 16px 34px rgba(247, 37, 133, 0.20) !important;
-        }
-
-        .sectionTop button {
-          border: 1px solid #ffd2e5 !important;
-          background: #ffffff !important;
-          color: #071b49 !important;
-          box-shadow: 0 10px 24px rgba(7, 27, 73, 0.06) !important;
-        }
-
-        .reviewList {
-          display: grid !important;
-          gap: 14px !important;
-        }
-
-        .reviewCard {
-          display: grid !important;
-          gap: 15px !important;
-          padding: 22px !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 24px !important;
-          background: #ffffff !important;
-          box-shadow: 0 8px 22px rgba(7, 27, 73, 0.045) !important;
-        }
-
-        .reviewTop span {
-          width: fit-content !important;
-          min-height: 32px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          border-radius: 999px !important;
-          padding: 0 12px !important;
-          color: #047857 !important;
-          background: #d1fae5 !important;
-          font-size: 0.82rem !important;
-          font-weight: 800 !important;
-        }
-
-        .reviewTop h3 {
-          margin: 10px 0 6px !important;
-          color: #071b49 !important;
-          font-size: clamp(1.65rem, 3vw, 2.05rem) !important;
-          line-height: 1 !important;
-          letter-spacing: -0.04em !important;
-          font-weight: 800 !important;
-        }
-
-        .reviewTop > strong {
-          display: grid !important;
-          justify-items: end !important;
-          gap: 3px !important;
-          color: #f72585 !important;
-          font-size: 1.05rem !important;
-          line-height: 1 !important;
-          white-space: nowrap !important;
-          font-weight: 800 !important;
-        }
-
-        .reviewTop > strong span {
-          min-height: auto !important;
-          padding: 0 !important;
-          color: #f72585 !important;
-          background: transparent !important;
-          font-size: 1rem !important;
-          letter-spacing: 0 !important;
-        }
-
-        .pillRow {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 8px !important;
-        }
-
-        .pillRow span,
-        .pillRow a {
-          width: fit-content !important;
-          max-width: 100% !important;
-          min-height: 38px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          padding: 0 13px !important;
-          border: 1px solid #dfe5f1 !important;
-          border-radius: 999px !important;
-          color: #071b49 !important;
-          background: #ffffff !important;
-          font-size: 0.9rem !important;
-          font-weight: 700 !important;
-          text-decoration: none !important;
-          overflow-wrap: anywhere !important;
-        }
-
-        .reviewCard label {
-          color: #071b49 !important;
-          font-size: 0.95rem !important;
-          font-weight: 800 !important;
-        }
-
-        .reviewCard textarea {
-          width: 100% !important;
-          min-height: 124px !important;
-          resize: vertical !important;
-          border: 1px solid #d7e0ee !important;
-          border-radius: 20px !important;
-          padding: 16px !important;
-          color: #071b49 !important;
-          background: #ffffff !important;
-          box-sizing: border-box !important;
-          font: inherit !important;
-          font-size: 1rem !important;
-          line-height: 1.5 !important;
-          font-weight: 600 !important;
-          outline: none !important;
-        }
-
-        .reviewCard textarea:focus {
-          border-color: #f72585 !important;
-          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.11) !important;
-        }
-
-        .reviewCard button:disabled {
-          opacity: 0.7 !important;
-          cursor: not-allowed !important;
-        }
-
-        .emptyState {
-          padding: 22px !important;
-          border: 1px dashed #ffd2e5 !important;
-          border-radius: 22px !important;
-          background: #ffffff !important;
-          text-align: center !important;
-        }
-
-        .emptyState h3 {
-          margin: 0 0 7px !important;
-          color: #071b49 !important;
-          font-size: 1.65rem !important;
-          line-height: 1.1 !important;
-          letter-spacing: -0.035em !important;
-          font-weight: 800 !important;
-        }
-
-        .pendingReviewsPanel {
-          border-color: #ffd2e5 !important;
-          background: #fffafd !important;
-        }
-
-        .pendingReviewCard {
-          border-color: #ffd2e5 !important;
-          background: #ffffff !important;
-        }
-
-        .pendingReviewCard .reviewTop > div > span {
-          color: #b45309 !important;
-          background: #fff7d6 !important;
-        }
-
-        .pendingReviewHelp {
-          margin: 0 !important;
-          padding: 14px 16px !important;
-          border: 1px solid #ffe2a8 !important;
-          border-radius: 16px !important;
-          background: #fffbeb !important;
-          color: #7c4a03 !important;
-          font-size: 0.92rem !important;
-          line-height: 1.5 !important;
-          font-weight: 700 !important;
-        }
-
-        @media (max-width: 760px) {
-          :global(body:has(.fromone-smiles-reviews-page) .main-content) {
-            padding-top: 0 !important;
-          }
-
-          .smilesReviewsPage {
-            padding: 0 0 130px !important;
-          }
-
-          .reviewsShell {
-            width: calc(100% - 72px) !important;
-            max-width: 468px !important;
-            min-height: auto !important;
-            margin: 24px auto 0 !important;
-            padding: 28px 26px 26px !important;
-            border-radius: 26px !important;
-            overflow: hidden !important;
-          }
-
-          .heroTop {
-            margin-bottom: 24px !important;
-          }
-
-          .backLink {
-            width: fit-content !important;
-            max-width: 100% !important;
-            min-height: 48px !important;
-            padding: 0 18px !important;
-          }
-
-          .heroGrid,
-          .reviewSummary,
-          .sectionTop,
-          .reviewTop {
-            grid-template-columns: 1fr !important;
-          }
-
-          .heroGrid {
-            gap: 18px !important;
-            margin-bottom: 28px !important;
-          }
-
-          h1 {
-            margin: 14px 0 18px !important;
-            font-size: clamp(2.45rem, 10.2vw, 3.25rem) !important;
-            line-height: 0.96 !important;
-            letter-spacing: -0.058em !important;
-          }
-
-          .intro {
-            font-size: 1rem !important;
-            line-height: 1.45 !important;
-          }
-
-          .listingCard {
-            padding: 18px !important;
-            border-radius: 22px !important;
-          }
-
-          .listingCard strong {
-            font-size: 1.35rem !important;
-          }
-
-          .reviewSummary {
-            gap: 12px !important;
-            margin-bottom: 14px !important;
-          }
-
-          .reviewSummary article {
-            padding: 18px !important;
-            border-radius: 22px !important;
-          }
-
-          .reviewSummary strong {
-            font-size: 2rem !important;
-          }
-
-          .simplePanel,
-          .reviewCard {
-            padding: 18px !important;
-            border-radius: 22px !important;
-          }
-
-          .simplePanel {
-            gap: 14px !important;
-          }
-
-          .simplePanel h2,
-          .sectionTop h2 {
-            font-size: clamp(1.8rem, 8vw, 2.18rem) !important;
-            line-height: 1 !important;
-          }
-
-          .sectionTop {
-            gap: 14px !important;
-          }
-
-          .sectionTop button,
-          .reviewCard button {
-            width: 100% !important;
-            min-height: 54px !important;
-          }
-
-          .reviewList {
-            gap: 12px !important;
-          }
-
-          .reviewCard {
-            gap: 14px !important;
-          }
-
-          .reviewTop {
-            gap: 12px !important;
-          }
-
-          .reviewTop > strong {
-            width: fit-content !important;
-            justify-items: start !important;
-            padding: 8px 12px !important;
-            border: 1px solid #ffd2e5 !important;
-            border-radius: 999px !important;
-            background: #fff8fc !important;
-          }
-
-          .reviewTop h3 {
-            font-size: clamp(1.65rem, 7.2vw, 2rem) !important;
-            line-height: 1.02 !important;
-          }
-
-          .reviewTop p {
-            font-size: 0.98rem !important;
-            line-height: 1.45 !important;
-          }
-
-          .pillRow {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-          }
-
-          .pillRow span,
-          .pillRow a {
-            width: 100% !important;
-            justify-content: center !important;
-            min-height: 42px !important;
-            padding: 9px 12px !important;
-            white-space: normal !important;
-            text-align: center !important;
-          }
-
-          .reviewCard textarea {
-            min-height: 138px !important;
-            border-radius: 18px !important;
-            font-size: 0.98rem !important;
-          }
-        }
-
-        @media (max-width: 420px) {
-          .reviewsShell {
-            width: calc(100% - 48px) !important;
-            padding: 26px 22px 24px !important;
-          }
-
-          h1 {
-            font-size: clamp(2.32rem, 10.8vw, 3rem) !important;
-          }
-
-          .simplePanel,
-          .reviewCard {
-            padding: 16px !important;
-          }
-        }
-
-        /* -------------------------------------------------------------- */
-        /* SMILES REVIEWS — GRANNY-PROOF LOCK + REFERENCES                 */
-        /* -------------------------------------------------------------- */
-        .fromone-smiles-reviews-page .lockedNotice {
-          border-color: #ffd2e5 !important;
-          background:
-            radial-gradient(circle at 26px 20px, rgba(255, 212, 59, 0.26), transparent 42%),
-            linear-gradient(135deg, #fff8fc, #ffffff) !important;
-          text-align: left !important;
-        }
-
-        .fromone-smiles-reviews-page .lockedNotice > span {
-          color: #f72585 !important;
-          font-size: 0.78rem !important;
-          line-height: 1 !important;
-          font-weight: 900 !important;
-          letter-spacing: 0.13em !important;
-          text-transform: uppercase !important;
-        }
-
-        .fromone-smiles-reviews-page .lockedActions {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 12px !important;
-          margin-top: 4px !important;
-        }
-
-        .fromone-smiles-reviews-page .lockedActions a {
-          min-height: 46px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          border-radius: 999px !important;
-          padding: 0 18px !important;
-          border: 1px solid #dfe5f1 !important;
-          color: #071b49 !important;
-          background: #ffffff !important;
-          text-decoration: none !important;
-          font-size: 0.92rem !important;
-          font-weight: 900 !important;
-          box-shadow: 0 10px 22px rgba(7, 27, 73, 0.06) !important;
-        }
-
-        .fromone-smiles-reviews-page .lockedActions a:first-child {
-          color: #ffffff !important;
-          border-color: transparent !important;
-          background: linear-gradient(135deg, #f72585, #ff7ab8) !important;
-          box-shadow: 0 14px 28px rgba(247, 37, 133, 0.18) !important;
-        }
-
-        .fromone-smiles-reviews-page .reviewReference {
-          width: fit-content !important;
-          max-width: 100% !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 6px !important;
-          margin-top: 12px !important;
-          padding: 9px 12px !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 999px !important;
-          background: #fff8fc !important;
-          color: #52617a !important;
-          font-size: 0.88rem !important;
-          line-height: 1 !important;
-          font-weight: 800 !important;
-        }
-
-        .fromone-smiles-reviews-page .reviewReference strong {
-          color: #071b49 !important;
-          font-size: 0.88rem !important;
-          line-height: 1 !important;
-          font-weight: 950 !important;
-          letter-spacing: 0.02em !important;
-        }
-
-        @media (max-width: 760px) {
-          .fromone-smiles-reviews-page .lockedNotice {
-            text-align: center !important;
-            justify-items: center !important;
-          }
-
-          .fromone-smiles-reviews-page .lockedActions {
-            width: 100% !important;
-            justify-content: center !important;
-          }
-
-          .fromone-smiles-reviews-page .lockedActions a {
-            width: 100% !important;
-            max-width: 280px !important;
-          }
-
-          .fromone-smiles-reviews-page .reviewReference {
-            margin-left: auto !important;
-            margin-right: auto !important;
-          }
-        }
-
-
-        /* SMILES REVIEWS — ACTIVE REFERENCE PILL FIX */
-        .reviewCard .reviewReference {
-          width: fit-content !important;
-          max-width: 100% !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 6px !important;
-          margin: 12px 0 18px !important;
-          padding: 9px 12px !important;
-          border: 1px solid #ffd2e5 !important;
-          border-radius: 999px !important;
-          background: #fff8fc !important;
-          color: #52617a !important;
-          font-size: 0.88rem !important;
-          line-height: 1 !important;
-          font-weight: 800 !important;
-        }
-
-        .reviewCard .reviewReference strong {
-          color: #071b49 !important;
-          font-size: 0.88rem !important;
-          line-height: 1 !important;
-          font-weight: 950 !important;
-          letter-spacing: 0.02em !important;
-        }
-
-        @media (max-width: 760px) {
-          .reviewCard .reviewReference {
-            margin-left: auto !important;
-            margin-right: auto !important;
-          }
-        }
-
-
-        /* FINAL SHARED FROMONE PAGE SYSTEM */
-        :global(body:has(.fromone-smiles-reviews-page)) {
-          background: var(--posts-bg) !important;
-        }
-
-        :global(body:has(.fromone-smiles-reviews-page) .app-shell),
-        :global(body:has(.fromone-smiles-reviews-page) .main-content) {
-          background: var(--posts-bg) !important;
-        }
-
-        :global(body:has(.fromone-smiles-reviews-page) .main-content) {
-          width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          margin: 0 !important;
-          padding: 38px clamp(24px, 4vw, 54px) 90px !important;
           overflow-x: hidden !important;
         }
 
         .smilesReviewsPage {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          min-height: 0 !important;
-          margin: 0 !important;
-          padding: 0 !important;
+          width: 100%;
+          max-width: 100%;
+          margin: 0;
+          color: #071b49;
           background: transparent !important;
-          overflow: visible !important;
+          font-family: var(--font-main), "Plus Jakarta Sans", ui-sans-serif, system-ui,
+            -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         .reviewsShell {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          min-height: 0 !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          display: grid !important;
-          gap: 22px !important;
-          overflow: visible !important;
-          border: 0 !important;
-          border-radius: 0 !important;
-          background: transparent !important;
-          background-image: none !important;
+          width: 100%;
+          max-width: 980px;
+          margin: 0 auto;
+          display: grid;
+          gap: 14px;
+        }
+
+        .reviews-simple-hero {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+          margin-bottom: 2px;
+        }
+
+        .reviews-eyebrow {
+          display: block;
+          margin-bottom: 8px;
+          color: #f72585;
+          font-size: 0.72rem;
+          font-weight: 900;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+        }
+
+        .reviews-simple-hero h1 {
+          margin: 0 0 9px;
+          color: #071b49;
+          font-size: clamp(2.4rem, 5vw, 3.9rem);
+          line-height: 0.98;
+          letter-spacing: -0.06em;
+          font-weight: 900;
+        }
+
+        .reviews-simple-hero p {
+          max-width: 650px;
+          margin: 0;
+          color: #66728a;
+          font-size: 0.98rem;
+          line-height: 1.45;
+          font-weight: 600;
+        }
+
+        .reviews-status-card a {
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 14px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49 !important;
+          font-size: 0.8rem;
+          font-weight: 900;
+          text-decoration: none;
+          box-shadow: none !important;
+          white-space: nowrap;
+        }
+
+        .reviews-status-card,
+        .reviews-toolbar,
+        .reviews-pending,
+        .reviews-main-section {
+          border: 1px solid #dfe5f1;
+          border-radius: 18px;
+          background: #ffffff;
+          box-shadow: none;
+        }
+
+        .reviews-status-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 16px;
+        }
+
+        .reviews-status-card > div {
+          display: grid;
+          gap: 3px;
+        }
+
+        .reviews-status-card strong {
+          color: #071b49;
+          font-size: 0.95rem;
+          font-weight: 900;
+        }
+
+        .reviews-status-card span {
+          color: #66728a;
+          font-size: 0.82rem;
+          line-height: 1.4;
+          font-weight: 600;
+        }
+
+        .reviews-status-card.is-warning {
+          border-color: #ffd2e5;
+          background: #fffafd;
+        }
+
+        .reviews-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px;
+        }
+
+        .reviews-toolbar > span {
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 0 11px;
+          border-radius: 999px;
+          background: #f7f9fc;
+          color: #66728a;
+          font-size: 0.76rem;
+          font-weight: 750;
+        }
+
+        .reviews-toolbar > span strong {
+          color: #071b49;
+          font-size: 0.9rem;
+          font-weight: 900;
+        }
+
+        .reviews-toolbar button {
+          min-height: 40px;
+          margin-left: auto;
+          padding: 0 13px;
+          border: 1px solid #dfe5f1;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #071b49;
+          font: inherit;
+          font-size: 0.78rem;
+          font-weight: 900;
+          cursor: pointer;
           box-shadow: none !important;
         }
 
-        .heroTop {
-          margin: 0 0 24px !important;
+        .reviews-pending {
+          overflow: hidden;
         }
 
-        .backLink {
-          width: fit-content !important;
-          min-height: 44px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          gap: 9px !important;
-          padding: 0 18px !important;
-          border: 1px solid rgba(247, 37, 133, 0.2) !important;
-          border-radius: 999px !important;
-          background: #fff5fa !important;
-          color: var(--posts-navy) !important;
-          box-shadow: 0 8px 20px rgba(7, 27, 73, 0.06) !important;
-          font-size: 0.86rem !important;
-          font-weight: 900 !important;
-          line-height: 1 !important;
-          text-decoration: none !important;
-          transition:
-            transform 160ms ease,
-            border-color 160ms ease,
-            box-shadow 160ms ease,
-            background 160ms ease !important;
+        .reviews-pending summary {
+          min-height: 64px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 16px;
+          cursor: pointer;
+          list-style: none;
         }
 
-        .backLink:hover {
-          transform: translateY(-1px) !important;
-          border-color: rgba(247, 37, 133, 0.32) !important;
-          background: #fff !important;
-          box-shadow: 0 12px 26px rgba(7, 27, 73, 0.09) !important;
+        .reviews-pending summary::-webkit-details-marker {
+          display: none;
         }
 
-        .backLink:focus-visible {
-          outline: none !important;
-          box-shadow:
-            0 0 0 4px rgba(247, 37, 133, 0.12),
-            0 12px 26px rgba(7, 27, 73, 0.09) !important;
+        .reviews-pending summary > div {
+          display: grid;
+          gap: 2px;
         }
 
-        .heroGrid {
-          width: 100% !important;
-          max-width: 100% !important;
-          grid-template-columns: minmax(0, 1fr) 260px !important;
-          gap: 24px !important;
-          align-items: start !important;
-          margin: 0 0 6px !important;
-          padding: 0 !important;
-          border: 0 !important;
-          background: transparent !important;
+        .reviews-pending summary strong {
+          color: #071b49;
+          font-size: 0.94rem;
+          font-weight: 900;
+        }
+
+        .reviews-pending summary span {
+          color: #718096;
+          font-size: 0.76rem;
+          font-weight: 650;
+        }
+
+        .reviews-pending summary b {
+          color: #f72585;
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+
+        .reviews-main-section {
+          padding: 16px;
+        }
+
+        .reviews-section-head {
+          margin-bottom: 12px;
+        }
+
+        .reviews-section-head h2 {
+          margin: 0 0 4px;
+          color: #071b49;
+          font-size: 1.18rem;
+          line-height: 1.1;
+          letter-spacing: -0.03em;
+          font-weight: 900;
+        }
+
+        .reviews-section-head p {
+          margin: 0;
+          color: #718096;
+          font-size: 0.82rem;
+          font-weight: 600;
+        }
+
+        .reviews-list {
+          display: grid;
+          gap: 9px;
+        }
+
+        .reviews-pending .reviews-list {
+          padding: 0 12px 12px;
+        }
+
+        .review-card {
+          padding: 14px;
+          border: 1px solid #e3e8f1;
+          border-radius: 15px;
+          background: #fbfcfe;
+        }
+
+        .review-card.is-pending {
+          border-color: #ffe0b5;
+          background: #fffdf7;
+        }
+
+        .review-card-head {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .review-card-head h3 {
+          margin: 6px 0 0;
+          color: #071b49;
+          font-size: 1.05rem;
+          line-height: 1.15;
+          font-weight: 900;
+        }
+
+        .review-status {
+          display: inline-flex;
+          align-items: center;
+          min-height: 26px;
+          padding: 0 8px;
+          border-radius: 999px;
+          background: #e8f8ef;
+          color: #147a4d;
+          font-size: 0.66rem;
+          font-weight: 900;
+        }
+
+        .review-card.is-pending .review-status {
+          background: #fff3d7;
+          color: #9a5a00;
+        }
+
+        .review-rating {
+          color: #f72585;
+          font-size: 0.85rem;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .review-text {
+          margin: 10px 0;
+          color: #52617a;
+          font-size: 0.88rem;
+          line-height: 1.48;
+          font-weight: 600;
+        }
+
+        .review-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-bottom: 10px;
+        }
+
+        .review-meta span,
+        .review-meta a {
+          min-height: 28px;
+          display: inline-flex;
+          align-items: center;
+          padding: 0 8px;
+          border-radius: 999px;
+          background: #f3f6fa;
+          color: #52617a !important;
+          font-size: 0.68rem;
+          font-weight: 800;
+          text-decoration: none;
+        }
+
+        .review-note {
+          margin: 0;
+          padding: 10px;
+          border-radius: 10px;
+          background: #fff8e8;
+          color: #805300;
+          font-size: 0.74rem;
+          line-height: 1.4;
+          font-weight: 700;
+        }
+
+        .review-card label {
+          display: block;
+          margin-bottom: 6px;
+          color: #071b49;
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+
+        .review-card textarea {
+          width: 100%;
+          min-height: 104px;
+          resize: vertical;
+          padding: 12px;
+          border: 1px solid #dfe5f1;
+          border-radius: 12px;
+          background: #ffffff;
+          color: #071b49;
+          box-sizing: border-box;
+          font: inherit;
+          font-size: 0.86rem;
+          line-height: 1.45;
+          font-weight: 600;
+          outline: none;
+        }
+
+        .review-card textarea:focus {
+          border-color: #f72585;
+          box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.08);
+        }
+
+        .review-save-button {
+          min-height: 40px;
+          margin-top: 8px;
+          padding: 0 14px;
+          border: 1px solid #f72585;
+          border-radius: 999px;
+          background: #f72585;
+          color: #ffffff;
+          font: inherit;
+          font-size: 0.8rem;
+          font-weight: 900;
+          cursor: pointer;
           box-shadow: none !important;
         }
 
-        .heroGrid > div:first-child {
-          max-width: 790px !important;
+        .review-save-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
-        .eyebrow {
-          display: block !important;
-          margin: 0 0 10px !important;
-          color: var(--posts-pink) !important;
-          font-size: 0.74rem !important;
-          line-height: 1 !important;
-          font-weight: 900 !important;
-          letter-spacing: 0.14em !important;
-          text-transform: uppercase !important;
+        .reviews-empty {
+          display: grid;
+          gap: 3px;
+          padding: 14px;
+          border-radius: 13px;
+          background: #f8fafc;
         }
 
-        h1 {
-          max-width: 760px !important;
-          margin: 0 0 12px !important;
-          color: var(--posts-navy) !important;
-          font-size: clamp(2.6rem, 5vw, 4.45rem) !important;
-          line-height: 0.96 !important;
-          letter-spacing: -0.06em !important;
-          font-weight: 800 !important;
+        .reviews-empty strong {
+          color: #071b49;
+          font-size: 0.9rem;
+          font-weight: 900;
         }
 
-        .intro {
-          max-width: 720px !important;
-          margin: 0 !important;
-          color: var(--posts-muted) !important;
-          font-size: 1.03rem !important;
-          line-height: 1.56 !important;
-          font-weight: 500 !important;
-        }
-
-        .listingCard,
-        .reviewSummary article,
-        .simplePanel {
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 26px !important;
-          background: rgba(255, 255, 255, 0.84) !important;
-          box-shadow: var(--posts-shadow) !important;
-          backdrop-filter: blur(10px) !important;
-        }
-
-        .listingCard {
-          background: rgba(255, 255, 255, 0.9) !important;
-          border-color: var(--posts-border) !important;
-        }
-
-        .reviewSummary {
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          gap: 16px !important;
-          margin: 0 !important;
-        }
-
-        .reviewSummary article {
-          padding: 20px !important;
-          background: rgba(255, 255, 255, 0.9) !important;
-          border-color: var(--posts-border) !important;
-        }
-
-        .simplePanel {
-          margin: 0 !important;
-          padding: 22px !important;
-          background: rgba(255, 255, 255, 0.84) !important;
-        }
-
-        .simplePanel.priority {
-          background: rgba(255, 255, 255, 0.84) !important;
-          border-color: var(--posts-border) !important;
-        }
-
-        .sectionTop button,
-        .reviewCard button {
-          min-height: 46px !important;
-          padding: 0 17px !important;
-          border-radius: 15px !important;
-          font-size: 0.86rem !important;
-          font-weight: 900 !important;
-        }
-
-        .sectionTop button {
-          border: 1px solid var(--posts-border) !important;
-          background: #fff !important;
-          color: var(--posts-navy) !important;
-          box-shadow: none !important;
-        }
-
-        .reviewCard button {
-          border: 0 !important;
-          background: var(--posts-pink) !important;
-          color: #fff !important;
-          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21) !important;
-        }
-
-        .reviewCard {
-          padding: 20px !important;
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 22px !important;
-          background: #fff !important;
-          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.055) !important;
-        }
-
-        .reviewCard textarea {
-          min-height: 124px !important;
-          border: 1px solid var(--posts-border) !important;
-          border-radius: 14px !important;
-          background: #fff !important;
-          color: var(--posts-navy) !important;
-        }
-
-        .reviewCard textarea:focus {
-          border-color: var(--posts-pink) !important;
-          box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1) !important;
-        }
-
-        .pillRow span,
-        .pillRow a,
-        .reviewReference {
-          border: 1px solid var(--posts-border) !important;
-          background: #f8fafc !important;
-          color: var(--posts-navy) !important;
+        .reviews-empty span {
+          color: #718096;
+          font-size: 0.78rem;
+          font-weight: 600;
         }
 
         @media (max-width: 700px) {
-          :global(body:has(.fromone-smiles-reviews-page) .main-content) {
-            padding: 24px 16px 100px !important;
+          body:has(.fromone-smiles-reviews-page) .main-content,
+          body:has(.fromone-smiles-reviews-page) .main-content.fromone-mobile-bottom-safe {
+            padding: 18px 10px 100px !important;
           }
 
-          .smilesReviewsPage {
-            padding: 0 !important;
+          .reviewsShell {
+            max-width: 100%;
+            gap: 12px;
           }
 
-          .heroGrid,
-          .reviewSummary,
-          .sectionTop,
-          .reviewTop {
-            grid-template-columns: 1fr !important;
+          .reviews-simple-hero {
+            display: grid;
+            gap: 12px;
           }
 
-          h1 {
-            font-size: clamp(2.25rem, 11vw, 3rem) !important;
+          .reviews-simple-hero h1 {
+            font-size: 2.2rem;
           }
 
-          .intro {
-            font-size: 0.95rem !important;
+          .reviews-toolbar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
           }
 
-          .listingCard,
-          .reviewSummary article,
-          .simplePanel,
-          .reviewCard {
-            padding: 17px !important;
-            border-radius: 21px !important;
+          .reviews-toolbar > span {
+            justify-content: center;
           }
 
-          .sectionTop button,
-          .reviewCard button {
-            width: 100% !important;
+          .reviews-toolbar button {
+            grid-column: 1 / -1;
+            width: 100%;
+            margin-left: 0;
+          }
+
+          .review-card-head {
+            display: grid;
+          }
+
+          .review-rating {
+            width: fit-content;
+          }
+
+          .review-save-button {
+            width: 100%;
           }
         }
-
       `}</style>
     </main>
   );

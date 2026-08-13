@@ -8,58 +8,36 @@ type DashboardCard = {
   title: string;
   description: string;
   href: string;
-  status: string;
   eyebrow: string;
 };
 
-const cards: DashboardCard[] = [
+const primaryCards: DashboardCard[] = [
   {
     eyebrow: "Create",
     title: "Create content",
     description:
-      "Upload a photo, video or flyer and prepare content for Facebook, Instagram or Smilez.",
+      "Upload a photo, video or flyer, write with AI or manually, review it and publish.",
     href: "/create",
-    status: "Start creating",
-  },
-  {
-    eyebrow: "Posts",
-    title: "Review your posts",
-    description:
-      "Check drafts, make changes and publish approved content to Facebook or Instagram.",
-    href: "/posts",
-    status: "Open review queue",
   },
   {
     eyebrow: "Smilez",
-    title: "Manage your Smilez presence",
+    title: "Manage Smilez",
     description:
-      "Check your listing, offers, events and anything waiting for approval.",
+      "Manage your venue, offers, events and anything waiting for approval.",
     href: "/smiles",
-    status: "Open Smilez",
   },
+];
+
+const quickLinks = [
   {
-    eyebrow: "Reports",
-    title: "See social performance",
-    description:
-      "Review publishing activity and Facebook or Instagram results.",
-    href: "/reports",
-    status: "View reports",
-  },
-  {
-    eyebrow: "Business",
-    title: "Update your business",
-    description:
-      "Keep business details, contact information and social connections up to date.",
+    title: "Business settings",
+    description: "Business details and social connections",
     href: "/settings",
-    status: "Open business settings",
   },
   {
-    eyebrow: "Plan",
-    title: "Manage your plan",
-    description:
-      "Check access, billing status and your current FromOne plan.",
+    title: "Plan",
+    description: "Access and billing",
     href: "/subscription",
-    status: "View plan",
   },
 ];
 
@@ -136,11 +114,8 @@ export default function DashboardPage() {
     <main className="companion-home">
       <header className="companion-home-header">
         <div className="page-eyebrow">FromOne companion</div>
-        <h1>Manage your content, business and online presence.</h1>
-        <p>
-          Choose what you need to do. FromOne keeps your content, Smilez workspace,
-          reporting and business details together.
-        </p>
+        <h1>What would you like to do?</h1>
+        <p>Create content or manage your Smilez presence. Everything else is one tap away.</p>
       </header>
 
       {!checkingSetup && !setupComplete && (
@@ -169,25 +144,38 @@ export default function DashboardPage() {
         </section>
       )}
 
-      <section className="companion-card-grid" aria-label="FromOne sections">
-        {cards.map((card, index) => (
-          <Link href={card.href} key={card.href} className="companion-dashboard-card">
-            <div className="companion-card-top">
-              <span className="companion-card-number">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="companion-card-eyebrow">{card.eyebrow}</span>
-            </div>
-
+      <section className="companion-primary-grid" aria-label="Main actions">
+        {primaryCards.map((card) => (
+          <Link href={card.href} key={card.href} className="companion-primary-card">
             <div>
+              <span className="companion-card-eyebrow">{card.eyebrow}</span>
               <h2>{card.title}</h2>
               <p>{card.description}</p>
             </div>
 
-            <span className="companion-card-action">{card.status}</span>
+            <span className="companion-card-arrow" aria-hidden="true">→</span>
           </Link>
         ))}
       </section>
+
+      <section className="companion-quick-links" aria-label="Quick links">
+        <div className="companion-quick-links-head">
+          <span className="companion-card-eyebrow">Quick links</span>
+        </div>
+
+        <div className="companion-quick-links-grid">
+          {quickLinks.map((item) => (
+            <Link href={item.href} key={item.href} className="companion-quick-link">
+              <div>
+                <strong>{item.title}</strong>
+                <span>{item.description}</span>
+              </div>
+              <span aria-hidden="true">→</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
 
       <style jsx global>{`
         body:has(.companion-home),
@@ -350,99 +338,142 @@ export default function DashboardPage() {
           white-space: nowrap;
         }
 
-        .companion-card-grid {
+        .companion-primary-grid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 18px;
+          gap: 16px;
+          margin-bottom: 18px;
           background: #ffffff !important;
         }
 
-        .companion-dashboard-card {
-          min-height: 250px;
+        .companion-primary-card {
+          min-height: 210px;
           display: flex;
-          flex-direction: column;
+          align-items: flex-end;
           justify-content: space-between;
-          gap: 24px;
-          padding: 26px;
+          gap: 20px;
+          padding: 24px;
           border: 1px solid #dfe5f1;
-          border-radius: 24px;
+          border-radius: 22px;
           background: #ffffff;
           color: #071b49;
           text-decoration: none;
-          box-shadow: 0 14px 36px rgba(7, 27, 73, 0.06);
-          transition: transform 160ms ease, border-color 160ms ease,
-            box-shadow 160ms ease;
+          box-shadow: 0 10px 28px rgba(7, 27, 73, 0.045);
+          transition: border-color 150ms ease, transform 150ms ease;
         }
 
-        .companion-dashboard-card:hover {
-          transform: translateY(-2px);
-          border-color: #f72585;
-          box-shadow: 0 18px 44px rgba(7, 27, 73, 0.1);
-        }
-
-        .companion-card-top {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .companion-card-number {
-          width: 38px;
-          height: 38px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 999px;
-          background: #f72585;
-          color: #ffffff;
-          font-size: 0.8rem;
-          font-weight: 900;
+        .companion-primary-card:hover {
+          border-color: rgba(247, 37, 133, 0.5);
+          transform: translateY(-1px);
         }
 
         .companion-card-eyebrow {
+          display: block;
+          margin-bottom: 10px;
           color: #f72585;
-          font-size: 0.76rem;
+          font-size: 0.72rem;
           font-weight: 900;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.11em;
           text-transform: uppercase;
         }
 
-        .companion-dashboard-card h2 {
-          margin: 0 0 10px;
+        .companion-primary-card h2 {
+          margin: 0 0 8px;
           color: #071b49;
-          font-size: clamp(1.55rem, 2.4vw, 2.05rem);
+          font-size: clamp(1.55rem, 2.4vw, 2rem);
           line-height: 1;
           letter-spacing: -0.045em;
           font-weight: 900;
         }
 
-        .companion-dashboard-card p {
+        .companion-primary-card p {
+          max-width: 440px;
           margin: 0;
           color: #52617a;
-          font-size: 0.98rem;
-          line-height: 1.5;
+          font-size: 0.94rem;
+          line-height: 1.48;
           font-weight: 600;
         }
 
-        .companion-card-action {
-          min-height: 46px;
-          width: fit-content;
+        .companion-card-arrow {
+          width: 42px;
+          height: 42px;
+          flex: 0 0 42px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          padding: 0 17px;
-          border: 0;
           border-radius: 999px;
-          background: #f72585;
-          color: #ffffff;
-          box-shadow: 0 10px 24px rgba(247, 37, 133, 0.21);
-          font-size: 0.86rem;
+          border: 1px solid #ffd2e5;
+          background: #fff7fb;
+          color: #f72585;
+          font-size: 1.1rem;
+          font-weight: 900;
+        }
+
+        .companion-quick-links {
+          padding: 18px 0 0;
+          border-top: 1px solid #edf1f7;
+        }
+
+        .companion-quick-links-head {
+          margin-bottom: 10px;
+        }
+
+        .companion-quick-links-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .companion-quick-link {
+          min-height: 72px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 16px;
+          border: 1px solid #e3e8f1;
+          border-radius: 16px;
+          background: #ffffff;
+          color: #071b49;
+          text-decoration: none;
+          transition: border-color 150ms ease;
+        }
+
+        .companion-quick-link:hover {
+          border-color: rgba(247, 37, 133, 0.35);
+        }
+
+        .companion-quick-link > div {
+          display: grid;
+          gap: 3px;
+          min-width: 0;
+        }
+
+        .companion-quick-link strong {
+          font-size: 0.92rem;
+          font-weight: 850;
+        }
+
+        .companion-quick-link span {
+          color: #738097;
+          font-size: 0.76rem;
+          line-height: 1.35;
+        }
+
+        .companion-quick-link > span:last-child {
+          color: #f72585;
+          font-size: 1rem;
           font-weight: 900;
         }
 
         @media (max-width: 1100px) {
-          .companion-card-grid {
-            gap: 16px;
+          .companion-primary-grid {
+            gap: 14px;
+          }
+
+          .companion-quick-links-grid {
+            grid-template-columns: 1fr 1fr;
           }
         }
 
@@ -453,7 +484,7 @@ export default function DashboardPage() {
           body:has(.companion-home) .main-content.fromone-mobile-bottom-safe,
           body:has(.companion-home) .fromone-universal-mobile-page-frame,
           .companion-home,
-          .companion-card-grid {
+          .companion-primary-grid {
             background: #ffffff !important;
             background-image: none !important;
           }
@@ -488,16 +519,20 @@ export default function DashboardPage() {
             text-align: center;
           }
 
-          .companion-card-grid {
+          .companion-primary-grid {
             grid-template-columns: 1fr;
             gap: 14px;
           }
 
-          .companion-dashboard-card {
-            min-height: 0;
-            gap: 18px;
-            padding: 22px;
-            border-radius: 22px;
+          .companion-primary-card {
+            min-height: 160px;
+            padding: 20px;
+            border-radius: 20px;
+          }
+
+          .companion-quick-links-grid {
+            grid-template-columns: 1fr;
+            gap: 9px;
           }
         }
 
@@ -507,18 +542,18 @@ export default function DashboardPage() {
           }
 
           .companion-home .page-eyebrow {
-            margin-bottom: 10px;
-            font-size: 0.72rem;
+            margin-bottom: 9px;
+            font-size: 0.7rem;
           }
 
           .companion-home-header h1 {
-            margin-bottom: 12px;
-            font-size: clamp(2rem, 11vw, 2.75rem);
+            margin-bottom: 10px;
+            font-size: clamp(2rem, 10.6vw, 2.7rem);
             letter-spacing: -0.052em;
           }
 
           .companion-home-header p {
-            font-size: 0.95rem;
+            font-size: 0.94rem;
           }
 
           .companion-setup-panel {
@@ -528,55 +563,51 @@ export default function DashboardPage() {
           }
 
           .companion-setup-panel h2 {
-            font-size: 1.55rem;
+            font-size: 1.5rem;
           }
 
-          .companion-card-grid {
-            gap: 12px;
-          }
-
-          .companion-dashboard-card {
-            min-height: 0;
-            gap: 16px;
-            padding: 18px;
-            border-radius: 20px;
-          }
-
-          .companion-card-top {
+          .companion-primary-grid {
+            grid-template-columns: 1fr;
             gap: 10px;
+            margin-bottom: 16px;
           }
 
-          .companion-card-number {
-            width: 34px;
-            height: 34px;
-            flex: 0 0 34px;
-            font-size: 0.74rem;
+          .companion-primary-card {
+            min-height: 142px;
+            align-items: center;
+            padding: 18px;
+            border-radius: 18px;
           }
 
-          .companion-card-eyebrow {
-            font-size: 0.7rem;
+          .companion-primary-card h2 {
+            margin-bottom: 7px;
+            font-size: 1.38rem;
           }
 
-          .companion-dashboard-card h2 {
-            margin-bottom: 8px;
-            font-size: 1.45rem;
+          .companion-primary-card p {
+            font-size: 0.88rem;
+            line-height: 1.42;
           }
 
-          .companion-dashboard-card p {
-            font-size: 0.92rem;
-            line-height: 1.45;
+          .companion-card-arrow {
+            width: 38px;
+            height: 38px;
+            flex-basis: 38px;
           }
 
-          .companion-card-action {
-            width: 100%;
-            min-height: 46px;
-            padding: 0 14px;
-            box-sizing: border-box;
+          .companion-quick-links {
+            padding-top: 14px;
+          }
+
+          .companion-quick-link {
+            min-height: 64px;
+            padding: 12px 14px;
+            border-radius: 14px;
           }
         }
 
         @media (max-width: 360px) {
-          .companion-dashboard-card {
+          .companion-primary-card {
             padding: 16px;
           }
 
@@ -584,6 +615,7 @@ export default function DashboardPage() {
             font-size: 1.9rem;
           }
         }
+
       `}</style>
     </main>
   );

@@ -2215,18 +2215,22 @@ export default function SettingsPage() {
           postcode: normalisePostcode(postcode),
           postcodePrefix: getPostcodePrefix(postcode),
           postcode_prefix: getPostcodePrefix(postcode),
-          latitude: latitude.trim() ? Number(latitude) : null,
-          longitude: longitude.trim() ? Number(longitude) : null,
-          geoEnabled,
-          geo_enabled: geoEnabled,
-          geoAccuracy,
-          geo_accuracy: geoAccuracy,
-          geoSource,
-          geo_source: geoSource,
+          latitude:
+            resolvedLocation?.latitude ??
+            (latitude.trim() ? Number(latitude) : null),
+          longitude:
+            resolvedLocation?.longitude ??
+            (longitude.trim() ? Number(longitude) : null),
+          geoEnabled: resolvedLocation ? true : geoEnabled,
+          geo_enabled: resolvedLocation ? true : geoEnabled,
+          geoAccuracy: resolvedLocation?.accuracy || geoAccuracy,
+          geo_accuracy: resolvedLocation?.accuracy || geoAccuracy,
+          geoSource: resolvedLocation?.source || geoSource,
+          geo_source: resolvedLocation?.source || geoSource,
           serviceRadiusMiles: Number(serviceRadiusMiles || '5'),
           service_radius_miles: Number(serviceRadiusMiles || '5'),
-          geoUpdatedAt: geoUpdatedAt || null,
-          geo_updated_at: geoUpdatedAt || null,
+          geoUpdatedAt: resolvedLocation?.verifiedAt || geoUpdatedAt || null,
+          geo_updated_at: resolvedLocation?.verifiedAt || geoUpdatedAt || null,
           phone: phone.trim(),
           email: email.trim(),
           openingHours: openingHours.trim(),
@@ -2510,115 +2514,32 @@ export default function SettingsPage() {
   if (settingsMode === 'simple') {
     return (
       <main
-        className="fromone-posts-page fromone-settings-page settings-simple-business-page settings-redesign-v2"
-        data-settings-page="simple-business-v1"
+        className="fromone-posts-page fromone-settings-page settings-simple-business-page"
+        data-settings-page="simple-business-v3"
       >
-      <BackToDashboardButton />
-        <section id="fromone-standard-shell" className="settings-simple-business-shell">
-          <header className="settings-simple-business-header">
-            <span className="posts-create-eyebrow">Settings</span>
-            <h1>Your business</h1>
-            <p>
-              Add the details customers need. Smilez uses this same information
-              automatically, so nothing needs entering twice.
-            </p>
+        <section id="fromone-standard-shell" className="settingsLiteShell">
+          <header className="settingsLiteHero">
+            <span>Settings</span>
+            <h1>Business settings.</h1>
+            <p>Keep the essentials up to date. FromOne handles the rest.</p>
           </header>
 
-          <nav
-            className="settings-redesign-nav"
-            aria-label="Settings sections"
-          >
-            {[
-              {
-                id: 'business' as const,
-                label: 'Business',
-                helper: 'Details and location',
-              },
-              {
-                id: 'images' as const,
-                label: 'Images',
-                helper: 'Main image and gallery',
-              },
-              {
-                id: 'bookings' as const,
-                label: 'Bookings',
-                helper: 'Hours and capacity',
-              },
-              {
-                id: 'connections' as const,
-                label: 'Connections',
-                helper: 'Facebook and Instagram',
-              },
-            ].map((item) => {
-              const active = simpleSettingsSection === item.id;
-
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={active ? 'is-active' : ''}
-                  aria-current={active ? 'page' : undefined}
-                  onClick={() => setSimpleSettingsSection(item.id)}
-                >
-                  <strong>{item.label}</strong>
-                  <small>{item.helper}</small>
-                </button>
-              );
-            })}
-          </nav>
-
-          {simpleSettingsSection === 'business' ? (
-            <div className="settings-redesign-section">
-          <section className="settings-simple-card settings-simple-scan-card">
-            <div className="settings-simple-card-heading">
+          <section className="settingsLiteCard">
+            <div className="settingsLiteCardHead">
               <div>
-                <span>Quick setup</span>
-                <h2>Scan your website</h2>
+                <span>Business</span>
+                <h2>Your details</h2>
               </div>
-              <small>Automatically fills the business profile</small>
+              <small>{getSmilesListingStatusLabel()}</small>
             </div>
 
-            <div className="settings-simple-scan-row">
-              <label>
-                <strong>Website address</strong>
-                <input
-                  value={websiteUrl}
-                  onChange={(event) => setWebsiteUrl(event.target.value)}
-                  placeholder="https://yourbusiness.co.uk"
-                />
-              </label>
-
-              <button
-                type="button"
-                className="settings-simple-primary"
-                onClick={handleScanWebsite}
-                disabled={scanningWebsite}
-              >
-                {scanningWebsite ? 'Scanning...' : 'Scan website'}
-              </button>
-            </div>
-
-            {scanMessage ? (
-              <p className="settings-simple-scan-message">{scanMessage}</p>
-            ) : null}
-          </section>
-
-          <section className="settings-simple-card">
-            <div className="settings-simple-card-heading">
-              <div>
-                <span>Business profile</span>
-                <h2>Main details</h2>
-              </div>
-              <small>Used across FromOne and Smilez</small>
-            </div>
-
-            <div className="settings-simple-grid">
+            <div className="settingsLiteGrid">
               <label>
                 <strong>Business name</strong>
                 <input
                   value={businessName}
                   onChange={(event) => setBusinessName(event.target.value)}
-                  placeholder="Your business name"
+                  placeholder="Business name"
                 />
               </label>
 
@@ -2627,25 +2548,16 @@ export default function SettingsPage() {
                 <input
                   value={industry}
                   onChange={(event) => setIndustry(event.target.value)}
-                  placeholder="Cafe, salon, retailer..."
+                  placeholder="Bar, cafe, salon..."
                 />
               </label>
 
-              <label className="settings-simple-wide">
-                <strong>Website</strong>
-                <input
-                  value={websiteUrl}
-                  onChange={(event) => setWebsiteUrl(event.target.value)}
-                  placeholder="https://..."
-                />
-              </label>
-
-              <label className="settings-simple-wide">
+              <label className="wide">
                 <strong>Address</strong>
                 <input
                   value={address}
                   onChange={(event) => setAddress(event.target.value)}
-                  placeholder="Street and venue address"
+                  placeholder="Street address"
                 />
               </label>
 
@@ -2657,257 +2569,80 @@ export default function SettingsPage() {
                   onBlur={handlePostcodeBlur}
                   placeholder="SK1 1AA"
                 />
-                <small>
-                  {isLookingUpLocation
-                    ? 'Finding the map location...'
-                    : geoMessage || 'Map location is found automatically from the postcode.'}
-                </small>
               </label>
 
               <label>
-                <strong>Town or area</strong>
+                <strong>Website</strong>
                 <input
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                  placeholder="Stockport"
+                  value={websiteUrl}
+                  onChange={(event) => setWebsiteUrl(event.target.value)}
+                  placeholder="https://..."
                 />
               </label>
-
-              <div className="settings-simple-geo-card settings-simple-wide">
-                <div className="settings-simple-geo-heading">
-                  <div>
-                    <strong>Map location</strong>
-                    <span>
-                      Entering a postcode automatically finds these coordinates.
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="settings-simple-secondary settings-simple-full-width-button"
-                    onClick={lookupPostcodeCoordinates}
-                    disabled={isLookingUpLocation || !postcode.trim()}
-                  >
-                    {isLookingUpLocation ? 'Finding...' : 'Refresh location'}
-                  </button>
-                </div>
-
-                <div className="settings-simple-geo-values">
-                  <label>
-                    <strong>Latitude</strong>
-                    <input
-                      value={latitude}
-                      readOnly
-                      placeholder="Found automatically"
-                    />
-                  </label>
-
-                  <label>
-                    <strong>Longitude</strong>
-                    <input
-                      value={longitude}
-                      readOnly
-                      placeholder="Found automatically"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <label>
-                <strong>Phone</strong>
-                <input
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="Customer contact number"
-                />
-              </label>
-
-              <label>
-                <strong>Email</strong>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="Customer contact email"
-                />
-              </label>
-
-              <label className="settings-simple-wide">
-                <strong>About your business</strong>
-                <span className="settings-field-help">
-                  This customer-facing introduction appears in the About section of your Smilez venue page.
-                </span>
-                <textarea
-                  value={services}
-                  onChange={(event) => setServices(event.target.value)}
-                  placeholder="Describe what customers can enjoy and the atmosphere."
-                  rows={4}
-                  maxLength={800}
-                />
-              </label>
-
-              <div className="settings-simple-wide settings-opening-hours-card-v4">
-                <div className="settings-opening-hours-copy-v4">
-                  <div>
-                    <span>Business opening hours</span>
-                    <strong>Opening times shown on your Smilez profile</strong>
-                  </div>
-                  <p>
-                    Choose a day, then set the public opening and closing time.
-                    Booking availability is managed separately.
-                  </p>
-                </div>
-
-                {(() => {
-                  const selectedHours =
-                    getOpeningHoursForDay(selectedOpeningHoursDay);
-
-                  return (
-                    <div className="settings-opening-hours-editor-v5">
-                      <label>
-                        <span>Day</span>
-                        <select
-                          value={selectedOpeningHoursDay}
-                          onChange={(event) =>
-                            setSelectedOpeningHoursDay(Number(event.target.value))
-                          }
-                        >
-                          {dayLabels.map((label, index) => (
-                            <option key={label} value={index}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <label className="settings-opening-hours-closed-v5">
-                        <input
-                          type="checkbox"
-                          checked={selectedHours.isClosed}
-                          onChange={(event) =>
-                            updateOpeningHoursDay(selectedOpeningHoursDay, {
-                              isClosed: event.target.checked,
-                            })
-                          }
-                        />
-                        <span>Closed this day</span>
-                      </label>
-
-                      {!selectedHours.isClosed ? (
-                        <>
-                          <label>
-                            <span>Opens</span>
-                            <select
-                              value={selectedHours.opensAt}
-                              onChange={(event) =>
-                                updateOpeningHoursDay(selectedOpeningHoursDay, {
-                                  opensAt: event.target.value,
-                                })
-                              }
-                            >
-                              {openingHoursTimeOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <label>
-                            <span>Closes</span>
-                            <select
-                              value={selectedHours.closesAt}
-                              onChange={(event) =>
-                                updateOpeningHoursDay(selectedOpeningHoursDay, {
-                                  closesAt: event.target.value,
-                                })
-                              }
-                            >
-                              {openingHoursTimeOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        </>
-                      ) : null}
-                    </div>
-                  );
-                })()}
-
-                <div className="settings-opening-hours-summary-v5">
-                  {dayLabels.map((label, index) => {
-                    const hours = getOpeningHoursForDay(index);
-
-                    return (
-                      <button
-                        key={label}
-                        type="button"
-                        className={
-                          selectedOpeningHoursDay === index ? 'is-active' : ''
-                        }
-                        onClick={() => setSelectedOpeningHoursDay(index)}
-                      >
-                        <strong>{shortDayLabels[index]}</strong>
-                        <span>
-                          {hours.isClosed
-                            ? 'Closed'
-                            : `${formatOpeningHoursTime(
-                                hours.opensAt,
-                              )}-${formatOpeningHoursTime(hours.closesAt)}`}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  className="settings-opening-hours-link-v4"
-                  onClick={() => setSimpleSettingsSection('bookings')}
-                >
-                  Set booking times in Bookings
-                </button>
-              </div>
             </div>
+
+            <details className="settingsLiteMore">
+              <summary>More business details</summary>
+
+              <div className="settingsLiteGrid">
+                <label>
+                  <strong>Town or area</strong>
+                  <input
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    placeholder="Stockport"
+                  />
+                </label>
+
+                <label>
+                  <strong>Phone</strong>
+                  <input
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder="Phone number"
+                  />
+                </label>
+
+                <label className="wide">
+                  <strong>Email</strong>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="hello@example.com"
+                  />
+                </label>
+
+                <label className="wide">
+                  <strong>About your business</strong>
+                  <textarea
+                    value={brandSummary}
+                    onChange={(event) => setBrandSummary(event.target.value)}
+                    placeholder="A short introduction for customers."
+                    rows={3}
+                    maxLength={800}
+                  />
+                </label>
+
+                <label className="wide">
+                  <strong>Main offer or call to action</strong>
+                  <input
+                    value={mainOffer}
+                    onChange={(event) => setMainOffer(event.target.value)}
+                    placeholder="Book a table, Visit us..."
+                  />
+                </label>
+              </div>
+            </details>
           </section>
 
-            </div>
-          ) : null}
-
-          {simpleSettingsSection === 'images' ? (
-            <div className="settings-redesign-section">
-          <section className="settings-simple-card">
-            <div className="settings-simple-card-heading">
+          <section className="settingsLiteCard">
+            <div className="settingsLiteCardHead">
               <div>
-                <span>Business images</span>
-                <h2>Main image and gallery</h2>
+                <span>Images</span>
+                <h2>Business photos</h2>
               </div>
-              <small>Used on Smilez venue cards and business pages</small>
-            </div>
-
-            <div className="settings-image-tabs" role="tablist" aria-label="Business images">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeImageTab === 'main'}
-                className={activeImageTab === 'main' ? 'is-active' : ''}
-                onClick={() => setActiveImageTab('main')}
-              >
-                Main image
-              </button>
-
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeImageTab === 'gallery'}
-                className={activeImageTab === 'gallery' ? 'is-active' : ''}
-                onClick={() => setActiveImageTab('gallery')}
-              >
-                Gallery
-                {galleryImageUrls.length > 0 ? ` (${galleryImageUrls.length})` : ''}
-              </button>
+              <small>{galleryImageUrls.length} gallery photo{galleryImageUrls.length === 1 ? '' : 's'}</small>
             </div>
 
             <input
@@ -2927,419 +2662,87 @@ export default function SettingsPage() {
               hidden
             />
 
-            {activeImageTab === 'main' ? (
-              brandLogoUrl ? (
-                <div className="settings-simple-image-row">
-                  <img src={brandLogoUrl} alt="Main business image preview" />
-                  <div>
-                    <strong>Main image ready</strong>
-                    <span>Shown first on Smilez venue cards and the venue page.</span>
-                  </div>
-                  <div className="settings-image-actions">
-                    <button
-                      type="button"
-                      className="settings-simple-secondary"
-                      onClick={() => businessImageInputRef.current?.click()}
-                      disabled={uploadingBusinessImage}
-                    >
-                      {uploadingBusinessImage ? 'Uploading...' : 'Change image'}
-                    </button>
-                    <button
-                      type="button"
-                      className="settings-simple-secondary"
-                      onClick={removeBusinessImage}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
+            <div className="settingsLitePhotoRow">
+              {brandLogoUrl ? (
+                <img src={brandLogoUrl} alt="Main business image" />
               ) : (
+                <div className="settingsLitePhotoPlaceholder">No main image</div>
+              )}
+
+              <div className="settingsLitePhotoActions">
                 <button
                   type="button"
-                  className="settings-simple-upload"
+                  className="secondary"
                   onClick={() => businessImageInputRef.current?.click()}
                   disabled={uploadingBusinessImage}
                 >
-                  {uploadingBusinessImage ? 'Uploading image...' : 'Upload main business image'}
+                  {uploadingBusinessImage
+                    ? 'Uploading…'
+                    : brandLogoUrl
+                      ? 'Change main image'
+                      : 'Add main image'}
                 </button>
-              )
-            ) : (
-              <div style={{ display: 'grid', gap: 14 }}>
-                <p className="settings-simple-help" style={{ margin: 0 }}>
-                  Add up to 6 additional venue photos. These appear in the Gallery tab
-                  on the Smilez business page.
-                </p>
-
-                {galleryImageUrls.length > 0 ? (
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                      gap: 12,
-                    }}
-                  >
-                    {galleryImageUrls.map((imageUrl, index) => (
-                      <div
-                        key={`${imageUrl}-${index}`}
-                        style={{
-                          position: 'relative',
-                          overflow: 'hidden',
-                          minHeight: 120,
-                          aspectRatio: '4 / 3',
-                          border: '1px solid #dfe7f2',
-                          borderRadius: 16,
-                          background: '#f8fafc',
-                        }}
-                      >
-                        <img
-                          src={imageUrl}
-                          alt={`${businessName || 'Business'} gallery image ${index + 1}`}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'block',
-                            objectFit: 'cover',
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="settings-simple-secondary"
-                          onClick={() => removeGalleryImage(imageUrl)}
-                          disabled={uploadingGalleryImages}
-                          aria-label={`Remove gallery image ${index + 1}`}
-                          style={{
-                            position: 'absolute',
-                            right: 8,
-                            bottom: 8,
-                            minHeight: 34,
-                            padding: '0 12px',
-                            background: 'rgba(255,255,255,0.94)',
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="settings-simple-help">
-                    No gallery photos uploaded yet.
-                  </div>
-                )}
 
                 <button
                   type="button"
-                  className="settings-simple-upload"
+                  className="secondary"
                   onClick={() => galleryImageInputRef.current?.click()}
                   disabled={uploadingGalleryImages || galleryImageUrls.length >= 6}
                 >
-                  {uploadingGalleryImages
-                    ? 'Uploading photos...'
-                    : galleryImageUrls.length >= 6
-                      ? 'Gallery full'
-                      : galleryImageUrls.length > 0
-                        ? 'Add gallery photos'
-                        : 'Upload gallery photos'}
+                  {uploadingGalleryImages ? 'Uploading…' : 'Add gallery photos'}
                 </button>
               </div>
-            )}
+            </div>
           </section>
 
-            </div>
-          ) : null}
-
-          {simpleSettingsSection === 'bookings' ? (
-            <div className="settings-redesign-section">
-              <section className="settings-simple-card settings-basic-bookings-v3">
-                <div className="settings-simple-card-heading">
-                  <div>
-                    <span>Smilez</span>
-                    <h2>Bookings</h2>
-                  </div>
-                  <small>{getSmilesListingStatusLabel()}</small>
-                </div>
-
-                <p className="settings-simple-help">
-                  Turn booking requests on, set your weekly times and choose how
-                  many guests each booking slot can hold.
-                </p>
-
-                <label className="settings-simple-toggle">
-                  <input
-                    type="checkbox"
-                    checked={acceptsBookings}
-                    onChange={(event) => setAcceptsBookings(event.target.checked)}
-                  />
-                  <span>
-                    <strong>Accept bookings</strong>
-                    <small>
-                      Customers can request a table from your Smilez listing.
-                    </small>
-                  </span>
-                </label>
-
-                {acceptsBookings ? (
-                  <>
-                    <label className="settings-simple-booking-link">
-                      <strong>
-                        Booking link <small>Optional</small>
-                      </strong>
-                      <input
-                        value={bookingUrl}
-                        onChange={(event) => setBookingUrl(event.target.value)}
-                        placeholder="https://..."
-                      />
-                      <span className="settings-field-help">
-                        Leave this blank to use the built-in Smilez table booking
-                        form.
-                      </span>
-                    </label>
-
-                    {!bookingUrl.trim() ? (
-                      <div className="settings-basic-booking-stack-v3">
-                        <section className="settings-basic-capacity-v3">
-                          <div>
-                            <span>Basic booking setup</span>
-                            <h3>Table booking limits</h3>
-                            <p>
-                              These settings apply to every available booking time.
-                            </p>
-                          </div>
-
-                          <div className="settings-basic-capacity-grid-v3">
-                            <label>
-                              <span>Slot length</span>
-                              <select
-                                value={bookingSettings.slot_interval_minutes}
-                                onChange={(event) =>
-                                  updateBookingSetting(
-                                    'slot_interval_minutes',
-                                    Number(event.target.value),
-                                  )
-                                }
-                              >
-                                <option value={15}>15 minutes</option>
-                                <option value={30}>30 minutes</option>
-                                <option value={45}>45 minutes</option>
-                                <option value={60}>60 minutes</option>
-                              </select>
-                            </label>
-
-                            <label>
-                              <span>Covers per slot</span>
-                              <input
-                                type="number"
-                                min={1}
-                                max={200}
-                                value={bookingSettings.max_covers_per_slot}
-                                onChange={(event) =>
-                                  updateBookingSetting(
-                                    'max_covers_per_slot',
-                                    Number(event.target.value),
-                                  )
-                                }
-                              />
-                              <small>
-                                Total guests allowed at the same booking time.
-                              </small>
-                            </label>
-
-                            <label>
-                              <span>Maximum party size</span>
-                              <input
-                                type="number"
-                                min={1}
-                                max={30}
-                                value={bookingSettings.max_party_size}
-                                onChange={(event) =>
-                                  updateBookingSetting(
-                                    'max_party_size',
-                                    Number(event.target.value),
-                                  )
-                                }
-                              />
-                              <small>
-                                Largest single table request customers can make.
-                              </small>
-                            </label>
-                          </div>
-                        </section>
-
-                        <section className="settings-basic-hours-v3">
-                          <div className="settings-basic-hours-heading-v3">
-                            <div>
-                              <span>Booking hours</span>
-                              <h3>Weekly availability</h3>
-                            </div>
-                            <strong>
-                              {bookingSettings.slot_interval_minutes}-minute slots
-                            </strong>
-                          </div>
-
-                          <div
-                            className="settings-basic-day-grid-v3"
-                            role="list"
-                            aria-label="Weekly booking hours"
-                          >
-                            {bookingHours.map((row) => {
-                              const active =
-                                row.day_of_week === selectedBookingDay;
-
-                              return (
-                                <button
-                                  key={row.day_of_week}
-                                  type="button"
-                                  role="listitem"
-                                  className={active ? 'is-active' : ''}
-                                  onClick={() =>
-                                    setSelectedBookingDay(row.day_of_week)
-                                  }
-                                >
-                                  <strong>
-                                    {shortDayLabels[row.day_of_week]}
-                                  </strong>
-                                  <span>
-                                    {formatBookingHourDisplay(row)}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {(() => {
-                            const selected =
-                              bookingHours.find(
-                                (row) =>
-                                  row.day_of_week === selectedBookingDay,
-                              ) || bookingHours[0];
-
-                            if (!selected) return null;
-
-                            return (
-                              <div className="settings-basic-day-editor-v3">
-                                <div>
-                                  <span>Editing</span>
-                                  <h4>
-                                    {dayLabels[selected.day_of_week]}
-                                  </h4>
-                                </div>
-
-                                <label className="settings-basic-closed-v3">
-                                  <input
-                                    type="checkbox"
-                                    checked={selected.is_closed}
-                                    onChange={(event) =>
-                                      updateBookingHour(
-                                        selected.day_of_week,
-                                        'is_closed',
-                                        event.target.checked,
-                                      )
-                                    }
-                                  />
-                                  <span>Closed this day</span>
-                                </label>
-
-                                {!selected.is_closed ? (
-                                  <div className="settings-basic-times-v3">
-                                    <label>
-                                      <span>Opens</span>
-                                      <input
-                                        type="time"
-                                        value={selected.opens_at || ''}
-                                        onChange={(event) =>
-                                          updateBookingHour(
-                                            selected.day_of_week,
-                                            'opens_at',
-                                            event.target.value,
-                                          )
-                                        }
-                                      />
-                                    </label>
-
-                                    <label>
-                                      <span>Closes</span>
-                                      <input
-                                        type="time"
-                                        value={selected.closes_at || ''}
-                                        onChange={(event) =>
-                                          updateBookingHour(
-                                            selected.day_of_week,
-                                            'closes_at',
-                                            event.target.value,
-                                          )
-                                        }
-                                      />
-                                    </label>
-                                  </div>
-                                ) : (
-                                  <p>
-                                    Customers will not see booking times for this
-                                    day.
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          })()}
-                        </section>
-
-                        <p className="settings-basic-booking-note-v3">
-                          Full booking slots are hidden automatically from
-                          customers.
-                        </p>
-                      </div>
-                    ) : null}
-                  </>
-                ) : null}
-              </section>
-            </div>
-          ) : null}
-
-          {simpleSettingsSection === 'connections' ? (
-            <div className="settings-redesign-section">
-          <section className="settings-simple-card settings-simple-connect-card">
+          <section className="settingsLiteCard settingsLiteConnection">
             <div>
-              <span>Social accounts</span>
-              <h2>Facebook and Instagram</h2>
-              <p>Connect once to publish directly from FromOne.</p>
+              <span>Connections</span>
+              <h2>Facebook & Instagram</h2>
+              <p>
+                {hasMetaConnection
+                  ? 'Connected and ready to publish.'
+                  : 'Connect once to publish from FromOne.'}
+              </p>
             </div>
 
             {hasMetaConnection ? (
               <button
                 type="button"
-                className="settings-simple-secondary settings-simple-full-width-button"
+                className="secondary"
                 onClick={() => disconnectMetaAccount(primaryMetaConnection?.id)}
                 disabled={metaConnectionBusy}
               >
-                {metaConnectionBusy ? 'Working...' : 'Disconnect accounts'}
+                {metaConnectionBusy ? 'Working…' : 'Disconnect'}
               </button>
             ) : (
               <button
                 type="button"
-                className="settings-simple-primary"
+                className="primary"
                 onClick={connectMetaAccount}
+                disabled={loadingConnections}
               >
                 Connect accounts
               </button>
             )}
           </section>
 
-            </div>
-          ) : null}
-
-          <div className="settings-simple-save-bar settings-redesign-save-bar">
+          <section className="settingsLiteSmilez">
             <div>
-              <strong>One profile, used everywhere</strong>
-              <span>Postcode lookup, map coordinates and Smilez syncing happen automatically.</span>
+              <strong>Smilez</strong>
+              <span>Bookings, reviews, photos and opening hours are managed in Smilez.</span>
             </div>
-            <button
-              type="button"
-              className="settings-simple-primary"
-              onClick={handleSaveProfile}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save settings'}
-            </button>
-          </div>
+            <a href="/smiles">Manage Smilez</a>
+          </section>
+
+          <button
+            type="button"
+            className="settingsLiteSave"
+            onClick={handleSaveProfile}
+            disabled={saving}
+          >
+            {saving ? 'Saving…' : 'Save changes'}
+          </button>
         </section>
 
         {confirmDialog &&
@@ -3348,37 +2751,28 @@ export default function SettingsPage() {
 
             return (
               <div
-                className="settings-confirm-backdrop"
+                className="settingsLiteConfirmBackdrop"
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby="settings-confirm-title"
+                aria-labelledby="settings-lite-confirm-title"
               >
-                <section className="settings-confirm-card">
-                  <div className="settings-create-eyebrow">Please confirm</div>
-                  <h2 id="settings-confirm-title">{activeConfirmDialog.title}</h2>
+                <section className="settingsLiteConfirm">
+                  <h2 id="settings-lite-confirm-title">{activeConfirmDialog.title}</h2>
                   <p>{activeConfirmDialog.message}</p>
-
-                  <div className="settings-action-row">
-                    <button
-                      type="button"
-                      className="settings-secondary-action"
-                      onClick={closeConfirmDialog}
-                    >
+                  <div>
+                    <button type="button" className="secondary" onClick={closeConfirmDialog}>
                       Cancel
                     </button>
-
                     <button
                       type="button"
-                      className="settings-primary-action"
+                      className="primary"
                       onClick={() =>
                         activeConfirmDialog.type === 'disconnectMeta' &&
                         confirmDisconnectMetaAccount(activeConfirmDialog.connectionId)
                       }
                       disabled={metaConnectionBusy}
                     >
-                      {metaConnectionBusy
-                        ? 'Working...'
-                        : activeConfirmDialog.confirmLabel}
+                      {metaConnectionBusy ? 'Working…' : activeConfirmDialog.confirmLabel}
                     </button>
                   </div>
                 </section>
@@ -3391,1685 +2785,385 @@ export default function SettingsPage() {
           body:has(.settings-simple-business-page) .app-shell,
           body:has(.settings-simple-business-page) .main-content,
           body:has(.settings-simple-business-page) .main-content.fromone-mobile-bottom-safe,
-          body:has(.settings-simple-business-page) .fromone-universal-mobile-page-frame,
-          .settings-simple-business-page {
+          body:has(.settings-simple-business-page) .fromone-universal-mobile-page-frame {
             background: #ffffff !important;
             background-image: none !important;
+          }
+
+          body:has(.settings-simple-business-page)::before {
+            display: none !important;
+            content: none !important;
           }
 
           body:has(.settings-simple-business-page) .main-content {
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
-            padding: 38px clamp(20px, 4vw, 54px) 110px !important;
+            padding: 34px clamp(24px, 4vw, 54px) 100px !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important;
           }
 
-          .settings-simple-business-shell {
+          .settings-simple-business-page {
             width: 100%;
-            max-width: 940px;
+            margin: 0;
+            color: #071b49;
+            background: transparent !important;
+            font-family: var(--font-main), "Plus Jakarta Sans", ui-sans-serif, system-ui,
+              -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          }
+
+          .settingsLiteShell {
+            width: 100%;
+            max-width: 760px;
             margin: 0 auto;
             display: grid;
-            gap: 24px;
-            color: #071b49;
+            gap: 12px;
           }
 
-          .settings-simple-business-header h1 {
-            margin: 8px 0 10px;
-            color: #071b49;
-            font-size: clamp(2.5rem, 5vw, 4.1rem);
-            line-height: 0.96;
-            letter-spacing: -0.06em;
+          .settingsLiteHero {
+            margin-bottom: 4px;
           }
 
-          .settings-simple-business-header p {
-            max-width: 680px;
-            margin: 0;
-            color: #52617a;
-            line-height: 1.55;
-          }
-
-          .settings-simple-card {
-            padding: 19px;
-            border: 1px solid #dfe7f2;
-            border-radius: 20px;
-            background: #ffffff;
-            box-shadow: 0 10px 28px rgba(7, 27, 73, 0.05);
-          }
-
-          .settings-simple-card-heading {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 18px;
-            margin-bottom: 15px;
-          }
-
-          .settings-simple-card-heading span,
-          .settings-simple-connect-card > div > span {
+          .settingsLiteHero > span,
+          .settingsLiteCardHead > div > span,
+          .settingsLiteConnection > div > span {
             display: block;
+            margin-bottom: 7px;
             color: #f72585;
-            font-size: 0.68rem;
+            font-size: 0.7rem;
             font-weight: 900;
             letter-spacing: 0.11em;
             text-transform: uppercase;
           }
 
-          .settings-simple-card-heading h2,
-          .settings-simple-connect-card h2 {
-            margin: 5px 0 0;
+          .settingsLiteHero h1 {
+            margin: 0 0 8px;
             color: #071b49;
-            font-size: 1.35rem;
-            line-height: 1.05;
+            font-size: clamp(2.35rem, 5vw, 3.7rem);
+            line-height: 0.98;
+            letter-spacing: -0.06em;
+            font-weight: 900;
           }
 
-          .settings-simple-card-heading small {
-            max-width: 310px;
-            color: #68758c;
-            font-weight: 800;
+          .settingsLiteHero p {
+            margin: 0;
+            color: #66728a;
+            font-size: 0.94rem;
+            line-height: 1.45;
+            font-weight: 600;
+          }
+
+          .settingsLiteCard,
+          .settingsLiteSmilez {
+            border: 1px solid #dfe5f1;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: none;
+          }
+
+          .settingsLiteCard {
+            padding: 15px;
+          }
+
+          .settingsLiteCardHead,
+          .settingsLiteConnection,
+          .settingsLiteSmilez {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+          }
+
+          .settingsLiteCardHead {
+            margin-bottom: 13px;
+          }
+
+          .settingsLiteCardHead h2,
+          .settingsLiteConnection h2,
+          .settingsLiteConfirm h2 {
+            margin: 0;
+            color: #071b49;
+            font-size: 1.08rem;
+            line-height: 1.1;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+          }
+
+          .settingsLiteCardHead small {
+            color: #718096;
+            font-size: 0.68rem;
+            font-weight: 750;
             text-align: right;
           }
 
-          .settings-simple-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-          }
-
-          .settings-simple-grid label,
-          .settings-simple-booking-link {
-            display: grid;
-            gap: 6px;
-            color: #071b49;
-            font-size: 0.86rem;
-          }
-
-          .settings-simple-grid input,
-          .settings-simple-grid textarea,
-          .settings-simple-booking-link input {
-            width: 100%;
-            min-height: 44px;
-            padding: 10px 12px;
-            border: 1px solid #dfe7f2;
-            border-radius: 12px;
-            background: #ffffff;
-            color: #071b49;
-            font: inherit;
-            box-sizing: border-box;
-            resize: vertical;
-          }
-
-          .settings-simple-grid label small {
-            color: #68758c;
-            font-size: 0.76rem;
-            font-weight: 700;
-          }
-
-          .settings-simple-wide {
-            grid-column: 1 / -1;
-          }
-
-          .settings-simple-scan-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            align-items: end;
-            gap: 12px;
-          }
-
-          .settings-simple-scan-row label {
-            display: grid;
-            gap: 6px;
-            color: #071b49;
-            font-size: 0.86rem;
-          }
-
-          .settings-simple-scan-row input {
-            width: 100%;
-            height: 46px;
-            min-height: 46px;
-            padding: 10px 12px;
-            border: 1px solid #dfe7f2;
-            border-radius: 12px;
-            background: #ffffff;
-            color: #071b49;
-            font: inherit;
-            box-sizing: border-box;
-          }
-
-          .settings-simple-scan-row > button {
-            align-self: end;
-            height: 46px;
-            min-height: 46px;
-            border-radius: 12px;
-            box-sizing: border-box;
-            position: relative;
-            top: -8px;
-          }
-
-          .settings-simple-scan-message {
-            margin: 12px 0 0;
-            color: #52617a;
-            font-size: 0.86rem;
-            font-weight: 700;
-          }
-
-          .settings-simple-geo-card {
-            padding: 14px;
-            border: 1px solid #dfe7f2;
-            border-radius: 15px;
-            background: #f8fafc;
-          }
-
-          .settings-simple-geo-heading {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 12px;
-          }
-
-          .settings-simple-geo-heading > div {
-            display: grid;
-            gap: 4px;
-          }
-
-          .settings-simple-geo-heading span {
-            color: #68758c;
-            font-size: 0.78rem;
-          }
-
-          .settings-simple-geo-values {
+          .settingsLiteGrid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
           }
 
-          .settings-simple-geo-values input[readonly] {
-            background: #ffffff;
-            color: #52617a;
-          }
-
-          .settings-image-tabs {
+          .settingsLiteGrid label {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 14px;
-            padding: 5px;
-            border: 1px solid #dfe7f2;
-            border-radius: 14px;
-            background: #f8fafc;
+            gap: 5px;
           }
 
-          .settings-image-tabs button {
-            min-height: 42px;
-            border: 1px solid transparent;
-            border-radius: 10px;
-            background: transparent;
-            color: #68758c;
+          .settingsLiteGrid label.wide {
+            grid-column: 1 / -1;
+          }
+
+          .settingsLiteGrid label strong {
+            color: #071b49;
+            font-size: 0.74rem;
+            font-weight: 900;
+          }
+
+          .settingsLiteGrid input,
+          .settingsLiteGrid textarea {
+            width: 100%;
+            min-height: 43px;
+            padding: 9px 11px;
+            border: 1px solid #dfe5f1;
+            border-radius: 11px;
+            background: #ffffff;
+            color: #071b49;
             font: inherit;
+            font-size: 0.82rem;
+            font-weight: 650;
+            outline: none;
+            box-sizing: border-box;
+          }
+
+          .settingsLiteGrid textarea {
+            resize: vertical;
+          }
+
+          .settingsLiteGrid input:focus,
+          .settingsLiteGrid textarea:focus {
+            border-color: #f72585;
+            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.08);
+          }
+
+          .settingsLiteMore {
+            margin-top: 11px;
+            border-top: 1px solid #edf1f7;
+          }
+
+          .settingsLiteMore summary {
+            padding: 12px 0 0;
+            color: #52617a;
+            font-size: 0.76rem;
             font-weight: 900;
             cursor: pointer;
+            list-style: none;
           }
 
-          .settings-image-tabs button.is-active {
-            border-color: #ffd2e5;
-            background: #ffffff;
-            color: #c71363;
+          .settingsLiteMore summary::-webkit-details-marker {
+            display: none;
           }
 
-          .settings-simple-image-row {
-            display: grid;
-            grid-template-columns: 72px minmax(0, 1fr) auto;
+          .settingsLiteMore[open] summary {
+            margin-bottom: 12px;
+          }
+
+          .settingsLitePhotoRow {
+            display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
           }
 
-          .settings-image-actions {
+          .settingsLitePhotoRow img,
+          .settingsLitePhotoPlaceholder {
+            width: 76px;
+            height: 76px;
+            flex: 0 0 76px;
+            border: 1px solid #dfe5f1;
+            border-radius: 13px;
+            background: #f7f9fc;
+          }
+
+          .settingsLitePhotoRow img {
+            object-fit: cover;
+          }
+
+          .settingsLitePhotoPlaceholder {
+            display: grid;
+            place-items: center;
+            padding: 8px;
+            color: #8a96a8;
+            font-size: 0.66rem;
+            font-weight: 800;
+            text-align: center;
+          }
+
+          .settingsLitePhotoActions {
             display: flex;
             flex-wrap: wrap;
+            gap: 7px;
+          }
+
+          .settingsLiteConnection {
+            padding: 15px;
+          }
+
+          .settingsLiteConnection p {
+            margin: 4px 0 0;
+            color: #718096;
+            font-size: 0.76rem;
+            font-weight: 600;
+          }
+
+          .settingsLiteSmilez {
+            padding: 12px 14px;
+          }
+
+          .settingsLiteSmilez > div {
+            display: grid;
+            gap: 2px;
+          }
+
+          .settingsLiteSmilez strong {
+            color: #071b49;
+            font-size: 0.86rem;
+            font-weight: 900;
+          }
+
+          .settingsLiteSmilez span {
+            color: #718096;
+            font-size: 0.72rem;
+            font-weight: 600;
+          }
+
+          .settingsLiteSmilez a,
+          .settingsLiteCard button,
+          .settingsLiteConnection button,
+          .settingsLiteConfirm button {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            border-radius: 999px;
+            font: inherit;
+            font-size: 0.76rem;
+            font-weight: 900;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: none !important;
+            white-space: nowrap;
+          }
+
+          .settingsLiteSmilez a,
+          button.secondary {
+            border: 1px solid #dfe5f1 !important;
+            background: #ffffff !important;
+            color: #071b49 !important;
+          }
+
+          button.primary,
+          .settingsLiteSave {
+            border: 1px solid #f72585 !important;
+            background: #f72585 !important;
+            color: #ffffff !important;
+          }
+
+          .settingsLiteSave {
+            width: 100%;
+            min-height: 44px;
+            border-radius: 999px;
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: none !important;
+          }
+
+          button:disabled,
+          .settingsLiteSave:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+
+          .settingsLiteConfirmBackdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(7, 27, 73, 0.38);
+          }
+
+          .settingsLiteConfirm {
+            width: min(100%, 420px);
+            padding: 18px;
+            border-radius: 18px;
+            background: #ffffff;
+          }
+
+          .settingsLiteConfirm p {
+            margin: 8px 0 16px;
+            color: #66728a;
+            font-size: 0.82rem;
+            line-height: 1.45;
+            font-weight: 600;
+          }
+
+          .settingsLiteConfirm > div {
+            display: flex;
             justify-content: flex-end;
             gap: 8px;
           }
 
-          .settings-simple-image-row img {
-            width: 72px;
-            height: 72px;
-            border-radius: 16px;
-            object-fit: cover;
-            border: 1px solid #dfe7f2;
-          }
-
-          .settings-simple-image-row div {
-            display: grid;
-            gap: 4px;
-          }
-
-          .settings-simple-image-row span,
-          .settings-simple-help,
-          .settings-simple-connect-card p,
-          .settings-simple-save-bar span {
-            color: #68758c;
-            line-height: 1.45;
-          }
-
-          .settings-simple-upload {
-            width: 100%;
-            min-height: 92px;
-            border: 1px dashed #cbd5e1;
-            border-radius: 16px;
-            background: #f8fafc;
-            color: #071b49;
-            font: inherit;
-            font-weight: 900;
-            cursor: pointer;
-          }
-
-          .settings-simple-help {
-            margin: -2px 0 14px;
-          }
-
-          .settings-simple-toggle {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px;
-            border: 1px solid #e4eaf3;
-            border-radius: 14px;
-            background: #f8fafc;
-          }
-
-          .settings-simple-toggle input {
-            width: 21px;
-            height: 21px;
-          }
-
-          .settings-simple-toggle span {
-            display: grid;
-            gap: 3px;
-          }
-
-          .settings-simple-toggle small {
-            color: #68758c;
-          }
-
-          .settings-simple-booking-link {
-            margin-top: 13px;
-          }
-
-          .settings-simple-connect-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 22px;
-            padding-top: 22px;
-            padding-bottom: 22px;
-          }
-
-          .settings-simple-connect-card p {
-            margin: 8px 0 0;
-          }
-
-          .settings-simple-primary,
-          .settings-simple-secondary {
-            min-height: 46px;
-            padding: 0 17px;
-            border-radius: 14px;
-            font: inherit;
-            font-size: 0.86rem;
-            font-weight: 900;
-            cursor: pointer;
-          }
-
-          .settings-simple-primary {
-            border: 0;
-            background: #f72585;
-            color: #ffffff;
-            box-shadow: 0 10px 24px rgba(247, 37, 133, 0.18);
-          }
-
-          .settings-simple-secondary {
-            border: 1px solid #dfe7f2;
-            background: #ffffff;
-            color: #071b49;
-          }
-
-          .settings-simple-full-width-button {
-            width: auto;
-          }
-
-          .settings-simple-save-bar {
-            position: sticky;
-            bottom: 18px;
-            margin-top: 4px;
-            z-index: 5;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 18px;
-            padding: 14px 16px;
-            border: 1px solid #dfe7f2;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.96);
-            box-shadow: 0 14px 38px rgba(7, 27, 73, 0.12);
-            backdrop-filter: blur(12px);
-          }
-
-          .settings-simple-save-bar > div {
-            display: grid;
-            gap: 3px;
-          }
-
-          @media (max-width: 720px) {
-            body:has(.settings-simple-business-page) .main-content {
-              padding: 24px 14px 110px !important;
+          @media (max-width: 700px) {
+            body:has(.settings-simple-business-page) .main-content,
+            body:has(.settings-simple-business-page) .main-content.fromone-mobile-bottom-safe {
+              padding: 18px 10px 100px !important;
             }
 
-            .settings-simple-grid,
-            .settings-simple-scan-row,
-            .settings-simple-geo-values {
+            .settingsLiteShell {
+              max-width: 100%;
+            }
+
+            .settingsLiteHero h1 {
+              font-size: 2.2rem;
+            }
+
+            .settingsLiteGrid {
               grid-template-columns: 1fr;
             }
 
-            .settings-simple-scan-row button,
-            .settings-simple-geo-heading button {
-              width: 100%;
+            .settingsLiteGrid label.wide {
+              grid-column: auto;
             }
 
-            .settings-simple-scan-row > button {
-              position: static;
-              top: auto;
+            .settingsLiteCardHead,
+            .settingsLiteConnection,
+            .settingsLiteSmilez {
+              align-items: stretch;
+              flex-direction: column;
             }
 
-            .settings-simple-geo-heading {
-              display: grid;
-              align-items: start;
-            }
-
-            .settings-simple-card-heading,
-            .settings-simple-connect-card,
-            .settings-simple-save-bar {
-              display: grid;
-              align-items: start;
-            }
-
-            .settings-simple-card-heading small {
+            .settingsLiteCardHead small {
               text-align: left;
             }
 
-            .settings-simple-image-row {
-              grid-template-columns: 64px minmax(0, 1fr);
+            .settingsLiteConnection button,
+            .settingsLiteSmilez a {
+              width: 100%;
             }
 
-            .settings-simple-image-row img {
-              width: 64px;
-              height: 64px;
-            }
-
-            .settings-image-actions {
-              grid-column: 1 / -1;
+            .settingsLitePhotoActions {
               display: grid;
-              grid-template-columns: 1fr;
+              flex: 1;
             }
 
-            .settings-simple-image-row button {
-              width: 100%;
-            }
-
-            .settings-simple-connect-card button,
-            .settings-simple-save-bar button,
-            .settings-simple-full-width-button {
-              width: 100%;
-            }
-
-            .settings-simple-business-shell {
-              gap: 18px;
-            }
-
-            .settings-simple-save-bar {
-              bottom: 12px;
-              margin-top: 2px;
-            }
-          }
-        `}</style>
-      
-        <style jsx global>{`
-          .fromone-settings-page .booking-blocked-panel-v2 {
-            width: 100% !important;
-            min-width: 0 !important;
-            box-sizing: border-box !important;
-            display: grid !important;
-            gap: 18px !important;
-            padding: 22px !important;
-            border: 1px solid rgba(7, 27, 73, 0.1) !important;
-            border-radius: 20px !important;
-            background: #ffffff !important;
-            box-shadow: 0 12px 30px rgba(7, 27, 73, 0.045) !important;
-          }
-
-          .fromone-settings-page .booking-blocked-panel-v2 .settings-smilez-card-head {
-            display: flex !important;
-            align-items: flex-start !important;
-            justify-content: space-between !important;
-            gap: 14px !important;
-            flex-wrap: wrap !important;
-          }
-
-          .fromone-settings-page .booking-blocked-panel-v2 .settings-smilez-card-head h4 {
-            margin: 6px 0 0 !important;
-            color: #071b49 !important;
-            font-size: 1.15rem !important;
-            letter-spacing: -0.025em !important;
-          }
-
-          .fromone-settings-page .booking-blocked-panel-v2 .settings-smilez-card-head > strong {
-            display: inline-flex !important;
-            align-items: center !important;
-            min-height: 34px !important;
-            padding: 0 12px !important;
-            border: 1px solid rgba(7, 27, 73, 0.1) !important;
-            border-radius: 999px !important;
-            background: #f6f8fc !important;
-            color: #647087 !important;
-            font-size: 0.72rem !important;
-            font-weight: 900 !important;
-          }
-
-          .fromone-settings-page .booking-blocked-quick-v2 {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 8px !important;
-            width: 100% !important;
-          }
-
-          .fromone-settings-page .booking-blocked-quick-v2 button {
-            min-height: 42px !important;
-            padding: 0 16px !important;
-            border: 1px solid rgba(247, 37, 133, 0.22) !important;
-            border-radius: 12px !important;
-            background: #fff4f9 !important;
-            color: #d91872 !important;
-            box-shadow: none !important;
-            font: inherit !important;
-            font-size: 0.78rem !important;
-            font-weight: 900 !important;
-            cursor: pointer !important;
-          }
-
-          .fromone-settings-page .booking-blocked-form-v2 {
-            width: 100% !important;
-            min-width: 0 !important;
-            display: grid !important;
-            grid-template-columns:
-              minmax(155px, 0.8fr)
-              minmax(240px, 1.25fr)
-              minmax(145px, 0.7fr)
-              minmax(145px, 0.7fr) !important;
-            gap: 12px !important;
-            align-items: end !important;
-          }
-
-          .fromone-settings-page .booking-blocked-form-v2 label,
-          .fromone-settings-page .booking-blocked-form-v2 label.is-wide {
-            min-width: 0 !important;
-            display: grid !important;
-            grid-column: auto !important;
-            gap: 7px !important;
-            color: #071b49 !important;
-            font-size: 0.79rem !important;
-            font-weight: 900 !important;
-          }
-
-          .fromone-settings-page .booking-blocked-form-v2 label.is-wide {
-            grid-column: span 3 !important;
-          }
-
-          .fromone-settings-page .booking-blocked-form-v2 .settings-simple-input {
-            width: 100% !important;
-            min-width: 0 !important;
-            height: 48px !important;
-            box-sizing: border-box !important;
-            padding: 0 14px !important;
-            border: 1px solid rgba(7, 27, 73, 0.15) !important;
-            border-radius: 13px !important;
-            background-color: #ffffff !important;
-            color: #071b49 !important;
-            font: inherit !important;
-            font-size: 0.88rem !important;
-            font-weight: 800 !important;
-            outline: none !important;
-          }
-
-          .fromone-settings-page .booking-blocked-form-v2 select.settings-simple-input {
-            appearance: none !important;
-            -webkit-appearance: none !important;
-            padding-right: 42px !important;
-            background-image:
-              linear-gradient(45deg, transparent 50%, #647087 50%),
-              linear-gradient(135deg, #647087 50%, transparent 50%) !important;
-            background-position:
-              calc(100% - 19px) 21px,
-              calc(100% - 14px) 21px !important;
-            background-size: 5px 5px, 5px 5px !important;
-            background-repeat: no-repeat !important;
-          }
-
-          .fromone-settings-page .booking-blocked-form-v2 .settings-simple-input:focus {
-            border-color: #f72585 !important;
-            box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1) !important;
-          }
-
-          .fromone-settings-page .booking-blocked-form-v2 > button {
-            width: 100% !important;
-            min-height: 48px !important;
-            padding: 0 18px !important;
-            border: 0 !important;
-            border-radius: 13px !important;
-            background: linear-gradient(135deg, #f72585, #ff9f1c) !important;
-            color: #ffffff !important;
-            font: inherit !important;
-            font-size: 0.84rem !important;
-            font-weight: 950 !important;
-            cursor: pointer !important;
-            box-shadow: 0 11px 24px rgba(247, 37, 133, 0.18) !important;
-          }
-
-          @media (max-width: 1050px) {
-            .fromone-settings-page .booking-blocked-form-v2 {
-              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            }
-
-            .fromone-settings-page .booking-blocked-form-v2 label.is-wide {
-              grid-column: 1 / -1 !important;
-            }
-          }
-
-          @media (max-width: 720px) {
-            .fromone-settings-page .booking-blocked-panel-v2 {
-              padding: 16px !important;
-              border-radius: 17px !important;
-            }
-
-            .fromone-settings-page .booking-blocked-form-v2 {
-              grid-template-columns: 1fr !important;
-            }
-
-            .fromone-settings-page .booking-blocked-form-v2 label,
-            .fromone-settings-page .booking-blocked-form-v2 label.is-wide,
-            .fromone-settings-page .booking-blocked-form-v2 > button {
-              grid-column: 1 !important;
-              width: 100% !important;
-            }
-          }
-
-          @media (max-width: 480px) {
-            .fromone-settings-page .booking-blocked-quick-v2 {
-              display: grid !important;
-              grid-template-columns: 1fr !important;
-            }
-
-            .fromone-settings-page .booking-blocked-quick-v2 button {
-              width: 100% !important;
-            }
-          }
-        `}</style>
-
-        <style jsx global>{`
-          .settings-redesign-v2 {
-            --settings-navy: #071b49;
-            --settings-pink: #f72585;
-            --settings-soft-pink: #fff4f9;
-            --settings-border: rgba(7, 27, 73, 0.1);
-            --settings-muted: #647087;
-            width: 100%;
-            min-width: 0;
-            overflow-x: hidden;
-          }
-
-          .settings-redesign-v2 *,
-          .settings-redesign-v2 *::before,
-          .settings-redesign-v2 *::after {
-            box-sizing: border-box;
-          }
-
-          .settings-redesign-v2 .settings-simple-business-shell {
-            width: min(1180px, calc(100% - 40px));
-            margin: 0 auto;
-            padding-bottom: 120px;
-          }
-
-          .settings-redesign-v2 .settings-simple-business-header {
-            max-width: 760px;
-            margin-bottom: 22px;
-          }
-
-          .settings-redesign-v2 .settings-simple-business-header h1 {
-            margin: 6px 0 8px;
-            color: var(--settings-navy);
-            font-size: clamp(2.5rem, 6vw, 4.6rem);
-            line-height: 0.96;
-            letter-spacing: -0.055em;
-          }
-
-          .settings-redesign-v2 .settings-simple-business-header p {
-            margin: 0;
-            color: var(--settings-muted);
-            font-size: 0.96rem;
-            font-weight: 700;
-            line-height: 1.6;
-          }
-
-          .settings-redesign-v2 .settings-redesign-nav {
-            position: sticky;
-            top: 74px;
-            z-index: 20;
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 18px;
-            padding: 7px;
-            border: 1px solid var(--settings-border);
-            border-radius: 18px;
-            background: rgba(247, 249, 253, 0.96);
-            box-shadow: 0 12px 30px rgba(7, 27, 73, 0.08);
-            backdrop-filter: blur(16px);
-          }
-
-          .settings-redesign-v2 .settings-redesign-nav button {
-            min-width: 0;
-            min-height: 62px;
-            display: grid;
-            place-items: center;
-            gap: 2px;
-            padding: 9px 12px;
-            border: 1px solid transparent;
-            border-radius: 13px;
-            background: transparent;
-            color: var(--settings-muted);
-            font: inherit;
-            cursor: pointer;
-            transition:
-              border-color 160ms ease,
-              background-color 160ms ease,
-              color 160ms ease,
-              box-shadow 160ms ease,
-              transform 160ms ease;
-          }
-
-          .settings-redesign-v2 .settings-redesign-nav button:hover {
-            background: rgba(255, 255, 255, 0.76);
-            color: var(--settings-navy);
-          }
-
-          .settings-redesign-v2 .settings-redesign-nav button.is-active {
-            border-color: rgba(247, 37, 133, 0.22);
-            background: #ffffff;
-            color: var(--settings-navy);
-            box-shadow: 0 9px 24px rgba(7, 27, 73, 0.09);
-          }
-
-          .settings-redesign-v2 .settings-redesign-nav strong {
-            font-size: 0.82rem;
-            font-weight: 950;
-          }
-
-          .settings-redesign-v2 .settings-redesign-nav small {
-            font-size: 0.66rem;
-            font-weight: 750;
-          }
-
-          .settings-redesign-v2 .settings-redesign-section {
-            display: grid;
-            gap: 16px;
-            animation: settingsSectionIn 180ms ease;
-          }
-
-          @keyframes settingsSectionIn {
-            from {
-              opacity: 0;
-              transform: translateY(4px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          .settings-redesign-v2 .settings-simple-card {
-            width: 100%;
-            min-width: 0;
-            padding: 24px;
-            border: 1px solid var(--settings-border);
-            border-radius: 22px;
-            background: #ffffff;
-            box-shadow: 0 14px 38px rgba(7, 27, 73, 0.055);
-          }
-
-          .settings-redesign-v2 .settings-simple-card-heading {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-          }
-
-          .settings-redesign-v2 .settings-simple-card-heading h2 {
-            margin: 5px 0 0;
-            color: var(--settings-navy);
-            font-size: clamp(1.35rem, 3vw, 1.9rem);
-            letter-spacing: -0.04em;
-          }
-
-          .settings-redesign-v2 .settings-simple-card-heading > div > span,
-          .settings-redesign-v2 .settings-simple-connect-card > div > span {
-            color: var(--settings-pink);
-            font-size: 0.68rem;
-            font-weight: 950;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-          }
-
-          .settings-redesign-v2 .settings-simple-card-heading > small {
-            color: var(--settings-muted);
-            font-size: 0.75rem;
-            font-weight: 750;
-          }
-
-          .settings-redesign-v2 .settings-simple-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 15px;
-          }
-
-          .settings-redesign-v2 .settings-simple-wide {
-            grid-column: 1 / -1;
-          }
-
-          .settings-redesign-v2 label {
-            min-width: 0;
-          }
-
-          .settings-redesign-v2 label > strong,
-          .settings-redesign-v2 label > span {
-            display: block;
-            margin-bottom: 7px;
-            color: var(--settings-navy);
-            font-size: 0.78rem;
-            font-weight: 900;
-          }
-
-          .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]),
-          .settings-redesign-v2 select,
-          .settings-redesign-v2 textarea {
-            width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-            border: 1px solid rgba(7, 27, 73, 0.14);
-            border-radius: 13px;
-            background: #ffffff;
-            color: var(--settings-navy);
-            font: inherit;
-            font-size: 0.9rem;
-            font-weight: 700;
-            outline: none;
-            transition:
-              border-color 160ms ease,
-              box-shadow 160ms ease,
-              background-color 160ms ease;
-          }
-
-          .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]),
-          .settings-redesign-v2 select {
-            min-height: 48px;
-            padding: 0 14px;
-          }
-
-          .settings-redesign-v2 textarea {
-            min-height: 102px;
-            padding: 13px 14px;
-            line-height: 1.5;
-            resize: vertical;
-          }
-
-          .settings-redesign-v2 select {
-            appearance: none;
-            -webkit-appearance: none;
-            padding-right: 42px;
-            background-image:
-              linear-gradient(45deg, transparent 50%, #647087 50%),
-              linear-gradient(135deg, #647087 50%, transparent 50%);
-            background-position:
-              calc(100% - 19px) 21px,
-              calc(100% - 14px) 21px;
-            background-size: 5px 5px, 5px 5px;
-            background-repeat: no-repeat;
-          }
-
-          .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]):hover,
-          .settings-redesign-v2 select:hover,
-          .settings-redesign-v2 textarea:hover {
-            border-color: rgba(7, 27, 73, 0.26);
-            background: #fbfcff;
-          }
-
-          .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]):focus,
-          .settings-redesign-v2 select:focus,
-          .settings-redesign-v2 textarea:focus {
-            border-color: var(--settings-pink);
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.1);
-          }
-
-          .settings-redesign-v2 .settings-simple-scan-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 12px;
-            align-items: end;
-          }
-
-          .settings-redesign-v2 .settings-simple-primary,
-          .settings-redesign-v2 .settings-simple-secondary,
-          .settings-redesign-v2 .settings-simple-upload,
-          .settings-redesign-v2 .settings-smilez-block-form > button {
-            min-height: 46px;
-            padding: 0 18px;
-            border-radius: 12px;
-            font: inherit;
-            font-size: 0.82rem;
-            font-weight: 950;
-            cursor: pointer;
-          }
-
-          .settings-redesign-v2 .settings-simple-primary,
-          .settings-redesign-v2 .settings-simple-upload,
-          .settings-redesign-v2 .settings-smilez-block-form > button {
-            border: 1px solid var(--settings-pink);
-            background: var(--settings-pink);
-            color: #ffffff;
-            box-shadow: 0 10px 24px rgba(247, 37, 133, 0.18);
-          }
-
-          .settings-redesign-v2 .settings-simple-secondary {
-            border: 1px solid rgba(7, 27, 73, 0.12);
-            background: #ffffff;
-            color: var(--settings-navy);
-          }
-
-          .settings-redesign-v2 .settings-simple-geo-card,
-          .settings-redesign-v2 .settings-simple-toggle {
-            border: 1px solid rgba(7, 27, 73, 0.08);
-            border-radius: 16px;
-            background: #f7f9fc;
-          }
-
-          .settings-redesign-v2 .settings-simple-geo-card {
-            padding: 16px;
-          }
-
-          .settings-redesign-v2 .settings-simple-geo-heading {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 14px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-          }
-
-          .settings-redesign-v2 .settings-simple-geo-values {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-          }
-
-          .settings-redesign-v2 .settings-image-tabs,
-          .settings-redesign-v2 .settings-booking-tabs {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 7px;
-            margin-bottom: 18px;
-            padding: 6px;
-            border: 1px solid var(--settings-border);
-            border-radius: 16px;
-            background: #eef2f8;
-          }
-
-          .settings-redesign-v2 .settings-booking-tabs {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-          }
-
-          .settings-redesign-v2 .settings-image-tabs button,
-          .settings-redesign-v2 .settings-booking-tabs button {
-            min-width: 0;
-            min-height: 52px;
-            border: 1px solid transparent;
-            border-radius: 11px;
-            background: transparent;
-            color: var(--settings-muted);
-            font: inherit;
-            font-size: 0.78rem;
-            font-weight: 900;
-            cursor: pointer;
-          }
-
-          .settings-redesign-v2 .settings-image-tabs button.is-active,
-          .settings-redesign-v2 .settings-booking-tabs button[aria-selected="true"] {
-            border-color: rgba(247, 37, 133, 0.22);
-            background: #ffffff;
-            color: var(--settings-navy);
-            box-shadow: 0 8px 20px rgba(7, 27, 73, 0.08);
-          }
-
-          .settings-redesign-v2 .settings-simple-image-row {
-            display: grid;
-            grid-template-columns: 92px minmax(0, 1fr) auto;
-            gap: 16px;
-            align-items: center;
-          }
-
-          .settings-redesign-v2 .settings-simple-image-row > img {
-            width: 92px;
-            height: 72px;
-            border-radius: 14px;
-            object-fit: cover;
-          }
-
-          .settings-redesign-v2 .settings-image-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-          }
-
-          .settings-redesign-v2 .settings-simple-booking-hours {
-            width: 100%;
-            min-width: 0;
-            padding: 20px !important;
-            border-radius: 18px !important;
-          }
-
-          .settings-redesign-v2 .settings-smilez-capacity-grid {
-            display: grid !important;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
-            gap: 12px !important;
-          }
-
-          .settings-redesign-v2 .settings-smilez-day-cards {
-            display: grid !important;
-            grid-template-columns: repeat(7, minmax(98px, 1fr)) !important;
-            gap: 8px !important;
-            overflow-x: auto;
-            padding-bottom: 4px;
-          }
-
-          .settings-redesign-v2 .settings-smilez-day-cards > * {
-            min-width: 98px;
-          }
-
-          .settings-redesign-v2 .booking-blocked-form-v2 {
-            display: grid !important;
-            grid-template-columns:
-              minmax(150px, 0.8fr)
-              minmax(220px, 1.2fr)
-              minmax(140px, 0.7fr)
-              minmax(140px, 0.7fr) !important;
-            gap: 12px !important;
-            align-items: end !important;
-          }
-
-          .settings-redesign-v2 .booking-blocked-form-v2 label,
-          .settings-redesign-v2 .booking-blocked-form-v2 label.is-wide {
-            display: grid !important;
-            grid-column: auto !important;
-            gap: 7px !important;
-          }
-
-          .settings-redesign-v2 .booking-blocked-form-v2 label.is-wide {
-            grid-column: span 3 !important;
-          }
-
-          .settings-redesign-v2 .booking-blocked-quick-v2 {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 8px !important;
-          }
-
-          .settings-redesign-v2 .booking-blocked-quick-v2 button {
-            min-height: 40px !important;
-            padding: 0 14px !important;
-            border: 1px solid rgba(247, 37, 133, 0.2) !important;
-            border-radius: 11px !important;
-            background: var(--settings-soft-pink) !important;
-            color: #d91872 !important;
-            box-shadow: none !important;
-            font: inherit !important;
-            font-size: 0.76rem !important;
-            font-weight: 900 !important;
-          }
-
-          .settings-redesign-v2 .settings-simple-connect-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 18px;
-            flex-wrap: wrap;
-          }
-
-          .settings-redesign-v2 .settings-redesign-save-bar {
-            position: sticky;
-            bottom: 14px;
-            z-index: 25;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-top: 18px;
-            padding: 14px 16px;
-            border: 1px solid rgba(7, 27, 73, 0.1);
-            border-radius: 17px;
-            background: #ffffff;
-            box-shadow: none;
-            backdrop-filter: none;
-          }
-
-          .settings-redesign-v2 .settings-redesign-save-bar > div {
-            min-width: 0;
-            display: grid;
-            gap: 3px;
-          }
-
-          .settings-redesign-v2 .settings-redesign-save-bar strong {
-            color: var(--settings-navy);
-          }
-
-          .settings-redesign-v2 .settings-redesign-save-bar span {
-            color: var(--settings-muted);
-            font-size: 0.76rem;
-            font-weight: 700;
-          }
-
-          @media (max-width: 980px) {
-            .settings-redesign-v2 .settings-redesign-nav {
-              top: 64px;
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .settings-redesign-v2 .booking-blocked-form-v2 {
-              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            }
-
-            .settings-redesign-v2 .booking-blocked-form-v2 label.is-wide {
-              grid-column: 1 / -1 !important;
-            }
-
-            .settings-redesign-v2 .settings-smilez-day-cards {
-              grid-template-columns: repeat(4, minmax(105px, 1fr)) !important;
-            }
-          }
-
-          @media (max-width: 720px) {
-            .settings-redesign-v2 .settings-simple-business-shell {
-              width: min(100%, calc(100% - 24px));
-              padding-bottom: 104px;
-            }
-
-            .settings-redesign-v2 .settings-redesign-nav {
-              position: static;
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .settings-redesign-v2 .settings-simple-card {
-              padding: 17px;
-              border-radius: 18px;
-            }
-
-            .settings-redesign-v2 .settings-simple-grid,
-            .settings-redesign-v2 .settings-simple-geo-values,
-            .settings-redesign-v2 .settings-simple-scan-row {
-              grid-template-columns: 1fr;
-            }
-
-            .settings-redesign-v2 .settings-simple-wide {
-              grid-column: 1;
-            }
-
-            .settings-redesign-v2 .settings-simple-scan-row > button,
-            .settings-redesign-v2 .settings-simple-full-width-button {
-              width: 100%;
-            }
-
-            .settings-redesign-v2 .settings-simple-image-row {
-              grid-template-columns: 72px minmax(0, 1fr);
-            }
-
-            .settings-redesign-v2 .settings-simple-image-row > img {
-              width: 72px;
-              height: 62px;
-            }
-
-            .settings-redesign-v2 .settings-image-actions {
-              grid-column: 1 / -1;
-              display: grid;
-              grid-template-columns: 1fr;
-            }
-
-            .settings-redesign-v2 .settings-booking-tabs {
-              grid-template-columns: 1fr;
-            }
-
-            .settings-redesign-v2 .settings-smilez-day-cards {
-              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-              overflow: visible;
-            }
-
-            .settings-redesign-v2 .settings-smilez-day-cards > * {
-              min-width: 0;
-            }
-
-            .settings-redesign-v2 .booking-blocked-form-v2 {
-              grid-template-columns: 1fr !important;
-            }
-
-            .settings-redesign-v2 .booking-blocked-form-v2 label,
-            .settings-redesign-v2 .booking-blocked-form-v2 label.is-wide,
-            .settings-redesign-v2 .booking-blocked-form-v2 > button {
-              grid-column: 1 !important;
-              width: 100% !important;
-            }
-
-            .settings-redesign-v2 .settings-simple-connect-card {
-              display: grid;
-              grid-template-columns: 1fr;
-            }
-
-            .settings-redesign-v2 .settings-simple-connect-card button {
-              width: 100%;
-            }
-
-            .settings-redesign-v2 .settings-redesign-save-bar {
-              display: grid;
-              grid-template-columns: 1fr;
-              bottom: 8px;
-            }
-
-            .settings-redesign-v2 .settings-redesign-save-bar button {
-              width: 100%;
-            }
-
-            .settings-redesign-v2 input:not([type="checkbox"]):not([type="file"]),
-            .settings-redesign-v2 select,
-            .settings-redesign-v2 textarea {
-              font-size: 16px;
-            }
-          }
-
-          @media (max-width: 420px) {
-            .settings-redesign-v2 .settings-simple-business-shell {
-              width: min(100%, calc(100% - 16px));
-            }
-
-            .settings-redesign-v2 .settings-redesign-nav {
-              grid-template-columns: 1fr;
-            }
-
-            .settings-redesign-v2 .settings-image-tabs {
-              grid-template-columns: 1fr;
-            }
-
-            .settings-redesign-v2 .booking-blocked-quick-v2 {
-              display: grid !important;
-              grid-template-columns: 1fr !important;
-            }
-
-            .settings-redesign-v2 .booking-blocked-quick-v2 button {
-              width: 100% !important;
-            }
-          }
-        `}</style>
-
-        <style jsx global>{`
-          .settings-redesign-v2 .settings-simple-grid > label {
-            align-content: start;
-          }
-
-          .settings-redesign-v2 .settings-simple-grid > label > input {
-            height: 48px;
-          }
-
-          .settings-redesign-v2 .settings-basic-bookings-v3 {
-            display: grid;
-            gap: 18px;
-          }
-
-          .settings-redesign-v2 .settings-basic-booking-stack-v3 {
-            display: grid;
-            gap: 16px;
-          }
-
-          .settings-redesign-v2 .settings-basic-capacity-v3,
-          .settings-redesign-v2 .settings-basic-hours-v3 {
-            display: grid;
-            gap: 18px;
-            padding: 20px;
-            border: 1px solid rgba(7, 27, 73, 0.1);
-            border-radius: 18px;
-            background: #f8faff;
-          }
-
-          .settings-redesign-v2 .settings-basic-capacity-v3 h3,
-          .settings-redesign-v2 .settings-basic-hours-v3 h3 {
-            margin: 4px 0 0;
-            color: #071b49;
-            font-size: 1.15rem;
-            letter-spacing: -0.025em;
-          }
-
-          .settings-redesign-v2 .settings-basic-capacity-v3 p,
-          .settings-redesign-v2 .settings-basic-hours-v3 p {
-            margin: 5px 0 0;
-            color: #647087;
-            font-size: 0.82rem;
-            font-weight: 700;
-            line-height: 1.5;
-          }
-
-          .settings-redesign-v2 .settings-basic-capacity-v3 > div > span,
-          .settings-redesign-v2 .settings-basic-hours-heading-v3 > div > span {
-            color: #f72585;
-            font-size: 0.67rem;
-            font-weight: 950;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-          }
-
-          .settings-redesign-v2 .settings-basic-capacity-grid-v3 {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-          }
-
-          .settings-redesign-v2 .settings-basic-capacity-grid-v3 label {
-            min-width: 0;
-            display: grid;
-            align-content: start;
-            gap: 7px;
-            padding: 14px;
-            border: 1px solid rgba(7, 27, 73, 0.09);
-            border-radius: 14px;
-            background: #ffffff;
-          }
-
-          .settings-redesign-v2 .settings-basic-capacity-grid-v3 label > span {
-            margin: 0;
-            color: #071b49;
-            font-size: 0.78rem;
-            font-weight: 900;
-          }
-
-          .settings-redesign-v2 .settings-basic-capacity-grid-v3 label > small {
-            color: #647087;
-            font-size: 0.7rem;
-            font-weight: 700;
-            line-height: 1.4;
-          }
-
-          .settings-redesign-v2 .settings-basic-hours-heading-v3 {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 14px;
-            flex-wrap: wrap;
-          }
-
-          .settings-redesign-v2 .settings-basic-hours-heading-v3 > strong {
-            display: inline-flex;
-            align-items: center;
-            min-height: 34px;
-            padding: 0 12px;
-            border: 1px solid rgba(7, 27, 73, 0.1);
-            border-radius: 999px;
-            background: #ffffff;
-            color: #071b49;
-            font-size: 0.72rem;
-            font-weight: 900;
-          }
-
-          .settings-redesign-v2 .settings-basic-day-grid-v3 {
-            display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
-            gap: 8px;
-          }
-
-          .settings-redesign-v2 .settings-basic-day-grid-v3 button {
-            min-width: 0;
-            min-height: 78px;
-            display: grid;
-            place-items: center;
-            gap: 4px;
-            padding: 10px 8px;
-            border: 1px solid rgba(7, 27, 73, 0.1);
-            border-radius: 13px;
-            background: #ffffff;
-            color: #647087;
-            font: inherit;
-            cursor: pointer;
-          }
-
-          .settings-redesign-v2 .settings-basic-day-grid-v3 button.is-active {
-            border-color: rgba(247, 37, 133, 0.35);
-            background: #fff7fb;
-            color: #071b49;
-            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.08);
-          }
-
-          .settings-redesign-v2 .settings-basic-day-grid-v3 button strong {
-            font-size: 0.78rem;
-            font-weight: 950;
-          }
-
-          .settings-redesign-v2 .settings-basic-day-grid-v3 button span {
-            font-size: 0.68rem;
-            font-weight: 800;
-            text-align: center;
-          }
-
-          .settings-redesign-v2 .settings-basic-day-editor-v3 {
-            display: grid;
-            grid-template-columns: minmax(130px, 0.7fr) minmax(160px, auto) minmax(340px, 1.5fr);
-            gap: 16px;
-            align-items: center;
-            padding: 17px;
-            border: 1px solid rgba(7, 27, 73, 0.1);
-            border-radius: 15px;
-            background: #ffffff;
-          }
-
-          .settings-redesign-v2 .settings-basic-day-editor-v3 h4 {
-            margin: 4px 0 0;
-            color: #071b49;
-            font-size: 1rem;
-          }
-
-          .settings-redesign-v2 .settings-basic-day-editor-v3 > div > span {
-            color: #647087;
-            font-size: 0.7rem;
-            font-weight: 800;
-          }
-
-          .settings-redesign-v2 .settings-basic-closed-v3 {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #071b49;
-            font-size: 0.78rem;
-            font-weight: 850;
-          }
-
-          .settings-redesign-v2 .settings-basic-closed-v3 input {
-            width: 17px;
-            height: 17px;
-            flex: 0 0 auto;
-          }
-
-          .settings-redesign-v2 .settings-basic-closed-v3 span {
-            margin: 0;
-          }
-
-          .settings-redesign-v2 .settings-basic-times-v3 {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-          }
-
-          .settings-redesign-v2 .settings-basic-times-v3 label {
-            min-width: 0;
-            display: grid;
-            gap: 7px;
-          }
-
-          .settings-redesign-v2 .settings-basic-times-v3 label > span {
-            margin: 0;
-            color: #071b49;
-            font-size: 0.76rem;
-            font-weight: 900;
-          }
-
-          .settings-redesign-v2 .settings-basic-booking-note-v3 {
-            margin: 0;
-            padding: 12px 14px;
-            border-radius: 13px;
-            background: #f3f6fb;
-            color: #536078;
-            font-size: 0.76rem;
-            font-weight: 800;
-          }
-
-          @media (max-width: 900px) {
-            .settings-redesign-v2 .settings-basic-capacity-grid-v3 {
-              grid-template-columns: 1fr;
-            }
-
-            .settings-redesign-v2 .settings-basic-day-grid-v3 {
-              grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-
-            .settings-redesign-v2 .settings-basic-day-editor-v3 {
-              grid-template-columns: 1fr 1fr;
-            }
-
-            .settings-redesign-v2 .settings-basic-times-v3 {
-              grid-column: 1 / -1;
-            }
-          }
-
-          @media (max-width: 620px) {
-            .settings-redesign-v2 .settings-basic-capacity-v3,
-            .settings-redesign-v2 .settings-basic-hours-v3 {
-              padding: 15px;
-              border-radius: 16px;
-            }
-
-            .settings-redesign-v2 .settings-basic-day-grid-v3 {
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .settings-redesign-v2 .settings-basic-day-editor-v3 {
-              grid-template-columns: 1fr;
-            }
-
-            .settings-redesign-v2 .settings-basic-times-v3 {
-              grid-column: 1;
-              grid-template-columns: 1fr;
-            }
-          }
-        `}</style>
-
-        <style jsx global>{`
-          .settings-redesign-v2 .settings-opening-hours-card-v4 {
-            display: grid;
-            gap: 14px;
-            padding: 16px;
-            border: 1px solid rgba(7, 27, 73, 0.1);
-            border-radius: 16px;
-            background: #f8faff;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-copy-v4 {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 18px;
-            flex-wrap: wrap;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-copy-v4 > div {
-            display: grid;
-            gap: 4px;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-copy-v4 span {
-            margin: 0;
-            color: #f72585;
-            font-size: 0.67rem;
-            font-weight: 950;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-copy-v4 strong {
-            color: #071b49;
-            font-size: 0.92rem;
-            font-weight: 900;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-copy-v4 p {
-            max-width: 560px;
-            margin: 0;
-            color: #647087;
-            font-size: 0.78rem;
-            font-weight: 700;
-            line-height: 1.5;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-card-v4 textarea {
-            min-height: 92px;
-            background: #ffffff;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-link-v4 {
-            width: fit-content;
-            min-height: 42px;
-            padding: 0 14px;
-            border: 1px solid rgba(247, 37, 133, 0.22);
-            border-radius: 11px;
-            background: #ffffff;
-            color: #d91872;
-            font: inherit;
-            font-size: 0.78rem;
-            font-weight: 900;
-            cursor: pointer;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-link-v4:hover {
-            border-color: rgba(247, 37, 133, 0.4);
-            background: #fff7fb;
-          }
-
-          @media (max-width: 620px) {
-            .settings-redesign-v2 .settings-opening-hours-card-v4 {
-              padding: 14px;
-            }
-
-            .settings-redesign-v2 .settings-opening-hours-link-v4 {
+            .settingsLitePhotoActions button {
               width: 100%;
             }
           }
         `}</style>
-
-        <style jsx global>{`
-          .settings-redesign-v2 .settings-opening-hours-editor-v5 {
-            display: grid;
-            grid-template-columns:
-              minmax(170px, 1fr)
-              minmax(170px, auto)
-              minmax(160px, 0.9fr)
-              minmax(160px, 0.9fr);
-            gap: 12px;
-            align-items: end;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-editor-v5 > label {
-            min-width: 0;
-            display: grid;
-            gap: 7px;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-editor-v5 > label > span {
-            margin: 0;
-            color: #071b49;
-            font-size: 0.76rem;
-            font-weight: 900;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-closed-v5 {
-            min-height: 48px;
-            display: flex !important;
-            align-items: center;
-            gap: 8px !important;
-            padding: 0 13px;
-            border: 1px solid rgba(7, 27, 73, 0.12);
-            border-radius: 13px;
-            background: #ffffff;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-closed-v5 input {
-            width: 17px;
-            height: 17px;
-            flex: 0 0 auto;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-closed-v5 span {
-            margin: 0 !important;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-summary-v5 {
-            display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
-            gap: 7px;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-summary-v5 button {
-            min-width: 0;
-            min-height: 64px;
-            display: grid;
-            place-items: center;
-            gap: 3px;
-            padding: 8px 6px;
-            border: 1px solid rgba(7, 27, 73, 0.09);
-            border-radius: 11px;
-            background: #ffffff;
-            color: #647087;
-            font: inherit;
-            cursor: pointer;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-summary-v5 button.is-active {
-            border-color: rgba(247, 37, 133, 0.32);
-            background: #fff7fb;
-            color: #071b49;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-summary-v5 strong {
-            font-size: 0.72rem;
-            font-weight: 950;
-          }
-
-          .settings-redesign-v2 .settings-opening-hours-summary-v5 span {
-            margin: 0;
-            font-size: 0.64rem;
-            font-weight: 800;
-            text-align: center;
-          }
-
-          @media (max-width: 900px) {
-            .settings-redesign-v2 .settings-opening-hours-editor-v5 {
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .settings-redesign-v2 .settings-opening-hours-summary-v5 {
-              grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-          }
-
-          @media (max-width: 620px) {
-            .settings-redesign-v2 .settings-opening-hours-editor-v5 {
-              grid-template-columns: 1fr;
-            }
-
-            .settings-redesign-v2 .settings-opening-hours-summary-v5 {
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-          }
-        `}</style>
-</main>
+      </main>
     );
   }
 
