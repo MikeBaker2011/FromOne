@@ -2376,6 +2376,8 @@ export default function PostReviewPage() {
           bookingUrl: draft.bookingUrl || "",
           mediaUrl: post.media_url || null,
           media_url: post.media_url || null,
+          mediaType: post.media_type || null,
+          media_type: post.media_type || null,
         }),
       });
 

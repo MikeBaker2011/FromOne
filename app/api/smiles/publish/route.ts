@@ -76,6 +76,8 @@ type SmilesPublishBody = {
   short_description?: string;
   mediaUrl?: string;
   media_url?: string;
+  mediaType?: string;
+  media_type?: string;
   logoUrl?: string;
   logo_url?: string;
   websiteUrl?: string;
@@ -227,6 +229,97 @@ function cleanImageUrlList(value: unknown, limit = 6) {
         )
     )
   ).slice(0, limit);
+}
+
+
+function getMediaUrl(body: SmilesPublishBody) {
+  return cleanText(body.mediaUrl || body.media_url);
+}
+
+function getMediaType(body: SmilesPublishBody) {
+  const explicitType = cleanText(body.mediaType || body.media_type).toLowerCase();
+
+  if (explicitType) {
+    return explicitType;
+  }
+
+  const mediaUrl = getMediaUrl(body).split("?")[0].toLowerCase();
+
+  if (/\.(mp4|mov|webm|m4v)$/.test(mediaUrl)) {
+    return "video";
+  }
+
+  if (/\.(jpg|jpeg|png|webp|gif|avif)$/.test(mediaUrl)) {
+    return "image";
+  }
+
+  return "";
+}
+
+function isVideoMedia(body: SmilesPublishBody) {
+  return getMediaType(body) === "video";
+}
+
+async function syncVenueVideoFromBody({
+  body,
+  venueId,
+  clientId = "",
+}: {
+  body: SmilesPublishBody;
+  venueId: string;
+  clientId?: string;
+}) {
+  if (!venueId || !isVideoMedia(body)) {
+    return { synced: false, videoId: null as string | null };
+  }
+
+  const videoUrl = getMediaUrl(body);
+  const postId = cleanText(body.postId || body.campaignPostId);
+
+  if (!videoUrl) {
+    return { synced: false, videoId: null as string | null };
+  }
+
+  const smiles = getSmilesSupabaseAdmin();
+  const now = new Date().toISOString();
+
+  const row = {
+    venue_id: venueId,
+    client_id: cleanNullableText(clientId),
+    video_url: videoUrl,
+    title: cleanNullableText(body.title || body.name),
+    caption: cleanNullableText(body.description || body.caption),
+    fromone_post_id: cleanNullableText(postId),
+    source: "fromone",
+    is_published: true,
+    updated_at: now,
+  };
+
+  const query = postId
+    ? smiles
+        .from("venue_videos")
+        .upsert(row, { onConflict: "venue_id,fromone_post_id" })
+        .select("id")
+        .single()
+    : smiles
+        .from("venue_videos")
+        .insert({
+          ...row,
+          created_at: now,
+        })
+        .select("id")
+        .single();
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(`Could not save the Smilez venue video: ${error.message}`);
+  }
+
+  return {
+    synced: true,
+    videoId: cleanText((data as any)?.id) || null,
+  };
 }
 
 function normalisePostcode(value: unknown) {
@@ -1124,8 +1217,7 @@ async function syncLinkedSmilesClientGeo(body: SmilesPublishBody) {
   );
   const mainImageUrl = cleanNullableText(
     firstText(
-      body.mediaUrl,
-      body.media_url,
+      isVideoMedia(body) ? "" : getMediaUrl(body),
       profile?.brand_logo_url,
       firstArray<string>(profile?.gallery_image_urls)[0],
     )
@@ -1545,7 +1637,11 @@ async function createVenueDraft(body: SmilesPublishBody, userId = "") {
     booking_hours: weeklyBookingHours,
     booking_settings: getBookingSettings(body),
     booking_blocks: getBookingBlocks(body) || [],
-    main_image_url: cleanNullableText(body.mediaUrl || body.media_url),
+    main_image_url: isVideoMedia(body)
+      ? null
+      : cleanNullableText(body.mediaUrl || body.media_url),
+    venue_video_urls: isVideoMedia(body) && getMediaUrl(body) ? [getMediaUrl(body)] : [],
+    media_type: getMediaType(body) || null,
     logo_url: cleanNullableText(body.logoUrl || body.logo_url),
     source: "fromone",
     fromone_source: "business_profile",
@@ -1631,7 +1727,9 @@ async function createOfferDraft(
     valid_times: cleanNullableText(body.validTimes || body.valid_times),
     terms: cleanText(body.terms) || "Subject to availability.",
     ...pricing,
-    main_image_url: cleanNullableText(body.mediaUrl || body.media_url),
+    main_image_url: isVideoMedia(body)
+      ? null
+      : cleanNullableText(body.mediaUrl || body.media_url),
     fromone_post_id: cleanNullableText(postId),
     fromone_profile_id: cleanNullableText(getFromOneProfileId(body)),
     is_featured: Boolean(existingOffer?.is_featured),
@@ -1719,7 +1817,9 @@ async function createEventDraft(
     end_time: cleanTime(body.endTime || body.end_time),
     ...ticketing,
     booking_url: cleanNullableText(body.bookingUrl || body.booking_url),
-    main_image_url: cleanNullableText(body.mediaUrl || body.media_url),
+    main_image_url: isVideoMedia(body)
+      ? null
+      : cleanNullableText(body.mediaUrl || body.media_url),
     fromone_post_id: cleanNullableText(postId),
     fromone_profile_id: cleanNullableText(getFromOneProfileId(body)),
     is_featured: Boolean(existingEvent?.is_featured),
@@ -1780,8 +1880,16 @@ export async function POST(req: NextRequest) {
       const directSync = await syncLinkedSmilesClientGeo(body);
 
       if (directSync.synced) {
+        const videoSync = await syncVenueVideoFromBody({
+          body,
+          venueId: cleanText(directSync.venueId),
+          clientId: cleanText(directSync.clientId),
+        });
+
         const successMessage =
-          "Live Smilez business profile updated automatically.";
+          videoSync.synced
+            ? "Live Smilez business profile and video updated automatically."
+            : "Live Smilez business profile updated automatically.";
 
         await insertPublishLog({
           userId,
@@ -1794,6 +1902,8 @@ export async function POST(req: NextRequest) {
             direct_client_sync: true,
             synced_client_id: directSync.clientId,
             synced_venue_id: directSync.venueId,
+            venue_video_synced: videoSync.synced,
+            venue_video_id: videoSync.videoId,
             admin_approval_bypassed: true,
           },
         });
@@ -1812,6 +1922,8 @@ export async function POST(req: NextRequest) {
           directSync: true,
           syncedClientId: directSync.clientId,
           syncedVenueId: directSync.venueId,
+          venueVideoSynced: videoSync.synced,
+          venueVideoId: videoSync.videoId,
           directSyncReason: null,
           isPublished: true,
           updatedExisting: true,
@@ -1882,6 +1994,11 @@ export async function POST(req: NextRequest) {
         ? await createEventDraft(body, smilesVenueId, existingSmilesDraftId)
         : await createOfferDraft(body, smilesVenueId, existingSmilesDraftId);
 
+    const videoSync = await syncVenueVideoFromBody({
+      body,
+      venueId: smilesVenueId,
+    });
+
     await updateFromOnePostAfterSmilesDraft({
       postId,
       smilesTable: result.table,
@@ -1907,6 +2024,8 @@ export async function POST(req: NextRequest) {
         smiles_slug: result.slug,
         smiles_reference_code: (result as any).referenceCode || null,
         smiles_venue_id: smilesVenueId || null,
+        venue_video_synced: videoSync.synced,
+        venue_video_id: videoSync.videoId,
         fromone_profile_id: getFromOneProfileId(body) || null,
       },
     });
@@ -1922,6 +2041,8 @@ export async function POST(req: NextRequest) {
       smilesSlug: result.slug,
       smilesReferenceCode: (result as any).referenceCode || null,
       smilesVenueId: smilesVenueId || null,
+      venueVideoSynced: videoSync.synced,
+      venueVideoId: videoSync.videoId,
       directSync: false,
       syncedClientId: null,
       syncedVenueId: null,
